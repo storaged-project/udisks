@@ -17,18 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __STORAGED_ZRAM_STATE_H__
-#define __STORAGED_ZRAM_STATE_H__
+#ifndef __STORAGED_BCACHE_STATE_H__
+#define __STORAGED_BCACHE_STATE_H__
 
 #include <glib.h>
 #include <src/storageddaemontypes.h>
-#include "storagedzramtypes.h"
+#include "storagedbcachetypes.h"
 
 G_BEGIN_DECLS
 
-StoragedZRAMState  *storaged_zram_state_new  (StoragedDaemon     *daemon);
-void                storaged_zram_state_free (StoragedZRAMState  *state);
+StoragedBcacheState  *storaged_bcache_state_new   (StoragedDaemon       *daemon);
+void                  storaged_bcache_state_free  (StoragedBcacheState  *state);
 
 G_END_DECLS
-
-#endif /* __STORAGED_ZRAM_STATE_H__ */
+#endif /* __STORAGED_BCACHE_STATE_H__ */

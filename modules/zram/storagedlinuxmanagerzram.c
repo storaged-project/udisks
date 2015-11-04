@@ -44,7 +44,7 @@
 /**
  * StoragedLinuxManagerZRAM:
  *
- * The #StoragedLinuxManagerBTRFS structure contains only private data and
+ * The #StoragedLinuxManagerZRAM structure contains only private data and
  * should only be accessed using the provided API.
  */
 
@@ -252,7 +252,7 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
      g_dbus_method_invocation_take_error (invocation, error);
      goto out;
     }
-    storaged_manager_zram_complete_destroy_devices(object, invocation);
+    storaged_manager_zram_complete_destroy_devices (object, invocation);
 out:
   return TRUE;
 }

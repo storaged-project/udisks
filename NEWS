@@ -1,11 +1,11 @@
 ---------------------------
-storaged 2.2.1 (unreleased)
+storaged 2.3.1 (unreleased)
 ---------------------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.2.0:
+Changes since 2.3.0:
 
 (TODO: git shortlog)
 
@@ -13,6 +13,92 @@ Thanks to all our contributors.
 
 Peter Hatina
 (TODO: date)
+
+--------------
+storaged 2.3.0
+--------------
+
+The storaged project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.2.0:
+
+Dominika Hodovska (7):
+      LVM2: add LVMCache support
+      LVMCache: code fix
+      LVM: add policy action_id
+      LVMCache: memory leak fix
+      ZRAM: introduce module
+      ZRAM: code cleanup
+      ZRAM: remove newlines at the end of files
+
+Gris Ge (3):
+      Fix memory leak in storaged_log().
+      New lsm module using LibStorageMgmt API.
+      Fix warning about removing non-exist interface.
+
+Peter Hatina (56):
+      Post-release bump to 2.2.1
+      BTRFS: move DBus types to storagedbtrfstypes.h
+      Deps: add missing rpm dependencies
+      Deps: pack rpm_dependencies.txt to tarball
+      BTRFS: refactor dev_file getter in filesystem update
+      Post release bump to 2.3.0
+      BTRFS: introduce check and repair method
+      BTRFS: introduce resize method
+      BTRFS: introduce create volume method
+      ZRAM: fix makefile to build the gtk docs
+      ZRAM: add translations macro for policy kit checks
+      ZRAM: add translation sources
+      ZRAM: remove whitespaces from sources
+      ISCSI: mark error messages for translation
+      BTRFS: fix subvolumes retrieval when no subvolume is present
+      BTRFS: fix reflink for @devices in o.s.S.M.BTRFS.CreateVolume()
+      BTRFS: introduce o.s.S.Filesystem.BTRFS.AddDevice()
+      BTRFS: fix misleading comment in btrfs_subvolume_perform_action()
+      BTRFS: introduce o.s.S.Filesystem.BTRFS.RemoveDevice()
+      BTRFS: update the o.s.S.F.BTRFS when Add/RemoveDevice() is called
+      Merge pull request #8 from cathay4t/lsm_module
+      LSM: add version for interfaces
+      BTRFS: add version for interface
+      LSM: allow to run with --uninstalled mode in builddir
+      BTRFS: fix @since tags coding style
+      ISCSI: fix @since tags coding style
+      Man: update month of release wrt HACKING
+      HACKING: update wrt storaged project
+      AUTHORS: add maintainer and most active contributors
+      LVM2: port to STORAGED_DAEMON_CHECK_AUTHORIZATION
+      ZRAM: update TODO-POSSIBLE-FEATURES
+      BTRFS: update TODO-POSSIBLE-FEATURES
+      Core: add method storaged_linux_block_object_get_device_file()
+      BTRFS: add exported object to STORAGED_DAEMON_CHECK_AUTHORIZATION()
+      ZRAM: add exported object to STORAGED_DAEMON_CHECK_AUTHORIZATION()
+      ISCSI: add exported object to STORAGED_DAEMON_CHECK_AUTHORIZATION()
+      ZRAM: fix typo in Makefile.am
+      LSM: fix documentation build
+      BTRFS: fix documentation build
+      Merge pull request #22 from hodovska/upstream
+      TODO: lvm cache is now supported
+      LVM2: drop duplicit lvm2_policy_action_id
+      LVM2: update doc sections for StoragedLogicalVolume
+      BTRFS: add types to the gtkdoc output
+      ISCSI: add types to the gtkdoc output
+      ZRAM: add types to the gtkdoc output
+      LSM: add types to the gtkdoc output
+      ZRAM: add optional interface to Block devices section in documentation
+      Doc: add new strings to translations' files
+      LVM2: fix typo in LogicalVolume
+      LVM2: fix uninitialized values in CacheAttach(), CacheSplit()
+      ZRAM: fix typos in translatable strings
+      Doc: disable explicit language translations
+      LSM: use sysconfdir for config file path construction
+      LSM: fix installation of storaged_lsm.conf
+      HACKING: add information about Zanata workflow
+
+Thanks to all our contributors.
+
+Peter Hatina
+2015-09-11
 
 --------------
 storaged 2.2.0

@@ -17,18 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __STORAGED_ZRAM_STATE_H__
-#define __STORAGED_ZRAM_STATE_H__
+#ifndef __STORAGED_BCACHE_TYPES_H__
+#define __STORAGED_BCACHE_TYPES_H__
 
-#include <glib.h>
-#include <src/storageddaemontypes.h>
-#include "storagedzramtypes.h"
+#define BCACHE_MODULE_NAME "bcache"
 
-G_BEGIN_DECLS
+typedef struct _StoragedBcacheState StoragedBcacheState;
 
-StoragedZRAMState  *storaged_zram_state_new  (StoragedDaemon     *daemon);
-void                storaged_zram_state_free (StoragedZRAMState  *state);
+typedef struct _StoragedLinuxManagerBcache StoragedLinuxManagerBcache;
+typedef struct _StoragedLinuxManagerBcacheClass StoragedLinuxManagerBcacheClass;
 
-G_END_DECLS
+typedef struct _StoragedLinuxBlockBcache StoragedLinuxBlockBcache;
+typedef struct _StoragedLinuxBlockBcacheClass StoragedLinuxBlockBcacheClass;
 
-#endif /* __STORAGED_ZRAM_STATE_H__ */
+#endif /* __STORAGED_BCACHE_TYPES_H__ */

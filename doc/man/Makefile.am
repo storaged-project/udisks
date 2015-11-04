@@ -5,7 +5,7 @@ man_MANS =
 
 if ENABLE_MAN
 man_MANS +=                                                                    \
-	storagedctl.1                                                          \
+	storagectl.1                                                           \
 	storaged.8                                                             \
 	storaged-project.8                                                     \
 	umount.storaged.8                                                      \
@@ -16,7 +16,7 @@ man_MANS += storaged-lvm.8
 endif # HAVE_LVM2
 endif # ENABLE_MAN
 
-storagedctl.1 : storagedctl.xml
+storagectl.1 : storagectl.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
 storaged.8 : storaged.xml
@@ -38,7 +38,7 @@ notrans_dist_man5_MANS=storaged_lsm.conf.5
 endif
 
 EXTRA_DIST =                                                                   \
-	storagedctl.xml                                                        \
+	storagectl.xml                                                         \
 	storaged.xml                                                           \
 	storaged-lvm.xml                                                       \
 	storaged-project.xml                                                   \

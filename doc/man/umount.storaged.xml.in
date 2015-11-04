@@ -5,7 +5,7 @@
 <refentry id="umount.storaged.8">
   <refentryinfo>
     <title>umount.storaged</title>
-    <date>August 2015</date>
+    <date>September 2015</date>
     <productname>storaged</productname>
   </refentryinfo>
 
@@ -33,7 +33,7 @@
 
   <refsect1><title>AUTHOR</title>
     <para>
-      Written by David Zeuthen
+      This man page was originally written for UDisks2 by David Zeuthen
       <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
       from many others.
     </para>
@@ -53,7 +53,7 @@
     <para>
       <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <link linkend="storagedd.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <link linkend="umount.8"><citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
     </para>
   </refsect1>

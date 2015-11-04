@@ -28,4 +28,8 @@ if HAVE_LSM
 SUBDIRS += lsm
 endif # HAVE_LSM
 
+if HAVE_BCACHE
+SUBDIRS += bcache
+endif # HAVE_BCACHE
+
 NULL =

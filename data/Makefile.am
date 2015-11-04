@@ -34,7 +34,7 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 completionsdir = $(datadir)/bash-completion/completions
 completions_DATA =                                                             \
-	completions/storagedctl                                                \
+	completions/storagectl                                                 \
 	$(NULL)
 
 @INTLTOOL_POLICY_RULE@

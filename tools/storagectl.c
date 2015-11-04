@@ -42,7 +42,7 @@
 static StoragedClient *client = NULL;
 static GMainLoop *loop = NULL;
 
-/* Uncomment to get debug traces in /tmp/storagedctl-completion-debug.txt - use tail(1) to
+/* Uncomment to get debug traces in /tmp/storagectl-completion-debug.txt - use tail(1) to
  * inspect this file
  */
 /* #define COMPLETION_DEBUG */
@@ -3443,7 +3443,7 @@ completion_debug (const gchar *format, ...)
   s = g_strdup_vprintf (format, var_args);
   if (f == NULL)
     {
-      f = fopen ("/tmp/storagedctl-completion-debug.txt", "a+");
+      f = fopen ("/tmp/storagectl-completion-debug.txt", "a+");
     }
   fprintf (f, "%s\n", s);
   g_free (s);

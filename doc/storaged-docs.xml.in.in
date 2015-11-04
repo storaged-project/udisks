@@ -18,7 +18,7 @@
     <xi:include href="man/storaged.xml"/>
     <!-- LVM2_MAN_PAGE -->
     <xi:include href="man/storaged-project.xml"/>
-    <xi:include href="man/storagedctl.xml"/>
+    <xi:include href="man/storagectl.xml"/>
     <xi:include href="man/umount.storaged.xml"/>
   </part>
 
@@ -378,6 +378,7 @@
       <!-- ISCSI_DBUS_INTERFACE -->
       <!-- BTRFS_DBUS_INTERFACE -->
       <!-- ZRAM_DBUS_INTERFACE -->
+      <!-- BCACHE_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -407,6 +408,7 @@
       <!-- ISCSI_GENERATED_CODE -->
       <!-- BTRFS_GENERATED_CODE -->
       <!-- ZRAM_GENERATED_CODE -->
+      <!-- BCACHE_GENERATED_CODE -->
     </chapter>
   </part>
 

@@ -1029,7 +1029,7 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
   StoragedDaemon *daemon;
   uid_t caller_uid;
   StoragedLinuxVolumeGroupObject *group_object;
-  GString *cmd;
+  GString *cmd = NULL;
   gchar *escaped_group_name = NULL;
   gchar *escaped_origin_name = NULL;
   gchar *escaped_cache_name = NULL;
@@ -1134,7 +1134,7 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
   StoragedDaemon *daemon;
   uid_t caller_uid;
   StoragedLinuxVolumeGroupObject *group_object;
-  GString *cmd;
+  GString *cmd = NULL;
   gchar *escaped_group_name = NULL;
   gchar *escaped_origin_name = NULL;
   gchar *error_message;

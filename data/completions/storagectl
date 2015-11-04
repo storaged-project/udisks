@@ -1,10 +1,10 @@
-# storagedctl(1) completion                                  -*- shell-script -*-
+# storagectl(1) completion                                  -*- shell-script -*-
 
-_storagedctl() {
+_storagectl() {
     local IFS=$'\n'
     local cur=`_get_cword :`
 
-    local suggestions=$(storagedctl complete "${COMP_LINE}" ${COMP_POINT})
+    local suggestions=$(storagectl complete "${COMP_LINE}" ${COMP_POINT})
     if [ "$suggestions" = "@FILES@" ] ; then
         _filedir
     else
@@ -26,4 +26,4 @@ _storagedctl() {
             ;;
     esac
 } &&
-complete -o nospace -F _storagedctl storagedctl
+complete -o nospace -F _storagectl storagectl

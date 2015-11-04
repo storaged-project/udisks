@@ -121,6 +121,14 @@ else
 	$(AM_V_at) $(SED) -i "/<\!-- ZRAM_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
 	$(AM_V_at) $(SED) -i "/\# ZRAM_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_ZRAM
+if HAVE_BCACHE
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).bcache.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).bcache.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).bcache.sed $(builddir)/$(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- BCACHE_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# BCACHE_TYPES/d" $(builddir)/$(STORAGED_TYPES)
+endif # HAVE_BCACHE
 
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).iscsi.sed $(builddir)/$(STORAGED_SECTIONS)
@@ -178,6 +186,15 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/lsm
 GTKDOC_LIBS += $(top_builddir)/modules/lsm/libstoraged_lsm.la
 endif # HAVE_LSM
 
+# GTKDOC for BCACHE
+if HAVE_BCACHE
+DOC_SOURCE_DIR += $(top_srcdir)/modules/bcache
+HFILE_GLOB += $(top_srcdir)/modules/bcache/*.h
+CFILE_GLOB += $(top_srcdir)/modules/bcache/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/bcache
+GTKDOC_LIBS += $(top_builddir)/modules/bcache/libstoraged_bcache.la
+endif # HAVE_BCACHE
+
 # ------------------------------------------------------------------------------
 
 include $(top_srcdir)/gtk-doc.make
@@ -185,6 +202,9 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).in.in                                            \
 	$(DOC_MAIN_SGML_FILE).in                                               \
+        $(DOC_MAIN_SGML_FILE).bcache.dbus.in                                   \
+        $(DOC_MAIN_SGML_FILE).bcache.generated.in                              \
+        $(DOC_MAIN_SGML_FILE).bcache.sed                                       \
 	$(DOC_MAIN_SGML_FILE).btrfs.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).btrfs.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).btrfs.sed                                        \
@@ -203,6 +223,8 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
 	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
+        $(STORAGED_TYPES).bcache.in                                            \
+        $(STORAGED_TYPES).bcache.sed                                           \
 	$(STORAGED_TYPES).btrfs.in                                             \
 	$(STORAGED_TYPES).btrfs.sed                                            \
 	$(STORAGED_TYPES).iscsi.in                                             \
@@ -215,6 +237,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_TYPES).zram.sed                                             \
 	$(STORAGED_SECTIONS).in.in                                             \
 	$(STORAGED_SECTIONS).in                                                \
+        $(STORAGED_SECTIONS).bcache.sections.in                                \
+        $(STORAGED_SECTIONS).bcache.sed                                        \
 	$(STORAGED_SECTIONS).btrfs.sections.in                                 \
 	$(STORAGED_SECTIONS).btrfs.sed                                         \
 	$(STORAGED_SECTIONS).iscsi.sections.in                                 \

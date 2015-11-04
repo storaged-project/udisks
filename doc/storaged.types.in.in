@@ -75,3 +75,5 @@ storaged_object_manager_client_get_type
 # BTRFS_TYPES
 
 # ZRAM_TYPES
+
+# BCACHE_TYPES

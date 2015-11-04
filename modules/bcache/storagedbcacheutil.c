@@ -17,18 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __STORAGED_ZRAM_STATE_H__
-#define __STORAGED_ZRAM_STATE_H__
+#include "storagedbcacheutil.h"
 
-#include <glib.h>
-#include <src/storageddaemontypes.h>
-#include "storagedzramtypes.h"
-
-G_BEGIN_DECLS
-
-StoragedZRAMState  *storaged_zram_state_new  (StoragedDaemon     *daemon);
-void                storaged_zram_state_free (StoragedZRAMState  *state);
-
-G_END_DECLS
-
-#endif /* __STORAGED_ZRAM_STATE_H__ */
+const gchar *bcache_policy_action_id = "org.storaged.Storaged.bcache.manage-bcache";

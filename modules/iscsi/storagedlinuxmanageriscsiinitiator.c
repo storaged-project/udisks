@@ -252,6 +252,32 @@ storaged_linux_manager_iscsi_initiator_get_iscsi_context (StoragedLinuxManagerIS
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+handle_get_firmware_initiator_name (StoragedManagerISCSIInitiator  *object,
+                                    GDBusMethodInvocation          *invocation)
+{
+  gchar initiator_name[LIBISCSI_VALUE_MAXLEN];
+  gint rval;
+
+  rval = libiscsi_get_firmware_initiator_name (initiator_name);
+  if (rval == 0)
+    {
+      storaged_manager_iscsi_initiator_complete_get_firmware_initiator_name (object,
+                                                                             invocation,
+                                                                             initiator_name);
+    }
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_ISCSI_NO_FIRMWARE,
+                                             "No firmware found");
+    }
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
 handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
                            GDBusMethodInvocation          *invocation)
 {
@@ -423,60 +449,6 @@ out:
 }
 
 /**
- * discover_send_targets:
- * @object: A #StoragedManagerISCSIInitiator
- * @address: A portal hostname or IP-address
- * @port: A portal port number
- * @auth_info: A #libiscsi_auth_info struct
- * @nodes: A #GVariant containing an array with discovery results
- * @nodes_cnt: The count of discovered nodes
- * @errorstr: An error string pointer; may be NULL. Free with g_free().
- *
- * Performs nodes discovery using sendtargets.
- */
-static gint
-discover_send_targets (StoragedManagerISCSIInitiator  *object,
-                       const gchar                    *address,
-                       const guint16                   port,
-                       struct libiscsi_auth_info      *auth_info,
-                       GVariant                      **nodes,
-                       gint                           *nodes_cnt,
-                       gchar                         **errorstr)
-{
-  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
-
-  gint rval;
-  struct libiscsi_context *ctx;
-  struct libiscsi_node *found_nodes;
-
-  /* Enter a critical section. */
-  storaged_iscsi_state_lock_libiscsi_context (state);
-
-  /* Discovery */
-  ctx = storaged_iscsi_state_get_libiscsi_context (state);
-  rval = libiscsi_discover_sendtargets (ctx,
-                                        address,
-                                        port,
-                                        auth_info,
-                                        nodes_cnt,
-                                        &found_nodes);
-
-  if (rval == 0)
-      *nodes = iscsi_libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
-  else if (errorstr)
-      *errorstr = g_strdup (libiscsi_get_error_string (ctx));
-
-  /* Leave the critical section. */
-  storaged_iscsi_state_unlock_libiscsi_context (state);
-
-  /* Release the resources */
-  iscsi_libiscsi_nodes_free (found_nodes);
-
-  return rval;
-}
-
-/**
  * discover_firmware:
  * @object: A #StoragedManagerISCSIInitiator
  * @nodes: A #GVariant containing an array with discovery results
@@ -523,15 +495,15 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
 }
 
 static gboolean
-handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
-                                      GDBusMethodInvocation          *invocation,
-                                      const gchar                    *arg_address,
-                                      const guint16                   arg_port,
-                                      GVariant                       *arg_options)
+handle_discover_send_targets (StoragedManagerISCSIInitiator  *object,
+                              GDBusMethodInvocation          *invocation,
+                              const gchar                    *arg_address,
+                              const guint16                   arg_port,
+                              GVariant                       *arg_options)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
   GVariant *nodes = NULL;
-  struct libiscsi_auth_info auth_info = { libiscsi_auth_none };
   gchar *errorstr = NULL;
   gint err = 0;
   gint nodes_cnt = 0;
@@ -544,137 +516,37 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                        N_("Authentication is required to discover targets"),
                                        invocation);
 
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
+
   /* Perform the discovery. */
-  err = discover_send_targets (object,
-                               arg_address,
-                               arg_port,
-                               &auth_info,
-                               &nodes,
-                               &nodes_cnt,
-                               &errorstr);
+  err = iscsi_discover_send_targets (manager->daemon,
+                                     arg_address,
+                                     arg_port,
+                                     arg_options,
+                                     &nodes,
+                                     &nodes_cnt,
+                                     &errorstr);
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   if (err != 0)
     {
       /* Discovery failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             N_("Discovery failed: %s"),
-                                             errorstr);
-      goto out;
-    }
-
-    /* Return discovered portals. */
-    storaged_manager_iscsi_initiator_complete_discover_send_targets_no_auth (object,
-                                                                             invocation,
-                                                                             nodes,
-                                                                             nodes_cnt);
-
-out:
-  g_free ((gpointer) errorstr);
-
-  /* Indicate that we handled the method invocation. */
-  return TRUE;
-}
-
-static gboolean
-handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
-                                   GDBusMethodInvocation          *invocation,
-                                   const gchar                    *arg_address,
-                                   guint16                         arg_port,
-                                   const gchar                    *arg_username,
-                                   const gchar                    *arg_password,
-                                   const gchar                    *arg_reverse_username,
-                                   const gchar                    *arg_reverse_password,
-                                   GVariant                       *arg_options)
-{
-  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  GVariant *nodes = NULL;
-  struct libiscsi_auth_info auth_info;
-  gint err = 0;
-  gint nodes_cnt = 0;
-  gchar *errorstr = NULL;
-
-  /* Policy check. */
-  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
-                                       NULL,
-                                       iscsi_policy_action_id,
-                                       arg_options,
-                                       N_("Authentication is required to discover targets"),
-                                       invocation);
-
-  /* Fill in authentication information */
-  auth_info.method = libiscsi_auth_chap;
-
-  /* Username */
-  if (strlen (arg_username) > LIBISCSI_VALUE_MAXLEN)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             N_("Username too long"));
-      goto out;
-    }
-  strcpy(auth_info.chap.username, arg_username);
-
-  /* Password */
-  if (strlen (arg_username) > LIBISCSI_VALUE_MAXLEN)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             N_("Password too long"));
-      goto out;
-    }
-  strcpy(auth_info.chap.password, arg_password);
-
-  /* Reverse username */
-  if (strlen (arg_reverse_username) > LIBISCSI_VALUE_MAXLEN)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             N_("Reverse username too long"));
-      goto out;
-    }
-  strcpy(auth_info.chap.reverse_username, arg_reverse_username);
-
-  /* Reverse password */
-  if (strlen (arg_reverse_password) > LIBISCSI_VALUE_MAXLEN)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             N_("Reverse password too long"));
-      goto out;
-    }
-  strcpy(auth_info.chap.reverse_password, arg_reverse_password);
-
-  /* Perform the discovery. */
-  err = discover_send_targets (object,
-                               arg_address,
-                               arg_port,
-                               &auth_info,
-                               &nodes,
-                               &nodes_cnt,
-                               &errorstr);
-
-  if (err != 0)
-    {
-      /* Discovery failed. */
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Discovery failed: %s"),
                                              errorstr);
       goto out;
     }
 
   /* Return discovered portals. */
-  storaged_manager_iscsi_initiator_complete_discover_send_targets_no_auth (object,
-                                                                           invocation,
-                                                                           nodes,
-                                                                           nodes_cnt);
+  storaged_manager_iscsi_initiator_complete_discover_send_targets (object,
+                                                                   invocation,
+                                                                   nodes,
+                                                                   nodes_cnt);
 
 out:
   g_free ((gpointer) errorstr);
@@ -713,7 +585,7 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
       /* Discovery failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Discovery failed: %s"),
                                              errorstr);
       g_free ((gpointer) errorstr);
@@ -732,14 +604,14 @@ out:
 }
 
 static gboolean
-handle_login(StoragedManagerISCSIInitiator  *object,
-             GDBusMethodInvocation          *invocation,
-             const gchar                    *arg_name,
-             gint                            arg_tpgt,
-             const gchar                    *arg_address,
-             gint                            arg_port,
-             const gchar                    *arg_iface,
-             GVariant                       *arg_options)
+handle_login (StoragedManagerISCSIInitiator  *object,
+              GDBusMethodInvocation          *invocation,
+              const gchar                    *arg_name,
+              gint                            arg_tpgt,
+              const gchar                    *arg_address,
+              gint                            arg_port,
+              const gchar                    *arg_iface,
+              GVariant                       *arg_options)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
@@ -758,21 +630,24 @@ handle_login(StoragedManagerISCSIInitiator  *object,
   storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Login */
-  err = iscsi_perform_login_action (manager->daemon,
-                                    ACTION_LOGIN,
-                                    arg_name,
-                                    arg_tpgt,
-                                    arg_address,
-                                    arg_port,
-                                    arg_iface,
-                                    &errorstr);
+  err = iscsi_login (manager->daemon,
+                     arg_name,
+                     arg_tpgt,
+                     arg_address,
+                     arg_port,
+                     arg_iface,
+                     arg_options,
+                     &errorstr);
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   if (err != 0)
     {
       /* Login failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Login failed: %s"),
                                              errorstr);
       goto out;
@@ -781,9 +656,6 @@ handle_login(StoragedManagerISCSIInitiator  *object,
   /* Complete DBus call. */
   storaged_manager_iscsi_initiator_complete_login (object,
                                                    invocation);
-
-  /* Leave the critical section. */
-  storaged_iscsi_state_unlock_libiscsi_context (state);
 
 out:
   g_free ((gpointer) errorstr);
@@ -819,21 +691,24 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
   storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Logout */
-  err = iscsi_perform_login_action (manager->daemon,
-                                    ACTION_LOGOUT,
-                                    arg_name,
-                                    arg_tpgt,
-                                    arg_address,
-                                    arg_port,
-                                    arg_iface,
-                                    &errorstr);
+  err = iscsi_logout (manager->daemon,
+                      arg_name,
+                      arg_tpgt,
+                      arg_address,
+                      arg_port,
+                      arg_iface,
+                      arg_options,
+                      &errorstr);
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   if (err != 0)
     {
       /* Logout failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Logout failed: %s"),
                                              errorstr);
       goto out;
@@ -842,9 +717,6 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
   /* Complete DBus call. */
   storaged_manager_iscsi_initiator_complete_logout (object,
                                                     invocation);
-
-  /* Leave the critical section. */
-  storaged_iscsi_state_unlock_libiscsi_context (state);
 
 out:
   g_free ((gpointer) errorstr);
@@ -858,10 +730,10 @@ out:
 static void
 storaged_linux_manager_iscsi_initiator_iface_init (StoragedManagerISCSIInitiatorIface *iface)
 {
+  iface->handle_get_firmware_initiator_name = handle_get_firmware_initiator_name;
   iface->handle_get_initiator_name = handle_get_initiator_name;
   iface->handle_set_initiator_name = handle_set_initiator_name;
-  iface->handle_discover_send_targets_no_auth = handle_discover_send_targets_no_auth;
-  iface->handle_discover_send_targets_chap = handle_discover_send_targets_chap;
+  iface->handle_discover_send_targets = handle_discover_send_targets;
   iface->handle_discover_firmware = handle_discover_firmware;
   iface->handle_login = handle_login;
   iface->handle_logout = handle_logout;

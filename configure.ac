@@ -1,7 +1,7 @@
 
 m4_define([storaged_major_version], [2])
 m4_define([storaged_minor_version], [3])
-m4_define([storaged_micro_version], [0])
+m4_define([storaged_micro_version], [1])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
@@ -268,21 +268,34 @@ AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
 if test "x$enable_iscsi" = "xyes" \
      -o "x$enable_modules" = "xyes" \
      -o "x$enable_all_modules" = "xyes"; then
+  # libiscsi.h
   AC_CHECK_HEADER([libiscsi.h],
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
                    have_iscsi=yes],
                   [have_iscsi=no])
+  if test "x$have_iscsi" = "xyes"; then
+    AC_MSG_CHECKING([whether libiscsi.h defines iscsi_err])
+    AC_TRY_COMPILE([#include <libiscsi.h>],
+                   [int err = ISCSI_SUCCESS;],
+                   [AC_MSG_RESULT([yes])
+                    AC_DEFINE([HAVE_LIBISCSI_ERR], [1], [libiscsi error states])],
+                   [AC_MSG_RESULT([no])])
+  fi
+
+  # libiscsi
   AC_CHECK_LIB([iscsi],
                [libiscsi_init],
                [ISCSI_LIBS="-liscsi"],
                [have_iscsi="no"])
-  AC_CHECK_LIB([iscsi],
-               [libiscsi_get_session_info_by_id],
-               [have_libiscsi_session_info="yes"
-                have_libiscsi_session_info_msg=", with iscsi sessions"
-                AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
-                          [libiscsi can retrieve session information])],
-               [have_libiscsi_session_info_msg=", without iscsi sessions"])
+  if test "x$have_iscsi" = "xyes"; then
+    AC_CHECK_LIB([iscsi],
+                 [libiscsi_get_session_info_by_id],
+                 [have_libiscsi_session_info="yes"
+                  have_libiscsi_session_info_msg=", with iscsi sessions"
+                  AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
+                            [libiscsi can retrieve session information])],
+                 [have_libiscsi_session_info_msg=", without iscsi sessions"])
+  fi
 
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
@@ -408,6 +421,7 @@ if test "x$enable_zram" = "xyes" \
        AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
     fi
 fi
+AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 
 
 # LSM module
@@ -437,9 +451,40 @@ if test "x$enable_lsm" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 
+# Bcache module
+have_bcache=no
+AC_ARG_ENABLE(bcache, AS_HELP_STRING([--enable-bcache], [enable Bcache support]))
+if test "x$enable_bcache" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
 
+    # libblockdev-kbd
+    AC_MSG_CHECKING([libblockdev-kbd presence])
+    AC_TRY_COMPILE([#include <kbd.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    have_bcache=yes],
+                   [AC_MSG_RESULT([no])
+                    have_bcache=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
 
-AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
+    BCACHE_CFLAGS="-I/usr/include/blockdev"
+    BCACHE_LIBS="-lbd_kbd"
+
+    if test "x$have_bcache" = "xno"; then
+      AC_MSG_ERROR([Bcache support requested but header or library not found])
+    fi
+
+    AC_SUBST([BCACHE_CFLAGS])
+    AC_SUBST([BCACHE_LIBS])
+fi
+AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
+
 # Internationalization
 #
 
@@ -477,6 +522,8 @@ modules/zram/Makefile
 modules/zram/data/Makefile
 modules/lsm/Makefile
 modules/lsm/data/Makefile
+modules/bcache/Makefile
+modules/bcache/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -486,7 +533,7 @@ doc/man/Makefile
 doc/man/storaged-lvm.xml
 doc/man/storaged-project.xml
 doc/man/storaged.xml
-doc/man/storagedctl.xml
+doc/man/storagectl.xml
 doc/man/umount.storaged.xml
 doc/man/storaged_lsm.conf.5
 doc/storaged-docs.xml.iscsi.dbus
@@ -511,6 +558,10 @@ doc/storaged-docs.xml.zram.generated
 doc/storaged-docs.xml.zram.block_devices
 doc/storaged-sections.txt.zram.sections
 doc/storaged.types.zram
+doc/storaged-docs.xml.bcache.dbus
+doc/storaged-docs.xml.bcache.generated
+doc/storaged-sections.txt.bcache.sections
+doc/storaged.types.bcache
 po/Makefile.in
 ])
 
@@ -551,4 +602,5 @@ echo "
         LVMCache:                   ${have_lvmcache}
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
+        Bcache module:              ${have_bcache}
 "

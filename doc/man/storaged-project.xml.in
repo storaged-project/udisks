@@ -5,7 +5,7 @@
 <refentry id="storaged-project.8">
   <refentryinfo>
     <title>storaged-project</title>
-    <date>August 2015</date>
+    <date>September 2015</date>
     <productname>storaged-project</productname>
   </refentryinfo>
 
@@ -290,7 +290,7 @@
       (for example, adopt a <quote>2</quote> suffix) to make room for
       the next major version. Therefore, applications can not rely on
       tools like e.g.
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
       to be available. Additionally, there is no guarantee that the
       options, command-line switches etc. of command-line tools or
       similar will remain stable.
@@ -365,7 +365,7 @@
 
   <refsect1><title>AUTHOR</title>
     <para>
-      Written by David Zeuthen
+      This man page was originally written for UDisks2 by David Zeuthen
       <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
       from many others.
     </para>
@@ -390,7 +390,7 @@
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <link linkend="umount.storaged.8"><citerefentry><refentrytitle>umount.storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>
     </para>

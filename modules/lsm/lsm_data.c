@@ -35,7 +35,7 @@
 #define _STD_LSM_SIM_URI "sim://"
 #define _STD_LSM_HPSA_URI "hpsa://"
 
-#define _STD_LSM_CONF_PATH_PREFIX "/etc/"
+#define _STD_LSM_CONF_PATH_PREFIX PACKAGE_SYSCONF_DIR
 #define _STD_LSM_CONF_PATH "storaged/modules.conf.d/"
 #define _STD_LSM_CONF_FILE "storaged_lsm.conf"
 #define _STD_LSM_CONF_REFRESH_KEYNAME "refresh_interval"

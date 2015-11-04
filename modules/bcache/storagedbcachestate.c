@@ -17,18 +17,44 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __STORAGED_ZRAM_STATE_H__
-#define __STORAGED_ZRAM_STATE_H__
+#include "config.h"
+#include "storagedbcachestate.h"
 
-#include <glib.h>
-#include <src/storageddaemontypes.h>
-#include "storagedzramtypes.h"
+struct _StoragedBcacheState
+{
+  StoragedDaemon *daemon;
+};
 
-G_BEGIN_DECLS
+/**
+ * storaged_bcache_state_new:
+ * @daemon: A #StoragedDaemon instance.
+ *
+ * Initializes the #StoragedBcacheState structure that holds the global state
+ * within Bcache plugin.
+ *
+ * Returns: (transfer full): A #StoragedBcacheState that must be freed with
+ * storaged_bcache_state_free().
+ */
 
-StoragedZRAMState  *storaged_zram_state_new  (StoragedDaemon     *daemon);
-void                storaged_zram_state_free (StoragedZRAMState  *state);
+StoragedBcacheState *
+storaged_bcache_state_new (StoragedDaemon *daemon)
+{
+  StoragedBcacheState *state;
 
-G_END_DECLS
+  state = g_malloc (sizeof (StoragedBcacheState));
 
-#endif /* __STORAGED_ZRAM_STATE_H__ */
+  if (state)
+    {
+      state->daemon = daemon;
+    }
+  return state;
+
+}
+
+void
+storaged_bcache_state_free (StoragedBcacheState* state)
+{
+  g_return_if_fail (state);
+
+  g_free (state);
+}
