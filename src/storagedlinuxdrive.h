@@ -34,6 +34,10 @@ StoragedDrive *storaged_linux_drive_new      (void);
 gboolean       storaged_linux_drive_update   (StoragedLinuxDrive       *drive,
                                               StoragedLinuxDriveObject *object);
 
+gboolean storaged_linux_device_is_multipath (StoragedLinuxDevice *std_lx_dev);
+GUdevDevice *storaged_linux_device_get_udev (StoragedLinuxDevice *std_lx_dev);
+
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_DRIVE_H__ */

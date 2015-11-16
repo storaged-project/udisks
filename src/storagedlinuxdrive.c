@@ -699,9 +699,20 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
   StoragedLinuxProvider *provider;
   gboolean coldplug = FALSE;
   const gchar *seat;
+  GUdevDevice *udev_dev = NULL;
 
-  device = storaged_linux_drive_object_get_device (object, TRUE /* get_hw */);
+
+  /* At the initial stage, multipath device might not including slave
+   * disk yet. We use get_hw = FALSE and storaged_linux_device_get_udev ()
+   * to workaround that issue.
+   */
+  device = storaged_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
+    goto out;
+
+  udev_dev = storaged_linux_device_get_udev (device);
+
+  if (udev_dev == NULL)
     goto out;
 
   if (object != NULL)
@@ -711,19 +722,19 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
       coldplug = storaged_linux_provider_get_coldplug (provider);
     }
 
-  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_DRIVE_FLOPPY") ||
-      g_str_has_prefix (g_udev_device_get_name (device->udev_device), "fd"))
+  if (g_udev_device_get_property_as_boolean (udev_dev, "ID_DRIVE_FLOPPY") ||
+      g_str_has_prefix (g_udev_device_get_name (udev_dev), "fd"))
     is_pc_floppy_drive = TRUE;
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
    */
-  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
+  if (g_udev_device_get_property_as_boolean (udev_dev, "ID_ATA"))
     {
       const gchar *model;
       const gchar *serial;
 
-      model = g_udev_device_get_property (device->udev_device, "ID_MODEL_ENC");
+      model = g_udev_device_get_property (udev_dev, "ID_MODEL_ENC");
       if (model != NULL)
         {
           gchar *s;
@@ -733,21 +744,24 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
           g_free (s);
         }
 
-      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
+      serial = g_udev_device_get_property (udev_dev, "ID_SERIAL_SHORT");
       if (serial == NULL)
-        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
+        serial = g_udev_device_get_property (udev_dev, "ID_SERIAL");
 
       storaged_drive_set_vendor (iface, "");
-      storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
+      storaged_drive_set_revision
+        (iface, g_udev_device_get_property (udev_dev, "ID_REVISION"));
       storaged_drive_set_serial (iface, serial);
-      storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
+      storaged_drive_set_wwn
+        (iface, g_udev_device_get_property (udev_dev,
+                                            "ID_WWN_WITH_EXTENSION"));
     }
-  else if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_SCSI"))
+  else if (g_udev_device_get_property_as_boolean (udev_dev, "ID_SCSI"))
     {
       const gchar *vendor;
       const gchar *model;
 
-      vendor = g_udev_device_get_property (device->udev_device, "ID_VENDOR_ENC");
+      vendor = g_udev_device_get_property (udev_dev, "ID_VENDOR_ENC");
       if (vendor != NULL)
         {
           gchar *s;
@@ -757,7 +771,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
           g_free (s);
         }
 
-      model = g_udev_device_get_property (device->udev_device, "ID_MODEL_ENC");
+      model = g_udev_device_get_property (udev_dev, "ID_MODEL_ENC");
       if (model != NULL)
         {
           gchar *s;
@@ -767,15 +781,21 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
           g_free (s);
         }
 
-      storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      storaged_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SCSI_SERIAL"));
-      storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
+      storaged_drive_set_revision
+        (iface, g_udev_device_get_property (udev_dev, "ID_REVISION"));
+      storaged_drive_set_serial
+        (iface, g_udev_device_get_property (udev_dev, "ID_SCSI_SERIAL"));
+      storaged_drive_set_wwn
+        (iface, g_udev_device_get_property (udev_dev,
+                                            "ID_WWN_WITH_EXTENSION"));
     }
-  else if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "mmcblk"))
+  else if (g_str_has_prefix (g_udev_device_get_name (udev_dev), "mmcblk"))
     {
       /* sigh, mmc is non-standard and using ID_NAME instead of ID_MODEL.. */
-      storaged_drive_set_model (iface, g_udev_device_get_property (device->udev_device, "ID_NAME"));
-      storaged_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SERIAL"));
+      storaged_drive_set_model
+        (iface, g_udev_device_get_property (udev_dev, "ID_NAME"));
+      storaged_drive_set_serial
+        (iface, g_udev_device_get_property (udev_dev, "ID_SERIAL"));
       /* TODO:
        *  - lookup Vendor from manfid and oemid in sysfs
        *  - lookup Revision from fwrev and hwrev in sysfs
@@ -788,10 +808,10 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
       const gchar *name;
       const gchar *serial;
 
-      name = g_udev_device_get_name (device->udev_device);
+      name = g_udev_device_get_name (udev_dev);
 
       /* generic fallback... */
-      vendor = g_udev_device_get_property (device->udev_device, "ID_VENDOR_ENC");
+      vendor = g_udev_device_get_property (udev_dev, "ID_VENDOR_ENC");
       if (vendor != NULL)
         {
           gchar *s;
@@ -802,7 +822,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
         }
       else
         {
-          vendor = g_udev_device_get_property (device->udev_device, "ID_VENDOR");
+          vendor = g_udev_device_get_property (udev_dev, "ID_VENDOR");
           if (vendor != NULL)
             {
               storaged_drive_set_vendor (iface, vendor);
@@ -820,7 +840,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
             }
         }
 
-      model = g_udev_device_get_property (device->udev_device, "ID_MODEL_ENC");
+      model = g_udev_device_get_property (udev_dev, "ID_MODEL_ENC");
       if (model != NULL)
         {
           gchar *s;
@@ -831,7 +851,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
         }
       else
         {
-          model = g_udev_device_get_property (device->udev_device, "ID_MODEL");
+          model = g_udev_device_get_property (udev_dev, "ID_MODEL");
           if (model != NULL)
             {
               storaged_drive_set_model (iface, model);
@@ -848,20 +868,24 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
             }
         }
 
-      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
+      serial = g_udev_device_get_property (udev_dev, "ID_SERIAL_SHORT");
       if (serial == NULL)
-        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
+        serial = g_udev_device_get_property (udev_dev, "ID_SERIAL");
 
-      storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
+      storaged_drive_set_revision
+        (iface, g_udev_device_get_property (udev_dev, "ID_REVISION"));
       storaged_drive_set_serial (iface, serial);
-      if (g_udev_device_has_property (device->udev_device, "ID_WWN_WITH_EXTENSION"))
-        storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
+      if (g_udev_device_has_property (udev_dev, "ID_WWN_WITH_EXTENSION"))
+        storaged_drive_set_wwn
+          (iface, g_udev_device_get_property (udev_dev,
+                                              "ID_WWN_WITH_EXTENSION"));
       else
-        storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN"));
+        storaged_drive_set_wwn
+          (iface, g_udev_device_get_property (udev_dev, "ID_WWN"));
     }
 
   /* common bits go here */
-  size = storaged_daemon_util_block_get_size (device->udev_device,
+  size = storaged_daemon_util_block_get_size (udev_dev,
                                               &media_available,
                                               &media_change_detected);
   storaged_drive_set_size (iface, size);
@@ -878,7 +902,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
     removable_hint = TRUE;
   storaged_drive_set_removable (iface, removable_hint);
 
-  seat = g_udev_device_get_property (device->udev_device, "ID_SEAT");
+  seat = g_udev_device_get_property (udev_dev, "ID_SEAT");
   /* assume seat0 if not set */
   if (seat == NULL || strlen (seat) == 0)
     seat = "seat0";
@@ -893,7 +917,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
         {
           const gchar *device_name;
           /* TODO: adjust device_name for better sort order (so e.g. sdaa comes after sdz) */
-          device_name = g_udev_device_get_name (device->udev_device);
+          device_name = g_udev_device_get_name (udev_dev);
           if (storaged_drive_get_removable (iface))
             {
               /* make sure fd* BEFORE sr* BEFORE sd* */
@@ -1602,4 +1626,47 @@ drive_iface_init (StoragedDriveIface *iface)
   iface->handle_eject = handle_eject;
   iface->handle_set_configuration = handle_set_configuration;
   iface->handle_power_off = handle_power_off;
+}
+
+GUdevDevice *
+storaged_linux_device_get_udev (StoragedLinuxDevice *std_lx_dev)
+{
+  gchar **slaves = NULL;
+  guint i = 0;
+  GUdevDevice *udev = NULL;
+  GUdevClient *udev_client = NULL;
+
+  if (std_lx_dev == NULL)
+    return NULL;
+
+  if (storaged_linux_device_is_multipath (std_lx_dev) == FALSE)
+    {
+      udev = std_lx_dev->udev_device;
+      g_object_ref (udev);
+      return udev;
+    }
+
+  udev_client = g_udev_client_new (NULL);
+
+  slaves = storaged_daemon_util_resolve_links
+    (g_udev_device_get_sysfs_path (std_lx_dev->udev_device), "slaves");
+  for (i = 0; slaves[i] != NULL; ++i)
+    {
+
+      udev = g_udev_client_query_by_sysfs_path (udev_client, slaves[i]);
+      g_object_ref (udev);
+      break;
+    }
+  g_object_unref (udev_client);
+
+  return udev;
+}
+
+gboolean
+storaged_linux_device_is_multipath (StoragedLinuxDevice *std_lx_dev)
+{
+  const gchar *dm_uuid;
+
+  dm_uuid = g_udev_device_get_sysfs_attr (std_lx_dev->udev_device, "dm/uuid");
+  return dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath-");
 }
