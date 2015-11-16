@@ -130,6 +130,20 @@ else
 	$(AM_V_at) $(SED) -i "/\# BCACHE_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_BCACHE
 
+if HAVE_MULTIPATH
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).multipath.sed \
+		$(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).multipath.sed \
+		$(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).multipath.sed \
+		$(builddir)/$(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- MULTIPATH_GENERATED_SECTIONS -->/d" \
+		$(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# MULTIPATH_TYPES/d" \
+		$(builddir)/$(STORAGED_TYPES)
+endif # HAVE_MULTIPATH
+
 # GTKDOC for LVM2
 if HAVE_LVM2
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lvm2
@@ -166,7 +180,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
 GTKDOC_LIBS += $(top_builddir)/modules/zram/libstoraged_zram.la
 endif # HAVE_ZRAM
 
-# GTKDOC for LSM
+# GTKDOC for LSM if HAVE_LSM
 if HAVE_LSM
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lsm
 HFILE_GLOB += $(top_srcdir)/modules/lsm/*.h
@@ -174,6 +188,15 @@ CFILE_GLOB += $(top_srcdir)/modules/lsm/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/lsm
 GTKDOC_LIBS += $(top_builddir)/modules/lsm/libstoraged_lsm.la
 endif # HAVE_LSM
+
+if HAVE_MULTIPATH
+# GTKDOC for LSM if HAVE_MULTIPATH
+DOC_SOURCE_DIR += $(top_srcdir)/modules/multipath
+HFILE_GLOB += $(top_srcdir)/modules/multipath/*.h
+CFILE_GLOB += $(top_srcdir)/modules/multipath/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/multipath
+GTKDOC_LIBS += $(top_builddir)/modules/multipath/libstoraged_multipath.la
+endif # HAVE_MULTIPATH
 
 # GTKDOC for BCACHE
 if HAVE_BCACHE
@@ -210,6 +233,9 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).zram.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).zram.block_devices.in                            \
 	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
+	$(DOC_MAIN_SGML_FILE).multipath.dbus.in                                \
+	$(DOC_MAIN_SGML_FILE).multipath.generated.in                           \
+	$(DOC_MAIN_SGML_FILE).multipath.sed                                    \
 	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
         $(STORAGED_TYPES).bcache.in                                            \
@@ -220,6 +246,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_TYPES).iscsi.sed                                            \
 	$(STORAGED_TYPES).lsm.in                                               \
 	$(STORAGED_TYPES).lsm.sed                                              \
+	$(STORAGED_TYPES).multipath.in                                         \
+	$(STORAGED_TYPES).multipath.sed                                        \
 	$(STORAGED_TYPES).lvm2.in                                              \
 	$(STORAGED_TYPES).lvm2.sed                                             \
 	$(STORAGED_TYPES).zram.in                                              \
@@ -238,7 +266,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
 	$(STORAGED_SECTIONS).zram.sections.in                                  \
 	$(STORAGED_SECTIONS).zram.sed                                          \
-	$(STORAGED_SECTIONS).lsm.sections.in                                   \
+	$(STORAGED_SECTIONS).multipath.sections.in                             \
+	$(STORAGED_SECTIONS).multipath.sed                                     \
 	version.xml.in                                                         \
 	TODO-ISCSI
 

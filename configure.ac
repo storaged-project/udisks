@@ -463,6 +463,19 @@ if test "x$enable_bcache" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
+# Multipath module
+have_multipath=no
+AC_ARG_ENABLE(multipath, AS_HELP_STRING([--enable-multipath],
+              [Enable Multipath support]))
+
+if test "x$enable_multipath" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    PKG_CHECK_MODULES([LIBDMMP], [libdmmp])
+    have_multipath=yes
+fi
+AM_CONDITIONAL(HAVE_MULTIPATH, [test "x$have_multipath" = "xyes"])
+
 # Internationalization
 #
 
@@ -500,6 +513,8 @@ modules/lsm/Makefile
 modules/lsm/data/Makefile
 modules/bcache/Makefile
 modules/bcache/data/Makefile
+modules/multipath/Makefile
+modules/multipath/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -538,6 +553,10 @@ doc/storaged-docs.xml.bcache.dbus
 doc/storaged-docs.xml.bcache.generated
 doc/storaged-sections.txt.bcache.sections
 doc/storaged.types.bcache
+doc/storaged-docs.xml.multipath.dbus
+doc/storaged-docs.xml.multipath.generated
+doc/storaged-sections.txt.multipath.sections
+doc/storaged.types.multipath
 po/Makefile.in
 ])
 
@@ -578,4 +597,5 @@ echo "
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
         Bcache module:              ${have_bcache}
+        Multipath module:           ${have_multipath}
 "

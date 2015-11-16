@@ -255,3 +255,89 @@ probe_ata (StoragedLinuxDevice  *device,
     }
   return ret;
 }
+
+const gchar *
+storaged_linux_device_multipath_name (StoragedLinuxDevice *std_lx_dev)
+{
+  gchar *mp_name = NULL;
+  const gchar *dev_name = NULL;
+  gchar *sys_holders_path = NULL;
+  GDir *holder_dir = NULL;
+  const gchar *dm_name = NULL;
+  gchar *sys_uuid_path = NULL;
+  gchar *uuid = NULL;
+  gsize size = 0;
+  gchar *sys_dm_name_path = NULL;
+
+  if (std_lx_dev == NULL)
+    goto out;
+
+  if (! STORAGED_IS_LINUX_DEVICE (std_lx_dev))
+    goto out;
+
+  uuid = (gchar *) g_udev_device_get_sysfs_attr (std_lx_dev->udev_device,
+                                                 "dm/uuid");
+  if (uuid != NULL && g_str_has_prefix (uuid, "mpath-"))
+    {
+      uuid = NULL;
+      mp_name =
+        g_strdup (g_udev_device_get_sysfs_attr (std_lx_dev->udev_device,
+                                                "dm/name"));
+      goto out;
+    }
+  uuid = NULL;
+
+  /* check multipath slave:
+   *  Check /sys/block/sdX/holders/dm-3/dm/uuid with 'mpath-' prefix.
+   *  Return /sys/block/sdX/holders/dm-3/dm/name
+   */
+
+  dev_name = g_udev_device_get_name (std_lx_dev->udev_device);
+  if (dev_name == NULL)
+    goto out;
+
+  sys_holders_path = g_strdup_printf("/sys/block/%s/holders", dev_name);
+  holder_dir = g_dir_open(sys_holders_path, 0, NULL);
+  if (holder_dir == NULL)
+    goto out;
+
+  dm_name = g_dir_read_name (holder_dir);
+  while (dm_name != NULL) {
+      if (g_strcmp0 (dm_name, "dm"))
+        {
+          sys_uuid_path = g_strdup_printf ("%s/%s/dm/uuid",
+                                           sys_holders_path, dm_name);
+
+          if (g_file_get_contents (sys_uuid_path, &uuid, &size, NULL))
+            {
+              if (g_str_has_prefix (uuid, "mpath-"))
+                {
+                  sys_dm_name_path = g_strdup_printf ("%s/%s/dm/name",
+                                                      sys_holders_path,
+                                                      dm_name);
+                  g_file_get_contents(sys_dm_name_path, &mp_name, &size, NULL);
+                  goto out;
+                }
+            }
+
+          g_free (sys_uuid_path);
+          g_free (uuid);
+          sys_uuid_path = NULL;
+          uuid = NULL;
+        }
+      dm_name = g_dir_read_name (holder_dir);
+  }
+
+out:
+  g_free (sys_holders_path);
+  if (holder_dir != NULL)
+    g_dir_close (holder_dir);
+
+  g_free (sys_uuid_path);
+  g_free (uuid);
+  g_free (sys_dm_name_path);
+  if (mp_name != NULL)
+    g_strchomp (mp_name);
+
+  return mp_name;
+}

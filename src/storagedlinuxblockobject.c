@@ -220,7 +220,7 @@ static void
 storaged_linux_block_object_constructed (GObject *_object)
 {
   StoragedLinuxBlockObject *object = STORAGED_LINUX_BLOCK_OBJECT (_object);
-  GString *str;
+  const gchar *std_lx_blk_obj_path = NULL;
 
   object->mount_monitor = storaged_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -236,10 +236,12 @@ storaged_linux_block_object_constructed (GObject *_object)
   storaged_linux_block_object_uevent (object, "add", NULL);
 
   /* compute the object path */
-  str = g_string_new ("/org/storaged/Storaged/block_devices/");
-  storaged_safe_append_to_object_path (str, g_udev_device_get_name (object->device->udev_device));
-  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), str->str);
-  g_string_free (str, TRUE);
+  std_lx_blk_obj_path = storaged_linux_block_object_path_gen
+    ( g_udev_device_get_name (object->device->udev_device));
+
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object),
+                                          std_lx_blk_obj_path);
+  g_free ((gchar *) std_lx_blk_obj_path);
 
   if (G_OBJECT_CLASS (storaged_linux_block_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (storaged_linux_block_object_parent_class)->constructed (_object);
@@ -954,4 +956,43 @@ storaged_linux_block_object_reread_partition_table (StoragedLinuxBlockObject *ob
         }
       close (fd);
     }
+}
+
+const gchar *
+storaged_linux_block_object_path_gen (const char *blk_name)
+{
+  GString *blk_obj_path = NULL;
+  const gchar *rc_str = NULL;
+
+  blk_obj_path = g_string_new("/org/storaged/Storaged/block_devices/");
+  storaged_safe_append_to_object_path (blk_obj_path, blk_name);
+
+  rc_str = g_strdup (blk_obj_path->str);
+
+  g_string_free (blk_obj_path, TRUE);
+  return rc_str;
+}
+
+
+StoragedLinuxBlockObject *
+storaged_linux_block_object_get (GDBusObjectManager *dbus_mgr,
+                                 const char *blk_name)
+{
+  const gchar *blk_obj_path = NULL;
+  GDBusObject *dbus_obj = NULL;
+  StoragedLinuxBlockObject *std_lx_blk_obj = NULL;
+
+  blk_obj_path = storaged_linux_block_object_path_gen (blk_name);
+
+  dbus_obj = g_dbus_object_manager_get_object (dbus_mgr, blk_obj_path);
+
+  if (dbus_obj == NULL)
+    goto out;
+
+  std_lx_blk_obj =
+    STORAGED_LINUX_BLOCK_OBJECT (G_DBUS_OBJECT_SKELETON (dbus_obj));
+
+out:
+  g_free ((gchar *) blk_obj_path);
+  return std_lx_blk_obj;
 }

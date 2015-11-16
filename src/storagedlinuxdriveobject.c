@@ -433,6 +433,37 @@ storaged_linux_drive_object_get_device (StoragedLinuxDriveObject   *object,
 }
 
 /**
+ * storaged_linux_drive_object_get_mp_device:
+ * @object: A #StoragedLinuxDriveObject.
+ *
+ * Gets the multipath #StoragedLinuxDevice object associated with @object.
+ *
+ * Returns: A #StoragedLinuxDevice or %NULL. The returned object must be freed
+ * with g_object_unref().
+ */
+StoragedLinuxDevice *
+storaged_linux_drive_object_get_mp_device (StoragedLinuxDriveObject *object)
+{
+  StoragedLinuxDevice *ret = NULL;
+  GList *gl = NULL;
+
+  if ((object == NULL) ||
+      (object->devices == NULL) || (object->devices->data == NULL))
+    return NULL;
+
+  for (gl = object->devices; gl != NULL; gl = gl->next)
+    {
+      ret = gl->data;
+      if (storaged_linux_device_is_multipath (ret) == TRUE)
+        {
+          g_object_ref (ret);
+          return ret;
+        }
+    }
+  return NULL;
+}
+
+/**
  * storaged_linux_drive_object_get_block:
  * @object: A #StoragedLinuxDriveObject.
  * @get_hw: If the drive is multipath, set to %TRUE to get a path device instead of the multipath device.

@@ -43,6 +43,17 @@ gchar                      *storaged_linux_block_object_get_device_file (Storage
 void                        storaged_linux_block_object_trigger_uevent  (StoragedLinuxBlockObject  *object);
 void                        storaged_linux_block_object_reread_partition_table (StoragedLinuxBlockObject *object);
 
+
+const gchar *storaged_linux_block_object_path_gen (const char *blk_name);
+
+/*
+ * Returned memory should be freed via g_object_unref()
+ *
+ */
+StoragedLinuxBlockObject *
+storaged_linux_block_object_get (GDBusObjectManager *dbus_mgr,
+                                 const char *blk_name);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_BLOCK_OBJECT_H__ */

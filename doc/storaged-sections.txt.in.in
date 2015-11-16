@@ -1329,6 +1329,8 @@ storaged_loop_skeleton_get_type
 
 <!-- BCACHE_GENERATED_SECTIONS -->
 
+<!-- MULTIPATH_GENERATED_SECTIONS -->
+
 <SECTION>
 <FILE>storagedfstabmonitor</FILE>
 <TITLE>StoragedFstabMonitor</TITLE>

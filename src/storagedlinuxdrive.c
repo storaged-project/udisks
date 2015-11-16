@@ -959,6 +959,8 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
 
  out:
   g_clear_object (&device);
+  if (udev_dev != NULL)
+    g_object_unref (udev_dev);
 
   return ret;
 }
@@ -1654,7 +1656,6 @@ storaged_linux_device_get_udev (StoragedLinuxDevice *std_lx_dev)
     {
 
       udev = g_udev_client_query_by_sysfs_path (udev_client, slaves[i]);
-      g_object_ref (udev);
       break;
     }
   g_object_unref (udev_client);

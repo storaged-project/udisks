@@ -1,0 +1,29 @@
+## scsi_debug
+
+ * PASS: Basic querying.
+
+ * PASS: Remove mpath via "multipath -F".
+     * PASS: Add it back via "multipath -r"
+ 
+ * TODO: Resize and discover via scsi rescan(scsi_debug might not allow
+   resize, need a real multipath):
+    find /sys/class/scsi_host/*/scan \
+    -exec echo {} \;  -exec bash -c "echo '- - -' > {}" \;
+
+ * TODO: Remove a path(sdX) via "echo 1 | /sys/block/sdX/device/delete"
+    * Add it back via rescan:
+        find /sys/class/scsi_host/*/scan \
+        -exec echo {} \;  -exec bash -c "echo '- - -' > {}" \;
+
+ * TODO: Sysfs offline.
+
+ * PASS: 1k mpath performance -- finish initial in 30 seconds.
+
+## FC/FCoE
+ * TODO: dev_lose_tmo, fast dev_lose_tmo.
+
+## iSCSI
+ * TODO
+
+## Memory Leak
+ * TODO

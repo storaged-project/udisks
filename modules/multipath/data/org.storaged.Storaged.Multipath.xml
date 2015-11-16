@@ -1,0 +1,150 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2015 Gris Ge <fge@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ******************************************************************* -->
+
+  <!--
+    org.storaged.Storaged.Drive.Multipath:
+    @short_description: Multipath interface exported on disk objects
+  -->
+  <interface name="org.storaged.Storaged.Drive.Multipath">
+    <!-- Multipath:
+        If the disk drive is multipath device, this is set to the
+        org.storaged.Storaged.Multipath object that it corresponds to. It is
+        '/' otherwise.
+    -->
+    <property name="Multipath" type="o" access="read"/>
+  </interface>
+  <!--
+    org.storaged.Storaged.Block.Multipath:
+    @short_description: Multipath interface exported on block objects
+  -->
+  <interface name="org.storaged.Storaged.Block.Multipath">
+    <!-- Path:
+        If the block is a multipath device slave, this is set to the
+        org.storaged.Storaged.Multipath.PathGroup.Path object that it
+        corresponds to. It is '/' otherwise.
+    -->
+    <property name="Path" type="o" access="read"/>
+    <!-- Multipath:
+        If block is(or part of) multipath device, this is set to the
+        org.storaged.Storaged.Multipath object that it corresponds to. It is
+        '/' otherwise.
+    -->
+    <property name="Multipath" type="o" access="read"/>
+  </interface>
+  <!--
+    org.storaged.Storaged.Multipath:
+    @short_description: A multipath device.
+  -->
+  <interface name="org.storaged.Storaged.Multipath">
+    <!-- WWID:
+        The WWID of certain multipath device(mpath).
+        It depends on "getuid_callout" configuration of multipathd.
+        Normally, it's SCSI VPD page 0x83 device ID or SCSI VPD page
+        0x80(rare) device ID of the disk device.
+    -->
+    <property name="WWID" type="s" access="read"/>
+    <!-- Name:
+        The alias of certain multipath device. For example: "mpatha".
+        TODO: Allow change this property.
+    -->
+    <property name="Name" type="s" access="read"/>
+    <!-- Block:
+        This is set to the org.storaged.Storaged.Block object.
+        TODO: Not supported yet.
+    -->
+    <property name="Block" type="o" access="read"/>
+  </interface>
+  <!--
+    org.storaged.Storaged.Multipath.PathGroup:
+    @short_description: A path group of multipath device.
+  -->
+  <interface name="org.storaged.Storaged.Multipath.PathGroup">
+    <!-- ID:
+        The ID of path group.
+    -->
+    <property name="ID" type="x" access="read"/>
+    <!-- Status:
+        The status of multipath path group. Should be one of these values:
+            "ENABLED": (TODO) This path group is standing by in case other
+                       group disabled or gone.
+            "ACTIVE": This path group is chose for I/O.
+            "DISABLED": (TODO) This patch group is disabled due to path
+                       failure or other failure.
+            "UNKNOWN": Unknwn status.
+    -->
+    <property name="Status" type="s" access="read"/>
+    <!-- Priority:
+        The priority of multipath path group. The enabled path group with
+        highest priority will be chosed to be next active group if
+        current active group failed.
+    -->
+    <property name="Priority" type="n" access="read"/>
+    <!-- Selector:
+        The selector of multipath path group. Should be one of these values:
+        TODO:
+            "round-robin 0"
+            "service-time 0"
+            "queue-length 0"
+    -->
+    <property name="Selector" type="s" access="read"/>
+  </interface>
+  <!--
+    org.storaged.Storaged.Multipath.PathGroup.Path:
+    @short_description: A path of multipath path group device.
+  -->
+  <interface name="org.storaged.Storaged.Multipath.PathGroup.Path">
+    <!-- Block:
+        This is set to the org.storaged.Storaged.Block object.
+    -->
+    <property name="Block" type="o" access="read"/>
+    <!-- Status:
+        The status of this path provide by path checker. Should be one of
+        these values:
+            "UNKNOWN"
+            "UNCHECKED"
+            "DOWN"
+            "UP"
+            "SHAKY"
+            "GHOST"
+            "PENDING"
+            "TIMEOUT"
+            "REMOVED"
+            "DELAYED"
+        TODO: Abstract status, dm_status, checker_status into this one
+    -->
+    <property name="Status" type="s" access="read"/>
+    <!-- Name:
+        The block name of this mpath path. Example: 'sdb' or 'nvme0n1'
+    -->
+    <property name="Name" type="s" access="read"/>
+  </interface>
+  <!--
+    org.storaged.Storaged.Manager.Multipath:
+    @short_description: Multipath add-on to the manager singleton
+  -->
+  <interface name="org.storaged.Storaged.Manager.Multipath">
+  </interface>
+</node>

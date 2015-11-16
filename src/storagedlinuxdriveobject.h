@@ -58,6 +58,9 @@ gboolean                  storaged_linux_drive_object_should_include_device (GUd
                                                                              StoragedLinuxDevice  *device,
                                                                              gchar               **out_vpd);
 
+StoragedLinuxDevice *
+storaged_linux_drive_object_get_mp_device (StoragedLinuxDriveObject *object);
+
 
 G_END_DECLS
 

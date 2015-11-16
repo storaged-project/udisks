@@ -56,6 +56,14 @@ gboolean             storaged_linux_device_reprobe_sync (StoragedLinuxDevice  *d
                                                          GCancellable         *cancellable,
                                                          GError              **error);
 
+/*
+ * Return multipath name if provided device is multipath or multipath slave.
+ * Returned memory should be freeed via g_free().
+ * Return NULL if not multipath or multipath slave.
+ */
+const gchar *
+storaged_linux_device_multipath_name (StoragedLinuxDevice *std_lx_dev);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_DEVICE_H__ */

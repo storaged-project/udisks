@@ -379,6 +379,7 @@
       <!-- BTRFS_DBUS_INTERFACE -->
       <!-- ZRAM_DBUS_INTERFACE -->
       <!-- BCACHE_DBUS_INTERFACE -->
+      <!-- MULTIPATH_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -409,6 +410,7 @@
       <!-- BTRFS_GENERATED_CODE -->
       <!-- ZRAM_GENERATED_CODE -->
       <!-- BCACHE_GENERATED_CODE -->
+      <!-- MULTIPATH_GENERATED_CODE -->
     </chapter>
   </part>
 

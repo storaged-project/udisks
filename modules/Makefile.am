@@ -30,4 +30,8 @@ if HAVE_BCACHE
 SUBDIRS += bcache
 endif # HAVE_BCACHE
 
+if HAVE_MULTIPATH
+SUBDIRS += multipath
+endif # HAVE_MULTIPATH
+
 NULL =

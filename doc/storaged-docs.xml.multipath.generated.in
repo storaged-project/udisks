@@ -1,0 +1,3 @@
+      <xi:include href="../doc/xml/StoragedManagerMultipath.xml"/>
+      <xi:include href="../doc/xml/StoragedDriveMultipath.xml"/>
+      <xi:include href="../doc/xml/StoragedBlockMultipath.xml"/>

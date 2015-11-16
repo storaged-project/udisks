@@ -1,0 +1,6 @@
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Manager.Multipath.xml"/>
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Drive.Multipath.xml"/>
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Block.Multipath.xml"/>
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Multipath.xml"/>
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Multipath.PathGroup.xml"/>
+      <xi:include href="../modules/multipath/doc_generated-org.storaged.Storaged.Multipath.PathGroup.Path.xml"/>
