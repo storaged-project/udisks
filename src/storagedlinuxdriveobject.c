@@ -423,8 +423,9 @@ storaged_linux_drive_object_get_device (StoragedLinuxDriveObject   *object,
                                         gboolean                    get_hw)
 {
   StoragedLinuxDevice *ret = NULL;
+  GList *devices = NULL;
 
-  for (GList *devices = object->devices; devices; devices = devices->next)
+  for (devices = object->devices; devices; devices = devices->next)
     {
       if (!get_hw || !is_dm_multipath (STORAGED_LINUX_DEVICE (devices->data)))
         {
