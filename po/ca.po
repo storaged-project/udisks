@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 14:34+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2015-11-24 16:42+0100\n"
 "PO-Revision-Date: 2015-09-07 06:02-0400\n"
 "Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
 "Language-Team: Catalan\n"
 "Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Zanata 3.7.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
@@ -109,7 +109,7 @@ msgstr "Gestiona els dispositius de bucles"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/storagedlinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
@@ -213,8 +213,7 @@ msgid "Modify a system device"
 msgstr "Modifica un dispositiu de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:41
-msgid ""
-"Authentication is required to modify a device plugged into another seat"
+msgid "Authentication is required to modify a device plugged into another seat"
 msgstr ""
 "Es requereix autenticació per modificar una unitat endollada a un altre "
 "assentament"
@@ -249,8 +248,7 @@ msgstr "Es requereix autenticació per modificar la configuració sistèmica"
 
 #: ../data/org.storaged.Storaged.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide "
-"configuration"
+"Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "Es requereix autenticació per recobrar els secrets de la configuració "
 "sistèmica"
@@ -333,7 +331,7 @@ msgid "Cancel job"
 msgstr "Cancel·la el treball"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:69 ../src/storagedbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Es requereix autenticació per cancel·lar un treball"
@@ -347,6 +345,31 @@ msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Es requereix autenticació per cancel·lar un treball iniciat per un altre "
 "usuari"
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:1
+#, fuzzy
+msgid "Manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:246
+#, fuzzy
+msgid "Authentication is required to destroy bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:289
+#, fuzzy
+msgid "Authentication is required to set mode of bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxmanagerbcache.c:217
+#, fuzzy
+msgid "Authentication is required to create bcache device."
+msgstr ""
 
 #: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -390,77 +413,59 @@ msgid "Authentication is required to manage iSCSI"
 msgstr "Es requereix autenticació per gestionar l'iSCSI"
 
 #: ../modules/iscsi/storagedlinuxiscsisession.c:134
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:687
 msgid "Authentication is required to perform iSCSI logout"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxiscsisession.c:164
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#: ../modules/iscsi/storagedlinuxiscsisession.c:167
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:712
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:302
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:408
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:322
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:380
 msgid "Authentication is required change iSCSI initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:388
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:425
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:516
 msgid "Authentication is required to discover targets"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:540
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:589
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
-msgid "Username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
-msgid "Password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
-msgid "Reverse username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
-msgid "Reverse password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:574
 msgid "Authentication is required to discover firmware targets"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
 msgid "Authentication is required to perform iSCSI login"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:651
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -530,13 +535,11 @@ msgstr "Es requereix autenticació per reanomenar un grup de volums"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
-"Es requereix autenticació per afegir un dispositiu a un grup de volums"
+msgstr "Es requereix autenticació per afegir un dispositiu a un grup de volums"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
-"Es requereix autenticació per treure un dispositiu d'un grup de volums"
+msgstr "Es requereix autenticació per treure un dispositiu d'un grup de volums"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
@@ -574,18 +577,18 @@ msgstr "Es requereix autenticació per cancel·lar un treball"
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr "Es requereix autenticació per reanomenar un volum lògic"
 
-#: ../modules/zram/storagedlinuxblockzram.c:253
+#: ../modules/zram/storagedlinuxblockzram.c:255
 msgid "Authentication is required to enable zRAM device"
 msgstr ""
 
-#: ../modules/zram/storagedlinuxblockzram.c:344
+#: ../modules/zram/storagedlinuxblockzram.c:346
 msgid "Authentication is required to disable zRAM device"
 msgstr ""
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#. 
+#.
 #: ../src/storagedlinuxblock.c:1195
 msgid "Authentication is required to read system-level secrets"
 msgstr "Es requereix autenticació per llegir els secrets a nivell sistemàtic"
@@ -604,8 +607,7 @@ msgstr ""
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/storagedlinuxblock.c:1942
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr ""
-"Es requereix autenticació per treure una entrada del fitxer /etc/fstab"
+msgstr "Es requereix autenticació per treure una entrada del fitxer /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
 #: ../src/storagedlinuxblock.c:1960
@@ -630,13 +632,13 @@ msgstr "Es requereix autenticació per modificar el fitxer /etc/crypttab"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
@@ -648,7 +650,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2831
 msgid "Authentication is required to format $(drive)"
 msgstr "Es requereix autenticació per formatar $(drive)"
@@ -667,7 +669,7 @@ msgstr "Es dóna format al dispositiu"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3364
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Es requereix autenticació per obrir $(drive) per a la lectura"
@@ -677,7 +679,7 @@ msgstr "Es requereix autenticació per obrir $(drive) per a la lectura"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3428
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Es requereix autenticació per obrir $(drive) per a l'escriptura"
@@ -687,7 +689,7 @@ msgstr "Es requereix autenticació per obrir $(drive) per a l'escriptura"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3494
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
@@ -698,7 +700,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3555
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Es requereix autenticació per reescanejar $(drive)"
@@ -708,7 +710,7 @@ msgstr "Es requereix autenticació per reescanejar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "Es requereix autenticació per expulsar $(drive)"
@@ -718,7 +720,7 @@ msgstr "Es requereix autenticació per expulsar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "Es requereix autenticació per configurar els ajustos per a $(drive)"
@@ -728,7 +730,7 @@ msgstr "Es requereix autenticació per configurar els ajustos per a $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "Es requereix autenticació per aturar $(drive)"
@@ -738,7 +740,7 @@ msgstr "Es requereix autenticació per aturar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:808
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Es requereix autenticació per actualitzar les dades SMART de $(drive)"
@@ -748,7 +750,7 @@ msgstr "Es requereix autenticació per actualitzar les dades SMART de $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:819
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
@@ -760,7 +762,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:953
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
@@ -771,7 +773,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1203
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
@@ -782,7 +784,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1290
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
@@ -793,7 +795,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Es requereix autenticació per ficar $(drive) en mode de suspensió"
@@ -803,18 +805,17 @@ msgstr "Es requereix autenticació per ficar $(drive) en mode de suspensió"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr ""
-"Es requereix autenticació per despertar $(drive) del mode de suspensió"
+msgstr "Es requereix autenticació per despertar $(drive) del mode de suspensió"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Es requereix autenticació per habilitar SMART en $(drive)"
@@ -824,7 +825,7 @@ msgstr "Es requereix autenticació per habilitar SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Es requereix autenticació per inhabilitar SMART en $(drive)"
@@ -834,7 +835,7 @@ msgstr "Es requereix autenticació per inhabilitar SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
@@ -846,7 +847,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
@@ -860,7 +861,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Es requereix autenticació per muntar $(drive)"
@@ -874,7 +875,7 @@ msgstr "Es requereix autenticació per muntar $(drive)"
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
@@ -892,7 +893,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
@@ -907,7 +908,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
@@ -918,7 +919,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
@@ -931,7 +932,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr ""
@@ -943,7 +944,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
@@ -951,7 +952,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
@@ -959,7 +960,7 @@ msgstr "Es requereix autenticació per crear la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
@@ -967,7 +968,7 @@ msgstr "Es requereix autenticació per iniciar la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
@@ -975,16 +976,15 @@ msgstr "Es requereix autenticació per aturar la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
-"Es requereix autenticació per eliminar un dispositiu de la matriu RAID"
+msgstr "Es requereix autenticació per eliminar un dispositiu de la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
@@ -992,7 +992,7 @@ msgstr "Es requereix autenticació per afegir un dispositiu a la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1374
 msgid ""
@@ -1002,11 +1002,10 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1498
-msgid ""
-"Authentication is required to start/stop data scrubbing of a RAID array"
+msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
 #: ../src/storagedlinuxmdraid.c:1590
@@ -1018,20 +1017,19 @@ msgstr "Es requereix autenticació per eliminar una matriu RAID"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
 #: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
-"Es requereix autenticació per modificar la partició en el dispositiu "
-"$(drive)"
+"Es requereix autenticació per modificar la partició en el dispositiu $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Es requereix autenticació per eliminar la partició $(drive)"
@@ -1041,7 +1039,7 @@ msgstr "Es requereix autenticació per eliminar la partició $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Es requereix autenticació per crear una partició en $(drive)"
@@ -1051,7 +1049,7 @@ msgstr "Es requereix autenticació per crear una partició en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr "Es requereix autenticació per activar l'àrea d'intercanvi a $(drive)"
@@ -1061,7 +1059,7 @@ msgstr "Es requereix autenticació per activar l'àrea d'intercanvi a $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
@@ -1075,7 +1073,7 @@ msgstr "Arrencada"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -1083,7 +1081,7 @@ msgstr "Sistema"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1091,7 +1089,7 @@ msgstr ""
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1099,7 +1097,7 @@ msgstr "Només lectura"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1107,7 +1105,7 @@ msgstr "Oculta"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
@@ -1176,7 +1174,7 @@ msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1185,7 +1183,7 @@ msgstr "%s (%s bytes)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1248,7 +1246,7 @@ msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
@@ -1256,7 +1254,7 @@ msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
@@ -1264,7 +1262,7 @@ msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -1272,7 +1270,7 @@ msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1571,7 +1569,7 @@ msgstr "Membre del VMFS"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#. 
+#.
 #: ../storaged/storagedclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1580,7 +1578,7 @@ msgstr "Desconegut (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#. 
+#.
 #: ../storaged/storagedclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1588,7 +1586,7 @@ msgid "Unknown (%s)"
 msgstr "Desconegut (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#. 
+#.
 #: ../storaged/storagedclient.c:2045 ../storaged/storagedclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -2526,7 +2524,7 @@ msgstr "Dispositiu de blocs"
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2536,7 +2534,7 @@ msgstr "Partició %u de %s"
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2555,7 +2553,7 @@ msgstr "Dispositiu de bucles"
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2566,7 +2564,7 @@ msgstr "Partició %u de %s"
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2611,7 +2609,7 @@ msgstr "Matriu RAID"
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2621,7 +2619,7 @@ msgstr "%s %s"
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2632,7 +2630,7 @@ msgstr "Partició %u de %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
@@ -2642,7 +2640,7 @@ msgstr "%s — %s (%s)"
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
@@ -2653,7 +2651,7 @@ msgstr "%s — %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
@@ -2663,7 +2661,7 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
@@ -2749,7 +2747,7 @@ msgstr "Lector de targetes %s"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2757,7 +2755,7 @@ msgid "%s %s Drive"
 msgstr "Unitat de %s %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2788,7 +2786,7 @@ msgstr "%s d'àudio"
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2800,7 +2798,7 @@ msgstr "Partició %u de %s"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
@@ -2811,7 +2809,7 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
