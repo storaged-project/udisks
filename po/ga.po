@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 14:34+0200\n"
+"POT-Creation-Date: 2015-11-24 16:42+0100\n"
 "PO-Revision-Date: 2014-03-12 19:53+0000\n"
 "Last-Translator: davidz <zeuthen@gmail.com>\n"
 "Language: ga\n"
@@ -321,6 +321,26 @@ msgstr ""
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:1
+msgid "Manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:2
+msgid "Authentication is required to manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:246
+msgid "Authentication is required to destroy bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:289
+msgid "Authentication is required to set mode of bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxmanagerbcache.c:217
+msgid "Authentication is required to create bcache device."
+msgstr ""
+
 #: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
 msgstr ""
@@ -363,77 +383,59 @@ msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/storagedlinuxiscsisession.c:134
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:687
 msgid "Authentication is required to perform iSCSI logout"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxiscsisession.c:164
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#: ../modules/iscsi/storagedlinuxiscsisession.c:167
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:712
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:302
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:408
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:322
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:380
 msgid "Authentication is required change iSCSI initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:388
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:425
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:516
 msgid "Authentication is required to discover targets"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:540
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:589
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
-msgid "Username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
-msgid "Password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
-msgid "Reverse username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
-msgid "Reverse password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:574
 msgid "Authentication is required to discover firmware targets"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
 msgid "Authentication is required to perform iSCSI login"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:651
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -541,11 +543,11 @@ msgstr ""
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr ""
 
-#: ../modules/zram/storagedlinuxblockzram.c:253
+#: ../modules/zram/storagedlinuxblockzram.c:255
 msgid "Authentication is required to enable zRAM device"
 msgstr ""
 
-#: ../modules/zram/storagedlinuxblockzram.c:344
+#: ../modules/zram/storagedlinuxblockzram.c:346
 msgid "Authentication is required to disable zRAM device"
 msgstr ""
 

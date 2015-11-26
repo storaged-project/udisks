@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Matej Urbančič <>, 2012
 # Martin Srebotnjak <miles@filmsi.net>, 2012-2014
@@ -10,16 +10,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 14:34+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2015-11-24 16:42+0100\n"
 "PO-Revision-Date: 2014-03-18 07:49-0400\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian\n"
 "Language: sl\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
-"n%100==4 ? 2 : 3);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
 "X-Generator: Zanata 3.7.1\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
@@ -113,7 +113,7 @@ msgstr "Upravljaj z zančnimi napravami"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/storagedlinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
@@ -215,8 +215,7 @@ msgid "Modify a system device"
 msgstr "Spremeni sistemsko napravo"
 
 #: ../data/org.storaged.Storaged.policy.in.h:41
-msgid ""
-"Authentication is required to modify a device plugged into another seat"
+msgid "Authentication is required to modify a device plugged into another seat"
 msgstr "Za spremembo naprave, vtaknjene v drugo režo, je potrebno overjanje"
 
 #: ../data/org.storaged.Storaged.policy.in.h:42
@@ -249,8 +248,7 @@ msgstr "Za spreminjanje sistemskih overitev je zahtevana overitev."
 
 #: ../data/org.storaged.Storaged.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide "
-"configuration"
+"Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "Za pridobitev skrivnosti s sistemske prilagoditve je zahtevana overitev."
 
@@ -333,7 +331,7 @@ msgid "Cancel job"
 msgstr "Prekliči opravilo"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:69 ../src/storagedbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Za preklic opravila je potrebna overitev."
@@ -346,6 +344,31 @@ msgstr "Prekliči opravilo, ki ga je zagnal drug uporabnik"
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Za preklic opravila, ki ga je zagnal drug uporabnik, je potrebna overitev."
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:1
+#, fuzzy
+msgid "Manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:246
+#, fuzzy
+msgid "Authentication is required to destroy bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:289
+#, fuzzy
+msgid "Authentication is required to set mode of bcache device."
+msgstr ""
+
+#: ../modules/bcache/storagedlinuxmanagerbcache.c:217
+#, fuzzy
+msgid "Authentication is required to create bcache device."
+msgstr ""
 
 #: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -396,82 +419,64 @@ msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/storagedlinuxiscsisession.c:134
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:687
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "Za formatiranje pogona $(drive) je potrebna overitev."
 
-#: ../modules/iscsi/storagedlinuxiscsisession.c:164
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#: ../modules/iscsi/storagedlinuxiscsisession.c:167
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:712
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:302
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:408
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:322
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:380
 #, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "Za upravljanje s polji RAID je potrebna overitev"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:388
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:425
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:516
 #, fuzzy
 msgid "Authentication is required to discover targets"
 msgstr "Za izklop pogona je potrebna overitev"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:540
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:589
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
-msgid "Username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
-msgid "Password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
-msgid "Reverse username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
-msgid "Reverse password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:574
 #, fuzzy
 msgid "Authentication is required to discover firmware targets"
 msgstr "Za izklop pogona je potrebna overitev"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
 #, fuzzy
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Za izklop pogona je potrebna overitev"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:651
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -588,12 +593,12 @@ msgstr "Za preklic opravila je potrebna overitev."
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr "Za odpiranje naprave je zahtevana overitev."
 
-#: ../modules/zram/storagedlinuxblockzram.c:253
+#: ../modules/zram/storagedlinuxblockzram.c:255
 #, fuzzy
 msgid "Authentication is required to enable zRAM device"
 msgstr "Za odpiranje naprave je zahtevana overitev."
 
-#: ../modules/zram/storagedlinuxblockzram.c:344
+#: ../modules/zram/storagedlinuxblockzram.c:346
 #, fuzzy
 msgid "Authentication is required to disable zRAM device"
 msgstr "Za spreminjanje naprave je zahtevana overitev."
@@ -601,7 +606,7 @@ msgstr "Za spreminjanje naprave je zahtevana overitev."
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#. 
+#.
 #: ../src/storagedlinuxblock.c:1195
 msgid "Authentication is required to read system-level secrets"
 msgstr "Za branje skrivnosti na ravni sistema je potrebna overitev."
@@ -644,13 +649,13 @@ msgstr "Za spreminjanje datoteke /etc/crypttab je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Za izvedbo varnega brisanja pogona $(drive) je potrebna overitev."
@@ -661,7 +666,7 @@ msgstr "Za izvedbo varnega brisanja pogona $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2831
 msgid "Authentication is required to format $(drive)"
 msgstr "Za formatiranje pogona $(drive) je potrebna overitev."
@@ -680,7 +685,7 @@ msgstr "Formatiranje naprave"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3364
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Za odpiranje pogona $(drive) za branje je potrebna overitev."
@@ -690,7 +695,7 @@ msgstr "Za odpiranje pogona $(drive) za branje je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3428
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Za odpiranje pogona $(drive) za pisanje je potrebna overitev."
@@ -700,7 +705,7 @@ msgstr "Za odpiranje pogona $(drive) za pisanje je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3494
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "Za odpiranje $(drive) za primerjalni preskus je potrebna overitev."
@@ -710,7 +715,7 @@ msgstr "Za odpiranje $(drive) za primerjalni preskus je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3555
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Overjanje je potrebno za ponovno preiskovanje "
@@ -720,7 +725,7 @@ msgstr "Overjanje je potrebno za ponovno preiskovanje "
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "Za izmet $(drive) je potrebna overitev."
@@ -730,7 +735,7 @@ msgstr "Za izmet $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "Za prilagoditev nastavitev pogona $(drive) je potrebna overitev."
@@ -740,7 +745,7 @@ msgstr "Za prilagoditev nastavitev pogona $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "Za izklop pogona $(drive) je potrebna overitev"
@@ -750,7 +755,7 @@ msgstr "Za izklop pogona $(drive) je potrebna overitev"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:808
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Za posodobitev podatkov SMART s pogona $(drive) je potrebna overitev."
@@ -760,7 +765,7 @@ msgstr "Za posodobitev podatkov SMART s pogona $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:819
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
@@ -772,7 +777,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:953
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
@@ -783,7 +788,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1203
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr "Za samopreizkus SMART na $(drive) je potrebna overitev."
@@ -793,7 +798,7 @@ msgstr "Za samopreizkus SMART na $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1290
 msgid "Authentication is required to check power state for $(drive)"
 msgstr "Za preverjanje stanja napajanja za $(drive) je potrebna overitev."
@@ -803,7 +808,7 @@ msgstr "Za preverjanje stanja napajanja za $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Za prehod $(drive) v način pripravljenosti je potrebna overitev."
@@ -813,7 +818,7 @@ msgstr "Za prehod $(drive) v način pripravljenosti je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr "Za izhod $(drive) iz načina pripravljenosti je potrebna overitev."
@@ -823,7 +828,7 @@ msgstr "Za izhod $(drive) iz načina pripravljenosti je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Za vklop SMART na pogonu $(drive) je potrebna overitev"
@@ -833,7 +838,7 @@ msgstr "Za vklop SMART na pogonu $(drive) je potrebna overitev"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Za izklop SMART na pogonu $(drive) je potrebna overitev"
@@ -843,7 +848,7 @@ msgstr "Za izklop SMART na pogonu $(drive) je potrebna overitev"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "Za odklepanje širirane naprave $(drive) je potrebna overitev."
@@ -854,7 +859,7 @@ msgstr "Za odklepanje širirane naprave $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
@@ -868,7 +873,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Za priklop $(drive) je potrebna overitev."
@@ -882,7 +887,7 @@ msgstr "Za priklop $(drive) je potrebna overitev."
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
@@ -899,7 +904,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
@@ -913,7 +918,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
@@ -925,7 +930,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
@@ -938,7 +943,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Za brisanje zančne naprave $(drive) je zahtevana overitev."
@@ -949,14 +954,14 @@ msgstr "Za brisanje zančne naprave $(drive) je zahtevana overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Za spreminjanje zančne naprave $(drive) je zahtevana overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
@@ -964,7 +969,7 @@ msgstr "Za ustvarjanje polja RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
@@ -972,7 +977,7 @@ msgstr "Za zagon polja RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
@@ -980,7 +985,7 @@ msgstr "Za ustavitev polja RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
@@ -988,7 +993,7 @@ msgstr "Za odstranitev naprave iz polja RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
@@ -996,23 +1001,21 @@ msgstr "Za dodajanje naprave polju RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
-"Za prilagajanje bitne slike namena pisanja na polju RAID je potrebna "
-"overitev"
+"Za prilagajanje bitne slike namena pisanja na polju RAID je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1498
-msgid ""
-"Authentication is required to start/stop data scrubbing of a RAID array"
+msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Za zagon/ustavitev prečesovanja podatkov polja RAID je potrebna overitev"
 
@@ -1025,7 +1028,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
 #: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
@@ -1036,7 +1039,7 @@ msgstr "Za spreminjanje razdelka na pogonu $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Za brisanje razdelka s pogona $(drive) je potrebna overitev."
@@ -1046,7 +1049,7 @@ msgstr "Za brisanje razdelka s pogona $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Za ustvarjanje razdelka na pogonu $(drive) je potrebna overitev."
@@ -1056,19 +1059,18 @@ msgstr "Za ustvarjanje razdelka na pogonu $(drive) je potrebna overitev."
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
 "Za aktiviranje nadomestnega prostora na pogonu $(drive) je potrebna overitev."
-""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr "Za izklop izmenjevalnega prostora na $(drive) je potrebna overitev."
@@ -1081,7 +1083,7 @@ msgstr "Zagonsko"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -1089,7 +1091,7 @@ msgstr "Sistemsko"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1097,7 +1099,7 @@ msgstr "Opuščeno zagonsko BIOS"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1105,7 +1107,7 @@ msgstr "Samo za branje"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1113,7 +1115,7 @@ msgstr "Skrito"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
@@ -1182,7 +1184,7 @@ msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1191,7 +1193,7 @@ msgstr "%s (%s bajtov)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1254,7 +1256,7 @@ msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
@@ -1262,7 +1264,7 @@ msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
@@ -1270,7 +1272,7 @@ msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -1278,7 +1280,7 @@ msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1576,7 +1578,7 @@ msgstr "Član VMFS"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#. 
+#.
 #: ../storaged/storagedclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1585,7 +1587,7 @@ msgstr "Neznano (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#. 
+#.
 #: ../storaged/storagedclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1593,7 +1595,7 @@ msgid "Unknown (%s)"
 msgstr "Neznano (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#. 
+#.
 #: ../storaged/storagedclient.c:2045 ../storaged/storagedclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -2531,7 +2533,7 @@ msgstr "Blokovna naprava"
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2541,7 +2543,7 @@ msgstr "Razdelek %d od %s"
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2560,7 +2562,7 @@ msgstr "Zankana naprava"
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2571,7 +2573,7 @@ msgstr "Razdelek %d od %s"
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2616,7 +2618,7 @@ msgstr "Polje RAID"
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2626,7 +2628,7 @@ msgstr "%s %s"
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2637,7 +2639,7 @@ msgstr "Razdelek %d od %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
@@ -2647,7 +2649,7 @@ msgstr "%s — %s (%s)"
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
@@ -2658,7 +2660,7 @@ msgstr "%s — %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
@@ -2668,7 +2670,7 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
@@ -2754,7 +2756,7 @@ msgstr "Bralnik kartic %s"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2762,7 +2764,7 @@ msgid "%s %s Drive"
 msgstr "Pogon %s %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2793,7 +2795,7 @@ msgstr "Zvokovno - %s"
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2805,7 +2807,7 @@ msgstr "Razdelek %d od %s"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
@@ -2816,7 +2818,7 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"

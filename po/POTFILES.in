@@ -2,6 +2,9 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
 data/org.storaged.Storaged.policy.in
+modules/bcache/data/org.storaged.Storaged.bcache.policy.in
+modules/bcache/storagedlinuxblockbcache.c
+modules/bcache/storagedlinuxmanagerbcache.c
 modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in
 modules/btrfs/storagedlinuxfilesystembtrfs.c
 modules/btrfs/storagedlinuxmanagerbtrfs.c

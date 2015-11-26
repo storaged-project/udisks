@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2012-2013
 # Lasse Liehu <larso@gmx.com>, 2014
@@ -10,14 +10,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 14:34+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2015-11-24 16:42+0100\n"
 "PO-Revision-Date: 2014-11-18 09:14-0500\n"
 "Last-Translator: Lasse Liehu <larso@gmx.com>\n"
 "Language-Team: Finnish\n"
 "Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 3.7.1\n"
 
@@ -107,7 +107,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/storagedlinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
@@ -203,8 +203,7 @@ msgid "Modify a system device"
 msgstr "Muokkaa järjestelmälaitetta"
 
 #: ../data/org.storaged.Storaged.policy.in.h:41
-msgid ""
-"Authentication is required to modify a device plugged into another seat"
+msgid "Authentication is required to modify a device plugged into another seat"
 msgstr ""
 
 #: ../data/org.storaged.Storaged.policy.in.h:42
@@ -237,8 +236,7 @@ msgstr "Tunnistautuminen vaaditaan järjestelmän laajuisia muutoksia varten"
 
 #: ../data/org.storaged.Storaged.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide "
-"configuration"
+"Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 
 #: ../data/org.storaged.Storaged.policy.in.h:50
@@ -319,7 +317,7 @@ msgid "Cancel job"
 msgstr "Peru työ"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#. 
+#.
 #: ../data/org.storaged.Storaged.policy.in.h:69 ../src/storagedbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Tunnistautuminen vaaditaan työn perumista varten"
@@ -332,6 +330,30 @@ msgstr "Peru toisen käyttäjän aloittama työ"
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Tunnistautuminen vaaditaan toisen käyttäjän aloittaman työn perumista varten"
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:1
+msgid "Manage Bcache"
+msgstr ""
+
+#: ../modules/bcache/data/org.storaged.Storaged.bcache.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage Bcache"
+msgstr "Tunnistautuminen vaaditaan RAID-pakkojen hallintaa varten"
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:246
+#, fuzzy
+msgid "Authentication is required to destroy bcache device."
+msgstr "Tunnistautuminen vaaditaan laitteen muokkausta varten"
+
+#: ../modules/bcache/storagedlinuxblockbcache.c:289
+#, fuzzy
+msgid "Authentication is required to set mode of bcache device."
+msgstr "Tunnistautuminen vaaditaan laitteen muokkausta varten"
+
+#: ../modules/bcache/storagedlinuxmanagerbcache.c:217
+#, fuzzy
+msgid "Authentication is required to create bcache device."
+msgstr "Tunnistautuminen vaaditaan laitteen avaamiseksi"
 
 #: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -382,82 +404,64 @@ msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/storagedlinuxiscsisession.c:134
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:687
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "Tunnistautuminen vaaditaan kohteen $(drive) alustamiseksi"
 
-#: ../modules/iscsi/storagedlinuxiscsisession.c:164
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#: ../modules/iscsi/storagedlinuxiscsisession.c:167
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:712
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:302
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:408
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:322
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:380
 #, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "Tunnistautuminen vaaditaan RAID-pakkojen hallintaa varten"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:388
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:425
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:516
 #, fuzzy
 msgid "Authentication is required to discover targets"
 msgstr "Tunnistautuminen vaaditaan aseman virran sammuttamista varten"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:540
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:589
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
-msgid "Username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
-msgid "Password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
-msgid "Reverse username too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
-msgid "Reverse password too long"
-msgstr ""
-
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:574
 #, fuzzy
 msgid "Authentication is required to discover firmware targets"
 msgstr "Tunnistautuminen vaaditaan aseman virran sammuttamista varten"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
 #, fuzzy
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Tunnistautuminen vaaditaan aseman virran sammuttamista varten"
 
-#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:651
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -574,12 +578,12 @@ msgstr "Tunnistautuminen vaaditaan työn perumista varten"
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr "Tunnistautuminen vaaditaan laitteen avaamiseksi"
 
-#: ../modules/zram/storagedlinuxblockzram.c:253
+#: ../modules/zram/storagedlinuxblockzram.c:255
 #, fuzzy
 msgid "Authentication is required to enable zRAM device"
 msgstr "Tunnistautuminen vaaditaan laitteen avaamiseksi"
 
-#: ../modules/zram/storagedlinuxblockzram.c:344
+#: ../modules/zram/storagedlinuxblockzram.c:346
 #, fuzzy
 msgid "Authentication is required to disable zRAM device"
 msgstr "Tunnistautuminen vaaditaan laitteen muokkausta varten"
@@ -587,7 +591,7 @@ msgstr "Tunnistautuminen vaaditaan laitteen muokkausta varten"
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#. 
+#.
 #: ../src/storagedlinuxblock.c:1195
 msgid "Authentication is required to read system-level secrets"
 msgstr ""
@@ -595,8 +599,7 @@ msgstr ""
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/storagedlinuxblock.c:1865
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr ""
-"Tunnistautuminen vaaditaan tietueen lisäämiseksi /etc/fstab-tiedostoon"
+msgstr "Tunnistautuminen vaaditaan tietueen lisäämiseksi /etc/fstab-tiedostoon"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
 #: ../src/storagedlinuxblock.c:1883
@@ -633,18 +636,17 @@ msgstr "Tunnistautuminen vaaditaan /etc/crypttab-tiedoston muokkausta varten"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
-"Tunnistautuminen vaaditaan aseman $(drive) Secure Erase -tyhjentämistä "
-"varten"
+"Tunnistautuminen vaaditaan aseman $(drive) Secure Erase -tyhjentämistä varten"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -652,7 +654,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:2831
 msgid "Authentication is required to format $(drive)"
 msgstr "Tunnistautuminen vaaditaan kohteen $(drive) alustamiseksi"
@@ -671,7 +673,7 @@ msgstr "Alustetaan laitetta"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3364
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
@@ -681,7 +683,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3428
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
@@ -691,7 +693,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3494
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
@@ -701,7 +703,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxblock.c:3555
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
@@ -711,7 +713,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr ""
@@ -721,7 +723,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
@@ -732,7 +734,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "Tunnistautuminen vaaditaan aseman $(drive) sammuttamista varten"
@@ -742,19 +744,18 @@ msgstr "Tunnistautuminen vaaditaan aseman $(drive) sammuttamista varten"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:808
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr ""
-"Tunnistautuminen vaaditaan levyn $(drive) SMART-tietojen päivittämistä "
-"varten"
+"Tunnistautuminen vaaditaan levyn $(drive) SMART-tietojen päivittämistä varten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:819
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
@@ -764,7 +765,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:953
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
@@ -775,7 +776,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1203
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
@@ -786,7 +787,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1290
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
@@ -796,18 +797,17 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr ""
-"Tunnistautuminen vaaditaan aseman $(drive) asettamiseksi valmiustilaan"
+msgstr "Tunnistautuminen vaaditaan aseman $(drive) asettamiseksi valmiustilaan"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
@@ -817,7 +817,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr ""
@@ -829,7 +829,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr ""
@@ -841,7 +841,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
@@ -854,7 +854,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
@@ -866,7 +866,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Tunnistautuminen vaaditaan aseman $(drive) liittämistä varten"
@@ -880,7 +880,7 @@ msgstr "Tunnistautuminen vaaditaan aseman $(drive) liittämistä varten"
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
@@ -896,7 +896,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
@@ -909,7 +909,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
@@ -919,7 +919,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
@@ -932,7 +932,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr ""
@@ -943,14 +943,14 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
@@ -958,7 +958,7 @@ msgstr "Tunnistautuminen vaaditaan RAID-pakan luomista varten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
@@ -966,7 +966,7 @@ msgstr "Tunnistautuminen vaaditaan RAID-pakan käynnistystä varten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
@@ -974,7 +974,7 @@ msgstr "Tunnistautuminen vaaditaan RAID-pakan pysäyttämistä varten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
@@ -982,7 +982,7 @@ msgstr "Tunnistautuminen vaaditaan laitteen poistamiseksi RAID-pakasta"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
@@ -990,7 +990,7 @@ msgstr "Tunnistautuminen vaaditaan laitteen lisäämiseksi RAID-pakkaan"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1374
 msgid ""
@@ -1000,11 +1000,10 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#. 
+#.
 #. TODO: variables
 #: ../src/storagedlinuxmdraid.c:1498
-msgid ""
-"Authentication is required to start/stop data scrubbing of a RAID array"
+msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
 #: ../src/storagedlinuxmdraid.c:1590
@@ -1016,7 +1015,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
 #: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
@@ -1027,7 +1026,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Tunnistautuminen vaaditaan osion $(drive) poistamista varten"
@@ -1037,7 +1036,7 @@ msgstr "Tunnistautuminen vaaditaan osion $(drive) poistamista varten"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Tunnistautuminen vaaditaan osion luomiseksi laitteelle $(drive)"
@@ -1047,7 +1046,7 @@ msgstr "Tunnistautuminen vaaditaan osion luomiseksi laitteelle $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
@@ -1057,7 +1056,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/storagedlinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
@@ -1070,7 +1069,7 @@ msgstr ""
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -1078,7 +1077,7 @@ msgstr "Järjestelmä"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1086,7 +1085,7 @@ msgstr ""
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1094,7 +1093,7 @@ msgstr "Vain luku"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1102,7 +1101,7 @@ msgstr "Piilotettu"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../storaged/storagedclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
@@ -1171,7 +1170,7 @@ msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1180,7 +1179,7 @@ msgstr "%s (%s tavua)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#. 
+#.
 #: ../storaged/storagedclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1243,7 +1242,7 @@ msgstr ""
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
@@ -1251,7 +1250,7 @@ msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
@@ -1259,7 +1258,7 @@ msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -1267,7 +1266,7 @@ msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../storaged/storagedclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1565,7 +1564,7 @@ msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#. 
+#.
 #: ../storaged/storagedclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1574,7 +1573,7 @@ msgstr "Tuntematon (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#. 
+#.
 #: ../storaged/storagedclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1582,7 +1581,7 @@ msgid "Unknown (%s)"
 msgstr "Tuntematon (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#. 
+#.
 #: ../storaged/storagedclient.c:2045 ../storaged/storagedclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -2520,7 +2519,7 @@ msgstr ""
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2530,7 +2529,7 @@ msgstr "Osio %d/%s"
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2549,7 +2548,7 @@ msgstr ""
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2560,7 +2559,7 @@ msgstr "Osio %d/%s"
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2605,7 +2604,7 @@ msgstr "RAID-pakka"
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2615,7 +2614,7 @@ msgstr ""
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2626,7 +2625,7 @@ msgstr "Osio %d/%s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
@@ -2636,7 +2635,7 @@ msgstr ""
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
@@ -2647,7 +2646,7 @@ msgstr ""
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
@@ -2657,7 +2656,7 @@ msgstr ""
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
@@ -2743,7 +2742,7 @@ msgstr "Kortinlukija (%s)"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2751,7 +2750,7 @@ msgid "%s %s Drive"
 msgstr ""
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2782,7 +2781,7 @@ msgstr ""
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2794,7 +2793,7 @@ msgstr "Osio %d/%s"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
@@ -2805,7 +2804,7 @@ msgstr ""
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../storaged/storagedobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
