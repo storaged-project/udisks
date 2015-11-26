@@ -229,8 +229,8 @@ _color_run_pager (void)
     }
   else
     {
-      fclose (stdout);
-      stdout = _color_pager_out;
+      fflush (stdout);
+      dup2 (fileno(_color_pager_out), fileno(stdout));
     }
 
  out:
