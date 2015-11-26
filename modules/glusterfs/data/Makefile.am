@@ -8,7 +8,7 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 @INTLTOOL_POLICY_RULE@
 
 EXTRA_DIST =                                                                   \
-	org.storaged.Storaged.glusterfs.xml                                        \
+	org.storaged.Storaged.glusterfs.xml                                    \
 	$(polkit_in_files)                                                     \
 	$(NULL)
 

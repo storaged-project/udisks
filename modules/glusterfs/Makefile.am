@@ -63,10 +63,15 @@ libstoraged_glusterfs_la_SOURCES =                                             \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
 	storagedglusterfstypes.h                                               \
 	storagedglusterfsmoduleiface.c                                         \
+	storagedlinuxmanagerglusterfs.h                                        \
+        storagedlinuxmanagerglusterfs.c                                        \
 	storagedlinuxglusterfsvolumeobject.h                                   \
 	storagedlinuxglusterfsvolumeobject.c                                   \
+        storagedlinuxglusterfsglusterdobject.h                                 \
+        storagedlinuxglusterfsglusterdobject.c                                 \
+        storagedlinuxglusterfsglusterd.h                                       \
+        storagedlinuxglusterfsglusterd.c                                       \
         storagedlinuxglusterfsvolume.h          storagedlinuxglusterfsvolume.c \
-	storagedlinuxmanagerglusterd.h          storagedlinuxmanagerglusterd.c \
 	storagedglusterfsutils.h                storagedglusterfsutils.c       \
         storagedglusterfsinfo.h                 storagedglusterfsinfo.c        \
 	storagedglusterfsstate.h                storagedglusterfsstate.c       \

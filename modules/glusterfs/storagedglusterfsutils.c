@@ -27,7 +27,7 @@
 #include "storagedglusterfsstate.h"
 #include "storagedglusterfsinfo.h"
 #include "storagedlinuxglusterfsvolumeobject.h"
-
+#include "storagedlinuxglusterfsglusterdobject.h"
 
 GVariant *volumes_names = NULL;
 
@@ -243,5 +243,137 @@ storaged_glusterfs_volumes_update (StoragedDaemon *daemon)
   const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", "all", "--xml", NULL };
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         storaged_glusterfs_update_all_from_variant, daemon);
+}
+
+/****************************************************************************/
+
+static GDBusProxy *
+storaged_get_sddbus_proxy (const gchar *obj_path,
+                           const gchar *interface_name)
+{
+  GError *error;
+  GDBusProxy *proxy;
+
+  error = NULL;
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                         G_DBUS_PROXY_FLAGS_NONE,
+                                         NULL,
+                                         "org.freedesktop.systemd1",
+                                         obj_path,
+                                         interface_name,
+                                         NULL,
+                                         &error);
+  return proxy;
+}
+
+static gchar *
+storaged_get_path_for_service (const gchar *service_name)
+{
+  GDBusProxy *proxy;
+  GVariant *path;
+  GError *error;
+
+  const gchar *service_path;
+
+  error = NULL;
+  service_path = NULL;
+  proxy = storaged_get_sddbus_proxy ("/org/freedesktop/systemd1",
+                                     "org.freedesktop.systemd1.Manager");
+  if (proxy == NULL)
+    {
+      storaged_error ("Error creating proxy for systemd dbus: %s\n", error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  path = g_dbus_proxy_call_sync (proxy,
+                                 "GetUnit",
+                                 g_variant_new ("(s)",
+                                                service_name),
+                                 G_DBUS_CALL_FLAGS_NONE,
+                                 -1,
+                                 NULL,
+                                 &error);
+  storaged_debug ("Here after making method call");
+  if (path == NULL)
+    {
+      storaged_error ("Error trying to find DBus object corresponding to service %s: %s\n",
+                      service_name,
+                      error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  g_assert (g_variant_n_children (path) == 1);
+  service_path = g_variant_get_string (g_variant_get_child_value (path, 0), NULL);
+  storaged_info ("Service path: %s", service_path);
+
+out:
+  if (proxy != NULL)
+    g_object_unref (proxy);
+  if (path != NULL)
+    g_variant_unref (path);
+  return service_path;
+}
+
+GVariant *
+storaged_get_glusterd_info ()
+{
+  /* Check for status of glusterd.service */
+  storaged_notice ("Getting glusterd status");
+  GDBusProxy *proxy;
+  const gchar *service_path;
+  const gchar *load_state;
+  const gchar *active_state;
+  GVariantDict glusterd_info;
+
+  service_path = storaged_get_path_for_service ("glusterd.service");
+
+  if (service_path == NULL) /* glusterd.service is not yet loaded */
+    return NULL;
+
+  proxy = storaged_get_sddbus_proxy (service_path,
+                                     "org.freedesktop.systemd1.Unit");
+  if (proxy == NULL)
+    return NULL;
+
+  storaged_debug ("Object path: %s", g_dbus_proxy_get_object_path (proxy));
+
+  load_state = g_variant_get_string (g_dbus_proxy_get_cached_property (proxy, "LoadState"), NULL);
+  active_state = g_variant_get_string (g_dbus_proxy_get_cached_property (proxy, "ActiveState"), NULL);
+
+  g_variant_dict_init (&glusterd_info, NULL);
+  g_variant_dict_insert (&glusterd_info,
+                         "LoadState",
+                         "s",
+                         load_state);
+  g_variant_dict_insert (&glusterd_info,
+                         "ActiveState",
+                         "s",
+                         active_state);
+
+  if (proxy != NULL)
+    g_object_unref (proxy);
+
+  return g_variant_dict_end (&glusterd_info);
+}
+
+void
+storaged_glusterfs_daemons_update (StoragedDaemon *daemon)
+{
+  StoragedLinuxGlusterFSGlusterdObject *glusterd_obj;
+  StoragedGlusterFSState *state;
+
+  state = get_module_state (daemon);
+  glusterd_obj = storaged_glusterfs_state_get_glusterd (state);
+
+  if (glusterd_obj == NULL)
+    {
+      glusterd_obj = storaged_linux_glusterfs_glusterd_object_new (daemon);
+      storaged_glusterfs_state_set_glusterd (state, glusterd_obj);
+    }
+  g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_GLUSTERD_OBJECT (glusterd_obj), NULL);
+  storaged_debug ("Assertion passed");
+  storaged_linux_glusterfs_glusterd_object_update (glusterd_obj);
 }
 

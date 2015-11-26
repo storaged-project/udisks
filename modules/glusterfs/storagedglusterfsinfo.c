@@ -29,7 +29,7 @@ GVariantBuilder *builder;
 
 static void
 add_volume_name_to_list(xmlNode *cur)
-{ 
+{
   cur = cur->children;
   while (cur != NULL) {
     if (cur->type == XML_ELEMENT_NODE) {
@@ -52,7 +52,7 @@ get_glusterfs_volume_names(xmlNode * a_node)
       if (strcmp (cur_node->name, "volume") == 0)
         add_volume_name_to_list (cur_node);
     }
-        
+
     get_glusterfs_volume_names(cur_node->children);
   }
 }
@@ -87,7 +87,7 @@ storaged_process_glusterfs_xml_info (const gchar *xml_info)
   /*free the document */
   xmlFreeDoc(doc);
 
-  /* 
+  /*
    * Free the global variables that may
    * have been allocated by the parser.
    */
@@ -95,4 +95,3 @@ storaged_process_glusterfs_xml_info (const gchar *xml_info)
 
   return g_variant_builder_end (builder);
 }
-

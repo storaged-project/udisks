@@ -31,7 +31,7 @@
 #include "storagedglusterfsstate.h"
 #include "storagedglusterfsutils.h"
 #include "storagedglusterfsinfo.h"
-#include "storagedlinuxmanagerglusterd.h"
+#include "storagedlinuxmanagerglusterfs.h"
 #include "storagedlinuxglusterfsvolumeobject.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -81,7 +81,9 @@ storaged_module_get_drive_object_iface_setup_entries (void)
 static GDBusObjectSkeleton *
 glusterfs_object_new (StoragedDaemon *daemon)
 {
+  storaged_debug ("Called here ----------------------------------------------------------->>>>>>>>");
   storaged_glusterfs_volumes_update (daemon);
+  storaged_glusterfs_daemons_update (daemon);
   return NULL;
 }
 
@@ -100,11 +102,11 @@ storaged_module_get_object_new_funcs (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GDBusInterfaceSkeleton *
-new_manager_glusterd_iface (StoragedDaemon *daemon)
+new_manager_glusterfs_iface (StoragedDaemon *daemon)
 {
-  StoragedLinuxManagerGlusterD *manager;
+  StoragedLinuxManagerGlusterFS *manager;
 
-  manager = storaged_linux_manager_glusterd_new (daemon);
+  manager = storaged_linux_manager_glusterfs_new (daemon);
 
   return G_DBUS_INTERFACE_SKELETON (manager);
 }
@@ -115,7 +117,7 @@ storaged_module_get_new_manager_iface_funcs (void)
   StoragedModuleNewManagerIfaceFunc *funcs;
 
   funcs = g_new0 (StoragedModuleNewManagerIfaceFunc, 2);
-  funcs[0] = &new_manager_glusterd_iface;
+  funcs[0] = &new_manager_glusterfs_iface;
 
   return funcs;
 }

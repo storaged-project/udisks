@@ -25,28 +25,25 @@
   <!-- ********************************************************************** -->
 
   <!--
-      org.storaged.Storaged.Manager.GlusterD:
+      org.storaged.Storaged.Manager.GlusterFS:
       @short_description: glusterd add-on to the manager singleton
       @since: 2.1.2
 
-      Additional interface with glusterd specifics for top-level manager
+      Additional interface with glusterfs specifics for top-level manager
       singleton object located at the object path
       <literal>/org/storaged/Storaged/Manager</literal>.
   -->
-  <interface name="org.storaged.Storaged.Manager.GlusterD">
+  <interface name="org.storaged.Storaged.Manager.GlusterFS">
     <!-- prereq: org.storaged.Storaged.Manager -->
 
-    <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterD"/>
+    <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterFS"/>
 
-    <!--
-        status:
+    <method name="Reload"/>
+    <method name="GlusterdStart"/>
+    <method name="GlusterdStop"/>
 
-        Running status of glusterd daemon
-        Valid statuses: 0 = Unknown, 1 = Running, 2 = Not running
-        Unrecognized statuses should be considered equal to Unknown
-    -->
-    <property name="status" type="u" access="read"/>
-    
+    <property name="volumes" type="ao" access="readwrite"/>
+
     <!--
         VolumeCreate:
         @name: Name of the volume
@@ -63,11 +60,29 @@
         <arg name="result" direction="out" type="o"/>
     </method>
 
-    <method name="Reload"/>
-
   </interface>
 
   <!-- ********************************************************************** -->
+
+  <interface name="org.storaged.Storaged.GlusterFS.Glusterd">
+
+     <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Glusterd"/>
+
+    <!--
+        LoadState:
+
+        LoadState of glusterd.service
+    -->
+    <property name="LoadState" type="s" access="read"/>
+
+    <!--
+        ActiveState:
+
+        LoadState of glusterd.service
+    -->
+    <property name="ActiveState" type="s" access="read"/> 
+  </interface>
+
 
   <!--
       org.storaged.Storaged.GlusterFS.Volume:

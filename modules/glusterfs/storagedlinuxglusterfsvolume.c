@@ -1,7 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
  *
- * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
- * Copyright (C) 2013 Marius Vollmer <marius.vollmer@gmail.com>
+ * Copyright (C) 2015 Samikshan Bairagya <sbairagy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,7 +147,7 @@ handle_add_brick (StoragedGlusterFSVolume   *_group,
                   GDBusMethodInvocation     *invocation,
                   const gchar               *arg_brick_path)
 {
-  ;
+  return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

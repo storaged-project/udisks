@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __STORAGED_LINUX_GLUSTERFS_VOLUME_H__
-#define __STORAGED_LINUX_GLUSTERFS_VOLUME_H__
+#ifndef __STORAGED_LINUX_GLUSTERFS_GLUSTERD_H__
+#define __STORAGED_LINUX_GLUSTERFS_GLUSTERD_H__
 
 #include <src/storageddaemontypes.h>
 #include "storagedglusterfstypes.h"
@@ -27,15 +27,15 @@
 
 G_BEGIN_DECLS
 
-#define STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME         (storaged_linux_glusterfs_volume_get_type ())
-#define STORAGED_LINUX_GLUSTERFS_VOLUME(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME, StoragedLinuxGlusterFSVolume))
-#define STORAGED_IS_LINUX_GLUSTERFS_VOLUME(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME))
+#define STORAGED_TYPE_LINUX_GLUSTERFS_GLUSTERD         (storaged_linux_glusterfs_glusterd_get_type ())
+#define STORAGED_LINUX_GLUSTERFS_GLUSTERD(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_GLUSTERFS_GLUSTERD, StoragedLinuxGlusterFSGlusterd))
+#define STORAGED_IS_LINUX_GLUSTERFS_GLUSTERD(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_GLUSTERFS_GLUSTERD))
 
-GType                    storaged_linux_glusterfs_volume_get_type  (void) G_GNUC_CONST;
-StoragedGlusterFSVolume *storaged_linux_glusterfs_volume_new       (void);
-void                     storaged_linux_glusterfs_volume_update    (StoragedLinuxGlusterFSVolume  *gfs_volume,
-                                                                    GVariant                      *info);
+GType                      storaged_linux_glusterfs_glusterd_get_type  (void) G_GNUC_CONST;
+StoragedGlusterFSGlusterd *storaged_linux_glusterfs_glusterd_new       (void);
+void                       storaged_linux_glusterfs_glusterd_update    (StoragedLinuxGlusterFSGlusterd  *gfs_glusterd,
+                                                                        GVariant                        *info);
 
 G_END_DECLS
 
-#endif /* __STORAGED_LINUX_GLUSTERFS_VOLUME_H__ */
+#endif /* __STORAGED_LINUX_GLUSTERFS_GLUSTERD_H__ */

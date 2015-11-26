@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include <src/storagedlogging.h>
 #include "storagedglusterfsstate.h"
 
 struct _StoragedGlusterFSState
@@ -27,6 +28,7 @@ struct _StoragedGlusterFSState
 
   /* maps from gluster volume name to StoragedLinuxGlusterFSVolumeObject instances. */
   GHashTable *name_to_glusterfs_volume;
+  StoragedLinuxGlusterFSGlusterdObject *glusterd_obj;
 };
 
 /**
@@ -53,6 +55,7 @@ storaged_glusterfs_state_new (StoragedDaemon *daemon)
                                                                g_str_equal,
                                                                g_free,
                                                                (GDestroyNotify) g_object_unref);
+      state->glusterd_obj = NULL;
     }
 
   return state;
@@ -73,4 +76,20 @@ storaged_glusterfs_state_get_name_to_glusterfs_volume (StoragedGlusterFSState *s
 {
   g_return_val_if_fail (state, NULL);
   return state->name_to_glusterfs_volume;
+}
+
+StoragedLinuxGlusterFSGlusterdObject *
+storaged_glusterfs_state_get_glusterd (StoragedGlusterFSState *state)
+{
+  g_return_val_if_fail (state, NULL);
+  storaged_debug ("storaged_get_glusterd");
+  return state->glusterd_obj;
+}
+
+void
+storaged_glusterfs_state_set_glusterd (StoragedGlusterFSState               *state,
+                                       StoragedLinuxGlusterFSGlusterdObject *object)
+{
+  state->glusterd_obj = object;
+  storaged_debug ("state_set_glusterd");
 }

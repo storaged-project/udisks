@@ -27,8 +27,13 @@
 
 G_BEGIN_DECLS
 
-StoragedGlusterFSState                 *storaged_glusterfs_state_new  (StoragedDaemon *daemon);
-void                                    storaged_glusterfs_state_free (StoragedGlusterFSState *state);
+StoragedGlusterFSState                 *storaged_glusterfs_state_new          (StoragedDaemon *daemon);
+void                                    storaged_glusterfs_state_free         (StoragedGlusterFSState *state);
+
+StoragedLinuxGlusterFSGlusterdObject   *storaged_glusterfs_state_get_glusterd (StoragedGlusterFSState *state);
+void                                    storaged_glusterfs_state_set_glusterd (StoragedGlusterFSState *state,
+                                                                               StoragedLinuxGlusterFSGlusterdObject *object);
+
 GHashTable                             *storaged_glusterfs_state_get_name_to_glusterfs_volume (StoragedGlusterFSState *state);
 
 G_END_DECLS

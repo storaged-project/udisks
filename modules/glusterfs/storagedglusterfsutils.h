@@ -17,8 +17,8 @@
  * foundation, inc., 51 franklin st, fifth floor, boston, ma  02110-1301  usa
  */
 
-#ifndef __STORAGED_GLUSTERFS_UTILS_H__           
-#define __STORAGED_GLUSTERFS_UTILS_H__           
+#ifndef __STORAGED_GLUSTERFS_UTILS_H__
+#define __STORAGED_GLUSTERFS_UTILS_H__
 
 #include <src/storageddaemontypes.h>
 #include "storagedglusterfstypes.h"
@@ -33,6 +33,8 @@ GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
                                            gpointer user_data);
 
 void storaged_glusterfs_volumes_update (StoragedDaemon *daemon);
+void storaged_glusterfs_daemons_update (StoragedDaemon *daemon);
+GVariant *storaged_get_glusterd_info ();
 
 G_END_DECLS
 
