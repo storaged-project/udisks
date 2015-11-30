@@ -82,7 +82,6 @@ StoragedLinuxGlusterFSGlusterdObject *
 storaged_glusterfs_state_get_glusterd (StoragedGlusterFSState *state)
 {
   g_return_val_if_fail (state, NULL);
-  storaged_debug ("storaged_get_glusterd");
   return state->glusterd_obj;
 }
 
@@ -91,5 +90,4 @@ storaged_glusterfs_state_set_glusterd (StoragedGlusterFSState               *sta
                                        StoragedLinuxGlusterFSGlusterdObject *object)
 {
   state->glusterd_obj = object;
-  storaged_debug ("state_set_glusterd");
 }

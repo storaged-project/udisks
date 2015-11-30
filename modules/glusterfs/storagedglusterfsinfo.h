@@ -20,6 +20,7 @@
 #ifndef __STORAGED_GLUSTERFS_INFO_H__
 #define __STORAGED_GLUSTERFS_INFO_H__
 
-GVariant *storaged_process_glusterfs_xml_info (const gchar *xml_info);
+GVariant *storaged_process_glusterfs_volume_info (const gchar *xml_info);
+GVariant *storaged_process_glusterfs_volume_info_all (const gchar *xml_info);
 
 #endif /* __STORAGED_GLUSTERFS_INFO_H__ */

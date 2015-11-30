@@ -27,6 +27,7 @@
 #include "storagedlinuxglusterfsvolumeobject.h"
 #include "storagedlinuxglusterfsvolume.h"
 #include "storagedglusterfsutils.h"
+#include "storagedglusterfsinfo.h"
 #include "storaged-glusterfs-generated.h"
 
 struct _StoragedLinuxGlusterFSVolumeObject {
@@ -210,35 +211,42 @@ storaged_linux_glusterfs_volume_object_get_daemon (StoragedLinuxGlusterFSVolumeO
 }
 
 static void
-update_with_variant (GVariant *info,
+update_from_variant (GVariant *volume_info_xml,
                      GError *error,
                      gpointer user_data)
 {
   StoragedLinuxGlusterFSVolumeObject *object;
   StoragedDaemon *daemon;
   GDBusObjectManagerServer *manager;
+  GVariant *gfs_volume_info;
+
+  if (error != NULL)
+    {
+      storaged_warning ("Couldn't get volume info: %s", error->message);
+      return;
+    }
 
   object = user_data;
   daemon = storaged_linux_glusterfs_volume_object_get_daemon (object);
   manager = storaged_daemon_get_object_manager (daemon);
 
-  storaged_linux_glusterfs_volume_update (STORAGED_LINUX_GLUSTERFS_VOLUME (object->iface_glusterfs_volume), info);
 
-  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object)))
+  gfs_volume_info = storaged_process_glusterfs_volume_info (g_variant_get_bytestring (volume_info_xml));
+
+  storaged_linux_glusterfs_volume_update (STORAGED_LINUX_GLUSTERFS_VOLUME (object->iface_glusterfs_volume), gfs_volume_info);
+
+  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object))) {
     g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
-
+  }
   g_object_unref (object);
 }
 
 void
 storaged_linux_glusterfs_volume_object_update (StoragedLinuxGlusterFSVolumeObject *object)
 {
-  GVariant *variant;
-
-  variant = g_variant_new_string (object->name);
-  update_with_variant (variant, NULL, g_object_ref (object));
-
-  /* const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", object->name, "--xml", NULL }; */
+  const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", object->name, "--xml", NULL };
+  storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
+                                        update_from_variant, g_object_ref (object));
 }
 
 void

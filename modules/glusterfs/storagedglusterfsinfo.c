@@ -19,13 +19,14 @@
 
 #include <libxml/parser.h>
 #include <glib.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <src/storagedlogging.h>
 
 #include "storagedglusterfsinfo.h"
 
-GVariantBuilder *builder;
+GVariantBuilder *builder, *b;
 
 static void
 add_volume_name_to_list(xmlNode *cur)
@@ -57,8 +58,89 @@ get_glusterfs_volume_names(xmlNode * a_node)
   }
 }
 
+static xmlChar *
+get_val_for_key (xmlNode *cur, const xmlChar *key)
+{
+  cur = cur->children;
+  while (cur != NULL) {
+    if (cur->type == XML_ELEMENT_NODE) {
+      if (xmlStrEqual(cur->name, key) == 1)
+        return xmlNodeGetContent (cur);
+    }
+    cur = cur->next;
+  }
+  return NULL;
+}
+
+static void
+get_glusterfs_volume_info (xmlNode * a_node)
+{
+  xmlNode *cur_node = NULL;
+  gchar *name, *id;
+  int status, brickcount;
+
+  for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if (strcmp (cur_node->name, "volume") == 0) {
+        name = get_val_for_key (cur_node, "name");
+        id = get_val_for_key (cur_node, "id");
+        status = atoi (get_val_for_key (cur_node, "status"));
+        brickcount = atoi (get_val_for_key (cur_node, "brickCount"));
+
+        g_variant_builder_add(b, "{sv}", "id", g_variant_new_string (name));
+        g_variant_builder_add(b, "{sv}", "name", g_variant_new_string (id));
+        g_variant_builder_add(b, "{sv}", "status", g_variant_new_uint32 (status));
+        g_variant_builder_add(b, "{sv}", "brickCount", g_variant_new_uint32 (brickcount));
+
+        break;
+      }
+    }
+
+    get_glusterfs_volume_info (cur_node->children);
+  }
+}
+
 GVariant *
-storaged_process_glusterfs_xml_info (const gchar *xml_info)
+storaged_process_glusterfs_volume_info (const gchar *xml_info)
+{
+  xmlDoc  *doc = NULL;
+  xmlNode *cur = NULL;
+
+  LIBXML_TEST_VERSION
+  /*parse the xml string and get the DOM */
+  doc = xmlParseDoc(xml_info);
+
+  if (doc == NULL)
+    {
+      storaged_error ("error: could not parse XML doc: \n %s", xml_info);
+      return NULL;
+    }
+
+  /*Get the root element node */
+  cur = xmlDocGetRootElement(doc);
+  if (!cur)
+    {
+      storaged_error ("Could not get root element");
+    }
+
+  b = g_variant_builder_new (G_VARIANT_TYPE("a{sv}"));
+
+  get_glusterfs_volume_info (cur);
+
+  /*free the document */
+  xmlFreeDoc(doc);
+
+  /*
+   * Free the global variables that may
+   * have been allocated by the parser.
+   */
+  xmlCleanupParser();
+
+  return g_variant_builder_end (b);
+}
+
+GVariant *
+storaged_process_glusterfs_volume_info_all (const gchar *xml_info)
 {
   xmlDoc  *doc = NULL;
   xmlNode *cur = NULL;
@@ -82,6 +164,7 @@ storaged_process_glusterfs_xml_info (const gchar *xml_info)
   builder = g_variant_builder_new (G_VARIANT_TYPE("as"));
   g_variant_builder_init (builder, G_VARIANT_TYPE("as"));
 
+  /* get_glusterfs_volume_names (cur); */
   get_glusterfs_volume_names (cur);
 
   /*free the document */
@@ -95,3 +178,4 @@ storaged_process_glusterfs_xml_info (const gchar *xml_info)
 
   return g_variant_builder_end (builder);
 }
+

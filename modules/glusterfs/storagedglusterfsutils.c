@@ -187,7 +187,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 
   manager = storaged_daemon_get_object_manager (daemon);
   state = get_module_state (daemon);
-  gfs_volumes = storaged_process_glusterfs_xml_info (g_variant_get_bytestring (volume_all_info_xml)); 
+  gfs_volumes = storaged_process_glusterfs_volume_info_all (g_variant_get_bytestring (volume_all_info_xml)); 
 
   /* Remove obsolete gluster volumes */
   g_hash_table_iter_init (&gfsvol_name_iter,
