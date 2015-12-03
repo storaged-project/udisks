@@ -6,6 +6,12 @@ ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
 
 MODULE_SO = libstoraged_zram.so
 
+zramconfdir = $(libdir)/zram.conf.d
+zramconf_DATA =
+
+modprobedir = $(libdir)/modprobe.d
+modloaddir = $(libdir)/modules-load.d
+
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -17,6 +23,9 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
+        -DPACKAGE_ZRAMCONF_DIR=\""$(zramconfdir)"\"                            \
+        -DPACKAGE_MODPROBE_DIR=\""$(modprobedir)"\"                            \
+        -DPACKAGE_MODLOAD_DIR=\""$(modloaddir)"\"                              \
 	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DSTORAGED_COMPILATION                                                 \

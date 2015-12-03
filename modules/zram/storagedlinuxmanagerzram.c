@@ -20,6 +20,8 @@
 #include "config.h"
 
 #include <string.h>
+#include <errno.h>
+#include <stdio.h>
 
 #include <glib/gi18n.h>
 #include <blockdev/kbd.h>
@@ -197,6 +199,95 @@ StoragedDaemon *storaged_linux_manager_zram_get_daemon (StoragedLinuxManagerZRAM
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+create_conf_files (guint64   num_devices,
+                   guint64  *sizes,
+                   guint64  *num_streams,
+                   GError  **error)
+{
+  gboolean rval = TRUE;
+  gchar *filename;
+  gchar *contents;
+  FILE *f;
+
+  filename = g_strdup_printf ("%s/zram.conf", PACKAGE_MODLOAD_DIR);
+  contents = g_strdup ("zram\n");
+
+  if (! g_file_set_contents (filename , contents, -1, error))
+    {
+      rval = FALSE;
+      goto out;
+    }
+  g_free (contents);
+  g_free (filename);
+
+  filename = g_strdup_printf ("%s/zram.conf", PACKAGE_MODPROBE_DIR);
+  contents = g_strdup_printf ("options zram num_devices=%lu\n", num_devices);
+
+  if (! g_file_set_contents (filename , contents, -1, error))
+    {
+      rval = FALSE;
+      goto out;
+    }
+
+  for (unsigned i = 0; i < num_devices; i++)
+    {
+      g_free (filename);
+      filename = g_strdup_printf ("%s/zram%i-env", PACKAGE_ZRAMCONF_DIR, i);
+
+      f = fopen (filename, "w");
+      if (f == NULL)
+        {
+          g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+          goto out;
+        }
+      fputs ("#!/bin/bash\n\n",f);
+      fprintf (f,"ZRAM_NUM_STR=%lu\n", num_streams[i]);
+      fprintf (f,"ZRAM_DEV_SIZE=%lu\n", sizes[i]);
+      fputs ("SWAP=n\n",f);
+      fclose(f);
+    }
+out:
+  g_free (filename);
+  g_free (contents);
+  return rval;
+}
+
+static gboolean
+delete_conf_files (GError **error)
+{
+  unsigned i;
+  gchar *tmp;
+  char filename [255];
+
+  strcat (filename, PACKAGE_MODLOAD_DIR);
+  strcat (filename, "/zram.conf");
+
+  if (unlink (filename))
+    {
+      g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+      return FALSE;
+    }
+
+  filename[0] = '\0';
+  strcat (filename, PACKAGE_MODPROBE_DIR);
+  strcat (filename, "/zram.conf");
+  if (unlink (filename))
+    {
+      g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+      return FALSE;
+    }
+
+  i=0;
+  do
+    {
+      tmp = g_strdup_printf ("%s/zram%i-env", PACKAGE_ZRAMCONF_DIR, i);
+      i++;
+    }
+  while (! unlink (tmp));
+  return TRUE;
+
+}
+static gboolean
 handle_create_devices (StoragedManagerZRAM    *object,
                        GDBusMethodInvocation  *invocation,
                        guint64                 num_devices,
@@ -220,9 +311,16 @@ handle_create_devices (StoragedManagerZRAM    *object,
   sizes = (guint64*) g_variant_get_fixed_array (sizes_, &num_devices, sizeof (guint64));
   num_streams = (guint64*) g_variant_get_fixed_array (num_streams_, &num_devices, sizeof (guint64));
 
+  if (! create_conf_files (num_devices, sizes, num_streams, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   if (! bd_kbd_zram_create_devices (num_devices, sizes, num_streams, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
+      delete_conf_files (&error);
       goto out;
     }
   storaged_manager_zram_complete_create_devices(object, invocation);
@@ -252,7 +350,14 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
      g_dbus_method_invocation_take_error (invocation, error);
      goto out;
     }
-    storaged_manager_zram_complete_destroy_devices (object, invocation);
+
+  if (! delete_conf_files (&error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  storaged_manager_zram_complete_destroy_devices (object, invocation);
 out:
   return TRUE;
 }
