@@ -244,7 +244,7 @@ update_from_variant (GVariant *volume_info_xml,
 void
 storaged_linux_glusterfs_volume_object_update (StoragedLinuxGlusterFSVolumeObject *object)
 {
-  const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", object->name, "--xml", NULL };
+  const gchar *args[] = { "gluster", "volume", "info", object->name, "--xml", NULL };
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         update_from_variant, g_object_ref (object));
 }

@@ -240,7 +240,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 void
 storaged_glusterfs_volumes_update (StoragedDaemon *daemon)
 {
-  const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", "all", "--xml", NULL };
+  const gchar *args[] = { "gluster", "volume", "info", "all", "--xml", NULL };
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         storaged_glusterfs_update_all_from_variant, daemon);
 }
