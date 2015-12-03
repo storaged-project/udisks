@@ -150,3 +150,6 @@ KERNEL=="sr*", ENV{ID_VENDOR}=="SanDisk", ENV{ID_MODEL}=="Cruzer", ENV{ID_FS_LAB
 # See http://mjg59.dreamwidth.org/11285.html for more details
 #
 ENV{ID_PART_TABLE_TYPE}=="dos", ENV{ID_PART_ENTRY_TYPE}=="0x0", ENV{ID_PART_ENTRY_NUMBER}=="1", ENV{ID_FS_TYPE}=="iso9660|udf", ENV{STORAGED_IGNORE}="0"
+
+# Zram devices setup
+KERNEL=="zram[0-9]", ENV{SYSTEMD_WANTS}="zram-setup@zram%n.service", TAG+="systemd

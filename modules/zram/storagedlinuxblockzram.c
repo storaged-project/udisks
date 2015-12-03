@@ -235,6 +235,7 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
   StoragedLinuxBlockZRAM *zramblock = STORAGED_LINUX_BLOCK_ZRAM (zramblock_);
   StoragedLinuxBlockObject *object = NULL;
   gchar *dev_file = NULL;
+  gchar *filename = NULL;
   gchar *label;
   GError *error = NULL;
 
@@ -269,11 +270,19 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
     goto out;
   }
 
+  filename = g_strdup_printf("%s/%s-env", PACKAGE_ZRAMCONF_DIR, (strrchr(dev_file,'/')+1));
+  if (! set_conf_property (filename, "SWAP", "y", &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   storaged_block_zram_set_active (zramblock_, TRUE);
   storaged_block_zram_complete_activate(zramblock_,invocation);
 
 out:
   g_clear_object (&object);
+  g_free (filename);
   g_free (dev_file);
   g_free (label);
   return TRUE;
@@ -329,6 +338,7 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
   StoragedLinuxBlockZRAM *zramblock = STORAGED_LINUX_BLOCK_ZRAM (zramblock_);
   StoragedLinuxBlockObject *object = NULL;
   gchar *dev_file = NULL;
+  gchar *filename = NULL;
   GError *error = NULL;
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
@@ -359,11 +369,18 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
     goto out;
   }
 
+  if (! set_conf_property (filename, "SWAP", "n", &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   storaged_block_zram_set_active (zramblock_, FALSE);
   storaged_block_zram_complete_deactivate(zramblock_,invocation);
 
 out:
   g_clear_object (&object);
+  g_free (filename);
   g_free (dev_file);
 
   return TRUE;
