@@ -101,11 +101,11 @@ variant_reader_watch_child (GPid     pid,
 
 GPid
 storaged_glusterfs_spawn_for_variant (const gchar       **argv,
-                                           const GVariantType *type,
-                                           void (*callback) (GVariant *result,
-                                                             GError *error,
-                                                             gpointer user_data),
-                                           gpointer user_data)
+                                      const GVariantType *type,
+                                      void (*callback) (GVariant *result,
+                                                        GError *error,
+                                                        gpointer user_data),
+                                      gpointer user_data)
 {
   GError *error = NULL;                           
   struct VariantReaderData *data;                 
@@ -115,7 +115,7 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
   if (!g_spawn_async_with_pipes (NULL,            
                                  (gchar **)argv,  
                                  NULL,            
-                                 G_SPAWN_DO_NOT_REAP_CHILD,
+                                 G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
                                  NULL,
                                  NULL,            
                                  &pid,            
