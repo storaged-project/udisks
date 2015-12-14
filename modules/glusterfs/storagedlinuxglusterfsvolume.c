@@ -113,6 +113,38 @@ storaged_linux_glusterfs_volume_new (void)
                                                   NULL));
 }
 
+static void
+storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_volume,
+                                              GVariant *                   *brick_info)
+{
+  const gchar *const *obj_paths;
+  const gchar *brick_name;
+  GString *brick_obj_path;
+  const gchar **p;
+  guint n;
+
+  brick_obj_path = g_string_new ("/org/storaged/Storaged/glusterfs/brick/");
+  obj_paths = storaged_glusterfs_volume_get_bricks (STORAGED_GLUSTERFS_VOLUME (gfs_volume));
+
+  if (g_variant_lookup (brick_info, "name", "&s", &brick_name)) {
+    for (n = 0; obj_paths != NULL && obj_paths[n] != NULL; n++);
+    p = g_new0 (const gchar *, n + 2);
+
+    storaged_safe_append_to_object_path (brick_obj_path, brick_name);
+    n = 0;
+    while (obj_paths != NULL && obj_paths[n] != NULL) {
+      if (g_strcmp0 (brick_obj_path->str, obj_paths[n]) == 0)
+        return;
+      p[n] = obj_paths[n];
+      n++;
+    }
+    p[n] = brick_obj_path->str;
+    storaged_glusterfs_volume_set_bricks (STORAGED_GLUSTERFS_VOLUME (gfs_volume), p);
+    g_free (p);
+  }
+}
+
+
 /**
  * storaged_linux_glusterfs_volume_update:
  * @gfs_volume: A #StoragedLinuxGlusterFSVolume.
@@ -127,10 +159,10 @@ storaged_linux_glusterfs_volume_update (StoragedLinuxGlusterFSVolume *gfs_volume
   StoragedGlusterFSVolume *iface = STORAGED_GLUSTERFS_VOLUME (gfs_volume);
   const gchar *str;
   guint num;
+  GVariantIter *iter;
 
-  if (g_variant_lookup (info, "name", "&s", &str)) {
+  if (g_variant_lookup (info, "name", "&s", &str))
     storaged_glusterfs_volume_set_name (iface, str);
-  }
 
   if (g_variant_lookup (info, "id", "&s", &str))
     storaged_glusterfs_volume_set_id (iface, str);
@@ -140,6 +172,12 @@ storaged_linux_glusterfs_volume_update (StoragedLinuxGlusterFSVolume *gfs_volume
 
   if (g_variant_lookup (info, "brickCount", "u", &num))
     storaged_glusterfs_volume_set_brickcount (iface, num);
+
+  if (g_variant_lookup (info, "bricks", "av", &iter)) {
+    GVariant *brick_info = NULL;
+    while (g_variant_iter_loop (iter, "v", &brick_info))
+      storaged_linux_glusterfs_add_brick_to_volume (gfs_volume, brick_info);
+  }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

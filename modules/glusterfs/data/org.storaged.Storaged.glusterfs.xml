@@ -98,6 +98,7 @@
     <property name="name" type="s" access="read"/>
     <property name="id" type="s" access="read"/>
     <property name="brickcount" type="u" access="read"/>
+    <property name="bricks" type="ao" access="read"/>
 
     <!--
         status:
@@ -134,17 +135,9 @@
   -->
   <interface name="org.storaged.Storaged.GlusterFS.Brick">
     <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Brick"/>
-    <!--
-        status:
 
-        Running status of the GlusterFS brick
-        Valid statuses: 0 = Unknown, 1 = Up, 2 = Down
-        Unrecognized statuses should be considered equal to Unknown
-    -->
-    <property name="status" type="u" access="read"/>
-
-    <property name="hostname" type="s" access="read"/>
-    <property name="path" type="s" access="read"/>
+    <property name="hostUuid" type="s" access="read"/>
+    <property name="name" type="s" access="read"/>
     <property name="volume" type="o" access="read"/>
      
   </interface>

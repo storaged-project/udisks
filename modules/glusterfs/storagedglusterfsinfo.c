@@ -35,7 +35,7 @@ add_volume_name_to_list(xmlNode *cur)
   while (cur != NULL) {
     if (cur->type == XML_ELEMENT_NODE) {
       if (xmlStrEqual(cur->name, (const xmlChar *) "name") == 1) {
-        g_variant_builder_add(builder, "s", xmlNodeGetContent(cur));
+        g_variant_builder_add (builder, "s", xmlNodeGetContent(cur));
         return;
       }
     }
@@ -54,7 +54,7 @@ get_glusterfs_volume_names(xmlNode * a_node)
         add_volume_name_to_list (cur_node);
     }
 
-    get_glusterfs_volume_names(cur_node->children);
+    get_glusterfs_volume_names (cur_node->children);
   }
 }
 
@@ -66,6 +66,54 @@ get_val_for_key (xmlNode *cur, const xmlChar *key)
     if (cur->type == XML_ELEMENT_NODE) {
       if (xmlStrEqual(cur->name, key) == 1)
         return xmlNodeGetContent (cur);
+    }
+    cur = cur->next;
+  }
+  return NULL;
+}
+
+static GVariant *
+get_brick_info (xmlNode *cur)
+{
+  GVariantBuilder *brick_info_builder;
+  brick_info_builder = g_variant_builder_new (G_VARIANT_TYPE("a{sv}"));
+
+  cur = cur->children;
+  while (cur != NULL) {
+    if (cur->type == XML_ELEMENT_NODE) {
+      storaged_debug ("%s: %s", cur->name, xmlNodeGetContent (cur));
+      g_variant_builder_add (brick_info_builder, "{sv}", cur->name, g_variant_new_string (xmlNodeGetContent (cur)));
+    }
+    cur = cur->next;
+  }
+  return g_variant_builder_end (brick_info_builder);
+}
+
+static GVariant *
+get_brick_list (xmlNode *cur)
+{
+  GVariantBuilder *brick_list_builder;
+  brick_list_builder = g_variant_builder_new (G_VARIANT_TYPE ("av"));
+
+  cur = cur->children;
+  while (cur != NULL) {
+    if (cur->type == XML_ELEMENT_NODE) {
+      if (xmlStrEqual (cur->name, "brick"))
+        g_variant_builder_add (brick_list_builder, "v", get_brick_info (cur));
+    }
+    cur = cur->next;
+  }
+  return g_variant_builder_end (brick_list_builder);
+}
+
+static GVariant *
+get_bricks (xmlNode *cur)
+{
+  cur = cur->children;
+  while (cur != NULL) {
+    if (cur->type == XML_ELEMENT_NODE) {
+      if (xmlStrEqual (cur->name, "bricks"))
+        return get_brick_list (cur);
     }
     cur = cur->next;
   }
@@ -87,12 +135,13 @@ get_glusterfs_volume_info (xmlNode * a_node)
         status = atoi (get_val_for_key (cur_node, "status"));
         brickcount = atoi (get_val_for_key (cur_node, "brickCount"));
 
-        g_variant_builder_add(b, "{sv}", "id", g_variant_new_string (name));
-        g_variant_builder_add(b, "{sv}", "name", g_variant_new_string (id));
-        g_variant_builder_add(b, "{sv}", "status", g_variant_new_uint32 (status));
-        g_variant_builder_add(b, "{sv}", "brickCount", g_variant_new_uint32 (brickcount));
-
-        break;
+        g_variant_builder_add (b, "{sv}", "id", g_variant_new_string (name));
+        g_variant_builder_add (b, "{sv}", "name", g_variant_new_string (id));
+        g_variant_builder_add (b, "{sv}", "status", g_variant_new_uint32 (status));
+        g_variant_builder_add (b, "{sv}", "brickCount", g_variant_new_uint32 (brickcount));
+        g_variant_builder_add (b, "{sv}", "bricks", get_bricks (cur_node));
+               
+        return;
       }
     }
 
