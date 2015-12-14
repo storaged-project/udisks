@@ -26,6 +26,7 @@
 
 #include "storagedlinuxglusterfsvolumeobject.h"
 #include "storagedlinuxglusterfsvolume.h"
+#include "storagedlinuxglusterfsbrickobject.h"
 #include "storagedglusterfsutils.h"
 #include "storagedglusterfsinfo.h"
 #include "storaged-glusterfs-generated.h"
@@ -35,6 +36,7 @@ struct _StoragedLinuxGlusterFSVolumeObject {
 
   StoragedDaemon *daemon;
   gchar *name;
+  GHashTable *bricks;
 
   /* Interfaces */
   StoragedLinuxGlusterFSVolume *iface_glusterfs_volume; 
@@ -134,7 +136,10 @@ storaged_linux_glusterfs_volume_object_constructed (GObject *_object)
   if (G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->constructed (_object);
 
-
+  object->bricks = g_hash_table_new_full (g_str_hash,
+                                          g_str_equal,
+                                          g_free,
+                                          (GDestroyNotify) g_object_unref);
   /* compute the object path */
   s = g_string_new ("/org/storaged/Storaged/glusterfs/volume/");
   storaged_safe_append_to_object_path (s, object->name);
@@ -219,6 +224,7 @@ update_from_variant (GVariant *volume_info_xml,
   StoragedDaemon *daemon;
   GDBusObjectManagerServer *manager;
   GVariant *gfs_volume_info;
+  GVariantIter *iter;
 
   if (error != NULL)
     {
@@ -231,6 +237,30 @@ update_from_variant (GVariant *volume_info_xml,
   manager = storaged_daemon_get_object_manager (daemon);
 
   gfs_volume_info = storaged_process_glusterfs_volume_info (g_variant_get_bytestring (volume_info_xml));
+
+  if (g_variant_lookup (gfs_volume_info, "bricks", "av", &iter)) {
+
+    GVariant *brick_info = NULL;
+    StoragedLinuxGlusterFSBrickObject *brick_object;
+
+    while (g_variant_iter_loop (iter, "v", &brick_info)) {
+      gchar *name;
+
+      if (g_variant_lookup (brick_info, "name", "&s", &name)) {
+        brick_object = g_hash_table_lookup (object->bricks, name);
+
+        if (brick_object == NULL) {
+          storaged_debug ("Brick object with name %s not found", name);
+          brick_object = storaged_linux_glusterfs_brick_object_new (daemon, object, name);
+          storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
+          g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (brick_object));
+          g_hash_table_insert (object->bricks, g_strdup (name), g_object_ref (brick_object));
+        } else {
+          storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
+        }
+      }
+    }
+  }
 
   storaged_linux_glusterfs_volume_update (STORAGED_LINUX_GLUSTERFS_VOLUME (object->iface_glusterfs_volume), gfs_volume_info);
 

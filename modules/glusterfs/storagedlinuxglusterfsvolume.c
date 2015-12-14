@@ -116,6 +116,7 @@ storaged_linux_glusterfs_volume_new (void)
 static void
 storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_volume,
                                               GVariant *                   *brick_info)
+
 {
   const gchar *const *obj_paths;
   const gchar *brick_name;
@@ -127,6 +128,8 @@ storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_
   obj_paths = storaged_glusterfs_volume_get_bricks (STORAGED_GLUSTERFS_VOLUME (gfs_volume));
 
   if (g_variant_lookup (brick_info, "name", "&s", &brick_name)) {
+    StoragedLinuxGlusterFSBrickObject *brick_obj;
+
     for (n = 0; obj_paths != NULL && obj_paths[n] != NULL; n++);
     p = g_new0 (const gchar *, n + 2);
 

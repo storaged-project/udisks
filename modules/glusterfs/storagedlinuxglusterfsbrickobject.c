@@ -26,6 +26,7 @@
 
 #include "storagedlinuxglusterfsbrickobject.h"
 #include "storagedlinuxglusterfsbrick.h"
+#include "storagedlinuxglusterfsvolumeobject.h"
 #include "storagedglusterfsutils.h"
 #include "storagedglusterfsinfo.h"
 #include "storaged-glusterfs-generated.h"
@@ -34,6 +35,7 @@ struct _StoragedLinuxGlusterFSBrickObject {
   StoragedObjectSkeleton parent_instance;
 
   StoragedDaemon *daemon;
+  StoragedLinuxGlusterFSVolumeObject *volume_object;
   gchar *name;
 
   /* Interfaces */
@@ -49,6 +51,7 @@ enum
   PROP_0,
   PROP_DAEMON,
   PROP_NAME,
+  PROP_VOLUME
 };
 
 G_DEFINE_TYPE (StoragedLinuxGlusterFSBrickObject, storaged_linux_glusterfs_brick_object, STORAGED_TYPE_OBJECT_SKELETON);
@@ -57,7 +60,6 @@ static void
 storaged_linux_glusterfs_brick_object_finalize (GObject *_object)
 { 
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (_object);
-  
   /* note: we don't hold a ref to object->daemon */
   
   if (object->iface_glusterfs_brick != NULL)
@@ -76,7 +78,6 @@ storaged_linux_glusterfs_brick_object_get_property (GObject    *__object,
                                                      GParamSpec *pspec)
 { 
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (__object);
-  
   switch (prop_id)
     {
     case PROP_DAEMON:
@@ -87,6 +88,10 @@ storaged_linux_glusterfs_brick_object_get_property (GObject    *__object,
       g_value_set_string (value, storaged_linux_glusterfs_brick_object_get_name (object));
       break;
 
+    case PROP_VOLUME:
+      g_value_set_object (value, storaged_linux_glusterfs_brick_object_get_volume_object (object));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -95,12 +100,11 @@ storaged_linux_glusterfs_brick_object_get_property (GObject    *__object,
 
 static void
 storaged_linux_glusterfs_brick_object_set_property (GObject      *__object,
-                                                     guint         prop_id,
-                                                     const GValue *value,
-                                                     GParamSpec   *pspec)
+                                                    guint         prop_id,
+                                                    const GValue *value,
+                                                    GParamSpec   *pspec)
 {
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (__object);
-
   switch (prop_id)
     {
     case PROP_DAEMON:
@@ -112,6 +116,11 @@ storaged_linux_glusterfs_brick_object_set_property (GObject      *__object,
     case PROP_NAME:
       g_assert (object->name == NULL);
       object->name = g_value_dup_string (value);
+      break;
+
+    case PROP_VOLUME:
+      g_assert (object->volume_object == NULL);
+      object->volume_object = g_value_get_object (value);
       break;
 
     default:
@@ -152,7 +161,6 @@ static void
 storaged_linux_glusterfs_brick_object_class_init (StoragedLinuxGlusterFSBrickObjectClass *klass)
 {
   GObjectClass *gobject_class;
-
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = storaged_linux_glusterfs_brick_object_finalize;
   gobject_class->constructed  = storaged_linux_glusterfs_brick_object_constructed;
@@ -174,7 +182,6 @@ storaged_linux_glusterfs_brick_object_class_init (StoragedLinuxGlusterFSBrickObj
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
-
   /**
    * StoragedLinuxGlusterFSBrickObject:name:
    *
@@ -189,18 +196,34 @@ storaged_linux_glusterfs_brick_object_class_init (StoragedLinuxGlusterFSBrickObj
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
+  /**
+   * StoragedLinuxGlusterFSVolumeObject:volume:
+   *
+   * The name of the GlusterFS volume to which the brick belongs.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_VOLUME,
+                                   g_param_spec_object ("volume",
+                                                        "Volume Object",
+                                                        "The name of the glusterfs volume",
+                                                        STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME_OBJECT,
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 StoragedLinuxGlusterFSBrickObject *
-storaged_linux_glusterfs_brick_object_new (StoragedDaemon  *daemon,
-                                            const gchar     *name)
+storaged_linux_glusterfs_brick_object_new (StoragedDaemon                     *daemon,
+                                           StoragedLinuxGlusterFSVolumeObject *volume_object,
+                                           const gchar                        *name)
 {
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   return STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (g_object_new (STORAGED_TYPE_LINUX_GLUSTERFS_BRICK_OBJECT,
-                                                               "daemon", daemon,
-                                                               "name", name,
-                                                               NULL));
+                                                              "daemon", daemon,
+                                                              "name", name,
+                                                              "volume", volume_object,
+                                                              NULL));
 }
 
 StoragedDaemon *
@@ -208,44 +231,6 @@ storaged_linux_glusterfs_brick_object_get_daemon (StoragedLinuxGlusterFSBrickObj
 {
   g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_BRICK_OBJECT (object), NULL);
   return object->daemon;
-}
-
-static void
-update_from_variant (GVariant *brick_info_xml,
-                     GError *error,
-                     gpointer user_data)
-{
-  StoragedLinuxGlusterFSBrickObject *object;
-  StoragedDaemon *daemon;
-  GDBusObjectManagerServer *manager;
-  GVariant *gfs_brick_info;
-
-  if (error != NULL)
-    {
-      storaged_warning ("Couldn't get brick info: %s", error->message);
-      return;
-    }
-
-  object = user_data;
-  daemon = storaged_linux_glusterfs_brick_object_get_daemon (object);
-  manager = storaged_daemon_get_object_manager (daemon);
-
-  gfs_brick_info = storaged_process_glusterfs_brick_info (g_variant_get_bytestring (brick_info_xml));
-
-  storaged_linux_glusterfs_brick_update (STORAGED_LINUX_GLUSTERFS_BRICK (object->iface_glusterfs_brick), gfs_brick_info);
-
-  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object))) {
-    g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
-  }
-  g_object_unref (object);
-}
-
-void
-storaged_linux_glusterfs_brick_object_update (StoragedLinuxGlusterFSBrickObject *object)
-{
-  const gchar *args[] = { "gluster", "brick", "info", object->name, "--xml", NULL };
-  storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
-                                        update_from_variant, g_object_ref (object));
 }
 
 void
@@ -261,3 +246,22 @@ storaged_linux_glusterfs_brick_object_get_name (StoragedLinuxGlusterFSBrickObjec
   g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_BRICK_OBJECT (object), NULL);
   return object->name;
 }
+
+StoragedLinuxGlusterFSVolumeObject *
+storaged_linux_glusterfs_brick_object_get_volume_object (StoragedLinuxGlusterFSBrickObject *object)
+{
+  g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_BRICK_OBJECT (object), NULL);
+  return object->volume_object;
+}
+
+void
+storaged_linux_glusterfs_brick_object_update (StoragedLinuxGlusterFSBrickObject *object,
+                                              GVariant                          *brick_info)
+{
+  g_return_if_fail (STORAGED_IS_LINUX_GLUSTERFS_BRICK_OBJECT (object));
+
+  storaged_linux_glusterfs_brick_update (STORAGED_LINUX_GLUSTERFS_BRICK (object->iface_glusterfs_brick),
+                                         object->volume_object,
+                                         brick_info);
+}
+

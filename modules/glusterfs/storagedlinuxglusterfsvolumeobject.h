@@ -35,6 +35,7 @@ StoragedLinuxGlusterFSVolumeObject   *storaged_linux_glusterfs_volume_object_new
                                                                                             const gchar                    *name);
 const gchar                          *storaged_linux_glusterfs_volume_object_get_name      (StoragedLinuxGlusterFSVolumeObject *object);
 StoragedDaemon                       *storaged_linux_glusterfs_volume_object_get_daemon    (StoragedLinuxGlusterFSVolumeObject *object);
+
 void                                  storaged_linux_glusterfs_volume_object_update        (StoragedLinuxGlusterFSVolumeObject *object);
 
 void                                  storaged_linux_glusterfs_volume_object_destroy       (StoragedLinuxGlusterFSVolumeObject *object);

@@ -110,7 +110,7 @@ StoragedGlusterFSBrick *
 storaged_linux_glusterfs_brick_new (void)
 {
   return STORAGED_GLUSTERFS_BRICK (g_object_new (STORAGED_TYPE_LINUX_GLUSTERFS_BRICK,
-                                                  NULL));
+                                                 NULL));
 }
 
 /**
@@ -121,29 +121,21 @@ storaged_linux_glusterfs_brick_new (void)
  * Updates the interface.
  */
 void
-storaged_linux_glusterfs_brick_update (StoragedLinuxGlusterFSBrick *gfs_brick,
-                                        GVariant                     *info)
+storaged_linux_glusterfs_brick_update (StoragedLinuxGlusterFSBrick        *gfs_brick,
+                                       StoragedLinuxGlusterFSVolumeObject *volume_object,
+                                       GVariant                           *brick_info)
 {
   StoragedGlusterFSBrick *iface = STORAGED_GLUSTERFS_BRICK (gfs_brick);
   const gchar *str;
   guint num;
 
-  if (g_variant_lookup (info, "name", "&s", &str))
+  if (g_variant_lookup (brick_info, "name", "&s", &str))
     storaged_glusterfs_brick_set_name (iface, str);
 
-  if (g_variant_lookup (info, "hostUuid", "&s", &str))
-    storaged_glusterfs_brick_set_id (iface, str);
+  if (g_variant_lookup (brick_info, "hostUuid", "&s", &str))
+    storaged_glusterfs_brick_set_host_uuid (iface, str);
 
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-static gboolean
-handle_add_brick (StoragedGlusterFSBrick   *_group,
-                  GDBusMethodInvocation     *invocation,
-                  const gchar               *arg_brick_path)
-{
-  return TRUE;
+  storaged_glusterfs_brick_set_volume (iface, g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -151,6 +143,6 @@ handle_add_brick (StoragedGlusterFSBrick   *_group,
 static void
 glusterfs_brick_iface_init (StoragedGlusterFSBrickIface *iface)
 {
-  iface->handle_add_brick = handle_add_brick;
+  ;
 }
 

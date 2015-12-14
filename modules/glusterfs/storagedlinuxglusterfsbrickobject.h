@@ -30,14 +30,18 @@ G_BEGIN_DECLS
 #define STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT(o)     (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_GLUSTERFS_BRICK_OBJECT, StoragedLinuxGlusterFSBrickObject))
 #define STORAGED_IS_LINUX_GLUSTERFS_BRICK_OBJECT(o)  (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_GLUSTERFS_BRICK_OBJECT))
 
-GType                                storaged_linux_glusterfs_brick_object_get_type      (void) G_GNUC_CONST;
-StoragedLinuxGlusterFSBrickObject   *storaged_linux_glusterfs_brick_object_new           (StoragedDaemon                 *daemon,
-                                                                                          const gchar                    *name);
-const gchar                         *storaged_linux_glusterfs_brick_object_get_name      (StoragedLinuxGlusterFSBrickObject *object);
-StoragedDaemon                      *storaged_linux_glusterfs_brick_object_get_daemon    (StoragedLinuxGlusterFSBrickObject *object);
-void                                 storaged_linux_glusterfs_brick_object_update        (StoragedLinuxGlusterFSBrickObject *object);
+GType                                storaged_linux_glusterfs_brick_object_get_type          (void) G_GNUC_CONST;
+StoragedLinuxGlusterFSBrickObject   *storaged_linux_glusterfs_brick_object_new               (StoragedDaemon                     *daemon,
+                                                                                              StoragedLinuxGlusterFSVolumeObject *volume_object,
+                                                                                              const gchar                        *name);
 
-void                                 storaged_linux_glusterfs_brick_object_destroy       (StoragedLinuxGlusterFSBrickObject *object);
+const gchar                         *storaged_linux_glusterfs_brick_object_get_name          (StoragedLinuxGlusterFSBrickObject *object);
+StoragedDaemon                      *storaged_linux_glusterfs_brick_object_get_daemon        (StoragedLinuxGlusterFSBrickObject *object);
+StoragedLinuxGlusterFSVolumeObject  *storaged_linux_glusterfs_brick_object_get_volume_object (StoragedLinuxGlusterFSBrickObject *object);
+void                                 storaged_linux_glusterfs_brick_object_update            (StoragedLinuxGlusterFSBrickObject *object,
+                                                                                              GVariant                          *brick_info);
+
+void                                 storaged_linux_glusterfs_brick_object_destroy           (StoragedLinuxGlusterFSBrickObject *object);
 
 G_END_DECLS
 

@@ -67,6 +67,10 @@ libstoraged_glusterfs_la_SOURCES =                                             \
         storagedlinuxmanagerglusterfs.c                                        \
 	storagedlinuxglusterfsvolumeobject.h                                   \
 	storagedlinuxglusterfsvolumeobject.c                                   \
+	storagedlinuxglusterfsbrick.h                                          \
+	storagedlinuxglusterfsbrick.c                                          \
+	storagedlinuxglusterfsbrickobject.h                                    \
+	storagedlinuxglusterfsbrickobject.c                                    \
         storagedlinuxglusterfsglusterdobject.h                                 \
         storagedlinuxglusterfsglusterdobject.c                                 \
         storagedlinuxglusterfsglusterd.h                                       \

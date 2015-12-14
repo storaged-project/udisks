@@ -33,8 +33,9 @@ G_BEGIN_DECLS
 
 GType                    storaged_linux_glusterfs_brick_get_type  (void) G_GNUC_CONST;
 StoragedGlusterFSBrick  *storaged_linux_glusterfs_brick_new       (void);
-void                     storaged_linux_glusterfs_brick_update    (StoragedLinuxGlusterFSBrick  *gfs_brick,
-                                                                   GVariant                     *info);
+void                     storaged_linux_glusterfs_brick_update    (StoragedLinuxGlusterFSBrick        *gfs_brick,
+                                                                   StoragedLinuxGlusterFSVolumeObject *volume_object,
+                                                                   GVariant                           *brick_info);
 
 G_END_DECLS
 
