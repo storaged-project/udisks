@@ -10,6 +10,7 @@
 # c72578 <c72578@yahoo.de>, 2014
 # Peter Hatina <phatina@redhat.com>, 2015. #zanata
 msgid ""
+# Simon Peter <probono@puredarwin.org>, 2015
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
@@ -120,7 +121,7 @@ msgstr ""
 
 #: ../data/org.storaged.Storaged.policy.in.h:18
 msgid "Manage loop devices"
-msgstr "Schleifen-Geräte verwalten"
+msgstr "Abbild-Geräte verwalten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -128,28 +129,28 @@ msgstr "Schleifen-Geräte verwalten"
 #: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/storagedlinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
-msgstr "Legitimierung ist zum Einrichten eines Schleifengeräts notwendig"
+msgstr "Legitimierung ist zum Einrichten eines Abbild-Geräts notwendig"
 
 #: ../data/org.storaged.Storaged.policy.in.h:20
 msgid "Delete loop devices"
-msgstr "Schleifen-Geräte löschen"
+msgstr "Abbild-Geräte löschen"
 
 #: ../data/org.storaged.Storaged.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
-"Legitimierung ist zum Löschen eines Schleifengeräts notwendig, das durch "
+"Legitimierung ist zum Löschen eines Abbild-Geräts notwendig, das durch "
 "einen anderen Benutzer eingerichtet wurde"
 
 #: ../data/org.storaged.Storaged.policy.in.h:22
 msgid "Modify loop devices"
-msgstr "Schleifen-Geräte verändern"
+msgstr "Abbild-Geräte verändern"
 
 #: ../data/org.storaged.Storaged.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
-"Legitimierung ist zum Verändern eines Schleifengeräts notwendig, das durch "
+"Legitimierung ist zum Verändern eines Abbild-Geräts notwendig, das durch "
 "einen anderen Benutzer eingerichtet wurde"
 
 #: ../data/org.storaged.Storaged.policy.in.h:24
@@ -986,7 +987,7 @@ msgstr ""
 #.
 #: ../src/storagedlinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "Legitimierung ist zum Löschen des Schleifen-Geräts $(drive) notwendig"
+msgstr "Legitimierung ist zum Löschen des Abbild-Geräts $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -998,7 +999,7 @@ msgstr "Legitimierung ist zum Löschen des Schleifen-Geräts $(drive) notwendig"
 #: ../src/storagedlinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
-"Legitimierung ist zum Verändern des Schleifen-Geräts $(drive) notwendig"
+"Legitimierung ist zum Verändern des Abbild-Geräts $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -2321,7 +2322,7 @@ msgstr "Dateisystem wird erstellt"
 #: ../storaged/storagedclient.c:2511
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr "Schleifen-Gerät wird eingerichtet"
+msgstr "Abbild-Gerät wird eingerichtet"
 
 #: ../storaged/storagedclient.c:2512
 msgctxt "job"
@@ -2605,11 +2606,11 @@ msgstr "%s (%s)"
 #: ../storaged/storagedobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr "%s Schleifen-Gerät"
+msgstr "%s Abbild-Gerät"
 
 #: ../storaged/storagedobjectinfo.c:310
 msgid "Loop Device"
-msgstr "Schleifen-Gerät"
+msgstr "Abbild-Gerät"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
