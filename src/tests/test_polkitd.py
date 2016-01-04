@@ -30,7 +30,7 @@ from gi.repository import GLib, Gio
 # ----------------------------------------------------------------------------
 
 class TestPolicyKitDaemon(dbus.service.Object):
-    def __init__(self, allowed_actions, on_bus=None, replace=False):
+    def __init__(self, allowed_actions, on_bus=None):
         '''Initialize test polkit daemon.
 
         @allowed_actions is a list of PolicyKit action IDs which will be
@@ -40,9 +40,6 @@ class TestPolicyKitDaemon(dbus.service.Object):
 
         When @on_bus string is given, the daemon will run on that D-BUS
         address, otherwise on the system D-BUS.
-
-        If @replace is True, this will replace an already running polkit daemon
-        on the D-BUS.
         '''
         self.allowed_actions = allowed_actions
         if on_bus:
@@ -51,7 +48,7 @@ class TestPolicyKitDaemon(dbus.service.Object):
             bus = dbus.SystemBus()
         bus_name = dbus.service.BusName('org.freedesktop.PolicyKit1',
                                         bus, do_not_queue=True,
-                                        replace_existing=replace,
+                                        replace_existing=True,
                                         allow_replacement=True)
         bus.add_signal_receiver(self.on_disconnected, signal_name='Disconnected')
 
@@ -132,12 +129,12 @@ class PolkitTestCase(unittest.TestCase):
 
 # ----------------------------------------------------------------------------
 
-def _run(allowed_actions, bus_address, replace=False):
+def _run(allowed_actions, bus_address):
     # Set up the DBus main loop
     import dbus.mainloop.glib
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    polkitd = TestPolicyKitDaemon(allowed_actions, bus_address, replace)
+    polkitd = TestPolicyKitDaemon(allowed_actions, bus_address)
     polkitd.run()
 
 def spawn(allowed_actions, on_bus=None):
@@ -162,7 +159,7 @@ def spawn(allowed_actions, on_bus=None):
         # child
         _run(allowed_actions, on_bus)
         os._exit(0)
-        
+
     # wait until the daemon is up on the bus
     if on_bus:
         bus = dbus.bus.BusConnection(on_bus)
@@ -172,11 +169,19 @@ def spawn(allowed_actions, on_bus=None):
         bus = dbus.bus.BusConnection(os.environ['DBUS_SYSTEM_BUS_ADDRESS'])
     else:
         bus = dbus.SystemBus()
-    timeout = 50
-    while timeout > 0 and not bus.name_has_owner('org.freedesktop.PolicyKit1'):
-        timeout -= 1
+    for timeout in range(50):
+        try:
+            p = dbus.Interface(bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'),
+                               'org.freedesktop.DBus').GetConnectionUnixProcessID(
+                                   bus.get_name_owner('org.freedesktop.PolicyKit1'))
+        except dbus.exceptions.DBusException:
+            continue
+        if p == pid:
+            break
         time.sleep(0.1)
-    assert timeout > 0, 'test polkitd failed to start up'
+    else:
+        sys.stderr.write('test polkitd failed to start up\n')
+        os.abort()
 
     return pid
 
@@ -186,11 +191,9 @@ def main():
                       default='', help='Comma separated list of allowed action ids')
     parser.add_argument('-b', '--bus-address',
                       help='D-BUS address to listen on (if not given, listen on system D-BUS)')
-    parser.add_argument('-r', '--replace', action='store_true',
-                      help='Replace existing polkit daemon on the bus')
     args = parser.parse_args()
 
-    _run(args.allowed_actions.split(','), args.bus_address, args.replace)
+    _run(args.allowed_actions.split(','), args.bus_address)
 
 if __name__ == '__main__':
     main()
