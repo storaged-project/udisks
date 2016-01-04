@@ -197,7 +197,7 @@ class UDisksTestCase(unittest.TestCase):
             time.sleep(0.1)
             timeout -= 1
         if timeout <= 0:
-            self.write_stderr('[wait timeout!] ')
+            klass.write_stderr('[wait timeout!] ')
 
     @classmethod
     def zero_device(klass):
@@ -329,7 +329,7 @@ class UDisksTestCase(unittest.TestCase):
             except GLib.GError as e:
                 if 'UDisks2.Error.DeviceBusy' not in e.message:
                     raise
-                self.write_stderr('[busy] ')
+                klass.write_stderr('[busy] ')
                 time.sleep(0.3)
                 timeout -= 1
 
@@ -492,7 +492,8 @@ class UDisksTestCase(unittest.TestCase):
 
         self.assertEventually(lambda: obj.get_property(name), value)
 
-    def write_stderr(self, msg):
+    @classmethod
+    def write_stderr(klass, msg):
         '''Write to stderr without buffering'''
         sys.stderr.write(msg)
         sys.stderr.flush()
