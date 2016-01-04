@@ -58,6 +58,10 @@ import signal
 import argparse
 import re
 from glob import glob
+import gi
+
+gi.require_version('UDisks', '2.0')
+
 from gi.repository import GLib, Gio, UDisks
 
 # find local test_polkit.py
