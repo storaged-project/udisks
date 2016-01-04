@@ -1454,8 +1454,9 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         self.assertEqual(block.get_property('id-label'), 'polkityes')
 
     def test_removable_fs(self):
-        '''Create FS on removable drive (allowed)'''
+        '''Mount FS on removable drive (allowed)'''
 
+        self.mkfs('ext4', 'polkityes')
         self.start_polkitd(['org.freedesktop.udisks2.filesystem-mount',
                             'org.freedesktop.udisks2.filesystem-mount-other-seat'])
 
