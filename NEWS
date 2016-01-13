@@ -1,18 +1,48 @@
----------------------------
-storaged 2.3.1 (unreleased)
----------------------------
+--------------
+storaged 2.4.0
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.3.0:
 
-(TODO: git shortlog)
+Dominika Hodovska (3):
+      ZRAM: fix typos in code and comment
+      Bcache: introduce module
+      Bcache: error check correction
+
+Marius Vollmer (2):
+      Daemon: Look at /sys/.../dm/uuid to identify multipath masters.
+      Daemon: Ignore device mapper when working with multipath drives.
+
+Peter Hatina (21):
+      Doc: clarify the original author of man pages
+      Merge pull request #23 from hodovska/master
+      ISCSI: redesign passing CHAP authentication data to Login, Discover (#24)
+      Rename storagedctl to storagectl (fixes #25)
+      LSM: conditionally install storaged_lsm.conf
+      ISCSI: fix coding style in utility module
+      Merge pull request #27 from hodovska/master
+      Merge pull request #28 from hodovska/master
+      Merge branch 'master' of github.com:storaged-project/storaged
+      ISCSI: make error reporting more specific (fixes #26)
+      ISCSI: fix reverse username/password retrieval from options
+      ISCSI: introduce parameters passing for nodes when Login/Logout is issued (fixes #31)
+      Merge pull request #29 from mvollmer/multipath-fixeses
+      TODO: bcache already supported
+      ISCSI: improve node and CHAP parameters passing to libiscsi
+      ISCSI: fix compilation when iscsi_err.h is available on the system
+      TODO: module loading thoughts
+      ISCSI: introduce GetFirmwareInitiatorName() (resolves #34)
+      Build: remove deprecated variable in autogen.sh
+      Bcache: add missing POTFILES dependencies
+      Bcache: add new strings to translations' files
 
 Thanks to all our contributors.
 
 Peter Hatina
-(TODO: date)
+2016-01-13
 
 --------------
 storaged 2.3.0
