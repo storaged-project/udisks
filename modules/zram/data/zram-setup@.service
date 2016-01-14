@@ -1,4 +1,4 @@
-ervice initializes zram devices
+#Service initializes zram devices
 [Unit]
 Description=Setup zram based device %i
 After=dev-%i.device

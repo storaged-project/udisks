@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include <glib/gi18n.h>
+#include <glib/gstdio.h>
 #include <blockdev/kbd.h>
 
 #include <src/storageddaemon.h>
@@ -207,9 +208,10 @@ create_conf_files (guint64   num_devices,
   gboolean rval = TRUE;
   gchar *filename;
   gchar *contents;
-  FILE *f;
+  gchar tmp[255];
+  guint64 i;
 
-  filename = g_strdup_printf ("%s/zram.conf", PACKAGE_MODLOAD_DIR);
+  filename = g_build_filename (PACKAGE_MODLOAD_DIR, "zram.conf", NULL);
   contents = g_strdup ("zram\n");
 
   if (! g_file_set_contents (filename , contents, -1, error))
@@ -220,7 +222,7 @@ create_conf_files (guint64   num_devices,
   g_free (contents);
   g_free (filename);
 
-  filename = g_strdup_printf ("%s/zram.conf", PACKAGE_MODPROBE_DIR);
+  filename = g_build_filename (PACKAGE_MODPROBE_DIR, "zram.conf", NULL);
   contents = g_strdup_printf ("options zram num_devices=%lu\n", num_devices);
 
   if (! g_file_set_contents (filename , contents, -1, error))
@@ -229,22 +231,20 @@ create_conf_files (guint64   num_devices,
       goto out;
     }
 
-  for (unsigned i = 0; i < num_devices; i++)
+  for (i = 0; i < num_devices; i++)
     {
       g_free (filename);
-      filename = g_strdup_printf ("%s/zram%i-env", PACKAGE_ZRAMCONF_DIR, i);
+      g_free (contents);
 
-      f = fopen (filename, "w");
-      if (f == NULL)
-        {
-          g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
-          goto out;
-        }
-      fputs ("#!/bin/bash\n\n",f);
-      fprintf (f,"ZRAM_NUM_STR=%lu\n", num_streams[i]);
-      fprintf (f,"ZRAM_DEV_SIZE=%lu\n", sizes[i]);
-      fputs ("SWAP=n\n",f);
-      fclose(f);
+      g_snprintf (tmp, 255, "zram%lu", i);
+      filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, tmp, NULL);
+      contents = g_strdup_printf ("#!/bin/bash\n\n"
+                                  "ZRAM_NUM_STR=%lu\n"
+                                  "ZRAM_DEV_SIZE=%lu\n"
+                                  "SWAP=n\n",
+                                  num_streams[i],
+                                  sizes[i]);
+      g_file_set_contents (filename, contents, -1, error);
     }
 out:
   g_free (filename);
@@ -255,36 +255,47 @@ out:
 static gboolean
 delete_conf_files (GError **error)
 {
-  unsigned i;
-  gchar *tmp;
-  char filename [255];
+  gboolean rval = TRUE;
+  GDir *zramconfd;
+  gchar *filename = NULL;
 
-  strcat (filename, PACKAGE_MODLOAD_DIR);
-  strcat (filename, "/zram.conf");
+  filename = g_build_filename (PACKAGE_MODLOAD_DIR, "/zram.conf", NULL);
 
-  if (unlink (filename))
+  if (g_unlink (filename))
     {
-      g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
-      return FALSE;
+      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+      rval = FALSE;
+      goto out;
     }
 
-  filename[0] = '\0';
-  strcat (filename, PACKAGE_MODPROBE_DIR);
-  strcat (filename, "/zram.conf");
-  if (unlink (filename))
+  g_free (filename);
+  filename = g_build_filename (PACKAGE_MODPROBE_DIR, "/zram.conf", NULL);
+
+  if (g_unlink (filename))
     {
-      g_set_error(error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
-      return FALSE;
+      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+      rval = FALSE;
+      goto out;
     }
 
-  i=0;
+  zramconfd = g_dir_open (PACKAGE_ZRAMCONF_DIR, 0, error);
+  if (! zramconfd)
+  {
+    rval = FALSE;
+    goto out;
+  }
   do
-    {
-      tmp = g_strdup_printf ("%s/zram%i-env", PACKAGE_ZRAMCONF_DIR, i);
-      i++;
-    }
-  while (! unlink (tmp));
-  return TRUE;
+  {
+    g_free (filename);
+    filename = g_build_filename(PACKAGE_ZRAMCONF_DIR,
+                                g_dir_read_name (zramconfd),
+                                NULL);
+  } while (! g_unlink (filename));
+  g_dir_close (zramconfd);
+
+out:
+  g_free (filename);
+  return rval;
 
 }
 static gboolean

@@ -270,7 +270,7 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
     goto out;
   }
 
-  filename = g_strdup_printf("%s/%s-env", PACKAGE_ZRAMCONF_DIR, (strrchr(dev_file,'/')+1));
+  filename = g_build_filename(PACKAGE_ZRAMCONF_DIR, g_path_get_basename(dev_file), NULL);
   if (! set_conf_property (filename, "SWAP", "y", &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -369,6 +369,7 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
     goto out;
   }
 
+  filename = g_build_filename(PACKAGE_ZRAMCONF_DIR, g_path_get_basename(dev_file), NULL);
   if (! set_conf_property (filename, "SWAP", "n", &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
