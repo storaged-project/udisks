@@ -225,16 +225,19 @@ update_from_variant (GVariant *volume_info_xml,
   GDBusObjectManagerServer *manager;
   GVariant *gfs_volume_info;
   GVariantIter *iter;
+  GHashTable *new_bricks;
+  GHashTableIter bricks_iter;
+  gpointer key, value;
 
-  if (error != NULL)
-    {
+  if (error != NULL) {
       storaged_warning ("Couldn't get volume info: %s", error->message);
       return;
-    }
+  }
 
   object = user_data;
   daemon = storaged_linux_glusterfs_volume_object_get_daemon (object);
   manager = storaged_daemon_get_object_manager (daemon);
+  new_bricks = g_hash_table_new (g_str_hash, g_str_equal);
 
   gfs_volume_info = storaged_process_glusterfs_volume_info (g_variant_get_bytestring (volume_info_xml));
 
@@ -255,10 +258,24 @@ update_from_variant (GVariant *volume_info_xml,
           storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (brick_object));
           g_hash_table_insert (object->bricks, g_strdup (name), g_object_ref (brick_object));
-        } else {
+        } else
           storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
-        }
+
+        g_hash_table_insert (new_bricks, (gchar*)name, brick_object);
       }
+    }
+    g_variant_iter_free (iter);
+  }
+
+  g_hash_table_iter_init (&bricks_iter, object->bricks);
+  storaged_debug ("whatever the brick!");
+  while (g_hash_table_iter_next (&bricks_iter, &key, &value)) {
+    const gchar *name = key;
+    StoragedLinuxGlusterFSBrickObject *brick_obj = value;
+
+    if (!g_hash_table_contains (new_bricks, name)) {
+      g_dbus_object_manager_server_unexport (manager, g_dbus_object_get_object_path (G_DBUS_OBJECT (brick_obj)));
+      g_hash_table_iter_remove (&bricks_iter);
     }
   }
 
