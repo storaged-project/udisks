@@ -31,20 +31,6 @@
 #include "storagedglusterfsinfo.h"
 #include "storaged-glusterfs-generated.h"
 
-struct _StoragedLinuxGlusterFSVolumeObject {
-  StoragedObjectSkeleton parent_instance;
-
-  StoragedDaemon *daemon;
-  gchar *name;
-  GHashTable *bricks;
-
-  /* Interfaces */
-  StoragedLinuxGlusterFSVolume *iface_glusterfs_volume; 
-};
-
-struct _StoragedLinuxGlusterFSVolumeObjectClass {
-  StoragedObjectSkeletonClass parent_class;
-};
 
 enum
 { 
@@ -268,7 +254,6 @@ update_from_variant (GVariant *volume_info_xml,
   }
 
   g_hash_table_iter_init (&bricks_iter, object->bricks);
-  storaged_debug ("whatever the brick!");
   while (g_hash_table_iter_next (&bricks_iter, &key, &value)) {
     const gchar *name = key;
     StoragedLinuxGlusterFSBrickObject *brick_obj = value;

@@ -30,6 +30,21 @@ G_BEGIN_DECLS
 #define STORAGED_LINUX_GLUSTERFS_VOLUME_OBJECT(o)     (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME_OBJECT, StoragedLinuxGlusterFSVolumeObject))
 #define STORAGED_IS_LINUX_GLUSTERFS_VOLUME_OBJECT(o)  (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_GLUSTERFS_VOLUME_OBJECT))
 
+struct _StoragedLinuxGlusterFSVolumeObject {
+  StoragedObjectSkeleton parent_instance;
+
+  StoragedDaemon *daemon;
+  gchar *name;
+  GHashTable *bricks;
+
+  /* Interfaces */
+  StoragedLinuxGlusterFSVolume *iface_glusterfs_volume;
+};
+
+struct _StoragedLinuxGlusterFSVolumeObjectClass {
+  StoragedObjectSkeletonClass parent_class;
+};
+
 GType                                 storaged_linux_glusterfs_volume_object_get_type      (void) G_GNUC_CONST;
 StoragedLinuxGlusterFSVolumeObject   *storaged_linux_glusterfs_volume_object_new           (StoragedDaemon                 *daemon,
                                                                                             const gchar                    *name);
