@@ -101,7 +101,7 @@
 
         LoadState of glusterd.service
     -->
-    <property name="ActiveState" type="s" access="read"/> 
+    <property name="ActiveState" type="s" access="read"/>
   </interface>
 
 
@@ -120,28 +120,28 @@
         name:
 
         Name of gluster volume
-    --> 
+    -->
     <property name="name" type="s" access="read"/>
 
     <!--
         id:
 
         id of gluster volume
-    --> 
+    -->
     <property name="id" type="s" access="read"/>
 
     <!--
         brickcount:
 
         Number of bricks in gluster volume
-    -->  
+    -->
     <property name="brickcount" type="u" access="read"/>
 
     <!--
         bricks:
 
         List of dbus objects corresponding bricks in the gluster volume
-    --> 
+    -->
     <property name="bricks" type="ao" access="read"/>
 
     <!--

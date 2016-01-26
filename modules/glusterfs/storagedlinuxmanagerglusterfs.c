@@ -164,7 +164,7 @@ storaged_linux_manager_glusterfs_new (StoragedDaemon *daemon)
 /**
  * storaged_linux_manager_glusterfs_get_daemon:
  * @manager: A #StoragedLinuxManagerGlusterFS.
- * 
+ *
  * Gets the daemon used by @manager.
  *
  * Returns: A #StoragedDaemon. Do not free, the object is owned by @manager.
