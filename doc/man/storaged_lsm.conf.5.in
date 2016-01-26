@@ -1,4 +1,4 @@
-.TH storaged_lsm.conf "5" "September 2015" "storaged_lsm.conf @VERSION@" "Storaged lsm module config"
+.TH storaged_lsm.conf "5" "January 2016" "storaged_lsm.conf @VERSION@" "Storaged lsm module config"
 .SH NAME
 storaged_lsm.conf - Storaged \fBlsm\fR module configuration file.
 
