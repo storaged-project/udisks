@@ -27,7 +27,7 @@
   <!--
       org.storaged.Storaged.Manager.GlusterFS:
       @short_description: glusterd add-on to the manager singleton
-      @since: 2.1.2
+      @since: 2.4.0
 
       Additional interface with glusterfs specifics for top-level manager
       singleton object located at the object path
@@ -37,11 +37,32 @@
     <!-- prereq: org.storaged.Storaged.Manager -->
 
     <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterFS"/>
+    <!--
+        Reload:
 
+        Reloads the gluster state in storaged
+    -->
     <method name="Reload"/>
+
+    <!--
+        GlusterdStart:
+
+        Starts the glusterd daemon
+    -->
     <method name="GlusterdStart"/>
+
+    <!--
+        GlusterdStop:
+
+        Stops the glusterd daemon
+    -->
     <method name="GlusterdStop"/>
 
+    <!--
+        volumes:
+
+        List of volumes
+    -->
     <property name="volumes" type="ao" access="readwrite"/>
 
     <!--
@@ -49,7 +70,7 @@
         @name: Name of the volume
         @bricks: List of path to bricks that will be a part of the volume
         @result: The path to the new gluster volume object
-        @since: 2.1.2
+        @since: 2.4.0
 
        Creates a new GlusterFS volume using @bricks as the list of bricks that
        are going to be the part of the volume
@@ -87,7 +108,7 @@
   <!--
       org.storaged.Storaged.GlusterFS.Volume:
       @short_description: A GlusterFS volume
-      @since: 2.1.2
+      @since: 2.4.0
 
       Objects implementing this interface represent GlusterFS volumes
   -->
@@ -95,9 +116,32 @@
 
     <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Volume"/>
 
+    <!--
+        name:
+
+        Name of gluster volume
+    --> 
     <property name="name" type="s" access="read"/>
+
+    <!--
+        id:
+
+        id of gluster volume
+    --> 
     <property name="id" type="s" access="read"/>
+
+    <!--
+        brickcount:
+
+        Number of bricks in gluster volume
+    -->  
     <property name="brickcount" type="u" access="read"/>
+
+    <!--
+        bricks:
+
+        List of dbus objects corresponding bricks in the gluster volume
+    --> 
     <property name="bricks" type="ao" access="read"/>
 
     <!--
@@ -108,12 +152,12 @@
         Unrecognized statuses should be considered equal to Unknown
     -->
     <property name="status" type="u" access="read"/>
- 
+
     <!--
         AddBrick:
         @brick_path: The path to the brick that will be added to the volume
         @result: The path to the new brick object
-        @since: 2.1.2
+        @since: 2.4.0
 
         Adds a new brick with path specified by @brick_path to an existing
         GlusterFS volume
@@ -128,7 +172,7 @@
   <!--
       org.storaged.Storaged.GlusterFS.Brick:
       @short_description: A GlusterFS Brick
-      @since: 2.1.2
+      @since: 2.4.0
 
       Objects implementing this interface represent bricks in a
       GlusterFS volume.
@@ -136,10 +180,29 @@
   <interface name="org.storaged.Storaged.GlusterFS.Brick">
     <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Brick"/>
 
+    <!--
+        hostUuid:
+
+        UUID of the host where the brick resides
+    -->
     <property name="hostUuid" type="s" access="read"/>
+
+    <!--
+        name:
+
+        Complete path to brick
+    -->
+
     <property name="name" type="s" access="read"/>
+
+    <!--
+        volume:
+
+        Object path of volume of which the brick is a part
+    -->
+
     <property name="volume" type="o" access="read"/>
-     
+
   </interface>
 
   <!-- ********************************************************************** -->

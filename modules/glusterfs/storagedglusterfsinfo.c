@@ -140,7 +140,7 @@ get_glusterfs_volume_info (xmlNode * a_node)
         g_variant_builder_add (b, "{sv}", "status", g_variant_new_uint32 (status));
         g_variant_builder_add (b, "{sv}", "brickCount", g_variant_new_uint32 (brickcount));
         g_variant_builder_add (b, "{sv}", "bricks", get_bricks (cur_node));
-               
+
         return;
       }
     }

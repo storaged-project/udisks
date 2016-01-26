@@ -33,7 +33,7 @@
 
 
 enum
-{ 
+{
   PROP_0,
   PROP_DAEMON,
   PROP_NAME,
@@ -43,16 +43,16 @@ G_DEFINE_TYPE (StoragedLinuxGlusterFSVolumeObject, storaged_linux_glusterfs_volu
 
 static void
 storaged_linux_glusterfs_volume_object_finalize (GObject *_object)
-{ 
+{
   StoragedLinuxGlusterFSVolumeObject *object = STORAGED_LINUX_GLUSTERFS_VOLUME_OBJECT (_object);
-  
+
   /* note: we don't hold a ref to object->daemon */
-  
+
   if (object->iface_glusterfs_volume != NULL)
     g_object_unref (object->iface_glusterfs_volume);
-  
+
   g_free (object->name);
-  
+
   if (G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->finalize (_object);
 }
@@ -62,15 +62,15 @@ storaged_linux_glusterfs_volume_object_get_property (GObject    *__object,
                                                      guint       prop_id,
                                                      GValue     *value,
                                                      GParamSpec *pspec)
-{ 
+{
   StoragedLinuxGlusterFSVolumeObject *object = STORAGED_LINUX_GLUSTERFS_VOLUME_OBJECT (__object);
-  
+
   switch (prop_id)
     {
     case PROP_DAEMON:
       g_value_set_object (value, storaged_linux_glusterfs_volume_object_get_daemon (object));
       break;
-    
+
     case PROP_NAME:
       g_value_set_string (value, storaged_linux_glusterfs_volume_object_get_name (object));
       break;
@@ -149,8 +149,8 @@ storaged_linux_glusterfs_volume_object_class_init (StoragedLinuxGlusterFSVolumeO
   gobject_class->constructed  = storaged_linux_glusterfs_volume_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_volume_object_set_property;
   gobject_class->get_property = storaged_linux_glusterfs_volume_object_get_property;
-                                    
-  /**                               
+
+  /**
    * StoragedLinuxGlusterFSVolumeObject:daemon:
    *
    * The #StoragedDaemon the object is for.

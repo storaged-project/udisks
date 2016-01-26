@@ -47,7 +47,7 @@ struct _StoragedLinuxGlusterFSBrickObjectClass {
 };
 
 enum
-{ 
+{
   PROP_0,
   PROP_DAEMON,
   PROP_NAME,
@@ -58,15 +58,15 @@ G_DEFINE_TYPE (StoragedLinuxGlusterFSBrickObject, storaged_linux_glusterfs_brick
 
 static void
 storaged_linux_glusterfs_brick_object_finalize (GObject *_object)
-{ 
+{
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (_object);
   /* note: we don't hold a ref to object->daemon */
-  
+
   if (object->iface_glusterfs_brick != NULL)
     g_object_unref (object->iface_glusterfs_brick);
-  
+
   g_free (object->name);
-  
+
   if (G_OBJECT_CLASS (storaged_linux_glusterfs_brick_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_linux_glusterfs_brick_object_parent_class)->finalize (_object);
 }
@@ -76,14 +76,14 @@ storaged_linux_glusterfs_brick_object_get_property (GObject    *__object,
                                                      guint       prop_id,
                                                      GValue     *value,
                                                      GParamSpec *pspec)
-{ 
+{
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (__object);
   switch (prop_id)
     {
     case PROP_DAEMON:
       g_value_set_object (value, storaged_linux_glusterfs_brick_object_get_daemon (object));
       break;
-    
+
     case PROP_NAME:
       g_value_set_string (value, storaged_linux_glusterfs_brick_object_get_name (object));
       break;
@@ -166,8 +166,8 @@ storaged_linux_glusterfs_brick_object_class_init (StoragedLinuxGlusterFSBrickObj
   gobject_class->constructed  = storaged_linux_glusterfs_brick_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_brick_object_set_property;
   gobject_class->get_property = storaged_linux_glusterfs_brick_object_get_property;
-                                    
-  /**                               
+
+  /**
    * StoragedLinuxGlusterFSBrickObject:daemon:
    *
    * The #StoragedDaemon the object is for.

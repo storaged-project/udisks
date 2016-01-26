@@ -94,7 +94,7 @@ storaged_linux_manager_glusterfs_set_property (GObject *object,
     }
 }
 
-static void                                                 
+static void
 storaged_linux_manager_glusterfs_dispose (GObject *object)
 {
   if (G_OBJECT_CLASS (storaged_linux_manager_glusterfs_parent_class))
@@ -111,7 +111,7 @@ storaged_linux_manager_glusterfs_finalize (GObject *object)
 static void
 storaged_linux_manager_glusterfs_class_init (StoragedLinuxManagerGlusterFSClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);     
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->get_property = storaged_linux_manager_glusterfs_get_property;
   gobject_class->set_property = storaged_linux_manager_glusterfs_set_property;
@@ -120,15 +120,15 @@ storaged_linux_manager_glusterfs_class_init (StoragedLinuxManagerGlusterFSClass 
 
   /** StoragedLinuxManager:daemon
    *
-   * The #StoragedDaemon for the object.                    
-   */  
-  g_object_class_install_property (gobject_class,           
-                                   PROP_DAEMON,             
-                                   g_param_spec_object ("daemon",                               
-                                                        "Daemon",                                                    
-                                                        "The daemon for the object",                                 
-                                                        STORAGED_TYPE_DAEMON,                                        
-                                                        G_PARAM_READABLE |                                           
+   * The #StoragedDaemon for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DAEMON,
+                                   g_param_spec_object ("daemon",
+                                                        "Daemon", 
+                                                        "The daemon for the object",
+                                                        STORAGED_TYPE_DAEMON,
+                                                        G_PARAM_READABLE | 
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));

@@ -84,8 +84,8 @@ variant_reader_watch_child (GPid     pid,
         {
           g_string_append_len (data->output, buf, buf_size);
           g_free(buf);
-        } 
- 
+        }
+
       result = g_variant_new_bytestring (data->output->str);
       data->callback (result, NULL, data->user_data);
       g_variant_unref (result);
@@ -97,7 +97,6 @@ variant_reader_watch_child (GPid     pid,
   g_spawn_close_pid (pid);
   g_string_free (data->output, TRUE);
   g_free (data);
-   
 }
 
 GPid
@@ -108,29 +107,29 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
                                                         gpointer user_data),
                                       gpointer user_data)
 {
-  GError *error = NULL;                           
-  struct VariantReaderData *data;                 
+  GError *error = NULL;
+  struct VariantReaderData *data;
   GPid pid;
   gint output_fd;
 
-  if (!g_spawn_async_with_pipes (NULL,            
-                                 (gchar **)argv,  
-                                 NULL,            
+  if (!g_spawn_async_with_pipes (NULL,
+                                 (gchar **)argv,
+                                 NULL,
                                  G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
                                  NULL,
-                                 NULL,            
-                                 &pid,            
-                                 NULL,            
+                                 NULL,
+                                 &pid,
+                                 NULL,
                                  &output_fd,
-                                 NULL,            
-                                 &error))         
+                                 NULL,
+                                 &error))
     {
       callback (NULL, error, user_data);
       g_error_free (error);
       return;
     }
 
-  data = g_new0 (struct VariantReaderData, 1); 
+  data = g_new0 (struct VariantReaderData, 1);
 
   data->type = type;
   data->callback = callback;
@@ -141,7 +140,7 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
   data->output_watch = g_io_add_watch (data->output_channel,
                                        G_IO_IN | G_IO_HUP,
                                        variant_reader_child_output,
-                                       data);                                                                                       
+                                       data);
 
   g_child_watch_add (pid, variant_reader_watch_child, data);
   return pid;
@@ -150,7 +149,7 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static StoragedGlusterFSState *
-get_module_state (StoragedDaemon *daemon)         
+get_module_state (StoragedDaemon *daemon)
 {
   StoragedGlusterFSState *state;
   StoragedModuleManager *manager;
@@ -159,7 +158,7 @@ get_module_state (StoragedDaemon *daemon)
   g_assert (manager != NULL);
 
   state = (StoragedGlusterFSState *) storaged_module_manager_get_module_state_pointer (manager, GLUSTERFS_MODULE_NAME);
-  g_assert (state != NULL);   
+  g_assert (state != NULL);
 
   return state;
 }
@@ -188,7 +187,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 
   manager = storaged_daemon_get_object_manager (daemon);
   state = get_module_state (daemon);
-  gfs_volumes = storaged_process_glusterfs_volume_info_all (g_variant_get_bytestring (volume_all_info_xml)); 
+  gfs_volumes = storaged_process_glusterfs_volume_info_all (g_variant_get_bytestring (volume_all_info_xml));
 
   /* Remove obsolete gluster volumes */
   g_hash_table_iter_init (&gfsvol_name_iter,
@@ -212,7 +211,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
           }
 
       if (!found)
-        {                                 
+        {
           /* First unexport dbus objects corresponding to the volume's bricks */
           g_hash_table_iter_init (&bricks_iter, volume->bricks);
           while (g_hash_table_iter_next (&bricks_iter, &key, &value))
@@ -385,7 +384,6 @@ storaged_glusterfs_daemons_update (StoragedDaemon *daemon)
       storaged_glusterfs_state_set_glusterd (state, glusterd_obj);
     }
   g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_GLUSTERD_OBJECT (glusterd_obj), NULL);
-  storaged_debug ("Assertion passed");
   storaged_linux_glusterfs_glusterd_object_update (glusterd_obj);
 }
 

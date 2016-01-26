@@ -42,7 +42,7 @@ struct _StoragedLinuxGlusterFSGlusterdObjectClass {
 };
 
 enum
-{ 
+{
   PROP_0,
   PROP_DAEMON,
 };
@@ -51,14 +51,14 @@ G_DEFINE_TYPE (StoragedLinuxGlusterFSGlusterdObject, storaged_linux_glusterfs_gl
 
 static void
 storaged_linux_glusterfs_glusterd_object_finalize (GObject *_object)
-{ 
+{
   StoragedLinuxGlusterFSGlusterdObject *object = STORAGED_LINUX_GLUSTERFS_GLUSTERD_OBJECT (_object);
-  
+
   /* note: we don't hold a ref to object->daemon */
-  
+
   if (object->iface_glusterfs_glusterd != NULL)
     g_object_unref (object->iface_glusterfs_glusterd);
-  
+
   if (G_OBJECT_CLASS (storaged_linux_glusterfs_glusterd_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_linux_glusterfs_glusterd_object_parent_class)->finalize (_object);
 }
@@ -68,15 +68,15 @@ storaged_linux_glusterfs_glusterd_object_get_property (GObject    *__object,
                                                      guint       prop_id,
                                                      GValue     *value,
                                                      GParamSpec *pspec)
-{ 
+{
   StoragedLinuxGlusterFSGlusterdObject *object = STORAGED_LINUX_GLUSTERFS_GLUSTERD_OBJECT (__object);
-  
+
   switch (prop_id)
     {
     case PROP_DAEMON:
       g_value_set_object (value, storaged_linux_glusterfs_glusterd_object_get_daemon (object));
       break;
-    
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -138,8 +138,8 @@ storaged_linux_glusterfs_glusterd_object_class_init (StoragedLinuxGlusterFSGlust
   gobject_class->constructed  = storaged_linux_glusterfs_glusterd_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_glusterd_object_set_property;
   gobject_class->get_property = storaged_linux_glusterfs_glusterd_object_get_property;
-                                    
-  /**                               
+
+  /**
    * StoragedLinuxGlusterFSGlusterdObject:daemon:
    *
    * The #StoragedDaemon the object is for.
