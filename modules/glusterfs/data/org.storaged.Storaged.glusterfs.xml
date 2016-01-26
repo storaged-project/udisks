@@ -27,7 +27,7 @@
   <!--
       org.storaged.Storaged.Manager.GlusterFS:
       @short_description: glusterd add-on to the manager singleton
-      @since: 2.4.0
+      @since: 2.4.1
 
       Additional interface with glusterfs specifics for top-level manager
       singleton object located at the object path
@@ -70,7 +70,7 @@
         @name: Name of the volume
         @bricks: List of path to bricks that will be a part of the volume
         @result: The path to the new gluster volume object
-        @since: 2.4.0
+        @since: 2.4.1
 
        Creates a new GlusterFS volume using @bricks as the list of bricks that
        are going to be the part of the volume
@@ -108,7 +108,7 @@
   <!--
       org.storaged.Storaged.GlusterFS.Volume:
       @short_description: A GlusterFS volume
-      @since: 2.4.0
+      @since: 2.4.1
 
       Objects implementing this interface represent GlusterFS volumes
   -->
@@ -157,7 +157,7 @@
         AddBrick:
         @brick_path: The path to the brick that will be added to the volume
         @result: The path to the new brick object
-        @since: 2.4.0
+        @since: 2.4.1
 
         Adds a new brick with path specified by @brick_path to an existing
         GlusterFS volume
@@ -172,7 +172,7 @@
   <!--
       org.storaged.Storaged.GlusterFS.Brick:
       @short_description: A GlusterFS Brick
-      @since: 2.4.0
+      @since: 2.4.1
 
       Objects implementing this interface represent bricks in a
       GlusterFS volume.
