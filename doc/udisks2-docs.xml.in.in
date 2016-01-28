@@ -1,0 +1,491 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
+<book id="udisks" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>UDisks Reference Manual</title>
+    <releaseinfo>
+      For version &version; — the latest version of this
+      documentation can be found at <ulink role="online-location"
+      url="https://storaged-project.github.io/doc/latest/">https://storaged-project.github.io/doc/latest/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <part id="overview">
+    <title>Manual pages and Overview</title>
+    <xi:include href="man/udisksd.xml"/>
+    <!-- LVM2_MAN_PAGE -->
+    <xi:include href="man/udisks.xml"/>
+    <xi:include href="man/udisksctl.xml"/>
+    <xi:include href="man/umount.udisks2.xml"/>
+  </part>
+
+  <part id="ref-dbus">
+    <title>D-Bus API Reference</title>
+    <chapter id="ref-dbus-overview">
+      <title>Overview</title>
+      <sect1 id="ref-dbus-well-known-name">
+        <title>The org.freedesktop.UDisks2 bus name</title>
+        <para>
+          The D-Bus name <literal>org.freedesktop.UDisks2</literal> on
+          the system bus is used by the UDisks Daemon, <link
+          linkend="udisksd.8">udisksd</link>. If this daemon isn't
+          running, it will be started if D-Bus messages are sent to
+          the name.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-udisks2-well-known-object">
+        <title>The /org/freedesktop/UDisks2 object</title>
+        <para>
+          The process that owns the well-known D-Bus name <link
+          linkend="ref-dbus-well-known-name">org.freedesktop.UDisks2</link>
+          on the system bus (typically <link
+          linkend="udisksd.8">udisksd</link>) exports an object at the
+          well-known path <literal>/org/freedesktop/UDisks2</literal>.
+          This object implements the <ulink
+          url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager">org.freedesktop.DBus.ObjectManager</ulink>
+          interface and should be used by clients to discover other
+          objects.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-manager-well-known-object">
+        <title>The /org/freedesktop/UDisks2/Manager object</title>
+        <para>
+          The object at the path
+          <literal>/org/freedesktop/UDisks2/Manager</literal>
+          implements the <link
+          linkend="gdbus-interface-org-freedesktop-UDisks2-Manager.top_of_page">org.freedesktop.UDisks2.Manager</link>
+          D-Bus interface. This object can be used to inspect and
+          manipulate global state.
+        </para>
+      </sect1>
+
+      <sect1 id="ref-dbus-block-devices">
+        <title>The /org/freedesktop/UDisks2/block_devices/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/block_devices/</literal>
+          all represent <ulink url="http://en.wikipedia.org/wiki/Block_device#Block_devices">block devices</ulink>.
+          Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Block.top_of_page">org.freedesktop.UDisks2.Block</link>
+          D-Bus interface and may optionally implement other D-Bus interfaces such as
+          <!-- ZRAM_BLOCK_DEVICES_IFACE -->
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>,
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Partition.top_of_page">org.freedesktop.UDisks2.Partition</link> or
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Loop.top_of_page">org.freedesktop.UDisks2.Loop</link> depending on the block device in question.
+        </para>
+        <para>
+          Note that interfaces may be added and removed at
+          run-time. For example, if a block device is full of zeroes
+          (or, at least, have zeroes in the known metadata areas), it
+          will not intially implement the <link
+          linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
+          interface; however, if a filesystem is later created on the device
+          (using, say, the
+          <citerefentry>
+            <refentrytitle>mkfs</refentrytitle><manvolnum>8</manvolnum>
+          </citerefentry>
+          command) and the filesystem is recognized by the OS (specifically, recognized by
+          <citerefentry>
+            <refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum>
+          </citerefentry> and its device probers), the object will gain the interface. If the device is later zeroed or formatted for use as e.g. swap-space, it will lose the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
+          interface.
+        </para>
+      </sect1>
+
+      <sect1 id="ref-dbus-drives">
+        <title>The /org/freedesktop/UDisks2/drives/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/drives/</literal>
+          all represent <ulink url="http://en.wikipedia.org/wiki/Disk_drive">disk drives</ulink>,
+          typically physical disk drives.
+          Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Drive.top_of_page">org.freedesktop.UDisks2.Drive</link>
+          D-Bus interface and may optionally implement other D-Bus interfaces such as
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Drive-Ata.top_of_page">org.freedesktop.UDisks2.Drive.Ata</link> depending on the drive in question.
+        </para>
+        <para>
+          A drive object should not to be confused with
+          <link linkend="ref-dbus-block-devices">block device</link>
+          objects (which are used for low-level block devices the OS
+          knows about). For example, if <filename>/dev/sda</filename>
+          and <filename>/dev/sdb</filename> are block devices for two
+          paths to the same drive, there will be only drive object but
+          two block device objects.
+        </para>
+      </sect1>
+
+      <sect1 id="ref-dbus-md-raid">
+        <title>The /org/freedesktop/UDisks2/mdraid/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/mdraid/</literal>
+          represent <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>.
+          Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-MDRaid.top_of_page">org.freedesktop.UDisks2.MDRaid</link>
+          D-Bus interface.
+        </para>
+        <para>
+          These objects should not to be confused with
+          <link linkend="ref-dbus-block-devices">block device</link>
+          objects (which are used for low-level block devices the OS
+          knows about).
+        </para>
+      </sect1>
+
+      <sect1 id="ref-iscsi-session">
+        <title>The /org/freedesktop/UDisks2/iscsi/session[0-9]+ objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/iscsi/session[0-9]+</literal>
+          represent iSCSI session parameters. Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-ISCSI-Session.top_of_page">org.freedesktop.UDisks2.ISCSI.Session</link>
+          D-Bus interface.
+        </para>
+      </sect1>
+
+      <sect1 id="ref-dbus-jobs">
+        <title>The /org/freedesktop/UDisks2/jobs/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/jobs/</literal> all
+          represent long-running tasks, typically initiated by the
+          user and are guaranteed to implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Job.top_of_page">org.freedesktop.UDisks2.Job</link>
+          D-Bus interface.
+        </para>
+      </sect1>
+
+      <sect1 id="udisks-polkit-actions">
+        <title>Authorization Checks</title>
+        <para>
+          Many methods and operations offered by udisks requires the
+          calling user to be sufficiently authorized. Whether the user
+          is authorized is checked using <ulink
+          url="http://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html">polkit</ulink>
+          allowing the administrator to configure fine-grained permissions via
+          polkit authorization rules.
+        </para>
+        <para>
+          There is not necessarily a one-to-one relationship between
+          D-Bus methods and polkit actions - typically the
+          relationship is more complicated and depends on both the
+          context of the process invoking the method, the object the
+          method is acting on and possibly more factors. For example,
+          the <link
+          linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Filesystem.Mount()</link>
+          method call may check that the caller is authorized for one
+          of the four actions
+          <emphasis>org.freedesktop.UDisks2.filesystem-mount</emphasis>,
+          <emphasis>org.freedesktop.UDisks2.filesystem-mount-system</emphasis>,
+          <emphasis>org.freedesktop.UDisks2.filesystem-mount-other-seat</emphasis>
+          or
+          <emphasis>org.freedesktop.UDisks2.filesystem-mount-fstab</emphasis>
+          depending on circumstances.
+        </para>
+        <para>
+          Often there will be two polkit actions for one operation -
+          one for so-called <quote>system devices</quote> and one for
+          non-system devices. In this context <quote>system
+          device</quote> refers to the value of the <link
+          linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintSystem">Block:HintSystem</link>
+          D-Bus property and is normally only
+          <constant>TRUE</constant> for devices not considered
+          <quote>removable</quote> (devices considered removable
+          include USB attached storage, Flash media and optical
+          drives). See <xref linkend="udisks.8"/> for how to control
+          if a device is considered a system device.
+        </para>
+        <para>
+          The polkit actions are not considered stable and may change
+          from release to release so administrators should take notice
+          when upgrading from one version of udisks to another. For
+          example, polkit authorization rules may need to be updated
+          to match an updated policy.
+        </para>
+        <para>
+          See <xref linkend="udisks-polkit-details"/> for the
+          variables that can be used to assist in determining if the
+          caller is authorized (note that each variable may not be set
+          for request). For example, a polkit authorization rule for
+          any of the
+          <emphasis>org.freedesktop.UDisks2.filesystem-mount*</emphasis>
+          actions can use the <parameter>device</parameter> variable
+          to determine if the caller is authorized to mount a specific
+          block device.
+        </para>
+
+        <table frame="all" id="udisks-polkit-details">
+          <title>Known polkit variables</title>
+          <tgroup cols="2" align="left" colsep="1" rowsep="1">
+            <thead>
+              <row>
+                <entry>key</entry>
+                <entry>value</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry><parameter>device</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file, for example <quote>/dev/vg_lucifer/lv_root</quote> or <quote>/dev/sda1</quote>. If the object is not a block device, this is not set.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive</parameter></entry>
+                <entry>Like the <parameter>device</parameter> variable, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
+              </row>
+
+              <row>
+                <entry><parameter>drive.wwn</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.WWN">Drive:WWN</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.serial</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Serial">Drive:Serial</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.vendor</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Vendor">Drive:Vendor</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.model</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Model">Drive:Model</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.revision</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Revision">Drive:Revision</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.removable</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the string <quote>true</quote> only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.removable.bus</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.ConnectionBus">Drive:ConnectionBus</link> property. This variable is set only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.removable.media</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.MediaCompatibility">Drive:MediaCompatibility</link> property. This variable is set only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
+              </row>
+
+              <row>
+                <entry><parameter>id.type</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdType">Block:IdType</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>id.usage</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUsage">Block:IdUsage</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>id.version</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdVersion">Block:IdVersion</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>id.label</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdLabel">Block:IdLabel</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>id.uuid</parameter></entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUUID">Block:IdUUID</link> property.</entry>
+              </row>
+
+              <row>
+                <entry><parameter>partition.number</parameter></entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Number">Partition:Number</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>partition.type</parameter></entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Type">Partition:Type</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>partition.flags</parameter></entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Flags">Partition:Flags</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>partition.name</parameter></entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Name">Partition:Name</link> property.</entry>
+              </row>
+              <row>
+                <entry><parameter>partition.uuid</parameter></entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.UUID">Partition:UUID</link> property.</entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </table>
+
+        <para>
+          For reference, the polkit actions defined by udisks &version;
+          are included here:
+          <informalexample id="udisks-polkit-actions-file"><programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="@top_srcdir@/data/org.freedesktop.UDisks2.policy.in"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting></informalexample>
+        </para>
+      </sect1>
+
+      <sect1 id="udisks-std-options">
+        <title>The <parameter>options</parameter> parameter</title>
+        <para>
+          Many method calls take a parameter of type
+          <link linkend='G-VARIANT-TYPE-VARDICT:CAPS'>'a{sv}'</link>
+          that is normally called <parameter>options</parameter>.
+          The following table lists well-known options:
+        </para>
+        <table frame='all'>
+          <title>Well-known options</title>
+          <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <thead>
+              <row>
+                <entry>Option name</entry>
+                <entry>Value type</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>auth.no_user_interaction</entry>
+                <entry><link linkend="G-VARIANT-TYPE-BOOLEAN:CAPS">'b'</link></entry>
+                <entry>
+                  If set to <constant>TRUE</constant>, then no user
+                  interaction will happen when checking if the method
+                  call is authorized.
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect1>
+
+    </chapter>
+
+    <chapter>
+      <title>D-Bus Interfaces</title>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.MDRaid.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Block.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Partition.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.PartitionTable.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Loop.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
+      <!-- LSM_DBUS_INTERFACE -->
+      <!-- LVM2_DBUS_INTERFACE -->
+      <!-- ISCSI_DBUS_INTERFACE -->
+      <!-- BTRFS_DBUS_INTERFACE -->
+      <!-- ZRAM_DBUS_INTERFACE -->
+      <!-- BCACHE_DBUS_INTERFACE -->
+    </chapter>
+  </part>
+
+  <part id="ref-library">
+    <title>Library API Reference</title>
+      <xi:include href="xml/udisksclient.xml"/>
+      <xi:include href="xml/udisksobjectinfo.xml"/>
+      <xi:include href="xml/udiskserror.xml"/>
+    <chapter id="ref-library-generated">
+      <title>Generated Code</title>
+      <xi:include href="xml/UDisksObject.xml"/>
+      <xi:include href="xml/UDisksObjectManagerClient.xml"/>
+      <xi:include href="xml/UDisksManager.xml"/>
+      <xi:include href="xml/UDisksDrive.xml"/>
+      <xi:include href="xml/UDisksDriveAta.xml"/>
+      <xi:include href="xml/UDisksMDRaid.xml"/>
+      <xi:include href="xml/UDisksJob.xml"/>
+      <xi:include href="xml/UDisksBlock.xml"/>
+      <xi:include href="xml/UDisksPartition.xml"/>
+      <xi:include href="xml/UDisksPartitionTable.xml"/>
+      <xi:include href="xml/UDisksFilesystem.xml"/>
+      <xi:include href="xml/UDisksSwapspace.xml"/>
+      <xi:include href="xml/UDisksEncrypted.xml"/>
+      <xi:include href="xml/UDisksLoop.xml"/>
+      <!-- LSM_GENERATED_CODE -->
+      <!-- LVM2_GENERATED_CODE -->
+      <!-- ISCSI_GENERATED_CODE -->
+      <!-- BTRFS_GENERATED_CODE -->
+      <!-- ZRAM_GENERATED_CODE -->
+      <!-- BCACHE_GENERATED_CODE -->
+    </chapter>
+  </part>
+
+  <part id="ref-daemon">
+    <title>Daemon Implementation Details</title>
+    <chapter id="ref-daemon-core">
+      <title>Core</title>
+      <xi:include href="xml/udisksdaemonutil.xml"/>
+      <xi:include href="xml/udiskslogging.xml"/>
+      <xi:include href="xml/udisksdaemon.xml"/>
+      <xi:include href="xml/udisksprovider.xml"/>
+      <xi:include href="xml/udisksstate.xml"/>
+      <xi:include href="xml/udisksata.xml"/>
+      <xi:include href="xml/UDisksModuleManager.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-monitoring">
+      <title>State and Configuration</title>
+      <xi:include href="xml/udisksmountmonitor.xml"/>
+      <xi:include href="xml/udisksfstabmonitor.xml"/>
+      <xi:include href="xml/udiskscrypttabmonitor.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-jobs">
+      <title>Jobs</title>
+      <xi:include href="xml/udisksbasejob.xml"/>
+      <xi:include href="xml/udiskssimplejob.xml"/>
+      <xi:include href="xml/udisksthreadedjob.xml"/>
+      <xi:include href="xml/udisksspawnedjob.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-linux-types">
+      <title>Linux-specific types</title>
+      <xi:include href="xml/udiskslinuxmanager.xml"/>
+      <xi:include href="xml/udiskslinuxprovider.xml"/>
+      <xi:include href="xml/udiskslinuxdevice.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-drives">
+      <title>Drives on Linux</title>
+      <xi:include href="xml/udiskslinuxdrive.xml"/>
+      <xi:include href="xml/udiskslinuxdriveata.xml"/>
+      <xi:include href="xml/udiskslinuxdriveobject.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-mdraid">
+      <title>Linux RAID</title>
+      <xi:include href="xml/udiskslinuxmdraid.xml"/>
+      <xi:include href="xml/udiskslinuxmdraidobject.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-block-devices">
+      <title>Block devices on Linux</title>
+      <xi:include href="xml/udiskslinuxblock.xml"/>
+      <xi:include href="xml/udiskslinuxpartition.xml"/>
+      <xi:include href="xml/udiskslinuxpartitiontable.xml"/>
+      <xi:include href="xml/udiskslinuxfilesystem.xml"/>
+      <xi:include href="xml/udiskslinuxencrypted.xml"/>
+      <xi:include href="xml/udiskslinuxswapspace.xml"/>
+      <xi:include href="xml/udiskslinuxloop.xml"/>
+      <xi:include href="xml/udiskslinuxblockobject.xml"/>
+    </chapter>
+  </part>
+
+  <index id="api-index">
+    <title>Index</title>
+  </index>
+
+  <index id="api-index-deprecated" role="deprecated">
+    <title>Index of deprecated symbols</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <!-- TODO: version -->
+  <index id="api-index-@VERSION@" role="@VERSION@">
+    <title>Index of new symbols in @VERSION@</title>
+    <xi:include href="xml/api-index-@VERSION@.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+
+  <chapter id="gio-hierarchy">
+    <title>Object Hierarchy</title>
+      <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+</book>

@@ -23,10 +23,10 @@
 
 #include <gio/gio.h>
 #include <polkit/polkit.h>
-#include <storaged/storaged.h>
+#include <udisks/udisks.h>
 #include <gudev/gudev.h>
 #include <sys/types.h>
-#include <src/storagedlogging.h>
+#include <src/udiskslogging.h>
 
 #include "lsm_generated.h"
 
@@ -34,35 +34,35 @@ G_BEGIN_DECLS
 
 #define LSM_MODULE_NAME "lsm"
 
-struct _StoragedLinuxDriveLSM;
-typedef struct _StoragedLinuxDriveLSM StoragedLinuxDriveLSM;
+struct _UDisksLinuxDriveLSM;
+typedef struct _UDisksLinuxDriveLSM UDisksLinuxDriveLSM;
 
-#define STORAGED_TYPE_LINUX_DRIVE_LSM (storaged_linux_drive_lsm_get_type ())
-#define STORAGED_LINUX_DRIVE_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_DRIVE_LSM, \
-                               StoragedLinuxDriveLSM))
-#define STORAGED_IS_LINUX_DRIVE_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_DRIVE_LSM))
+#define UDISKS_TYPE_LINUX_DRIVE_LSM (udisks_linux_drive_lsm_get_type ())
+#define UDISKS_LINUX_DRIVE_LSM(o) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_LSM, \
+                               UDisksLinuxDriveLSM))
+#define UDISKS_IS_LINUX_DRIVE_LSM(o) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_LSM))
 
-GType storaged_linux_drive_lsm_get_type (void) G_GNUC_CONST;
-StoragedLinuxDriveLSM *storaged_linux_drive_lsm_new (void);
+GType udisks_linux_drive_lsm_get_type (void) G_GNUC_CONST;
+UDisksLinuxDriveLSM *udisks_linux_drive_lsm_new (void);
 gboolean
-storaged_linux_drive_lsm_update (StoragedLinuxDriveLSM *std_lx_drv_lsm,
-                                 StoragedLinuxDriveObject *st_lx_drv_obj);
+udisks_linux_drive_lsm_update (UDisksLinuxDriveLSM *std_lx_drv_lsm,
+                               UDisksLinuxDriveObject *st_lx_drv_obj);
 
-struct _StoragedLinuxManagerLSM;
-typedef struct _StoragedLinuxManagerLSM StoragedLinuxManagerLSM;
+struct _UDisksLinuxManagerLSM;
+typedef struct _UDisksLinuxManagerLSM UDisksLinuxManagerLSM;
 
-#define STORAGED_TYPE_LINUX_MANAGER_LSM \
-  (storaged_linux_manager_lsm_get_type ())
-#define STORAGED_LINUX_MANAGER_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_LINUX_MANAGER_LSM, \
-                               StoragedLinuxManagerLSM))
-#define STORAGED_IS_LINUX_MANAGER_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_LINUX_MANAGER))
+#define UDISKS_TYPE_LINUX_MANAGER_LSM \
+  (udisks_linux_manager_lsm_get_type ())
+#define UDISKS_LINUX_MANAGER_LSM(o) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_MANAGER_LSM, \
+                               UDisksLinuxManagerLSM))
+#define UDISKS_IS_LINUX_MANAGER_LSM(o) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_MANAGER))
 
-GType storaged_linux_manager_lsm_get_type (void) G_GNUC_CONST;
-StoragedLinuxManagerLSM *storaged_linux_manager_lsm_new (void);
+GType udisks_linux_manager_lsm_get_type (void) G_GNUC_CONST;
+UDisksLinuxManagerLSM *udisks_linux_manager_lsm_new (void);
 
 G_END_DECLS
 

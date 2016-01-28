@@ -2,7 +2,7 @@
 
 SUBDIRS = data
 
-MODULE_SO = libstoraged_lsm.so
+MODULE_SO = libudisks2_lsm.so
 
 NULL =
 
@@ -16,7 +16,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT \
-	-DSTORAGED_COMPILATION \
+	-DUDISKS_COMPILATION \
 	-DBUILD_DIR=\"$(abs_top_builddir)/\" \
 	$(POLKIT_GOBJECT_1_CFLAGS) \
 	$(GLIB_CFLAGS) \
@@ -25,10 +25,10 @@ INCLUDES = \
 	$(WARN_CFLAGS) \
 	$(NULL)
 
-$(dbus_built_sources): data/org.storaged.Storaged.lsm.xml Makefile.am
+$(dbus_built_sources): data/org.freedesktop.UDisks2.lsm.xml Makefile.am
 	$(AM_V_GEN) gdbus-codegen \
-		--interface-prefix org.storaged.Storaged. \
-		--c-namespace Storaged \
+		--interface-prefix org.freedesktop.UDisks2. \
+		--c-namespace UDisks \
 		--generate-c-code lsm_generated \
 		--generate-docbook doc_generated \
 		$<
@@ -41,7 +41,7 @@ module_flags = \
 	-module \
 	-no-undefined \
 	-export-symbols-regex \
-	'^storaged_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
+	'^udisks_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
 
 dbus_built_sources = \
 	lsm_generated.h    lsm_generated.c \
@@ -51,23 +51,23 @@ BUILT_SOURCES = \
 	$(dbus_built_sources) \
 	$(NULL)
 
-libstoraged_lsmdir=$(libdir)/storaged/modules
-libstoraged_lsm_LTLIBRARIES=libstoraged_lsm.la
+libudisks2_lsmdir=$(libdir)/udisks2/modules
+libudisks2_lsm_LTLIBRARIES=libudisks2_lsm.la
 
-libstoraged_lsmincludedir=$(includedir)/storaged/storaged
+libudisks2_lsmincludedir=$(includedir)/udisks2/udisks
 
-libstoraged_lsminclude_HEADERS= \
-	$(top_srcdir)/modules/storagedmoduleiface.h \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h \
-	$(top_srcdir)/modules/storagedmoduleobject.h \
+libudisks2_lsminclude_HEADERS= \
+	$(top_srcdir)/modules/udisksmoduleiface.h \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h \
+	$(top_srcdir)/modules/udisksmoduleobject.h \
 	$(NULL)
 
-libstoraged_lsm_la_SOURCES = \
+libudisks2_lsm_la_SOURCES = \
 	$(BUILT_SOURCES) \
-	$(top_srcdir)/modules/storagedmoduleiface.h \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h \
-	$(top_srcdir)/modules/storagedmoduleobject.h \
-	$(top_srcdir)/modules/storagedmoduleobject.c \
+	$(top_srcdir)/modules/udisksmoduleiface.h \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h \
+	$(top_srcdir)/modules/udisksmoduleobject.h \
+	$(top_srcdir)/modules/udisksmoduleobject.c \
 	lsm_types.h \
 	lsm_module_iface.c \
 	lsm_data.h lsm_data.c \
@@ -75,11 +75,11 @@ libstoraged_lsm_la_SOURCES = \
 	lsm_linux_manager.c \
 	$(NULL)
 
-libstoraged_lsm_la_CPPFLAGS = \
-	-DG_LOG_DOMAIN=\"libstoraged-lsm\" \
+libudisks2_lsm_la_CPPFLAGS = \
+	-DG_LOG_DOMAIN=\"libudisks2-lsm\" \
 	$(NULL)
 
-libstoraged_lsm_la_CFLAGS = \
+libudisks2_lsm_la_CFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GUDEV_CFLAGS) \
@@ -88,9 +88,9 @@ libstoraged_lsm_la_CFLAGS = \
 	$(LIBCONFIG_CFLAGS) \
 	$(NULL)
 
-libstoraged_lsm_la_LDFLAGS = $(module_flags)
+libudisks2_lsm_la_LDFLAGS = $(module_flags)
 
-libstoraged_lsm_la_LIBADD = \
+libudisks2_lsm_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(GIO_LIBS) \
 	$(GUDEV_LIBS) \

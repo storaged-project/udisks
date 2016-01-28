@@ -6,10 +6,6 @@ if HAVE_BTRFS
 SUBDIRS += btrfs
 endif # HAVE_BTRFS
 
-if HAVE_DUMMY
-SUBDIRS += dummy
-endif # HAVE_DUMMY
-
 if HAVE_ISCSI
 SUBDIRS += iscsi
 endif # HAVE_ISCSI

@@ -29,28 +29,28 @@
     systemctl start libstoragemgmt
     lsmcli ls -l -u ontap://root@na-sim -P      # Input ONTAP password.
  * It should print some information about this ONTAP array.
- * Compile and install storaged with lsm module:
+ * Compile and install Storaged project with lsm module:
     ./autogen.sh  --libdir=/usr/lib64 --prefix=/usr  --sysconfdir /etc \
-        --enable-lsm --disable-lvm2 --disable-dummy --disable-iscsi
+        --enable-lsm
     make -j5
     sudo make install
- * Update /etc/storaged/modules.conf.d/storaged_lsm.conf to hold these lines:
+ * Update /etc/udisks2/modules.conf.d/udisks2_lsm.conf to hold these lines:
     extra_uris = ["ontap://root@na-sim"]
     extra_passwords = ["your_ontap_password"]
- * Run storaged with lsm module loading:
+ * Run udisksd with lsm module loading:
     sudo valgrind --show-leak-kinds=all --leak-check=full \
         --trace-children=yes --show-reachable=no
-        --log-file=/tmp/mem_check.log  /usr/libexec/storaged/storaged
+        --log-file=/tmp/mem_check.log  /usr/libexec/udisks2/udisksd
         --force-load-modules
  * Use qdbus(or other tool) to query dbus interface:
-    sudo qdbus --system org.storaged.Storaged
+    sudo qdbus --system org.freedesktop.UDisks2
  * Use "dbus-monitor --system" command to monitor dbus signals.
 
 ## Files
 * lsm_module_iface.c
 
     Implemented the public module public method defined by
-    modules/storagedmoduleifacetypes.h
+    modules/udisksmoduleifacetypes.h
 
 * lsm_data.c lsm_data.h
 
@@ -64,7 +64,7 @@
 
 * lsm_linux_manager.c
 
-    Empty interface for org.storaged.Storaged.Manager.LSM.
+    Empty interface for org.freedesktop.UDisks2.Manager.LSM.
 
 * lsm_types.h
 
@@ -73,15 +73,15 @@
 
 ## Workflow
 
-* storaged_module_manager_load_modules () of
-  src/storagedmodulemanager.c
+* udisks_module_manager_load_modules () of
+  src/udisksmodulemanager.c
 
-    Check whether libstoraged_lsm.so has required g_module_symbol () in
-    storaged_module_manager_load_modules ().
+    Check whether libudisks2_lsm.so has required g_module_symbol () in
+    udisks_module_manager_load_modules ().
 
-* storaged_linux_provider_start () of src/storagedlinuxprovider.c
+* udisks_linux_provider_start () of src/udiskslinuxprovider.c
 
-    If module is loaded __after__ storaged daemon, only 1 codeplugin
+    If module is loaded __after__ udisksd daemon, only 1 codeplugin
     will be kicked off by ensure_modules ();
 
     If module is enabled via command option --force-load-modules
@@ -89,19 +89,19 @@
     performed:
 
       * ensure_modules () invoke codeplug.
-      * storaged_linux_provider_start () do twice codeplugs.
+      * udisks_linux_provider_start () do twice codeplugs.
 
     The codeplug just generate add udev event on all devices which
-    will then handled by storaged_linux_drive_object_uevent ()
-    of src/storagedlinuxdriveobject.c in our case.
+    will then handled by udisks_linux_drive_object_uevent ()
+    of src/udiskslinuxdriveobject.c in our case.
 
 * The add udev event of disk drive was handled by
-  storaged_linux_drive_object_uevent () of src/storagedlinuxdriveobject.c.
+  udisks_linux_drive_object_uevent () of src/udiskslinuxdriveobject.c.
 
-* Then update_iface () of src/storagedlinuxdriveobject.c invoke module
+* Then update_iface () of src/udiskslinuxdriveobject.c invoke module
   functions:
     * _drive_check () of lsm_module_iface.c:
-        If retrun TRUE, the dbus org.storaged.Storaged.Drive.LSM interface
+        If retrun TRUE, the dbus org.freedesktop.UDisks2.Drive.LSM interface
         will be created.
         In order to refresh the lsm cache when new disk attached,
         in this method, we do extra refresh if not found in cache.
@@ -110,7 +110,7 @@
     * _drive_connect () of lsm_module_iface.c:
         No idea what this for. We just return void.
     * _drive_update () of lsm_module_iface.c:
-        For add udev event, invoke storaged_linux_drive_lsm_update () of
+        For add udev event, invoke udisks_linux_drive_lsm_update () of
         lsm_linux_drive.c which create loop event to refresh cache at
         certain interval (configureable).
         For remove udev event, just g_object_unref ().
@@ -267,8 +267,8 @@ _vpd83_2_lsm_vri_data_hash = {
 
 ## TODO
 * Warnning:
-    (storaged:12885): GLib-GObject-WARNING **: g_object_notify: object class
-    'StoragedLinuxDriveObject' has no property named 'drive-lsm'
+    (udisksd:12885): GLib-GObject-WARNING **: g_object_notify: object class
+    'UDisksLinuxDriveObject' has no property named 'drive-lsm'
 
 * Add extra sections to the documentation, currently we only have dbus
   interface documentation.

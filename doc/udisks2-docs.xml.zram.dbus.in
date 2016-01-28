@@ -1,0 +1,2 @@
+      <xi:include href="../modules/zram/udisks-generated-doc-org.freedesktop.UDisks2.Manager.ZRAM.xml"/>
+      <xi:include href="../modules/zram/udisks-generated-doc-org.freedesktop.UDisks2.Block.ZRAM.xml"/>

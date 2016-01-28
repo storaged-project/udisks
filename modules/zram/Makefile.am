@@ -4,7 +4,7 @@ SUBDIRS = data
 
 ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
 
-MODULE_SO = libstoraged_zram.so
+MODULE_SO = libudisks2_zram.so
 
 NULL =
 
@@ -19,7 +19,7 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
 	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
-	-DSTORAGED_COMPILATION                                                 \
+	-DUDISKS_COMPILATION                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
@@ -27,88 +27,88 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(ZRAM_MODULE_DIR)/data/org.storaged.Storaged.zram.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                             \
-	        --interface-prefix org.storaged.Storaged.                     \
-	        --c-namespace Storaged                                        \
-	        --generate-c-code storaged-zram-generated                     \
-	        --generate-docbook storaged-generated-doc                     \
+$(dbus_built_sources): $(ZRAM_MODULE_DIR)/data/org.freedesktop.UDisks2.zram.xml Makefile.am
+	$(AM_V_GEN) gdbus-codegen                                              \
+	        --interface-prefix org.freedesktop.UDisks2.                    \
+	        --c-namespace UDisks                                           \
+	        --generate-c-code udisks-zram-generated                        \
+	        --generate-docbook udisks-generated-doc                        \
 	        $<
 
-dbus_built_sources =                                                          \
-	storaged-zram-generated.h        storaged-zram-generated.c            \
+dbus_built_sources =                                                           \
+	udisks-zram-generated.h        udisks-zram-generated.c                 \
 	$(NULL)
 
-BUILT_SOURCES =                                                               \
-	$(dbus_built_sources)                                                 \
+BUILT_SOURCES =                                                                \
+	$(dbus_built_sources)                                                  \
 	$(NULL)
 
-libstoraged_zramdir=$(libdir)/storaged/modules
-libstoraged_zram_LTLIBRARIES=libstoraged_zram.la
+libudisks2_zramdir=$(libdir)/udisks2/modules
+libudisks2_zram_LTLIBRARIES=libudisks2_zram.la
 
-libstoraged_zramincludedir=$(includedir)/storaged/storaged
+libudisks2_zramincludedir=$(includedir)/udisks2/udisks
 
-libstoraged_zraminclude_HEADERS =                                             \
-	$(top_srcdir)/modules/storagedmoduleiface.h                           \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                      \
-	$(top_srcdir)/modules/storagedmoduleobject.h                          \
+libudisks2_zraminclude_HEADERS =                                               \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
-libstoraged_zram_la_SOURCES =                                                 \
-	$(BUILT_SOURCES)                                                      \
-	$(top_srcdir)/modules/storagedmoduleiface.h                           \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                      \
-	$(top_srcdir)/modules/storagedmoduleobject.h                          \
-	$(top_srcdir)/modules/storagedmoduleobject.c                          \
-	storagedlinuxblockzram.c                                              \
-	storagedlinuxblockzram.h                                              \
-	storagedlinuxmanagerzram.h                                            \
-	storagedlinuxmanagerzram.c                                            \
-	storagedzrammoduleiface.c                                             \
-	storagedzramstate.h                                                   \
-	storagedzramstate.c                                                   \
-	storagedzramtypes.h                                                   \
-	storagedzramutil.c                                                    \
-	storagedzramutil.h                                                    \
+libudisks2_zram_la_SOURCES =                                                   \
+	$(BUILT_SOURCES)                                                       \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
+	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	udiskslinuxblockzram.c                                                 \
+	udiskslinuxblockzram.h                                                 \
+	udiskslinuxmanagerzram.h                                               \
+	udiskslinuxmanagerzram.c                                               \
+	udiskszrammoduleiface.c                                                \
+	udiskszramstate.h                                                      \
+	udiskszramstate.c                                                      \
+	udiskszramtypes.h                                                      \
+	udiskszramutil.c                                                       \
+	udiskszramutil.h                                                       \
 	$(NULL)
 
-libstoraged_zram_la_CPPFLAGS =                                                \
-	$(CPPFLAGS)                                                           \
-	-DG_LOG_DOMAIN=\"libstoraged-zram\"                                   \
+libudisks2_zram_la_CPPFLAGS =                                                  \
+	$(CPPFLAGS)                                                            \
+	-DG_LOG_DOMAIN=\"libudisks2-zram\"                                     \
 	$(NULL)
 
-libstoraged_zram_la_CFLAGS =                                                  \
-	$(GLIB_CFLAGS)                                                        \
-	$(GIO_CFLAGS)                                                         \
-	$(GUDEV_CFLAGS)                                                       \
-	$(POLKIT_GOBJECT_1_CFLAGS)                                            \
-	$(KBD_CFLAGS)                                                         \
-	$(SWAP_CFLAGS)                                                        \
+libudisks2_zram_la_CFLAGS =                                                    \
+	$(GLIB_CFLAGS)                                                         \
+	$(GIO_CFLAGS)                                                          \
+	$(GUDEV_CFLAGS)                                                        \
+	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
+	$(KBD_CFLAGS)                                                          \
+	$(SWAP_CFLAGS)                                                         \
 	$(NULL)
 
-libstoraged_zram_la_LDFLAGS =                                                 \
-	-export_dynamic                                                       \
-	-avoid-version                                                        \
-	-module                                                               \
-	-no-undefined                                                         \
-	-export-symbols-regex                                                 \
-	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query' \
+libudisks2_zram_la_LDFLAGS =                                                   \
+	-export_dynamic                                                        \
+	-avoid-version                                                         \
+	-module                                                                \
+	-no-undefined                                                          \
+	-export-symbols-regex                                                  \
+	 '^udisks_.*|g_io_module_load|g_io_module_unload|g_io_module_query'    \
 	$(NULL)
 
-libstoraged_zram_la_LIBADD =                                                  \
-	$(GLIB_LIBS)                                                          \
-	$(GIO_LIBS)                                                           \
-	$(GUDEV_LIBS)                                                         \
-	$(POLKIT_GOBJECT_1_LIBS)                                              \
-	$(KBD_LIBS)                                                           \
-	$(SWAP_LIBS)                                                          \
+libudisks2_zram_la_LIBADD =                                                    \
+	$(GLIB_LIBS)                                                           \
+	$(GIO_LIBS)                                                            \
+	$(GUDEV_LIBS)                                                          \
+	$(POLKIT_GOBJECT_1_LIBS)                                               \
+	$(KBD_LIBS)                                                            \
+	$(SWAP_LIBS)                                                           \
 	$(NULL)
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
+CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
 
-EXTRA_DIST =                                                                  \
+EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled

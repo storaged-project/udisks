@@ -7,7 +7,7 @@ Makefile.in
 *.o
 *.lo
 *.la
-storaged-daemon
+udisks-daemon
 *-glue.h
 generated-*.c
 generated-*.h

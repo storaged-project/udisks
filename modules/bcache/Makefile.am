@@ -4,7 +4,7 @@ SUBDIRS = data
 
 BCACHE_MODULE_DIR = $(top_srcdir)/modules/bcache
 
-MODULE_SO = libstoraged_bcache.so
+MODULE_SO = libudisks2_bcache.so
 
 NULL =
 
@@ -17,9 +17,9 @@ CPPFLAGS =                                                                    \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                       \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                               \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                     \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                        \
+	-DLVM_HELPER_DIR=\""$(prefix)/lib/udisks2/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                               \
-	-DSTORAGED_COMPILATION                                                \
+	-DUDISKS_COMPILATION                                                  \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                            \
 	$(GLIB_CFLAGS)                                                        \
 	$(GIO_CFLAGS)                                                         \
@@ -27,57 +27,57 @@ CPPFLAGS =                                                                    \
 	$(WARN_CFLAGS)                                                        \
 	$(NULL)
 
-$(dbus_built_sources): $(BCACHE_MODULE_DIR)/data/org.storaged.Storaged.bcache.xml Makefile.am
+$(dbus_built_sources): $(BCACHE_MODULE_DIR)/data/org.freedesktop.UDisks2.bcache.xml Makefile.am
 	$(AM_V_GEN) gdbus-codegen                                             \
-	        --interface-prefix org.storaged.Storaged.                     \
-	        --c-namespace Storaged                                        \
-	        --generate-c-code storaged-bcache-generated                   \
-	        --generate-docbook storaged-generated-doc                     \
+	        --interface-prefix org.freedesktop.UDisks2.                   \
+	        --c-namespace UDisks                                          \
+	        --generate-c-code udisks-bcache-generated                     \
+	        --generate-docbook udisks-generated-doc                       \
 	        $<
 
 dbus_built_sources =                                                          \
-	storaged-bcache-generated.h	storaged-bcache-generated.c           \
+	udisks-bcache-generated.h	udisks-bcache-generated.c             \
 	$(NULL)
 
 BUILT_SOURCES =                                                               \
 	$(dbus_built_sources)                                                 \
 	$(NULL)
 
-libstoraged_bcachedir=$(libdir)/storaged/modules
-libstoraged_bcache_LTLIBRARIES=libstoraged_bcache.la
+libudisks2_bcachedir=$(libdir)/udisks2/modules
+libudisks2_bcache_LTLIBRARIES=libudisks2_bcache.la
 
-libstoraged_bcacheincludedir=$(includedir)/storaged/storaged
+libudisks2_bcacheincludedir=$(includedir)/udisks2/udisks
 
-libstoraged_bcacheinclude_HEADERS =                                           \
-	$(top_srcdir)/modules/storagedmoduleiface.h                           \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                      \
-	$(top_srcdir)/modules/storagedmoduleobject.h                          \
+libudisks2_bcacheinclude_HEADERS =                                            \
+	$(top_srcdir)/modules/udisksmoduleiface.h                             \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
+	$(top_srcdir)/modules/udisksmoduleobject.h                            \
 	$(NULL)
 
-libstoraged_bcache_la_SOURCES =                                               \
+libudisks2_bcache_la_SOURCES =                                                \
 	$(BUILT_SOURCES)                                                      \
-	$(top_srcdir)/modules/storagedmoduleiface.h                           \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                      \
-	$(top_srcdir)/modules/storagedmoduleobject.h                          \
-	$(top_srcdir)/modules/storagedmoduleobject.c                          \
-	storagedlinuxblockbcache.c                                            \
-	storagedlinuxblockbcache.h                                            \
-	storagedlinuxmanagerbcache.h                                          \
-	storagedlinuxmanagerbcache.c                                          \
-	storagedbcachemoduleiface.c                                           \
-	storagedbcachestate.h                                                 \
-	storagedbcachestate.c                                                 \
-	storagedbcachetypes.h                                                 \
-	storagedbcacheutil.c                                                  \
-	storagedbcacheutil.h                                                  \
+	$(top_srcdir)/modules/udisksmoduleiface.h                             \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
+	$(top_srcdir)/modules/udisksmoduleobject.h                            \
+	$(top_srcdir)/modules/udisksmoduleobject.c                            \
+	udiskslinuxblockbcache.c                                              \
+	udiskslinuxblockbcache.h                                              \
+	udiskslinuxmanagerbcache.h                                            \
+	udiskslinuxmanagerbcache.c                                            \
+	udisksbcachemoduleiface.c                                             \
+	udisksbcachestate.h                                                   \
+	udisksbcachestate.c                                                   \
+	udisksbcachetypes.h                                                   \
+	udisksbcacheutil.c                                                    \
+	udisksbcacheutil.h                                                    \
 	$(NULL)
 
-libstoraged_bcache_la_CPPFLAGS =                                              \
+libudisks2_bcache_la_CPPFLAGS =                                               \
 	$(CPPFLAGS)                                                           \
-	-DG_LOG_DOMAIN=\"libstoraged-bcache\"                                 \
+	-DG_LOG_DOMAIN=\"libudisks2-bcache\"                                  \
 	$(NULL)
 
-libstoraged_bcache_la_CFLAGS =                                                \
+libudisks2_bcache_la_CFLAGS =                                                 \
 	$(GLIB_CFLAGS)                                                        \
 	$(GIO_CFLAGS)                                                         \
 	$(GUDEV_CFLAGS)                                                       \
@@ -85,16 +85,16 @@ libstoraged_bcache_la_CFLAGS =                                                \
 	$(BCACHE_CFLAGS)                                                      \
 	$(NULL)
 
-libstoraged_bcache_la_LDFLAGS =                                               \
+libudisks2_bcache_la_LDFLAGS =                                                \
 	-export_dynamic                                                       \
 	-avoid-version                                                        \
 	-module                                                               \
 	-no-undefined                                                         \
 	-export-symbols-regex                                                 \
-	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query' \
+	 '^udisks_.*|g_io_module_load|g_io_module_unload|g_io_module_query'   \
 	$(NULL)
 
-libstoraged_bcache_la_LIBADD =                                                \
+libudisks2_bcache_la_LIBADD =                                                 \
 	$(GLIB_LIBS)                                                          \
 	$(GIO_LIBS)                                                           \
 	$(GUDEV_LIBS)                                                         \
@@ -104,7 +104,7 @@ libstoraged_bcache_la_LIBADD =                                                \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
+CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
 
 EXTRA_DIST =                                                                  \
 	$(NULL)

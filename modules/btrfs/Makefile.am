@@ -4,7 +4,7 @@ SUBDIRS = data
 
 BTRFS_MODULE_DIR = $(top_srcdir)/modules/btrfs
 
-MODULE_SO = libstoraged_btrfs.so
+MODULE_SO = libudisks2_btrfs.so
 
 NULL =
 
@@ -17,9 +17,9 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
+	-DLVM_HELPER_DIR=\""$(prefix)/lib/udisks2/"\"                          \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
-	-DSTORAGED_COMPILATION                                                 \
+	-DUDISKS_COMPILATION                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
@@ -27,57 +27,57 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(BTRFS_MODULE_DIR)/data/org.storaged.Storaged.btrfs.xml Makefile.am
+$(dbus_built_sources): $(BTRFS_MODULE_DIR)/data/org.freedesktop.UDisks2.btrfs.xml Makefile.am
 	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.storaged.Storaged.                      \
-	        --c-namespace Storaged                                         \
-	        --generate-c-code storaged-btrfs-generated                     \
-	        --generate-docbook storaged-generated-doc                      \
+	        --interface-prefix org.freedesktop.UDisks2.                    \
+	        --c-namespace UDisks                                           \
+	        --generate-c-code udisks-btrfs-generated                       \
+	        --generate-docbook udisks-generated-doc                        \
 	        $<
 
 dbus_built_sources =                                                           \
-	storaged-btrfs-generated.h        storaged-btrfs-generated.c           \
+	udisks-btrfs-generated.h        udisks-btrfs-generated.c               \
 	$(NULL)
 
 BUILT_SOURCES =                                                                \
 	$(dbus_built_sources)                                                  \
 	$(NULL)
 
-libstoraged_btrfsdir=$(libdir)/storaged/modules
-libstoraged_btrfs_LTLIBRARIES=libstoraged_btrfs.la
+libudisks2_btrfsdir=$(libdir)/udisks2/modules
+libudisks2_btrfs_LTLIBRARIES=libudisks2_btrfs.la
 
-libstoraged_btrfsincludedir=$(includedir)/storaged/storaged
+libudisks2_btrfsincludedir=$(includedir)/udisks2/udisks
 
-libstoraged_btrfsinclude_HEADERS =                                             \
-	$(top_srcdir)/modules/storagedmoduleiface.h                            \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                       \
-	$(top_srcdir)/modules/storagedmoduleobject.h                           \
+libudisks2_btrfsinclude_HEADERS =                                              \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
-libstoraged_btrfs_la_SOURCES =                                                 \
+libudisks2_btrfs_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/storagedmoduleiface.h                            \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                       \
-	$(top_srcdir)/modules/storagedmoduleobject.h                           \
-	$(top_srcdir)/modules/storagedmoduleobject.c                           \
-	storagedlinuxfilesystembtrfs.h                                         \
-	storagedlinuxfilesystembtrfs.c                                         \
-	storagedlinuxmanagerbtrfs.h                                            \
-	storagedlinuxmanagerbtrfs.c                                            \
-	storagedbtrfsstate.h                                                   \
-	storagedbtrfsstate.c                                                   \
-	storagedbtrfstypes.h                                                   \
-	storagedbtrfsmoduleiface.c                                             \
-	storagedbtrfsutil.h                                                    \
-	storagedbtrfsutil.c                                                    \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
+	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	udiskslinuxfilesystembtrfs.h                                           \
+	udiskslinuxfilesystembtrfs.c                                           \
+	udiskslinuxmanagerbtrfs.h                                              \
+	udiskslinuxmanagerbtrfs.c                                              \
+	udisksbtrfsstate.h                                                     \
+	udisksbtrfsstate.c                                                     \
+	udisksbtrfstypes.h                                                     \
+	udisksbtrfsmoduleiface.c                                               \
+	udisksbtrfsutil.h                                                      \
+	udisksbtrfsutil.c                                                      \
 	$(NULL)
 
-libstoraged_btrfs_la_CPPFLAGS =                                                \
+libudisks2_btrfs_la_CPPFLAGS =                                                 \
 	$(CPPFLAGS)                                                            \
-	-DG_LOG_DOMAIN=\"libstoraged-btrfs\"                                   \
+	-DG_LOG_DOMAIN=\"libudisks2-btrfs\"                                    \
 	$(NULL)
 
-libstoraged_btrfs_la_CFLAGS =                                                  \
+libudisks2_btrfs_la_CFLAGS =                                                   \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
@@ -85,16 +85,16 @@ libstoraged_btrfs_la_CFLAGS =                                                  \
 	$(BTRFS_CFLAGS)                                                        \
 	$(NULL)
 
-libstoraged_btrfs_la_LDFLAGS =                                                 \
+libudisks2_btrfs_la_LDFLAGS =                                                  \
 	-export_dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
 	-export-symbols-regex                                                  \
-	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'  \
+	 '^udisks_.*|g_io_module_load|g_io_module_unload|g_io_module_query'    \
 	$(NULL)
 
-libstoraged_btrfs_la_LIBADD =                                                  \
+libudisks2_btrfs_la_LIBADD =                                                   \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
@@ -104,7 +104,7 @@ libstoraged_btrfs_la_LIBADD =                                                  \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = storaged-generated-doc-*.xml storaged-btrfs-generated.[ch]
+CLEANFILES = udisks-generated-doc-*.xml udisks-btrfs-generated.[ch]
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

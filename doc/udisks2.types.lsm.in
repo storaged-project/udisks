@@ -1,0 +1,6 @@
+udisks_drive_lsm_get_type
+udisks_drive_lsm_proxy_get_type
+udisks_drive_lsm_skeleton_get_type
+udisks_manager_lsm_get_type
+udisks_manager_lsm_proxy_get_type
+udisks_manager_lsm_skeleton_get_type

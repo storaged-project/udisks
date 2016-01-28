@@ -27,12 +27,12 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#include <modules/storagedmoduleiface.h>
+#include <modules/udisksmoduleiface.h>
 
-#include <storaged/storaged-generated.h>
-#include <src/storagedlinuxblockobject.h>
-#include <src/storagedlinuxdriveobject.h>
-#include <src/storagedlinuxdevice.h>
+#include <udisks/udisks-generated.h>
+#include <src/udiskslinuxblockobject.h>
+#include <src/udiskslinuxdriveobject.h>
+#include <src/udiskslinuxdevice.h>
 
 #include "lsm_types.h"
 #include "lsm_data.h"
@@ -44,39 +44,39 @@
 #define _UDEV_ACTION_OFFLINE    "offline"
 
 gchar *
-storaged_module_id (void)
+udisks_module_id (void)
 {
   return g_strdup (LSM_MODULE_NAME);
 }
 
 gpointer
-storaged_module_init (StoragedDaemon *daemon)
+udisks_module_init (UDisksDaemon *daemon)
 {
-  storaged_debug ("LSM: storaged_module_init ()");
+  udisks_debug ("LSM: udisks_module_init ()");
   std_lsm_data_init (daemon);
   return NULL;
 }
 
 void
-storaged_module_teardown (StoragedDaemon *daemon)
+udisks_module_teardown (UDisksDaemon *daemon)
 {
-  storaged_debug ("LSM: storaged_module_teardown ()");
+  udisks_debug ("LSM: udisks_module_teardown ()");
   std_lsm_data_teardown ();
 }
 
 static gboolean
-_drive_check (StoragedObject *object)
+_drive_check (UDisksObject *object)
 {
   gboolean is_managed = FALSE;
-  StoragedLinuxDriveObject *std_lx_drv_obj = NULL;
-  StoragedLinuxDevice *st_lx_dev = NULL;
+  UDisksLinuxDriveObject *std_lx_drv_obj = NULL;
+  UDisksLinuxDevice *st_lx_dev = NULL;
   gboolean rc = FALSE;
   const gchar *wwn = NULL;
 
-  storaged_debug ("LSM: _drive_check");
-  std_lx_drv_obj = STORAGED_LINUX_DRIVE_OBJECT (object);
+  udisks_debug ("LSM: _drive_check");
+  std_lx_drv_obj = UDISKS_LINUX_DRIVE_OBJECT (object);
 
-  st_lx_dev = storaged_linux_drive_object_get_device (std_lx_drv_obj, TRUE);
+  st_lx_dev = udisks_linux_drive_object_get_device (std_lx_drv_obj, TRUE);
   if (st_lx_dev == NULL)
     {
       goto out;
@@ -103,8 +103,8 @@ _drive_check (StoragedObject *object)
 
   if (is_managed == FALSE)
     {
-      storaged_debug ("LSM: VPD %s is not managed by LibstorageMgmt",
-                      wwn + 2 );
+      udisks_debug ("LSM: VPD %s is not managed by LibstorageMgmt",
+                    wwn + 2 );
       goto out;
     }
   else
@@ -118,21 +118,22 @@ out:
 }
 
 static void
-_drive_connect (StoragedObject *object)
+_drive_connect (UDisksObject *object)
 {
 }
 
 static gboolean
-_drive_update (StoragedObject *object,
-               const gchar *uevent_action, GDBusInterface *_iface)
+_drive_update (UDisksObject   *object,
+               const gchar    *uevent_action,
+               GDBusInterface *_iface)
 {
-  storaged_debug ("LSM: _drive_update: got udevent_action %s", uevent_action);
+  udisks_debug ("LSM: _drive_update: got udevent_action %s", uevent_action);
 
   if (strcmp (uevent_action, _UDEV_ACTION_ADD) == 0)
     {
-      return storaged_linux_drive_lsm_update
-        (STORAGED_LINUX_DRIVE_LSM (_iface),
-         STORAGED_LINUX_DRIVE_OBJECT (object));
+      return udisks_linux_drive_lsm_update
+        (UDISKS_LINUX_DRIVE_LSM (_iface),
+         UDISKS_LINUX_DRIVE_OBJECT (object));
     }
   else if (strcmp (uevent_action, _UDEV_ACTION_CHANGE) == 0)
     {
@@ -153,60 +154,60 @@ _drive_update (StoragedObject *object,
     }
   else if (strcmp (uevent_action, _UDEV_ACTION_REMOVE) == 0)
     {
-      if (STORAGED_IS_LINUX_DRIVE_LSM (_iface))
-        g_object_unref (STORAGED_LINUX_DRIVE_LSM (_iface));
+      if (UDISKS_IS_LINUX_DRIVE_LSM (_iface))
+        g_object_unref (UDISKS_LINUX_DRIVE_LSM (_iface));
       return TRUE;
     }
   else
     {
-      storaged_warning ("LSM: BUG: Got unknown udev action: %s, ignoring",
-                        (const char *) uevent_action);
+      udisks_warning ("LSM: BUG: Got unknown udev action: %s, ignoring",
+                      (const char *) uevent_action);
       return FALSE;
     }
 }
 
-StoragedModuleInterfaceInfo **
-storaged_module_get_block_object_iface_setup_entries (void)
+UDisksModuleInterfaceInfo **
+udisks_module_get_block_object_iface_setup_entries (void)
 {
   return NULL;
 }
 
-StoragedModuleInterfaceInfo **
-storaged_module_get_drive_object_iface_setup_entries (void)
+UDisksModuleInterfaceInfo **
+udisks_module_get_drive_object_iface_setup_entries (void)
 {
-  StoragedModuleInterfaceInfo **iface;
+  UDisksModuleInterfaceInfo **iface;
 
-  iface = g_new0 (StoragedModuleInterfaceInfo *, 2);
-  iface[0] = g_new0 (StoragedModuleInterfaceInfo, 1);
+  iface = g_new0 (UDisksModuleInterfaceInfo *, 2);
+  iface[0] = g_new0 (UDisksModuleInterfaceInfo, 1);
   iface[0]->has_func = &_drive_check;
   iface[0]->connect_func = &_drive_connect;
   iface[0]->update_func = &_drive_update;
-  iface[0]->skeleton_type = STORAGED_TYPE_LINUX_DRIVE_LSM;
+  iface[0]->skeleton_type = UDISKS_TYPE_LINUX_DRIVE_LSM;
 
   return iface;
 }
 
-StoragedModuleObjectNewFunc *
-storaged_module_get_object_new_funcs (void)
+UDisksModuleObjectNewFunc *
+udisks_module_get_object_new_funcs (void)
 {
   return NULL;
 }
 
 static GDBusInterfaceSkeleton *
-_manager_iface_new (StoragedDaemon *daemon)
+_manager_iface_new (UDisksDaemon *daemon)
 {
-  StoragedLinuxManagerLSM *manager;
+  UDisksLinuxManagerLSM *manager;
 
-  manager = storaged_linux_manager_lsm_new ();
+  manager = udisks_linux_manager_lsm_new ();
 
   return G_DBUS_INTERFACE_SKELETON (manager);
 }
 
-StoragedModuleNewManagerIfaceFunc *
-storaged_module_get_new_manager_iface_funcs (void)
+UDisksModuleNewManagerIfaceFunc *
+udisks_module_get_new_manager_iface_funcs (void)
 {
-  StoragedModuleNewManagerIfaceFunc *funcs = NULL;
-  funcs = g_new0 (StoragedModuleNewManagerIfaceFunc, 2);
+  UDisksModuleNewManagerIfaceFunc *funcs = NULL;
+  funcs = g_new0 (UDisksModuleNewManagerIfaceFunc, 2);
   funcs[0] = &_manager_iface_new;
 
   return funcs;

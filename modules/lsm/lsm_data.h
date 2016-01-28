@@ -21,8 +21,8 @@
 
 /*
  * This file contains:
- *  1. LSM data to storaged interface data converting.
- *  2. Provide simple abstracted interface of LSM to storaged codes.
+ *  1. LSM data to udisks interface data converting.
+ *  2. Provide simple abstracted interface of LSM to udisks codes.
  */
 
 #ifndef __LSM_DATA_H__
@@ -42,7 +42,7 @@ G_BEGIN_DECLS
 #define _MAX_RAID_TYPE_LEN 10
 #define _MAX_STATUS_INFO_LEN 255
 
-typedef struct _StoragedDaemon StoragedDaemon;
+typedef struct _UDisksDaemon UDisksDaemon;
 
 struct StdLsmVolData
 {
@@ -58,7 +58,7 @@ struct StdLsmVolData
   uint32_t raid_disk_count;
 };
 
-void std_lsm_data_init (StoragedDaemon *daemon);
+void std_lsm_data_init (UDisksDaemon *daemon);
 
 /*
  * The cached lsm volume/vpd83 list will not refresh automatically. This is

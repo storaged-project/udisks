@@ -1,0 +1,6 @@
+udisks_manager_zram_get_type
+udisks_manager_zram_proxy_get_type
+udisks_manager_zram_skeleton_get_type
+udisks_block_zram_get_type
+udisks_block_zram_proxy_get_type
+udisks_block_zram_skeleton_get_type

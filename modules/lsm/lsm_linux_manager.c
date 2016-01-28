@@ -28,53 +28,53 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/storagedlogging.h>
-#include <src/storageddaemon.h>
-#include <src/storageddaemonutil.h>
-#include <src/storagedlinuxdevice.h>
+#include <src/udiskslogging.h>
+#include <src/udisksdaemon.h>
+#include <src/udisksdaemonutil.h>
+#include <src/udiskslinuxdevice.h>
 
 #include "lsm_types.h"
 
-typedef struct _StoragedLinuxManagerLSMClass StoragedLinuxManagerLSMClass;
+typedef struct _UDisksLinuxManagerLSMClass UDisksLinuxManagerLSMClass;
 
-struct _StoragedLinuxManagerLSM
+struct _UDisksLinuxManagerLSM
 {
-  StoragedManagerLSMSkeleton parent_instance;
+  UDisksManagerLSMSkeleton parent_instance;
 };
 
-struct _StoragedLinuxManagerLSMClass
+struct _UDisksLinuxManagerLSMClass
 {
-  StoragedManagerLSMSkeletonClass parent_class;
+  UDisksManagerLSMSkeletonClass parent_class;
 };
 
 static void
-storaged_linux_manager_lsm_iface_init (StoragedManagerLSMIface *iface);
+udisks_linux_manager_lsm_iface_init (UDisksManagerLSMIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE
-  (StoragedLinuxManagerLSM, storaged_linux_manager_lsm,
-   STORAGED_TYPE_MANAGER_LSM_SKELETON,
-   G_IMPLEMENT_INTERFACE (STORAGED_TYPE_MANAGER_LSM,
-                          storaged_linux_manager_lsm_iface_init));
+  (UDisksLinuxManagerLSM, udisks_linux_manager_lsm,
+   UDISKS_TYPE_MANAGER_LSM_SKELETON,
+   G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_LSM,
+                          udisks_linux_manager_lsm_iface_init));
 
 static void
-storaged_linux_manager_lsm_init (StoragedLinuxManagerLSM *manager)
+udisks_linux_manager_lsm_init (UDisksLinuxManagerLSM *manager)
 {
 }
 
 static void
-storaged_linux_manager_lsm_class_init (StoragedLinuxManagerLSMClass *class)
+udisks_linux_manager_lsm_class_init (UDisksLinuxManagerLSMClass *class)
 {
 }
 
-StoragedLinuxManagerLSM *
-storaged_linux_manager_lsm_new (void)
+UDisksLinuxManagerLSM *
+udisks_linux_manager_lsm_new (void)
 {
-  return STORAGED_LINUX_MANAGER_LSM
-    (g_object_new (STORAGED_TYPE_LINUX_MANAGER_LSM, NULL));
+  return UDISKS_LINUX_MANAGER_LSM
+    (g_object_new (UDISKS_TYPE_LINUX_MANAGER_LSM, NULL));
 }
 
 static void
-storaged_linux_manager_lsm_iface_init (StoragedManagerLSMIface *iface)
+udisks_linux_manager_lsm_iface_init (UDisksManagerLSMIface *iface)
 {
-  // Empty but need to force storaged do coldplug refresh all interface.
+  // Empty but need to force udisks do coldplug refresh all interface.
 }

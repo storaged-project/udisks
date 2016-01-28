@@ -1,0 +1,5 @@
+      <xi:include href="../doc/xml/UDisksManagerLVM2.xml"/>
+      <xi:include href="../doc/xml/UDisksBlockLVM2.xml"/>
+      <xi:include href="../doc/xml/UDisksPhysicalVolume.xml"/>
+      <xi:include href="../doc/xml/UDisksVolumeGroup.xml"/>
+      <xi:include href="../doc/xml/UDisksLogicalVolume.xml"/>

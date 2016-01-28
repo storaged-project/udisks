@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <storaged/storaged.h>
+#include <udisks/udisks.h>
 
 #include "testutil.h"
 

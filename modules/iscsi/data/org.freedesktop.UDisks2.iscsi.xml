@@ -1,0 +1,246 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2015 Peter Hatina <phatina@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ********************************************************************** -->
+
+  <!--
+       org.freedesktop.UDisks2.Manager.ISCSI.Initiator:
+       @short_description: iSCSI add-on to the manager singleton
+       @since: 2.0.1
+
+       Additional interface with iSCSI specifics for top-level manager
+       singleton object located at the object path
+       <literal>/org/freedesktop/UDisks2/Manager</literal>.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager.ISCSI.Initiator">
+    <!-- prereq: org.freedesktop.UDisks2.Manager -->
+
+    <annotation name="org.gtk.GDBus.C.Name" value="Manager_ISCSI_Initiator"/>
+
+    <!--
+        GetFirmwareInitiatorName:
+        @result: The iSCSI firmware initiator name.
+        @since: 2.4.0
+
+        Returns the iSCSI firmware initiator name.
+    -->
+    <method name="GetFirmwareInitiatorName">
+      <arg name="result" direction="out" type="s"/>
+    </method>
+
+    <!--
+         GetInitiatorName:
+         @result: The iSCSI initiator name.
+         @since: 2.0.1
+
+         Returns a iSCSI initiator name.
+    -->
+    <method name="GetInitiatorName">
+      <arg name="result" direction="out" type="s"/>
+    </method>
+
+    <!--
+        SetInitiatorName:
+        @name: The new iSCSI initiator name.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Sets a new iSCSI initiator name.
+
+        No additional options are currently defined.
+    -->
+    <method name="SetInitiatorName">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        DiscoverSendTargets:
+        @address: Hostname or IP-address to connect to.
+        @port: Port to connect to, or 0 for the default port.
+        @nodes: Discovered nodes.
+        @nodes_cnt: The number of found nodes.
+        @options: Additional options.
+        @since: 2.3.1
+
+        Performs targets' discovery with no authentication data.
+
+        If the option <parameter>username</parameter> is provided, then
+        the <parameter>username</parameter> and <parameter>password</parameter>
+        will be used for CHAP authentication.
+
+        If the option <parameter>reverse-username</parameter> is provided,
+        the the <parameter>reverse-username</parameter> and
+        <parameter>reverse-password</parameter> will be used for CHAP
+        authentication.
+    -->
+    <method name="DiscoverSendTargets">
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="q"/>
+      <arg name="nodes" direction="out" type="a(sisis)"/>
+      <arg name="nodes_cnt" direction="out" type="i"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        DiscoverFirmware:
+        @nodes: Structure containing discovered targets (name, tpgt, address, port, iface).
+        @nodes_cnt: The number of found nodes.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Performs targets' discovery  using firmware (ppc or ibft).
+
+        No additional options are currently defined.
+    -->
+    <method name="DiscoverFirmware">
+      <arg name="nodes" direction="out" type="a(sisis)"/>
+      <arg name="nodes_cnt" direction="out" type="i"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        Login:
+        @name: iSCSI iqn for the node.
+        @tpgt: Portal group number.
+        @address: Portal hostname or IP-address.
+        @port: Portal port number.
+        @iface: Interface to connect through.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Login to the iSCSI node described by the given node properties.
+
+        If the option <parameter>username</parameter> is provided, then
+        the <parameter>username</parameter> and <parameter>password</parameter>
+        will be used for CHAP authentication.
+
+        If the option <parameter>reverse-username</parameter> is provided,
+        the the <parameter>reverse-username</parameter> and
+        <parameter>reverse-password</parameter> will be used for CHAP
+        authentication.
+
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is desired, the
+        <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>automatic</emphasis>' (default value is
+        '<emphasis>manual</emphasis>').
+    -->
+    <method name="Login">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="tpgt" direction="in" type="i"/>
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="i"/>
+      <arg name="iface" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        Logout:
+        @name: iSCSI iqn for the node.
+        @tpgt: Portal group number.
+        @address: Portal hostname or IP-address.
+        @port: Portal port number.
+        @iface: Interface to logout.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Logout of the iSCSI node described by the given node properties.
+
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
+    -->
+    <method name="Logout">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="tpgt" direction="in" type="i"/>
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="i"/>
+      <arg name="iface" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+  </interface>
+
+  <!--
+      org.freedesktop.UDisks2.ISCSI.Session:
+      @short_description: iSCSI session.
+
+      This interface should appear on a separate object exported on the master
+      Storaged root.
+  -->
+  <interface name="org.freedesktop.UDisks2.ISCSI.Session">
+    <annotation name="org.gtk.GDBus.C.Name" value="ISCSI_Session"/>
+
+    <!--
+        Logout:
+        @options: Additional options.
+        @since: 2.1.3
+
+        Logout iSCSI node in this session; default interface is used.
+
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
+    -->
+    <method name="Logout">
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        LogoutInterface:
+        @iface: Interface to logout.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Logout iSCSI node in this session; @iface is used.
+
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
+    -->
+    <method name="LogoutInterface">
+      <arg name="iface" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <property name="target_name" type="s" access="read"/>
+    <property name="tpgt" type="i" access="read"/>
+    <property name="address" type="s" access="read"/>
+    <property name="port" type="i" access="read"/>
+    <property name="persistent_address" type="s" access="read"/>
+    <property name="persistent_port" type="i" access="read"/>
+
+    <!-- timeouts -->
+    <property name="abort_timeout" type="i" access="read"/>
+    <property name="lu_reset_timeout" type="i" access="read"/>
+    <property name="recovery_timeout" type="i" access="read"/>
+    <property name="tgt_reset_timeout" type="i" access="read"/>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+</node>

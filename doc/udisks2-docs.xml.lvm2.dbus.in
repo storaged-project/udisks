@@ -1,0 +1,5 @@
+      <xi:include href="../modules/lvm2/udisks-generated-doc-org.freedesktop.UDisks2.Block.LVM2.xml"/>
+      <xi:include href="../modules/lvm2/udisks-generated-doc-org.freedesktop.UDisks2.LogicalVolume.xml"/>
+      <xi:include href="../modules/lvm2/udisks-generated-doc-org.freedesktop.UDisks2.Manager.LVM2.xml"/>
+      <xi:include href="../modules/lvm2/udisks-generated-doc-org.freedesktop.UDisks2.PhysicalVolume.xml"/>
+      <xi:include href="../modules/lvm2/udisks-generated-doc-org.freedesktop.UDisks2.VolumeGroup.xml"/>

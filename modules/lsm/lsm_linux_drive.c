@@ -32,70 +32,70 @@
 #include <glib.h>
 #include <libstoragemgmt/libstoragemgmt.h>
 
-#include <src/storagedlogging.h>
-#include <src/storagedlinuxdriveobject.h>
-#include <src/storagedlinuxblockobject.h>
-#include <src/storageddaemon.h>
-#include <src/storageddaemonutil.h>
-#include <src/storagedbasejob.h>
-#include <src/storagedsimplejob.h>
-#include <src/storagedthreadedjob.h>
-#include <src/storagedlinuxdevice.h>
-#include <modules/storagedmoduleobject.h>
+#include <src/udiskslogging.h>
+#include <src/udiskslinuxdriveobject.h>
+#include <src/udiskslinuxblockobject.h>
+#include <src/udisksdaemon.h>
+#include <src/udisksdaemonutil.h>
+#include <src/udisksbasejob.h>
+#include <src/udiskssimplejob.h>
+#include <src/udisksthreadedjob.h>
+#include <src/udiskslinuxdevice.h>
+#include <modules/udisksmoduleobject.h>
 
 #include "lsm_data.h"
 #include "lsm_types.h"
 
 static void
-_fill_std_lx_drv_lsm (StoragedLinuxDriveLSM *std_lx_drv_lsm,
-                   struct StdLsmVolData *lsm_vol_data);
+_fill_std_lx_drv_lsm (UDisksLinuxDriveLSM *std_lx_drv_lsm,
+                      struct StdLsmVolData *lsm_vol_data);
 
 static gboolean
 _is_std_lsm_vol_data_changed (struct StdLsmVolData *old_lsm_data,
                               struct StdLsmVolData *new_lsm_data,
-                              StoragedLinuxDriveLSM *std_lx_drv_lsm);
+                              UDisksLinuxDriveLSM *std_lx_drv_lsm);
 
-static gboolean _on_refresh_data (StoragedLinuxDriveLSM *std_lx_drv_lsm);
+static gboolean _on_refresh_data (UDisksLinuxDriveLSM *std_lx_drv_lsm);
 
-typedef struct _StoragedLinuxDriveLSMClass StoragedLinuxDriveLSMClass;
+typedef struct _UDisksLinuxDriveLSMClass UDisksLinuxDriveLSMClass;
 
-struct _StoragedLinuxDriveLSM
+struct _UDisksLinuxDriveLSM
 {
-  StoragedDriveLSMSkeleton parent_instance;
+  UDisksDriveLSMSkeleton parent_instance;
   struct StdLsmVolData *old_lsm_data;
-  StoragedLinuxDriveObject *std_lx_drv_obj;
+  UDisksLinuxDriveObject *std_lx_drv_obj;
   const char *vpd83;
   GSource *loop_source;
 };
 
-struct _StoragedLinuxDriveLSMClass
+struct _UDisksLinuxDriveLSMClass
 {
-  StoragedDriveLSMSkeletonClass parent_class;
+  UDisksDriveLSMSkeletonClass parent_class;
 };
 
 static void
-storaged_linux_drive_lsm_iface_init (StoragedDriveLSMIface *iface);
+udisks_linux_drive_lsm_iface_init (UDisksDriveLSMIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE
-  (StoragedLinuxDriveLSM, storaged_linux_drive_lsm,
-   STORAGED_TYPE_DRIVE_LSM_SKELETON,
-   G_IMPLEMENT_INTERFACE (STORAGED_TYPE_DRIVE_LSM,
-                          storaged_linux_drive_lsm_iface_init));
+  (UDisksLinuxDriveLSM, udisks_linux_drive_lsm,
+   UDISKS_TYPE_DRIVE_LSM_SKELETON,
+   G_IMPLEMENT_INTERFACE (UDISKS_TYPE_DRIVE_LSM,
+                          udisks_linux_drive_lsm_iface_init));
 
 static void
-_free_std_lx_drv_lsm_content (StoragedLinuxDriveLSM *std_lx_drv_lsm);
+_free_std_lx_drv_lsm_content (UDisksLinuxDriveLSM *std_lx_drv_lsm);
 
 
 static void
-_free_std_lx_drv_lsm_content (StoragedLinuxDriveLSM *std_lx_drv_lsm)
+_free_std_lx_drv_lsm_content (UDisksLinuxDriveLSM *std_lx_drv_lsm)
 {
   if (std_lx_drv_lsm == NULL)
     return;
 
   if (std_lx_drv_lsm->loop_source != NULL)
     {
-      storaged_debug ("LSM: _free_std_lx_drv_lsm_content (): "
-                        "destroying loop source");
+      udisks_debug ("LSM: _free_std_lx_drv_lsm_content (): "
+                    "destroying loop source");
 
       g_free ((gpointer) std_lx_drv_lsm->vpd83);
       std_lsm_vol_data_free (std_lx_drv_lsm->old_lsm_data);
@@ -108,7 +108,7 @@ _free_std_lx_drv_lsm_content (StoragedLinuxDriveLSM *std_lx_drv_lsm)
        * is call by _on_refresh_data ().
        * As g_dbus_object_skeleton_add_interface () still hold reference
        * to std_lx_drv_lsm, it might possible
-       * storaged_linux_drive_lsm_update () add every thing back again.
+       * udisks_linux_drive_lsm_update () add every thing back again.
        */
       std_lx_drv_lsm->loop_source = NULL;
 
@@ -116,7 +116,7 @@ _free_std_lx_drv_lsm_content (StoragedLinuxDriveLSM *std_lx_drv_lsm)
           G_IS_DBUS_INTERFACE_SKELETON (std_lx_drv_lsm) &&
           g_dbus_object_get_interface
           ((GDBusObject *) std_lx_drv_lsm->std_lx_drv_obj,
-           "org.storaged.Storaged.Drive.LSM"))
+           "org.freedesktop.UDisks2.Drive.LSM"))
         {
           g_dbus_object_skeleton_remove_interface
               (G_DBUS_OBJECT_SKELETON (std_lx_drv_lsm->std_lx_drv_obj),
@@ -127,22 +127,22 @@ _free_std_lx_drv_lsm_content (StoragedLinuxDriveLSM *std_lx_drv_lsm)
 
 
 static void
-storaged_linux_drive_lsm_finalize (GObject *object)
+udisks_linux_drive_lsm_finalize (GObject *object)
 {
-  storaged_debug ("LSM: storaged_linux_drive_lsm_finalize ()");
+  udisks_debug ("LSM: udisks_linux_drive_lsm_finalize ()");
 
-  if ((object != NULL) && (STORAGED_IS_LINUX_DRIVE_LSM (object)))
-    _free_std_lx_drv_lsm_content (STORAGED_LINUX_DRIVE_LSM (object));
+  if ((object != NULL) && (UDISKS_IS_LINUX_DRIVE_LSM (object)))
+    _free_std_lx_drv_lsm_content (UDISKS_LINUX_DRIVE_LSM (object));
 
-  if (G_OBJECT_CLASS (storaged_linux_drive_lsm_parent_class)->finalize != NULL)
-    G_OBJECT_CLASS (storaged_linux_drive_lsm_parent_class)->finalize (object);
+  if (G_OBJECT_CLASS (udisks_linux_drive_lsm_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_linux_drive_lsm_parent_class)->finalize (object);
 }
 
 
 static void
-storaged_linux_drive_lsm_init (StoragedLinuxDriveLSM *std_lx_drv_lsm)
+udisks_linux_drive_lsm_init (UDisksLinuxDriveLSM *std_lx_drv_lsm)
 {
-  storaged_debug ("LSM: storaged_linux_drive_lsm_init");
+  udisks_debug ("LSM: udisks_linux_drive_lsm_init");
 
   std_lx_drv_lsm->old_lsm_data = NULL;
   std_lx_drv_lsm->std_lx_drv_obj = NULL;
@@ -152,43 +152,43 @@ storaged_linux_drive_lsm_init (StoragedLinuxDriveLSM *std_lx_drv_lsm)
 }
 
 static void
-storaged_linux_drive_lsm_class_init (StoragedLinuxDriveLSMClass *class)
+udisks_linux_drive_lsm_class_init (UDisksLinuxDriveLSMClass *class)
 {
   GObjectClass *gobject_class;
 
-  storaged_debug ("LSM: storaged_linux_drive_lsm_class_init");
+  udisks_debug ("LSM: udisks_linux_drive_lsm_class_init");
   gobject_class = G_OBJECT_CLASS (class);
-  gobject_class->finalize = storaged_linux_drive_lsm_finalize;
+  gobject_class->finalize = udisks_linux_drive_lsm_finalize;
 }
 
 static void
-_fill_std_lx_drv_lsm (StoragedLinuxDriveLSM *std_lx_drv_lsm,
-                   struct StdLsmVolData *lsm_vol_data)
+_fill_std_lx_drv_lsm (UDisksLinuxDriveLSM *std_lx_drv_lsm,
+                      struct StdLsmVolData *lsm_vol_data)
 {
-  StoragedDriveLSM *std_drv_lsm = STORAGED_DRIVE_LSM (std_lx_drv_lsm);
+  UDisksDriveLSM *std_drv_lsm = UDISKS_DRIVE_LSM (std_lx_drv_lsm);
 
   if (lsm_vol_data == NULL)
     return;
 
-  storaged_drive_lsm_set_status_info
+  udisks_drive_lsm_set_status_info
     (std_drv_lsm, lsm_vol_data->status_info);
-  storaged_drive_lsm_set_raid_type
+  udisks_drive_lsm_set_raid_type
     (std_drv_lsm, lsm_vol_data->raid_type);
-  storaged_drive_lsm_set_is_ok
+  udisks_drive_lsm_set_is_ok
     (std_drv_lsm, lsm_vol_data->is_ok);
-  storaged_drive_lsm_set_is_raid_degraded
+  udisks_drive_lsm_set_is_raid_degraded
     (std_drv_lsm, lsm_vol_data->is_raid_degraded);
-  storaged_drive_lsm_set_is_raid_error
+  udisks_drive_lsm_set_is_raid_error
     (std_drv_lsm, lsm_vol_data->is_raid_error);
-  storaged_drive_lsm_set_is_raid_verifying
+  udisks_drive_lsm_set_is_raid_verifying
     (std_drv_lsm, lsm_vol_data->is_raid_verifying);
-  storaged_drive_lsm_set_is_raid_reconstructing
+  udisks_drive_lsm_set_is_raid_reconstructing
     (std_drv_lsm, lsm_vol_data->is_raid_reconstructing);
-  storaged_drive_lsm_set_min_io_size
+  udisks_drive_lsm_set_min_io_size
     (std_drv_lsm, lsm_vol_data->min_io_size);
-  storaged_drive_lsm_set_opt_io_size
+  udisks_drive_lsm_set_opt_io_size
     (std_drv_lsm, lsm_vol_data->opt_io_size);
-  storaged_drive_lsm_set_raid_disk_count
+  udisks_drive_lsm_set_raid_disk_count
     (std_drv_lsm, lsm_vol_data->raid_disk_count);
 }
 
@@ -199,13 +199,13 @@ _fill_std_lx_drv_lsm (StoragedLinuxDriveLSM *std_lx_drv_lsm,
 static gboolean
 _is_std_lsm_vol_data_changed (struct StdLsmVolData *old_lsm_data,
                               struct StdLsmVolData *new_lsm_data,
-                              StoragedLinuxDriveLSM *std_lx_drv_lsm)
+                              UDisksLinuxDriveLSM *std_lx_drv_lsm)
 {
   if ((old_lsm_data == NULL || new_lsm_data == NULL))
     {
-      storaged_warning ("LSM: BUG: _is_std_lsm_vol_data_changed () got NULL "
-                        "old_lsm_data or NULL new_lsm_data "
-                        "which should not happen");
+      udisks_warning ("LSM: BUG: _is_std_lsm_vol_data_changed () got NULL "
+                      "old_lsm_data or NULL new_lsm_data "
+                      "which should not happen");
       return TRUE;
     }
 
@@ -226,25 +226,25 @@ _is_std_lsm_vol_data_changed (struct StdLsmVolData *old_lsm_data,
 }
 
 static gboolean
-_on_refresh_data (StoragedLinuxDriveLSM *std_lx_drv_lsm)
+_on_refresh_data (UDisksLinuxDriveLSM *std_lx_drv_lsm)
 {
   struct StdLsmVolData *new_lsm_data = NULL;
 
   if ((std_lx_drv_lsm == NULL) ||
       (std_lx_drv_lsm->std_lx_drv_obj == NULL) ||
-      (! STORAGED_IS_LINUX_DRIVE_LSM (std_lx_drv_lsm)) ||
-      (! STORAGED_IS_LINUX_DRIVE_OBJECT (std_lx_drv_lsm->std_lx_drv_obj)))
+      (! UDISKS_IS_LINUX_DRIVE_LSM (std_lx_drv_lsm)) ||
+      (! UDISKS_IS_LINUX_DRIVE_OBJECT (std_lx_drv_lsm->std_lx_drv_obj)))
     goto remove_out;
 
-  storaged_debug ("LSM: Refreshing LSM RAID info for VPD83/WWN %s",
-                  std_lx_drv_lsm->vpd83);
+  udisks_debug ("LSM: Refreshing LSM RAID info for VPD83/WWN %s",
+                std_lx_drv_lsm->vpd83);
 
   new_lsm_data = std_lsm_vol_data_get (std_lx_drv_lsm->vpd83);
 
   if (new_lsm_data == NULL)
     {
-      storaged_debug ("LSM: Disk drive VPD83/WWN %s is not LSM managed "
-                      "any more", std_lx_drv_lsm->vpd83);
+      udisks_debug ("LSM: Disk drive VPD83/WWN %s is not LSM managed "
+                    "any more", std_lx_drv_lsm->vpd83);
       goto remove_out;
     }
 
@@ -262,12 +262,12 @@ _on_refresh_data (StoragedLinuxDriveLSM *std_lx_drv_lsm)
 
 remove_out:
   /* As g_dbus_object_skeleton_add_interface () in update_iface () of
-   * src/storagedlinuxdriveobject.c take its own reference to std_lx_drv_lsm,
+   * src/udiskslinuxdriveobject.c take its own reference to std_lx_drv_lsm,
    * g_object_unref (std_drv_Lsm) here does not cause trigger
-   * storaged_linux_drive_lsm_finalize () to remove dbus interface.
+   * udisks_linux_drive_lsm_finalize () to remove dbus interface.
    * Hence we have to remove dbus interface and loop related resources here.
    */
-  if STORAGED_IS_LINUX_DRIVE_LSM (std_lx_drv_lsm)
+  if UDISKS_IS_LINUX_DRIVE_LSM (std_lx_drv_lsm)
     {
       _free_std_lx_drv_lsm_content (std_lx_drv_lsm);
       g_object_unref (std_lx_drv_lsm);
@@ -279,41 +279,41 @@ remove_out:
 }
 
 static void
-storaged_linux_drive_lsm_iface_init (StoragedDriveLSMIface *iface)
+udisks_linux_drive_lsm_iface_init (UDisksDriveLSMIface *iface)
 {
-  storaged_debug ("LSM: storaged_linux_drive_lsm_iface_init");
+  udisks_debug ("LSM: udisks_linux_drive_lsm_iface_init");
 }
 
-StoragedLinuxDriveLSM *
-storaged_linux_drive_lsm_new (void)
+UDisksLinuxDriveLSM *
+udisks_linux_drive_lsm_new (void)
 {
-  storaged_debug ("LSM: storaged_linux_drive_lsm_new");
-  return STORAGED_LINUX_DRIVE_LSM (g_object_new (STORAGED_TYPE_DRIVE_LSM,
-                                                 NULL));
+  udisks_debug ("LSM: udisks_linux_drive_lsm_new");
+  return UDISKS_LINUX_DRIVE_LSM (g_object_new (UDISKS_TYPE_DRIVE_LSM,
+                                               NULL));
 }
 
 gboolean
-storaged_linux_drive_lsm_update (StoragedLinuxDriveLSM *std_lx_drv_lsm,
-                                 StoragedLinuxDriveObject *std_lx_drv_obj)
+udisks_linux_drive_lsm_update (UDisksLinuxDriveLSM *std_lx_drv_lsm,
+                               UDisksLinuxDriveObject *std_lx_drv_obj)
 {
   struct StdLsmVolData *lsm_vol_data = NULL;
-  StoragedLinuxDevice *st_lx_dev;
+  UDisksLinuxDevice *st_lx_dev;
   const gchar *wwn = NULL;
   gboolean rc = FALSE;
 
-  storaged_debug ("LSM: storaged_linux_drive_lsm_update");
+  udisks_debug ("LSM: udisks_linux_drive_lsm_update");
 
   if (std_lx_drv_lsm->loop_source != NULL)
     {
-      storaged_debug ("LSM: Already in refresh loop");
+      udisks_debug ("LSM: Already in refresh loop");
       return FALSE;
     }
 
-  st_lx_dev = storaged_linux_drive_object_get_device (std_lx_drv_obj, TRUE);
+  st_lx_dev = udisks_linux_drive_object_get_device (std_lx_drv_obj, TRUE);
   if (st_lx_dev == NULL)
     {
-      storaged_debug ("LSM: storaged_linux_drive_lsm_update (): Got NULL "
-                      "storaged_linux_drive_object_get_device () return");
+      udisks_debug ("LSM: udisks_linux_drive_lsm_update (): Got NULL "
+                    "udisks_linux_drive_object_get_device () return");
       goto out;
     }
 
@@ -321,8 +321,8 @@ storaged_linux_drive_lsm_update (StoragedLinuxDriveLSM *std_lx_drv_lsm,
                                     "ID_WWN_WITH_EXTENSION");
   if ((!wwn) || (strlen (wwn) < 2))
     {
-      storaged_debug ("LSM: storaged_linux_drive_lsm_update (): Got emtpy "
-                      "ID_WWN_WITH_EXTENSION dbus property");
+      udisks_debug ("LSM: udisks_linux_drive_lsm_update (): Got emtpy "
+                    "ID_WWN_WITH_EXTENSION dbus property");
       goto out;
     }
 
@@ -331,17 +331,17 @@ storaged_linux_drive_lsm_update (StoragedLinuxDriveLSM *std_lx_drv_lsm,
 
   if (lsm_vol_data == NULL)
     {
-      storaged_debug ("LSM: VPD %s is not managed by LibstorageMgmt",
-                      wwn + 2 );
+      udisks_debug ("LSM: VPD %s is not managed by LibstorageMgmt",
+                    wwn + 2 );
       goto out;
     }
 
-  storaged_debug ("LSM: VPD %s is managed by LibstorageMgmt", wwn + 2 );
+  udisks_debug ("LSM: VPD %s is managed by LibstorageMgmt", wwn + 2 );
 
   _fill_std_lx_drv_lsm (std_lx_drv_lsm, lsm_vol_data);
 
   /* Don't free lsm_vol_data, it is managed by
-   * storaged_linux_drive_lsm_finalize ().
+   * udisks_linux_drive_lsm_finalize ().
    */
   std_lx_drv_lsm->old_lsm_data = lsm_vol_data;
   std_lx_drv_lsm->std_lx_drv_obj = std_lx_drv_obj;
@@ -355,7 +355,7 @@ storaged_linux_drive_lsm_update (StoragedLinuxDriveLSM *std_lx_drv_lsm,
                          (gpointer) std_lx_drv_lsm, NULL);
   g_source_attach (std_lx_drv_lsm->loop_source, NULL);
 
-  storaged_debug ("LSM: VPD83 %s added to refresh event loop", wwn + 2);
+  udisks_debug ("LSM: VPD83 %s added to refresh event loop", wwn + 2);
 
   rc = TRUE;
 

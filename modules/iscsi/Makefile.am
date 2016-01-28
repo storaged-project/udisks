@@ -4,7 +4,7 @@ SUBDIRS = data
 
 ISCSI_MODULE_DIR = $(top_srcdir)/modules/iscsi
 
-MODULE_SO = libstoraged_iscsi.so
+MODULE_SO = libudisks2_iscsi.so
 
 NULL =
 
@@ -17,9 +17,9 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
+	-DLVM_HELPER_DIR=\""$(prefix)/lib/udisks2/"\"                          \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
-	-DSTORAGED_COMPILATION                                                 \
+	-DUDISKS_COMPILATION                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
@@ -27,79 +27,79 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.storaged.Storaged.iscsi.xml Makefile.am
+$(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.freedesktop.UDisks2.iscsi.xml Makefile.am
 	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.storaged.Storaged.                      \
-	        --c-namespace Storaged                                         \
-	        --generate-c-code storaged-iscsi-generated                     \
-	        --generate-docbook storaged-generated-doc                      \
+	        --interface-prefix org.freedesktop.UDisks2.                    \
+	        --c-namespace UDisks                                           \
+	        --generate-c-code udisks-iscsi-generated                       \
+	        --generate-docbook udisks-generated-doc                        \
 	        $<
 
 dbus_built_sources =                                                           \
-	storaged-iscsi-generated.h        storaged-iscsi-generated.c           \
+	udisks-iscsi-generated.h        udisks-iscsi-generated.c               \
 	$(NULL)
 
 BUILT_SOURCES =                                                                \
 	$(dbus_built_sources)                                                  \
 	$(NULL)
 
-libstoraged_iscsidir=$(libdir)/storaged/modules
-libstoraged_iscsi_LTLIBRARIES=libstoraged_iscsi.la
+libudisks2_iscsidir=$(libdir)/udisks2/modules
+libudisks2_iscsi_LTLIBRARIES=libudisks2_iscsi.la
 
-libstoraged_iscsiincludedir=$(includedir)/storaged/storaged
+libudisks2_iscsiincludedir=$(includedir)/udisks2/udisks
 
-libstoraged_iscsiinclude_HEADERS =                                             \
-	$(top_srcdir)/modules/storagedmoduleiface.h                            \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                       \
-	$(top_srcdir)/modules/storagedmoduleobject.h                           \
+libudisks2_iscsiinclude_HEADERS =                                              \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
-libstoraged_iscsi_la_SOURCES =                                                 \
+libudisks2_iscsi_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/storagedmoduleiface.h                            \
-	$(top_srcdir)/modules/storagedmoduleifacetypes.h                       \
-	$(top_srcdir)/modules/storagedmoduleobject.h                           \
-	$(top_srcdir)/modules/storagedmoduleobject.c                           \
-	storagedlinuxmanageriscsiinitiator.h                                   \
-	storagedlinuxmanageriscsiinitiator.c                                   \
-	storagediscsistate.h                                                   \
-	storagediscsistate.c                                                   \
-	storagediscsitypes.h                                                   \
-	storagediscsimoduleiface.c                                             \
-	storagediscsiutil.h                                                    \
-	storagediscsiutil.c                                                    \
+	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
+	$(top_srcdir)/modules/udisksmoduleobject.h                             \
+	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	udiskslinuxmanageriscsiinitiator.h                                     \
+	udiskslinuxmanageriscsiinitiator.c                                     \
+	udisksiscsistate.h                                                     \
+	udisksiscsistate.c                                                     \
+	udisksiscsitypes.h                                                     \
+	udisksiscsimoduleiface.c                                               \
+	udisksiscsiutil.h                                                      \
+	udisksiscsiutil.c                                                      \
 	$(NULL)
 
 if BUILD_ISCSI_SESSION_OBJECT
-libstoraged_iscsi_la_SOURCES +=                                                \
-	storagedlinuxiscsisession.h                                            \
-	storagedlinuxiscsisession.c                                            \
-	storagedlinuxiscsisessionobject.h                                      \
-	storagedlinuxiscsisessionobject.c
+libudisks2_iscsi_la_SOURCES +=                                                 \
+	udiskslinuxiscsisession.h                                              \
+	udiskslinuxiscsisession.c                                              \
+	udiskslinuxiscsisessionobject.h                                        \
+	udiskslinuxiscsisessionobject.c
 endif # BUILD_ISCSI_SESSION_OBJECT
 
-libstoraged_iscsi_la_CPPFLAGS =                                                \
+libudisks2_iscsi_la_CPPFLAGS =                                                 \
 	$(CPPFLAGS)                                                            \
-	-DG_LOG_DOMAIN=\"libstoraged-iscsi\"                                   \
+	-DG_LOG_DOMAIN=\"libudisks2-iscsi\"                                    \
 	$(NULL)
 
-libstoraged_iscsi_la_CFLAGS =                                                  \
+libudisks2_iscsi_la_CFLAGS =                                                   \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(NULL)
 
-libstoraged_iscsi_la_LDFLAGS =                                                 \
+libudisks2_iscsi_la_LDFLAGS =                                                  \
 	-export_dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
 	-export-symbols-regex                                                  \
-	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'  \
+	 '^udisks_.*|g_io_module_load|g_io_module_unload|g_io_module_query'    \
 	$(NULL)
 
-libstoraged_iscsi_la_LIBADD =                                                  \
+libudisks2_iscsi_la_LIBADD =                                                   \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
@@ -109,7 +109,7 @@ libstoraged_iscsi_la_LIBADD =                                                  \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
+CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

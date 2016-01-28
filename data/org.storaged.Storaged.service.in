@@ -1,5 +1,0 @@
-[D-BUS Service]
-Name=org.storaged.Storaged
-Exec=@storagedprivdir@/storaged --no-debug
-User=root
-SystemdService=storaged.service

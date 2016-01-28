@@ -20,8 +20,8 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
-	-DSTORAGED_COMPILATION                                                 \
-	-DSTORAGED_TEST_DIR=\""$(builddir)"\"                                  \
+	-DUDISKS_COMPILATION                                                   \
+	-DUDISKS_TEST_DIR=\""$(builddir)"\"                                    \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GUDEV_CFLAGS)                                                        \
 	$(GLIB_CFLAGS)                                                         \
@@ -31,35 +31,35 @@ AM_CPPFLAGS = \
 
 # ------------------------------------------------------------------------------
 
-TESTS = storaged-test
+TESTS = udisks-test
 
-noinst_PROGRAMS = storaged-test storaged-test-helper
+noinst_PROGRAMS = udisks-test udisks-test-helper
 
-storaged_test_SOURCES =                                                        \
+udisks_test_SOURCES =                                                          \
 	test.c                                                                 \
 	testutil.h    testutil.c                                               \
 	$(NULL)
 
-storaged_test_CFLAGS =                                                         \
-	-DG_LOG_DOMAIN=\"storaged-test\"                                       \
+udisks_test_CFLAGS =                                                           \
+	-DG_LOG_DOMAIN=\"udisks-test\"                                         \
 	$(NULL)
 
-storaged_test_LDADD =                                                          \
+udisks_test_LDADD =                                                            \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
-	$(top_builddir)/src/libstoraged-daemon.la                              \
+	$(top_builddir)/src/libudisks-daemon.la                                \
 	$(NULL)
 
-storaged_test_helper_SOURCES =                                                 \
+udisks_test_helper_SOURCES =                                                   \
 	helper.c                                                               \
 	testutil.h    testutil.c                                               \
 	$(NULL)
 
-storaged_test_helper_CFLAGS =                                                  \
-	-DG_LOG_DOMAIN=\"storaged-test-helper\"                                \
+udisks_test_helper_CFLAGS =                                                    \
+	-DG_LOG_DOMAIN=\"udisks-test-helper\"                                  \
 	$(NULL)
 
-storaged_test_helper_LDADD =                                                   \
+udisks_test_helper_LDADD =                                                     \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(NULL)

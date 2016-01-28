@@ -1,5 +1,0 @@
-      <xi:include href="../modules/lvm2/storaged-generated-doc-org.storaged.Storaged.Block.LVM2.xml"/>
-      <xi:include href="../modules/lvm2/storaged-generated-doc-org.storaged.Storaged.LogicalVolume.xml"/>
-      <xi:include href="../modules/lvm2/storaged-generated-doc-org.storaged.Storaged.Manager.LVM2.xml"/>
-      <xi:include href="../modules/lvm2/storaged-generated-doc-org.storaged.Storaged.PhysicalVolume.xml"/>
-      <xi:include href="../modules/lvm2/storaged-generated-doc-org.storaged.Storaged.VolumeGroup.xml"/>

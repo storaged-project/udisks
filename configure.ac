@@ -3,18 +3,18 @@ m4_define([storaged_major_version], [2])
 m4_define([storaged_minor_version], [4])
 m4_define([storaged_micro_version], [1])
 
-m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
+m4_define([udisks_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
-AC_INIT([storaged],[storaged_version],[https://storaged-project.github.io],[storaged])
+AC_INIT([storaged],[udisks_version],[https://storaged-project.github.io],[storaged])
 
-STORAGED_MAJOR_VERSION=storaged_major_version
-STORAGED_MINOR_VERSION=storaged_minor_version
-STORAGED_MICRO_VERSION=storaged_micro_version
-STORAGED_VERSION=storaged_version
-AC_SUBST(STORAGED_MAJOR_VERSION)
-AC_SUBST(STORAGED_MINOR_VERSION)
-AC_SUBST(STORAGED_MICRO_VERSION)
-AC_SUBST(STORAGED_VERSION)
+UDISKS_MAJOR_VERSION=udisks_major_version
+UDISKS_MINOR_VERSION=udisks_minor_version
+UDISKS_MICRO_VERSION=udisks_micro_version
+UDISKS_VERSION=udisks_version
+AC_SUBST(UDISKS_MAJOR_VERSION)
+AC_SUBST(UDISKS_MINOR_VERSION)
+AC_SUBST(UDISKS_MICRO_VERSION)
+AC_SUBST(UDISKS_VERSION)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src])
@@ -200,27 +200,12 @@ AC_CHECK_LIB(
 AC_SUBST(ACL_CFLAGS)
 AC_SUBST(ACL_LIBS)
 
-# Enable the modules; except the dummy module.
-AC_ARG_ENABLE(modules, AS_HELP_STRING([--enable-modules], [enable modules]))
-# Enable all the modules; including the dummy one.
-AC_ARG_ENABLE(all_modules, AS_HELP_STRING([--enable-all-modules], [enable all modules]))
-
-# Dummy module
-have_dummy=no
-AC_ARG_ENABLE(dummy, AS_HELP_STRING([--enable-dummy], [enable dummy test module]))
-if test "x$enable_dummy" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
-  have_dummy=yes
-fi
-AM_CONDITIONAL(HAVE_DUMMY, [test "$have_dummy" = "yes"])
-
 # LVM2 module
 have_lvm2=no
 have_devmapper=no
 AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
 if test "x$enable_lvm2" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
   PKG_CHECK_MODULES(DEVMAPPER, devmapper >= 1.02,
                     [AC_DEFINE(HAVE_DEVMAPPER, 1, [Define if DEVMAPPER is available]) have_devmapper=yes],
                     have_devmapper=no)
@@ -245,8 +230,7 @@ AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 have_lvmcache=no
 AC_ARG_ENABLE(lvmcache, AS_HELP_STRING([--enable-lvmcache], [enable LVMCache support]))
 if test "x$enable_lvmcache" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
 
   if test "x$have_lvm2" = "xno"; then
     AC_MSG_ERROR([lvmcache support requested, but lvm2 module not enabled])
@@ -262,8 +246,7 @@ have_libiscsi_session_info="no"
 have_libiscsi_session_info_msg=""
 AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
 if test "x$enable_iscsi" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
   # libiscsi.h
   AC_CHECK_HEADER([libiscsi.h],
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
@@ -305,8 +288,7 @@ AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" 
 have_btrfs=no
 AC_ARG_ENABLE(btrfs, AS_HELP_STRING([--enable-btrfs], [enable BTRFS support]))
 if test "x$enable_btrfs" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -343,8 +325,7 @@ have_swap="no"
 have_zram="no"
 AC_ARG_ENABLE(zram, AS_HELP_STRING([--enable-zram], [enable ZRAM support]))
 if test "x$enable_zram" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -407,8 +388,7 @@ have_lsm=no
 AC_ARG_ENABLE(
     lsm, AS_HELP_STRING([--enable-lsm], [enable LibStorageMgmt support]))
 if test "x$enable_lsm" = "xyes" \
-        -o "x$enable_modules" = "xyes" \
-        -o "x$enable_all_modules" = "xyes"; then
+        -o "x$enable_modules" = "xyes"; then
     PKG_CHECK_MODULES(
         [LIBLSM], [libstoragemgmt >= 1.2.0],
         [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
@@ -433,8 +413,7 @@ AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 have_bcache=no
 AC_ARG_ENABLE(bcache, AS_HELP_STRING([--enable-bcache], [enable Bcache support]))
 if test "x$enable_bcache" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_all_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -467,7 +446,7 @@ AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 #
 
 IT_PROG_INTLTOOL([$INTLTOOL_REQUIRED])
-GETTEXT_PACKAGE=storaged
+GETTEXT_PACKAGE=udisks2
 AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
@@ -478,18 +457,16 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 AC_OUTPUT([
 Makefile
 data/Makefile
-storaged/Makefile
-storaged/storaged.pc
-storaged/modules.conf.d/Makefile
-storaged/modules.conf.d/storaged_lsm.conf
+udisks/Makefile
+udisks/udisks2.pc
+udisks/modules.conf.d/Makefile
+udisks/modules.conf.d/udisks2_lsm.conf
 src/Makefile
 src/tests/Makefile
 tools/Makefile
 modules/Makefile
 modules/btrfs/Makefile
 modules/btrfs/data/Makefile
-modules/dummy/Makefile
-modules/dummy/data/Makefile
 modules/iscsi/Makefile
 modules/iscsi/data/Makefile
 modules/lvm2/Makefile
@@ -501,50 +478,50 @@ modules/lsm/data/Makefile
 modules/bcache/Makefile
 modules/bcache/data/Makefile
 doc/Makefile
-doc/storaged-docs.xml.in
-doc/storaged-sections.txt.in
-doc/storaged.types.in
+doc/udisks2-docs.xml.in
+doc/udisks2-sections.txt.in
+doc/udisks2.types.in
 doc/version.xml
 doc/man/Makefile
-doc/man/storaged-lvm.xml
-doc/man/storaged-project.xml
-doc/man/storaged.xml
-doc/man/storagectl.xml
-doc/man/umount.storaged.xml
-doc/man/storaged_lsm.conf.5
-doc/storaged-docs.xml.iscsi.dbus
-doc/storaged-docs.xml.iscsi.generated
-doc/storaged-sections.txt.iscsi.sections
-doc/storaged.types.iscsi
-doc/storaged-docs.xml.lsm.dbus
-doc/storaged-docs.xml.lsm.generated
-doc/storaged-sections.txt.lsm.sections
-doc/storaged.types.lsm
-doc/storaged-docs.xml.lvm2.man
-doc/storaged-docs.xml.lvm2.dbus
-doc/storaged-docs.xml.lvm2.generated
-doc/storaged-sections.txt.lvm2.sections
-doc/storaged.types.lvm2
-doc/storaged-docs.xml.btrfs.dbus
-doc/storaged-docs.xml.btrfs.generated
-doc/storaged-sections.txt.btrfs.sections
-doc/storaged.types.btrfs
-doc/storaged-docs.xml.zram.dbus
-doc/storaged-docs.xml.zram.generated
-doc/storaged-docs.xml.zram.block_devices
-doc/storaged-sections.txt.zram.sections
-doc/storaged.types.zram
-doc/storaged-docs.xml.bcache.dbus
-doc/storaged-docs.xml.bcache.generated
-doc/storaged-sections.txt.bcache.sections
-doc/storaged.types.bcache
+doc/man/udisks-lvm.xml
+doc/man/udisks.xml
+doc/man/udisksd.xml
+doc/man/udisksctl.xml
+doc/man/umount.udisks2.xml
+doc/man/udisks2_lsm.conf.5
+doc/udisks2-docs.xml.iscsi.dbus
+doc/udisks2-docs.xml.iscsi.generated
+doc/udisks2-sections.txt.iscsi.sections
+doc/udisks2.types.iscsi
+doc/udisks2-docs.xml.lsm.dbus
+doc/udisks2-docs.xml.lsm.generated
+doc/udisks2-sections.txt.lsm.sections
+doc/udisks2.types.lsm
+doc/udisks2-docs.xml.lvm2.man
+doc/udisks2-docs.xml.lvm2.dbus
+doc/udisks2-docs.xml.lvm2.generated
+doc/udisks2-sections.txt.lvm2.sections
+doc/udisks2.types.lvm2
+doc/udisks2-docs.xml.btrfs.dbus
+doc/udisks2-docs.xml.btrfs.generated
+doc/udisks2-sections.txt.btrfs.sections
+doc/udisks2.types.btrfs
+doc/udisks2-docs.xml.zram.dbus
+doc/udisks2-docs.xml.zram.generated
+doc/udisks2-docs.xml.zram.block_devices
+doc/udisks2-sections.txt.zram.sections
+doc/udisks2.types.zram
+doc/udisks2-docs.xml.bcache.dbus
+doc/udisks2-docs.xml.bcache.generated
+doc/udisks2-sections.txt.bcache.sections
+doc/udisks2.types.bcache
 po/Makefile.in
 ])
 
 dnl ==========================================================================
 echo "
-               storaged $VERSION
-             ==================
+               udisks $VERSION
+             ================
 
         prefix:                     ${prefix}
         libdir:                     ${libdir}
@@ -571,7 +548,6 @@ echo "
         Building man pages:         ${enable_man}
 
         BTRFS module:               ${have_btrfs}
-        Dummy module:               ${have_dummy}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
         LVMCache:                   ${have_lvmcache}

@@ -2,10 +2,10 @@
 Makefile
 Makefile.in
 *.o
-storaged
-storaged-daemon-glue.h
-storaged-device-glue.h
-storaged-marshal.c
-storaged-marshal.h
-storaged-tcp-bridge
-umount.storaged
+udisks
+udisks-daemon-glue.h
+udisks-device-glue.h
+udisks-marshal.c
+udisks-marshal.h
+udisks-tcp-bridge
+umount.udisks
