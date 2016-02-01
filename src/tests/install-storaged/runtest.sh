@@ -38,7 +38,7 @@ rlJournalStart
         rlRun "cd /home/storaged"
         rlRun "su -c 'git clone $GIT_REPO' storaged"
         rlRun "cd $REPO_DIR"
-        rlRun "yum install -y $(cat rpm_dependencies.txt)"
+        rlRun "dnf builddep -y packaging/storaged.spec"
     rlPhaseEnd
 
     rlPhaseStartTest
@@ -47,9 +47,9 @@ rlJournalStart
         rlRun "su -c 'make' storaged"
 
         rlRun "make install"
-        rlRun "cp data/org.storaged.Storaged.conf /etc/dbus-1/system.d/"
-        rlRun "cp data/org.storaged.Storaged.policy /usr/share/polkit-1/"
-        rlRun "cp modules/lvm2/data/org.storaged.Storaged.lvm2.policy /usr/share/polkit-1/"
+        rlRun "cp data/org.freedesktop.UDisks2 /etc/dbus-1/system.d/"
+        rlRun "cp data/org.freedesktop.UDisks2.policy /usr/share/polkit-1/"
+        rlRun "cp modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy /usr/share/polkit-1/"
     rlPhaseEnd
 
     rlPhaseStartCleanup

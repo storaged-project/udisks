@@ -464,6 +464,7 @@ udisks/modules.conf.d/udisks2_lsm.conf
 src/Makefile
 src/tests/Makefile
 tools/Makefile
+packaging/Makefile
 modules/Makefile
 modules/btrfs/Makefile
 modules/btrfs/data/Makefile
