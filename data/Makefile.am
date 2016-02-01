@@ -22,7 +22,7 @@ systemdservicedir       = $(systemdsystemunitdir)
 systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
 
 $(systemdservice_DATA): $(systemdservice_in_files) Makefile
-	@sed -e "s|\@udisksprivdir\@|$(libexecdir)/udisks2|" $< > $@
+	@sed -e "s|\@udisksdprivdir\@|$(libexecdir)/udisks2|" $< > $@
 endif
 
 udevrulesdir = $(udevdir)/rules.d
