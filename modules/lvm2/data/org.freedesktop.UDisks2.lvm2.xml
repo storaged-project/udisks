@@ -400,7 +400,7 @@
          is also valid when this logical volume is not currently
          active and there is no block device for it.  It works via the
          'track-parents' options of
-         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         org.freedesktop.UDisks2.Block.AddConfigurationItem(), which
          see.
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>

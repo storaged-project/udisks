@@ -1260,7 +1260,7 @@
 
         If the option <parameter>config-items</parameter> is set, it
         should be an array of configuration items suitable for
-        org.storaged.Storaged.Block.AddConfigurationItem.  They will
+        org.freedesktop.UDisks2.Block.AddConfigurationItem.  They will
         all be added after the formatting is done.
 
         If the option <parameter>tear-down</parameter> is set to
@@ -1408,16 +1408,16 @@
         CreatePartitionAndFormat:
         @offset: The desired offset where the partition should be created, in bytes.
         @size: The desired size of the partition, in bytes.
-        @type: The type of partition to create (cf. the #org.storaged.Storaged.Partition:Type property) or blank to use the default for the partition table type and OS.
+        @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
-        @created_partition: An object path to the created block device object implementing the #org.storaged.Storaged.Partition interface.
+        @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
         @format_type: The type to use for Format.
         @format_options: Options for Format.
 
         This is a combination of
-        #org.storaged.Storaged.PartitionTable:CreatePartition and
-        #org.storaged.Storaged.Block:Format.  After creating the
+        #org.freedesktop.UDisks2.PartitionTable:CreatePartition and
+        #org.freedesktop.UDisks2.Block:Format.  After creating the
         partition, the resulting block device is formatted.
     -->
     <method name="CreatePartitionAndFormat">
@@ -1729,7 +1729,7 @@
          children.  This is also valid when this block device is
          currently locked and there is no clear text device for it.
          It works via the 'track-parents' options of
-         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         org.freedesktop.UDisks2.Block.AddConfigurationItem(), which
          see.
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
@@ -2010,7 +2010,7 @@
          block devices of this array (recursively).  This is also
          valid when the array is stopped and there are no actual block
          devices for it.  It works via the 'track-parents' options of
-         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         org.freedesktop.UDisks2.Block.AddConfigurationItem(), which
          see.
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
