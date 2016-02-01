@@ -38,7 +38,7 @@ rlJournalStart
         rlRun "cd /home/storaged"
         rlRun "su -c 'git clone $GIT_REPO' storaged"
         rlRun "cd $REPO_DIR"
-        rlRun "yum install -y $(cat rpm_dependencies.txt)"
+        rlRun "dnf builddep -y packaging/storaged.spec"
     rlPhaseEnd
 
     rlPhaseStartTest

@@ -12,7 +12,6 @@ export GCC_COLORS
 EXTRA_DIST =                                                                   \
 	HACKING                                                                \
 	README.md                                                              \
-	rpm_dependencies.txt                                                   \
 	$(NULL)
 
 DISTCHECK_CONFIGURE_FLAGS =                                                    \

@@ -23,11 +23,11 @@ licensed under LGPLv2 (or later).
 INSTALLATION
 ============
 
-Storaged has several dependencies listed in `rpm_dependencies.txt`.
+Storaged has several dependencies listed in `packaging/storaged.spec`.
 
 If you run rpm based distro, install the dependencies by:
 
-    # yum install -y $(cat rpm_dependencies.txt)
+    # dnf builddep -y packaging/storaged.spec
 
 AUTOTOOLS
 ---------
