@@ -258,6 +258,7 @@ delete_conf_files (GError **error)
   gboolean rval = TRUE;
   GDir *zramconfd;
   gchar *filename = NULL;
+  const gchar *name;
 
   filename = g_build_filename (PACKAGE_MODLOAD_DIR, "/zram.conf", NULL);
 
@@ -284,13 +285,13 @@ delete_conf_files (GError **error)
     rval = FALSE;
     goto out;
   }
-  do
+
+  while (name = g_dir_read_name (zramconfd))
   {
     g_free (filename);
-    filename = g_build_filename(PACKAGE_ZRAMCONF_DIR,
-                                g_dir_read_name (zramconfd),
-                                NULL);
-  } while (! g_unlink (filename));
+    filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, name, NULL);
+    g_unlink (filename);
+  }
   g_dir_close (zramconfd);
 
 out:
