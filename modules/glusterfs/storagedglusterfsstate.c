@@ -89,5 +89,6 @@ void
 storaged_glusterfs_state_set_glusterd (StoragedGlusterFSState               *state,
                                        StoragedLinuxGlusterFSGlusterdObject *object)
 {
+  g_return_if_fail (state);
   state->glusterd_obj = object;
 }
