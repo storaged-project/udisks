@@ -57,13 +57,22 @@ enum
 G_DEFINE_TYPE (StoragedLinuxGlusterFSBrickObject, storaged_linux_glusterfs_brick_object, STORAGED_TYPE_OBJECT_SKELETON);
 
 static void
+storaged_linux_glusterfs_brick_object_dispose (GObject *_object)
+{
+  StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (_object);
+
+  if (object->iface_glusterfs_brick != NULL)
+    g_clear_object (&object->iface_glusterfs_brick);
+
+  if (G_OBJECT_CLASS (storaged_linux_glusterfs_brick_object_parent_class)->dispose != NULL)
+    G_OBJECT_CLASS (storaged_linux_glusterfs_brick_object_parent_class)->dispose (_object);
+}
+
+static void
 storaged_linux_glusterfs_brick_object_finalize (GObject *_object)
 {
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (_object);
   /* note: we don't hold a ref to object->daemon */
-
-  if (object->iface_glusterfs_brick != NULL)
-    g_object_unref (object->iface_glusterfs_brick);
 
   g_free (object->name);
 

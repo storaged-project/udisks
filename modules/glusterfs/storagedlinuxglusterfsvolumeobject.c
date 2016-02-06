@@ -42,14 +42,25 @@ enum
 G_DEFINE_TYPE (StoragedLinuxGlusterFSVolumeObject, storaged_linux_glusterfs_volume_object, STORAGED_TYPE_OBJECT_SKELETON);
 
 static void
-storaged_linux_glusterfs_volume_object_finalize (GObject *_object)
+storaged_linux_glusterfs_volume_object_dispose (GObject *_object)
 {
   StoragedLinuxGlusterFSVolumeObject *object = STORAGED_LINUX_GLUSTERFS_VOLUME_OBJECT (_object);
 
   /* note: we don't hold a ref to object->daemon */
 
   if (object->iface_glusterfs_volume != NULL)
-    g_object_unref (object->iface_glusterfs_volume);
+    g_clear_object (&object->iface_glusterfs_volume);
+
+  if (G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->dispose != NULL)
+    G_OBJECT_CLASS (storaged_linux_glusterfs_volume_object_parent_class)->dispose (_object);
+}
+
+static void
+storaged_linux_glusterfs_volume_object_finalize (GObject *_object)
+{
+  StoragedLinuxGlusterFSVolumeObject *object = STORAGED_LINUX_GLUSTERFS_VOLUME_OBJECT (_object);
+
+  /* note: we don't hold a ref to object->daemon */
 
   g_free (object->name);
 
