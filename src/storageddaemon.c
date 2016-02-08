@@ -1,6 +1,7 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
  *
  * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
+ * Copyright (C)      2016 Peter Hatina <phatina@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +40,7 @@
 #include "storagedlinuxblockobject.h"
 #include "storagedlinuxdevice.h"
 #include "storagedmodulemanager.h"
+#include "storagedconfigmanager.h"
 
 /**
  * SECTION:storageddaemon
@@ -77,6 +79,8 @@ struct _StoragedDaemon
 
   StoragedModuleManager *module_manager;
 
+  StoragedConfigManager *config_manager;
+
   gboolean disable_modules;
   gboolean force_load_modules;
   gboolean uninstalled;
@@ -96,6 +100,7 @@ enum
   PROP_FSTAB_MONITOR,
   PROP_CRYPTTAB_MONITOR,
   PROP_MODULE_MANAGER,
+  PROP_CONFIG_MANAGER,
   PROP_DISABLE_MODULES,
   PROP_FORCE_LOAD_MODULES,
   PROP_UNINSTALLED,
@@ -121,6 +126,8 @@ storaged_daemon_finalize (GObject *object)
 
   storaged_module_manager_unload_modules (daemon->module_manager);
   g_clear_object (&daemon->module_manager);
+
+  g_clear_object (&daemon->config_manager);
 
   if (G_OBJECT_CLASS (storaged_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_daemon_parent_class)->finalize (object);
@@ -158,6 +165,10 @@ storaged_daemon_get_property (GObject    *object,
 
     case PROP_MODULE_MANAGER:
       g_value_set_object (value, storaged_daemon_get_module_manager (daemon));
+      break;
+
+    case PROP_CONFIG_MANAGER:
+      g_value_set_object (value, storaged_daemon_get_config_manager (daemon));
       break;
 
     case PROP_DISABLE_MODULES:
@@ -258,10 +269,17 @@ storaged_daemon_constructed (GObject *object)
         }
     }
 
-  if (!daemon->uninstalled)
-    daemon->module_manager = storaged_module_manager_new (daemon);
+
+  if (! daemon->uninstalled)
+    {
+      daemon->config_manager = storaged_config_manager_new ();
+      daemon->module_manager = storaged_module_manager_new (daemon);
+    }
   else
-    daemon->module_manager = storaged_module_manager_new_uninstalled (daemon);
+    {
+      daemon->config_manager = storaged_config_manager_new_uninstalled ();
+      daemon->module_manager = storaged_module_manager_new_uninstalled (daemon);
+    }
 
   daemon->mount_monitor = storaged_mount_monitor_new ();
 
@@ -278,8 +296,12 @@ storaged_daemon_constructed (GObject *object)
   /* now add providers */
   daemon->linux_provider = storaged_linux_provider_new (daemon);
 
-  if (daemon->force_load_modules)
-    storaged_module_manager_load_modules (daemon->module_manager);
+  if (daemon->force_load_modules
+      || (storaged_config_manager_get_load_preference (daemon->config_manager)
+          == STORAGED_MODULE_LOAD_ONSTARTUP))
+    {
+      storaged_module_manager_load_modules (daemon->module_manager);
+    }
 
   storaged_provider_start (STORAGED_PROVIDER (daemon->linux_provider));
 
@@ -1197,8 +1219,6 @@ storaged_daemon_get_objects (StoragedDaemon *daemon)
   return g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (daemon->object_manager));
 }
 
-/* ---------------------------------------------------------------------------------------------------- */
-
 /**
  * storaged_daemon_get_module_manager:
  * @daemon: A #StoragedDaemon.
@@ -1214,7 +1234,20 @@ storaged_daemon_get_module_manager (StoragedDaemon *daemon)
   return daemon->module_manager;
 }
 
-/* ---------------------------------------------------------------------------------------------------- */
+/**
+ * storage_daemon_get_config_manager:
+ * @daemon: A #StoragedDaemon.
+ *
+ * Gets the config manager used by @daemon.
+ *
+ * Returns: A #ConfigModuleManager. Do not free, the object is owned by @daemon.
+ */
+StoragedConfigManager *
+storaged_daemon_get_config_manager (StoragedDaemon *daemon)
+{
+  g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), NULL);
+  return daemon->config_manager;
+}
 
 /**
  * storaged_daemon_get_disable_modules:

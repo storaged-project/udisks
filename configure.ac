@@ -479,6 +479,7 @@ AC_OUTPUT([
 Makefile
 data/Makefile
 storaged/Makefile
+storaged/storaged.conf
 storaged/storaged.pc
 storaged/modules.conf.d/Makefile
 storaged/modules.conf.d/storaged_lsm.conf

@@ -43,6 +43,7 @@ StoragedLinuxProvider    *storaged_daemon_get_linux_provider    (StoragedDaemon 
 PolkitAuthority          *storaged_daemon_get_authority         (StoragedDaemon    *daemon);
 StoragedState            *storaged_daemon_get_state             (StoragedDaemon    *daemon);
 StoragedModuleManager    *storaged_daemon_get_module_manager    (StoragedDaemon    *daemon);
+StoragedConfigManager    *storaged_daemon_get_config_manager    (StoragedDaemon    *daemon);
 gboolean                  storaged_daemon_get_disable_modules   (StoragedDaemon    *daemon);
 gboolean                  storaged_daemon_get_force_load_modules(StoragedDaemon    *daemon);
 gboolean                  storaged_daemon_get_uninstalled       (StoragedDaemon    *daemon);

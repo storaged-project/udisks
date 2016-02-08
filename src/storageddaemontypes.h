@@ -114,6 +114,9 @@ typedef struct StoragedInhibitCookie StoragedInhibitCookie;
 struct _StoragedModuleManager;
 typedef struct _StoragedModuleManager StoragedModuleManager;
 
+typedef struct _StoragedConfigManager        StoragedConfigManager;
+typedef struct _StoragedConfigManagerClass   StoragedConfigManagerClass;
+
 /**
  * StoragedThreadedJobFunc:
  * @job: A #StoragedThreadedJob.

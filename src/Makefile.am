@@ -83,6 +83,7 @@ libstoraged_daemon_la_SOURCES =                                                \
 	storagedlinuxdevice.h            storagedlinuxdevice.c                 \
 	storagedata.h                    storagedata.c                         \
 	storagedmodulemanager.h          storagedmodulemanager.c               \
+	storagedconfigmanager.h          storagedconfigmanager.c               \
 	$(top_srcdir)/modules/storagedmoduleobject.h                           \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
 	$(BUILT_SOURCES)                                                       \

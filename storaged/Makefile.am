@@ -155,6 +155,7 @@ CLEANFILES =                                                                   \
 	$(typelibs_DATA)
 
 EXTRA_DIST =                                                                   \
+	storaged.conf.in                                                       \
 	storaged.pc.in                                                         \
 	storagedversion.h.in                                                   \
 	storagedenumtypes.h.template                                           \
