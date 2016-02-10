@@ -11,7 +11,7 @@
 Name:    storaged
 Summary: Disk Manager
 Version: 2.4.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -215,6 +215,7 @@ udevadm trigger
 %{_sysconfdir}/dbus-1/system.d/org.storaged.Storaged.conf
 %{_datadir}/bash-completion/completions/storagectl
 %{_prefix}/lib/systemd/system/storaged.service
+%{_prefix}/lib/systemd/system/zram-setup@.service
 %{_prefix}/lib/udev/rules.d/80-storaged.rules
 %{_sbindir}/umount.storaged
 
@@ -298,6 +299,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Feb 10 2016 Peter Hatina <phatina@redhat.com> - 2.4.0-5
+- Package template zram-setup@.service file
+
 * Wed Feb 10 2016 Peter Hatina <phatina@redhat.com> - 2.4.0-4
 - Add storaged configuration file and its man page
 
