@@ -10,6 +10,7 @@
 *.pot
 *.sign
 *.swp
+*.swo
 *.stamp
 *.trs
 *.typelib
@@ -23,8 +24,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
-build/
-build-aux/
+build*
 config.h
 config.h.in
 config.log
