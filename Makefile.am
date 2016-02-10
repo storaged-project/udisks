@@ -2,7 +2,7 @@
 
 NULL =
 
-SUBDIRS = data udisks src tools modules po doc
+SUBDIRS = data udisks src tools modules po doc packaging
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
