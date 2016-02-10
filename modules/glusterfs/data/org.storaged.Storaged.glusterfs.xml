@@ -69,6 +69,7 @@
         VolumeCreate:
         @name: Name of the volume
         @bricks: List of path to bricks that will be a part of the volume
+        @options: List of additional options
         @result: The path to the new gluster volume object
         @since: 2.4.1
 
@@ -78,6 +79,7 @@
     <method name="VolumeCreate">
         <arg name="name" direction="in" type="s"/>
         <arg name="bricks" direction="in" type="as"/>
+        <arg name="options" direction="in" type="a{sv}"/>
         <arg name="result" direction="out" type="o"/>
     </method>
 

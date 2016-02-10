@@ -23,6 +23,8 @@
 #include <src/storageddaemonutil.h>
 #include <src/storagedlogging.h>
 
+#include <glib/gi18n-lib.h>
+
 #include "storagedglusterfsutils.h"
 #include "storagedglusterfsstate.h"
 #include "storagedlinuxmanagerglusterfs.h"
@@ -292,11 +294,118 @@ out:
   return (sdjob_path != NULL);
 }
 
+static StoragedObject *
+wait_for_gluster_volume_object (StoragedDaemon *daemon,
+                                gpointer        userdata)
+{
+  const gchar *name = userdata;
+
+  return STORAGED_OBJECT (storaged_glusterfs_util_find_volume_object (daemon, name));
+}
+
+static gboolean
+handle_volume_create (StoragedLinuxManagerGlusterFS *_object,
+                      GDBusMethodInvocation         *invocation,
+                      const gchar                   *arg_name,
+                      const gchar *const            *arg_bricks,
+                      GVariant                      *arg_options)
+{
+  StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS(_object);
+  uid_t caller_uid;
+  GError *error = NULL;
+  guint n;
+  gchar *escaped_name = NULL;
+  GString *str = NULL;
+  gint status;
+  gchar *error_message = NULL;
+  StoragedObject *volume_object = NULL;
+
+  error = NULL;
+  if (!storaged_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_glusterfs_get_daemon (manager),
+                                       NULL,
+                                       glusterfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to create a volume group"),
+                                       invocation);
+
+
+  /* Create the gluster volume... */
+  escaped_name = storaged_daemon_util_escape_and_quote (arg_name);
+  str = g_string_new ("gluster volume create");
+  g_string_append_printf (str, " %s", escaped_name);
+
+  for (n = 0; arg_bricks != NULL && arg_bricks[n] != NULL; n++)
+    {
+      gchar *escaped_brick;
+      escaped_brick = storaged_daemon_util_escape_and_quote (arg_bricks[n]);
+      g_string_append_printf (str, " %s", escaped_brick);
+      g_free (escaped_brick);
+    }
+
+  if (!storaged_daemon_launch_spawned_job_sync (manager->daemon,
+                                                NULL,
+                                                "gluster-volume-create", caller_uid,
+                                                NULL, /* cancellable */
+                                                0,    /* uid_t run_as_uid */
+                                                0,    /* uid_t run_as_euid */
+                                                &status,
+                                                &error_message,
+                                                NULL, /* input_string */
+                                                "%s",
+                                                str->str))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Error creating gluster volume: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+
+  /* ... then, sit and wait for the object to show up */
+  volume_object = storaged_daemon_wait_for_object_sync (manager->daemon,
+                                                        wait_for_gluster_volume_object,
+                                                        (gpointer) arg_name,
+                                                        NULL,
+                                                        10, /* timeout_seconds */
+                                                        &error);
+  if (volume_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for gluster volume object for %s",
+                      arg_name);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  storaged_manager_glusterfs_complete_volume_create (_object,
+                                                     invocation,
+                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
+
+ out:
+  if (str != NULL)
+    g_string_free (str, TRUE);
+  g_free (escaped_name);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+
 static void
 storaged_linux_manager_glusterfs_iface_init (StoragedManagerGlusterFSIface *iface)
 {
   iface->handle_reload = handle_reload;
   iface->handle_glusterd_start = handle_glusterd_start;
   iface->handle_glusterd_stop = handle_glusterd_stop;
+  iface->handle_volume_create = handle_volume_create;
 }
 

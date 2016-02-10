@@ -30,6 +30,7 @@
 #include "storagedlinuxglusterfsbrickobject.h"
 #include "storagedlinuxglusterfsglusterdobject.h"
 
+const gchar *glusterfs_policy_action_id = "org.storaged.Storaged.glusterfs.manage-glusterfs";
 GVariant *volumes_names = NULL;
 
 struct VariantReaderData {
@@ -254,6 +255,15 @@ storaged_glusterfs_volumes_update (StoragedDaemon *daemon)
   const gchar *args[] = { "gluster", "volume", "info", "all", "--xml", NULL };
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         storaged_glusterfs_update_all_from_variant, daemon);
+}
+
+StoragedLinuxGlusterFSVolumeObject *
+storaged_glusterfs_util_find_volume_object (StoragedDaemon *daemon,
+                                            const gchar    *name)
+{
+  StoragedGlusterFSState *state;
+  state = get_module_state (daemon);
+  return g_hash_table_lookup (storaged_glusterfs_state_get_name_to_glusterfs_volume (state), name);
 }
 
 /****************************************************************************/

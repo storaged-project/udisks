@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+extern const gchar *glusterfs_policy_action_id;
+
 GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
                                            const GVariantType *type,
                                            void (*callback) (GVariant *result,
@@ -35,6 +37,9 @@ GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
 void storaged_glusterfs_volumes_update (StoragedDaemon *daemon);
 void storaged_glusterfs_daemons_update (StoragedDaemon *daemon);
 GVariant *storaged_get_glusterd_info ();
+
+StoragedLinuxGlusterFSVolumeObject *storaged_glusterfs_util_find_volume_object (StoragedDaemon *daemon,
+                                                                                const gchar    *name);
 
 G_END_DECLS
 
