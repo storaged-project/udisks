@@ -43,6 +43,7 @@ UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
 UDisksState              *udisks_daemon_get_state             (UDisksDaemon    *daemon);
 UDisksModuleManager      *udisks_daemon_get_module_manager    (UDisksDaemon    *daemon);
+UDisksConfigManager      *udisks_daemon_get_config_manager    (UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_disable_modules   (UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_force_load_modules(UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_uninstalled       (UDisksDaemon    *daemon);

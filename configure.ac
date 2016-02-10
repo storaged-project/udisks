@@ -451,6 +451,9 @@ AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
+AC_DEFINE([PROJECT_SYSCONF_DIR], ["udisks"], [Project configuration directory])
+AC_DEFINE([PACKAGE_NAME_UDISKS2], ["udisks2"], [Full package name for UDisks2 compatibility])
+
 # Generate
 #
 
@@ -458,6 +461,7 @@ AC_OUTPUT([
 Makefile
 data/Makefile
 udisks/Makefile
+udisks/udisks2.conf
 udisks/udisks2.pc
 udisks/modules.conf.d/Makefile
 udisks/modules.conf.d/udisks2_lsm.conf

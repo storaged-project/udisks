@@ -147,6 +147,7 @@ endif # HAVE_INTROSPECTION
 CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch] $(gir_DATA) $(typelibs_DATA)
 
 EXTRA_DIST = 						\
+	udisks2.conf.in                                 \
 	udisks2.pc.in					\
 	udisksversion.h.in				\
 	udisksenumtypes.h.template			\

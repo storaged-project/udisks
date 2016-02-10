@@ -1,6 +1,7 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
  *
  * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
+ * Copyright (C)      2016 Peter Hatina <phatina@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +40,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
+#include "udisksconfigmanager.h"
 
 /**
  * SECTION:udisksdaemon
@@ -77,6 +79,8 @@ struct _UDisksDaemon
 
   UDisksModuleManager *module_manager;
 
+  UDisksConfigManager *config_manager;
+
   gboolean disable_modules;
   gboolean force_load_modules;
   gboolean uninstalled;
@@ -96,6 +100,7 @@ enum
   PROP_FSTAB_MONITOR,
   PROP_CRYPTTAB_MONITOR,
   PROP_MODULE_MANAGER,
+  PROP_CONFIG_MANAGER,
   PROP_DISABLE_MODULES,
   PROP_FORCE_LOAD_MODULES,
   PROP_UNINSTALLED,
@@ -121,6 +126,8 @@ udisks_daemon_finalize (GObject *object)
 
   udisks_module_manager_unload_modules (daemon->module_manager);
   g_clear_object (&daemon->module_manager);
+
+  g_clear_object (&daemon->config_manager);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize (object);
@@ -158,6 +165,10 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_MODULE_MANAGER:
       g_value_set_object (value, udisks_daemon_get_module_manager (daemon));
+      break;
+
+    case PROP_CONFIG_MANAGER:
+      g_value_set_object (value, udisks_daemon_get_config_manager (daemon));
       break;
 
     case PROP_DISABLE_MODULES:
@@ -258,10 +269,17 @@ udisks_daemon_constructed (GObject *object)
         }
     }
 
-  if (!daemon->uninstalled)
-    daemon->module_manager = udisks_module_manager_new (daemon);
+
+  if (! daemon->uninstalled)
+    {
+      daemon->config_manager = udisks_config_manager_new ();
+      daemon->module_manager = udisks_module_manager_new (daemon);
+    }
   else
-    daemon->module_manager = udisks_module_manager_new_uninstalled (daemon);
+    {
+      daemon->config_manager = udisks_config_manager_new_uninstalled ();
+      daemon->module_manager = udisks_module_manager_new_uninstalled (daemon);
+    }
 
   daemon->mount_monitor = udisks_mount_monitor_new ();
 
@@ -278,8 +296,12 @@ udisks_daemon_constructed (GObject *object)
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
 
-  if (daemon->force_load_modules)
-    udisks_module_manager_load_modules (daemon->module_manager);
+  if (daemon->force_load_modules
+      || (udisks_config_manager_get_load_preference (daemon->config_manager)
+          == UDISKS_MODULE_LOAD_ONSTARTUP))
+    {
+      udisks_module_manager_load_modules (daemon->module_manager);
+    }
 
   udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
 
@@ -1197,8 +1219,6 @@ udisks_daemon_get_objects (UDisksDaemon *daemon)
   return g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (daemon->object_manager));
 }
 
-/* ---------------------------------------------------------------------------------------------------- */
-
 /**
  * udisks_daemon_get_module_manager:
  * @daemon: A #UDisksDaemon.
@@ -1214,7 +1234,20 @@ udisks_daemon_get_module_manager (UDisksDaemon *daemon)
   return daemon->module_manager;
 }
 
-/* ---------------------------------------------------------------------------------------------------- */
+/**
+ * udisks_daemon_get_config_manager:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the config manager used by @daemon.
+ *
+ * Returns: A #ConfigModuleManager. Do not free, the object is owned by @daemon.
+ */
+UDisksConfigManager *
+udisks_daemon_get_config_manager (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->config_manager;
+}
 
 /**
  * udisks_daemon_get_disable_modules:

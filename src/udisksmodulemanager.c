@@ -35,6 +35,7 @@
 
 #include "udisksdaemon.h"
 #include "udisksmodulemanager.h"
+#include "udisksconfigmanager.h"
 #include "udisksprivate.h"
 #include "udiskslogging.h"
 #include <modules/udisksmoduleifacetypes.h>
@@ -289,6 +290,73 @@ udisks_module_manager_free_modules (UDisksModuleManager *manager)
     }
 }
 
+static GList *
+udisks_module_manager_get_modules_list (UDisksModuleManager *manager)
+{
+  UDisksConfigManager *config_manager;
+  GDir *dir;
+  GError *error = NULL;
+  const GList *modules_i = NULL;
+  GList *modules_list = NULL;
+  const gchar *dent;
+  gchar *lib_filename;
+  gchar *module_dir;
+  gchar *pth;
+
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
+
+  /* Open a directory with modules. */
+  if (! udisks_module_manager_get_uninstalled (manager))
+    module_dir = g_build_path (G_DIR_SEPARATOR_S, UDISKS_MODULE_DIR, NULL);
+  else
+    module_dir = g_build_path (G_DIR_SEPARATOR_S, BUILD_DIR, "modules", NULL);
+  dir = g_dir_open (module_dir, 0, &error);
+  if (! dir)
+    {
+      udisks_warning ("Error loading modules: %s", error->message);
+      g_error_free (error);
+      g_free (module_dir);
+      return NULL;
+    }
+
+  config_manager = udisks_daemon_get_config_manager (manager->daemon);
+  if (udisks_config_manager_get_modules_all (config_manager))
+    {
+      /* Load all the modules from modules directory. */
+      while ((dent = g_dir_read_name (dir)))
+        {
+          if (!g_str_has_suffix (dent, ".so"))
+            continue;
+
+          pth = g_build_filename (G_DIR_SEPARATOR_S, module_dir, dent, NULL);
+          modules_list = g_list_append (modules_list, pth);
+        }
+    }
+  else
+    {
+      /* Load only those modules which are specified in config file. */
+      for (modules_i = udisks_config_manager_get_modules (config_manager);
+           modules_i;
+           modules_i = modules_i->next)
+        {
+          lib_filename = g_strdup_printf ("lib" PACKAGE_NAME_UDISKS2 "_%s.so",
+                                          (gchar *) modules_i->data);
+          pth = g_build_filename (G_DIR_SEPARATOR_S,
+                                  module_dir,
+                                  lib_filename,
+                                  NULL);
+          g_free (lib_filename);
+
+          modules_list = g_list_append (modules_list, pth);
+        }
+    }
+
+  g_dir_close (dir);
+  g_free (module_dir);
+
+  return modules_list;
+}
+
 /**
  * udisks_module_manager_load_modules:
  * @manager: A #UDisksModuleManager instance.
@@ -299,12 +367,10 @@ udisks_module_manager_free_modules (UDisksModuleManager *manager)
 void
 udisks_module_manager_load_modules (UDisksModuleManager *manager)
 {
-  GError *error;
-  GDir *dir;
-  const gchar *dent;
+  GList *modules_to_load;
+  GList *modules_to_load_tmp;
   GModule *module;
   ModuleData *module_data;
-  gchar *module_dir;
   gchar *pth;
 
   UDisksModuleIfaceSetupFunc block_object_iface_setup_func;
@@ -315,6 +381,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
   UDisksModuleInitFunc module_init_func;
   UDisksModuleTeardownFunc module_teardown_func;
 
+  /* Module API */
   gchar *module_id;
   gpointer module_state_pointer;
   UDisksModuleInterfaceInfo **infos, **infos_i;
@@ -324,6 +391,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
+  /* Repetitive loading guard */
   g_mutex_lock (&manager->modules_ready_lock);
   if (manager->modules_ready)
     {
@@ -331,44 +399,20 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
       return;
     }
 
-  error = NULL;
-  module_dir = g_strdup(UDISKS_MODULE_DIR);
-  dir = g_dir_open (module_dir, 0, &error);
-  if (! dir)
+  /* Load the modules */
+  modules_to_load = udisks_module_manager_get_modules_list (manager);
+  for (modules_to_load_tmp = modules_to_load;
+       modules_to_load_tmp;
+       modules_to_load_tmp = modules_to_load_tmp->next)
     {
-      /* We don't want to exit prematurely.  Check build directory first. */
-      if (manager->uninstalled)
-        {
-          g_error_free (error);
-          g_free (module_dir);
-          error = NULL;
-          module_dir = g_strdup (BUILD_DIR "modules");
-          dir = g_dir_open (module_dir, 0, &error);
-        }
-
-      if (!dir)
-        {
-          udisks_warning ("Error loading modules: %s", error->message);
-          g_error_free (error);
-          g_free (module_dir);
-          g_mutex_unlock (&manager->modules_ready_lock);
-          return;
-        }
-    }
-
-  while ((dent = g_dir_read_name (dir)))
-    {
-      if (!g_str_has_suffix (dent, ".so"))
-        continue;
-
-      pth = g_build_filename (module_dir, dent, NULL);
+      pth = (gchar *) modules_to_load_tmp->data;
       module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
 
       if (module != NULL)
         {
           module_data = g_new0 (ModuleData, 1);
           module_data->handle = module;
-          udisks_notice ("Loading module %s...", dent);
+          udisks_notice ("Loading module %s...", g_path_get_basename (pth));
           if (! g_module_symbol (module_data->handle, "udisks_module_id", (gpointer *) &module_id_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_init", (gpointer *) &module_init_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_teardown", (gpointer *) &module_teardown_func) ||
@@ -428,15 +472,12 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
         {
           udisks_error ("Module loading failed: %s", g_module_error ());
         }
-
-      g_free (pth);
     }
-  g_dir_close (dir);
-
-  g_free (module_dir);
 
   manager->modules_ready = TRUE;
   g_mutex_unlock (&manager->modules_ready_lock);
+
+  g_list_free_full (modules_to_load, (GDestroyNotify) g_free);
 
   /* Ensured to fire only once */
   g_object_notify (G_OBJECT (manager), "modules-ready");

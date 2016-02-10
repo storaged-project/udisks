@@ -114,6 +114,9 @@ typedef struct UDisksInhibitCookie UDisksInhibitCookie;
 struct _UDisksModuleManager;
 typedef struct _UDisksModuleManager UDisksModuleManager;
 
+typedef struct _UDisksConfigManager        UDisksConfigManager;
+typedef struct _UDisksConfigManagerClass   UDisksConfigManagerClass;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.
