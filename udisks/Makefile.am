@@ -4,6 +4,10 @@ SUBDIRS = modules.conf.d
 
 NULL =
 
+moduleconfdir = $(sysconfdir)/udisks2/
+
+moduleconf_DATA = udisks2.conf
+
 AM_CPPFLAGS = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\

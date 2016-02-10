@@ -493,6 +493,7 @@ doc/man/udisks.xml
 doc/man/udisksd.xml
 doc/man/udisksctl.xml
 doc/man/umount.udisks2.xml
+doc/man/udisks2.conf.5.xml.in
 doc/man/udisks2_lsm.conf.5
 doc/udisks2-docs.xml.iscsi.dbus
 doc/udisks2-docs.xml.iscsi.generated

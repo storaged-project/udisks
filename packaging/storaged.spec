@@ -11,7 +11,7 @@
 Name:    storaged
 Summary: Disk Manager
 Version: 2.5.0
-Release: 1%{?dist}_udisks2
+Release: 2%{?dist}_udisks2
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -219,6 +219,7 @@ udevadm trigger
 %if %{is_fedora}
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %endif
+%{_sysconfdir}/udisks2/udisks2.conf
 
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
@@ -232,6 +233,7 @@ udevadm trigger
 %{_bindir}/udisksctl
 
 %{_mandir}/man1/udisksctl.1*
+%{_mandir}/man5/udisks2.conf.5*
 %{_mandir}/man8/udisksd.8*
 %{_mandir}/man8/udisks.8*
 %{_mandir}/man8/umount.udisks2.8*
@@ -305,6 +307,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Feb 10 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-2
+- Add udisksd configuration file and its man page
+
 * Thu Jan 28 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-1
 - UDisks2 drop-in replacement
 
