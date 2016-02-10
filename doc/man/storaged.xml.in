@@ -29,6 +29,7 @@
       <arg><option>--replace</option></arg>
       <arg><option>--no-debug</option></arg>
       <arg><option>--no-sigint</option></arg>
+      <arg><option>--force-load-modules</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -85,6 +86,14 @@
         <listitem>
           <para>
             Do not handle SIGINT for controlled shutdown.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--force-load-modules</option></term>
+        <listitem>
+          <para>
+            Activate modules on startup
           </para>
         </listitem>
       </varlistentry>
