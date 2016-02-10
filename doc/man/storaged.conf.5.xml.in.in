@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
+<refentry id="storaged.conf.5">
+  <refentryinfo>
+    <title>storaged</title>
+    <date>February 2016</date>
+    <productname>storaged</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>storaged.conf</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class="manual">Storaged Daemon Configuration</refmiscinfo>
+    <refmiscinfo class="source">storaged.conf</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>storaged.conf</refname>
+    <refpurpose>The storaged configuration file</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      The storaged project provides additional functionality via pluggable
+      modules. These plugins can be inserted into the daemon either by D-Bus
+      call <function>org.storaged.Storaged.Manager.EnableModules()</function>
+      or by running the storaged daemon with
+      <option>--force-load-modules</option> command line option.
+    </para>
+
+    <para>
+      It is also possible to configure the modules loading behavior via
+      the configuration file placed at
+      <emphasis>@sysconfdir@/storaged/storaged.conf</emphasis>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>CONFIGURATION FILE</title>
+    <para>
+      The default configuration file <emphasis
+      role="bold">storaged.conf</emphasis> looks like this:
+    </para>
+
+    <programlisting>
+    [storaged]
+    modules=*
+    modules_load_preference=ondemand
+    </programlisting>
+
+    <para>
+      <variablelist>
+        <varlistentry>
+          <term><option>modules = &lt;string list&gt;</option></term>
+          <para>
+            This variable controlls what modules should be loaded. It may
+            contain either a comma-separated list of modules to load or a
+            single asterisk which stands for all the modules.
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>modules_load_preference = ondemand|onstartup</option></term>
+          <para>
+            This key tells storaged when to load the plugins: either at startup
+            or on demand by D-Bus
+            <function>org.storaged.Storaged.Manager.EnableModules()</function>.
+          </para>
+        </varlistentry>
+      </variablelist>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>
+      <email><![CDATA[phatina@redhat.com]]></email>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="https://github.com/storaged-project/storaged/issues"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="umount.storaged.8"><citerefentry><refentrytitle>umount.storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
+    </para>
+  </refsect1>
+</refentry>

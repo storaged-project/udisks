@@ -11,7 +11,7 @@
 Name:    storaged
 Summary: Disk Manager
 Version: 2.4.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -210,6 +210,7 @@ udevadm trigger
 %if %{is_fedora}
 %dir %{_sysconfdir}/storaged/modules.conf.d
 %endif
+%{_sysconfdir}/storaged/storaged.conf
 
 %{_sysconfdir}/dbus-1/system.d/org.storaged.Storaged.conf
 %{_datadir}/bash-completion/completions/storagectl
@@ -223,6 +224,7 @@ udevadm trigger
 %{_bindir}/storagectl
 
 %{_mandir}/man1/storagectl.1*
+%{_mandir}/man5/storaged.conf.5*
 %{_mandir}/man8/storaged.8*
 %{_mandir}/man8/storaged-project.8*
 %{_mandir}/man8/umount.storaged.8*
@@ -296,6 +298,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Feb 10 2016 Peter Hatina <phatina@redhat.com> - 2.4.0-4
+- Add storaged configuration file and its man page
+
 * Thu Jan 21 2016 Peter Hatina <phatina@redhat.com> - 2.4.0-3
 - Redesign subpackage dependencies
 - Make GTK documentation generation configurable

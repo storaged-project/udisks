@@ -4,6 +4,10 @@ SUBDIRS = modules.conf.d
 
 NULL =
 
+moduleconfdir = $(sysconfdir)/storaged/
+
+moduleconf_DATA = storaged.conf
+
 AM_CPPFLAGS =                                                                  \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \

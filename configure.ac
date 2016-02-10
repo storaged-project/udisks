@@ -513,6 +513,7 @@ doc/man/storaged-project.xml
 doc/man/storaged.xml
 doc/man/storagectl.xml
 doc/man/umount.storaged.xml
+doc/man/storaged.conf.5.xml.in
 doc/man/storaged_lsm.conf.5
 doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
