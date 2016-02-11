@@ -514,11 +514,12 @@ doc/man/storaged.xml
 doc/man/storagectl.xml
 doc/man/umount.storaged.xml
 doc/man/storaged.conf.5.xml.in
-doc/man/storaged_lsm.conf.5
+doc/man/storaged_lsm.conf.5.xml.in
 doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
 doc/storaged-sections.txt.iscsi.sections
 doc/storaged.types.iscsi
+doc/storaged-docs.xml.lsm.man
 doc/storaged-docs.xml.lsm.dbus
 doc/storaged-docs.xml.lsm.generated
 doc/storaged-sections.txt.lsm.sections
