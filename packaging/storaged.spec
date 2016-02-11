@@ -8,14 +8,14 @@
 
 %define is_fedora                       0%{?rhel} == 0
 
-Name:    storaged
+Name:    storaged-udisks2-compat
 Summary: Disk Manager
 Version: 2.5.0
 Release: 3%{?dist}_udisks2
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
-Source0: https://github.com/storaged-project/storaged/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
+Source0: https://github.com/storaged-project/storaged/releases/download/storaged-%{version}/storaged-%{version}.tar.bz2
 
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: gobject-introspection-devel >= %{gobject_introspection_version}
@@ -53,7 +53,7 @@ Requires: eject
 # For MD-RAID
 Requires: mdadm
 
-Requires: libstoraged%{?_isa} = %{version}-%{release}
+Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
 # For mkntfs (not available on rhel or on ppc/ppc64)
 %if ! 0%{?rhel}
@@ -75,18 +75,18 @@ manipulate disks, storage devices and technologies.
 Storaged is a fork of UDisks2 and extends its DBus API; it is meant to be a
 drop-in replacement for the original project.
 
-%package -n libstoraged
+%package -n lib%{name}
 Summary: Dynamic library to access the udisksd daemon
 Group: System Environment/Libraries
 License: LGPLv2+
 Provides:  libudisks2 = %{version}-%{release}
 Obsoletes: libudisks2
 
-%description -n libstoraged
+%description -n lib%{name}
 This package contains the dynamic library, which provides
 access to the udisksd daemon.
 
-%package -n storaged-iscsi
+%package -n %{name}-iscsi
 Summary: Module for iSCSI
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -94,10 +94,10 @@ License: LGPLv2+
 Requires: iscsi-initiator-utils
 BuildRequires: iscsi-initiator-utils-devel
 
-%description -n storaged-iscsi
+%description -n %{name}-iscsi
 This package contains module for iSCSI configuration.
 
-%package -n storaged-lvm2
+%package -n %{name}-lvm2
 Summary: Module for LVM2
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -105,23 +105,23 @@ License: LGPLv2+
 Requires: lvm2
 BuildRequires: lvm2-devel
 
-%description -n storaged-lvm2
+%description -n %{name}-lvm2
 This package contains module for LVM2 configuration.
 
-%package -n libstoraged-devel
-Summary: Development files for libstoraged
+%package -n lib%{name}-devel
+Summary: Development files for lib%{name}
 Group: Development/Libraries
-Requires: libstoraged%{?_isa} = %{version}-%{release}
+Requires: lib%{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Provides:  libudisks2-devel = %{version}-%{release}
 Obsoletes: libudisks2-devel
 
-%description -n libstoraged-devel
-This package contains the development files for the library libstoraged, a
+%description -n lib%{name}-devel
+This package contains the development files for the library lib%{name}, a
 dynamic library, which provides access to the udisksd daemon.
 
 %if %{is_fedora}
-%package -n storaged-bcache
+%package -n %{name}-bcache
 Summary: Module for Bcache
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -129,10 +129,10 @@ License: LGPLv2+
 Requires: libblockdev-kbd
 BuildRequires: libblockdev-kbd-devel
 
-%description -n storaged-bcache
+%description -n %{name}-bcache
 This package contains module for Bcache configuration.
 
-%package -n storaged-btrfs
+%package -n %{name}-btrfs
 Summary: Module for BTRFS
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -140,10 +140,10 @@ License: LGPLv2+
 Requires: libblockdev-btrfs
 BuildRequires: libblockdev-btrfs-devel
 
-%description -n storaged-btrfs
+%description -n %{name}-btrfs
 This package contains module for BTRFS configuration.
 
-%package -n storaged-lsm
+%package -n %{name}-lsm
 Summary: Module for LSM
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -152,10 +152,10 @@ Requires: libstoragemgmt
 BuildRequires: libstoragemgmt-devel
 BuildRequires: libconfig-devel
 
-%description -n storaged-lsm
+%description -n %{name}-lsm
 This package contains module for LSM configuration.
 
-%package -n storaged-zram
+%package -n %{name}-zram
 Summary: Module for ZRAM
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -165,7 +165,7 @@ Requires: libblockdev-swap
 BuildRequires: libblockdev-kbd-devel
 BuildRequires: libblockdev-swap-devel
 
-%description -n storaged-zram
+%description -n %{name}-zram
 This package contains module for ZRAM configuration.
 %endif
 
@@ -203,13 +203,15 @@ chrpath --delete %{buildroot}/%{_libexecdir}/udisks2/udisksd
 
 %find_lang udisks2
 
-%post -n storaged
+%post -n %{name}
 udevadm control --reload
 udevadm trigger
+# Restart udisks2, if it's running...
+systemctl try-restart udisks2
 
-%post -n libstoraged -p /sbin/ldconfig
+%post -n lib%{name} -p /sbin/ldconfig
 
-%postun -n libstoraged -p /sbin/ldconfig
+%postun -n lib%{name} -p /sbin/ldconfig
 
 %files -f udisks2.lang
 %doc README.md AUTHORS NEWS HACKING
@@ -246,11 +248,11 @@ udevadm trigger
 # about e.g. mounts to unprivileged users
 %attr(0700,root,root) %dir %{_localstatedir}/lib/udisks2
 
-%files -n libstoraged
+%files -n lib%{name}
 %{_libdir}/libudisks2.so.*
 %{_libdir}/girepository-1.0/UDisks-2.0.typelib
 
-%files -n storaged-lvm2
+%files -n %{name}-lvm2
 %dir %{_prefix}/lib/udisks2
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/lvm-nolocking
@@ -261,13 +263,13 @@ udevadm trigger
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lvm2.policy
 %{_mandir}/man8/udisks-lvm.8*
 
-%files -n storaged-iscsi
+%files -n %{name}-iscsi
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_iscsi.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.iscsi.policy
 
-%files -n libstoraged-devel
+%files -n lib%{name}-devel
 %{_libdir}/libudisks2.so
 %dir %{_includedir}/udisks2
 %dir %{_includedir}/udisks2/udisks
@@ -280,19 +282,19 @@ udevadm trigger
 %{_libdir}/pkgconfig/udisks2.pc
 
 %if %{is_fedora}
-%files -n storaged-bcache
+%files -n %{name}-bcache
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_bcache.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.bcache.policy
 
-%files -n storaged-btrfs
+%files -n %{name}-btrfs
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_btrfs.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.btrfs.policy
 
-%files -n storaged-lsm
+%files -n %{name}-lsm
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
 %dir %{_sysconfdir}/udisks2/modules.conf.d
@@ -300,7 +302,7 @@ udevadm trigger
 %{_mandir}/man5/udisks2_lsm.conf.*
 %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
 
-%files -n storaged-zram
+%files -n %{name}-zram
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_zram.so
