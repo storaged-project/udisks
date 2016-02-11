@@ -21,6 +21,7 @@
     <xi:include href="man/udisksctl.xml"/>
     <xi:include href="man/umount.udisks2.xml"/>
     <xi:include href="man/udisks2.conf.5.xml"/>
+    <!-- LSM_MAN_PAGE -->
   </part>
 
   <part id="ref-dbus">
