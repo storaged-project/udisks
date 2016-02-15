@@ -223,7 +223,8 @@ create_conf_files (guint64   num_devices,
   g_free (filename);
 
   filename = g_build_filename (PACKAGE_MODPROBE_DIR, "zram.conf", NULL);
-  contents = g_strdup_printf ("options zram num_devices=%lu\n", num_devices);
+  contents = g_strdup_printf ("options zram num_devices=%" G_GUINT64_FORMAT "\n",
+                              num_devices);
 
   if (! g_file_set_contents (filename , contents, -1, error))
     {
@@ -236,11 +237,11 @@ create_conf_files (guint64   num_devices,
       g_free (filename);
       g_free (contents);
 
-      g_snprintf (tmp, 255, "zram%lu", i);
+      g_snprintf (tmp, 255, "zram%" G_GUINT64_FORMAT, i);
       filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, tmp, NULL);
       contents = g_strdup_printf ("#!/bin/bash\n\n"
-                                  "ZRAM_NUM_STR=%lu\n"
-                                  "ZRAM_DEV_SIZE=%lu\n"
+                                  "ZRAM_NUM_STR=%" G_GUINT64_FORMAT "\n"
+                                  "ZRAM_DEV_SIZE=%" G_GUINT64_FORMAT "\n"
                                   "SWAP=n\n",
                                   num_streams[i],
                                   sizes[i]);
@@ -286,7 +287,7 @@ delete_conf_files (GError **error)
     goto out;
   }
 
-  while (name = g_dir_read_name (zramconfd))
+  while ((name = g_dir_read_name (zramconfd)))
   {
     g_free (filename);
     filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, name, NULL);
