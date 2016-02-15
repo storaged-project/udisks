@@ -38,7 +38,6 @@
 
     <!--
         CreateDevices:
-        @num_devices: Number of devices to create.
         @sizes: Requested sizes (in bytes) for created zRAM devices.
         @num_streams: Number of streams for created zRAM devices.
         @options: Additional options.
@@ -49,7 +48,6 @@
         No additional options are currently defined.
     -->
     <method name = "CreateDevices">
-      <arg name="num_devices" direction="in" type="t"/>
       <arg name="sizes" direction="in" type="at"/>
       <arg name="num_streams" direction="in" type="at"/>
       <arg name="options" direction="in" type="a{sv}"/>
