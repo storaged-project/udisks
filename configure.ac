@@ -451,7 +451,7 @@ AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
-AC_DEFINE([PROJECT_SYSCONF_DIR], ["udisks"], [Project configuration directory])
+AC_DEFINE([PROJECT_SYSCONF_DIR], ["udisks2"], [Project configuration directory])
 AC_DEFINE([PACKAGE_NAME_UDISKS2], ["udisks2"], [Full package name for UDisks2 compatibility])
 
 # Generate
