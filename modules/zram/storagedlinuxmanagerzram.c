@@ -302,13 +302,14 @@ out:
 static gboolean
 handle_create_devices (StoragedManagerZRAM    *object,
                        GDBusMethodInvocation  *invocation,
-                       guint64                 num_devices,
                        GVariant               *sizes_,
                        GVariant               *num_streams_,
                        GVariant               *options)
 {
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
   GError *error = NULL;
+  gsize sizes_len;
+  gsize streams_len;
   guint64 *sizes;
   guint64 *num_streams;
 
@@ -320,16 +321,20 @@ handle_create_devices (StoragedManagerZRAM    *object,
                                        N_("Authentication is required to add zRAM kernel module"),
                                        invocation);
 
-  sizes = (guint64*) g_variant_get_fixed_array (sizes_, &num_devices, sizeof (guint64));
-  num_streams = (guint64*) g_variant_get_fixed_array (num_streams_, &num_devices, sizeof (guint64));
+  sizes = (guint64*) g_variant_get_fixed_array (sizes_,
+                                                &sizes_len,
+                                                sizeof (guint64));
+  num_streams = (guint64*) g_variant_get_fixed_array (num_streams_,
+                                                      &streams_len,
+                                                      sizeof (guint64));
 
-  if (! create_conf_files (num_devices, sizes, num_streams, &error))
+  if (! create_conf_files ((guint64) streams_len, sizes, num_streams, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
-  if (! bd_kbd_zram_create_devices (num_devices, sizes, num_streams, &error))
+  if (! bd_kbd_zram_create_devices ((guint64) sizes_len, sizes, num_streams, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       delete_conf_files (&error);
