@@ -44,6 +44,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
+#include "udiskslinuxfsinfo.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -147,6 +148,9 @@ udisks_linux_manager_init (UDisksLinuxManager *manager)
   g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+
+  udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager),
+                                            get_supported_filesystems ());
 }
 
 static void
