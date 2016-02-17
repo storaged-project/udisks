@@ -44,6 +44,7 @@
 #include "storagedlinuxblockobject.h"
 #include "storagedlinuxdevice.h"
 #include "storagedmodulemanager.h"
+#include "storagedlinuxfsinfo.h"
 
 /**
  * SECTION:storagedlinuxmanager
@@ -147,6 +148,9 @@ storaged_linux_manager_init (StoragedLinuxManager *manager)
   g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+
+  storaged_manager_set_supported_filesystems (STORAGED_MANAGER (manager),
+                                              get_supported_filesystems ());
 }
 
 static void
