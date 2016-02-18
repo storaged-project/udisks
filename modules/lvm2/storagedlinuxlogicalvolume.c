@@ -954,9 +954,10 @@ return TRUE;
 
 
 static gboolean
-handle_cache_split (StoragedLogicalVolume  *volume_,
-                    GDBusMethodInvocation  *invocation,
-                    GVariant               *options)
+cache_detach_or_split (StoragedLogicalVolume  *volume_,
+                       GDBusMethodInvocation  *invocation,
+                       GVariant               *options,
+                       gboolean               destroy)
 {
 #ifndef HAVE_LVMCACHE
 
@@ -989,7 +990,7 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
                                        STORAGED_OBJECT (object),
                                        lvm2_policy_action_id,
                                        options,
-                                       N_("Authentication is required to split cache pool LV off of a cache LV"),
+                                       N_("Authentication is required to split or detach cache pool LV off of a cache LV"),
                                        invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
@@ -997,7 +998,7 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
   vg_name = storaged_linux_volume_group_object_get_name (group_object);
   origin_name = storaged_linux_logical_volume_object_get_name (object);
 
-  if (!bd_lvm_cache_detach (vg_name, origin_name, FALSE, &error))
+  if (!bd_lvm_cache_detach (vg_name, origin_name, destroy, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
@@ -1015,6 +1016,24 @@ out:
   return TRUE;
 
 #endif /* HAVE_LVMCACHE */
+}
+
+
+static gboolean
+handle_cache_split (StoragedLogicalVolume  *volume_,
+                    GDBusMethodInvocation  *invocation,
+                    GVariant               *options)
+{
+  return cache_detach_or_split(volume_, invocation, options, FALSE);
+}
+
+
+static gboolean
+handle_cache_detach (StoragedLogicalVolume  *volume_,
+                    GDBusMethodInvocation  *invocation,
+                    GVariant               *options)
+{
+  return cache_detach_or_split(volume_, invocation, options, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
