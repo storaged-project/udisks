@@ -549,7 +549,7 @@
 
     <!-- CacheDetach:
          @options: Additional options.
-         @since: 2.3.0
+         @since: 2.5.0
 
          Detaches the cached LV from its cache.
 
