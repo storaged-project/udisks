@@ -229,10 +229,14 @@ if test "x$enable_lvm2" = "xyes" \
                       [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available]) have_lvm2=yes],
                       have_lvm2=no)
   fi
+  BLOCKDEV_CFLAGS="-I/usr/include/blockdev"
+  BLOCKDEV_LIBS="-lbd_lvm"
   AC_SUBST(DEVMAPPER_CFLAGS)
   AC_SUBST(DEVMAPPER_LIBS)
   AC_SUBST(LVM2_CFLAGS)
   AC_SUBST(LVM2_LIBS)
+  AC_SUBST(BLOCKDEV_CFLAGS)
+  AC_SUBST(BLOCKDEV_LIBS)
   if test \( "x$have_devmapper" = xno  -o "x$have_lvm2"      = xno  \) \
        -a \( "x$enable_lvm2"    = xyes -o "x$enable_modules" = xyes \); then
     AC_MSG_ERROR([lvm2 support requested but libraries not found])

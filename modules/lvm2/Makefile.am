@@ -26,6 +26,7 @@ CPPFLAGS =                                                                     \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(WARN_CFLAGS)                                                         \
+	$(BLOCKDEV_CFLAGS)                                                     \
 	$(NULL)
 
 $(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.storaged.Storaged.lvm2.xml Makefile.am
@@ -87,6 +88,7 @@ libstoraged_lvm2_la_CFLAGS =                                                   \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
+	$(BLOCKDEV_CFLAGS)                                                     \
 	$(NULL)
 
 libstoraged_lvm2_la_LDFLAGS =                                                  \
@@ -103,6 +105,7 @@ libstoraged_lvm2_la_LIBADD =                                                   \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
+	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
 # ------------------------------------------------------------------------------
@@ -122,12 +125,14 @@ storaged_lvm_CFLAGS =                                                          \
 	-DG_LOG_DOMAIN=\"storaged-lvm-helper\"                                 \
 	$(DEVMAPPER_CFLAGS)                                                    \
 	$(LVM2_CFLAGS)                                                         \
+	$(BLOCKDEV_CFLAGS)                                                     \
 	$(NULL)
 
 storaged_lvm_LDADD =                                                           \
 	$(GLIB_LIBS)                                                           \
 	$(DEVMAPPER_LIBS)                                                      \
 	$(LVM2_LIBS)                                                           \
+	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
 # ------------------------------------------------------------------------------

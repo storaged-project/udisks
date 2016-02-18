@@ -32,6 +32,8 @@
 
 #include <glib/gstdio.h>
 
+#include <lvm.h>
+
 #include <src/storagedlogging.h>
 #include <src/storagedlinuxprovider.h>
 #include <src/storageddaemon.h>
@@ -255,10 +257,8 @@ handle_delete (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
   gboolean teardown_flag = FALSE;
-  gchar *escaped_name = NULL;
+  gchar *vg_name = NULL;
   gchar *error_message = NULL;
   GList *objects_to_wipe = NULL;
   GList *l;
@@ -290,19 +290,6 @@ handle_delete (StoragedVolumeGroup   *_group,
       g_list_free_full (objects, g_object_unref);
     }
 
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &caller_gid,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
                                        STORAGED_OBJECT (object),
@@ -321,25 +308,16 @@ handle_delete (StoragedVolumeGroup   *_group,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  escaped_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
-
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-delete", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "vgremove -f %s",
-                                                escaped_name))
+  vg_name = (gchar *)storaged_linux_volume_group_object_get_name (object);
+  printf("Removing volume %s\n", vg_name);
+  if (!bd_lvm_vgremove (vg_name, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error deleting volume group: %s",
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -355,7 +333,6 @@ handle_delete (StoragedVolumeGroup   *_group,
  out:
   g_list_free_full (objects_to_wipe, g_object_unref);
   g_free (error_message);
-  g_free (escaped_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -483,12 +460,10 @@ handle_add_device (StoragedVolumeGroup      *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   const gchar *new_member_device_file = NULL;
-  gchar *escaped_new_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   StoragedObject *new_member_device_object = NULL;
   StoragedBlock *new_member_device = NULL;
-  gchar *escaped_name = NULL;
+  gchar *vg_name = NULL;
 
   object = storaged_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -549,38 +524,24 @@ handle_add_device (StoragedVolumeGroup      *_group,
       goto out;
     }
 
-  escaped_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
+  vg_name = (gchar *)storaged_linux_volume_group_object_get_name (object);
   new_member_device_file = storaged_block_get_device (new_member_device);
-  escaped_new_member_device_file = storaged_daemon_util_escape_and_quote (new_member_device_file);
 
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-add-device", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "vgextend %s %s",
-                                                escaped_name,
-                                                escaped_new_member_device_file))
+  if (!bd_lvm_vgextend(vg_name, (gchar *)new_member_device_file, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error adding %s to volume group: %s",
                                              new_member_device_file,
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
   storaged_volume_group_complete_add_device (_group, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_new_member_device_file);
   g_clear_object (&new_member_device_object);
   g_clear_object (&new_member_device);
   g_clear_object (&object);
@@ -608,6 +569,7 @@ handle_remove_device (StoragedVolumeGroup      *_group,
   StoragedObject *member_device_object = NULL;
   StoragedBlock *member_device = NULL;
   gchar *escaped_name = NULL;
+  const gchar *vg_name;
 
   object = storaged_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -655,30 +617,20 @@ handle_remove_device (StoragedVolumeGroup      *_group,
                                        options,
                                        N_("Authentication is required to remove a device from a volume group"),
                                        invocation);
-
-  escaped_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
+  vg_name = storaged_linux_volume_group_object_get_name (object);
+  escaped_name = storaged_daemon_util_escape_and_quote (vg_name);
   member_device_file = storaged_block_get_device (member_device);
   escaped_member_device_file = storaged_daemon_util_escape_and_quote (member_device_file);
 
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-rem-device", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "vgreduce %s %s",
-                                                escaped_name,
-                                                escaped_member_device_file))
+  if (!bd_lvm_vgreduce ((gchar *)vg_name, (gchar *)member_device_file, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error remove %s from volume group: %s",
                                              member_device_file,
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -733,9 +685,7 @@ handle_empty_device (StoragedVolumeGroup      *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   const gchar *member_device_file = NULL;
-  gchar *escaped_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   StoragedObject *member_device_object = NULL;
   StoragedBlock *member_device = NULL;
 
@@ -787,34 +737,22 @@ handle_empty_device (StoragedVolumeGroup      *_group,
                                        invocation);
 
   member_device_file = storaged_block_get_device (member_device);
-  escaped_member_device_file = storaged_daemon_util_escape_and_quote (member_device_file);
 
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (member_device_object),
-                                                "lvm-vg-empty-device", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "pvmove %s",
-                                                escaped_member_device_file))
+  if (!bd_lvm_pvmove ((gchar *)member_device_file, NULL, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error emptying %s: %s",
                                              member_device_file,
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
   storaged_volume_group_complete_remove_device (_group, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_member_device_file);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&object);
@@ -874,13 +812,8 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath;
+  const gchar *vg_name;
 
   object = storaged_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -891,19 +824,6 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
 
   daemon = storaged_linux_volume_group_object_get_daemon (object);
 
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &caller_gid,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
                                        STORAGED_OBJECT (object),
@@ -912,30 +832,17 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
                                        N_("Authentication is required to create a logical volume"),
                                        invocation);
 
-  escaped_volume_name = storaged_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
+  vg_name =  storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
   arg_size -= arg_size % 512;
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s -L %" G_GUINT64_FORMAT "b -n %s",
-                          escaped_group_name, arg_size, escaped_volume_name);
-
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-create-volume", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "%s", cmd->str))
+  if (!bd_lvm_lvcreate ((gchar *)vg_name, (gchar *)arg_name, arg_size, (gchar *)"linear", NULL, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -952,10 +859,6 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
   storaged_volume_group_complete_create_plain_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_group_name);
-  g_free (escaped_volume_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&object);
   return TRUE;
 }
@@ -973,12 +876,7 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
+  const gchar *vg_name;
   const gchar *lv_objpath;
 
   object = storaged_daemon_util_dup_object (group, &error);
@@ -990,19 +888,6 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
 
   daemon = storaged_linux_volume_group_object_get_daemon (object);
 
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &caller_gid,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
                                        STORAGED_OBJECT (object),
@@ -1011,30 +896,17 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
                                        N_("Authentication is required to create a thin pool volume"),
                                        invocation);
 
-  escaped_volume_name = storaged_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
+  vg_name = storaged_linux_volume_group_object_get_name (object);
   arg_size -= arg_size % 512;
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s -T -L %" G_GUINT64_FORMAT "b --thinpool %s",
-                          escaped_group_name, arg_size, escaped_volume_name);
-
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-create-volume", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "%s", cmd->str))
+  if (!bd_lvm_thpoolcreate ((gchar *)vg_name, (gchar *)arg_name, arg_size, 0, 0, NULL, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -1051,10 +923,6 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
   storaged_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_volume_name);
-  g_free (escaped_group_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&object);
   return TRUE;
 }
@@ -1073,14 +941,9 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
   StoragedLinuxLogicalVolumeObject *pool_object = NULL;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_pool_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
+  const gchar *vg_name;
+  const gchar *pool_name;
   const gchar *lv_objpath;
 
   object = storaged_daemon_util_dup_object (group, &error);
@@ -1091,19 +954,6 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
     }
 
   daemon = storaged_linux_volume_group_object_get_daemon (object);
-
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &caller_gid,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
@@ -1121,31 +971,18 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
       goto out;
     }
 
-  escaped_volume_name = storaged_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
+  vg_name = storaged_linux_volume_group_object_get_name (object);
   arg_size -= arg_size % 512;
-  escaped_pool_name = storaged_daemon_util_escape_and_quote (storaged_linux_logical_volume_object_get_name (pool_object));
+  pool_name = storaged_linux_logical_volume_object_get_name (pool_object);
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s --thinpool %s -V %" G_GUINT64_FORMAT "b -n %s",
-                          escaped_group_name, escaped_pool_name, arg_size, escaped_volume_name);
-
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-create-volume", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "%s", cmd->str))
+  if (!bd_lvm_thlvcreate ((gchar *)vg_name, (gchar *)pool_name, (gchar *)arg_name, arg_size, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -1162,11 +999,6 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
   storaged_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_volume_name);
-  g_free (escaped_group_name);
-  g_free (escaped_pool_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&pool_object);
   g_clear_object (&object);
   return TRUE;
