@@ -156,6 +156,30 @@
     <property name="status" type="u" access="read"/>
 
     <!--
+        Start:
+        @status: The changed status of the volume
+        @since: 2.4.1
+
+        Starts a gluster volume
+    -->
+    <method name="Start">
+        <arg name="options" direction="in" type="a{sv}"/>
+        <arg name="status" direction="out" type="u"/>
+    </method>
+
+    <!--
+        Stop:
+        @status: The changed status of the volume
+        @since: 2.4.1
+
+        Stops a gluster volume
+    -->
+    <method name="Stop">
+        <arg name="options" direction="in" type="a{sv}"/>
+        <arg name="status" direction="out" type="u"/>
+    </method>
+
+    <!--
         AddBrick:
         @brick_path: The path to the brick that will be added to the volume
         @result: The path to the new brick object
@@ -166,6 +190,7 @@
     -->
     <method name="AddBrick">
         <arg name="brick_path" direction="in" type="s"/>
+        <arg name="options" direction="in" type="a{sv}"/>
         <arg name="result" direction="out" type="o"/>
     </method>
 

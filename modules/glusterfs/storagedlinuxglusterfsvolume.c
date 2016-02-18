@@ -41,6 +41,8 @@
 #include <src/storagedlinuxblockobject.h>
 
 #include "storagedlinuxglusterfsvolume.h"
+#include "storagedlinuxglusterfsvolumeobject.h"
+#include "storagedglusterfsutils.h"
 
 /**
  * SECTION:storagedlinuxglusterfsvolume
@@ -51,7 +53,7 @@
  * on Linux.
  */
 
-typedef struct _StoragedLinuxGlusterFSVolumeClass   StoragedLinuxGlusterFSVolumeClass;
+typedef struct _StoragedLinuxGlusterFSVolumeClass StoragedLinuxGlusterFSVolumeClass;
 
 /**
  * StoragedLinuxGlusterFSVolume:
@@ -69,10 +71,13 @@ struct _StoragedLinuxGlusterFSVolumeClass
   StoragedGlusterFSVolumeSkeletonClass parent_class;
 };
 
-static void glusterfs_volume_iface_init (StoragedGlusterFSVolumeIface *iface);
+static void storaged_linux_glusterfs_volume_iface_init (StoragedGlusterFSVolumeIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (StoragedLinuxGlusterFSVolume, storaged_linux_glusterfs_volume, STORAGED_TYPE_GLUSTERFS_VOLUME_SKELETON,
-                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_VOLUME, glusterfs_volume_iface_init));
+G_DEFINE_TYPE_WITH_CODE (StoragedLinuxGlusterFSVolume,
+                         storaged_linux_glusterfs_volume,
+                         STORAGED_TYPE_GLUSTERFS_VOLUME_SKELETON,
+                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_VOLUME,
+                                                storaged_linux_glusterfs_volume_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -185,6 +190,187 @@ storaged_linux_glusterfs_volume_update (StoragedLinuxGlusterFSVolume *gfs_volume
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static StoragedObject *
+wait_for_gluster_volume_object (StoragedDaemon *daemon,
+                                gpointer        userdata)
+{
+  const gchar *name = userdata;
+  return STORAGED_OBJECT (storaged_glusterfs_util_find_volume_object (daemon, name));
+}
+
+static gboolean
+handle_start (StoragedGlusterFSVolume *volume,
+              GDBusMethodInvocation   *invocation,
+              GVariant                *arg_options)
+{
+  StoragedDaemon *daemon = NULL;
+  StoragedLinuxGlusterFSVolumeObject *volume_object = NULL;
+  GError *error = NULL;
+  uid_t caller_uid;
+  gint status;
+  gchar *escaped_name = NULL;
+  gchar *error_message = NULL;
+  const gchar *caller = NULL;
+
+  caller = g_dbus_method_invocation_get_sender (invocation);
+
+  volume_object = storaged_daemon_util_dup_object (volume, &error);
+  if (volume_object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = storaged_linux_glusterfs_volume_object_get_daemon (volume_object);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (volume_object),
+                                       glusterfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to start a volume group"),
+                                       invocation);
+  escaped_name = storaged_daemon_util_escape (storaged_linux_glusterfs_volume_object_get_name (volume_object));
+
+  if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                NULL,
+                                                "gluster-volume-start", caller_uid,
+                                                NULL, /* cancellable */
+                                                0,    /* uid_t run_as_uid */
+                                                0,    /* uid_t run_as_euid */
+                                                &status,
+                                                &error_message,
+                                                NULL, /* input_string */
+                                                "gluster volume start %s",
+                                                escaped_name))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Error starting gluster volume: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+
+  volume_object = storaged_daemon_wait_for_object_sync (daemon,
+                                                        wait_for_gluster_volume_object,
+                                                        escaped_name,
+                                                        NULL,
+                                                        20, /* timeout_seconds */
+                                                        &error);
+  if (volume_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for gluster volume object for %s",
+                      escaped_name);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  storaged_glusterfs_volume_complete_start (volume,
+                                            invocation,
+                                            g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
+
+ out:
+  g_free (escaped_name);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+handle_stop (StoragedGlusterFSVolume *volume,
+             GDBusMethodInvocation   *invocation,
+             GVariant                *arg_options)
+{
+  StoragedDaemon *daemon = NULL;
+  StoragedLinuxGlusterFSVolumeObject *volume_object = NULL;
+  GError *error = NULL;
+  uid_t caller_uid;
+  gint status;
+  gchar *escaped_name = NULL;
+  gchar *error_message = NULL;
+
+  volume_object = storaged_daemon_util_dup_object (volume, &error);
+
+  if (volume_object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = storaged_linux_glusterfs_volume_object_get_daemon (volume_object);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (volume_object),
+                                       glusterfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to stop a volume group"),
+                                       invocation);
+
+  escaped_name = storaged_daemon_util_escape (storaged_linux_glusterfs_volume_object_get_name (volume_object));
+
+  if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                NULL,
+                                                "gluster-volume-stop", caller_uid,
+                                                NULL, /* cancellable */
+                                                0,    /* uid_t run_as_uid */
+                                                0,    /* uid_t run_as_euid */
+                                                &status,
+                                                &error_message,
+                                                "y\n", /* input_string */
+                                                "gluster volume stop %s",
+                                                escaped_name))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Error starting gluster volume: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+
+  volume_object = storaged_daemon_wait_for_object_sync (daemon,
+                                                        wait_for_gluster_volume_object,
+                                                        escaped_name,
+                                                        NULL,
+                                                        20, /* timeout_seconds */
+                                                        &error);
+  if (volume_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for gluster volume object for %s",
+                      escaped_name);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  storaged_glusterfs_volume_complete_stop (volume,
+                                           invocation,
+                                           g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
+
+ out:
+  g_free (escaped_name);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
 static gboolean
 handle_add_brick (StoragedGlusterFSVolume   *_group,
                   GDBusMethodInvocation     *invocation,
@@ -196,8 +382,10 @@ handle_add_brick (StoragedGlusterFSVolume   *_group,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-glusterfs_volume_iface_init (StoragedGlusterFSVolumeIface *iface)
+storaged_linux_glusterfs_volume_iface_init (StoragedGlusterFSVolumeIface *iface)
 {
+  iface->handle_start = handle_start;
+  iface->handle_stop = handle_stop;
   iface->handle_add_brick = handle_add_brick;
 }
 
