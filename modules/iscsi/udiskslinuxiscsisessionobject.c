@@ -69,7 +69,7 @@ enum
   N_PROPERTIES
 };
 
-static const gchar *iscsi_session_object_path_prefix = "org/freedesktop/UDisks2/iscsi/";
+static const gchar *iscsi_session_object_path_prefix = "/org/freedesktop/UDisks2/iscsi/";
 
 static void udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *session_object);
 static void udisks_linux_iscsi_session_object_iface_init (UDisksModuleObjectIface *iface);
