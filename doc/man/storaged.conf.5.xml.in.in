@@ -4,7 +4,7 @@
 [<!ENTITY version SYSTEM "../version.xml">]>
 <refentry id="storaged.conf.5">
   <refentryinfo>
-    <title>storaged</title>
+    <title>storaged.conf</title>
     <date>February 2016</date>
     <productname>storaged</productname>
   </refentryinfo>

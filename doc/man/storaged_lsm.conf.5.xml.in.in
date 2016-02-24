@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
+<refentry id="storaged_lsm.conf.5">
+  <refentryinfo>
+    <title>storaged_lsm.conf</title>
+    <date>February 2016</date>
+    <productname>storaged</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>storaged_lsm.conf</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class="manual">Storaged LSM Module Configuration</refmiscinfo>
+    <refmiscinfo class="source">storaged_lsm.conf</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>storaged_lsm.conf</refname>
+    <refpurpose>The Storaged LSM Module configuration file</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      The lsm module of storaged uses <emphasis>LibStorageMgmt</emphasis>[1]
+      API to provides <function>org.storaged.Storaged.Drive.LSM</function>
+      interface with RAID information for external(DAS or SAN) Linux disk
+      drive. Please refer to storage interface document for detail.
+    </para>
+
+    <para>
+      Some storage system requires extra configuration in
+      <emphasis>@sysconfdir@/storaged/modules.conf.d/storaged_lsm.conf</emphasis>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>CONFIGURATION FILE</title>
+    <para>
+      <variablelist>
+        <varlistentry>
+          <term><option>refresh_interval = &lt;integer&gt;</option></term>
+          <para>
+            The  option  controls  how  many  seconds should this module
+            refresh the RAID information cache. If not defined, the default
+            value is 30 (seconds).
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>enable_sim = true|false</option></term>
+          <para>
+            This option indicates whether lsm module should try simulator  of
+            LibStorageMgmt.  This  is  only  for developer.  If  not defined,
+            the default value is false(do not enable simulator of
+            LibStorageMgmt).  If enabled, the
+            <emphasis role="bold">sim://</emphasis> URI will be
+            used to query LibStorageMgmt simulator plugin.
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>enable_hpsa = true|false</option></term>
+          <para>
+            This option indicates whether lsm module should check HP
+            SmartArray.  If not defined, the default value is true(check HP
+            SmartArray).
+          </para>
+          <para>
+            To be functional, also requires
+            <emphasis role="bold">libstoragemgmt-hpsa-plugin</emphasis>
+            package be installed and well configured. Please refer to the
+            <emphasis>hpsa_lsmplugin(1)</emphasis> manpage for detail.
+          </para>
+          <para>
+            If enabled, the <emphasis role="bold">hpsa://</emphasis> URI will
+            be used to query LibStorageMgmt HP SmartArray plugin.
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>extra_uris= ["uri_string_1", "uri_string_2"]</option></term>
+          <para>
+            This option defines extra LibStorageMgmt URI list here. Please
+            refer to <emphasis>LibStorageMgmt User Guide[3]</emphasis> for URI
+            format.
+          </para>
+          <para>
+            Require double quoted string and separated by comma, example:
+
+            <programlisting>
+              extra_uris = ["ontap+ssl://root@ontap.a.ip", "ontap+ssl://root@ontap.b.ip"]
+            </programlisting>
+
+            If not defined, empty list(no extra URI loaded) will be used.
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>extra_passwords = ["password_string_1", "password_string_2"]</option></term>
+          <para>
+            This options defines the passwords of above URI list. Please use
+            double quoted string and separated by comma, example:
+
+            <programlisting>
+              extra_paasswords = ["password1", "password2"]
+            </programlisting>
+          </para>
+        </varlistentry>
+      </variablelist>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>HARDWARE SUPPORT STATUS</title>
+    <para>
+      Any hardwares which are supported in LibStorageMgmt with these capabilities
+      will get fully support by storaged lsm module:
+    </para>
+
+    <variablelist>
+      <varlistentry>
+        <term>
+          * <option>VOLUMES capabilityes</option>
+          with valid VPD83 information,
+        </term>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          * <option>VOLUME_RAID_INFO</option>
+          capabilities.
+        </term>
+      </varlistentry>
+    </variablelist>
+    <para>
+      Please refer to LibStorageMgmt document website[2] for support status.
+    </para>
+    <para>
+      Tested hardwares are:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">HP SmartArray</emphasis></term>
+        <para>
+          Using <emphasis role="bold">libstoragemgmt-hpsa-plugin</emphasis>
+          package.
+        </para>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis role="bold">NetApp ONTAP</emphasis></term>
+        <para>
+          Using <emphasis role="bold">libstoragemgmt-netapp-plugin</emphasis>
+          package.
+        </para>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>
+      Gris Ge <email><![CDATA[fge@redhat.com]]></email>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="https://github.com/storaged-project/storaged/issues"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <emphasis role="bold">lsmd</emphasis>(1),
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <emphasis role="bold">hpsa_lsmplugin</emphasis>(1),
+      <emphasis role="bold">ontap_lsmplugin</emphasis>(1),
+    </para>
+    <para>
+      <variablelist>
+        <varlistentry>
+          <term>
+          [1]: <ulink url="https://github.com/libstorage/libstoragemgmt"/>
+          </term>
+        </varlistentry>
+        <varlistentry>
+          <term>
+          [2]: <ulink url="http://libstorage.github.io/libstoragemgmt-doc"/>
+          </term>
+        </varlistentry>
+        <varlistentry>
+          <term>
+          [3]: <ulink url="http://libstorage.github.io/libstoragemgmt-doc/doc/user_guide.html"/>
+          </term>
+        </varlistentry>
+      </variablelist>
+    </para>
+  </refsect1>
+</refentry>

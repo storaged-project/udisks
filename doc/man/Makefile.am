@@ -15,6 +15,10 @@ man_MANS +=                                                                    \
 if HAVE_LVM2
 man_MANS += storaged-lvm.8
 endif # HAVE_LVM2
+
+if HAVE_LSM
+man_MANS += storaged_lsm.conf.5
+endif # HAVE_LSM
 endif # ENABLE_MAN
 
 storagectl.1 : storagectl.xml
@@ -43,17 +47,28 @@ storaged-lvm.8 : storaged-lvm.xml
 endif # HAVE_LVM2
 
 if HAVE_LSM
-notrans_dist_man5_MANS=storaged_lsm.conf.5
-endif
+# Hack: Autotools expand @sysconfdir@ as %{prefix}/etc; that's why we sed this
+# to real prefix, so it doesn't appear like this in the man page.
+storaged_lsm.conf.5.xml: storaged_lsm.conf.5.xml.in
+	$(SED) "s|\$${prefix}|${prefix}|" $< > $@
+
+storaged_lsm.conf.5 : storaged_lsm.conf.5.xml
+	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+endif # HAVE_LSM
 
 EXTRA_DIST =                                                                   \
 	storagectl.xml                                                         \
 	storaged.xml                                                           \
 	storaged.conf.5.xml                                                    \
+	storaged_lsm.conf.5.xml                                                \
 	storaged-lvm.xml                                                       \
 	storaged-project.xml                                                   \
 	umount.storaged.xml                                                    \
 	$(NULL)
 
 clean-local:
-	rm -f *~ *.[18] storaged.conf.5.xml
+	rm -f *~ *.[18]                                                        \
+	storaged.conf.5                                                        \
+	storaged.conf.5.xml                                                    \
+	storaged_lsm.conf.5                                                    \
+	storaged_lsm.conf.5.xml

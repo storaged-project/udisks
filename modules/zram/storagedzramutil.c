@@ -28,6 +28,7 @@
 
 const gchar *zram_policy_action_id = "org.storaged.Storaged.zram.manage-zram";
 
+gboolean
 set_conf_property (char *filename,
                    const char *key,
                    const char *value,

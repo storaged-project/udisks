@@ -36,6 +36,9 @@
     <!-- Version: The version of the daemon currently running  -->
     <property name="Version" type="s" access="read"/>
 
+    <!-- SupportedFilesystems: List of supported filesystem by Storaged -->
+    <property name="SupportedFilesystems" type="as" access="read"/>
+
     <!--
         LoopSetup:
         @fd: An index for the file descriptor to use.
