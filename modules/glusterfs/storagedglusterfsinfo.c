@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
+
 #include <libxml/parser.h>
 #include <glib.h>
 #include <stdlib.h>
@@ -32,15 +34,18 @@ static void
 add_volume_name_to_list(xmlNode *cur)
 {
   cur = cur->children;
-  while (cur != NULL) {
-    if (cur->type == XML_ELEMENT_NODE) {
-      if (xmlStrEqual(cur->name, (const xmlChar *) "name") == 1) {
-        g_variant_builder_add (builder, "s", xmlNodeGetContent(cur));
-        return;
-      }
+  while (cur != NULL)
+    {
+      if (cur->type == XML_ELEMENT_NODE)
+        {
+          if (xmlStrEqual(cur->name, (const xmlChar *) "name") == 1)
+            {
+              g_variant_builder_add (builder, "s", xmlNodeGetContent(cur));
+              return;
+            }
+        }
+      cur = cur->next;
     }
-    cur = cur->next;
-  }
 }
 
 static void
@@ -170,6 +175,7 @@ storaged_process_glusterfs_volume_info (const gchar *xml_info)
   if (!cur)
     {
       storaged_error ("Could not get root element");
+      return NULL;
     }
 
   b = g_variant_builder_new (G_VARIANT_TYPE("a{sv}"));
@@ -209,6 +215,7 @@ storaged_process_glusterfs_volume_info_all (const gchar *xml_info)
   if (!cur)
     {
       storaged_error ("Could not get root element");
+      return NULL;
     }
   builder = g_variant_builder_new (G_VARIANT_TYPE("as"));
   g_variant_builder_init (builder, G_VARIANT_TYPE("as"));

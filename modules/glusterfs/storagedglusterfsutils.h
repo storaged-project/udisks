@@ -36,7 +36,7 @@ GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
 
 void storaged_glusterfs_volumes_update (StoragedDaemon *daemon);
 void storaged_glusterfs_daemons_update (StoragedDaemon *daemon);
-GVariant *storaged_get_glusterd_info ();
+GVariant *storaged_get_glusterd_info (void);
 
 StoragedLinuxGlusterFSVolumeObject *storaged_glusterfs_util_find_volume_object (StoragedDaemon *daemon,
                                                                                 const gchar    *name);

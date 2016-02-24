@@ -17,7 +17,6 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DSTORAGED_COMPILATION                                                 \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \

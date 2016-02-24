@@ -120,7 +120,7 @@ storaged_linux_glusterfs_volume_new (void)
 
 static void
 storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_volume,
-                                              GVariant *                   *brick_info)
+                                              GVariant                     *brick_info)
 
 {
   const gchar *const *obj_paths;
@@ -133,7 +133,6 @@ storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_
   obj_paths = storaged_glusterfs_volume_get_bricks (STORAGED_GLUSTERFS_VOLUME (gfs_volume));
 
   if (g_variant_lookup (brick_info, "name", "&s", &brick_name)) {
-    StoragedLinuxGlusterFSBrickObject *brick_obj;
 
     for (n = 0; obj_paths != NULL && obj_paths[n] != NULL; n++);
     p = g_new0 (const gchar *, n + 2);
@@ -146,7 +145,7 @@ storaged_linux_glusterfs_add_brick_to_volume (StoragedLinuxGlusterFSVolume *gfs_
       p[n] = obj_paths[n];
       n++;
     }
-    p[n] = brick_obj_path->str;
+    p[n] = g_string_free (brick_obj_path, FALSE);
     storaged_glusterfs_volume_set_bricks (STORAGED_GLUSTERFS_VOLUME (gfs_volume), p);
     g_free (p);
   }
@@ -275,9 +274,7 @@ handle_start (StoragedGlusterFSVolume *volume,
       goto out;
     }
 
-  storaged_glusterfs_volume_complete_start (volume,
-                                            invocation,
-                                            g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
+  storaged_glusterfs_volume_complete_start (volume, invocation);
 
  out:
   g_free (escaped_name);
@@ -361,9 +358,7 @@ handle_stop (StoragedGlusterFSVolume *volume,
       goto out;
     }
 
-  storaged_glusterfs_volume_complete_stop (volume,
-                                           invocation,
-                                           g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object)));
+  storaged_glusterfs_volume_complete_stop (volume, invocation);
 
  out:
   g_free (escaped_name);
@@ -372,9 +367,10 @@ handle_stop (StoragedGlusterFSVolume *volume,
 }
 
 static gboolean
-handle_add_brick (StoragedGlusterFSVolume   *_group,
-                  GDBusMethodInvocation     *invocation,
-                  const gchar               *arg_brick_path)
+handle_add_brick (StoragedGlusterFSVolume *_group,
+                  GDBusMethodInvocation   *invocation,
+                  const gchar             *arg_brick_path,
+                  GVariant                *arg_options)
 {
   return TRUE;
 }

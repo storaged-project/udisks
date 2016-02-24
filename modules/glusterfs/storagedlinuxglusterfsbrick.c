@@ -41,6 +41,7 @@
 #include <src/storagedlinuxblockobject.h>
 
 #include "storagedlinuxglusterfsbrick.h"
+#include "storagedlinuxglusterfsbrickobject.h"
 
 /**
  * SECTION:storagedlinuxglusterfsbrick
@@ -51,7 +52,7 @@
  * on Linux.
  */
 
-typedef struct _StoragedLinuxGlusterFSBrickClass   StoragedLinuxGlusterFSBrickClass;
+typedef struct _StoragedLinuxGlusterFSBrickClass StoragedLinuxGlusterFSBrickClass;
 
 /**
  * StoragedLinuxGlusterFSBrick:
@@ -69,10 +70,10 @@ struct _StoragedLinuxGlusterFSBrickClass
   StoragedGlusterFSBrickSkeletonClass parent_class;
 };
 
-static void glusterfs_brick_iface_init (StoragedGlusterFSBrickIface *iface);
+static void storaged_linux_glusterfs_brick_iface_init (StoragedGlusterFSBrickIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (StoragedLinuxGlusterFSBrick, storaged_linux_glusterfs_brick, STORAGED_TYPE_GLUSTERFS_BRICK_SKELETON,
-                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_BRICK, glusterfs_brick_iface_init));
+                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_BRICK, storaged_linux_glusterfs_brick_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -127,7 +128,6 @@ storaged_linux_glusterfs_brick_update (StoragedLinuxGlusterFSBrick        *gfs_b
 {
   StoragedGlusterFSBrick *iface = STORAGED_GLUSTERFS_BRICK (gfs_brick);
   const gchar *str;
-  guint num;
 
   if (g_variant_lookup (brick_info, "name", "&s", &str))
     storaged_glusterfs_brick_set_name (iface, str);
@@ -141,8 +141,6 @@ storaged_linux_glusterfs_brick_update (StoragedLinuxGlusterFSBrick        *gfs_b
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-glusterfs_brick_iface_init (StoragedGlusterFSBrickIface *iface)
-{
-  ;
-}
+storaged_linux_glusterfs_brick_iface_init (StoragedGlusterFSBrickIface *iface)
+{}
 

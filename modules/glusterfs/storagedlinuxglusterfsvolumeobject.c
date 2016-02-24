@@ -156,6 +156,7 @@ storaged_linux_glusterfs_volume_object_class_init (StoragedLinuxGlusterFSVolumeO
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->dispose      = storaged_linux_glusterfs_volume_object_dispose;
   gobject_class->finalize     = storaged_linux_glusterfs_volume_object_finalize;
   gobject_class->constructed  = storaged_linux_glusterfs_volume_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_volume_object_set_property;

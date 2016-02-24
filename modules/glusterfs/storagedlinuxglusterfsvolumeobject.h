@@ -38,7 +38,7 @@ struct _StoragedLinuxGlusterFSVolumeObject {
   GHashTable *bricks;
 
   /* Interfaces */
-  StoragedLinuxGlusterFSVolume *iface_glusterfs_volume;
+  StoragedGlusterFSVolume *iface_glusterfs_volume;
 };
 
 struct _StoragedLinuxGlusterFSVolumeObjectClass {

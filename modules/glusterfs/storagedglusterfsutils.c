@@ -17,6 +17,8 @@
  * foundation, inc., 51 franklin st, fifth floor, boston, ma  02110-1301  usa
  */
 
+#include "config.h"
+
 #include <glib.h>
 
 #include <src/storagedlogging.h>
@@ -33,7 +35,8 @@
 const gchar *glusterfs_policy_action_id = "org.storaged.Storaged.glusterfs.manage-glusterfs";
 GVariant *volumes_names = NULL;
 
-struct VariantReaderData {
+struct VariantReaderData
+{
   const GVariantType *type;
   void (*callback) (GVariant *result, GError *error, gpointer user_data);
   gpointer user_data;
@@ -93,7 +96,7 @@ variant_reader_watch_child (GPid     pid,
     }
 
   g_io_channel_unref (data->output_channel);
-  data->output_watch = NULL;
+  /*data->output_watch = NULL;*/
 
   g_spawn_close_pid (pid);
   g_string_free (data->output, TRUE);
@@ -127,7 +130,7 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
     {
       callback (NULL, error, user_data);
       g_error_free (error);
-      return;
+      return 0;
     }
 
   data = g_new0 (struct VariantReaderData, 1);
@@ -294,7 +297,7 @@ storaged_get_path_for_service (const gchar *service_name)
   GVariant *path;
   GError *error;
 
-  const gchar *service_path;
+  gchar *service_path;
 
   error = NULL;
   service_path = NULL;
@@ -315,7 +318,6 @@ storaged_get_path_for_service (const gchar *service_name)
                                  -1,
                                  NULL,
                                  &error);
-  storaged_debug ("Here after making method call");
   if (path == NULL)
     {
       storaged_error ("Error trying to find DBus object corresponding to service %s: %s\n",
@@ -338,10 +340,9 @@ out:
 }
 
 GVariant *
-storaged_get_glusterd_info ()
+storaged_get_glusterd_info (void)
 {
   /* Check for status of glusterd.service */
-  storaged_notice ("Getting glusterd status");
   GDBusProxy *proxy;
   const gchar *service_path;
   const gchar *load_state;
@@ -393,7 +394,7 @@ storaged_glusterfs_daemons_update (StoragedDaemon *daemon)
       glusterd_obj = storaged_linux_glusterfs_glusterd_object_new (daemon);
       storaged_glusterfs_state_set_glusterd (state, glusterd_obj);
     }
-  g_return_val_if_fail (STORAGED_IS_LINUX_GLUSTERFS_GLUSTERD_OBJECT (glusterd_obj), NULL);
+  g_return_if_fail (STORAGED_IS_LINUX_GLUSTERFS_GLUSTERD_OBJECT (glusterd_obj));
   storaged_linux_glusterfs_glusterd_object_update (glusterd_obj);
 }
 

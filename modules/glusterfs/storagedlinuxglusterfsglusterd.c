@@ -69,10 +69,10 @@ struct _StoragedLinuxGlusterFSGlusterdClass
   StoragedGlusterFSGlusterdSkeletonClass parent_class;
 };
 
-static void glusterfs_glusterd_iface_init (StoragedGlusterFSGlusterdIface *iface);
+static void storaged_linux_glusterfs_glusterd_iface_init (StoragedGlusterFSGlusterdIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (StoragedLinuxGlusterFSGlusterd, storaged_linux_glusterfs_glusterd, STORAGED_TYPE_GLUSTERFS_GLUSTERD_SKELETON,
-                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_GLUSTERD, glusterfs_glusterd_iface_init));
+                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_GLUSTERFS_GLUSTERD, storaged_linux_glusterfs_glusterd_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -138,7 +138,6 @@ storaged_linux_glusterfs_glusterd_update (StoragedLinuxGlusterFSGlusterd *gfs_gl
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-glusterfs_glusterd_iface_init (StoragedGlusterFSGlusterdIface *iface)
-{
-}
+storaged_linux_glusterfs_glusterd_iface_init (StoragedGlusterFSGlusterdIface *iface)
+{}
 

@@ -31,7 +31,8 @@
 #include "storagedglusterfsinfo.h"
 #include "storaged-glusterfs-generated.h"
 
-struct _StoragedLinuxGlusterFSBrickObject {
+struct _StoragedLinuxGlusterFSBrickObject
+{
   StoragedObjectSkeleton parent_instance;
 
   StoragedDaemon *daemon;
@@ -39,10 +40,11 @@ struct _StoragedLinuxGlusterFSBrickObject {
   gchar *name;
 
   /* Interfaces */
-  StoragedLinuxGlusterFSBrick *iface_glusterfs_brick;
+  StoragedGlusterFSBrick *iface_glusterfs_brick;
 };
 
-struct _StoragedLinuxGlusterFSBrickObjectClass {
+struct _StoragedLinuxGlusterFSBrickObjectClass
+{
   StoragedObjectSkeletonClass parent_class;
 };
 
@@ -82,9 +84,9 @@ storaged_linux_glusterfs_brick_object_finalize (GObject *_object)
 
 static void
 storaged_linux_glusterfs_brick_object_get_property (GObject    *__object,
-                                                     guint       prop_id,
-                                                     GValue     *value,
-                                                     GParamSpec *pspec)
+                                                    guint       prop_id,
+                                                    GValue     *value,
+                                                    GParamSpec *pspec)
 {
   StoragedLinuxGlusterFSBrickObject *object = STORAGED_LINUX_GLUSTERFS_BRICK_OBJECT (__object);
   switch (prop_id)
@@ -171,6 +173,7 @@ storaged_linux_glusterfs_brick_object_class_init (StoragedLinuxGlusterFSBrickObj
 {
   GObjectClass *gobject_class;
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->dispose      = storaged_linux_glusterfs_brick_object_dispose;
   gobject_class->finalize     = storaged_linux_glusterfs_brick_object_finalize;
   gobject_class->constructed  = storaged_linux_glusterfs_brick_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_brick_object_set_property;

@@ -37,26 +37,6 @@
     <!-- prereq: org.storaged.Storaged.Manager -->
 
     <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterFS"/>
-    <!--
-        Reload:
-
-        Reloads the gluster state in storaged
-    -->
-    <method name="Reload"/>
-
-    <!--
-        GlusterdStart:
-
-        Starts the glusterd daemon
-    -->
-    <method name="GlusterdStart"/>
-
-    <!--
-        GlusterdStop:
-
-        Stops the glusterd daemon
-    -->
-    <method name="GlusterdStop"/>
 
     <!--
         volumes:
@@ -64,6 +44,33 @@
         List of volumes
     -->
     <property name="volumes" type="ao" access="readwrite"/>
+
+    <!--
+        Reload:
+
+        Reloads the gluster state in storaged
+    -->
+    <method name="Reload">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        GlusterdStart:
+
+        Starts the glusterd daemon
+    -->
+    <method name="GlusterdStart">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        GlusterdStop:
+
+        Stops the glusterd daemon
+    -->
+    <method name="GlusterdStop">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
 
     <!--
         VolumeCreate:
@@ -164,7 +171,6 @@
     -->
     <method name="Start">
         <arg name="options" direction="in" type="a{sv}"/>
-        <arg name="status" direction="out" type="u"/>
     </method>
 
     <!--
@@ -176,7 +182,6 @@
     -->
     <method name="Stop">
         <arg name="options" direction="in" type="a{sv}"/>
-        <arg name="status" direction="out" type="u"/>
     </method>
 
     <!--

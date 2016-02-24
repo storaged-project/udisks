@@ -29,15 +29,17 @@
 #include "storagedglusterfsutils.h"
 #include "storaged-glusterfs-generated.h"
 
-struct _StoragedLinuxGlusterFSGlusterdObject {
+struct _StoragedLinuxGlusterFSGlusterdObject
+{
   StoragedObjectSkeleton parent_instance;
   StoragedDaemon *daemon;
 
   /* Interfaces */
-  StoragedLinuxGlusterFSGlusterd *iface_glusterfs_glusterd; 
+  StoragedGlusterFSGlusterd *iface_glusterfs_glusterd; 
 };
 
-struct _StoragedLinuxGlusterFSGlusterdObjectClass {
+struct _StoragedLinuxGlusterFSGlusterdObjectClass
+{
   StoragedObjectSkeletonClass parent_class;
 };
 
@@ -64,10 +66,7 @@ storaged_linux_glusterfs_glusterd_object_dispose (GObject *_object)
 static void
 storaged_linux_glusterfs_glusterd_object_finalize (GObject *_object)
 {
-  StoragedLinuxGlusterFSGlusterdObject *object = STORAGED_LINUX_GLUSTERFS_GLUSTERD_OBJECT (_object);
-
   /* note: we don't hold a ref to object->daemon */
-
   if (G_OBJECT_CLASS (storaged_linux_glusterfs_glusterd_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_linux_glusterfs_glusterd_object_parent_class)->finalize (_object);
 }
@@ -139,10 +138,10 @@ storaged_linux_glusterfs_glusterd_object_constructed (GObject *_object)
 static void
 storaged_linux_glusterfs_glusterd_object_class_init (StoragedLinuxGlusterFSGlusterdObjectClass *klass)
 {
-  storaged_notice ("In class_init");
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->dispose      = storaged_linux_glusterfs_glusterd_object_dispose;
   gobject_class->finalize     = storaged_linux_glusterfs_glusterd_object_finalize;
   gobject_class->constructed  = storaged_linux_glusterfs_glusterd_object_constructed;
   gobject_class->set_property = storaged_linux_glusterfs_glusterd_object_set_property;

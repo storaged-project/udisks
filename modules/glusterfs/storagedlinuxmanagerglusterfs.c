@@ -30,18 +30,21 @@
 #include "storagedlinuxmanagerglusterfs.h"
 #include "storaged-glusterfs-generated.h"
 
-struct _StoragedLinuxManagerGlusterFS {
+struct _StoragedLinuxManagerGlusterFS
+{
 
   StoragedManagerGlusterFSSkeleton parent_instance;
 
   StoragedDaemon *daemon;
 };
 
-struct _StoragedLinuxManagerGlusterFSClass {
+struct _StoragedLinuxManagerGlusterFSClass
+{
   StoragedManagerGlusterFSSkeletonClass parent_class;
 };
 
-enum {
+enum
+{
   PROP_0,
   PROP_DAEMON
 };
@@ -56,10 +59,10 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxManagerGlusterFS, storaged_linux_manager_g
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-storaged_linux_manager_glusterfs_get_property (GObject *object,
-                                              guint property_id,
-                                              GValue *value,
-                                              GParamSpec *pspec)
+storaged_linux_manager_glusterfs_get_property (GObject    *object,
+                                               guint       property_id,
+                                               GValue     *value,
+                                               GParamSpec *pspec)
 {
   StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS(object);
 
@@ -76,10 +79,10 @@ storaged_linux_manager_glusterfs_get_property (GObject *object,
 }
 
 static void
-storaged_linux_manager_glusterfs_set_property (GObject *object,
-                                              guint property_id,
-                                              GValue *value,
-                                              GParamSpec *pspec)
+storaged_linux_manager_glusterfs_set_property (GObject    *object,
+                                               guint       property_id,
+                                               GValue     *value,
+                                               GParamSpec *pspec)
 {
   StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS(object);
 
@@ -159,8 +162,8 @@ storaged_linux_manager_glusterfs_new (StoragedDaemon *daemon)
 {
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), NULL);
   return STORAGED_LINUX_MANAGER_GLUSTERFS (g_object_new (STORAGED_TYPE_LINUX_MANAGER_GLUSTERFS,
-                                                               "daemon", daemon,
-                                                               NULL));
+                                                         "daemon", daemon,
+                                                         NULL));
 }
 
 /**
@@ -182,28 +185,36 @@ storaged_linux_manager_glusterfs_get_daemon (StoragedLinuxManagerGlusterFS *mana
 
 static gboolean
 handle_reload (StoragedManagerGlusterFS *object,
-               GDBusMethodInvocation    *invocation)
+               GDBusMethodInvocation    *invocation,
+               GVariant                 *arg_options)
 {
-  storaged_notice ("Reloading GlusterFS state");
-  StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
+  StoragedLinuxManagerGlusterFS *manager;
 
+  g_return_val_if_fail (STORAGED_IS_MANAGER_GLUSTERFS (object), FALSE);
+
+  storaged_notice ("Reloading GlusterFS state");
+
+  manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
   storaged_glusterfs_volumes_update (manager->daemon);
   storaged_glusterfs_daemons_update (manager->daemon);
+  storaged_manager_glusterfs_complete_reload (object, invocation);
   return TRUE;
 }
 
 static gboolean
 handle_glusterd_start (StoragedManagerGlusterFS *object,
-                       GDBusMethodInvocation    *invocation)
+                       GDBusMethodInvocation    *invocation,
+                       GVariant                 *arg_options)
 {
-  storaged_notice ("Starting glusterd.service");
-
-  StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
-
+  StoragedLinuxManagerGlusterFS *manager;
   GError *error;
   GDBusProxy *proxy;
   GVariant *sdjob_path;
 
+  g_return_val_if_fail (STORAGED_IS_MANAGER_GLUSTERFS (object), FALSE);
+  storaged_notice ("Starting glusterd.service");
+
+  manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
   error = NULL;
   proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                          G_DBUS_PROXY_FLAGS_NONE,
@@ -238,6 +249,7 @@ handle_glusterd_start (StoragedManagerGlusterFS *object,
     }
 
   storaged_glusterfs_daemons_update (manager->daemon);
+  storaged_manager_glusterfs_complete_glusterd_start (object, invocation);
 
 out:
   return (sdjob_path != NULL);
@@ -245,16 +257,18 @@ out:
 
 static gboolean
 handle_glusterd_stop (StoragedManagerGlusterFS *object,
-                      GDBusMethodInvocation    *invocation)
+                      GDBusMethodInvocation    *invocation,
+                      GVariant                 *arg_options)
 {
-  storaged_notice ("Stopping glusterd.service");
-
-  StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
-
+  StoragedLinuxManagerGlusterFS *manager;
   GError *error;
   GDBusProxy *proxy;
   GVariant *sdjob_path;
 
+  g_return_val_if_fail (STORAGED_IS_MANAGER_GLUSTERFS (object), FALSE);
+  storaged_notice ("Stopping glusterd.service");
+
+  manager = STORAGED_LINUX_MANAGER_GLUSTERFS (object);
   error = NULL;
   proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                          G_DBUS_PROXY_FLAGS_NONE,
@@ -289,6 +303,7 @@ handle_glusterd_stop (StoragedManagerGlusterFS *object,
     }
 
   storaged_glusterfs_daemons_update (manager->daemon);
+  storaged_manager_glusterfs_complete_glusterd_stop (object, invocation);
 
 out:
   return (sdjob_path != NULL);
@@ -304,13 +319,13 @@ wait_for_gluster_volume_object (StoragedDaemon *daemon,
 }
 
 static gboolean
-handle_volume_create (StoragedLinuxManagerGlusterFS *_object,
-                      GDBusMethodInvocation         *invocation,
-                      const gchar                   *arg_name,
-                      const gchar *const            *arg_bricks,
-                      GVariant                      *arg_options)
+handle_volume_create (StoragedManagerGlusterFS *_object,
+                      GDBusMethodInvocation    *invocation,
+                      const gchar              *arg_name,
+                      const gchar *const       *arg_bricks,
+                      GVariant                 *arg_options)
 {
-  StoragedLinuxManagerGlusterFS *manager = STORAGED_LINUX_MANAGER_GLUSTERFS(_object);
+  StoragedLinuxManagerGlusterFS *manager;
   uid_t caller_uid;
   GError *error = NULL;
   guint n;
@@ -320,6 +335,9 @@ handle_volume_create (StoragedLinuxManagerGlusterFS *_object,
   gchar *error_message = NULL;
   StoragedObject *volume_object = NULL;
 
+  g_return_val_if_fail (STORAGED_IS_MANAGER_GLUSTERFS (_object), FALSE);
+
+  manager = STORAGED_LINUX_MANAGER_GLUSTERFS(_object);
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
     {
