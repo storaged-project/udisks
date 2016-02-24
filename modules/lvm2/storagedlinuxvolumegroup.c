@@ -358,11 +358,7 @@ handle_rename (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  gchar *escaped_name = NULL;
-  gchar *escaped_new_name = NULL;
-  gchar *error_message = NULL;
+  const gchar *vg_name = NULL;
   StoragedObject *group_object = NULL;
 
   object = storaged_daemon_util_dup_object (group, &error);
@@ -374,19 +370,6 @@ handle_rename (StoragedVolumeGroup   *_group,
 
   daemon = storaged_linux_volume_group_object_get_daemon (object);
 
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &caller_gid,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
                                        STORAGED_OBJECT (object),
@@ -395,27 +378,16 @@ handle_rename (StoragedVolumeGroup   *_group,
                                        N_("Authentication is required to rename a volume group"),
                                        invocation);
 
-  escaped_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
-  escaped_new_name = storaged_daemon_util_escape_and_quote (new_name);
+  vg_name = storaged_linux_volume_group_object_get_name (object);
 
-  if (!storaged_daemon_launch_spawned_job_sync (daemon,
-                                                STORAGED_OBJECT (object),
-                                                "lvm-vg-rename", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "vgrename %s %s",
-                                                escaped_name,
-                                                escaped_new_name))
+  if (!bd_lvm_vgrename (vg_name, new_name, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error renaming volume group: %s",
-                                             error_message);
+                                             error->message);
+      g_error_free (error);
       goto out;
     }
 
@@ -439,9 +411,6 @@ handle_rename (StoragedVolumeGroup   *_group,
                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_new_name);
   g_clear_object (&object);
   return TRUE;
 }
