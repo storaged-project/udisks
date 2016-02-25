@@ -33,6 +33,7 @@
 #include "storagedlinuxmdraid.h"
 #include "storagedlinuxblockobject.h"
 #include "storagedlinuxdevice.h"
+#include "storagedsimplejob.h"
 
 /**
  * SECTION:storagedlinuxmdraidobject
@@ -71,6 +72,10 @@ struct _StoragedLinuxMDRaidObject
   /* watches for sysfs attr changes */
   GSource *sync_action_source;
   GSource *degraded_source;
+
+  /* sync job */
+  StoragedBaseJob *sync_job;
+  GMutex sync_job_mutex;
 };
 
 struct _StoragedLinuxMDRaidObjectClass
@@ -83,6 +88,7 @@ enum
   PROP_0,
   PROP_UUID,
   PROP_DAEMON,
+  PROP_SYNC_JOB,
 };
 
 static void
@@ -175,6 +181,8 @@ storaged_linux_mdraid_object_set_property (GObject      *__object,
 static void
 storaged_linux_mdraid_object_init (StoragedLinuxMDRaidObject *object)
 {
+  g_mutex_init (&object->sync_job_mutex);
+  object->sync_job = NULL;
 }
 
 static void
@@ -705,6 +713,81 @@ storaged_linux_mdraid_object_have_devices (StoragedLinuxMDRaidObject   *object)
   g_return_val_if_fail (STORAGED_IS_LINUX_MDRAID_OBJECT (object), FALSE);
 
   return g_list_length (object->member_devices) > 0 || object->raid_device != NULL;
+}
+
+StoragedBaseJob *
+storaged_linux_mdraid_object_get_sync_job (StoragedLinuxMDRaidObject *object)
+{
+  StoragedBaseJob *rval = NULL;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_MDRAID_OBJECT (object), NULL);
+
+  g_mutex_lock (&object->sync_job_mutex);
+  rval = object->sync_job;
+  g_mutex_unlock (&object->sync_job_mutex);
+
+  return rval;
+}
+
+gboolean
+storaged_linux_mdraid_object_set_sync_job  (StoragedLinuxMDRaidObject   *object,
+                                            StoragedBaseJob             *job)
+{
+  gboolean rval = TRUE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_MDRAID_OBJECT (object), FALSE);
+
+  g_mutex_lock (&object->sync_job_mutex);
+  if (! object->sync_job)
+    object->sync_job = g_object_ref (job);
+  else
+    rval = FALSE;
+  g_mutex_unlock (&object->sync_job_mutex);
+
+  return rval;
+}
+
+gboolean
+storaged_linux_mdraid_object_complete_sync_job (StoragedLinuxMDRaidObject *object,
+                                                gboolean                   success,
+                                                const gchar               *message)
+{
+  gboolean rval = TRUE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_MDRAID_OBJECT (object), FALSE);
+
+  g_mutex_lock (&object->sync_job_mutex);
+
+  if (! object->sync_job)
+    {
+      rval = FALSE;
+    }
+  else
+    {
+      storaged_simple_job_complete (STORAGED_SIMPLE_JOB (object->sync_job),
+                                    success,
+                                    message);
+
+      g_clear_object (&object->sync_job);
+    }
+
+  g_mutex_unlock (&object->sync_job_mutex);
+
+  return rval;
+}
+
+gboolean
+storaged_linux_mdraid_object_has_sync_job (StoragedLinuxMDRaidObject *object)
+{
+  gboolean rval = FALSE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_MDRAID_OBJECT (object), FALSE);
+
+  g_mutex_lock (&object->sync_job_mutex);
+  rval = object->sync_job != NULL;
+  g_mutex_unlock (&object->sync_job_mutex);
+
+  return rval;
 }
 
 /**

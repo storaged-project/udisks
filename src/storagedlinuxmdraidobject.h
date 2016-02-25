@@ -44,6 +44,14 @@ StoragedLinuxDevice       *storaged_linux_mdraid_object_get_device    (StoragedL
 
 gboolean                   storaged_linux_mdraid_object_have_devices  (StoragedLinuxMDRaidObject   *object);
 
+StoragedBaseJob           *storaged_linux_mdraid_object_get_sync_job  (StoragedLinuxMDRaidObject   *object);
+gboolean                   storaged_linux_mdraid_object_set_sync_job  (StoragedLinuxMDRaidObject   *object,
+                                                                       StoragedBaseJob             *job);
+gboolean                   storaged_linux_mdraid_object_complete_sync_job (StoragedLinuxMDRaidObject *object,
+                                                                           gboolean                   success,
+                                                                           const gchar               *message);
+gboolean                   storaged_linux_mdraid_object_has_sync_job      (StoragedLinuxMDRaidObject *object);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_MDRAID_OBJECT_H__ */
