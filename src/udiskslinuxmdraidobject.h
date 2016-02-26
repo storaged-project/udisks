@@ -44,6 +44,14 @@ UDisksLinuxDevice       *udisks_linux_mdraid_object_get_device    (UDisksLinuxMD
 
 gboolean                 udisks_linux_mdraid_object_have_devices  (UDisksLinuxMDRaidObject   *object);
 
+UDisksBaseJob             *udisks_linux_mdraid_object_get_sync_job  (UDisksLinuxMDRaidObject   *object);
+gboolean                   udisks_linux_mdraid_object_set_sync_job  (UDisksLinuxMDRaidObject   *object,
+                                                                     UDisksBaseJob             *job);
+gboolean                   udisks_linux_mdraid_object_complete_sync_job (UDisksLinuxMDRaidObject *object,
+                                                                         gboolean                 success,
+                                                                         const gchar             *message);
+gboolean                   udisks_linux_mdraid_object_has_sync_job      (UDisksLinuxMDRaidObject *object);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_MDRAID_OBJECT_H__ */

@@ -286,11 +286,13 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   guint64 chunk_size = 0;
   gdouble sync_completed_val = 0.0;
   guint64 sync_rate = 0;
+  guint64 sync_start_time = 0;
   guint64 sync_remaining_time = 0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
   gboolean has_redundancy = FALSE;
   gboolean has_stripes = FALSE;
+  UDisksBaseJob *job = NULL;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
 
@@ -417,6 +419,49 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
         {
           guint64 num_bytes_remaining = (num_sectors - completed_sectors) * 512ULL;
           sync_remaining_time = ((guint64) G_USEC_PER_SEC) * num_bytes_remaining / sync_rate;
+        }
+    }
+
+  if (sync_action)
+    {
+      if (g_strcmp0 (sync_action, "idle") != 0)
+        {
+          if (! udisks_linux_mdraid_object_has_sync_job (object))
+            {
+              /* Launch a job */
+              job = udisks_daemon_launch_simple_job (daemon,
+                                                     UDISKS_OBJECT (object),
+                                                     "mdraid-sync-job",
+                                                     0,
+                                                     NULL /* cancellable */);
+
+              /* Mark the job as not cancellable. It simply has to finish... */
+              udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
+              udisks_linux_mdraid_object_set_sync_job (object, job);
+            }
+          else
+            {
+              /* Update the job's interface */
+              job = udisks_linux_mdraid_object_get_sync_job (object);
+
+              udisks_job_set_progress (UDISKS_JOB (job), sync_completed_val);
+              udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+              udisks_job_set_rate (UDISKS_JOB (job), sync_rate);
+
+              sync_start_time = udisks_job_get_start_time (UDISKS_JOB (job));
+              udisks_job_set_expected_end_time (UDISKS_JOB (job),
+                                                sync_start_time + sync_remaining_time);
+            }
+        }
+      else
+        {
+          if (udisks_linux_mdraid_object_has_sync_job (object))
+            {
+              /* Complete the job */
+              udisks_linux_mdraid_object_complete_sync_job (object,
+                                                            TRUE,
+                                                            "Finished");
+            }
         }
     }
   udisks_mdraid_set_sync_completed (iface, sync_completed_val);
