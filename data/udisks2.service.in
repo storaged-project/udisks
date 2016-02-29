@@ -6,3 +6,6 @@ Documentation=man:udisks(8)
 Type=dbus
 BusName=org.freedesktop.UDisks2
 ExecStart=@udisksdprivdir@/udisksd --no-debug
+
+[Install]
+WantedBy=graphical.target
