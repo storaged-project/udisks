@@ -259,7 +259,7 @@ storaged_client_get_object_info_for_block (StoragedClient     *client,
   if (partition != NULL)
     {
       /* Translators: Used to describe a partition of a block device.
-       *              The %d is the partition number.
+       *              The %u is the partition number.
        *              The %s is the description for the block device (e.g. "5 GB Block Device").
        */
       s = g_strdup_printf (C_("part-block", "Partition %u of %s"),
@@ -313,7 +313,7 @@ storaged_client_get_object_info_for_loop (StoragedClient     *client,
   if (partition != NULL)
     {
       /* Translators: Used to describe a partition of a loop device.
-       *              The %d is the partition number.
+       *              The %u is the partition number.
        *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
        */
       s = g_strdup_printf (C_("part-loop", "Partition %u of %s"),
@@ -409,7 +409,7 @@ storaged_client_get_object_info_for_mdraid (StoragedClient     *client,
   if (partition != NULL)
     {
       /* Translators: Used to describe a partition of a RAID Array.
-       *              The %d is the partition number.
+       *              The %u is the partition number.
        *              The %s is the description for the drive (e.g. "2 TB RAID-5").
        */
       s = g_strdup_printf (C_("part-raid", "Partition %u of %s"),
@@ -826,7 +826,7 @@ storaged_client_get_object_info_for_drive (StoragedClient     *client,
   if (partition != NULL)
     {
       /* Translators: Used to describe a partition of a drive.
-       *              The %d is the partition number.
+       *              The %u is the partition number.
        *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
        */
       s = g_strdup_printf (C_("part-drive", "Partition %u of %s"),
