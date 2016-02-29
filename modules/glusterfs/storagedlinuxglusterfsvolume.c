@@ -42,6 +42,7 @@
 
 #include "storagedlinuxglusterfsvolume.h"
 #include "storagedlinuxglusterfsvolumeobject.h"
+#include "storagedlinuxglusterfsbrickobject.h"
 #include "storagedglusterfsutils.h"
 
 /**
@@ -209,9 +210,6 @@ handle_start (StoragedGlusterFSVolume *volume,
   gint status;
   gchar *escaped_name = NULL;
   gchar *error_message = NULL;
-  const gchar *caller = NULL;
-
-  caller = g_dbus_method_invocation_get_sender (invocation);
 
   volume_object = storaged_daemon_util_dup_object (volume, &error);
   if (volume_object == NULL)
@@ -367,13 +365,77 @@ handle_stop (StoragedGlusterFSVolume *volume,
 }
 
 static gboolean
-handle_add_brick (StoragedGlusterFSVolume *_group,
-                  GDBusMethodInvocation   *invocation,
-                  const gchar             *arg_brick_path,
-                  GVariant                *arg_options)
+handle_delete (StoragedGlusterFSVolume *volume,
+               GDBusMethodInvocation   *invocation,
+               GVariant                *arg_options)
 {
-  return TRUE;
+  StoragedDaemon *daemon = NULL;
+  StoragedLinuxGlusterFSVolumeObject *volume_object = NULL;
+  GDBusObjectManagerServer *manager;
+  GError *error = NULL;
+  uid_t caller_uid;
+  gint status;
+  gchar *escaped_name = NULL;
+  gchar *error_message = NULL;
+
+  volume_object = storaged_daemon_util_dup_object (volume, &error);
+
+  if (volume_object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = storaged_linux_glusterfs_volume_object_get_daemon (volume_object);
+  manager = storaged_daemon_get_object_manager (daemon);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (volume_object),
+                                       glusterfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to delete a volume group"),
+                                       invocation);
+
+  escaped_name = storaged_daemon_util_escape (storaged_linux_glusterfs_volume_object_get_name (volume_object));
+
+  if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                NULL,
+                                                "gluster-volume-delete", caller_uid,
+                                                NULL, /* cancellable */
+                                                0,    /* uid_t run_as_uid */
+                                                0,    /* uid_t run_as_euid */
+                                                &status,
+                                                &error_message,
+                                                "y\n", /* input_string */
+                                                "gluster volume delete %s",
+                                                escaped_name))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Error deleting gluster volume: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+
+
+  storaged_glusterfs_volume_complete_delete (volume, invocation);
+
+ out:
+  g_free (escaped_name);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
 }
+
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -382,6 +444,6 @@ storaged_linux_glusterfs_volume_iface_init (StoragedGlusterFSVolumeIface *iface)
 {
   iface->handle_start = handle_start;
   iface->handle_stop = handle_stop;
-  iface->handle_add_brick = handle_add_brick;
+  iface->handle_delete = handle_delete;
 }
 

@@ -314,7 +314,6 @@ wait_for_gluster_volume_object (StoragedDaemon *daemon,
                                 gpointer        userdata)
 {
   const gchar *name = userdata;
-
   return STORAGED_OBJECT (storaged_glusterfs_util_find_volume_object (daemon, name));
 }
 

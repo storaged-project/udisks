@@ -227,10 +227,11 @@ update_from_variant (GVariant *volume_info_xml,
   GHashTableIter bricks_iter;
   gpointer key, value;
 
-  if (error != NULL) {
+  if (error != NULL)
+    {
       storaged_warning ("Couldn't get volume info: %s", error->message);
       return;
-  }
+    }
 
   object = user_data;
   daemon = storaged_linux_glusterfs_volume_object_get_daemon (object);
@@ -239,48 +240,55 @@ update_from_variant (GVariant *volume_info_xml,
 
   gfs_volume_info = storaged_process_glusterfs_volume_info (g_variant_get_bytestring (volume_info_xml));
 
-  if (g_variant_lookup (gfs_volume_info, "bricks", "av", &iter)) {
+  if (g_variant_lookup (gfs_volume_info, "bricks", "av", &iter))
+    {
+      GVariant *brick_info = NULL;
+      StoragedLinuxGlusterFSBrickObject *brick_object;
 
-    GVariant *brick_info = NULL;
-    StoragedLinuxGlusterFSBrickObject *brick_object;
+      while (g_variant_iter_loop (iter, "v", &brick_info))
+        {
+          gchar *name;
 
-    while (g_variant_iter_loop (iter, "v", &brick_info)) {
-      gchar *name;
+          if (g_variant_lookup (brick_info, "name", "&s", &name))
+            {
+              brick_object = g_hash_table_lookup (object->bricks, name);
 
-      if (g_variant_lookup (brick_info, "name", "&s", &name)) {
-        brick_object = g_hash_table_lookup (object->bricks, name);
+              if (brick_object == NULL)
+                {
+                  storaged_debug ("Brick object with name %s not found", name);
+                  brick_object = storaged_linux_glusterfs_brick_object_new (daemon, object, name);
+                  storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
+                  g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (brick_object));
+                  g_hash_table_insert (object->bricks, g_strdup (name), g_object_ref (brick_object));
+                }
+              else
+                  storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
 
-        if (brick_object == NULL) {
-          storaged_debug ("Brick object with name %s not found", name);
-          brick_object = storaged_linux_glusterfs_brick_object_new (daemon, object, name);
-          storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
-          g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (brick_object));
-          g_hash_table_insert (object->bricks, g_strdup (name), g_object_ref (brick_object));
-        } else
-          storaged_linux_glusterfs_brick_object_update (brick_object, brick_info);
-
-        g_hash_table_insert (new_bricks, (gchar*)name, brick_object);
-      }
+              g_hash_table_insert (new_bricks, (gchar*)name, brick_object);
+            }
+        }
+      g_variant_iter_free (iter);
     }
-    g_variant_iter_free (iter);
-  }
 
   g_hash_table_iter_init (&bricks_iter, object->bricks);
-  while (g_hash_table_iter_next (&bricks_iter, &key, &value)) {
-    const gchar *name = key;
-    StoragedLinuxGlusterFSBrickObject *brick_obj = value;
+  while (g_hash_table_iter_next (&bricks_iter, &key, &value))
+    {
+      const gchar *name = key;
+      StoragedLinuxGlusterFSBrickObject *brick_obj = value;
 
-    if (!g_hash_table_contains (new_bricks, name)) {
-      g_dbus_object_manager_server_unexport (manager, g_dbus_object_get_object_path (G_DBUS_OBJECT (brick_obj)));
-      g_hash_table_iter_remove (&bricks_iter);
+      if (!g_hash_table_contains (new_bricks, name))
+        {
+          g_dbus_object_manager_server_unexport (manager, g_dbus_object_get_object_path (G_DBUS_OBJECT (brick_obj)));
+          g_hash_table_iter_remove (&bricks_iter);
+        }
     }
-  }
 
   storaged_linux_glusterfs_volume_update (STORAGED_LINUX_GLUSTERFS_VOLUME (object->iface_glusterfs_volume), gfs_volume_info);
 
-  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object))) {
-    g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
-  }
+  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object)))
+    {
+      g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
+    }
   g_object_unref (object);
 }
 

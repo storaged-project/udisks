@@ -216,6 +216,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 
       if (!found)
         {
+          storaged_debug ("Volume named %s not found", name);
           /* First unexport dbus objects corresponding to the volume's bricks */
           g_hash_table_iter_init (&bricks_iter, volume->bricks);
           while (g_hash_table_iter_next (&bricks_iter, &key, &value))

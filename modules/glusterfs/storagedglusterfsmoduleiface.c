@@ -81,8 +81,8 @@ storaged_module_get_drive_object_iface_setup_entries (void)
 static GDBusObjectSkeleton *
 glusterfs_object_new (StoragedDaemon *daemon)
 {
-  storaged_glusterfs_volumes_update (daemon);
   storaged_glusterfs_daemons_update (daemon);
+  storaged_glusterfs_volumes_update (daemon);
   return NULL;
 }
 

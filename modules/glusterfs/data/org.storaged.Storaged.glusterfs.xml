@@ -164,7 +164,7 @@
 
     <!--
         Start:
-        @status: The changed status of the volume
+        @options: List of additional options
         @since: 2.4.1
 
         Starts a gluster volume
@@ -175,7 +175,7 @@
 
     <!--
         Stop:
-        @status: The changed status of the volume
+        @options: List of additional options
         @since: 2.4.1
 
         Stops a gluster volume
@@ -185,18 +185,14 @@
     </method>
 
     <!--
-        AddBrick:
-        @brick_path: The path to the brick that will be added to the volume
-        @result: The path to the new brick object
+        Delete:
+        @options: List of additional options
         @since: 2.4.1
 
-        Adds a new brick with path specified by @brick_path to an existing
-        GlusterFS volume
+        Deletes the gluster volume
     -->
-    <method name="AddBrick">
-        <arg name="brick_path" direction="in" type="s"/>
+    <method name="Delete">
         <arg name="options" direction="in" type="a{sv}"/>
-        <arg name="result" direction="out" type="o"/>
     </method>
 
   </interface>
