@@ -6,3 +6,6 @@ Documentation=man:storaged(8)
 Type=dbus
 BusName=org.storaged.Storaged
 ExecStart=@storagedprivdir@/storaged --no-debug
+
+[Install]
+WantedBy=graphical.target
