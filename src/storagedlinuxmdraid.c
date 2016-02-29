@@ -286,11 +286,13 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
   guint64 chunk_size = 0;
   gdouble sync_completed_val = 0.0;
   guint64 sync_rate = 0;
+  guint64 sync_start_time = 0;
   guint64 sync_remaining_time = 0;
   GVariantBuilder builder;
   StoragedDaemon *daemon = NULL;
   gboolean has_redundancy = FALSE;
   gboolean has_stripes = FALSE;
+  StoragedBaseJob *job = NULL;
 
   daemon = storaged_linux_mdraid_object_get_daemon (object);
 
@@ -311,18 +313,34 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
   if (member_devices != NULL)
     {
       device = STORAGED_LINUX_DEVICE (member_devices->data);
-      num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_MEMBER_DEVICES");
-      level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_LEVEL");
-      uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_UUID");
-      name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_NAME");
+      num_devices = g_udev_device_get_property_as_int (device->udev_device, "UDISKS_MD_MEMBER_DEVICES");
+      if (! num_devices)
+          num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_MEMBER_DEVICES");
+      level = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_LEVEL");
+      if (! level)
+          level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_LEVEL");
+      uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_UUID");
+      if (! uuid)
+          uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_UUID");
+      name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_NAME");
+      if (! name)
+          name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_NAME");
     }
   else
     {
       device = STORAGED_LINUX_DEVICE (raid_device);
-      num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_DEVICES");
-      level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_LEVEL");
-      uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_UUID");
-      name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_NAME");
+      num_devices = g_udev_device_get_property_as_int (device->udev_device, "UDISKS_MD_DEVICES");
+      if (! num_devices)
+          num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_DEVICES");
+      level = g_udev_device_get_property (device->udev_device, "UDISKS_MD_LEVEL");
+      if (! level)
+          level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_LEVEL");
+      uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_UUID");
+      if (! uuid)
+          uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_UUID");
+      name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_NAME");
+      if (! name)
+          name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_NAME");
     }
 
   /* figure out size */
@@ -401,6 +419,49 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
         {
           guint64 num_bytes_remaining = (num_sectors - completed_sectors) * 512ULL;
           sync_remaining_time = ((guint64) G_USEC_PER_SEC) * num_bytes_remaining / sync_rate;
+        }
+    }
+
+  if (sync_action)
+    {
+      if (g_strcmp0 (sync_action, "idle") != 0)
+        {
+          if (! storaged_linux_mdraid_object_has_sync_job (object))
+            {
+              /* Launch a job */
+              job = storaged_daemon_launch_simple_job (daemon,
+                                                       STORAGED_OBJECT (object),
+                                                       "mdraid-sync-job",
+                                                       0,
+                                                       NULL /* cancellable */);
+
+              /* Mark the job as not cancellable. It simply has to finish... */
+              storaged_job_set_cancelable (STORAGED_JOB (job), FALSE);
+              storaged_linux_mdraid_object_set_sync_job (object, job);
+            }
+          else
+            {
+              /* Update the job's interface */
+              job = storaged_linux_mdraid_object_get_sync_job (object);
+
+              storaged_job_set_progress (STORAGED_JOB (job), sync_completed_val);
+              storaged_job_set_progress_valid (STORAGED_JOB (job), TRUE);
+              storaged_job_set_rate (STORAGED_JOB (job), sync_rate);
+
+              sync_start_time = storaged_job_get_start_time (STORAGED_JOB (job));
+              storaged_job_set_expected_end_time (STORAGED_JOB (job),
+                                                  sync_start_time + sync_remaining_time);
+            }
+        }
+      else
+        {
+          if (storaged_linux_mdraid_object_has_sync_job (object))
+            {
+              /* Complete the job */
+              storaged_linux_mdraid_object_complete_sync_job (object,
+                                                              TRUE,
+                                                              "Finished");
+            }
         }
     }
   storaged_mdraid_set_sync_completed (iface, sync_completed_val);
