@@ -28,6 +28,8 @@
 
 #include <glib/gi18n-lib.h>
 
+#include <lvm.h>
+
 #include <src/storagedlogging.h>
 #include <src/storageddaemon.h>
 #include <src/storageddaemonutil.h>
@@ -208,24 +210,14 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
                             GVariant                *arg_options)
 {
   StoragedLinuxManagerLVM2 *manager = STORAGED_LINUX_MANAGER_LVM2(_object);
-  uid_t caller_uid;
   GError *error = NULL;
   GList *blocks = NULL;
   GList *l;
   guint n;
   gchar *escaped_name = NULL;
   GString *str = NULL;
-  gint status;
-  gchar *error_message = NULL;
   StoragedObject *group_object = NULL;
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
+  gchar** vg_devices = NULL;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_lvm2_get_daemon (manager),
@@ -278,6 +270,10 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
       g_object_unref (object);
     }
   blocks = g_list_reverse (blocks);
+  vg_devices = g_malloc_n(n + 1, sizeof(gchar*));
+  vg_devices[0] = NULL; /* in case of error -- see the out: label */
+  vg_devices[n] = NULL;
+
 
   /* wipe existing devices */
   for (l = blocks; l != NULL; l = l->next)
@@ -290,36 +286,19 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
     }
 
   /* Create the volume group... */
-  escaped_name = storaged_daemon_util_escape_and_quote (arg_name);
-  str = g_string_new ("vgcreate");
-  g_string_append_printf (str, " %s", escaped_name);
-  for (l = blocks; l != NULL; l = l->next)
+  for (n = 0, l = blocks; l != NULL; n++, l = l->next)
     {
-      StoragedBlock *block = STORAGED_BLOCK (l->data);
-      gchar *escaped_device;
-      escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (block));
-      g_string_append_printf (str, " %s", escaped_device);
-      g_free (escaped_device);
+      vg_devices[n] = g_strdup(storaged_block_get_device (STORAGED_BLOCK (l->data)));
     }
 
-  if (!storaged_daemon_launch_spawned_job_sync (manager->daemon,
-                                                NULL,
-                                                "lvm-vg-create", caller_uid,
-                                                NULL, /* cancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                &status,
-                                                &error_message,
-                                                NULL, /* input_string */
-                                                "%s",
-                                                str->str))
+  if (!bd_lvm_vgcreate((gchar *)arg_name, vg_devices, 0, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Error creating volume group: %s",
-                                             error_message);
-      g_free (error_message);
+                                             error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -354,6 +333,14 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
                                                       g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
 
  out:
+  if (vg_devices)
+    {
+      for (n = 0; vg_devices[n] != NULL; n++)
+        {
+          g_free(vg_devices[n]);
+        }
+      g_free(vg_devices);
+    }
   if (str != NULL)
     g_string_free (str, TRUE);
   g_list_free_full (blocks, g_object_unref);

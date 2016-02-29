@@ -547,6 +547,18 @@
       <arg name="options" type= "a{sv}" direction="in"/>
     </method>
 
+    <!-- CacheDetach:
+         @options: Additional options.
+         @since: 2.5.0
+
+         Detaches the cached LV from its cache.
+
+         No additional options are currently defined.
+    -->
+    <method name="CacheDetach">
+      <arg name="options" type= "a{sv}" direction="in"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
