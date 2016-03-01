@@ -427,7 +427,6 @@ handle_delete (StoragedGlusterFSVolume *volume,
       goto out;
     }
 
-
   storaged_glusterfs_volume_complete_delete (volume, invocation);
 
  out:

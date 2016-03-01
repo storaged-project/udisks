@@ -178,7 +178,7 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
   StoragedDaemon *daemon = STORAGED_DAEMON (user_data);
   GDBusObjectManagerServer *manager;
   GVariantIter var_iter;
-  GHashTableIter *gfsvol_name_iter;
+  GHashTableIter gfsvol_name_iter;
   GVariant *gfs_volumes;
   gpointer key, value;
   const gchar *name;
@@ -216,7 +216,6 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 
       if (!found)
         {
-          storaged_debug ("Volume named %s not found", name);
           /* First unexport dbus objects corresponding to the volume's bricks */
           g_hash_table_iter_init (&bricks_iter, volume->bricks);
           while (g_hash_table_iter_next (&bricks_iter, &key, &value))
@@ -227,9 +226,9 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
               g_hash_table_iter_remove (&bricks_iter);
             }
 
-          storaged_linux_glusterfs_volume_object_destroy (volume);
           g_dbus_object_manager_server_unexport (manager,
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (volume)));
+          storaged_linux_glusterfs_volume_object_destroy (volume);
           g_hash_table_iter_remove (&gfsvol_name_iter);
         }
     }
