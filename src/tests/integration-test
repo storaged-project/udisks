@@ -412,8 +412,6 @@ class UDisksTestCase(unittest.TestCase):
         with open('/sys/bus/pseudo/drivers/scsi_debug/add_host', 'w') as f:
             f.write('1')  # generate a new drive
         subprocess.call(['udevadm', 'settle'])
-        with open('/sys/bus/pseudo/drivers/scsi_debug/ptype', 'w') as f:
-            f.write('0')
 
         ro_dirs = []
         while len(ro_dirs) < 2:
