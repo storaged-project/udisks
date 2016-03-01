@@ -434,6 +434,9 @@ class UDisksTestCase(unittest.TestCase):
         assert open('/sys/block/%s/device/model' %
                     os.path.basename(rw_dev)).read().strip() == 'scsi_debug'
 
+        with open('/sys/bus/pseudo/drivers/scsi_debug/ptype', 'w') as f:
+            f.write('0')
+
         print('Set up test device: r/w: %s, r/o: %s' % (rw_dev, ro_dev))
         return (rw_dev, ro_dev)
 
