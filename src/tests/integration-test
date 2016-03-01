@@ -469,8 +469,11 @@ class UDisksTestCase(unittest.TestCase):
         assert len(scan_files) > 0
         for f in scan_files:
             open(f, 'w').write('- - -\n')
-        while not os.path.exists(klass.device):
+        timeout = 100
+        while not os.path.exists(klass.device) and timeout > 0:
             time.sleep(0.1)
+            timeout -= 1
+        assert os.path.exists(klass.device), 'timed out waiting for %s to exist' % klass.device
         time.sleep(0.5)
         klass.sync()
 
