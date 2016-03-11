@@ -977,6 +977,7 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
   gid_t caller_gid;
   gchar *escaped_volume_name = NULL;
   gchar *escaped_group_name = NULL;
+  int size_percentage;
   GString *cmd = NULL;
   gchar *error_message = NULL;
   const gchar *lv_objpath;
@@ -1015,9 +1016,25 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
   arg_size -= arg_size % 512;
 
+  /* HACK - https://bugzilla.redhat.com/show_bug.cgi?id=1314770
+   *
+   * We want to say "take this amount of space and turn it into a thin
+   * pool with all your defaults" but ordinarily lvcreate understands
+   * the "-l" option as "make me a thin pool for this much data and
+   * use as much extra space as is needed according to your defaults".
+   *
+   * But when using the "NNN%FREE" syntax with the "-l" option
+   * lvcreate will do what we want.
+   *
+   * Unfortunately, the "NNN%FREE" syntax only allows integers, so the
+   * resolution is limited.
+   */
+
+  size_percentage = arg_size * 100 / udisks_volume_group_get_free_size (_group);
+
   cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s -T -L %" G_GUINT64_FORMAT "b --thinpool %s",
-                          escaped_group_name, arg_size, escaped_volume_name);
+  g_string_append_printf (cmd, "lvcreate %s -T -l %d%%FREE --thinpool %s",
+                          escaped_group_name, size_percentage, escaped_volume_name);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),

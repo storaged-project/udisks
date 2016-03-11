@@ -270,12 +270,16 @@
 
     <!-- CreateThinPoolVolume:
          @name: The name of the new logical volume.
-         @size: The size.
+         @size: The total size.
          @options: Additional options.
          @result: The object path of the new logical volume.
 
          Create a new logical volume that can be used to back
-         thinly-provisioned logical volumes.
+         thinly-provisioned logical volumes.  The @size parameter is
+         the total amount of space taken out of the volume group.
+         That space will be used for data and metadata.  The actual
+         amount of data that can be stored in the pool will be
+         slightly smaller.
 
          No additional options are currently defined.
     -->
