@@ -492,6 +492,9 @@
 
          resize_fsys (b):  Whether to resize the filesystem on the
                            logical volume as well. Default to 'false'.
+
+         force (b):        Whether to force the resize even if it might
+                           destroy data.
     -->
     <method name="Resize">
       <arg name="new_size" type="t" direction="in"/>
