@@ -1,18 +1,70 @@
----------------------------
-storaged 2.4.1 (unreleased)
----------------------------
+--------------
+storaged 2.5.0
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.4.0:
 
-(TODO: make shortlog)
+David Heidelberger (1):
+      Backport: allow disabling ACL
+
+Dominika Hodovska (6):
+      ZRAM: add configuration for setup after reboot
+      ZRAM: fix configuration files handling
+      ZRAM: code reability change
+      ZRAM: add configuration for setup after reboot
+      ZRAM: fix configuration files handling
+      ZRAM: code reability change
+
+Kylie McClain (1):
+      Backport: storagectl: Properly redirect stdout
+
+Marius Vollmer (2):
+      lvm2: Use "NNN%FREE" syntax when creating thin pools
+      lvm2: Add 'force' option to LogicalVolume.Resize
+
+Martin Pitt (11):
+      Backport: Fix udiskctl help for glib 2.45
+      Backport: integration-test: Explicitly require UDisks 2.0 gir
+      Backport: integration-test: Fix wait_timeout/busy error messages
+      Backport: integration-test: PEP-8 fixes
+      Backport: integration-test: Fix Polkit.test_removable_fs
+      Backport: test_polkitd.py: Fix race condition in waiting for test polkitd
+      Backport: storaged.service.in: Add [Install] section
+      Backport: Fix translator comments in storagedobjectinfo.c
+      Backport: integration-test: Fix race condition in fake CD drive creation
+      Backport: integration-test: Fix race condition in fake CD drive creation harder
+      Backport: integration-test: Add timeout to readd_device()
+
+Peter Hatina (18):
+      LinuxProvider: EnableModules() is now sync function
+      README: add build status badge
+      Build: introduce packaging/storaged.spec
+      Introduce configuration file for storaged
+      Add storaged.conf man page
+      Build: fix subdirs for packaging
+      Doc: add missing CLI options for storaged
+      Build: package zram-setup@.service template
+      gitignore: add build directories and vim files
+      Doc: fix storaged.conf typo in title
+      Doc: rewrite storaged_lsm man page to docbook
+      ZRAM: drop num_devices parameter from CreateDevices()
+      ZRAM: fix compiler warnings
+      Manager: introduce property with supported filesystems (fixes #38)
+      MDRaid: check UDISKS_* and STORAGED_* properties when handling uevents
+      MDRaid: handle UDISKS_* and STORAGED_* udev properties when updating     D-Bus interfaces
+      MDRaid: introduce RAID jobs (fixes #37)
+      Remove unused variables in DriveObject class
+
+Tom Yan (1):
+      Backport: Add support for read look-ahead ATA settings
 
 Thanks to all our contributors.
 
 Peter Hatina
-(TODO: date)
+2016-03-14
 
 --------------
 storaged 2.4.0
