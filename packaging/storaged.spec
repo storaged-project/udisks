@@ -10,8 +10,8 @@
 
 Name:    storaged-udisks2-compat
 Summary: Disk Manager
-Version: 2.5.0
-Release: 3%{?dist}_udisks2
+Version: 2.6.0
+Release: 1%{?dist}_udisks2
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -226,7 +226,6 @@ systemctl try-restart udisks2
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
 %{_prefix}/lib/systemd/system/udisks2.service
-%{_prefix}/lib/systemd/system/zram-setup@.service
 %{_prefix}/lib/udev/rules.d/80-udisks2.rules
 %{_sbindir}/umount.udisks2
 
@@ -305,11 +304,16 @@ systemctl try-restart udisks2
 %files -n %{name}-zram
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
+%dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
+%{_prefix}/lib/systemd/system/zram-setup@.service
 %endif
 
 %changelog
+* Mon Mar 14 2016 Peter Hatina <phatina@redhat.com> - 2.6.0-1
+- Upgrade to 2.6.0
+
 * Wed Feb 10 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-3
 - Package template zram-setup@.service file
 
