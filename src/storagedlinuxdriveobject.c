@@ -882,7 +882,6 @@ storaged_linux_drive_object_should_include_device (GUdevClient          *client,
       const gchar *name;
       const gchar *vendor;
       const gchar *model;
-      const gchar *dm_uuid;
       GUdevDevice *parent;
 
       name = g_udev_device_get_name (device->udev_device);
