@@ -178,6 +178,12 @@
                Whether the write-cache is enabled (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x82 and 0x02). Since 2.1.
              </para></listitem>
            </varlistentry>
+           <varlistentry>
+             <term>ata-read-lookahead-enabled (type <literal>'b'</literal>)</term>
+             <listitem><para>
+               Whether the read look-ahead is enabled (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x55 and 0xaa). Since 2.1.7.
+             </para></listitem>
+           </varlistentry>
          </variablelist>
          The contents of this property is read from the configuration
          file <filename>/etc/udisks2/IDENTIFIER.conf</filename>
@@ -681,6 +687,18 @@
          Whether the write-cache is enabled (or %FALSE if not supported).
     -->
     <property name="WriteCacheEnabled" type="b" access="read"/>
+
+    <!-- ReadLookaheadSupported:
+         @since: 2.1.7
+         Whether the drive supports configuring the read look-ahead.
+    -->
+    <property name="ReadLookaheadSupported" type="b" access="read"/>
+
+    <!-- ReadLookaheadEnabled:
+         @since: 2.1.7
+         Whether the read look-ahead is enabled (or %FALSE if not supported).
+    -->
+    <property name="ReadLookaheadEnabled" type="b" access="read"/>
 
     <!--
         PmGetState:
