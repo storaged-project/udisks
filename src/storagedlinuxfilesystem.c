@@ -30,7 +30,9 @@
 #include <stdio.h>
 #include <mntent.h>
 #include <sys/types.h>
+#ifdef HAVE_ACL
 #include <sys/acl.h>
+#endif
 #include <errno.h>
 
 #include <glib/gstdio.h>
@@ -803,6 +805,7 @@ ensure_utf8 (const gchar *s)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_ACL
 static gboolean
 add_acl (const gchar  *path,
          uid_t         uid,
@@ -835,6 +838,7 @@ add_acl (const gchar  *path,
     acl_free (acl);
   return ret;
 }
+#endif
 
 /*
  * calculate_mount_point: <internal>
@@ -912,7 +916,11 @@ calculate_mount_point (StoragedDaemon              *daemon,
               goto out;
             }
           /* Then create the per-user MOUNT_BASE/$USER */
+#ifdef HAVE_ACL
           if (g_mkdir (mount_dir, 0700) != 0 && errno != EEXIST)
+#else
+          if (g_mkdir (mount_dir, 0750) != 0 && errno != EEXIST)
+#endif
             {
               g_set_error (error,
                            STORAGED_ERROR,
@@ -922,8 +930,17 @@ calculate_mount_point (StoragedDaemon              *daemon,
               goto out;
             }
           /* Finally, add the read+execute ACL for $USER */
+#ifdef HAVE_ACL
           if (!add_acl (mount_dir, uid, error))
             {
+#else
+          if (chown (mount_dir, -1, gid) == -1)
+            {
+               g_set_error (error, G_IO_ERROR,
+                            g_io_error_from_errno (errno),
+                            "Failed to change gid to %d for %s: %m",
+                            (gint) gid, mount_dir);
+#endif
               if (rmdir (mount_dir) != 0)
                 storaged_warning ("Error calling rmdir() on %s: %m", mount_dir);
               goto out;

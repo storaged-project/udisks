@@ -187,18 +187,31 @@ if test "x$with_systemdsystemunitdir" != "xno"; then
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$systemdsystemunitdir"])
 
-# libacl
-AC_CHECK_HEADERS(
-        [sys/acl.h acl/libacl.h],
-        [ACL_CFLAGS=""],
-        AC_MSG_ERROR([*** ACL headers not found.]))
-AC_CHECK_LIB(
-        [acl],
-        [acl_get_file],
-        [ACL_LIBS="-lacl"],
-        AC_MSG_ERROR([*** libacl not found.]))
-AC_SUBST(ACL_CFLAGS)
-AC_SUBST(ACL_LIBS)
+have_acl=no
+AC_ARG_ENABLE(acl, AS_HELP_STRING([--disable-acl], [disable acl support]))
+if test "x$enable_acl" != "xno"; then
+  AC_CHECK_HEADERS(
+          [sys/acl.h acl/libacl.h],
+          [
+            AC_CHECK_LIB(
+                [acl],
+                [acl_get_file],
+                [AC_DEFINE(HAVE_ACL, 1, [Define if libacl is available]) have_acl=yes],
+                have_acl=no)
+          ],
+          have_acl=no)
+  if test "x$have_acl" = "xyes"; then
+    ACL_CFLAGS=""
+    ACL_LIBS="-lacl"
+  fi
+  AC_SUBST(ACL_CFLAGS)
+  AC_SUBST(ACL_LIBS)
+  if test "x$have_acl" = xno -a "x$enable_acl" = xyes; then
+    AC_MSG_ERROR([acl support requested but libraries not found])
+  fi
+fi
+AM_CONDITIONAL(HAVE_ACL, [test "$have_acl" = "yes"])
+
 
 # Enable the modules; except the dummy module.
 AC_ARG_ENABLE(modules, AS_HELP_STRING([--enable-modules], [enable modules]))
@@ -565,6 +578,7 @@ echo "
         systemdsystemunitdir:       ${systemdsystemunitdir}
         using libsystemd-login:     ${have_libsystemd_login}
         use /media for mounting:    ${fhs_media}
+        acl support:                ${have_acl}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}
