@@ -216,11 +216,12 @@ typedef struct {
   const GVariantType *type;
 } VariantKeyfileMapping;
 
-static const VariantKeyfileMapping drive_configuration_mapping[4] = {
-  {"ata-pm-standby",          "ATA", "StandbyTimeout",    G_VARIANT_TYPE_INT32},
-  {"ata-apm-level",           "ATA", "APMLevel",          G_VARIANT_TYPE_INT32},
-  {"ata-aam-level",           "ATA", "AAMLevel",          G_VARIANT_TYPE_INT32},
-  {"ata-write-cache-enabled", "ATA", "WriteCacheEnabled", G_VARIANT_TYPE_BOOLEAN},
+static const VariantKeyfileMapping drive_configuration_mapping[5] = {
+  {"ata-pm-standby",             "ATA", "StandbyTimeout",       G_VARIANT_TYPE_INT32},
+  {"ata-apm-level",              "ATA", "APMLevel",             G_VARIANT_TYPE_INT32},
+  {"ata-aam-level",              "ATA", "AAMLevel",             G_VARIANT_TYPE_INT32},
+  {"ata-write-cache-enabled",    "ATA", "WriteCacheEnabled",    G_VARIANT_TYPE_BOOLEAN},
+  {"ata-read-lookahead-enabled", "ATA", "ReadLookaheadEnabled", G_VARIANT_TYPE_BOOLEAN},
 };
 
 /* ---------------------------------------------------------------------------------------------------- */

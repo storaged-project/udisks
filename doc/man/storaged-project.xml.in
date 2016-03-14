@@ -166,6 +166,19 @@
             </para>
           </listitem>
         </varlistentry>
+        <varlistentry>
+          <term><option>ReadLookaheadEnabled</option></term>
+          <listitem>
+            <para>
+              A boolean specifying whether to enable or disable the
+              Read Look-ahead. Valid values for this key are
+              <quote>true</quote> and <quote>false</quote>. This is
+              similar to the <option>-A</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+              This key was added in 2.5.0.
+            </para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </refsect2>
   </refsect1>
