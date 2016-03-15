@@ -237,7 +237,7 @@ create_conf_files (guint64   num_devices,
       g_free (filename);
       g_free (contents);
 
-      g_snprintf (tmp, 255, "zram%lu", i);
+      g_snprintf (tmp, 255, "zram%" G_GUINT64_FORMAT, i);
       filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, tmp, NULL);
       contents = g_strdup_printf ("#!/bin/bash\n\n"
                                   "ZRAM_NUM_STR=%" G_GUINT64_FORMAT "\n"
