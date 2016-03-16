@@ -11,7 +11,7 @@
 Name:    storaged-udisks2-compat
 Summary: Disk Manager
 Version: 2.6.0
-Release: 1%{?dist}_udisks2
+Release: 2%{?dist}_udisks2
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -299,7 +299,7 @@ systemctl try-restart udisks2
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_lsm.so
 %{_mandir}/man5/udisks2_lsm.conf.*
-%{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
+%attr(0600,root,root) %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
 
 %files -n %{name}-zram
 %dir %{_libdir}/udisks2
@@ -311,6 +311,9 @@ systemctl try-restart udisks2
 %endif
 
 %changelog
+* Wed Mar 16 2016 Peter Hatina <phatina@redhat.com> - 2.6.0-2
+- Fix permissions set for storaged_lsm.conf so it is readable only by root
+
 * Mon Mar 14 2016 Peter Hatina <phatina@redhat.com> - 2.6.0-1
 - Upgrade to 2.6.0
 
