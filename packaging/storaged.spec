@@ -11,7 +11,7 @@
 Name:    storaged
 Summary: Disk Manager
 Version: 2.5.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -288,7 +288,7 @@ udevadm trigger
 %dir %{_sysconfdir}/storaged/modules.conf.d
 %{_libdir}/storaged/modules/libstoraged_lsm.so
 %{_mandir}/man5/storaged_lsm.conf.*
-%{_sysconfdir}/storaged/modules.conf.d/storaged_lsm.conf
+%attr(0600,root,root) %{_sysconfdir}/storaged/modules.conf.d/storaged_lsm.conf
 
 %files -n storaged-zram
 %dir %{_libdir}/storaged
@@ -300,6 +300,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Mar 16 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-2
+- Fix permissions set for storaged_lsm.conf so it is readable only by root
+
 * Mon Mar 14 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-1
 - Upgrade to 2.5.0
 
