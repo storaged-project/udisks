@@ -357,7 +357,8 @@
 
     <!-- Size:
 
-         The size of this logical volume in bytes.
+         The total size of this logical volume in bytes, including the
+         size of the metadata.
     -->
     <property name="Size" type="t" access="read"/>
 

@@ -130,6 +130,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   const gchar *str;
   const gchar *uuid;
   guint64 num;
+  guint64 size, metadata_size;
 
   iface = STORAGED_LOGICAL_VOLUME (logical_volume);
 
@@ -139,8 +140,13 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   if (g_variant_lookup (info, "uuid", "&s", &uuid))
     storaged_logical_volume_set_uuid (iface, uuid);
 
+  size = metadata_size = 0;
+
   if (g_variant_lookup (info, "size", "t", &num))
-    storaged_logical_volume_set_size (iface, num);
+    size = num;
+
+  if (g_variant_lookup (info, "lv_metadata_size", "t", &metadata_size))
+    metadata_size = num;
 
   type = "block";
   active = FALSE;
@@ -154,14 +160,17 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
       if (target_type == 't')
         *needs_polling_ret = TRUE;
 
-      if (target_type == 't' && volume_type == 't')
+      if (target_type == 't' && volume_type == 't') {
         type = "pool";
+        size += metadata_size;
+      }
 
       if (state == 'a')
         active = TRUE;
     }
   storaged_logical_volume_set_type_ (iface, type);
   storaged_logical_volume_set_active (iface, active);
+  storaged_logical_volume_set_size (iface, size);
 
   if (g_variant_lookup (info, "data_percent", "t", &num)
       && (int64_t)num >= 0)
