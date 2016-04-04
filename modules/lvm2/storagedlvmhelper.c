@@ -137,6 +137,7 @@ show_logical_volume (vg_t vg,
   add_lvprop (&result, "data_percent", lv);
   add_lvprop (&result, "metadata_percent", lv);
   add_lvprop (&result, "copy_percent", lv);
+  add_lvprop (&result, "lv_metadata_size", lv);
 
   return g_variant_builder_end (&result);
 }
