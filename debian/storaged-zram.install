@@ -1,0 +1,3 @@
+usr/lib/*/storaged/modules/libstoraged_zram.so
+usr/share/polkit-1/actions/org.storaged.Storaged.zram.policy
+lib/systemd/system/zram-setup@.service

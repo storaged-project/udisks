@@ -1,0 +1,2 @@
+usr/lib/*/storaged/modules/libstoraged_iscsi.so
+usr/share/polkit-1/actions/org.storaged.Storaged.iscsi.policy

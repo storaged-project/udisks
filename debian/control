@@ -1,0 +1,168 @@
+Source: storaged
+Priority: optional
+Maintainer: Peter Hatina <phatina@redhat.com>
+Build-Depends: debhelper (>=9), dh-autoreconf, dh-systemd,
+ systemd (>= 208),
+ udev (>= 208),
+ libsystemd-login-dev (>= 208),
+ libdevmapper-dev,
+ liblvm2-dev,
+ libblkid-dev,
+ libstoragemgmt-dev,
+ libconfig-dev,
+ libglib2.0-dev (>= 2.36),
+ gobject-introspection (>= 1.30.0),
+ libgirepository1.0-dev (>= 1.30.0),
+ libgudev-1.0-dev (>= 208),
+ libatasmart-dev (>= 0.17),
+ libpolkit-gobject-1-dev (>= 0.97),
+ libpolkit-agent-1-dev (>= 0.97),
+ libacl1-dev,
+ gtk-doc-tools,
+ intltool,
+ libiscsi2-dev,
+ libblockdev-kbd-dev,
+ libstoragemgmt-dev,
+ libconfig-dev,
+ libblockdev-kbd-dev,
+ libblockdev-swap-dev,
+ libblockdev-btrfs-dev
+Section: admin
+Standards-Version: 3.9.6
+Homepage: http://storaged-project.github.io/
+Vcs-Git: git://anonscm.debian.org/collab-maint/pkg-storaged.git
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/pkg-storaged.git
+
+Package: storaged
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         dbus, udev,
+         parted, gdisk,
+         libpam-systemd
+# Also depends on util-linux for mount, umount, mkswap, but no dep on essential
+Recommends:
+# e2fsprogs for mkfs.ext3, mkfs.ext3, e2label, but it's essential so no rec.
+# For mkfs.xfs, xfs_admin,
+            xfsprogs,
+# For mkfs.vfat
+            dosfstools,
+# For mkntfs
+            ntfs-3g,
+            mdadm,
+            eject
+Description: Disk Manager
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the storagectl command and basic utilities.
+
+Package: storaged-doc
+Architecture: all
+Section: doc
+Depends: ${misc:Depends}
+Suggests: devhelp
+Description: Disk Manager - documentation
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the API reference documentation.
+
+Package: libstoraged-dev
+Architecture: linux-any
+Section: libdevel
+Depends: libstoraged0 (= ${binary:Version}), ${misc:Depends},
+         gir1.2-storaged-2.0 (= ${binary:Version})
+Description: Disk Manager library - development headers
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the development header files for the library.
+
+Package: libstoraged0
+Architecture: linux-any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Disk Manager library
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the library.
+
+Package: gir1.2-storaged-2.0
+Architecture: linux-any
+Section: introspection
+Multi-Arch: same
+Depends: ${gir:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Description: Disk Manager - gobject introspection
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the gobject introspection typelib.
+
+Package: storaged-iscsi
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}, storaged (= ${binary:Version}),
+         open-iscsi
+Description: Disk Manager - iscsi module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the iscsi support module.
+
+Package: storaged-lvm2
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}, storaged (= ${binary:Version}),
+         lvm2
+Description: Disk Manager - lvm2 module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the lvm2 support module.
+
+Package: storaged-bcache
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         storaged (= ${binary:Version}),
+         libblockdev-kbd0
+Description: Disk Manager - bcache module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the bcache support module.
+
+Package: storaged-btrfs
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         storaged (= ${binary:Version}),
+         libblockdev-btrfs0
+Description: Disk Manager - btrfs module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the btrfs support module.
+
+Package: storaged-lsm
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         storaged (= ${binary:Version}),
+         libstoragemgmt1,
+         libconfig9
+Recommends: libstoragemgmtd
+Description: Disk Manager - LibStorageMgmt module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the LibStorageMgmt support module.
+
+Package: storaged-zram
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         storaged (= ${binary:Version}),
+         libblockdev-kbd0,
+         libblockdev-swap0
+Description: Disk Manager - zram module
+ The Storaged project provides a daemon, tools and libraries to access
+ and manipulate disks and storage devices.
+ .
+ This package contains the zram compressed ram support module.
+

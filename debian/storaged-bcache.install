@@ -1,0 +1,2 @@
+usr/lib/*/storaged/modules/libstoraged_bcache.so
+usr/share/polkit-1/actions/org.storaged.Storaged.bcache.policy

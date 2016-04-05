@@ -1,0 +1,36 @@
+storaged (2.5.0-5) wily; urgency=medium
+
+  * Add patches from Fedora
+
+ -- Peter Hatina <phatina@redhat.com>  Tue, 05 Apr 2016 13:06:06 +0100
+
+storaged (2.5.0-4) wily; urgency=medium
+
+  * Add missing libblockdev-btrfs-dev dependency
+
+ -- Peter Hatina <phatina@redhat.com>  Tue, 05 Apr 2016 12:52:31 +0100
+
+storaged (2.5.0-3) wily; urgency=medium
+
+  * Upload orig tarball
+
+ -- Peter Hatina <phatina@redhat.com>  Tue, 05 Apr 2016 12:04:07 +0100
+
+storaged (2.5.0-2) wily; urgency=medium
+
+  * Change distro to Wily
+
+ -- Peter Hatina <phatina@redhat.com>  Tue, 05 Apr 2016 09:31:52 +0100
+
+storaged (2.5.0-1) experimental; urgency=medium
+
+  * Upgrade to 2.5.0
+  * Add missing packages (due to libblockdev, ...)
+
+ -- Peter Hatina <phatina@redhat.com>  Tue, 05 Apr 2016 09:11:04 +0100
+
+storaged (2.4.0-1) experimental; urgency=medium
+
+  * Initial release
+
+ -- Andreas Henriksson <andreas@fatal.se>  Mon, 08 Feb 2016 12:52:06 +0100

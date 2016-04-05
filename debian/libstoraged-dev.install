@@ -1,0 +1,4 @@
+usr/include/*
+usr/lib/*/lib*.so
+usr/lib/*/pkgconfig/*
+usr/share/gir-1.0/Storaged-2.0.gir

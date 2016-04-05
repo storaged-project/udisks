@@ -1,0 +1,5 @@
+usr/lib/storaged/storaged-lvm
+usr/lib/*/storaged/lvm-nolocking/lvm.conf
+usr/lib/*/storaged/modules/libstoraged_lvm2.so
+usr/share/polkit-1/actions/org.storaged.Storaged.lvm2.policy
+usr/share/man/man8/storaged-lvm.8*

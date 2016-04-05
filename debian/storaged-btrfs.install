@@ -1,0 +1,2 @@
+usr/lib/*/storaged/modules/libstoraged_btrfs.so
+usr/share/polkit-1/actions/org.storaged.Storaged.btrfs.policy

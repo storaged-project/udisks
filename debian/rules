@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+CONFOPTS=--enable-gtk-doc
+
+# If we where able to build all modules we could just use --enable-modules,
+# but state every module separately here instead:
+CONFOPTS+=--enable-lvm2
+CONFOPTS+=--enable-lvmcache
+CONFOPTS+=--enable-iscsi
+CONFOPTS+=--enable-btrfs # Missing libblockdev-btrfs
+CONFOPTS+=--enable-zram # Missing libblockdev-kbd and libblockdev-swap
+CONFOPTS+=--enable-lsm
+CONFOPTS+=--enable-bcache # Missing libblockdev-kbd
+
+%:
+	dh $@  --with systemd
+
+#override_dh_autoreconf:
+#	dh_autoreconf ./autogen.sh
+
+override_dh_auto_configure:
+	dh_auto_configure -- ${CONFOPTS}
+
+override_dh_install:
+	rm -f $(CURDIR)/debian/tmp/usr/lib/*/libstoraged.a
+	rm -f $(CURDIR)/debian/tmp/usr/lib/*/libstoraged.la
+	rm -f $(CURDIR)/debian/tmp/usr/lib/*/storaged/modules/libstoraged_*.a
+	rm -f $(CURDIR)/debian/tmp/usr/lib/*/storaged/modules/libstoraged_*.la
+	dh_install --fail-missing
+

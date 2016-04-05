@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/.+\/storaged-v?(\d\S*)\.tar\.gz/storaged-$1\.tar\.gz/ \
+  https://github.com/storaged-project/storaged/tags .*/?(\d+\.\d.\d)\.tar\.gz
