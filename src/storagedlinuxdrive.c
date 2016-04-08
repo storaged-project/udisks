@@ -691,6 +691,7 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
   gboolean ret = FALSE;
   StoragedDrive *iface = STORAGED_DRIVE (drive);
   StoragedLinuxDevice *device;
+  const gchar *serial = NULL;
   guint64 size;
   gboolean media_available;
   gboolean media_change_detected;
@@ -722,7 +723,6 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
   if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
     {
       const gchar *model;
-      const gchar *serial;
 
       model = g_udev_device_get_property (device->udev_device, "ID_MODEL_ENC");
       if (model != NULL)
@@ -734,13 +734,8 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
           g_free (s);
         }
 
-      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
-      if (serial == NULL)
-        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
-
       storaged_drive_set_vendor (iface, "");
       storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      storaged_drive_set_serial (iface, serial);
       storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_SCSI"))
@@ -769,14 +764,13 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
         }
 
       storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      storaged_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SCSI_SERIAL"));
+      serial = g_udev_device_get_property (device->udev_device, "ID_SCSI_SERIAL");
       storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "mmcblk"))
     {
       /* sigh, mmc is non-standard and using ID_NAME instead of ID_MODEL.. */
       storaged_drive_set_model (iface, g_udev_device_get_property (device->udev_device, "ID_NAME"));
-      storaged_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SERIAL"));
       /* TODO:
        *  - lookup Vendor from manfid and oemid in sysfs
        *  - lookup Revision from fwrev and hwrev in sysfs
@@ -787,7 +781,6 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
       const gchar *vendor;
       const gchar *model;
       const gchar *name;
-      const gchar *serial;
 
       name = g_udev_device_get_name (device->udev_device);
 
@@ -849,17 +842,19 @@ storaged_linux_drive_update (StoragedLinuxDrive       *drive,
             }
         }
 
-      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
-      if (serial == NULL)
-        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
-
       storaged_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      storaged_drive_set_serial (iface, serial);
       if (g_udev_device_has_property (device->udev_device, "ID_WWN_WITH_EXTENSION"))
         storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
       else
         storaged_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN"));
     }
+
+  /* try to find a serial number if we don't have one yet */
+  if (serial == NULL)
+    serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
+  if (serial == NULL)
+    serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
+  storaged_drive_set_serial (iface, serial);
 
   /* common bits go here */
   size = storaged_daemon_util_block_get_size (device->udev_device,
