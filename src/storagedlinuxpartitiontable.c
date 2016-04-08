@@ -343,6 +343,7 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean do_wipe = TRUE;
+  gboolean was_partitioned = FALSE;
   GError *error;
 
   error = NULL;
@@ -589,6 +590,10 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object));
 
+  was_partitioned = (storaged_object_peek_partition_table (object) != NULL);
+  if (was_partitioned)
+    storaged_linux_block_object_reread_partition_table (STORAGED_LINUX_BLOCK_OBJECT (object));
+
   /* sit and wait for the partition to show up */
   g_warn_if_fail (wait_data->pos_to_wait_for > 0);
   wait_data->partition_table_object = object;
@@ -645,6 +650,13 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
 
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (partition_object));
+
+  if (was_partitioned)
+    storaged_linux_block_object_reread_partition_table (STORAGED_LINUX_BLOCK_OBJECT (object));
+
+  storaged_partition_table_complete_create_partition (table,
+                                                      invocation,
+                                                      g_dbus_object_get_object_path (G_DBUS_OBJECT (partition_object)));
 
  out:
   g_free (escaped_partition_device);
