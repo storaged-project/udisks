@@ -784,7 +784,7 @@ find_fstab_entries_for_needle (const gchar    *needle,
       const gchar *opts = NULL;
 
       opts = storaged_fstab_entry_get_opts (entry);
-      if (strstr(opts, needle))
+      if (opts && strstr(opts, needle))
         ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
@@ -810,7 +810,7 @@ find_crypttab_entries_for_needle (gchar          *needle,
       const gchar *opts = NULL;
 
       opts = storaged_crypttab_entry_get_options (entry);
-      if (strstr(opts, needle))
+      if (opts && strstr(opts, needle))
         ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
