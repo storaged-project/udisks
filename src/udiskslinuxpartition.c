@@ -26,6 +26,7 @@
 #include <grp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/sysmacros.h>
 #include <glib-unix.h>
 
 #include <glib/gstdio.h>
