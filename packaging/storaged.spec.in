@@ -5,13 +5,14 @@
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
+%global with_libblockdev_part           @have_libblockdev_part_spec@
 
 %define is_fedora                       0%{?rhel} == 0
 
 Name:    storaged
 Summary: Disk Manager
 Version: 2.5.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -28,6 +29,9 @@ BuildRequires: libacl-devel
 BuildRequires: chrpath
 BuildRequires: gtk-doc
 BuildRequires: intltool
+%if %{with_libblockdev_part} == 1
+BuildRequires: libblockdev-part-devel
+%endif # with_libblockdev_part
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -44,7 +48,11 @@ Requires: xfsprogs
 # For mkfs.vfat
 Requires: dosfstools
 # For partitioning
+%if %{with_libblockdev_part} == 0
 Requires: parted
+%else
+Requires: libblockdev-part
+%endif # with_libblockdev_part
 Requires: gdisk
 # For LUKS devices
 Requires: cryptsetup-luks
@@ -300,6 +308,10 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Apr 20 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-3
+- Add support for libblockdev-part plugin which replaces
+  parted calls
+
 * Wed Mar 16 2016 Peter Hatina <phatina@redhat.com> - 2.5.0-2
 - Fix permissions set for storaged_lsm.conf so it is readable only by root
 

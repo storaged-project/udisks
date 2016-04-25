@@ -476,6 +476,35 @@ if test "x$enable_bcache" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
+have_libblockdev_part=no
+have_libblockdev_part_spec=0
+SAVE_CFLAGS=$CFLAGS
+SAVE_LDFLAGS=$LDFLAGS
+CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+LDFLAGS="$GLIB_LIBS"
+AC_CHECK_HEADERS(
+        [blockdev/part.h],
+        [
+          AC_CHECK_LIB(
+              [bd_part],
+              [bd_part_create_part],
+              [AC_DEFINE(HAVE_LIBBLOCKDEV_PART, 1,
+                         [Define if libbd_part is available])
+               have_libblockdev_part=yes
+               have_libblockdev_part_spec=1
+               PART_CFLAGS="-I/usr/include/blockdev"
+               PART_LDFLAGS="-lbd_part"],
+              have_libblockdev_part=no
+              have_libblockdev_part_spec=0)
+        ],
+        have_libblockdev_part=no)
+AM_CONDITIONAL(HAVE_LIBBLOCKDEV_PART, [test "x$have_libblockdev_part" = "xyes"])
+AC_SUBST([have_libblockdev_part_spec])
+AC_SUBST([PART_CFLAGS])
+AC_SUBST([PART_LDFLAGS])
+CFLAGS=$SAVE_CFLAGS
+LDFLAGS=$SAVE_LDFLAGS
+
 # Internationalization
 #
 
@@ -500,6 +529,7 @@ src/Makefile
 src/tests/Makefile
 tools/Makefile
 packaging/Makefile
+packaging/storaged.spec
 modules/Makefile
 modules/btrfs/Makefile
 modules/btrfs/data/Makefile
@@ -579,6 +609,7 @@ echo "
         using libsystemd-login:     ${have_libsystemd_login}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
+        libblockdev_part support:   ${have_libblockdev_part}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

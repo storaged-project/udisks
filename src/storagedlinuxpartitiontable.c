@@ -29,6 +29,10 @@
 
 #include <glib/gstdio.h>
 
+#ifdef HAVE_LIBBLOCKDEV_PART
+#include <blockdev/part.h>
+#endif /* HAVE_LIBBLOCKDEV_PART */
+
 #include "storagedlogging.h"
 #include "storagedlinuxpartitiontable.h"
 #include "storagedlinuxblockobject.h"
@@ -333,7 +337,7 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
   StoragedObject *object = NULL;
   StoragedDaemon *daemon = NULL;
   gchar *error_message = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
   gchar *command_line = NULL;
   WaitForPartitionData *wait_data = NULL;
   StoragedObject *partition_object = NULL;
@@ -405,7 +409,11 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
                                                     invocation))
     goto out;
 
-  escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (block));
+#ifndef HAVE_LIBBLOCKDEV_PART
+  device_name = storaged_daemon_util_escape_and_quote (storaged_block_get_device (block));
+#else
+  device_name = g_strdup (storaged_block_get_device (block));
+#endif /* HAVE_LIBBLOCKDEV_PART */
 
   table_type = storaged_partition_table_get_type_ (table);
   wait_data = g_new0 (WaitForPartitionData, 1);
@@ -414,7 +422,11 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
       guint64 start_mib;
       guint64 end_bytes;
       guint64 max_end_bytes;
+#ifndef HAVE_LIBBLOCKDEV_PART
       const gchar *part_type;
+#else
+      BDPartTypeReq part_type;
+#endif /* HAVE_LIBBLOCKDEV_PART */
       char *endp;
       gint type_as_int;
       gboolean is_logical = FALSE;
@@ -433,7 +445,11 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
       if (type[0] != '\0' && *endp == '\0' &&
           (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
+#ifndef HAVE_LIBBLOCKDEV_PART
           part_type = "extended";
+#else
+          part_type = BD_PART_TYPE_REQ_EXTENDED;
+#endif /* HAVE_LIBBLOCKDEV_PART */
           do_wipe = FALSE;  // wiping an extended partition destroys it
           if (have_partition_in_range (table, object, offset, offset + size, FALSE))
             {
@@ -458,14 +474,22 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
                                                                            offset, offset + size);
                   g_assert (container != NULL);
                   is_logical = TRUE;
+#ifndef HAVE_LIBBLOCKDEV_PART
                   part_type = "logical ext2";
+#else
+                  part_type = BD_PART_TYPE_REQ_LOGICAL;
+#endif /* HAVE_LIBBLOCKDEV_PART */
                   max_end_bytes = (storaged_partition_get_offset(container)
                                    + storaged_partition_get_size(container));
                 }
             }
           else
             {
+#ifndef HAVE_LIBBLOCKDEV_PART
               part_type = "primary ext2";
+#else
+              part_type = BD_PART_TYPE_REQ_NORMAL;
+#endif /* HAVE_LIBBLOCKDEV_PART */
             }
         }
 
@@ -494,19 +518,32 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
       wait_data->ignore_container = is_logical;
 
+#ifndef HAVE_LIBBLOCKDEV_PART
       command_line = g_strdup_printf ("parted --align optimal --script %s "
                                       "\"mkpart %s %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
-                                      escaped_device,
+                                      device_name,
                                       part_type,
                                       start_mib,
                                       end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
+#else
+      if (! bd_part_create_part (device_name, part_type, start_mib * MIB_SIZE,
+                                 end_bytes - 1, BD_PART_ALIGN_OPTIMAL, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+
+      goto partition_table_created;
+#endif /* HAVE_LIBBLOCKDEV_PART */
     }
   else if (g_strcmp0 (table_type, "gpt") == 0)
     {
       guint64 start_mib;
       guint64 end_bytes;
+#ifndef HAVE_LIBBLOCKDEV_PART
       gchar *escaped_name;
       gchar *escaped_escaped_name;
+#endif /* HAVE_LIBBLOCKDEV_PART */
 
       /* GPT is easy, no extended/logical crap */
       if (have_partition_in_range (table, object, offset, offset + size, FALSE))
@@ -523,9 +560,6 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
         {
           name = " ";
         }
-
-      escaped_name = storaged_daemon_util_escape (name);
-      escaped_escaped_name = storaged_daemon_util_escape (escaped_name);
 
       /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
        * Also round up size to nearest multiple of 512
@@ -550,14 +584,29 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
           end_bytes -= 512L;
         }
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
+#ifndef HAVE_LIBBLOCKDEV_PART
+      escaped_name = storaged_daemon_util_escape (name);
+      escaped_escaped_name = storaged_daemon_util_escape (escaped_name);
+
       command_line = g_strdup_printf ("parted --align optimal --script %s "
                                       "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
-                                      escaped_device,
+                                      device_name,
                                       escaped_escaped_name,
                                       start_mib,
                                       end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
+
       g_free (escaped_escaped_name);
       g_free (escaped_name);
+#else
+      if (! bd_part_create_part (device_name, BD_PART_TYPE_REQ_NORMAL, start_mib * MIB_SIZE,
+                                 end_bytes - 1, BD_PART_ALIGN_OPTIMAL, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+
+      goto partition_table_created;
+#endif /* HAVE_LIBBLOCKDEV_PART */
     }
   else
     {
@@ -587,6 +636,10 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
                                              error_message);
       goto out;
     }
+
+#ifdef HAVE_LIBBLOCKDEV_PART
+partition_table_created:
+#endif /* HAVE_LIBBLOCKDEV_PART */
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object));
 
@@ -663,7 +716,7 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
   g_free (wait_data);
   g_clear_object (&partition_block);
   g_free (command_line);
-  g_free (escaped_device);
+  g_free (device_name);
   g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);

@@ -30,6 +30,10 @@
 
 #include <glib/gstdio.h>
 
+#ifdef HAVE_LIBBLOCKDEV_PART
+#include <blockdev/part.h>
+#endif /* HAVE_LIBBLOCDEV_PART */
+
 #include "storagedlogging.h"
 #include "storagedlinuxpartition.h"
 #include "storagedlinuxblockobject.h"
@@ -207,7 +211,8 @@ storaged_linux_partition_update (StoragedLinuxPartition  *partition,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* runs in thread dedicated to handling @invocation */
+/* If libblockdev-part isn't present at compile-time, this runs in thread
+ * dedicated to handling @invocation. */
 static gboolean
 handle_set_flags (StoragedPartition        *partition,
                   GDBusMethodInvocation    *invocation,
@@ -220,7 +225,7 @@ handle_set_flags (StoragedPartition        *partition,
   StoragedObject *object = NULL;
   StoragedDaemon *daemon = NULL;
   gchar *error_message = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
   StoragedObject *partition_table_object = NULL;
   StoragedPartitionTable *partition_table = NULL;
   StoragedBlock *partition_table_block = NULL;
@@ -228,6 +233,10 @@ handle_set_flags (StoragedPartition        *partition,
   gint fd = -1;
   uid_t caller_uid;
   gid_t caller_gid;
+#ifdef HAVE_LIBBLOCKDEV_PART
+  gchar *partition_name = NULL;
+  gboolean bootable;
+#endif /* HAVE_LIBBLOCKDEV_PART */
   GError *error;
 
   error = NULL;
@@ -287,21 +296,43 @@ handle_set_flags (StoragedPartition        *partition,
                                                       invocation))
     goto out;
 
-  escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
+  device_name = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
   if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
+      /* TODO: implement once
+       * https://github.com/rhinstaller/libblockdev/issues/80 is resolved.
+       */
       command_line = g_strdup_printf ("sgdisk --attributes %u:=:0x%08x%08x %s",
                                       storaged_partition_get_number (partition),
                                       (guint32) (flags >> 32),
                                       (guint32) (flags & 0xffffffff),
-                                      escaped_device);
+                                      device_name);
     }
   else if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "dos") == 0)
     {
+#ifndef HAVE_LIBBLOCKDEV_PART
       command_line = g_strdup_printf ("parted --script %s \"set %u boot %s\"",
-                                      escaped_device,
+                                      device_name,
                                       storaged_partition_get_number (partition),
                                       flags & 0x80 ? "on" : "off");
+#else
+      /* 7th bit - the partition is marked as bootable */
+      bootable = !!(flags & 1 << 7); /* Narrow possible values to TRUE/FALSE */
+      device_name = g_strdup (storaged_block_get_device (partition_table_block));
+      partition_name = g_strdup_printf ("%s%u", device_name, storaged_partition_get_number (partition));
+
+      if (! bd_part_set_part_flag (device_name,
+                                   partition_name,
+                                   BD_PART_FLAG_BOOT,
+                                   bootable,
+                                   &error))
+      {
+        g_dbus_method_invocation_take_error (invocation, error);
+        goto out;
+      }
+
+      goto flags_set;
+#endif /* HAVE_LIBBLOCKDEV_PART */
     }
   else
     {
@@ -336,6 +367,8 @@ handle_set_flags (StoragedPartition        *partition,
                                              error_message);
       goto out;
     }
+
+flags_set:
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object));
 
   storaged_partition_complete_set_flags (partition, invocation);
@@ -344,8 +377,11 @@ handle_set_flags (StoragedPartition        *partition,
   if (fd != -1)
     close (fd);
   g_free (command_line);
-  g_free (escaped_device);
+  g_free (device_name);
   g_free (error_message);
+#ifdef HAVE_LIBBLOCKDEV_PART
+  g_free (partition_name);
+#endif /* HAVE_LIBBLOCDEV_PART */
   g_clear_object (&object);
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
@@ -371,7 +407,7 @@ handle_set_name (StoragedPartition        *partition,
   StoragedObject *object = NULL;
   StoragedDaemon *daemon = NULL;
   gchar *error_message = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
   gchar *escaped_name = NULL;
   StoragedObject *partition_table_object = NULL;
   StoragedPartitionTable *partition_table = NULL;
@@ -438,7 +474,7 @@ handle_set_name (StoragedPartition        *partition,
                                                       invocation))
     goto out;
 
-  escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
+  device_name = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
   escaped_name = storaged_daemon_util_escape_and_quote (name);
   if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
@@ -457,7 +493,7 @@ handle_set_name (StoragedPartition        *partition,
       command_line = g_strdup_printf ("sgdisk --change-name %u:%s %s",
                                       storaged_partition_get_number (partition),
                                       escaped_name,
-                                      escaped_device);
+                                      device_name);
     }
   else
     {
@@ -501,7 +537,7 @@ handle_set_name (StoragedPartition        *partition,
     close (fd);
   g_free (command_line);
   g_free (escaped_name);
-  g_free (escaped_device);
+  g_free (device_name);
   g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);
@@ -571,7 +607,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
   StoragedObject *object = NULL;
   StoragedDaemon *daemon = NULL;
   gchar *error_message = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
   gchar *escaped_type = NULL;
   StoragedObject *partition_table_object = NULL;
   StoragedPartitionTable *partition_table = NULL;
@@ -590,7 +626,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
   partition_table = storaged_object_get_partition_table (partition_table_object);
   partition_table_block = storaged_object_get_block (partition_table_object);
 
-  escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
+  device_name = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
   escaped_type = storaged_daemon_util_escape_and_quote (type);
   if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
@@ -607,7 +643,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
       command_line = g_strdup_printf ("sgdisk --typecode %u:%s %s",
                                       storaged_partition_get_number (STORAGED_PARTITION (partition)),
                                       escaped_type,
-                                      escaped_device);
+                                      device_name);
     }
   else if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "dos") == 0)
     {
@@ -632,7 +668,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
           goto out;
         }
       command_line = g_strdup_printf ("sfdisk --change-id %s %u 0x%02x",
-                                      escaped_device,
+                                      device_name,
                                       storaged_partition_get_number (STORAGED_PARTITION (partition)),
                                       type_as_int);
     }
@@ -678,7 +714,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
     close (fd);
   g_free (command_line);
   g_free (escaped_type);
-  g_free (escaped_device);
+  g_free (device_name);
   g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);
@@ -800,7 +836,10 @@ handle_delete (StoragedPartition        *partition,
   StoragedObject *object = NULL;
   StoragedDaemon *daemon = NULL;
   gchar *error_message = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
+#ifdef HAVE_LIBBLOCKDEV_PART
+  gchar *partition_name = NULL;
+#endif /* HAVE_LIBBLOCKDEV_PART */
   StoragedObject *partition_table_object = NULL;
   StoragedPartitionTable *partition_table = NULL;
   StoragedBlock *partition_table_block = NULL;
@@ -888,7 +927,8 @@ handle_delete (StoragedPartition        *partition,
         }
     }
 
-  escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
+#ifndef HAVE_LIBBLOCKDEV_PART
+  device_name = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
 
   if (!storaged_daemon_launch_spawned_job_sync (daemon,
                                                 partition_table_object,
@@ -900,7 +940,7 @@ handle_delete (StoragedPartition        *partition,
                                                 &error_message,
                                                 NULL,  /* input_string */
                                                 "parted --script %s \"rm %u\"",
-                                                escaped_device,
+                                                device_name,
                                                 storaged_partition_get_number (partition)))
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -911,6 +951,16 @@ handle_delete (StoragedPartition        *partition,
                                              error_message);
       goto out;
     }
+#else
+  device_name = g_strdup (storaged_block_get_device (partition_table_block));
+  partition_name = g_strdup_printf ("%s%u", device_name, storaged_partition_get_number (partition));
+
+  if (! bd_part_delete_part (device_name, partition_name, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+#endif /* HAVE_LIBBLOCKDEV_PART */
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (partition_table_object));
 
@@ -918,7 +968,10 @@ handle_delete (StoragedPartition        *partition,
 
  out:
   g_free (command_line);
-  g_free (escaped_device);
+  g_free (device_name);
+#ifdef HAVE_LIBBLOCKDEV_PART
+  g_free (partition_name);
+#endif /* HAVE_LIBBLOCKDEV_PART */
   g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);

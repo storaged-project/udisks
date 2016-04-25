@@ -1,1 +1,1 @@
-EXTRA_DIST = storaged.spec
+EXTRA_DIST = storaged.spec.in
