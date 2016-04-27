@@ -10,6 +10,3 @@ Add support for:
 - raid tests
 - glusterfs
 - ceph
-- module loading
-  - config file?
-  - granularity?
