@@ -37,6 +37,10 @@
 #include <glib/gstdio.h>
 #include <gio/gunixfdlist.h>
 
+#ifdef HAVE_LIBBLOCKDEV_PART
+#include <blockdev/part.h>
+#endif /* HAVE_LIBBLOCKDEV_PART */
+
 #include "udiskslogging.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxblockobject.h"
@@ -2741,6 +2745,10 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
+#ifdef HAVE_LIBBLOCKDEV_PART
+  BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
+  gchar *device_name = NULL;
+#endif /* HAVE_LIBBLOCKDEV_PART */
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -3099,30 +3107,52 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-  /* Build and run mkfs shell command */
-  tmp = subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
-  command = subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
-  g_free (tmp);
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object_to_mkfs,
-                                              "format-mkfs", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "%s", command))
-    {
-      if (invocation != NULL)
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_FAILED,
-                                               "Error creating file system: %s",
-                                               error_message);
-      g_free (error_message);
-      goto out;
-    }
+#ifdef HAVE_LIBBLOCKDEV_PART
+    if (g_strcmp0 (type, "dos") == 0)
+      part_table_type = BD_PART_TABLE_MSDOS;
+    else if (g_strcmp0 (type, "gpt") == 0)
+      part_table_type = BD_PART_TABLE_GPT;
+    if (part_table_type == BD_PART_TABLE_UNDEF)
+#endif /* HAVE_LIBBLOCKDEV_PART */
+      {
+        /* Build and run mkfs shell command */
+        tmp = subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
+        command = subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
+        g_free (tmp);
+        if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                      object_to_mkfs,
+                                                      "format-mkfs", caller_uid,
+                                                      NULL, /* cancellable */
+                                                      0,    /* uid_t run_as_uid */
+                                                      0,    /* uid_t run_as_euid */
+                                                      &status,
+                                                      &error_message,
+                                                      NULL, /* input_string */
+                                                      "%s", command))
+          {
+            if (invocation != NULL)
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error creating file system: %s",
+                                                     error_message);
+            g_free (error_message);
+            goto out;
+          }
+      }
+#ifdef HAVE_LIBBLOCKDEV_PART
+    else
+      {
+        /* Create the partition table. */
+        device_name = g_strdup (udisks_block_get_device (block));
+        if (! bd_part_create_table (device_name, part_table_type, TRUE, &error))
+          {
+            g_dbus_method_invocation_take_error (invocation, error);
+            goto out;
+          }
+      }
+#endif /* HAVE_LIBBLOCKDEV_PART */
+
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
@@ -3292,6 +3322,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_clear_object (&partition_table);
   g_clear_object (&partition);
   g_clear_object (&object);
+#ifdef HAVE_LIBBLOCKDEV_PART
+  g_free (device_name);
+#endif /* HAVE_LIBBLOCKDEV_PART */
 }
 
 struct FormatCompleteData {
