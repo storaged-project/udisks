@@ -1,18 +1,34 @@
----------------------------
-storaged 2.6.1 (unreleased)
----------------------------
+--------------
+storaged 2.6.1
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.6.0:
 
-(TODO: make shortlog)
+Marius Vollmer (2):
+      LVM2: Include metadata size in Size property.
+      drives: Try harder when looking for a serial number
+
+Mathieu Trudel-Lapierre (1):
+      Reread partition table before wiping when creating new partitions
+
+Peter Hatina (9):
+      Packaging: bump release version in spec file
+      ZRAM: %lu format
+      Fix permissions set for storaged_lsm.conf so it is readable only by root     (fixes #51)
+      ZRAM: Fix typo in udev rules file
+      Build: introduce Debian packaging
+      TODO: possible features update
+      Block: fix segfault when no configuration is given for a LUKS device
+      Core: use libblockdev-part instead of parted
+      Doc: remove already implemented features
 
 Thanks to all our contributors.
 
 Peter Hatina
-(TODO: date)
+2016-04-29
 
 --------------
 storaged 2.6.0
