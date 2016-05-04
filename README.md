@@ -27,7 +27,9 @@ Storaged has several dependencies listed in `packaging/storaged.spec`.
 
 If you run rpm based distro, install the dependencies by:
 
-    # dnf builddep -y packaging/storaged.spec
+    $ cd packaging
+    $ ./generate      # generates the storaged.spec file, see --help for usage
+    # dnf builddep -y storaged.spec
 
 AUTOTOOLS
 ---------

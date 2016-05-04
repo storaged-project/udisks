@@ -529,7 +529,6 @@ src/Makefile
 src/tests/Makefile
 tools/Makefile
 packaging/Makefile
-packaging/storaged.spec
 modules/Makefile
 modules/btrfs/Makefile
 modules/btrfs/data/Makefile
