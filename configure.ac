@@ -7,9 +7,9 @@ m4_define([udisks_version], [storaged_major_version.storaged_minor_version.stora
 
 AC_INIT([storaged],[udisks_version],[https://storaged-project.github.io],[storaged])
 
-UDISKS_MAJOR_VERSION=udisks_major_version
-UDISKS_MINOR_VERSION=udisks_minor_version
-UDISKS_MICRO_VERSION=udisks_micro_version
+UDISKS_MAJOR_VERSION=storaged_major_version
+UDISKS_MINOR_VERSION=storaged_minor_version
+UDISKS_MICRO_VERSION=storaged_micro_version
 UDISKS_VERSION=udisks_version
 AC_SUBST(UDISKS_MAJOR_VERSION)
 AC_SUBST(UDISKS_MINOR_VERSION)
