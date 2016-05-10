@@ -423,8 +423,9 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject *object,
                                       gboolean                get_hw)
 {
   UDisksLinuxDevice *ret = NULL;
+  GList *devices;
 
-  for (GList *devices = object->devices; devices; devices = devices->next)
+  for (devices = object->devices; devices; devices = devices->next)
     {
       if (!get_hw || !is_dm_multipath (UDISKS_LINUX_DEVICE (devices->data)))
         {
