@@ -368,7 +368,9 @@ handle_set_flags (StoragedPartition        *partition,
       goto out;
     }
 
+#ifdef HAVE_LIBBLOCKDEV_PART
 flags_set:
+#endif /* HAVE_LIBBLOCKDEV_PART */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object));
 
   storaged_partition_complete_set_flags (partition, invocation);
