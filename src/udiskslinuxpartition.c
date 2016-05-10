@@ -368,7 +368,9 @@ handle_set_flags (UDisksPartition       *partition,
       goto out;
     }
 
+#ifdef HAVE_LIBBLOCKDEV_PART
 flags_set:
+#endif /* HAVE_LIBBLOCKDEV_PART */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   udisks_partition_complete_set_flags (partition, invocation);
