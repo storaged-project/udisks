@@ -11,7 +11,7 @@
 
 Name:    storaged-udisks2-compat
 Summary: Disk Manager
-Version: 2.6.0
+Version: @MAJOR_VERSION@.@MINOR_VERSION@.@MICRO_VERSION@
 Release: 3%{?dist}_udisks2
 License: GPLv2+
 Group:   System Environment/Libraries
