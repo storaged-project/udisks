@@ -145,7 +145,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   if (g_variant_lookup (info, "size", "t", &num))
     size = num;
 
-  if (g_variant_lookup (info, "lv_metadata_size", "t", &metadata_size))
+  if (g_variant_lookup (info, "lv_metadata_size", "t", &num))
     metadata_size = num;
 
   type = "block";
