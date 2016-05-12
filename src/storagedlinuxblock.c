@@ -2112,9 +2112,62 @@ subst_str_and_escape (const gchar *str,
 
 typedef struct
 {
-  StoragedObject *object;
+  StoragedObject **object_ptr;
+  StoragedBlock **block_ptr;
   const gchar  *type;
 } FormatWaitData;
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+update_to_current_block_object (StoragedDaemon *daemon,
+                                FormatWaitData *data)
+{
+  GList *objects, *l;
+
+  /* There might be remove/add uevent pairs at any time for
+     partitions, even if they haven't really been removed and
+     recreated.  Storaged will create a new StoragedObject in that
+     scenario and the one we are checking here will be obsolete and
+     not receive any updates anymore.
+
+     So we catch that case, complain a bit, and carry on with the new
+     StoragedObject.
+  */
+
+  if (*data->block_ptr == NULL)
+    return;
+
+  objects = storaged_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      StoragedObject *object = STORAGED_OBJECT (l->data);
+      StoragedBlock *block = NULL;
+
+      if (object == *data->object_ptr)
+        continue;
+
+      block = storaged_object_get_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (storaged_block_get_device (block), storaged_block_get_device (*data->block_ptr)) == 0)
+            {
+              storaged_warning ("Block device %s was removed and readded while we were working on it",
+                                storaged_block_get_device (block));
+              g_object_ref (object);
+              g_object_unref (*data->object_ptr);
+              *data->object_ptr = object;
+
+              g_object_unref (*data->block_ptr);
+              *data->block_ptr = block;
+              break;
+            }
+          g_object_unref (block);
+        }
+    }
+
+  g_list_free_full (objects, g_object_unref);
+}
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -2123,17 +2176,21 @@ wait_for_filesystem (StoragedDaemon *daemon,
                      gpointer        user_data)
 {
   FormatWaitData *data = user_data;
+  StoragedObject *object;
+  StoragedBlock *block;
   StoragedObject *ret = NULL;
-  StoragedBlock *block = NULL;
   StoragedPartitionTable *partition_table = NULL;
   gchar *id_type = NULL;
   gchar *partition_table_type = NULL;
 
-  block = storaged_object_get_block (data->object);
+  update_to_current_block_object (daemon, data);
+  object = *data->object_ptr;
+  block = *data->block_ptr;
+
   if (block == NULL)
     goto out;
 
-  partition_table = storaged_object_get_partition_table (data->object);
+  partition_table = storaged_object_get_partition_table (object);
 
   id_type = storaged_block_dup_id_type (block);
 
@@ -2141,14 +2198,14 @@ wait_for_filesystem (StoragedDaemon *daemon,
     {
       if ((id_type == NULL || g_strcmp0 (id_type, "") == 0) && partition_table == NULL)
         {
-          ret = g_object_ref (data->object);
+          ret = g_object_ref (object);
           goto out;
         }
     }
 
   if (g_strcmp0 (id_type, data->type) == 0)
     {
-      ret = g_object_ref (data->object);
+      ret = g_object_ref (object);
       goto out;
     }
 
@@ -2157,7 +2214,7 @@ wait_for_filesystem (StoragedDaemon *daemon,
       partition_table_type = storaged_partition_table_dup_type_ (partition_table);
       if (g_strcmp0 (partition_table_type, data->type) == 0)
         {
-          ret = g_object_ref (data->object);
+          ret = g_object_ref (object);
           goto out;
         }
     }
@@ -2166,7 +2223,6 @@ wait_for_filesystem (StoragedDaemon *daemon,
   g_free (partition_table_type);
   g_free (id_type);
   g_clear_object (&partition_table);
-  g_clear_object (&block);
   return ret;
 }
 
@@ -2177,20 +2233,23 @@ wait_for_luks_uuid (StoragedDaemon *daemon,
                     gpointer        user_data)
 {
   FormatWaitData *data = user_data;
+  StoragedObject *object;
+  StoragedBlock *block;
   StoragedObject *ret = NULL;
-  StoragedBlock *block = NULL;
 
-  block = storaged_object_get_block (data->object);
+  update_to_current_block_object (daemon, data);
+  object = *data->object_ptr;
+  block = *data->block_ptr;
+
   if (block == NULL)
     goto out;
 
   if (g_strcmp0 (storaged_block_get_id_type (block), "crypto_LUKS") != 0)
     goto out;
 
-  ret = g_object_ref (data->object);
+  ret = g_object_ref (object);
 
  out:
-  g_clear_object (&block);
   return ret;
 }
 
@@ -2204,6 +2263,8 @@ wait_for_luks_cleartext (StoragedDaemon *daemon,
   StoragedObject *ret = NULL;
   GList *objects, *l;
 
+  update_to_current_block_object (daemon, data);
+
   objects = storaged_daemon_get_objects (daemon);
   for (l = objects; l != NULL; l = l->next)
     {
@@ -2214,7 +2275,7 @@ wait_for_luks_cleartext (StoragedDaemon *daemon,
       if (block != NULL)
         {
           if (g_strcmp0 (storaged_block_get_crypto_backing_device (block),
-                         g_dbus_object_get_object_path (G_DBUS_OBJECT (data->object))) == 0)
+                         g_dbus_object_get_object_path (G_DBUS_OBJECT (*data->object_ptr))) == 0)
             {
               g_object_unref (block);
               ret = g_object_ref (object);
@@ -2750,6 +2811,12 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
   gchar *device_name = NULL;
 #endif /* HAVE_LIBBLOCKDEV_PART */
 
+  /* We take a reference on BLOCK for the duration of this function
+     since it might be swapped out for a different object while
+     waiting.  See update_to_current_block_object.
+  */
+  g_object_ref (block);
+
   error = NULL;
   object = storaged_daemon_util_dup_object (block, &error);
   if (object == NULL)
@@ -2921,17 +2988,18 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
     }
   /* ...then wait until this change has taken effect */
   wait_data = g_new0 (FormatWaitData, 1);
-  wait_data->object = object;
+  wait_data->object_ptr = &object;
+  wait_data->block_ptr = &block;
   wait_data->type = "empty";
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object));
   if (was_partitioned)
     storaged_linux_block_object_reread_partition_table (STORAGED_LINUX_BLOCK_OBJECT (object));
   if (storaged_daemon_wait_for_object_sync (daemon,
-                                          wait_for_filesystem,
-                                          wait_data,
-                                          NULL,
-                                          15,
-                                          &error) == NULL)
+                                            wait_for_filesystem,
+                                            wait_data,
+                                            NULL,
+                                            15,
+                                            &error) == NULL)
     {
       g_prefix_error (&error, "Error synchronizing after initial wipe: ");
       if (invocation != NULL)
@@ -3037,11 +3105,11 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
 
       /* Wait for it */
       cleartext_object = storaged_daemon_wait_for_object_sync (daemon,
-                                                             wait_for_luks_cleartext,
-                                                             wait_data,
-                                                             NULL,
-                                                             30,
-                                                             &error);
+                                                               wait_for_luks_cleartext,
+                                                               wait_data,
+                                                               NULL,
+                                                               30,
+                                                               &error);
       if (cleartext_object == NULL)
         {
           g_prefix_error (&error, "Error waiting for LUKS cleartext device: ");
@@ -3157,13 +3225,14 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
    * trigger an event here
    */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (object_to_mkfs));
-  wait_data->object = object_to_mkfs;
+  wait_data->object_ptr = &object_to_mkfs;
+  wait_data->block_ptr = &block_to_mkfs;
   if (storaged_daemon_wait_for_object_sync (daemon,
-                                          wait_for_filesystem,
-                                          wait_data,
-                                          NULL,
-                                          30,
-                                          &error) == NULL)
+                                            wait_for_filesystem,
+                                            wait_data,
+                                            NULL,
+                                            30,
+                                            &error) == NULL)
     {
       g_prefix_error (&error,
                       "Error synchronizing after formatting with type `%s': ",
@@ -3325,6 +3394,7 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
 #ifdef HAVE_LIBBLOCKDEV_PART
   g_free (device_name);
 #endif /* HAVE_LIBBLOCKDEV_PART */
+  g_object_unref (block);
 }
 
 struct FormatCompleteData {
