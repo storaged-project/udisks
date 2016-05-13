@@ -707,10 +707,6 @@ partition_table_created:
   if (was_partitioned)
     udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  udisks_partition_table_complete_create_partition (table,
-                                                    invocation,
-                                                    g_dbus_object_get_object_path (G_DBUS_OBJECT (partition_object)));
-
  out:
   g_free (escaped_partition_device);
   g_free (wait_data);
