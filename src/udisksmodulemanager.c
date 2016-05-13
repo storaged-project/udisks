@@ -410,9 +410,11 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
       if (module != NULL)
         {
+          gchar *path_basename = g_path_get_basename (pth);
           module_data = g_new0 (ModuleData, 1);
           module_data->handle = module;
-          udisks_notice ("Loading module %s...", g_path_get_basename (pth));
+          udisks_notice ("Loading module %s...", path_basename);
+          g_free (path_basename);
           if (! g_module_symbol (module_data->handle, "udisks_module_id", (gpointer *) &module_id_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_init", (gpointer *) &module_init_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_teardown", (gpointer *) &module_teardown_func) ||

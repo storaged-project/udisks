@@ -566,6 +566,8 @@ update_with_variant (GPid pid,
           g_dbus_object_manager_server_unexport (manager,
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (volume)));
           g_hash_table_iter_remove (&volume_iter);
+
+          g_object_unref (G_OBJECT (volume));
         }
     }
 

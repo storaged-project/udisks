@@ -322,6 +322,8 @@ update_configuration (UDisksLinuxDrive       *drive,
   value = g_variant_ref_sink (g_variant_builder_end (&builder));
 
  out:
+  g_free (path);
+
   old_value = udisks_drive_get_configuration (UDISKS_DRIVE (drive));
   if (!_g_variant_equal0 (old_value, value))
     ret = TRUE;
