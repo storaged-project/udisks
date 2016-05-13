@@ -143,6 +143,7 @@ storaged_linux_provider_finalize (GObject *object)
   /* stop the request thread and wait for it */
   g_async_queue_push (provider->probe_request_queue, (gpointer) 0xdeadbeef);
   g_thread_join (provider->probe_request_thread);
+  g_thread_unref (provider->probe_request_thread);
   g_async_queue_unref (provider->probe_request_queue);
 
   daemon = storaged_provider_get_daemon (STORAGED_PROVIDER (provider));

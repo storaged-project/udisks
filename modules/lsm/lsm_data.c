@@ -900,6 +900,7 @@ _free_lsm_uri_set (gpointer data)
       g_free ((gpointer) lsm_uri_set->uri);
       g_free ((gpointer) lsm_uri_set->password);
     }
+  g_free ((gpointer) lsm_uri_set);
 }
 
 static void

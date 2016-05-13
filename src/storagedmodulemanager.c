@@ -410,9 +410,11 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
 
       if (module != NULL)
         {
+          gchar *path_basename = g_path_get_basename (pth);
           module_data = g_new0 (ModuleData, 1);
           module_data->handle = module;
-          storaged_notice ("Loading module %s...", g_path_get_basename (pth));
+          storaged_notice ("Loading module %s...", path_basename);
+          g_free (path_basename);
           if (! g_module_symbol (module_data->handle, "storaged_module_id", (gpointer *) &module_id_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_init", (gpointer *) &module_init_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_teardown", (gpointer *) &module_teardown_func) ||
