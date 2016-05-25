@@ -26,6 +26,8 @@
 #include <grp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <sys/file.h>
 
 #include <glib/gstdio.h>
 
@@ -711,6 +713,27 @@ partition_table_created:
   return partition_object;
 }
 
+static int
+flock_block_dev (StoragedPartitionTable *iface)
+{
+  StoragedObject *object = storaged_daemon_util_dup_object (iface, NULL);
+  StoragedBlock *block = object? storaged_object_peek_block (object) : NULL;
+  int fd = block? open (storaged_block_get_device (block), O_RDONLY) : -1;
+
+  if (fd >= 0)
+    flock (fd, LOCK_SH | LOCK_NB);
+
+  g_clear_object (&object);
+  return fd;
+}
+
+static void
+unflock_block_dev (int fd)
+{
+  if (fd >= 0)
+    close (fd);
+}
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_create_partition (StoragedPartitionTable   *table,
@@ -721,6 +744,24 @@ handle_create_partition (StoragedPartitionTable   *table,
                          const gchar              *name,
                          GVariant                 *options)
 {
+  /* We (try to) take a shared lock on the partition table while
+     creating and formatting a new partition, here and also in
+     handle_create_partition_and_format.
+
+     This lock prevents udevd from issuing a BLKRRPART ioctl call.
+     That ioctl is undesired because it might temporarily remove the
+     block device of the newly created block device.  It does so only
+     temporarily, but it still happens that the block device is
+     missing exactly when wipefs or mkfs try to access it.
+
+     Also, a pair of remove/add events will cause storaged to create a
+     new internal StoragedObject to represent the block device of the
+     partition.  The code currently doesn't handle this and waits for
+     changes (such as an expected filesystem type or UUID) to a
+     obsolete internal object that will never see them.
+  */
+
+  int fd = flock_block_dev (table);
   StoragedObject *partition_object =
     storaged_linux_partition_table_handle_create_partition (table,
                                                             invocation,
@@ -737,6 +778,8 @@ handle_create_partition (StoragedPartitionTable   *table,
       g_object_unref (partition_object);
     }
 
+  unflock_block_dev (fd);
+
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -745,6 +788,7 @@ struct FormatCompleteData {
   StoragedPartitionTable *table;
   GDBusMethodInvocation *invocation;
   StoragedObject *partition_object;
+  int lock_fd;
 };
 
 static void
@@ -753,6 +797,7 @@ handle_format_complete (gpointer user_data)
   struct FormatCompleteData *data = user_data;
   storaged_partition_table_complete_create_partition
     (data->table, data->invocation, g_dbus_object_get_object_path (G_DBUS_OBJECT (data->partition_object)));
+  unflock_block_dev (data->lock_fd);
 }
 
 static gboolean
@@ -766,6 +811,10 @@ handle_create_partition_and_format (StoragedPartitionTable   *table,
                                     const gchar              *format_type,
                                     GVariant                 *format_options)
 {
+  /* See handle_create_partition for a motivation of taking the lock.
+   */
+
+  int fd = flock_block_dev (table);
   StoragedObject *partition_object =
     storaged_linux_partition_table_handle_create_partition (table,
                                                             invocation,
@@ -781,6 +830,7 @@ handle_create_partition_and_format (StoragedPartitionTable   *table,
       data.table = table;
       data.invocation = invocation;
       data.partition_object = partition_object;
+      data.lock_fd = fd;
       storaged_linux_block_handle_format (storaged_object_peek_block (partition_object),
                                           invocation,
                                           format_type,
@@ -788,6 +838,8 @@ handle_create_partition_and_format (StoragedPartitionTable   *table,
                                           handle_format_complete, &data);
       g_object_unref (partition_object);
     }
+  else
+    unflock_block_dev (fd);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
