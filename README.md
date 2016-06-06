@@ -1,4 +1,5 @@
-[![build status](https://phatina.fedorapeople.org/jenkins/storaged/build.svg)](https://phatina.fedorapeople.org/jenkins/storaged/build.log)
+[![build status](https://tsmetana.fedorapeople.org/storaged_ci/build.svg)](https://tsmetana.fedorapeople.org/storaged_ci/build.log)
+[![tests status](https://tsmetana.fedorapeople.org/storaged_ci/test.svg)](https://tsmetana.fedorapeople.org/storaged_ci/test.log)
 
 
 OVERVIEW

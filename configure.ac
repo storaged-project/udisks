@@ -1,7 +1,7 @@
 
 m4_define([storaged_major_version], [2])
 m4_define([storaged_minor_version], [5])
-m4_define([storaged_micro_version], [2])
+m4_define([storaged_micro_version], [3])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
