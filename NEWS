@@ -1,18 +1,30 @@
----------------------------
-storaged 2.5.2 (unreleased)
----------------------------
+--------------
+storaged 2.5.2
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.5.1:
 
-(TODO: make shortlog)
+Marius Vollmer (4):
+      LVM2: Correctly retrieve meta data size
+      Core: Don't complete partition/format methods twice
+      Revert "Reread partition table before wiping when creating new partitions"
+      Core: Lock the table while creating a new partition
+
+Peter Hatina (6):
+      Build: introduce generate script for spec file (fixes #56)
+      Build: get the package version from configure script
+      Core: add missing ifdef for libblockdev-part label
+      Core: fix C99 error in DriveObject (fixes #55)
+      Revert "Build: get the package version from configure script"
+      Fix some memory leaks
 
 Thanks to all our contributors.
 
-Peter Hatina
-(TODO: date)
+Tomas Smetana
+2016-06-06
 
 --------------
 storaged 2.5.1
