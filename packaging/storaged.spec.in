@@ -9,10 +9,10 @@
 
 %define is_fedora                       0%{?rhel} == 0
 
-Name:    storaged-udisks2-compat
+Name:    storaged
 Summary: Disk Manager
-Version: 2.6.0
-Release: 3%{?dist}_udisks2
+Version: 2.6.2
+Release: 1%{?dist}
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
@@ -319,6 +319,9 @@ systemctl try-restart udisks2
 %endif
 
 %changelog
+* Thu Jun 16 2016 Tomas Smetana <tsmetana@redhat.com> - 2.6.2-1
+- Version 2.6.2; aimed to replace udisks2
+
 * Wed Apr 27 2016 Peter Hatina <phatina@redhat.com> - 2.6.0-3
 - Add support for libblockdev-part plugin which replaces
   parted calls

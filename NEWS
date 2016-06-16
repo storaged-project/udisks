@@ -1,18 +1,49 @@
----------------------------
-storaged 2.6.2 (unreleased)
----------------------------
+--------------
+storaged 2.6.2
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.6.1:
 
-(TODO: make shortlog)
+Marius Vollmer (4):
+      Drives: Try harder when looking for a serial number
+      Core: Don't complete partition/format methods twice
+      Revert "Reread partition table before wiping when creating new partitions"
+      Core: Lock the table while creating a new partition
+
+Mathieu Trudel-Lapierre (1):
+      Reread partition table before wiping when creating new partitions
+
+Peter Hatina (15):
+      Post-release bump to 2.6.1
+      Fix permissions set for storaged_lsm.conf so it is readable only by root
+      ZRAM: Fix typo in udev rules file
+      LVM2: Include metadata size in Size property
+      Block: fix segfault when no configuration is given for a LUKS device
+      Core: use libblockdev-part instead of parted
+      Doc: remove already implemented features
+      Version 2.6.1-udisks2
+      Post-release bump to 2.6.2
+      Build: fix version substitution in udisks/udisksversion.h (fixes #57)
+      Build: get the package version from configure script
+      Core: add missing ifdef for libblockdev-part label
+      Core: fix C99 error in DriveObject
+      Revert "Build: get the package version from configure script"
+      Fix some memory leaks
+
+Stef Walter (1):
+      Log failures when formatting or creating partitions
+
+Tomas Smetana (1):
+      Doc: Update the link in HTML documents release info
+
 
 Thanks to all our contributors.
 
-Peter Hatina
-(TODO: date)
+Tomas Smetana
+2016-06-16
 
 --------------
 storaged 2.6.1
