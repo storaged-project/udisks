@@ -181,6 +181,13 @@
       <arg name="iface" direction="in" type="s"/>
       <arg name="options" type="a{sv}" direction="in"/>
     </method>
+
+    <!--
+        SessionsSupported: Whether or not this version of Storaged
+        supports ISCSI.Session objects.
+    -->
+    <property name="SessionsSupported" type="b" access="read"/>
+
   </interface>
 
   <!--
