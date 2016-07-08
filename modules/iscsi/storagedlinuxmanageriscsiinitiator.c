@@ -184,6 +184,10 @@ storaged_linux_manager_iscsi_initiator_init (StoragedLinuxManagerISCSIInitiator 
 
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+#ifdef HAVE_LIBISCSI_GET_SESSION_INFOS
+  storaged_manager_iscsi_initiator_set_sessions_supported (STORAGED_MANAGER_ISCSI_INITIATOR (manager),
+                                                           TRUE);
+#endif
 }
 
 /**
