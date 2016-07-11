@@ -178,7 +178,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
 
     def test_40_cache(self):
-        '''Test LVM snapshoting'''
+        '''Basic LVM cache test'''
 
         vgname = 'storaged_test_cache_vg'
 
