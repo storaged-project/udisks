@@ -19,7 +19,7 @@ class StoragedTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         if daemon_bin == 'udisksd':
-            self.iface_prefix = 'org..freedestkop.Udisks2'
+            self.iface_prefix = 'org.freedesktop.UDisks2'
             self.path_prefix = '/org/freedesktop/UDisks2'
         elif daemon_bin == 'storaged':
             self.iface_prefix = 'org.storaged.Storaged'
