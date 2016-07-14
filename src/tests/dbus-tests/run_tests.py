@@ -9,6 +9,7 @@ import unittest
 import storagedtestcase
 import glob
 import shutil
+import tempfile
 
 
 VDEV_SIZE = 300000000  # size of virtual test device
@@ -54,28 +55,24 @@ def setup_vdevs():
     storagedtestcase.test_devs = vdevs
 
 
-def install_new_policy(projdir):
+def install_new_policy(projdir, tmpdir):
     '''Copies the polkit policies to the system directory and backs up eventually the existing files.
-       Returns a list of tuples containing (file_name, should_be_restored).'''
+       Returns a list of files that need to be restored.'''
     files = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
     restore_list = []
     for f in files:
         tgt = '/usr/share/polkit-1/actions/' + os.path.basename(f)
         if os.path.exists(tgt):
-            shutil.move(tgt, '/tmp/')
-            restore_list.append((tgt, True))
-        else:
-            restore_list.append((tgt, False))
+            shutil.move(tgt, tmpdir.name)
+            restore_list.append(tgt)
         shutil.copy(f, '/usr/share/polkit-1/actions/')
+
     return restore_list
 
 
-def restore_policy(restore_list):
-    for (fname, restore) in restore_list:
-        if restore:
-            shutil.move('/tmp/' + os.path.basename(fname), fname)
-        else:
-            os.remove(fname)
+def restore_policy(restore_list, tmpdir):
+    for f in restore_list:
+        shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
 
 
 if __name__ == '__main__':
@@ -102,7 +99,9 @@ if __name__ == '__main__':
     testdir = os.path.abspath(os.path.dirname(__file__))
     projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..', '..')))
 
-    policy_files = install_new_policy(projdir)
+    tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
+    policy_files = install_new_policy(projdir, tmpdir)
+
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir)
     storagedtestcase.daemon_bin = daemon_bin
@@ -131,7 +130,8 @@ if __name__ == '__main__':
     daemon.wait()
     daemon_log.close()
 
-    restore_policy(policy_files)
+    restore_policy(policy_files, tmpdir)
+    tmpdir.cleanup()
 
     subprocess.call(['modprobe', '-r', 'scsi_debug'])
 
