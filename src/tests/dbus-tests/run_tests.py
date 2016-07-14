@@ -8,6 +8,8 @@ import argparse
 import unittest
 import storagedtestcase
 import glob
+import shutil
+import tempfile
 
 
 VDEV_SIZE = 300000000  # size of virtual test device
@@ -53,6 +55,26 @@ def setup_vdevs():
     storagedtestcase.test_devs = vdevs
 
 
+def install_new_policy(projdir, tmpdir):
+    '''Copies the polkit policies to the system directory and backs up eventually the existing files.
+       Returns a list of files that need to be restored.'''
+    files = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
+    restore_list = []
+    for f in files:
+        tgt = '/usr/share/polkit-1/actions/' + os.path.basename(f)
+        if os.path.exists(tgt):
+            shutil.move(tgt, tmpdir.name)
+            restore_list.append(tgt)
+        shutil.copy(f, '/usr/share/polkit-1/actions/')
+
+    return restore_list
+
+
+def restore_policy(restore_list, tmpdir):
+    for f in restore_list:
+        shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
+
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
@@ -74,9 +96,13 @@ if __name__ == '__main__':
     if args.logfile:
         daemon_log = open(args.logfile, mode='w')
 
-    # find which binary we're about to test: this also affects the D-Bus interface and object paths
     testdir = os.path.abspath(os.path.dirname(__file__))
     projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..', '..')))
+
+    tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
+    policy_files = install_new_policy(projdir, tmpdir)
+
+    # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir)
     storagedtestcase.daemon_bin = daemon_bin
     daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
@@ -103,6 +129,9 @@ if __name__ == '__main__':
     daemon.terminate()
     daemon.wait()
     daemon_log.close()
+
+    restore_policy(policy_files, tmpdir)
+    tmpdir.cleanup()
 
     subprocess.call(['modprobe', '-r', 'scsi_debug'])
 
