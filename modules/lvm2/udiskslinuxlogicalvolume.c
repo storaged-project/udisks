@@ -1129,9 +1129,10 @@ return TRUE;
 
 
 static gboolean
-handle_cache_split (UDisksLogicalVolume  *volume_,
-                    GDBusMethodInvocation  *invocation,
-                    GVariant               *options)
+handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
+                              GDBusMethodInvocation  *invocation,
+                              GVariant               *options,
+                              gboolean               destroy)
 {
 #ifndef HAVE_LVMCACHE
 
@@ -1189,7 +1190,8 @@ handle_cache_split (UDisksLogicalVolume  *volume_,
 
   cmd = g_string_new ("");
   g_string_append_printf (cmd,
-                          "lvconvert --splitcache %s/%s -y",
+                          "lvconvert %s %s/%s -y",
+                          destroy ? "--splitcache" : "--uncache",
                           escaped_group_name,
                           escaped_origin_name);
 
@@ -1226,6 +1228,22 @@ out:
 #endif /* HAVE_LVMCACHE */
 }
 
+static gboolean
+handle_cache_split (UDisksLogicalVolume    *volume_,
+                    GDBusMethodInvocation  *invocation,
+                    GVariant               *options)
+{
+  return handle_cache_detach_or_split(volume_, invocation, options, TRUE);
+}
+
+static gboolean
+handle_cache_detach (UDisksLogicalVolume    *volume_,
+                     GDBusMethodInvocation  *invocation,
+                     GVariant               *options)
+{
+  return handle_cache_detach_or_split(volume_, invocation, options, FALSE);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1240,4 +1258,5 @@ logical_volume_iface_init (UDisksLogicalVolumeIface *iface)
 
   iface->handle_cache_attach = handle_cache_attach;
   iface->handle_cache_split = handle_cache_split;
+  iface->handle_cache_detach = handle_cache_detach;
 }
