@@ -752,6 +752,9 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
         }
     }
 
+  if (g_strcmp0 (action, "reconfigure") == 0)
+    conf_changed = TRUE;
+
   if (conf_changed)
     apply_configuration (object);
 }

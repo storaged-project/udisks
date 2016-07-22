@@ -318,8 +318,9 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
 }
 
 static void
-update_drive_with_id (UDisksLinuxProvider *provider,
-                      const gchar         *id)
+synthesize_uevent_for_id (UDisksLinuxProvider *provider,
+                          const gchar         *id,
+                          const gchar         *action)
 {
   GHashTableIter iter;
   UDisksLinuxDriveObject *drive_object;
@@ -333,12 +334,22 @@ update_drive_with_id (UDisksLinuxProvider *provider,
         {
           if (g_strcmp0 (udisks_drive_get_id (drive), id) == 0)
             {
-              //udisks_debug ("synthesizing change event on drive with id %s", id);
-              udisks_linux_drive_object_uevent (drive_object, "change", NULL);
+              udisks_debug ("synthesizing %s event on drive with id %s", action, id);
+              udisks_linux_drive_object_uevent (drive_object, action, device);
             }
           g_object_unref (drive);
         }
     }
+}
+
+static gchar *
+dup_id_from_config_name (const gchar *conf_filename)
+{
+  gchar *id;
+
+  udisks_debug ("Found config file %s", conf_filename);
+  id = g_strndup (conf_filename, strlen (conf_filename) - strlen(".conf"));
+  return id;
 }
 
 static void
@@ -355,13 +366,10 @@ on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
       event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT)
     {
       gchar *filename = g_file_get_basename (file);
+      gchar *id = dup_id_from_config_name (filename);
       if (g_str_has_suffix (filename, ".conf"))
-        {
-          gchar *id;
-          id = g_strndup (filename, strlen (filename) - strlen(".conf"));
-          update_drive_with_id (provider, id);
-          g_free (id);
-        }
+        synthesize_uevent_for_id (provider, id, "change");
+      g_free (id);
       g_free (filename);
     }
 }
@@ -511,6 +519,67 @@ ensure_modules (UDisksLinuxProvider *provider)
     }
 }
 
+/**
+ * The logind's PrepareForSleep D-Bus signal handler. There is one boolean
+ * value in the 'parameters' GVariant tuple. When TRUE, the system is about to
+ * suspend/hibernate, when FALSE the system has just woken up. Since the ATA
+ * drives reset their configuration during suspend it needs to be re-read and
+ * applied again.
+ */
+static void
+on_system_sleep_signal (GDBusConnection *connection,
+                         const gchar *sender_name,
+                         const gchar *object_path,
+                         const gchar *interface_name,
+                         const gchar *signal_name,
+                         GVariant *parameters,
+                         gpointer user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  GDir *etc_dir;
+  GError *error;
+  const gchar *filename;
+  GVariant *tmp_bool;
+  gboolean suspending;
+
+  if (g_variant_n_children(parameters) != 1)
+    {
+      udisks_warning("Error: incorrect number of parameters to resume signal handler");
+      return;
+    }
+  tmp_bool = g_variant_get_child_value (parameters, 0);
+  if (!g_variant_is_of_type (tmp_bool, G_VARIANT_TYPE_BOOLEAN))
+    {
+      udisks_warning("Error: incorrect parameter type of resume signal handler");
+      g_variant_unref (tmp_bool);
+      return;
+    }
+  suspending = g_variant_get_boolean (tmp_bool);
+  g_variant_unref (tmp_bool);
+  if (suspending)
+    return;
+
+  etc_dir = g_dir_open (PACKAGE_SYSCONF_DIR "/udisks2", 0, &error);
+  if (!etc_dir)
+    {
+      udisks_warning ("Error reading directory %s: %s (%s, %d)",
+                      PACKAGE_SYSCONF_DIR "/udisks2",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      return;
+    }
+
+  while ((filename = g_dir_read_name (etc_dir)))
+    if (g_str_has_suffix (filename, ".conf"))
+      {
+        gchar *id = dup_id_from_config_name (filename);
+        synthesize_uevent_for_id (provider, id, "reconfigure");
+        g_free (id);
+      }
+
+  g_dir_close (etc_dir);
+}
+
 static void
 udisks_linux_provider_start (UDisksProvider *_provider)
 {
@@ -520,6 +589,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   UDisksModuleManager *module_manager;
   GList *udisks_devices;
   guint n;
+  GDBusConnection *dbus_conn;
 
   provider->coldplug = TRUE;
 
@@ -608,6 +678,19 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                     "entry-removed",
                     G_CALLBACK (crypttab_monitor_on_entry_removed),
                     provider);
+
+  /* The drive configurations need to be re-applied when system wakes up from suspend/hibernate */
+  dbus_conn = udisks_daemon_get_connection (daemon);
+  g_dbus_connection_signal_subscribe (dbus_conn,
+                                      "org.freedesktop.login1",         /* sender */
+                                      "org.freedesktop.login1.Manager", /* interface */
+                                      "PrepareForSleep",                /* signal */
+                                      "/org/freedesktop/login1",        /* object path */
+                                      NULL,                             /* arg0 */
+                                      G_DBUS_SIGNAL_FLAGS_NONE,         /* flags */
+                                      on_system_sleep_signal,           /* callback function */
+                                      provider,                         /* callback user data */
+                                      NULL);                            /* user data freeing func */
 }
 
 static void
