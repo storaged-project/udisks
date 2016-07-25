@@ -335,7 +335,7 @@ synthesize_uevent_for_id (UDisksLinuxProvider *provider,
           if (g_strcmp0 (udisks_drive_get_id (drive), id) == 0)
             {
               udisks_debug ("synthesizing %s event on drive with id %s", action, id);
-              udisks_linux_drive_object_uevent (drive_object, action, device);
+              udisks_linux_drive_object_uevent (drive_object, action, NULL);
             }
           g_object_unref (drive);
         }
