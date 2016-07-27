@@ -30,3 +30,14 @@ shortlog:
 
 clean-local:
 	rm -f *~
+
+RPMDIR = `readlink -f $(top_builddir)/packaging`
+SRCDIR = `readlink -f $(top_srcdir)`
+rpm: dist-bzip2
+	rpmbuild \
+		--define "_sourcedir $(SRCDIR)" \
+		--define "_specdir $(RPMDIR)" \
+		--define "_builddir $(RPMDIR)" \
+		--define "_srcrpmdir $(RPMDIR)" \
+		--define "_rpmdir $(RPMDIR)" \
+		-ba $(SRCDIR)/packaging/storaged.spec
