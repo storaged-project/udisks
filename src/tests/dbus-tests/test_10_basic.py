@@ -12,6 +12,7 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
         self.assertIsNotNone(manager)
         version = self.get_property(manager, '.Manager', 'Version')
         self.assertIsNotNone(version)
+        manager.EnableModules(True, dbus_interface=self.iface_prefix + '.Manager')
 
 
     def test_20_device_presence(self):

@@ -15,14 +15,21 @@ import tempfile
 VDEV_SIZE = 300000000  # size of virtual test device
 
 
-def find_daemon(projdir):
-    if os.path.exists(os.path.join(projdir, 'src', 'storaged')):
-        daemon_bin = 'storaged'
-    elif os.path.exists(os.path.join(projdir, 'src', 'udisksd')):
-        daemon_bin = 'udisksd'
+def find_daemon(projdir, system):
+    if not system:
+        if os.path.exists(os.path.join(projdir, 'src', 'storaged')):
+            daemon_bin = 'storaged'
+        elif os.path.exists(os.path.join(projdir, 'src', 'udisksd')):
+            daemon_bin = 'udisksd'
+        else:
+            print("Cannot find the daemon binary", file=sys.stderr)
+            sys.exit(1)
     else:
-        print("Cannot find the daemon binary", file=sys.stderr)
-        sys.exit(1)
+        if os.path.exists('/usr/libexec/storaged/storaged'):
+            daemon_bin = 'storaged'
+        elif os.path.exists('/usr/libexec/udisks2/udisksd'):
+            daemon_bin = 'udisksd'
+
     return daemon_bin
 
 
@@ -84,6 +91,9 @@ if __name__ == '__main__':
                            help='write daemon log to a file')
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
+    argparser.add_argument('-s', '--system', dest='system',
+                           help='run the test against the system installed instance',
+                           action='store_true')
     args = argparser.parse_args()
 
     # ensure that the scsi_debug module is loaded
@@ -99,23 +109,27 @@ if __name__ == '__main__':
     testdir = os.path.abspath(os.path.dirname(__file__))
     projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..', '..')))
 
-    tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
-    policy_files = install_new_policy(projdir, tmpdir)
-
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
-    daemon_bin = find_daemon(projdir)
+    daemon_bin = find_daemon(projdir, args.system)
     storagedtestcase.daemon_bin = daemon_bin
-    daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
 
-    # start the devel tree daemon
-    daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled',
-        '--force-load-modules'], shell=False, stdout=daemon_log, stderr=daemon_log)
-    # give the daemon some time to initialize
-    time.sleep(3)
-    daemon.poll()
-    if daemon.returncode != None:
-        print("Fatal: Unable to start the daemon process", file=sys.stderr)
-        sys.exit(1)
+    if not args.system:
+        tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
+        policy_files = install_new_policy(projdir, tmpdir)
+
+        daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
+
+        # start the devel tree daemon
+        daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled',
+            '--force-load-modules'], shell=False, stdout=daemon_log, stderr=daemon_log)
+        # give the daemon some time to initialize
+        time.sleep(3)
+        daemon.poll()
+        if daemon.returncode != None:
+            print("Fatal: Unable to start the daemon process", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("Not spawning own process: testing the system installed instance.")
 
     # Load all files in this directory whose name starts with 'test'
     if args.testname:
@@ -126,12 +140,13 @@ if __name__ == '__main__':
             suite.addTest(test_cases)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
 
-    daemon.terminate()
-    daemon.wait()
-    daemon_log.close()
+    if not args.system:
+        daemon.terminate()
+        daemon.wait()
+        daemon_log.close()
 
-    restore_policy(policy_files, tmpdir)
-    tmpdir.cleanup()
+        restore_policy(policy_files, tmpdir)
+        tmpdir.cleanup()
 
     subprocess.call(['modprobe', '-r', 'scsi_debug'])
 
