@@ -3083,7 +3083,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       /* TODO: return an error if label is too long */
       if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
         {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
+          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
                                  "File system type %s does not support labels", type));
           goto out;
         }
