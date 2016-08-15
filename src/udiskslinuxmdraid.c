@@ -256,6 +256,19 @@ member_cmpfunc (GVariant **a,
   return slot_a - slot_b;
 }
 
+static const char *
+sync_action_to_job_id (const char *sync_action)
+{
+  if (g_strcmp0 (sync_action, "check") == 0)
+    return "mdraid-check-job";
+  else if (g_strcmp0 (sync_action, "repair") == 0)
+    return "mdraid-repair-job";
+  else if (g_strcmp0 (sync_action, "recover") == 0)
+    return "mdraid-recover-job";
+  else
+    return "mdraid-sync-job";
+}
+
 /**
  * udisks_linux_mdraid_update:
  * @mdraid: A #UDisksLinuxMDRaid.
@@ -430,7 +443,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               /* Launch a job */
               job = udisks_daemon_launch_simple_job (daemon,
                                                      UDISKS_OBJECT (object),
-                                                     "mdraid-sync-job",
+                                                     sync_action_to_job_id (sync_action),
                                                      0,
                                                      NULL /* cancellable */);
 
