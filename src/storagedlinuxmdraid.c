@@ -440,18 +440,16 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
               storaged_linux_mdraid_object_set_sync_job (object, job);
             }
           else
-            {
-              /* Update the job's interface */
-              job = storaged_linux_mdraid_object_get_sync_job (object);
+            job = storaged_linux_mdraid_object_get_sync_job (object);
 
-              storaged_job_set_progress (STORAGED_JOB (job), sync_completed_val);
-              storaged_job_set_progress_valid (STORAGED_JOB (job), TRUE);
-              storaged_job_set_rate (STORAGED_JOB (job), sync_rate);
+          /* Update the job's interface */
+          storaged_job_set_progress (STORAGED_JOB (job), sync_completed_val);
+          storaged_job_set_progress_valid (STORAGED_JOB (job), TRUE);
+          storaged_job_set_rate (STORAGED_JOB (job), sync_rate);
 
-              sync_start_time = storaged_job_get_start_time (STORAGED_JOB (job));
-              storaged_job_set_expected_end_time (STORAGED_JOB (job),
-                                                  sync_start_time + sync_remaining_time);
-            }
+          sync_start_time = storaged_job_get_start_time (STORAGED_JOB (job));
+          storaged_job_set_expected_end_time (STORAGED_JOB (job),
+                                              sync_start_time + sync_remaining_time);
         }
       else
         {
