@@ -286,7 +286,6 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
   guint64 chunk_size = 0;
   gdouble sync_completed_val = 0.0;
   guint64 sync_rate = 0;
-  guint64 sync_start_time = 0;
   guint64 sync_remaining_time = 0;
   GVariantBuilder builder;
   StoragedDaemon *daemon = NULL;
@@ -447,9 +446,8 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
           storaged_job_set_progress_valid (STORAGED_JOB (job), TRUE);
           storaged_job_set_rate (STORAGED_JOB (job), sync_rate);
 
-          sync_start_time = storaged_job_get_start_time (STORAGED_JOB (job));
           storaged_job_set_expected_end_time (STORAGED_JOB (job),
-                                              sync_start_time + sync_remaining_time);
+                                              g_get_real_time () + sync_remaining_time);
         }
       else
         {
