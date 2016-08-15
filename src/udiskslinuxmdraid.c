@@ -440,18 +440,16 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               udisks_linux_mdraid_object_set_sync_job (object, job);
             }
           else
-            {
-              /* Update the job's interface */
-              job = udisks_linux_mdraid_object_get_sync_job (object);
+            job = udisks_linux_mdraid_object_get_sync_job (object);
 
-              udisks_job_set_progress (UDISKS_JOB (job), sync_completed_val);
-              udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
-              udisks_job_set_rate (UDISKS_JOB (job), sync_rate);
+          /* Update the job's interface */
+          udisks_job_set_progress (UDISKS_JOB (job), sync_completed_val);
+          udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+          udisks_job_set_rate (UDISKS_JOB (job), sync_rate);
 
-              sync_start_time = udisks_job_get_start_time (UDISKS_JOB (job));
-              udisks_job_set_expected_end_time (UDISKS_JOB (job),
-                                                sync_start_time + sync_remaining_time);
-            }
+          sync_start_time = udisks_job_get_start_time (UDISKS_JOB (job));
+          udisks_job_set_expected_end_time (UDISKS_JOB (job),
+                                            sync_start_time + sync_remaining_time);
         }
       else
         {
