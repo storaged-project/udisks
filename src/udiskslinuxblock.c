@@ -2753,6 +2753,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   UDisksInhibitCookie *inhibit_cookie = NULL;
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
+  gboolean dry_run_first = FALSE;
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
@@ -2779,6 +2780,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "erase", "s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
+  g_variant_lookup (options, "dry-run-first", "b", &dry_run_first);
   g_variant_lookup (options, "config-items", "@a(sa{sv})", &config_items);
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
@@ -2946,6 +2948,39 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       g_prefix_error (&error, "Error synchronizing after initial wipe: ");
       g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
+    }
+
+  /* If requested, check whether the ultimate filesystem creation
+     will succeed before actually getting to work.
+  */
+  if (dry_run_first && fs_info->command_validate_create_fs)
+    {
+      tmp = subst_str_and_escape (fs_info->command_validate_create_fs, "$DEVICE",
+                                  udisks_block_get_device (block));
+      command = subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
+      g_free (tmp);
+
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                    object,
+                                                    "format-mkfs", caller_uid,
+                                                    NULL, /* cancellable */
+                                                    0,    /* uid_t run_as_uid */
+                                                    0,    /* uid_t run_as_euid */
+                                                    &status,
+                                                    &error_message,
+                                                    NULL, /* input_string */
+                                                    "%s", command))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error creating file system: %s",
+                                                 error_message);
+          g_free (error_message);
+          goto out;
+        }
+
+      g_free (command);
     }
 
   /* complete early, if requested */

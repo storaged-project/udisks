@@ -1279,6 +1279,12 @@
         done. This is useful for applications that want to format
         several devices in parallel.
 
+        If the option <parameter>dry-run-first</parameter> is set to
+        %TRUE then a dry run of the formatting command is performed
+        first, if Storaged knows how to do that.  The idea is that
+        this allows a deeper check of the parameters even when
+        <parameter>no-block</parameter> is %TRUE.
+
         If the option <parameter>config-items</parameter> is set, it
         should be an array of configuration items suitable for
         org.freedesktop.UDisks2.Block.AddConfigurationItem.  They will
