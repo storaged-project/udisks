@@ -82,6 +82,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.udev_settle()
         lv.Resize(dbus.UInt64(new_vgsize), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
+        time.sleep(1)
         new_lvsize = int(self.get_property(lv, '.LogicalVolume', 'Size'))
         self.assertEqual(new_vgsize, new_lvsize)
 
