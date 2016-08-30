@@ -41,3 +41,11 @@ rpm: dist-bzip2
 		--define "_srcrpmdir $(RPMDIR)" \
 		--define "_rpmdir $(RPMDIR)" \
 		-ba $(SRCDIR)/packaging/storaged.spec
+srpm: dist-bzip2
+	rpmbuild \
+		--define "_sourcedir $(SRCDIR)" \
+		--define "_specdir $(RPMDIR)" \
+		--define "_builddir $(RPMDIR)" \
+		--define "_srcrpmdir $(RPMDIR)" \
+		--define "_rpmdir $(RPMDIR)" \
+		-bs $(SRCDIR)/packaging/storaged.spec
