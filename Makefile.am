@@ -12,6 +12,7 @@ export GCC_COLORS
 EXTRA_DIST =                                                                   \
 	HACKING                                                                \
 	README.md                                                              \
+	version.sh                                                             \
 	$(NULL)
 
 DISTCHECK_CONFIGURE_FLAGS =                                                    \
