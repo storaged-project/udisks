@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # aurisc4 <aurisc4@gmail.com>, 2013
 # aurisc4 <aurisc4@gmail.com>, 2013
@@ -10,17 +10,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-27 12:57+0100\n"
-"PO-Revision-Date: 2014-03-12 03:53-0400\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
-"Language-Team: Lithuanian\n"
-"Language: lt\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
-"%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Zanata 3.7.1\n"
+"PO-Revision-Date: 2015-09-10 08:42-0400\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"Language-Team: Lithuanian\n"
+"Language: lt\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"(n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Zanata 3.9.5\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -39,7 +39,6 @@ msgid "Mount a filesystem from a device plugged into another seat"
 msgstr "Prijungti failų sistemą iš įrenginio, prijungto kitoje darbo vietoje"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:5
-#, fuzzy
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
@@ -59,7 +58,8 @@ msgstr "Atjungti kito naudotojo prijungtą įrenginį"
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
-"Kito naudotojo prijungtai failų sistemai atjungti reikia patvirtinti tapatybę"
+"Kito naudotojo prijungtai failų sistemai atjungti reikia patvirtinti "
+"tapatybę"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
@@ -78,12 +78,11 @@ msgid "Unlock an encrypted device plugged into another seat"
 msgstr "Atrakinti šifruotą įrenginį, prijungtą kitoje darbo vietoje"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:13
-#, fuzzy
 msgid ""
-"Unlock an encrypted device specified in the crypttab file with the x-udisks-"
-"auth option"
+"Unlock an encrypted device specified in the crypttab file with the x-"
+"udisks-auth option"
 msgstr ""
-"Atrakinti crypttab aprašytą šifruotą įrenginį su parametru x-storaged-auth"
+"Atrakinti crypttab aprašytą šifruotą įrenginį su parametru x-udisks-auth"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
@@ -112,7 +111,7 @@ msgstr "Valdyti ciklinius įrenginius"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#.
+#. 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
@@ -216,7 +215,8 @@ msgid "Modify a system device"
 msgstr "Keisti sisteminį įrenginį"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
-msgid "Authentication is required to modify a device plugged into another seat"
+msgid ""
+"Authentication is required to modify a device plugged into another seat"
 msgstr ""
 "Prie kitos darbo vietos prijungtam įrenginiui pakeisti reikia patvirtinti "
 "tapatybę"
@@ -251,7 +251,8 @@ msgstr "Sistemos konfigūracijai keisti reikia reikia patvirtinti tapatybę"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide configuration"
+"Authentication is required to retrieve secrets from system-wide "
+"configuration"
 msgstr ""
 "Paslaptims iš sistemos konfigūracijos gauti reikia patvirtinti tapatybę"
 
@@ -333,7 +334,7 @@ msgid "Cancel job"
 msgstr "Atsisakyti darbo"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#.
+#. 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Darbo atsisakymui reikia patvirtinti tapatybę"
@@ -345,26 +346,6 @@ msgstr "Atsisakyti kito naudotojo pradėto darbo"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:71
 msgid "Authentication is required to cancel a job started by another user"
 msgstr "Kito naudotojo pradėto darbo atsisakyti reikia patvirtinti tapatybę"
-
-#: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
-msgid "Manage Bcache"
-msgstr ""
-
-#: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
-msgid "Authentication is required to manage Bcache"
-msgstr ""
-
-#: ../modules/bcache/udiskslinuxblockbcache.c:246
-msgid "Authentication is required to destroy bcache device."
-msgstr ""
-
-#: ../modules/bcache/udiskslinuxblockbcache.c:289
-msgid "Authentication is required to set mode of bcache device."
-msgstr ""
-
-#: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-msgid "Authentication is required to create bcache device."
-msgstr ""
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -415,64 +396,82 @@ msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:687
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:815
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
 
-#: ../modules/iscsi/udiskslinuxiscsisession.c:167
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:712
+#: ../modules/iscsi/udiskslinuxiscsisession.c:164
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:837
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:302
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:408
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:382
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:322
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:296
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:380
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:354
 #, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:388
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:362
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:425
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:399
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:516
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:603
 #, fuzzy
 msgid "Authentication is required to discover targets"
 msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:540
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:589
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:717
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:574
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:702
 #, fuzzy
 msgid "Authentication is required to discover firmware targets"
 msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:626
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:754
 #, fuzzy
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:651
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:776
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -589,12 +588,12 @@ msgstr "Darbo atsisakymui reikia patvirtinti tapatybę"
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
 
-#: ../modules/zram/udiskslinuxblockzram.c:255
+#: ../modules/zram/udiskslinuxblockzram.c:253
 #, fuzzy
 msgid "Authentication is required to enable zRAM device"
 msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
 
-#: ../modules/zram/udiskslinuxblockzram.c:346
+#: ../modules/zram/udiskslinuxblockzram.c:344
 #, fuzzy
 msgid "Authentication is required to disable zRAM device"
 msgstr "Įrenginiui keisti reikia patvirtinti tapatybę"
@@ -602,7 +601,7 @@ msgstr "Įrenginiui keisti reikia patvirtinti tapatybę"
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#.
+#. 
 #: ../src/udiskslinuxblock.c:1195
 msgid "Authentication is required to read system-level secrets"
 msgstr "Sistemos lygmens paslaptims perskaityti reikia patvirtinti tapatybę"
@@ -644,13 +643,13 @@ msgstr "/etc/crypttab failui pakeisti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:2819 ../src/udiskslinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Saugiam $(drive) ištrynimui atlikti reikia patvirtinti tapatybę"
@@ -661,12 +660,12 @@ msgstr "Saugiam $(drive) ištrynimui atlikti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:2831
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
 
-#: ../src/udiskslinuxblock.c:2873 ../src/udiskslinuxmdraid.c:1611
+#: ../src/udiskslinuxblock.c:2873 ../src/udiskslinuxmdraid.c:1609
 #: ../src/udiskslinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
@@ -680,7 +679,7 @@ msgstr "Formatuojamas įrenginys"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3364
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "$(drive) atvėrimui skaitymui reikia patvirtinti tapatybę"
@@ -690,7 +689,7 @@ msgstr "$(drive) atvėrimui skaitymui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3428
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "$(drive) atvėrimui rašymui reikia patvirtinti tapatybę"
@@ -700,7 +699,7 @@ msgstr "$(drive) atvėrimui rašymui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3494
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "$(drive) atvėrimui matavimams reikia patvirtinti tapatybę"
@@ -710,7 +709,7 @@ msgstr "$(drive) atvėrimui matavimams reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3555
 msgid "Authentication is required to rescan $(drive)"
 msgstr "$(drive) perskaitymui reikia patvirtinti tapatybę"
@@ -720,7 +719,7 @@ msgstr "$(drive) perskaitymui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "$(drive) išstūmimui reikia patvirtinti tapatybę"
@@ -730,7 +729,7 @@ msgstr "$(drive) išstūmimui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "$(drive) nustatymams konfigūruoti reikia patvirtinti tapatybę"
@@ -740,7 +739,7 @@ msgstr "$(drive) nustatymams konfigūruoti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "$(drive) išjungimui reikia patvirtinti tapatybę"
@@ -750,7 +749,7 @@ msgstr "$(drive) išjungimui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:808
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "$(drive) SMART duomenims atnaujinti reikia patvirtinti tapatybę"
@@ -760,7 +759,7 @@ msgstr "$(drive) SMART duomenims atnaujinti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:819
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
@@ -772,7 +771,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:953
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr "$(drive) SMART pasitikrinimui nutraukti reikia patvirtinti tapatybę"
@@ -782,7 +781,7 @@ msgstr "$(drive) SMART pasitikrinimui nutraukti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:1203
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr "$(drive) SMART pasitikrinimui pradėti reikia patvirtinti tapatybę"
@@ -792,7 +791,7 @@ msgstr "$(drive) SMART pasitikrinimui pradėti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:1290
 msgid "Authentication is required to check power state for $(drive)"
 msgstr "$(drive) energijos būklei patikrinti reikia patvirtinti tapatybę"
@@ -802,7 +801,7 @@ msgstr "$(drive) energijos būklei patikrinti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "$(drive) užmigdymui reikia patvirtinti tapatybę"
@@ -812,7 +811,7 @@ msgstr "$(drive) užmigdymui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr "$(drive) pažadinimui reikia patvirtinti tapatybę"
@@ -822,7 +821,7 @@ msgstr "$(drive) pažadinimui reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "SMART įjungimui diske $(drive) reikia patvirtinti tapatybę"
@@ -832,7 +831,7 @@ msgstr "SMART įjungimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "SMART išjungimui diske $(drive) reikia patvirtinti tapatybę"
@@ -842,7 +841,7 @@ msgstr "SMART išjungimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxencrypted.c:357 ../src/udiskslinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "Šifruotam įrenginiui $(drive) atrakinti reikia patvirtinti tapatybę"
@@ -853,7 +852,7 @@ msgstr "Šifruotam įrenginiui $(drive) atrakinti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
@@ -867,7 +866,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1251 ../src/udiskslinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive) prijungti reikia patvirtinti tapatybę"
@@ -881,7 +880,7 @@ msgstr "$(drive) prijungti reikia patvirtinti tapatybę"
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
@@ -898,7 +897,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
@@ -912,7 +911,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
@@ -923,7 +922,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
@@ -935,7 +934,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Cikliniam įrenginiui $(drive) ištrinti reikia patvirtinti tapatybę"
@@ -946,14 +945,14 @@ msgstr "Cikliniam įrenginiui $(drive) ištrinti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Cikliniam įrenginiui $(drive) pakeisti reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
@@ -961,7 +960,7 @@ msgstr "RAID masyvo sukūrimui reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
@@ -969,33 +968,33 @@ msgstr "RAID masyvo paleidimui reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:822
+#: ../src/udiskslinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
 msgstr "RAID masyvo sustabdymui reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1050
+#: ../src/udiskslinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "Įrenginio pašalinimui iš RAID masyvo reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1246
+#: ../src/udiskslinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "Įrenginio pridėjimui į RAID masyvą reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#.
+#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1376
+#: ../src/udiskslinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1005,13 +1004,14 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#.
+#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1500
-msgid "Authentication is required to start/stop data scrubbing of a RAID array"
+#: ../src/udiskslinuxmdraid.c:1498
+msgid ""
+"Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
-#: ../src/udiskslinuxmdraid.c:1592
+#: ../src/udiskslinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
 
@@ -1020,7 +1020,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartition.c:269 ../src/udiskslinuxpartition.c:421
 #: ../src/udiskslinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
@@ -1031,7 +1031,7 @@ msgstr "Skirsnio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Skirsnio ištrynimui diske $(drive) reikia patvirtinti tapatybę"
@@ -1041,7 +1041,7 @@ msgstr "Skirsnio ištrynimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
@@ -1051,7 +1051,7 @@ msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr "Mainų srities įjungimui diske $(drive) reikia patvirtinti tapatybę"
@@ -1061,7 +1061,7 @@ msgstr "Mainų srities įjungimui diske $(drive) reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr "Mainų sričiai išjungti diske $(drive) reikia patvirtinti tapatybę"
@@ -1074,7 +1074,7 @@ msgstr "Įkeliamas"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -1082,7 +1082,7 @@ msgstr "Sisteminis"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1090,7 +1090,7 @@ msgstr "Senas BIOS įkeliamas"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1098,7 +1098,7 @@ msgstr "Tik skaitymui"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1106,7 +1106,7 @@ msgstr "Paslėptas"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
@@ -1175,7 +1175,7 @@ msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#.
+#. 
 #: ../udisks/udisksclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1184,7 +1184,7 @@ msgstr "%s (%s baitų)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#.
+#. 
 #: ../udisks/udisksclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1247,7 +1247,7 @@ msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
@@ -1255,7 +1255,7 @@ msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
@@ -1263,7 +1263,7 @@ msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -1271,7 +1271,7 @@ msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1569,7 +1569,7 @@ msgstr "VMFS narys"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#.
+#. 
 #: ../udisks/udisksclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1578,7 +1578,7 @@ msgstr "Nežinoma (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#.
+#. 
 #: ../udisks/udisksclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1586,7 +1586,7 @@ msgid "Unknown (%s)"
 msgstr "Nežinoma (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#.
+#. 
 #: ../udisks/udisksclient.c:2045 ../udisks/udisksclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -2524,7 +2524,7 @@ msgstr "Blokinis įrenginys"
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2534,7 +2534,7 @@ msgstr "Skirsnis %d iš %s"
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2553,7 +2553,7 @@ msgstr "Ciklinis įrenginys"
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2564,7 +2564,7 @@ msgstr "Skirsnis %d iš %s"
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2609,7 +2609,7 @@ msgstr "RAID masyvas"
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2619,7 +2619,7 @@ msgstr "%s %s"
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2630,7 +2630,7 @@ msgstr "Skirsnis %d iš %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
@@ -2640,7 +2640,7 @@ msgstr "%s — %s (%s)"
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
@@ -2651,7 +2651,7 @@ msgstr "%s — %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
@@ -2661,7 +2661,7 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
@@ -2747,7 +2747,7 @@ msgstr "%s kortelių skaitytuvas"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2755,7 +2755,7 @@ msgid "%s %s Drive"
 msgstr "%s %s diskas"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2786,7 +2786,7 @@ msgstr "Garso %s"
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2798,7 +2798,7 @@ msgstr "Skirsnis %d iš %s"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
@@ -2809,7 +2809,7 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
