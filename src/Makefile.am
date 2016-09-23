@@ -47,6 +47,7 @@ EXTRA_DIST += udisks-daemon-marshal.list
 noinst_LTLIBRARIES = libudisks-daemon.la
 
 libudisks_daemon_la_SOURCES =                                                  \
+	storageddbus.h                 storageddbus.c                          \
 	udisksdaemontypes.h                                                    \
 	udisksdaemon.h                 udisksdaemon.c                          \
 	udisksprovider.h               udisksprovider.c                        \
@@ -99,6 +100,7 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(LIBATASMART_CFLAGS)                                                  \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(ACL_CFLAGS)                                                          \
+	$(LIBSYSTEMD_CFLAGS)                                                   \
 	$(LIBSYSTEMD_LOGIN_CFLAGS)                                             \
 	$(PART_CFLAGS)                                                         \
 	$(NULL)
@@ -111,6 +113,7 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(LIBATASMART_LIBS)                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \
+	$(LIBSYSTEMD_LIBS)                                                     \
 	$(LIBSYSTEMD_LOGIN_LIBS)                                               \
 	$(PART_LDFLAGS)                                                        \
 	$(top_builddir)/udisks/libudisks2.la                                   \

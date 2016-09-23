@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include <glib-unix.h>
 
+#include "storageddbus.h"
+
 #include "udiskslogging.h"
 #include "udisksdaemontypes.h"
 #include "udisksdaemon.h"
@@ -48,44 +50,6 @@ static GOptionEntry opt_entries[] =
   {NULL }
 };
 
-static UDisksDaemon *the_daemon = NULL;
-
-static void
-on_bus_acquired (GDBusConnection *connection,
-                 const gchar     *name,
-                 gpointer         user_data)
-{
-  the_daemon = udisks_daemon_new (connection,
-                                  opt_disable_modules,
-                                  opt_force_load_modules,
-                                  opt_uninstalled);
-  udisks_debug ("Connected to the system bus");
-}
-
-static void
-on_name_lost (GDBusConnection *connection,
-              const gchar     *name,
-              gpointer         user_data)
-{
-  if (the_daemon == NULL)
-    {
-      udisks_error ("Failed to connect to the system message bus");
-    }
-  else
-    {
-      udisks_info ("Lost (or failed to acquire) the name %s on the system message bus", name);
-    }
-  g_main_loop_quit (loop);
-}
-
-static void
-on_name_acquired (GDBusConnection *connection,
-                  const gchar     *name,
-                  gpointer         user_data)
-{
-  udisks_notice ("Acquired the name %s on the system message bus", name);
-}
-
 static gboolean
 on_sigint (gpointer user_data)
 {
@@ -100,9 +64,13 @@ main (int    argc,
 {
   GError *error;
   GOptionContext *opt_context;
+  GDBusConnection *connection = NULL;
+  UDisksDaemon *daemon = NULL;
+  sd_bus *system = NULL;
   gint ret;
   guint name_owner_id;
   guint sigint_id;
+  int r;
 
   ret = 1;
   loop = NULL;
@@ -164,16 +132,22 @@ main (int    argc,
                                           NULL); /* GDestroyNotify */
     }
 
-  name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-                                  "org.freedesktop.UDisks2",
-                                  G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-                                    (opt_replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0),
-                                  on_bus_acquired,
-                                  on_name_acquired,
-                                  on_name_lost,
-                                  NULL,
-                                  NULL);
+  if (!storaged_dbus_initialize (&system, &connection))
+    goto out;
 
+  daemon = udisks_daemon_new (connection,
+                              opt_disable_modules,
+                              opt_force_load_modules,
+                              opt_uninstalled);
+
+  r = sd_bus_request_name (system, "org.freedesktop.UDisks2",
+                           SD_BUS_NAME_ALLOW_REPLACEMENT |
+                           (opt_replace ? SD_BUS_NAME_REPLACE_EXISTING : 0));
+  if (r < 0)
+    {
+      g_message ("Unable to claim 'org.freedesktop.UDisks2' DBus name on the system bus: %s", g_strerror (r));
+      goto out;
+    }
 
   udisks_debug ("Entering main event loop");
 
@@ -184,14 +158,16 @@ main (int    argc,
  out:
   if (sigint_id > 0)
     g_source_remove (sigint_id);
-  if (the_daemon != NULL)
-    g_object_unref (the_daemon);
   if (name_owner_id != 0)
     g_bus_unown_name (name_owner_id);
   if (loop != NULL)
     g_main_loop_unref (loop);
   if (opt_context != NULL)
     g_option_context_free (opt_context);
+  g_clear_object (&daemon);
+  g_clear_object (&connection);
+  if (system)
+    sd_bus_unref (system);
 
   udisks_notice ("udisks daemon version %s exiting", PACKAGE_VERSION);
 
