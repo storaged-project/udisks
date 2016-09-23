@@ -306,7 +306,6 @@ update_etctabs (UDisksLinuxVolumeGroupObject *object)
   g_hash_table_iter_init (&iter, object->logical_volumes);
   while (g_hash_table_iter_next (&iter, &key, &value))
     {
-      const gchar *name = key;
       UDisksLinuxLogicalVolumeObject *volume = value;
 
       udisks_linux_logical_volume_object_update_etctabs (volume);
