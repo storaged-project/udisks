@@ -39,7 +39,6 @@ AC_PROG_LIBTOOL
 GNOME_COMPILE_WARNINGS([maximum])
 
 CC_CHECK_CFLAGS_APPEND([                          \
-        -Waggregate-return                        \
         -Wall                                     \
         -W                                        \
         -Wextra                                   \
