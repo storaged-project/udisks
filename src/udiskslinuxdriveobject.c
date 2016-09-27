@@ -511,6 +511,7 @@ update_iface (UDisksObject                     *object,
   gboolean add;
   GDBusInterface **interface_pointer = _interface_pointer;
   GDBusInterfaceInfo *interface_info = NULL;
+  GDBusInterface *tmp_iface = NULL;
 
   g_return_val_if_fail (object != NULL, FALSE);
   g_return_val_if_fail (has_func != NULL, FALSE);
@@ -538,12 +539,16 @@ update_iface (UDisksObject                     *object,
         {
           /* Check before we remove interface from object  */
           interface_info = g_dbus_interface_get_info (*interface_pointer);
+          tmp_iface = g_dbus_object_get_interface ((GDBusObject *) object,
+                                                   interface_info->name);
 
-          if (g_dbus_object_get_interface ((GDBusObject *) object,
-                                           interface_info->name))
-            g_dbus_object_skeleton_remove_interface
-              (G_DBUS_OBJECT_SKELETON (object),
-               G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+          if (tmp_iface)
+            {
+              g_dbus_object_skeleton_remove_interface
+                (G_DBUS_OBJECT_SKELETON (object),
+                 G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+              g_object_unref(tmp_iface);
+            }
 
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
