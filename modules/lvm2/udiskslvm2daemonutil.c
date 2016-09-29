@@ -267,6 +267,7 @@ variant_reader_child_output (GIOChannel *source,
   return TRUE;
 }
 
+/* This function is called when a spawned processed has exited */
 static void
 variant_reader_watch_child (GPid     pid,
                             gint     status,
@@ -308,11 +309,32 @@ variant_reader_watch_child (GPid     pid,
 static void
 variant_reader_destroy (gpointer user_data)
 {
+  char err_buf[64];
+  int rc = 0;
   struct VariantReaderData *data = user_data;
-
+  gint fd = g_io_channel_unix_get_fd(data->output_channel);
   g_source_remove (data->output_watch);
   g_io_channel_unref (data->output_channel);
   g_free (data);
+
+  /* Make sure to close the underlying file descriptor, this apparently is
+   * not done when the channel gets cleaned up.  Documentation doesn't mention
+   * it, but this keeps us from exhausting all the file descriptors we have for
+   * the process.
+   */
+  rc = close(fd);
+  if (rc != 0 )
+    {
+      int ec = errno;
+      if (0 == strerror_r(ec, err_buf, sizeof(err_buf)))
+        {
+          udisks_warning ("Error on close (errno %d): %s", ec, err_buf);
+        }
+      else
+        {
+          udisks_warning ("Error on close (errno %d)", ec);
+        }
+    }
 }
 
 GPid
@@ -359,6 +381,7 @@ udisks_daemon_util_lvm2_spawn_for_variant (const gchar        **argv,
   g_io_channel_set_flags (data->output_channel, G_IO_FLAG_NONBLOCK, NULL);
   data->output_watch = g_io_add_watch (data->output_channel, G_IO_IN, variant_reader_child_output, data);
 
+  /* Call the function 'variant_reader_watch_child' when this process exits */
   g_child_watch_add_full (G_PRIORITY_DEFAULT_IDLE,
                           pid, variant_reader_watch_child, data, variant_reader_destroy);
   return pid;
