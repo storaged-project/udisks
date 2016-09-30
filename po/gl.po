@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Fran Diéguez <frandieguez@ubuntu.com>, 2012-2014
 # Peter Hatina <phatina@redhat.com>, 2015. #zanata
@@ -9,14 +9,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 14:34+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2016-09-30 10:43+0200\n"
 "PO-Revision-Date: 2015-09-10 08:43-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Galician\n"
 "Language: gl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 3.9.5\n"
 
@@ -78,8 +78,8 @@ msgstr "Desbloquear un sistema de ficheiros cifrado conectado noutro posto"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:13
 msgid ""
-"Unlock an encrypted device specified in the crypttab file with the x-"
-"udisks-auth option"
+"Unlock an encrypted device specified in the crypttab file with the x-udisks-"
+"auth option"
 msgstr ""
 "Desbloquear un dispositivo cifrado especificado polo ficheiro crypttab coa "
 "opción «x-udisks-auth»"
@@ -103,8 +103,7 @@ msgstr "Cambiar a frase de paso para un dispositivo cifrado"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr ""
-"Debe autenticarse para cambiar a frase de paso dun dispositivo cifrado"
+msgstr "Debe autenticarse para cambiar a frase de paso dun dispositivo cifrado"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:18
 msgid "Manage loop devices"
@@ -112,9 +111,9 @@ msgstr "Xestionar os dispositivos loop"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#. 
+#.
 #: ../data/org.freedesktop.UDisks2.policy.in.h:19
-#: ../src/udiskslinuxmanager.c:338
+#: ../src/udiskslinuxmanager.c:342
 msgid "Authentication is required to set up a loop device"
 msgstr "Debe autenticarse para configurar un dispositivo loop"
 
@@ -213,10 +212,8 @@ msgid "Modify a system device"
 msgstr "Modificar un dispositivo do sistema"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
-msgid ""
-"Authentication is required to modify a device plugged into another seat"
-msgstr ""
-"Debe autenticarse para modificar un dispositivo conectado noutro posto"
+msgid "Authentication is required to modify a device plugged into another seat"
+msgstr "Debe autenticarse para modificar un dispositivo conectado noutro posto"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:42
 msgid "Rescan a device"
@@ -248,8 +245,7 @@ msgstr "Debe autenticarse para modificar a configuración global do sistema"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide "
-"configuration"
+"Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "Debe autenticarse para obter os sergredos da configuración global do sistema"
 
@@ -330,7 +326,7 @@ msgid "Cancel job"
 msgstr "Cancelar traballo"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#. 
+#.
 #: ../data/org.freedesktop.UDisks2.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Para cancelar un traballo precisa autenticarse"
@@ -343,6 +339,31 @@ msgstr "Cancelar traballo iniciado por outro usuario"
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Para cancelar un traballo iniciado por outro usuario precisa autenticarse"
+
+#: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
+#, fuzzy
+msgid "Manage Bcache"
+msgstr "Xestionar o espazo de intercambio"
+
+#: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage Bcache"
+msgstr "Debe autenticarse para xestionar o espazo de intercambio"
+
+#: ../modules/bcache/udiskslinuxblockbcache.c:246
+#, fuzzy
+msgid "Authentication is required to destroy bcache device."
+msgstr "Debe autenticarse para modificar un dispositivo"
+
+#: ../modules/bcache/udiskslinuxblockbcache.c:289
+#, fuzzy
+msgid "Authentication is required to set mode of bcache device."
+msgstr "Debe autenticarse para modificar un dispositivo"
+
+#: ../modules/bcache/udiskslinuxmanagerbcache.c:217
+#, fuzzy
+msgid "Authentication is required to create bcache device."
+msgstr "Requírese autenticación para reanalizar un dispositivo"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -394,82 +415,64 @@ msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:815
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "Para formatar $(drive) precisa autenticarse"
 
-#: ../modules/iscsi/udiskslinuxiscsisession.c:164
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:837
+#: ../modules/iscsi/udiskslinuxiscsisession.c:167
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:276
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:382
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:296
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:354
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
 #, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "Requírese autenticación para xestionar matrices de RAID"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:362
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:399
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:603
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
 #, fuzzy
 msgid "Authentication is required to discover targets"
 msgstr "Requírese autenticación para apagar o dispositivo"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:562
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:668
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:717
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:615
-msgid "Username too long"
-msgstr ""
-
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:626
-msgid "Password too long"
-msgstr ""
-
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:637
-msgid "Reverse username too long"
-msgstr ""
-
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:648
-msgid "Reverse password too long"
-msgstr ""
-
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:702
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
 #, fuzzy
 msgid "Authentication is required to discover firmware targets"
 msgstr "Requírese autenticación para apagar o dispositivo"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:754
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
 #, fuzzy
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Requírese autenticación para apagar o dispositivo"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:776
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -482,48 +485,48 @@ msgstr ""
 msgid "Authentication is required to manage LVM"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:398
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:533
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:544
 msgid "Authentication is required to rename a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:632
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
 #, fuzzy
 msgid "Authentication is required to resize a logical volume"
 msgstr "Requírese autenticación para reanalizar un dispositivo"
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:762
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:862
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:877
 msgid "Authentication is required to deactivate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:950
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:965
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1021
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1126
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1036
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1142
 msgid "LVMCache not enabled at compile time."
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1064
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
 #, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "Debe autenticarse para abrir un dispositivo"
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1095
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1195
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
 #, c-format
 msgid "Error converting volume: %s"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1167
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
 #, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr "Requírese autenticación para apagar o dispositivo"
@@ -556,12 +559,12 @@ msgstr ""
 msgid "Authentication is required to create a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxvolumegroup.c:1011
+#: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
 #, fuzzy
 msgid "Authentication is required to create a thin pool volume"
 msgstr "Requírese autenticación para crear a partición en $(drive)"
 
-#: ../modules/lvm2/udiskslinuxvolumegroup.c:1113
+#: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
 #, fuzzy
 msgid "Authentication is required to create a thin volume"
 msgstr "Requírese autenticación para crear a partición en $(drive)"
@@ -576,22 +579,22 @@ msgstr "Xestionar matrices de RAID"
 msgid "Authentication is required to manage zRAM"
 msgstr "Requírese autenticación para xestionar matrices de RAID"
 
-#: ../modules/zram/udiskslinuxmanagerzram.c:217
+#: ../modules/zram/udiskslinuxmanagerzram.c:322
 #, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
 msgstr "Para cancelar un traballo precisa autenticarse"
 
-#: ../modules/zram/udiskslinuxmanagerzram.c:247
+#: ../modules/zram/udiskslinuxmanagerzram.c:363
 #, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr "Debe autenticarse para abrir un dispositivo"
 
-#: ../modules/zram/udiskslinuxblockzram.c:253
+#: ../modules/zram/udiskslinuxblockzram.c:256
 #, fuzzy
 msgid "Authentication is required to enable zRAM device"
 msgstr "Debe autenticarse para abrir un dispositivo"
 
-#: ../modules/zram/udiskslinuxblockzram.c:344
+#: ../modules/zram/udiskslinuxblockzram.c:356
 #, fuzzy
 msgid "Authentication is required to disable zRAM device"
 msgstr "Debe autenticarse para modificar un dispositivo"
@@ -599,40 +602,39 @@ msgstr "Debe autenticarse para modificar un dispositivo"
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#. 
-#: ../src/udiskslinuxblock.c:1195
+#.
+#: ../src/udiskslinuxblock.c:1199
 msgid "Authentication is required to read system-level secrets"
 msgstr "Debe autenticarse para ler os segredos a nivel do sistema"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1865
+#: ../src/udiskslinuxblock.c:1869
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Debe autenticarse para engadir unha entrada no ficheiro /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: ../src/udiskslinuxblock.c:1883
+#: ../src/udiskslinuxblock.c:1887
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "Debe autenticarse para engadir un entrada no ficheiro /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1942
+#: ../src/udiskslinuxblock.c:1946
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Debe autenticarse para eliminar unha entrada no ficheiro /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: ../src/udiskslinuxblock.c:1960
+#: ../src/udiskslinuxblock.c:1964
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
-msgstr ""
-"Debe autenticarse para eliminar unha entrada no ficheiro /etc/crypttab"
+msgstr "Debe autenticarse para eliminar unha entrada no ficheiro /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:2032
+#: ../src/udiskslinuxblock.c:2036
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Debe autenticarse para modificar o ficheiro /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: ../src/udiskslinuxblock.c:2050
+#: ../src/udiskslinuxblock.c:2054
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Debe autenticarse para modificar o ficheiro /etc/crypttab"
 
@@ -642,14 +644,14 @@ msgstr "Debe autenticarse para modificar o ficheiro /etc/crypttab"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2819 ../src/udiskslinuxdriveata.c:2287
+#.
+#: ../src/udiskslinuxblock.c:2840 ../src/udiskslinuxdriveata.c:2331
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Requírese autenticación par realizar un borrado seguro de $(drive)"
 
@@ -659,17 +661,17 @@ msgstr "Requírese autenticación par realizar un borrado seguro de $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2831
+#.
+#: ../src/udiskslinuxblock.c:2852
 msgid "Authentication is required to format $(drive)"
 msgstr "Para formatar $(drive) precisa autenticarse"
 
-#: ../src/udiskslinuxblock.c:2873 ../src/udiskslinuxmdraid.c:1609
-#: ../src/udiskslinuxpartition.c:877
+#: ../src/udiskslinuxblock.c:2894 ../src/udiskslinuxmdraid.c:1681
+#: ../src/udiskslinuxpartition.c:918
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
 
-#: ../src/udiskslinuxblock.c:2877 ../src/udiskslinuxdriveata.c:2299
+#: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2343
 msgid "Formatting Device"
 msgstr "Formatando o dispositivo"
 
@@ -678,8 +680,8 @@ msgstr "Formatando o dispositivo"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:3364
+#.
+#: ../src/udiskslinuxblock.c:3399
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Requírese autenticación para abrir $(drive) para a súa lectura"
 
@@ -688,8 +690,8 @@ msgstr "Requírese autenticación para abrir $(drive) para a súa lectura"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:3428
+#.
+#: ../src/udiskslinuxblock.c:3463
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Requírese autenticación para abrir $(drive) para a súa escrita"
 
@@ -698,8 +700,8 @@ msgstr "Requírese autenticación para abrir $(drive) para a súa escrita"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:3494
+#.
+#: ../src/udiskslinuxblock.c:3529
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Requírese autenticación para abrir $(drive) para analizar o seu rendemento "
@@ -709,8 +711,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:3555
+#.
+#: ../src/udiskslinuxblock.c:3590
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Requírese autenticación para reanalizar $(drive)"
 
@@ -719,8 +721,8 @@ msgstr "Requírese autenticación para reanalizar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1009
+#.
+#: ../src/udiskslinuxdrive.c:1007
 msgid "Authentication is required to eject $(drive)"
 msgstr "Requírese autenticación para expulsar $(drive)"
 
@@ -729,8 +731,8 @@ msgstr "Requírese autenticación para expulsar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1097
+#.
+#: ../src/udiskslinuxdrive.c:1095
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "Requírese autenticación para configurar as preferencias de $(drive)"
 
@@ -739,8 +741,8 @@ msgstr "Requírese autenticación para configurar as preferencias de $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1413
+#.
+#: ../src/udiskslinuxdrive.c:1411
 msgid "Authentication is required to power off $(drive)"
 msgstr "Requírese autenticación para apagar $(drive)"
 
@@ -749,8 +751,8 @@ msgstr "Requírese autenticación para apagar $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:808
+#.
+#: ../src/udiskslinuxdriveata.c:814
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Requírese autenticación para actualizar os datos SMART de $(drive)"
 
@@ -759,8 +761,8 @@ msgstr "Requírese autenticación para actualizar os datos SMART de $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:819
+#.
+#: ../src/udiskslinuxdriveata.c:825
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
 "Requírese autenticación para estabelecer os datos SMART desde un blob en "
@@ -771,8 +773,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:953
+#.
+#: ../src/udiskslinuxdriveata.c:959
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr "Requírese autenticación para abortar a autoproba SMART en $(drive)"
 
@@ -781,8 +783,8 @@ msgstr "Requírese autenticación para abortar a autoproba SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1203
+#.
+#: ../src/udiskslinuxdriveata.c:1209
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr "Requírese autenticación para iniciar a autoproba SMART en $(drive)"
 
@@ -791,19 +793,18 @@ msgstr "Requírese autenticación para iniciar a autoproba SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1290
+#.
+#: ../src/udiskslinuxdriveata.c:1296
 msgid "Authentication is required to check power state for $(drive)"
-msgstr ""
-"Requírese autenticación para comprobar o estado de enerxía de $(drive)"
+msgstr "Requírese autenticación para comprobar o estado de enerxía de $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1391
+#.
+#: ../src/udiskslinuxdriveata.c:1397
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Requírese autenticación para poñer $(drive) en modo en espera"
 
@@ -812,8 +813,8 @@ msgstr "Requírese autenticación para poñer $(drive) en modo en espera"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1525
+#.
+#: ../src/udiskslinuxdriveata.c:1531
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr "Requírese autenticación para espertar $(drive) do modo en espera"
 
@@ -822,8 +823,8 @@ msgstr "Requírese autenticación para espertar $(drive) do modo en espera"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:2380
+#.
+#: ../src/udiskslinuxdriveata.c:2424
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Requírese autenticación para activar SMART en $(drive)"
 
@@ -832,8 +833,8 @@ msgstr "Requírese autenticación para activar SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:2390
+#.
+#: ../src/udiskslinuxdriveata.c:2434
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Requírese autenticación para desactivar SMART en $(drive)"
 
@@ -842,7 +843,7 @@ msgstr "Requírese autenticación para desactivar SMART en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxencrypted.c:357 ../src/udiskslinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
@@ -854,7 +855,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
@@ -868,8 +869,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1251 ../src/udiskslinuxfilesystem.c:1413
+#.
+#: ../src/udiskslinuxfilesystem.c:1268 ../src/udiskslinuxfilesystem.c:1430
 msgid "Authentication is required to mount $(drive)"
 msgstr "Requírese autenticación para montar $(drive)"
 
@@ -882,8 +883,8 @@ msgstr "Requírese autenticación para montar $(drive)"
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
-#: ../src/udiskslinuxfilesystem.c:1320
+#.
+#: ../src/udiskslinuxfilesystem.c:1337
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -900,8 +901,8 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
-#: ../src/udiskslinuxfilesystem.c:1667
+#.
+#: ../src/udiskslinuxfilesystem.c:1684
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -915,8 +916,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1714
+#.
+#: ../src/udiskslinuxfilesystem.c:1731
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Requírese autenticación para desmontar $(drive) montado por outro usuario"
@@ -926,8 +927,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1946
+#.
+#: ../src/udiskslinuxfilesystem.c:1963
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Requírese autenticación para cambiar a etiqueta do sistema de ficheiros en "
@@ -939,7 +940,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Requírese autenticación para eliminar o dispositivo «loop» $(drive)"
@@ -950,58 +951,58 @@ msgstr "Requírese autenticación para eliminar o dispositivo «loop» $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Requírese autenticación para modificar o dispositivo «loop» $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmanager.c:570
+#: ../src/udiskslinuxmanager.c:574
 msgid "Authentication is required to create a RAID array"
 msgstr "Requírese autenticación para crear unha matriz de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:651
+#: ../src/udiskslinuxmdraid.c:721
 msgid "Authentication is required to start a RAID array"
 msgstr "Requírese autenticación para iniciar unha matriz de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:820
+#: ../src/udiskslinuxmdraid.c:892
 msgid "Authentication is required to stop a RAID array"
 msgstr "Requírese autenticación para deter unha matriz de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1048
+#: ../src/udiskslinuxmdraid.c:1120
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
 "Requírese autenticación para quitar un dispositivo dunha matriz de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1244
+#: ../src/udiskslinuxmdraid.c:1316
 msgid "Authentication is required to add a device to a RAID array"
 msgstr ""
 "Requírese autenticación para engadir un dispositivo a unha matriz de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1374
+#: ../src/udiskslinuxmdraid.c:1446
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1011,16 +1012,15 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#. 
+#.
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1498
-msgid ""
-"Authentication is required to start/stop data scrubbing of a RAID array"
+#: ../src/udiskslinuxmdraid.c:1570
+msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Requírese autenticación para iniciar/deter a depuración de datos dunha "
 "matriz RAID"
 
-#: ../src/udiskslinuxmdraid.c:1590
+#: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
 
@@ -1029,9 +1029,9 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartition.c:269 ../src/udiskslinuxpartition.c:421
-#: ../src/udiskslinuxpartition.c:750
+#.
+#: ../src/udiskslinuxpartition.c:278 ../src/udiskslinuxpartition.c:459
+#: ../src/udiskslinuxpartition.c:788
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
 "Requírese autenticación para modificar a partición no dispositivo $(drive)"
@@ -1041,8 +1041,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartition.c:851
+#.
+#: ../src/udiskslinuxpartition.c:892
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Requírese autenticación para eliminar a particińo $(drive)"
 
@@ -1051,8 +1051,8 @@ msgstr "Requírese autenticación para eliminar a particińo $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartitiontable.c:386
+#.
+#: ../src/udiskslinuxpartitiontable.c:392
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Requírese autenticación para crear a partición en $(drive)"
 
@@ -1061,7 +1061,7 @@ msgstr "Requírese autenticación para crear a partición en $(drive)"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
@@ -1072,7 +1072,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
+#.
 #: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
@@ -1086,7 +1086,7 @@ msgstr "Arrincábel"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../udisks/udisksclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -1094,7 +1094,7 @@ msgstr "Sistema"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../udisks/udisksclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1102,7 +1102,7 @@ msgstr "Arrinque BIOS"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../udisks/udisksclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1110,7 +1110,7 @@ msgstr "Só lectura"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../udisks/udisksclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1118,7 +1118,7 @@ msgstr "Agochado"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
+#.
 #: ../udisks/udisksclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
@@ -1187,7 +1187,7 @@ msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#. 
+#.
 #: ../udisks/udisksclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1196,7 +1196,7 @@ msgstr "%s (%s bytes)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#. 
+#.
 #: ../udisks/udisksclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1259,7 +1259,7 @@ msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../udisks/udisksclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
@@ -1267,7 +1267,7 @@ msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../udisks/udisksclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
@@ -1275,7 +1275,7 @@ msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../udisks/udisksclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -1283,7 +1283,7 @@ msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
+#.
 #: ../udisks/udisksclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1581,7 +1581,7 @@ msgstr "Mebro de VMFS"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#. 
+#.
 #: ../udisks/udisksclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1590,7 +1590,7 @@ msgstr "Descoñecido (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#. 
+#.
 #: ../udisks/udisksclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1598,7 +1598,7 @@ msgid "Unknown (%s)"
 msgstr "Descoñecido (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#. 
+#.
 #: ../udisks/udisksclient.c:2045 ../udisks/udisksclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -2534,9 +2534,9 @@ msgid "Block Device"
 msgstr "Dispositivo de bloque"
 
 #. Translators: Used to describe a partition of a block device.
-#. *              The %d is the partition number.
+#. *              The %u is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2546,7 +2546,7 @@ msgstr "Partición %d de %s"
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2563,9 +2563,9 @@ msgid "Loop Device"
 msgstr "Dispositivo de búcle"
 
 #. Translators: Used to describe a partition of a loop device.
-#. *              The %d is the partition number.
+#. *              The %u is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2576,7 +2576,7 @@ msgstr "Partición %d de %s"
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2621,7 +2621,7 @@ msgstr "Matriz de RAID"
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2629,9 +2629,9 @@ msgid "%s %s"
 msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
-#. *              The %d is the partition number.
+#. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2642,7 +2642,7 @@ msgstr "Partición %d de %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
@@ -2652,7 +2652,7 @@ msgstr "%s — %s (%s)"
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
@@ -2663,7 +2663,7 @@ msgstr "%s — %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
@@ -2673,7 +2673,7 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
@@ -2759,7 +2759,7 @@ msgstr "Lector de tarxetas %s"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2767,7 +2767,7 @@ msgid "%s %s Drive"
 msgstr "Unidade %s %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2796,9 +2796,9 @@ msgid "Audio %s"
 msgstr "Son %s"
 
 #. Translators: Used to describe a partition of a drive.
-#. *              The %d is the partition number.
+#. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2810,7 +2810,7 @@ msgstr "Partición %d de %s"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
@@ -2821,7 +2821,7 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
+#.
 #: ../udisks/udisksobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
