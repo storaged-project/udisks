@@ -328,8 +328,7 @@ gboolean
 udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
                                UDisksLinuxDriveObject *object)
 {
-  UDisksLinuxDevice *device
-;
+  UDisksLinuxDevice *device;
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
