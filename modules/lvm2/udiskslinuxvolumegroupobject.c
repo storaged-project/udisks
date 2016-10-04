@@ -453,6 +453,8 @@ update_block (UDisksLinuxBlockObject       *block_object,
           {
             block_object_update_lvm_iface (block_object, g_dbus_object_get_object_path (G_DBUS_OBJECT (lv_object)));
           }
+
+        g_object_unref(device);
       }
   }
 
