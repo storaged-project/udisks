@@ -66,6 +66,7 @@ btrfs_block_check (UDisksObject *object)
 {
   const gchar *fs_type = NULL;
   UDisksLinuxDevice *device = NULL;
+  int rc = 0;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
@@ -73,7 +74,10 @@ btrfs_block_check (UDisksObject *object)
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
   fs_type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
 
-  return g_strcmp0 (fs_type, "btrfs") == 0;
+  rc = g_strcmp0 (fs_type, "btrfs");
+  g_object_unref(device);
+
+  return rc == 0;
 }
 
 static void

@@ -306,7 +306,6 @@ update_etctabs (UDisksLinuxVolumeGroupObject *object)
   g_hash_table_iter_init (&iter, object->logical_volumes);
   while (g_hash_table_iter_next (&iter, &key, &value))
     {
-      const gchar *name = key;
       UDisksLinuxLogicalVolumeObject *volume = value;
 
       udisks_linux_logical_volume_object_update_etctabs (volume);
@@ -454,6 +453,8 @@ update_block (UDisksLinuxBlockObject       *block_object,
           {
             block_object_update_lvm_iface (block_object, g_dbus_object_get_object_path (G_DBUS_OBJECT (lv_object)));
           }
+
+        g_object_unref(device);
       }
   }
 

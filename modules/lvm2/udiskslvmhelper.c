@@ -70,20 +70,25 @@ static GVariant *
 list_volume_groups (void)
 {
   lvm_t lvm;
-  struct dm_list *vg_names;
-  struct lvm_str_list *vg_name;
+  struct dm_list *vg_names = NULL;
+  struct lvm_str_list *vg_name = NULL;
   GVariantBuilder result;
 
   lvm = init_lvm ();
 
-  g_variant_builder_init (&result, G_VARIANT_TYPE ("as"));
-  vg_names = lvm_list_vg_names (lvm);
-  dm_list_iterate_items (vg_name, vg_names)
+  if (lvm)
     {
-      g_variant_builder_add (&result, "s", vg_name->str);
+      g_variant_builder_init (&result, G_VARIANT_TYPE ("as"));
+      vg_names = lvm_list_vg_names (lvm);
+      if (vg_names)
+        {
+          dm_list_iterate_items (vg_name, vg_names)
+            {
+              g_variant_builder_add (&result, "s", vg_name->str);
+            }
+        }
+      lvm_quit (lvm);
     }
-
-  lvm_quit (lvm);
   return g_variant_builder_end (&result);
 }
 
