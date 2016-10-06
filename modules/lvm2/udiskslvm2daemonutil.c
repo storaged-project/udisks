@@ -309,7 +309,6 @@ variant_reader_watch_child (GPid     pid,
 static void
 variant_reader_destroy (gpointer user_data)
 {
-  char err_buf[64];
   int rc = 0;
   struct VariantReaderData *data = user_data;
   gint fd = g_io_channel_unix_get_fd(data->output_channel);
@@ -326,14 +325,7 @@ variant_reader_destroy (gpointer user_data)
   if (rc != 0 )
     {
       int ec = errno;
-      if (0 == strerror_r(ec, err_buf, sizeof(err_buf)))
-        {
-          udisks_warning ("Error on close (errno %d): %s", ec, err_buf);
-        }
-      else
-        {
-          udisks_warning ("Error on close (errno %d)", ec);
-        }
+      udisks_warning ("Error on close (errno %d): %s", ec, g_strerror (ec));
     }
 }
 
