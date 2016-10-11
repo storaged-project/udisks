@@ -47,6 +47,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         # create partition
         path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
 
         part = self.bus.get_object(self.iface_prefix, path)
         self.assertIsNotNone(part)
@@ -71,6 +72,51 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         sys_start = int(read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+
+    def test_create_extended_partition(self):
+
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create msdos partition table
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        # create extended partition
+        ext_path = disk.CreatePartition(dbus.UInt64(0), dbus.UInt64(100 * 1024**2), '0x0f', '',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
+
+        ext_part = self.bus.get_object(self.iface_prefix, ext_path)
+        self.assertIsNotNone(ext_part)
+
+        self.addCleanup(self._remove_partition, ext_part)
+
+        # check dbus type and check if its a 'container'
+        dbus_pttype = self.get_property(ext_part, '.Partition', 'Type')
+        self.assertEqual(dbus_pttype, '0x0f')
+
+        dbus_cont = self.get_property(ext_part, '.Partition', 'IsContainer')
+        self.assertTrue(dbus_cont)
+
+        # check system type
+        part_name = str(ext_part.object_path).split('/')[-1]
+        sys_pttype = run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertEqual(sys_pttype, '0xf')  # lsblk prints 0xf instead of 0x0f
+
+        # create logical partition
+        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
+
+        log_part = self.bus.get_object(self.iface_prefix, log_path)
+        self.assertIsNotNone(log_part)
+
+        self.addCleanup(self._remove_partition, log_part)
+
+        # check if its a 'contained'
+        dbus_cont = self.get_property(log_part, '.Partition', 'IsContained')
+        self.assertTrue(dbus_cont)
 
     def test_create_gpt_partition(self):
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
