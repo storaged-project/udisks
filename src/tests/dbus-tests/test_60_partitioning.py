@@ -73,6 +73,15 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         sys_start = int(read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
 
+        # check uuid and part number
+        dbus_uuid = self.get_property(part, '.Partition', 'UUID')
+        sys_uuid = run_command('lsblk -no PARTUUID /dev/%s' % part_name)
+        self.assertEqual(dbus_uuid, sys_uuid)
+
+        dbus_num = self.get_property(part, '.Partition', 'Number')
+        sys_num = int(read_file('%s/partition' % part_syspath))
+        self.assertEqual(dbus_num, sys_num)
+
     def test_create_extended_partition(self):
 
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
