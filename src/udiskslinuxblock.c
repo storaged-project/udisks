@@ -1027,31 +1027,13 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
     }
   else if (g_str_has_prefix (device_file, "/dev/md"))
     {
-      const gchar *md_name;
-
-      md_name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_NAME");
-      if (md_name != NULL)
+      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
         {
-          gchar *md_name_dev_file = NULL;
-          const gchar *sep;
-          const gchar *md_name_dev_file_as_symlink = NULL;
-          /* skip homehost */
-          sep = strstr (md_name, ":");
-          if (sep != NULL)
-            md_name_dev_file = g_strdup_printf ("/dev/md/%s", sep + 1);
-          else
-            md_name_dev_file = g_strdup_printf ("/dev/md/%s", md_name);
-          for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+          if (g_str_has_prefix (symlinks[n], "/dev/md/"))
             {
-              if (g_str_has_prefix (symlinks[n], md_name_dev_file))
-                {
-                  md_name_dev_file_as_symlink = symlinks[n];
-                }
+              preferred_device_file = symlinks[n];
+              break;
             }
-          /* Use /dev/md/$MD_NAME, if it's available as a symlink */
-          if (preferred_device_file == NULL && md_name_dev_file_as_symlink != NULL)
-            preferred_device_file = md_name_dev_file_as_symlink;
-          g_free (md_name_dev_file);
         }
     }
   /* fallback to the device name */
