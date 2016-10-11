@@ -319,7 +319,7 @@ handle_set_flags (UDisksPartition       *partition,
       /* 7th bit - the partition is marked as bootable */
       bootable = !!(flags & 1 << 7); /* Narrow possible values to TRUE/FALSE */
       device_name = g_strdup (udisks_block_get_device (partition_table_block));
-      partition_name = g_strdup_printf ("%s%u", device_name, udisks_partition_get_number (partition));
+      partition_name = g_strdup (udisks_block_get_device (block));
 
       if (! bd_part_set_part_flag (device_name,
                                    partition_name,
@@ -955,7 +955,7 @@ handle_delete (UDisksPartition       *partition,
     }
 #else
   device_name = g_strdup (udisks_block_get_device (partition_table_block));
-  partition_name = g_strdup_printf ("%s%u", device_name, udisks_partition_get_number (partition));
+  partition_name = g_strdup (udisks_block_get_device (block));
 
   if (! bd_part_delete_part (device_name, partition_name, &error))
     {
