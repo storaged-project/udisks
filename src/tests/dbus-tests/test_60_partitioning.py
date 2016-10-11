@@ -158,3 +158,142 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         sys_fstype = run_command('lsblk -no FSTYPE /dev/%s' % part_name)
         self.assertEqual(sys_fstype, 'xfs')
+
+
+class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
+    '''This is a basic partition test suite'''
+
+    def _remove_format(self, device):
+        d = dbus.Dictionary(signature='sv')
+        d['erase'] = True
+        device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+
+    def _create_format(self, device, ftype):
+        device.Format(ftype, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+    def _remove_partition(self, device):
+        device.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+
+    def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='xfs'):
+        if fmt:
+            path = disk.CreatePartitionAndFormat(dbus.UInt64(start), dbus.UInt64(size), '', '',
+                                                 self.no_options, fmt, self.no_options,
+                                                 dbus_interface=self.iface_prefix + '.PartitionTable')
+        else:
+            path = disk.CreatePartition(dbus.UInt64(start), dbus.UInt64(size), '', '',
+                                        self.no_options,
+                                        dbus_interface=self.iface_prefix + '.PartitionTable')
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        return part
+
+    def test_delete(self):
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        path = str(part.object_path)
+
+        part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+
+        self.udev_settle()
+
+        part_name = path.split('/')[-1]
+        disk_name = os.path.basename(self.vdevs[0])
+        part_syspath = '/sys/block/%s/%s' % (disk_name, part_name)
+
+        # make sure the partition is not on dbus
+        udisks = self.get_object('', '')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        self.assertNotIn(path, objects.keys())
+
+        # make sure partition is not in the system
+        self.assertFalse(os.path.isdir(part_syspath))
+
+    def test_flags(self):
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        self.addCleanup(self._remove_partition, part)
+
+        self._create_format(part, 'xfs')
+        self.addCleanup(self._remove_format, part)
+
+        # set boot flag (10000000(2), 128(10), 0x80(16))
+        part.SetFlags(dbus.UInt64(10000000), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_flags = self.get_property(part, '.Partition', 'Flags')
+        self.assertEqual(dbus_flags, 128)
+
+        # test flags value from sysytem
+        part_name = str(part.object_path).split('/')[-1]
+        sys_flags = run_command('lsblk -no PARTFLAGS /dev/%s' % part_name)
+        self.assertEqual(sys_flags, '0x80')
+
+    def test_type(self):
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        self.addCleanup(self._remove_partition, part)
+
+        self._create_format(part, 'xfs')
+        self.addCleanup(self._remove_format, part)
+
+        # set part type/guid (home partition)
+        home_guid = '933ac7e1-2eb4-4f13-b844-0e14e2aef915'
+        part.SetType(home_guid, self.no_options,
+                     dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        self.assertEqual(dbus_type, home_guid)
+
+        # test flags value from sysytem
+        part_name = str(part.object_path).split('/')[-1]
+        sys_type = run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertEqual(sys_type, home_guid)
+
+    def test_name(self):
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        self.addCleanup(self._remove_partition, part)
+
+        self._create_format(part, 'xfs')
+        self.addCleanup(self._remove_format, part)
+
+        # set part name
+        part.SetName('test', self.no_options,
+                     dbus_interface=self.iface_prefix + '.Partition')
+
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_name = self.get_property(part, '.Partition', 'Name')
+        self.assertEqual(dbus_name, 'test')
+
+        # test flags value from sysytem
+        part_name = str(part.object_path).split('/')[-1]
+        sys_name = run_command('lsblk -no PARTLABEL /dev/%s' % part_name)
+        self.assertEqual(sys_name, 'test')
