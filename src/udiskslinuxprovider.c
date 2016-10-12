@@ -989,22 +989,25 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
         }
       else
         {
-          object = udisks_linux_drive_object_new (daemon, device);
-          if (object != NULL)
+          if (g_strcmp0 (action, "add") == 0) /* don't create new drive object on "change" event */
             {
-              g_object_set_data_full (G_OBJECT (object), "x-vpd", g_strdup (vpd), g_free);
-              g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                            G_DBUS_OBJECT_SKELETON (object));
-              g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), object);
-              g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), object);
-
-              /* schedule initial housekeeping for the drive unless coldplugging */
-              if (!provider->coldplug)
+              object = udisks_linux_drive_object_new (daemon, device);
+              if (object != NULL)
                 {
-                  task = g_task_new (NULL, NULL, NULL, NULL);
-                  g_task_set_task_data (task, g_object_ref (object), NULL);
-                  g_task_run_in_thread (task, perform_initial_housekeeping_for_drive);
-                  g_object_unref (task);
+                  g_object_set_data_full (G_OBJECT (object), "x-vpd", g_strdup (vpd), g_free);
+                  g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
+                                                                G_DBUS_OBJECT_SKELETON (object));
+                  g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), object);
+                  g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), object);
+
+                  /* schedule initial housekeeping for the drive unless coldplugging */
+                  if (!provider->coldplug)
+                    {
+                      task = g_task_new (NULL, NULL, NULL, NULL);
+                      g_task_set_task_data (task, g_object_ref (object), NULL);
+                      g_task_run_in_thread (task, perform_initial_housekeeping_for_drive);
+                      g_object_unref (task);
+                    }
                 }
             }
         }
