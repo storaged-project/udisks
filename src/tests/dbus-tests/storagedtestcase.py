@@ -54,5 +54,19 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def udev_settle(self):
-        subprocess.call(['udevadm', 'settle'])
+        self.run_command('udevadm settle')
 
+
+    @classmethod
+    def read_file(self, filename):
+        with open(filename, 'r') as f:
+            content = f.read()
+        return content
+
+
+    @classmethod
+    def run_command(self, command):
+        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out = res.stdout.decode().strip()
+        return (res.returncode, out)
