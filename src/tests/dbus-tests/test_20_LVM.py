@@ -86,6 +86,22 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         new_lvsize = int(self.get_property(lv, '.LogicalVolume', 'Size'))
         self.assertEqual(new_vgsize, new_lvsize)
 
+        # rename the LV
+        lvname = 'storaged_test_lv2'
+        new_lvpath = lv.Rename(lvname, self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        self.udev_settle()
+        time.sleep(1)
+
+        # get the new (renamed) lv object
+        lv = self.bus.get_object(self.iface_prefix, new_lvpath)
+        self.assertIsNotNone(lv)
+
+        dbus_name = self.get_property(lv, '.LogicalVolume', 'Name')
+        self.assertEqual(lvname, dbus_name)
+
+        ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
+        self.assertEqual(ret, 0)
+
         # lvremove
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         lv.Delete(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
@@ -193,9 +209,9 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create the origin LV
         vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
-        lvname = 'storaged_test_origin_lv'
-        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
-                dbus_interface=self.iface_prefix + '.VolumeGroup')
+        orig_lvname = 'storaged_test_origin_lv'
+        lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize / 2), self.no_options,
+                                       dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
@@ -203,17 +219,103 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         time.sleep(1)
 
         # Create the caching LV
-        lvname = 'storaged_test_cache_lv'
+        cache_lvname = 'storaged_test_cache_lv'
         vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
-        lv_cache_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
-                dbus_interface=self.iface_prefix + '.VolumeGroup')
+        lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64(vgsize / 2), self.no_options,
+                                             dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
         cache_lv = self.bus.get_object(self.iface_prefix, lv_cache_path)
         self.assertIsNotNone(cache_lv)
 
         # Add the cache to the origin
         lv.CacheAttach('storaged_test_cache_lv', self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        self.udev_settle()
+        time.sleep(1)
 
-        # vgremove
-        self._remove_vg(vg)
+        _ret, out = self.run_command('lvs %s/%s --noheadings -o segtype' % (vgname, orig_lvname))
+        self.assertEqual(out, 'cache')
 
+        # Split the cache
+        lv.CacheSplit(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        self.udev_settle()
+        time.sleep(1)
+
+        _ret, out = self.run_command('lvs %s/%s --noheadings -o lv_layout' % (vgname, orig_lvname))
+        self.assertEqual(out, 'linear')
+
+        _ret, out = self.run_command('lvs %s/%s --noheadings -o lv_layout' % (vgname, cache_lvname))
+        self.assertEqual(out, 'cache,pool')
+
+    def test_50_rename_vg(self):
+        ''' Test VG renaming '''
+
+        vgname = 'storaged_test_rename_vg'
+
+        # Use all the virtual devices
+        devs = dbus.Array()
+        for d in self.vdevs:
+            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            self.assertIsNotNone(dev_obj)
+            devs.append(dev_obj)
+
+        vg = self._create_vg(vgname, devs)
+
+        vgname = 'storaged_test_rename_vg2'
+        new_vgpath = vg.Rename(vgname, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.udev_settle()
+        time.sleep(1)
+
+        # get the new (renamed) lv object
+        vg = self.bus.get_object(self.iface_prefix, new_vgpath)
+        self.assertIsNotNone(vg)
+        self.addCleanup(self._remove_vg, vg)
+
+        dbus_name = self.get_property(vg, '.VolumeGroup', 'Name')
+        self.assertEqual(vgname, dbus_name)
+
+        ret, _out = self.run_command('vgs %s' % vgname)
+        self.assertEqual(ret, 0)
+
+    def test_60_pvs(self):
+        ''' Test adding and removing PVs from VG '''
+
+        vgname = 'storaged_test_pv_vg'
+
+        # crete vg with one pv
+        old_pv = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(old_pv)
+
+        vg = self._create_vg(vgname, dbus.Array([old_pv]))
+        self.addCleanup(self._remove_vg, vg)
+
+        # create an lv on it
+        lvname = 'storaged_test_lv'
+        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(4 * 1024**2), self.no_options,
+                                       dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.udev_settle()
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(lv)
+
+        # add a new pv to the vg
+        new_pv = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[1]))
+        vg.AddDevice(new_pv, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.udev_settle()
+
+        _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[1])
+        self.assertEqual(out, vgname)
+
+        # empty the old pv
+        vg.EmptyDevice(old_pv, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup', timeout=120 * 100)
+        self.udev_settle()
+
+        _ret, pv_size = self.run_command('pvs --noheadings --units=B --nosuffix -o pv_size %s' % self.vdevs[0])
+        _ret, pv_free = self.run_command('pvs --noheadings --units=B --nosuffix -o pv_free %s' % self.vdevs[0])
+        self.assertEqual(pv_size, pv_free)
+
+        # remove the old pv from the vg
+        vg.RemoveDevice(old_pv, False, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.udev_settle()
+        time.sleep(1)
+
+        _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[0])
+        self.assertEqual(out, '')
