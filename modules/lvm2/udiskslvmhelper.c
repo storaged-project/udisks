@@ -74,11 +74,11 @@ list_volume_groups (void)
   struct lvm_str_list *vg_name = NULL;
   GVariantBuilder result;
 
+  g_variant_builder_init (&result, G_VARIANT_TYPE ("as"));
   lvm = init_lvm ();
 
   if (lvm)
     {
-      g_variant_builder_init (&result, G_VARIANT_TYPE ("as"));
       vg_names = lvm_list_vg_names (lvm);
       if (vg_names)
         {
