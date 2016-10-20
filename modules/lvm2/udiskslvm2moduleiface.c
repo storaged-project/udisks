@@ -154,7 +154,6 @@ lvm_update_from_variant (GPid      pid,
           udisks_linux_volume_group_object_destroy (group);
           g_dbus_object_manager_server_unexport (manager,
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (group)));
-          g_object_unref (G_OBJECT (group));
           g_hash_table_iter_remove (&vg_name_iter);
         }
     }
