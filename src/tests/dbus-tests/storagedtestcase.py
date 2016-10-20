@@ -65,6 +65,14 @@ class StoragedTestCase(unittest.TestCase):
 
 
     @classmethod
+    def write_file(self, filename, content):
+        with open(filename, 'w') as f:
+            f.seek(0)
+            f.write(content)
+            f.truncate()
+
+
+    @classmethod
     def run_command(self, command):
         res = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)

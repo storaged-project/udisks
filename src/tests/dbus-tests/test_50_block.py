@@ -18,17 +18,6 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
     def _close_luks(self, disk):
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
-    def _read_file(self, filename):
-        with open(filename, 'r') as f:
-            content = f.read()
-        return content
-
-    def _write_file(self, filename, content):
-        with open(filename, 'w') as f:
-            f.seek(0)
-            f.write(content)
-            f.truncate()
-
     def test_format(self):
 
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -43,6 +32,9 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         fstype = self.get_property(disk, '.Block', 'IdType')
         self.assertEqual(fstype, 'xfs')
 
+        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
+        self.assertEqual(sys_fstype, 'xfs')
+
         # remove the format
         self._clean_format(disk)
 
@@ -52,6 +44,9 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
         fstype = self.get_property(disk, '.Block', 'IdType')
         self.assertEqual(fstype, '')
+
+        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
+        self.assertEqual(sys_fstype, '')
 
     def test_open(self):
 
@@ -92,8 +87,8 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
     def test_configuration_fstab(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes
-        fstab = self._read_file('/etc/fstab')
-        self.addCleanup(self._write_file, '/etc/fstab', fstab)
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
         # format the disk
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -152,8 +147,8 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
     def test_configuration_crypttab(self):
 
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
-        crypttab = self._read_file('/etc/crypttab')
-        self.addCleanup(self._write_file, '/etc/crypttab', crypttab)
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
 
         # format the disk
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
