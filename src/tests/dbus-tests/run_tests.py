@@ -131,6 +131,7 @@ if __name__ == '__main__':
             sys.exit(1)
     else:
         print("Not spawning own process: testing the system installed instance.")
+        time.sleep(3)
 
     # Load all files in this directory whose name starts with 'test'
     if args.testname:
