@@ -56,8 +56,9 @@ def setup_vdevs():
 
     # let's be 100% sure that we pick a virtual one
     for d in vdevs:
-        assert open('/sys/block/%s/device/model' %
-                    os.path.basename(d)).read().strip() == 'scsi_debug'
+        with open('/sys/block/%s/device/model' %
+                    os.path.basename(d)) as model_file:
+            assert model_file.read().strip() == 'scsi_debug'
 
     storagedtestcase.test_devs = vdevs
 
