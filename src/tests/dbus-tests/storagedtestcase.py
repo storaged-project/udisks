@@ -8,6 +8,14 @@ import time
 daemon_bin = None
 test_devs = None
 
+def get_call_long(call):
+    def call_long(*args, **kwargs):
+        """Do an async call with a very long timeout (unless specified otherwise)"""
+        kwargs['timeout'] = 100  # seconds
+        return call(*args, **kwargs)
+
+    return call_long
+
 class StoragedTestCase(unittest.TestCase):
     iface_prefix = None
     path_prefix = None
@@ -25,13 +33,18 @@ class StoragedTestCase(unittest.TestCase):
             self.iface_prefix = 'org.storaged.Storaged'
             self.path_prefix = '/org/storaged/Storaged'
         self.bus = dbus.SystemBus()
+        self._orig_call_async = self.bus.call_async
+        self._orig_call_blocking = self.bus.call_blocking
+        self.bus.call_async = get_call_long(self._orig_call_async)
+        self.bus.call_blocking = get_call_long(self._orig_call_blocking)
         self.vdevs = test_devs
         assert len(self.vdevs) > 3;
 
 
     @classmethod
-    def tearDownClass(self):\
-        pass
+    def tearDownClass(self):
+        self.bus.call_async = self._orig_call_async
+        self.bus.call_blocking = self._orig_call_blocking
 
 
     @classmethod
