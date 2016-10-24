@@ -187,6 +187,7 @@ udisks_config_manager_constructed (GObject *object)
         {
           udisks_debug ("No 'modules' found in configuration file");
           manager->modules = NULL;
+          g_clear_error (&error);
         }
 
       /* Read the load preference configuration option. */
@@ -220,6 +221,7 @@ udisks_config_manager_constructed (GObject *object)
         }
       else
         {
+          g_clear_error (&error);
           udisks_debug ("No 'modules_load_preference' found in configuration file");
           manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
         }
@@ -227,6 +229,7 @@ udisks_config_manager_constructed (GObject *object)
     }
   else
     {
+      g_clear_error (&error);
       udisks_warning ("Can't load configuration file %s", conf_filename);
       manager->modules = NULL; /* NULL == '*' */
       manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
