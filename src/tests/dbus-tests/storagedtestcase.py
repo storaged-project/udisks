@@ -1,9 +1,6 @@
 import unittest
 import dbus
-import sys
 import subprocess
-import os
-import time
 
 daemon_bin = None
 test_devs = None
