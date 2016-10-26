@@ -56,8 +56,9 @@ def setup_vdevs():
 
     # let's be 100% sure that we pick a virtual one
     for d in vdevs:
-        assert open('/sys/block/%s/device/model' %
-                    os.path.basename(d)).read().strip() == 'scsi_debug'
+        with open('/sys/block/%s/device/model' %
+                    os.path.basename(d)) as model_file:
+            assert model_file.read().strip() == 'scsi_debug'
 
     storagedtestcase.test_devs = vdevs
 
@@ -130,6 +131,7 @@ if __name__ == '__main__':
             sys.exit(1)
     else:
         print("Not spawning own process: testing the system installed instance.")
+        time.sleep(3)
 
     # Load all files in this directory whose name starts with 'test'
     if args.testname:

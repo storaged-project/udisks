@@ -1,6 +1,5 @@
 import unittest
 import storagedtestcase
-import dbus
 import os
 import glob
 import time
@@ -8,6 +7,7 @@ import time
 class StoragedISCSITest(storagedtestcase.StoragedTestCase):
     '''Basic iSCSI test suite'''
 
+    @unittest.skipUnless('TEST_ISCSI_HOST' in os.environ, "$TEST_ISCSI_HOST not set")
     def test_login_noauth(self):
         host = os.getenv('TEST_ISCSI_HOST')
         self.assertIsNotNone(host)
