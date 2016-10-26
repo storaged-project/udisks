@@ -528,7 +528,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                       end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
 #else
       if (! bd_part_create_part (device_name, part_type, start_mib * MIB_SIZE,
-                                 end_bytes - 1, BD_PART_ALIGN_OPTIMAL, &error))
+                                 size, BD_PART_ALIGN_OPTIMAL, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -600,7 +600,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       g_free (escaped_name);
 #else
       if (! bd_part_create_part (device_name, BD_PART_TYPE_REQ_NORMAL, start_mib * MIB_SIZE,
-                                 end_bytes - 1, BD_PART_ALIGN_OPTIMAL, &error))
+                                 size, BD_PART_ALIGN_OPTIMAL, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
