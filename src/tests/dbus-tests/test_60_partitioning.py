@@ -80,7 +80,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_format, disk)
 
         # create extended partition
-        ext_path = disk.CreatePartition(dbus.UInt64(0), dbus.UInt64(100 * 1024**2), '0x0f', '',
+        ext_path = disk.CreatePartition(dbus.UInt64(0), dbus.UInt64(100 * 1024**2), '0x05', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -89,17 +89,18 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         self.addCleanup(self._remove_partition, ext_part)
 
-        # check dbus type and check if its a 'container'
+        # check dbus type (0x05, 0x0f, 0x85 are all exteded types, see https://en.wikipedia.org/wiki/Partition_type#PID_05h)
         dbus_pttype = self.get_property(ext_part, '.Partition', 'Type')
-        self.assertEqual(dbus_pttype, '0x0f')
+        self.assertIn(dbus_pttype, ['0x05', '0x0f', '0x85'])
 
+        # check if its a 'container'
         dbus_cont = self.get_property(ext_part, '.Partition', 'IsContainer')
         self.assertTrue(dbus_cont)
 
         # check system type
         part_name = str(ext_part.object_path).split('/')[-1]
         _ret, sys_pttype = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
-        self.assertEqual(sys_pttype, '0xf')  # lsblk prints 0xf instead of 0x0f
+        self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
         log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
