@@ -1614,7 +1614,7 @@ add_remove_crypttab_entry (UDisksBlock *block,
           g_set_error (error,
                        UDISKS_ERROR,
                        UDISKS_ERROR_FAILED,
-                       "Missing passphrase-path, options or passphrase-contents parameter in entry to add");
+                       "Missing options or passphrase-contents parameter in entry to add");
           goto out;
         }
 
