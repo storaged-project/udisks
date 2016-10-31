@@ -483,6 +483,32 @@ AC_SUBST([PART_LDFLAGS])
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
 
+# libblockdev swap
+SAVE_CFLAGS=$CFLAGS
+SAVE_LDFLAGS=$LDFLAGS
+
+CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+LDFLAGS="$GLIB_LIBS"
+AC_MSG_CHECKING([libblockdev-swap presence])
+AC_TRY_COMPILE([#include <swap.h>], [],
+               [AC_MSG_RESULT([yes])
+               have_swap=yes],
+               [AC_MSG_RESULT([no])
+               have_swap=no])
+
+CFLAGS=$SAVE_CFLAGS
+LDFLAGS=$SAVE_LDFLAGS
+
+SWAP_CFLAGS="-I/usr/include/blockdev"
+SWAP_LIBS="-lbd_swap"
+
+if test "x$have_swap" = "xno"; then
+  AC_MSG_ERROR([SWAP support requested but header or library not found])
+fi
+
+AC_SUBST([SWAP_CFLAGS])
+AC_SUBST([SWAP_LIBS])
+
 # Internationalization
 #
 
