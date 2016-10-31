@@ -483,6 +483,12 @@ AC_SUBST([PART_LDFLAGS])
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
 
+# libblockdev swap
+SWAP_CFLAGS="-I/usr/include/blockdev"
+SWAP_LDFLAGS="-lbd_swap"
+AC_SUBST([SWAP_CFLAGS])
+AC_SUBST([SWAP_LDFLAGS])
+
 # Internationalization
 #
 
