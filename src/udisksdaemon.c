@@ -119,12 +119,14 @@ udisks_daemon_finalize (GObject *object)
   g_clear_object (&daemon->authority);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
-  g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->connection);
+
+  /* Modules use the monitors and try to reference them when cleaning up */
+  udisks_module_manager_unload_modules (daemon->module_manager);
+  g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->fstab_monitor);
   g_object_unref (daemon->crypttab_monitor);
 
-  udisks_module_manager_unload_modules (daemon->module_manager);
   g_clear_object (&daemon->module_manager);
 
   g_clear_object (&daemon->config_manager);

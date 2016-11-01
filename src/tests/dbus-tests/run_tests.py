@@ -10,9 +10,7 @@ import storagedtestcase
 import glob
 import shutil
 import tempfile
-
-
-VDEV_SIZE = 300000000  # size of virtual test device
+import re
 
 
 def find_daemon(projdir, system):
@@ -36,29 +34,21 @@ def find_daemon(projdir, system):
 def setup_vdevs():
     '''create virtual test devices'''
 
-    # craete 4 fake SCSI hard drives
-    assert subprocess.call(['modprobe', 'scsi_debug', 'dev_size_mb=%i' % (
-        VDEV_SIZE / 1048576), 'num_tgts=4']) == 0, 'Failure to modprobe scsi_debug'
+    orig_devs = {dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev)}
 
-    # wait until the drives got created
-    dirs = []
-    while len(dirs) < 4:
-        dirs = glob.glob('/sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*:*/block')
-        time.sleep(0.1)
-    assert len(dirs) == 4
+    # create fake SCSI hard drives
+    assert subprocess.call(["targetcli", "restoreconfig src/tests/dbus-tests/targetcli_config.json"]) == 0
+    time.sleep(0.1)
 
-    vdevs = []
-    for d in dirs:
-        devs = os.listdir(d)
-        assert len(devs) == 1
-        vdevs.append('/dev/' + devs[0])
-        assert os.path.exists(vdevs[-1])
+    devs = {dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev)}
+
+    vdevs = ["/dev/%s" % dev for dev in (devs - orig_devs)]
 
     # let's be 100% sure that we pick a virtual one
     for d in vdevs:
         with open('/sys/block/%s/device/model' %
                     os.path.basename(d)) as model_file:
-            assert model_file.read().strip() == 'scsi_debug'
+            assert model_file.read().strip() == 'storaged_test_d'
 
     storagedtestcase.test_devs = vdevs
 
@@ -97,11 +87,6 @@ if __name__ == '__main__':
                            action='store_true')
     args = argparser.parse_args()
 
-    # ensure that the scsi_debug module is loaded
-    if os.path.isdir('/sys/module/scsi_debug'):
-        sys.stderr.write('The scsi_debug module is already loaded; please '
-                         'remove before running this test.\n')
-        sys.exit(1)
     setup_vdevs()
 
     if args.logfile:
@@ -150,7 +135,10 @@ if __name__ == '__main__':
         restore_policy(policy_files, tmpdir)
         tmpdir.cleanup()
 
-    subprocess.call(['modprobe', '-r', 'scsi_debug'])
+    # remove the fake SCSI devices and their backing files
+    subprocess.call(['targetcli', 'clearconfig confirm=True'])
+    for disk_file in glob.glob("/var/tmp/storaged_test_disk*"):
+        os.unlink(disk_file)
 
     if result.wasSuccessful():
         sys.exit(0)
