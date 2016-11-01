@@ -1,5 +1,6 @@
 import dbus
 import os
+import time
 
 import storagedtestcase
 
@@ -19,7 +20,11 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         device.Format(ftype, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
     def _remove_partition(self, part):
-        part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+        try:
+            part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+        except dbus.exceptions.DBusException:
+            time.sleep(1)
+            part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
     def test_create_mbr_partition(self):
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
