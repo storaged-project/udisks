@@ -530,6 +530,27 @@ wait_for_array_object (UDisksDaemon *daemon,
   return ret;
 }
 
+static gchar* md_node_from_name (const gchar *name, GError **error) {
+    gchar *symlink = NULL;
+    gchar *ret = NULL;
+    gchar *md_path = g_strdup_printf ("/dev/md/%s", name);
+
+    symlink = g_file_read_link (md_path, error);
+    if (!symlink) {
+        /* error is already populated */
+        g_free (md_path);
+        return NULL;
+    }
+
+    g_strstrip (symlink);
+    ret = g_path_get_basename (symlink);
+
+    g_free (symlink);
+    g_free (md_path);
+
+    return ret;
+}
+
 static const gchar *raid_level_whitelist[] = {"raid0", "raid1", "raid4", "raid5", "raid6", "raid10", NULL};
 
 static gboolean
@@ -551,11 +572,12 @@ handle_mdraid_create (UDisksManager         *_object,
   GList *blocks = NULL;
   GList *l;
   guint n;
-  gchar *escaped_name = NULL;
+  gchar *array_name = NULL;
   GString *str = NULL;
   gint status;
   gchar *error_message = NULL;
   gchar *raid_device_file = NULL;
+  gchar *raid_device_name = NULL;
   struct stat statbuf;
   dev_t raid_device_num;
 
@@ -725,22 +747,31 @@ handle_mdraid_create (UDisksManager         *_object,
     }
 
   /* Create the array... */
-  escaped_name = udisks_daemon_util_escape (arg_name);
   str = g_string_new ("mdadm");
-  raid_device_file = udisks_daemon_util_get_free_mdraid_device ();
-  if (raid_device_file == NULL)
+
+  /* we have name from the user */
+  if (strlen (arg_name) > 0)
     {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Unable to find free MD device");
-      goto out;
+      array_name = udisks_daemon_util_escape (arg_name);
+      g_string_append_printf (str, " --create \"%s\"", array_name);
     }
-  g_string_append_printf (str, " --create %s", raid_device_file);
+  /* we don't have name, get next 'free' /dev/mdX device */
+  else
+    {
+      array_name = udisks_daemon_util_get_free_mdraid_device ();
+      if (raid_device_file == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Unable to find free MD device");
+          goto out;
+        }
+      g_string_append_printf (str, " --create %s", array_name);
+    }
+
   g_string_append_printf (str, " --run");
   if (arg_chunk > 0)
     g_string_append_printf (str, " --chunk %" G_GUINT64_FORMAT, (guint64) (arg_chunk / 1024LL));
   g_string_append_printf (str, " --level %s", arg_level);
-  if (strlen (arg_name) > 0)
-    g_string_append_printf (str, " --name \"%s\"", escaped_name);
   g_string_append_printf (str, " --raid-devices %u", num_devices);
   for (l = blocks; l != NULL; l = l->next)
     {
@@ -771,6 +802,25 @@ handle_mdraid_create (UDisksManager         *_object,
       g_free (error_message);
       goto out;
     }
+
+  /* User specified name of the array, we need to get the md node */
+  if (strlen (arg_name) > 0)
+    {
+      /* FIXME replace by 'bd_md_node_from_name' after rewriting this to use libblockdev */
+      raid_device_name = md_node_from_name (array_name, &error);
+      if (!raid_device_name)
+        {
+          g_prefix_error (&error,
+                          "Failed to get md node for array %s",
+                          array_name);
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      raid_device_file = g_strdup_printf ("/dev/%s", raid_device_name);
+    }
+
+  else
+    raid_device_file = g_strdup (array_name);
 
   /* ... then, sit and wait for raid array object to show up */
   array_object = udisks_daemon_wait_for_object_sync (manager->daemon,
@@ -862,10 +912,11 @@ handle_mdraid_create (UDisksManager         *_object,
 
  out:
   g_free (raid_device_file);
+  g_free (raid_device_name);
+  g_free (array_name);
   if (str != NULL)
     g_string_free (str, TRUE);
   g_list_free_full (blocks, g_object_unref);
-  g_free (escaped_name);
   g_clear_object (&array_object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
