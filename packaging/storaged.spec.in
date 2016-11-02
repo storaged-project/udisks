@@ -39,6 +39,7 @@ BuildRequires: intltool
 %if %{with_libblockdev_part} == 1
 BuildRequires: libblockdev-part-devel
 %endif # with_libblockdev_part
+BuildRequires: libblockdev-swap-devel
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -67,6 +68,8 @@ Requires: cryptsetup-luks
 Requires: eject
 # For MD-RAID
 Requires: mdadm
+# For swap
+Requires: libblockdev-swap
 
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
