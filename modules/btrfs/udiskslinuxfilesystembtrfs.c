@@ -57,8 +57,8 @@ struct _UDisksLinuxFilesystemBTRFSClass {
   UDisksFilesystemBTRFSSkeletonClass parent_class;
 };
 
-typedef gboolean (*btrfs_subvolume_func)(gchar *mount_point, gchar *name, GError **error);
-typedef gboolean (*btrfs_device_func)(gchar *mountpoint, gchar *device, GError **error);
+typedef gboolean (*btrfs_subvolume_func)(const gchar *mount_point, const gchar *name, const BDExtraArg **extra, GError **error);
+typedef gboolean (*btrfs_device_func)(const gchar *mountpoint, const gchar *device, const BDExtraArg **extra, GError **error);
 
 enum
 {
@@ -420,7 +420,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
     }
 
   /* Add/remove the subvolume. */
-  if (! subvolume_action (mount_point, name, &error))
+  if (! subvolume_action (mount_point, name, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -480,7 +480,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   device = g_strdup (arg_device);
 
   /* Add/remove the device to/from the volume. */
-  if (! device_action (mount_point, device, &error))
+  if (! device_action (mount_point, device, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -668,7 +668,7 @@ handle_create_snapshot(UDisksFilesystemBTRFS  *fs_btrfs,
   dest = g_build_path (G_DIR_SEPARATOR_S, mount_point, arg_dest, NULL);
 
   /* Create the snapshot. */
-  if (! bd_btrfs_create_snapshot (source, dest, arg_ro, &error))
+  if (! bd_btrfs_create_snapshot (source, dest, arg_ro, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -723,7 +723,7 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
     }
 
   /* Check and repair. */
-  if (! bd_btrfs_repair (dev_file, &error))
+  if (! bd_btrfs_repair (dev_file, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -776,7 +776,7 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
     }
 
   /* Resize the volume. */
-  if (! bd_btrfs_resize (mount_point, arg_size, &error))
+  if (! bd_btrfs_resize (mount_point, arg_size, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

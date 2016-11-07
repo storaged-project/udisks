@@ -206,11 +206,7 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
                                      N_("Authentication is required to create a new volume"),
                                      invocation);
 
-  if (! bd_btrfs_create_volume ((gchar **) arg_devices,
-                                (gchar *) arg_label,
-                                (gchar *) arg_data_level,
-                                (gchar *) arg_md_level,
-                                &error))
+  if (! bd_btrfs_create_volume ((const gchar const **)arg_devices, arg_label, arg_data_level, arg_md_level, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
