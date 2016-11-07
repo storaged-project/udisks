@@ -304,13 +304,13 @@ if test "x$enable_btrfs" = "xyes" \
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    CFLAGS="$GLIB_CFLAGS"
     LDFLAGS="$GLIB_LIBS"
     # We don't use AC_CHECK_HEADER to avoid these warnings:
     #   - accepted by the compiler, rejected by the preprocessor!
     #   - proceeding with the compiler's result
     AC_MSG_CHECKING(["libblockdev-btrfs presence"])
-    AC_TRY_COMPILE([#include <btrfs.h>], [],
+    AC_TRY_COMPILE([#include <blockdev/btrfs.h>], [],
                    [AC_MSG_RESULT([yes])
                     AC_DEFINE(HAVE_BTRFS, 1, [Define, if libblockdev-btrfs is available])
                     have_btrfs=yes],
@@ -319,7 +319,7 @@ if test "x$enable_btrfs" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    BTRFS_CFLAGS="-I/usr/include/blockdev"
+    BTRFS_CFLAGS=""
     BTRFS_LIBS="-lbd_btrfs"
 
     if test "x$have_btrfs" = "xno"; then
@@ -341,18 +341,18 @@ if test "x$enable_zram" = "xyes" \
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    CFLAGS="$GLIB_CFLAGS"
     LDFLAGS="$GLIB_LIBS"
 
     # libblockdev-kbd
     AC_MSG_CHECKING([libblockdev-kbd presence])
-    AC_TRY_COMPILE([#include <kbd.h>], [],
+    AC_TRY_COMPILE([#include <blockdev/kbd.h>], [],
                    [AC_MSG_RESULT([yes])
                     have_kbd=yes],
                    [AC_MSG_RESULT([no])
                     have_kbd=no])
 
-    KBD_CFLAGS="-I/usr/include/blockdev"
+    KBD_CFLAGS=""
     KBD_LIBS="-lbd_kbd"
 
     if test "x$have_kbd" = "xno"; then
@@ -362,12 +362,12 @@ if test "x$enable_zram" = "xyes" \
     AC_SUBST([KBD_CFLAGS])
     AC_SUBST([KBD_LIBS])
 
-    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    CFLAGS="$GLIB_CFLAGS"
     LDFLAGS="$GLIB_LIBS"
 
     # libblockdev-swap
     AC_MSG_CHECKING([libblockdev-swap presence])
-    AC_TRY_COMPILE([#include <swap.h>], [],
+    AC_TRY_COMPILE([#include <blockdev/swap.h>], [],
                    [AC_MSG_RESULT([yes])
                    have_swap=yes],
                    [AC_MSG_RESULT([no])
@@ -376,7 +376,7 @@ if test "x$enable_zram" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    SWAP_CFLAGS="-I/usr/include/blockdev"
+    SWAP_CFLAGS=""
     SWAP_LIBS="-lbd_swap"
 
     if test "x$have_swap" = "xno"; then
@@ -429,12 +429,12 @@ if test "x$enable_bcache" = "xyes" \
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    CFLAGS="$GLIB_CFLAGS"
     LDFLAGS="$GLIB_LIBS"
 
     # libblockdev-kbd
     AC_MSG_CHECKING([libblockdev-kbd presence])
-    AC_TRY_COMPILE([#include <kbd.h>], [],
+    AC_TRY_COMPILE([#include <blockdev/kbd.h>], [],
                    [AC_MSG_RESULT([yes])
                     have_bcache=yes],
                    [AC_MSG_RESULT([no])
@@ -442,7 +442,7 @@ if test "x$enable_bcache" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    BCACHE_CFLAGS="-I/usr/include/blockdev"
+    BCACHE_CFLAGS=""
     BCACHE_LIBS="-lbd_kbd"
 
     if test "x$have_bcache" = "xno"; then
@@ -458,7 +458,7 @@ have_libblockdev_part=no
 have_libblockdev_part_spec=0
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
-CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
 AC_CHECK_HEADERS(
         [blockdev/part.h],
@@ -470,7 +470,7 @@ AC_CHECK_HEADERS(
                          [Define if libbd_part is available])
                have_libblockdev_part=yes
                have_libblockdev_part_spec=1
-               PART_CFLAGS="-I/usr/include/blockdev"
+               PART_CFLAGS=""
                PART_LDFLAGS="-lbd_part"],
               have_libblockdev_part=no
               have_libblockdev_part_spec=0)
