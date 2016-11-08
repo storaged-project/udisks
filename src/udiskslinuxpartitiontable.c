@@ -545,6 +545,8 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 #ifndef HAVE_LIBBLOCKDEV_PART
       gchar *escaped_name;
       gchar *escaped_escaped_name;
+#else
+      BDPartSpec *part_spec = NULL;
 #endif /* HAVE_LIBBLOCKDEV_PART */
 
       /* GPT is easy, no extended/logical crap */
@@ -553,14 +555,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Requested range is already occupied by a partition");
           goto out;
-        }
-
-      /* bah, parted(8) is broken with empty names (it sets the name to 'ext2' in that case)
-       * TODO: file bug
-       */
-      if (strlen (name) == 0)
-        {
-          name = " ";
         }
 
       /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
@@ -587,6 +581,14 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
 #ifndef HAVE_LIBBLOCKDEV_PART
+      /* bah, parted(8) is broken with empty names (it sets the name to 'ext2' in that case)
+       * TODO: file bug
+       */
+      if (strlen (name) == 0)
+        {
+          name = " ";
+        }
+
       escaped_name = udisks_daemon_util_escape (name);
       escaped_escaped_name = udisks_daemon_util_escape (escaped_name);
 
@@ -601,12 +603,26 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       g_free (escaped_name);
 #else
       size = end_bytes - (start_mib * MIB_SIZE); /* recalculate size with the new end_bytes */
-      if (! bd_part_create_part (device_name, BD_PART_TYPE_REQ_NORMAL, start_mib * MIB_SIZE,
-                                 size, BD_PART_ALIGN_OPTIMAL, &error))
+      part_spec = bd_part_create_part (device_name, BD_PART_TYPE_REQ_NORMAL, start_mib * MIB_SIZE,
+                                       size, BD_PART_ALIGN_OPTIMAL, &error);
+      if (!part_spec)
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+
+      /* set name if given */
+      if (strlen (name) > 0)
+        {
+          if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
+            {
+              g_dbus_method_invocation_take_error (invocation, error);
+              g_free (part_spec);
+              goto out;
+            }
+        }
+
+      g_free (part_spec);
 
       goto partition_table_created;
 #endif /* HAVE_LIBBLOCKDEV_PART */
