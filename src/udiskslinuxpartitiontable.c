@@ -42,6 +42,7 @@
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
+#include "udiskslinuxpartition.h"
 
 /**
  * SECTION:udiskslinuxpartitiontable
@@ -344,11 +345,13 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   WaitForPartitionData *wait_data = NULL;
   UDisksObject *partition_object = NULL;
   UDisksBlock *partition_block = NULL;
+  UDisksPartition *partition = NULL;
   gchar *escaped_partition_device = NULL;
   const gchar *table_type;
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean do_wipe = TRUE;
+  gboolean set_type = FALSE;
   GError *error;
 
   error = NULL;
@@ -446,6 +449,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       if (type[0] != '\0' && *endp == '\0' &&
           (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
+          set_type = FALSE;  // do not set part type for extended partitions
 #ifndef HAVE_LIBBLOCKDEV_PART
           part_type = "extended";
 #else
@@ -461,6 +465,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
       else
         {
+          set_type = TRUE;
           if (have_partition_in_range (table, object, offset, offset + size, FALSE))
             {
               if (have_partition_in_range (table, object, offset, offset + size, TRUE))
@@ -548,7 +553,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 #else
       BDPartSpec *part_spec = NULL;
 #endif /* HAVE_LIBBLOCKDEV_PART */
-
+      set_type = TRUE;
       /* GPT is easy, no extended/logical crap */
       if (have_partition_in_range (table, object, offset, offset + size, FALSE))
         {
@@ -688,7 +693,36 @@ partition_table_created:
     }
   escaped_partition_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_block));
 
-  /* TODO: set partition type */
+  /* set partition type */
+  if (strlen (type) == 0)
+      set_type = FALSE;
+
+  if (set_type)
+    {
+      partition = udisks_object_get_partition (partition_object);
+      if (!partition)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error getting newly created partition");
+          goto out;
+        }
+
+      if (! udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
+                                                  type,
+                                                  caller_uid,
+                                                  NULL,
+                                                  &error))
+        {
+          g_prefix_error (&error, "Error setting type for newly created partition: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          g_clear_object (&partition);
+          goto out;
+        }
+
+      g_clear_object (&partition);
+    }
 
   /* wipe the newly created partition if wanted */
   if (do_wipe)
