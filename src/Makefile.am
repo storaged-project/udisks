@@ -24,6 +24,7 @@ CPPFLAGS =                                                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
+	$(BLOCKDEV_CFLAGS)													   \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
@@ -109,6 +110,7 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
 	$(GUDEV_LIBS)                                                          \
+	$(BLOCKDEV_LIBS)                                                          \
 	$(LIBATASMART_LIBS)                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \
@@ -135,6 +137,7 @@ udisksd_LDADD =                                                                \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
+	$(BLOCKDEV_LIBS)                                                       \
 	libudisks-daemon.la                                                    \
 	$(NULL)
 

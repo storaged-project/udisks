@@ -145,6 +145,10 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 AC_SUBST(GMODULE_CFLAGS)
 AC_SUBST(GMODULE_LIBS)
 
+PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.0])
+AC_SUBST(BLOCKDEV_CFLAGS)
+AC_SUBST(BLOCKDEV_LIBS)
+
 PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102])
 AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
 AC_SUBST(POLKIT_GOBJECT_1_LIBS)
@@ -319,15 +323,9 @@ if test "x$enable_btrfs" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    BTRFS_CFLAGS=""
-    BTRFS_LIBS="-lbd_btrfs"
-
     if test "x$have_btrfs" = "xno"; then
       AC_MSG_ERROR([BTRFS support requested but header or library not found])
     fi
-
-    AC_SUBST([BTRFS_CFLAGS])
-    AC_SUBST([BTRFS_LIBS])
 fi
 AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
 
@@ -352,15 +350,9 @@ if test "x$enable_zram" = "xyes" \
                    [AC_MSG_RESULT([no])
                     have_kbd=no])
 
-    KBD_CFLAGS=""
-    KBD_LIBS="-lbd_kbd"
-
     if test "x$have_kbd" = "xno"; then
       AC_MSG_ERROR([KBD support requested but header or library not found])
     fi
-
-    AC_SUBST([KBD_CFLAGS])
-    AC_SUBST([KBD_LIBS])
 
     CFLAGS="$GLIB_CFLAGS"
     LDFLAGS="$GLIB_LIBS"
@@ -376,15 +368,9 @@ if test "x$enable_zram" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    SWAP_CFLAGS=""
-    SWAP_LIBS="-lbd_swap"
-
     if test "x$have_swap" = "xno"; then
       AC_MSG_ERROR([SWAP support requested but header or library not found])
     fi
-
-    AC_SUBST([SWAP_CFLAGS])
-    AC_SUBST([SWAP_LIBS])
 
     have_zram="yes"
 
@@ -442,15 +428,9 @@ if test "x$enable_bcache" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    BCACHE_CFLAGS=""
-    BCACHE_LIBS="-lbd_kbd"
-
     if test "x$have_bcache" = "xno"; then
       AC_MSG_ERROR([Bcache support requested but header or library not found])
     fi
-
-    AC_SUBST([BCACHE_CFLAGS])
-    AC_SUBST([BCACHE_LIBS])
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
@@ -469,17 +449,13 @@ AC_CHECK_HEADERS(
               [AC_DEFINE(HAVE_LIBBLOCKDEV_PART, 1,
                          [Define if libbd_part is available])
                have_libblockdev_part=yes
-               have_libblockdev_part_spec=1
-               PART_CFLAGS=""
-               PART_LDFLAGS="-lbd_part"],
+               have_libblockdev_part_spec=1],
               have_libblockdev_part=no
               have_libblockdev_part_spec=0)
         ],
         have_libblockdev_part=no)
 AM_CONDITIONAL(HAVE_LIBBLOCKDEV_PART, [test "x$have_libblockdev_part" = "xyes"])
 AC_SUBST([have_libblockdev_part_spec])
-AC_SUBST([PART_CFLAGS])
-AC_SUBST([PART_LDFLAGS])
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
 
@@ -499,15 +475,9 @@ AC_TRY_COMPILE([#include <swap.h>], [],
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
 
-SWAP_CFLAGS="-I/usr/include/blockdev"
-SWAP_LIBS="-lbd_swap"
-
 if test "x$have_swap" = "xno"; then
   AC_MSG_ERROR([SWAP support requested but header or library not found])
 fi
-
-AC_SUBST([SWAP_CFLAGS])
-AC_SUBST([SWAP_LIBS])
 
 # Internationalization
 #
