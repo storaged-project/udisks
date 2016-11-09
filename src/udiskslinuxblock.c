@@ -37,9 +37,7 @@
 #include <glib/gstdio.h>
 #include <gio/gunixfdlist.h>
 
-#ifdef HAVE_LIBBLOCKDEV_PART
 #include <blockdev/part.h>
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
 #include "udiskslogging.h"
 #include "udiskslinuxblock.h"
@@ -2739,10 +2737,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
-#ifdef HAVE_LIBBLOCKDEV_PART
   BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
   gchar *device_name = NULL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -3106,13 +3102,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-#ifdef HAVE_LIBBLOCKDEV_PART
     if (g_strcmp0 (type, "dos") == 0)
       part_table_type = BD_PART_TABLE_MSDOS;
     else if (g_strcmp0 (type, "gpt") == 0)
       part_table_type = BD_PART_TABLE_GPT;
     if (part_table_type == BD_PART_TABLE_UNDEF)
-#endif /* HAVE_LIBBLOCKDEV_PART */
       {
         /* Build and run mkfs shell command */
         tmp = subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
@@ -3135,7 +3129,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             goto out;
           }
       }
-#ifdef HAVE_LIBBLOCKDEV_PART
     else
       {
         /* Create the partition table. */
@@ -3146,7 +3139,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             goto out;
           }
       }
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
@@ -3306,9 +3298,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_clear_object (&partition_table);
   g_clear_object (&partition);
   g_clear_object (&object);
-#ifdef HAVE_LIBBLOCKDEV_PART
   g_free (device_name);
-#endif /* HAVE_LIBBLOCKDEV_PART */
 }
 
 struct FormatCompleteData {

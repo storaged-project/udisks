@@ -54,7 +54,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(size, 100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        self.assertEqual(offset, 1024**2)
 
         dbus_type = self.get_property(part, '.Partition', 'Type')
         self.assertEqual(dbus_type, part_type)
@@ -69,7 +69,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, part_type)
@@ -93,7 +93,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_format, disk)
 
         # create extended partition
-        ext_path = disk.CreatePartition(dbus.UInt64(0), dbus.UInt64(100 * 1024**2), '0x05', '',
+        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '0x05', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -116,7 +116,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
-        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
+        log_path = disk.CreatePartition(dbus.UInt64(2 * 1024**2), dbus.UInt64(50 * 1024**2), '', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -148,6 +148,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
                                     gpt_type, gpt_name,
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
+        self.udev_settle()
         part = self.bus.get_object(self.iface_prefix, path)
         self.assertIsNotNone(part)
 
@@ -158,7 +159,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(size, 100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        self.assertEqual(offset, 1024**2)
 
         dbus_name = self.get_property(part, '.Partition', 'Name')
         self.assertEqual(dbus_name, gpt_name)
@@ -176,7 +177,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_name = self.run_command('lsblk -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, gpt_name)
@@ -209,7 +210,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(size, 100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        self.assertEqual(offset, 1024**2)
 
         usage = self.get_property(part, '.Block', 'IdUsage')
         self.assertEqual(usage, 'filesystem')
@@ -227,7 +228,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_fstype = self.run_command('lsblk -no FSTYPE /dev/%s' % part_name)
         self.assertEqual(sys_fstype, 'xfs')
@@ -257,6 +258,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
                                         self.no_options,
                                         dbus_interface=self.iface_prefix + '.PartitionTable')
 
+        self.udev_settle()
         part = self.bus.get_object(self.iface_prefix, path)
         self.assertIsNotNone(part)
 
