@@ -258,7 +258,7 @@ zram_device_activate (UDisksBlockZRAM       *zramblock_,
 
   dev_file = udisks_linux_block_object_get_device_file (object);
 
-  if (! bd_swap_mkswap (dev_file, label, &error))
+  if (! bd_swap_mkswap (dev_file, label, NULL, &error))
   {
     g_dbus_method_invocation_take_error (invocation, error);
     goto out;
