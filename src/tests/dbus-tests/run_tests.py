@@ -52,7 +52,6 @@ def setup_vdevs():
 
     storagedtestcase.test_devs = vdevs
 
-
 def install_new_policy(projdir, tmpdir):
     '''Copies the polkit policies to the system directory and backs up eventually the existing files.
        Returns a list of files that need to be restored.'''
@@ -67,8 +66,20 @@ def install_new_policy(projdir, tmpdir):
 
     return restore_list
 
+def install_new_dbus_conf(projdir, tmpdir):
+    '''Copies the DBus config file(s) to the system directory and backs up eventually the existing files.
+       Returns a list of files that need to be restored.'''
+    restore_list = []
+    config = os.path.join(projdir, "data/org.freedesktop.UDisks2.conf")
+    tgt = os.path.join('/etc/dbus-1/system.d/', os.path.basename(config))
+    if os.path.exists(tgt):
+        shutil.move(tgt, tmpdir.name)
+        restore_list.append(tgt)
+    shutil.copy(config, '/etc/dbus-1/system.d/')
 
-def restore_policy(restore_list, tmpdir):
+    return restore_list
+
+def restore_files(restore_list, tmpdir):
     for f in restore_list:
         shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
 
@@ -102,6 +113,7 @@ if __name__ == '__main__':
     if not args.system:
         tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
         policy_files = install_new_policy(projdir, tmpdir)
+        conf_files = install_new_dbus_conf(projdir, tmpdir)
 
         daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
 
@@ -132,7 +144,8 @@ if __name__ == '__main__':
         daemon.wait()
         daemon_log.close()
 
-        restore_policy(policy_files, tmpdir)
+        restore_files(policy_files, tmpdir)
+        restore_files(conf_files, tmpdir)
         tmpdir.cleanup()
 
     # remove the fake SCSI devices and their backing files
