@@ -1,17 +1,113 @@
 ---------------------------
-storaged 2.6.3 (unreleased)
+storaged 2.6.4 (unreleased)
 ---------------------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.6.2:
+Changes since 2.6.3:
 (TODO: make shortlog)
 
 Thanks to all our contributors.
 
 Tomas Smetana
 (TODO: date)
+
+--------------
+storaged 2.6.3
+--------------
+
+The storaged project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.6.2:
+
+Gris Ge (2):
+      Fix memory leak caused by g_dbus_object_get_interface()
+      Fix memory leak in udisks_config_manager_constructed()
+
+Marius Vollmer (8):
+      ISCSI: Add SessionsSupported property
+      mdraid: Set sync job values also immediately
+      mdraid: Fix job expected end time
+      mdraid: Distinguish different kinds of sync jobs
+      core: Add 'dry-run-first' option to Block.Format
+      core: Don't pass bogus partition names to libblockdev
+      core: Prefer nice device names also for mdraid partitions
+      LVM2: Correctly retrieve meta data size
+
+Stef Walter (4):
+      .gitignore: Cleanup the .gitignore files
+      Remove warning about aggregate return values
+      lvm2: Remove unused variable
+      Don't include optional parameters in 'Missing parameter' message
+
+Tomas Smetana (29):
+      Post-release bump to 2.6.3
+      Tests: Add basic D-Bus tests for LVM and iSCSI
+      Tests: Fix doc string in the LVM cache test
+      Tests: Fix typo in the D-Bus interface prefix again
+      Tests: Install and eventually backup the polkit data files
+      Tests: Store backups in secure temporary directory
+      Packaging: Add the spec file generating script
+      Fix #46: LVM2 Plugin: cache split using unsafe option
+      Core: Force re-applying configuration on system resume from sleep
+      Core: Fix FTBFS caused by error in udiskslinuxprovider.c
+      Build system: Add rpm make taget
+      Tests: Call EnableModules in the first test
+      Tests: Allow testing of the system instance of storaged
+      Core: Return correct error type on unsupported FS label
+      Tests: Sleep before querying resized LV
+      Build: Add srpm make target; autogenerate rpm versions from git hash.
+      Update translations from Zanata
+      Translations: Update po files
+      LVM2: Use g_strerror insted of strerror_r
+      Don't add new drive object on "change" uevent
+
+Tony Asleson (12):
+      Fix seg fault in udiskslvmhelper
+      lvm2daemonutil.c: Close FD for spawned process
+      bcache_block_check: Fix UDisksLinuxDevice ref. leak
+      btrfs_block_check: Fix UDisksLinuxDevice ref. leak
+      update_etctabs: Remove unused variable name
+      zram_block_check: Fix UDisksLinuxDevice ref. leak
+      update_block: Fix UDisksLinuxDevice ref. leak
+      udisks_linux_drive_ata_update: Fix ';' placement
+      main.c: Fix glib crit. error on g_source_remove
+      udiskslvmhelper.c: list_volume_groups init. return value
+      udiskslvm2moduleiface.c: Fix double g_object_unref
+      udisksdaemon.c: Clean-up modules before removing needed resources
+
+Vojtech Trefny (12):
+      Add dbus tests for org.freedesktop.UDisks2.Block interface
+      Add dbus tests for org.freedesktop.UDisks2.PartitionTable interface
+      Add dbus tests for org.freedesktop.UDisks2.Partition interface
+      Add test for extended and logical parts to StoragedPartitionTableTest
+      Partition test: check the uuid and part number too
+      Move some general dbus test related methods to StoragedTestCase
+      Dbus tests: Add more tests for LVM plugin
+      Few fixes for lvm plugin dbus tests
+      Few fixes for block devices dbus tests
+      Add dbus tests for encrypted devices
+      DBus tests: Fix extended partition checks
+      Add dbus tests for filesystems
+
+Vratislav Podzimek (18):
+      Skip iSCSI tests if no target is available/defined
+      Open, read and close the device's model file when running tests
+      Give the daemon time to process events before running tests
+      Give libblockdev partition size not end
+      Use long DBus timeout when running tests
+      Remove unused imports in storagedtestcase.py
+      Use targetcli instead of scsi_debug
+      Try harder when deleting partition after tests
+      Transform libblockev includes to blockdev/HEADER.h
+      Adapt the bcache, btrfs and zram  modules to libblockdev-2.0
+
+Thanks to all our contributors.
+
+Tomas Smetana
+2016-11-14
 
 --------------
 storaged 2.6.2

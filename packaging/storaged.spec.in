@@ -6,6 +6,7 @@
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
 %global with_libblockdev_part           @have_libblockdev_part_spec@
+%global libblockdev_version             2.1
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
@@ -36,10 +37,10 @@ BuildRequires: libacl-devel
 BuildRequires: chrpath
 BuildRequires: gtk-doc
 BuildRequires: intltool
-%if %{with_libblockdev_part} == 1
-BuildRequires: libblockdev-part-devel
-%endif # with_libblockdev_part
-BuildRequires: libblockdev-swap-devel
+BuildRequires: libblockdev-part-devel  >= %{libblockdev_version}
+BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
+BuildRequires: libblockdev-kbd-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-swap-devel  >= %{libblockdev_version}
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -55,12 +56,6 @@ Requires: e2fsprogs
 Requires: xfsprogs
 # For mkfs.vfat
 Requires: dosfstools
-# For partitioning
-%if %{with_libblockdev_part} == 0
-Requires: parted
-%else
-Requires: libblockdev-part
-%endif # with_libblockdev_part
 Requires: gdisk
 # For LUKS devices
 Requires: cryptsetup-luks
@@ -329,6 +324,9 @@ systemctl try-restart udisks2
 %endif
 
 %changelog
+* Mon Nov 14 2016 Tomas Smetana <tsmetana@redhat.com> - 2.6.3-1
+- Version 2.6.3
+
 * Thu Jun 16 2016 Tomas Smetana <tsmetana@redhat.com> - 2.6.2-1
 - Version 2.6.2; aimed to replace udisks2
 
