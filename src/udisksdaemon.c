@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <blockdev/blockdev.h>
 
 #include "udiskslogging.h"
 #include "udisksdaemon.h"
@@ -243,8 +244,27 @@ udisks_daemon_constructed (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
   GError *error;
+  gboolean ret = FALSE;
+
+  /* NULL means no specific so_name (implementation) */
+  BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
+  BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
+
+  /* the core daemon only needs the part and swap plugins, additional plugins
+     are required by various modules, but they make sure plugins are loaded
+     themselves */
+  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, NULL};
 
   error = NULL;
+
+  ret = bd_ensure_init (plugins, NULL, &error);
+  if (!ret)
+    {
+      udisks_error ("Error initializing libblockdev library: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+    }
+
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {

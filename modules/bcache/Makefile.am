@@ -24,6 +24,7 @@ CPPFLAGS =                                                                    \
 	$(GLIB_CFLAGS)                                                        \
 	$(GIO_CFLAGS)                                                         \
 	$(GUDEV_CFLAGS)                                                       \
+	$(BLOCKDEV_CFLAGS)                                                    \
 	$(WARN_CFLAGS)                                                        \
 	$(NULL)
 
@@ -82,7 +83,7 @@ libudisks2_bcache_la_CFLAGS =                                                 \
 	$(GIO_CFLAGS)                                                         \
 	$(GUDEV_CFLAGS)                                                       \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                            \
-	$(BCACHE_CFLAGS)                                                      \
+	$(BLOCKDEV_CFLAGS)                                                    \
 	$(NULL)
 
 libudisks2_bcache_la_LDFLAGS =                                                \
@@ -99,7 +100,7 @@ libudisks2_bcache_la_LIBADD =                                                 \
 	$(GIO_LIBS)                                                           \
 	$(GUDEV_LIBS)                                                         \
 	$(POLKIT_GOBJECT_1_LIBS)                                              \
-	$(BCACHE_LIBS)                                                        \
+	$(BLOCKDEV_LIBS)                                                      \
 	$(NULL)
 
 # ------------------------------------------------------------------------------
