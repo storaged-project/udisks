@@ -37,8 +37,10 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         pttype = self.get_property(disk, '.PartitionTable', 'Type')
         self.assertEqual(pttype, 'dos')
 
+        part_type = '0x8e'  # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
+
         # create partition
-        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, '',
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -54,6 +56,9 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         offset = self.get_property(part, '.Partition', 'Offset')
         self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
 
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        self.assertEqual(dbus_type, part_type)
+
         # check system values
         part_name = path.split('/')[-1]
         disk_name = os.path.basename(self.vdevs[0])
@@ -65,6 +70,9 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+
+        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertEqual(sys_type, part_type)
 
         # check uuid and part number
         dbus_uuid = self.get_property(part, '.Partition', 'UUID')
@@ -132,8 +140,12 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         self.addCleanup(self._remove_format, disk)
 
+        gpt_name = 'home'
+        gpt_type = '933ac7e1-2eb4-4f13-b844-0e14e2aef915'
+
         # create partition
-        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2),
+                                    gpt_type, gpt_name,
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
         part = self.bus.get_object(self.iface_prefix, path)
@@ -148,6 +160,12 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         offset = self.get_property(part, '.Partition', 'Offset')
         self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
 
+        dbus_name = self.get_property(part, '.Partition', 'Name')
+        self.assertEqual(dbus_name, gpt_name)
+
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        self.assertEqual(dbus_type, gpt_type)
+
         # check system values
         part_name = path.split('/')[-1]
         disk_name = os.path.basename(self.vdevs[0])
@@ -159,6 +177,12 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+
+        _ret, sys_name = self.run_command('lsblk -no PARTLABEL /dev/%s' % part_name)
+        self.assertEqual(sys_name, gpt_name)
+
+        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertEqual(sys_type, gpt_type)
 
     def test_create_with_format(self):
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -291,7 +315,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         _ret, sys_flags = self.run_command('lsblk -no PARTFLAGS /dev/%s' % part_name)
         self.assertEqual(sys_flags, '0x80')
 
-    def test_type(self):
+    def test_gpt_type(self):
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
@@ -318,6 +342,34 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, home_guid)
+
+    def test_dos_type(self):
+        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        self.addCleanup(self._remove_partition, part)
+
+        self._create_format(part, 'xfs')
+        self.addCleanup(self._remove_format, part)
+
+        # set part type/id
+        part_type = '0x8e'   # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
+        part.SetType(part_type, self.no_options,
+                     dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        self.assertEqual(dbus_type, part_type)
+
+        # test flags value from sysytem
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertEqual(sys_type, part_type)
 
     def test_name(self):
         disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
