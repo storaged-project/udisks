@@ -1179,7 +1179,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1383,7 +1383,7 @@ handle_pm_standby (UDisksDriveAta        *_drive,
                                                  &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1517,7 +1517,7 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -2315,7 +2315,7 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -2344,7 +2344,7 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   if (!udisks_linux_drive_ata_secure_erase_sync (drive, caller_uid, enhanced, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -2408,7 +2408,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

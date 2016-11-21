@@ -204,7 +204,7 @@ udisks_linux_filesystem_btrfs_get_daemon (UDisksLinuxFilesystemBTRFS *l_fs_btrfs
   else
     {
       udisks_error ("%s", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   return daemon;
@@ -258,7 +258,7 @@ out:
   if (btrfs_info)
     bd_btrfs_filesystem_info_free (btrfs_info);
   if (error)
-    g_error_free (error);
+    g_clear_error (&error);
   g_free ((gpointer) dev_file);
 
   return rval;

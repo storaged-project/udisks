@@ -314,7 +314,7 @@ udisks_module_manager_get_modules_list (UDisksModuleManager *manager)
   if (! dir)
     {
       udisks_warning ("Error loading modules: %s", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
       g_free (module_dir);
       return NULL;
     }

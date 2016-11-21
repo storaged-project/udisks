@@ -786,7 +786,7 @@ udisks_state_check_mounted_fs (UDisksState *state,
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -824,7 +824,7 @@ udisks_state_check_mounted_fs (UDisksState *state,
                           error->message,
                           g_quark_to_string (error->domain),
                           error->code);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -879,7 +879,7 @@ udisks_state_add_mounted_fs (UDisksState    *state,
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -943,7 +943,7 @@ udisks_state_add_mounted_fs (UDisksState    *state,
     {
       udisks_warning ("Error setting mounted-fs: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -990,7 +990,7 @@ udisks_state_find_mounted_fs (UDisksState   *state,
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1253,7 +1253,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1291,7 +1291,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
                           error->message,
                           g_quark_to_string (error->domain),
                           error->code);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -1346,7 +1346,7 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1410,7 +1410,7 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
     {
       udisks_warning ("Error setting unlocked-luks: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1455,7 +1455,7 @@ udisks_state_find_unlocked_luks (UDisksState   *state,
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1632,7 +1632,7 @@ udisks_state_check_loop (UDisksState *state,
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1670,7 +1670,7 @@ udisks_state_check_loop (UDisksState *state,
                           error->message,
                           g_quark_to_string (error->domain),
                           error->code);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -1726,7 +1726,7 @@ udisks_state_add_loop (UDisksState   *state,
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1789,7 +1789,7 @@ udisks_state_add_loop (UDisksState   *state,
     {
       udisks_warning ("Error setting loop: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1834,7 +1834,7 @@ udisks_state_has_loop (UDisksState   *state,
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1978,7 +1978,7 @@ udisks_state_check_mdraid (UDisksState *state,
     {
       udisks_warning ("Error getting mdraid: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -2016,7 +2016,7 @@ udisks_state_check_mdraid (UDisksState *state,
                           error->message,
                           g_quark_to_string (error->domain),
                           error->code);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -2064,7 +2064,7 @@ udisks_state_add_mdraid (UDisksState   *state,
     {
       udisks_warning ("Error getting mdraid: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -2119,7 +2119,7 @@ udisks_state_add_mdraid (UDisksState   *state,
     {
       udisks_warning ("Error setting mdraid: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

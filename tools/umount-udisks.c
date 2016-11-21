@@ -103,7 +103,7 @@ main (int argc, char *argv[])
   if (client == NULL)
     {
       g_printerr ("Error connecting to the udisks daemon: %s\n", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -129,7 +129,7 @@ main (int argc, char *argv[])
                                             &error))
     {
       g_printerr ("Error unmounting block device %u:%u: %s\n", major (block_device), minor (block_device), error->message);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

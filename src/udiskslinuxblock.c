@@ -763,7 +763,7 @@ update_configuration (UDisksLinuxBlock  *block,
     {
       udisks_warning ("Error loading configuration: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       configuration = g_variant_new ("a(sa{sv})", NULL);
     }
   udisks_block_set_configuration (UDISKS_BLOCK (block), configuration);
@@ -881,7 +881,7 @@ udisks_linux_find_child_configuration (UDisksDaemon *daemon,
     {
       udisks_warning ("Error loading configuration: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       res = g_variant_new ("a(sa{sv})", NULL);
     }
   g_free (needle);
@@ -2693,7 +2693,7 @@ handle_format_failure (GDBusMethodInvocation *invocation,
   if (invocation != NULL)
     g_dbus_method_invocation_take_error (invocation, error);
   else
-    g_error_free (error);
+    g_clear_error (&error);
 }
 
 void
@@ -2805,7 +2805,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

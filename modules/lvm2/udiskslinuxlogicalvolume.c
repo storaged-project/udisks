@@ -397,7 +397,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -532,7 +532,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -632,7 +632,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -765,7 +765,7 @@ handle_activate (UDisksLogicalVolume *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -865,7 +865,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -953,7 +953,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

@@ -283,7 +283,7 @@ udisks_crypttab_monitor_constructed (GObject *object)
     {
       udisks_error ("Error monitoring /etc/crypttab: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
   else
     {
@@ -374,7 +374,7 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
           udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
                           error->message, g_quark_to_string (error->domain), error->code);
         }
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

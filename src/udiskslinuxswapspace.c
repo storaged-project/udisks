@@ -184,7 +184,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -271,7 +271,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

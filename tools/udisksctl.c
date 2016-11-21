@@ -85,7 +85,7 @@ setup_local_polkit_agent (void)
                   error->message,
                   g_quark_to_string (error->domain),
                   error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
   local_agent_handle = polkit_agent_listener_register (local_polkit_agent,
@@ -100,7 +100,7 @@ setup_local_polkit_agent (void)
                   error->message,
                   g_quark_to_string (error->domain),
                   error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -819,13 +819,13 @@ handle_command_mount_unmount (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto try_again;
             }
           g_printerr ("Error mounting %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           g_object_unref (object);
           goto out;
         }
@@ -848,13 +848,13 @@ handle_command_mount_unmount (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto try_again;
             }
           g_printerr ("Error unmounting %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           g_object_unref (object);
           goto out;
         }
@@ -1265,13 +1265,13 @@ handle_command_unlock_lock (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto try_again;
             }
           g_printerr ("Error unlocking %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           g_object_unref (object);
           goto out;
         }
@@ -1299,13 +1299,13 @@ handle_command_unlock_lock (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto try_again;
             }
           g_printerr ("Error locking %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           g_object_unref (object);
           goto out;
         }
@@ -1639,14 +1639,14 @@ handle_command_loop (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto setup_try_again;
             }
           g_object_unref (fd_list);
           g_printerr ("Error setting up loop device for %s: %s\n",
                       opt_loop_file,
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
       g_object_unref (fd_list);
@@ -1705,13 +1705,13 @@ handle_command_loop (gint        *argc,
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
             {
-              g_error_free (error);
+              g_clear_error (&error);
               goto delete_try_again;
             }
           g_printerr ("Error deleting loop device %s: %s\n",
                       udisks_block_get_device (udisks_object_peek_block (object)),
                       error->message);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
       g_object_unref (object);
@@ -1984,7 +1984,7 @@ handle_command_smart_simulate (gint        *argc,
           error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
           setup_local_polkit_agent ())
         {
-          g_error_free (error);
+          g_clear_error (&error);
           goto try_again;
         }
       g_dbus_error_strip_remote_error (error);
@@ -2217,7 +2217,7 @@ handle_command_power_off (gint        *argc,
           error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
           setup_local_polkit_agent ())
         {
-          g_error_free (error);
+          g_clear_error (&error);
           goto try_again;
         }
       g_dbus_error_strip_remote_error (error);
@@ -3225,7 +3225,7 @@ main (int argc,
   if (client == NULL)
     {
       g_printerr ("Error connecting to the udisks daemon: %s\n", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

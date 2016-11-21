@@ -284,7 +284,7 @@ variant_reader_watch_child (GPid     pid,
   if (!g_spawn_check_exit_status (status, &error))
     {
       data->callback (pid, NULL, error, data->user_data);
-      g_error_free (error);
+      g_clear_error (&error);
       g_byte_array_free (data->output, TRUE);
     }
   else
@@ -356,7 +356,7 @@ udisks_daemon_util_lvm2_spawn_for_variant (const gchar        **argv,
                                  &error))
     {
       callback (0, NULL, error, user_data);
-      g_error_free (error);
+      g_clear_error (&error);
       return 0;
     }
 

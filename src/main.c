@@ -122,7 +122,7 @@ main (int    argc,
   if (!g_option_context_parse (opt_context, &argc, &argv, &error))
     {
       g_printerr ("Error parsing options: %s\n", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

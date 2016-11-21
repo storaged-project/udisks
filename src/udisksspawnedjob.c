@@ -229,7 +229,7 @@ emit_completed_with_error_in_idle_cb (gpointer user_data)
                  data->job->child_stderr,  /* standard_error */
                  &ret);
   g_object_unref (data->job);
-  g_error_free (data->error);
+  g_clear_error (&(data->error));
   g_free (data);
   return FALSE;
 }
@@ -268,7 +268,7 @@ on_cancelled (GCancellable *cancellable,
   error = NULL;
   g_warn_if_fail (g_cancellable_set_error_if_cancelled (cancellable, &error));
   emit_completed_with_error_in_idle (job, error);
-  g_error_free (error);
+  g_clear_error (&error);
 }
 
 static gboolean
@@ -439,7 +439,7 @@ udisks_spawned_job_constructed (GObject *object)
   if (g_cancellable_set_error_if_cancelled (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)), &error))
     {
       emit_completed_with_error_in_idle (job, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -458,7 +458,7 @@ udisks_spawned_job_constructed (GObject *object)
                       "Error parsing command-line `%s': ",
                       job->command_line);
       emit_completed_with_error_in_idle (job, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -471,7 +471,7 @@ udisks_spawned_job_constructed (GObject *object)
           g_set_error(&error, G_IO_ERROR, G_IO_ERROR_FAILED,
                       "No password record for uid %d: %m\n", (gint) job->run_as_euid);
           emit_completed_with_error_in_idle (job, error);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
       job->real_egid = pw->pw_gid;
@@ -482,7 +482,7 @@ udisks_spawned_job_constructed (GObject *object)
           g_set_error(&error, G_IO_ERROR, G_IO_ERROR_FAILED,
                       "No password record for uid %d: %m\n", (gint) job->run_as_uid);
           emit_completed_with_error_in_idle (job, error);
-          g_error_free (error);
+          g_clear_error (&error);
           goto out;
         }
       job->real_gid = pw->pw_gid;
@@ -507,7 +507,7 @@ udisks_spawned_job_constructed (GObject *object)
                       "Error spawning command-line `%s': ",
                       job->command_line);
       emit_completed_with_error_in_idle (job, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

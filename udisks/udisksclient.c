@@ -131,7 +131,7 @@ udisks_client_finalize (GObject *object)
     g_source_destroy (client->changed_timeout_source);
 
   if (client->initialization_error != NULL)
-    g_error_free (client->initialization_error);
+    g_clear_error (&(client->initialization_error));
 
   /* might be NULL if failing early in the constructor */
   if (client->object_manager != NULL)
