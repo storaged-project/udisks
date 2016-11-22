@@ -46,9 +46,14 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def get_object(self, path_suffix):
+        # if given full path, just use it, otherwise prepend the prefix
+        if path_suffix.startswith(self.path_prefix):
+            path = path_suffix
+        else:
+            path = self.path_prefix + path_suffix
         try:
             # self.iface_prefix is the same as the DBus name we acquire
-            obj = self.bus.get_object(self.iface_prefix, self.path_prefix + path_suffix)
+            obj = self.bus.get_object(self.iface_prefix, path)
         except:
             obj = None
         return obj
