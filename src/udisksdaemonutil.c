@@ -732,7 +732,7 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
           /* assume polkit authority is not available (e.g. could be the service
            * manager returning org.freedesktop.systemd1.Masked)
            */
-          g_error_free (sub_error);
+          g_clear_error (&sub_error);
           ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation, error);
         }
       else
@@ -744,7 +744,7 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                        sub_error->message,
                        g_quark_to_string (sub_error->domain),
                        sub_error->code);
-          g_error_free (sub_error);
+          g_clear_error (&sub_error);
         }
       goto out;
     }
@@ -840,7 +840,7 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                    local_error->message,
                    g_quark_to_string (local_error->domain),
                    local_error->code);
-      g_error_free (local_error);
+      g_clear_error (&local_error);
       goto out;
     }
 
@@ -943,7 +943,7 @@ udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
                    local_error->message,
                    g_quark_to_string (local_error->domain),
                    local_error->code);
-      g_error_free (local_error);
+      g_clear_error (&local_error);
       goto out;
     }
 

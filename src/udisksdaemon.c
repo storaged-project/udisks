@@ -250,7 +250,7 @@ udisks_daemon_constructed (GObject *object)
     {
       udisks_error ("Error initializing polkit authority: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   daemon->object_manager = g_dbus_object_manager_server_new ("/org/freedesktop/UDisks2");

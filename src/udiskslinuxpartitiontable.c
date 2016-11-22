@@ -381,7 +381,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

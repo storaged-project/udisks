@@ -313,7 +313,7 @@ udisks_mount_monitor_constructed (GObject *object)
   else
     {
       g_error ("No /proc/self/mountinfo file: %s", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   error = NULL;
@@ -332,7 +332,7 @@ udisks_mount_monitor_constructed (GObject *object)
           udisks_warning ("Error opening /proc/swaps file: %s (%s, %d)",
                           error->message, g_quark_to_string (error->domain), error->code);
         }
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   if (G_OBJECT_CLASS (udisks_mount_monitor_parent_class)->constructed != NULL)
@@ -613,7 +613,7 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
     {
       udisks_warning ("Error getting mounts: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   error = NULL;
@@ -621,7 +621,7 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
     {
       udisks_warning ("Error getting swaps: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   monitor->have_data = TRUE;

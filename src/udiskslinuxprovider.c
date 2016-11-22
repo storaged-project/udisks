@@ -773,7 +773,7 @@ perform_initial_housekeeping_for_drive (GTask           *task,
       udisks_warning ("Error performing initial housekeeping for drive %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 }
 
@@ -1312,7 +1312,7 @@ housekeeping_all_drives (UDisksLinuxProvider *provider,
           udisks_warning ("Error performing housekeeping for drive %s: %s (%s, %d)",
                           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                           error->message, g_quark_to_string (error->domain), error->code);
-          g_error_free (error);
+          g_clear_error (&error);
         }
     }
 
@@ -1355,7 +1355,7 @@ housekeeping_all_modules (UDisksLinuxProvider *provider,
           udisks_warning ("Error performing housekeeping for module object %s: %s (%s, %d)",
                           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                           error->message, g_quark_to_string (error->domain), error->code);
-          g_error_free (error);
+          g_clear_error (&error);
         }
     }
 
