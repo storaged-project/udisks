@@ -63,7 +63,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         time.sleep(0.1)  # in this case SetUp does not always finish in time
         raw = self.get_property(self.device, '.Loop', 'BackingFile')
         # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = ''.join(chr(x) for x in raw[:-1])
+        backing_file = self.ay_to_str(raw)
         self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
 
     def test_40_setupbyuid(self):

@@ -105,3 +105,9 @@ class StoragedTestCase(unittest.TestCase):
                              stderr=subprocess.PIPE)
         out = res.stdout.decode().strip()
         return (res.returncode, out)
+
+    @classmethod
+    def ay_to_str(self, ay):
+        """Convert a bytearray (terminated with '\0') to a string"""
+
+        return ''.join(chr(x) for x in ay[:-1])
