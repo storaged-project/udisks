@@ -15,7 +15,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.run_command('dd if=/dev/zero of=%s bs=10MiB count=1' % self.LOOP_DEVICE_FILENAME)
         ret_code, self.dev_name = self.run_command('losetup --find --show %s' % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret_code, 0)
-        self.device = self.get_object('', '/block_devices/' + os.path.basename(self.dev_name))
+        self.device = self.get_object('/block_devices/' + os.path.basename(self.dev_name))
         self.iface = dbus.Interface(self.device, dbus_interface=self.iface_prefix + '.Loop')
 
     def tearDown(self):

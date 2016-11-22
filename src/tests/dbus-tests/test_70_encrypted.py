@@ -21,7 +21,7 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
 
     def test_create(self):
         disk_name = os.path.basename(self.vdevs[0])
-        disk = self.get_object('', '/block_devices/' + disk_name)
+        disk = self.get_object('/block_devices/' + disk_name)
 
         self._create_luks(disk, 'test')
         self.addCleanup(self._remove_luks, disk)
@@ -50,7 +50,7 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
         # get the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
         obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
-        luks = self.get_object('', '/block_devices/' + obj_name)
+        luks = self.get_object('/block_devices/' + obj_name)
 
         self.assertIsNotNone(luks)
 
@@ -79,7 +79,7 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
 
     def test_close_open(self):
         disk_name = os.path.basename(self.vdevs[0])
-        disk = self.get_object('', '/block_devices/' + disk_name)
+        disk = self.get_object('/block_devices/' + disk_name)
 
         self._create_luks(disk, 'test')
         self.addCleanup(self._remove_luks, disk)
@@ -107,7 +107,7 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
 
     def test_password_change(self):
         disk_name = os.path.basename(self.vdevs[0])
-        disk = self.get_object('', '/block_devices/' + disk_name)
+        disk = self.get_object('/block_devices/' + disk_name)
 
         self._create_luks(disk, 'test')
         self.addCleanup(self._remove_luks, disk)

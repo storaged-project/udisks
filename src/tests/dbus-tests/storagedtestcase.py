@@ -45,9 +45,10 @@ class StoragedTestCase(unittest.TestCase):
 
 
     @classmethod
-    def get_object(self, iface_suffix, path_suffix):
+    def get_object(self, path_suffix):
         try:
-            obj = self.bus.get_object(self.iface_prefix + iface_suffix, self.path_prefix + path_suffix)
+            # self.iface_prefix is the same as the DBus name we acquire
+            obj = self.bus.get_object(self.iface_prefix, self.path_prefix + path_suffix)
         except:
             obj = None
         return obj

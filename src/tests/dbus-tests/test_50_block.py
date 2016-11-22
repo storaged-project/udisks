@@ -20,7 +20,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
     def test_format(self):
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create xfs filesystem
@@ -51,7 +51,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
     def test_open(self):
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         self.addCleanup(self._clean_format, disk)
@@ -91,7 +91,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- remove format
@@ -151,7 +151,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
@@ -205,7 +205,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
     def test_rescan(self):
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         disk.Rescan(self.no_options, dbus_interface=self.iface_prefix + '.Block')
