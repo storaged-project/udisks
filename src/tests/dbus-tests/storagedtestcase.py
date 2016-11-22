@@ -53,6 +53,22 @@ class StoragedTestCase(unittest.TestCase):
             obj = None
         return obj
 
+    @classmethod
+    def get_interface(self, obj, iface_suffix):
+        """Get interface for the given object either specified by an object path suffix
+        (appended to the common UDisks2/storaged prefix) or given as the object
+        itself.
+
+        :param obj: object to get the interface for
+        :type obj: str or dbus.proxies.ProxyObject
+        :param iface_suffix: suffix appended to the common UDisks2/storaged interface prefix
+        :type iface_suffix: str
+
+        """
+        if isinstance(obj, str):
+            obj = self.get_object(obj)
+        return dbus.Interface(obj, self.iface_prefix + iface_suffix)
+
 
     @classmethod
     def get_property(self, obj, iface_suffix, prop):
