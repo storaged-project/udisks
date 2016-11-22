@@ -147,12 +147,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.addCleanup(tmp.cleanup)
 
         # configuration items as arrays of dbus.Byte
-        mnt = dbus.Array([dbus.Byte(ord(c)) for c in '%s\0' % tmp.name],
-                         signature=dbus.Signature('y'), variant_level=1)
-        fstype = dbus.Array([dbus.Byte(ord(c)) for c in '%s\0' % self._fs_name],
-                            signature=dbus.Signature('y'), variant_level=1)
-        opts = dbus.Array([dbus.Byte(ord(c)) for c in 'ro\0'],
-                          signature=dbus.Signature('y'), variant_level=1)
+        mnt = self.str_to_ay(tmp.name)
+        fstype = self.str_to_ay(self._fs_name)
+        opts = self.str_to_ay('ro')
 
         # set the new configuration
         conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
