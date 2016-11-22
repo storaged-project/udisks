@@ -77,10 +77,7 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def get_property(self, obj, iface_suffix, prop):
-        try:
-            res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
-        except:
-            res = None
+        res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
         return res
 
 
