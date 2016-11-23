@@ -15,7 +15,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.run_command('dd if=/dev/zero of=%s bs=10MiB count=1' % self.LOOP_DEVICE_FILENAME)
         ret_code, self.dev_name = self.run_command('losetup --find --show %s' % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret_code, 0)
-        self.device = self.get_object('', '/block_devices/' + os.path.basename(self.dev_name))
+        self.device = self.get_object('/block_devices/' + os.path.basename(self.dev_name))
         self.iface = dbus.Interface(self.device, dbus_interface=self.iface_prefix + '.Loop')
 
     def tearDown(self):
@@ -63,7 +63,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         time.sleep(0.1)  # in this case SetUp does not always finish in time
         raw = self.get_property(self.device, '.Loop', 'BackingFile')
         # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = ''.join(chr(x) for x in raw[:-1])
+        backing_file = self.ay_to_str(raw)
         self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
 
     def test_40_setupbyuid(self):

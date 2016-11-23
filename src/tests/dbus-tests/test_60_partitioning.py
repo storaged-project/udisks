@@ -27,7 +27,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
             part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
     def test_create_mbr_partition(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create msdos partition table
@@ -85,7 +85,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
     def test_create_extended_partition(self):
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create msdos partition table
@@ -130,7 +130,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertTrue(dbus_cont)
 
     def test_create_gpt_partition(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create gpt partition table
@@ -185,7 +185,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_type, gpt_type)
 
     def test_create_with_format(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create msdos partition table
@@ -263,7 +263,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         return part
 
     def test_delete(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'dos')
@@ -281,7 +281,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         part_syspath = '/sys/block/%s/%s' % (disk_name, part_name)
 
         # make sure the partition is not on dbus
-        udisks = self.get_object('', '')
+        udisks = self.get_object('')
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(path, objects.keys())
 
@@ -289,7 +289,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         self.assertFalse(os.path.isdir(part_syspath))
 
     def test_flags(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'dos')
@@ -316,7 +316,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_flags, '0x80')
 
     def test_gpt_type(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'gpt')
@@ -344,7 +344,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_type, home_guid)
 
     def test_dos_type(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'dos')
@@ -372,7 +372,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_type, part_type)
 
     def test_name(self):
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'gpt')

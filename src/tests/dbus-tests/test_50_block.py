@@ -20,7 +20,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
     def test_format(self):
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create xfs filesystem
@@ -51,7 +51,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
     def test_open(self):
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         self.addCleanup(self._clean_format, disk)
@@ -91,19 +91,16 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- remove format
         self.addCleanup(self._clean_format, disk)
 
         # configuration items as arrays of dbus.Byte
-        mnt = dbus.Array([dbus.Byte(ord(c)) for c in '/mnt/test\0'],
-                         signature=dbus.Signature('y'), variant_level=1)
-        fstype = dbus.Array([dbus.Byte(ord(c)) for c in 'xfs\0'],
-                            signature=dbus.Signature('y'), variant_level=1)
-        opts = dbus.Array([dbus.Byte(ord(c)) for c in 'defaults\0'],
-                          signature=dbus.Signature('y'), variant_level=1)
+        mnt = self.str_to_ay('/mnt/test')
+        fstype = self.str_to_ay('xfs')
+        opts = self.str_to_ay('defaults')
 
         # set the new configuration
         conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
@@ -122,8 +119,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(old_conf[0][1]['freq'], 0)
 
         # update the configuration
-        new_opts = dbus.Array([dbus.Byte(ord(c)) for c in 'defaults,noauto\0'],
-                              signature=dbus.Signature('y'), variant_level=1)
+        new_opts = self.str_to_ay('defaults,noauto')
         new_conf = copy.deepcopy(old_conf)
         new_conf[0][1]['opts'] = new_opts
 
@@ -151,7 +147,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
 
         # format the disk
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
@@ -159,10 +155,8 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._close_luks, disk)
 
         # configuration items as arrays of dbus.Byte
-        opts = dbus.Array([dbus.Byte(ord(c)) for c in 'verify\0'],
-                          signature=dbus.Signature('y'), variant_level=1)
-        passwd = dbus.Array([dbus.Byte(ord(c)) for c in 'test\0'],
-                            signature=dbus.Signature('y'), variant_level=1)
+        opts = self.str_to_ay('verify')
+        passwd = self.str_to_ay('test')
 
         # set the new configuration
         conf = dbus.Dictionary({'passphrase-contents': passwd,
@@ -181,8 +175,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sec_conf[0][1]['passphrase-contents'], passwd)
 
         # update the configuration
-        new_opts = dbus.Array([dbus.Byte(ord(c)) for c in 'verify,discard\0'],
-                              signature=dbus.Signature('y'), variant_level=1)
+        new_opts = self.str_to_ay('verify,discard')
         new_conf = copy.deepcopy(sec_conf)
         new_conf[0][1]['options'] = new_opts
 
@@ -205,7 +198,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
     def test_rescan(self):
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         disk.Rescan(self.no_options, dbus_interface=self.iface_prefix + '.Block')

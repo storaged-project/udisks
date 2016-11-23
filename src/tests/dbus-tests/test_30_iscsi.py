@@ -11,7 +11,7 @@ class StoragedISCSITest(storagedtestcase.StoragedTestCase):
     def test_login_noauth(self):
         host = os.getenv('TEST_ISCSI_HOST')
         self.assertIsNotNone(host)
-        manager = self.get_object('', '/Manager')
+        manager = self.get_object('/Manager')
         (nodes, nodes_num) = manager.DiscoverSendTargets(host, 0, self.no_options,
                 dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
         self.assertGreater(nodes_num, 0)
