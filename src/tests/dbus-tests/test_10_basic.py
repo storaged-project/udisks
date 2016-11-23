@@ -27,6 +27,11 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
             intro_data = manager_intro.Introspect()
             self.assertIn('interface name="org.freedesktop.UDisks2.Manager.Bcache"', intro_data)
 
+    def test_30_supported_filesystems(self):
+        fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')
+        self.assertEqual({str(s) for s in fss},
+                         {'nilfs2', 'btrfs', 'swap', 'ext3', 'udf', 'xfs', 'minix', 'ext2', 'ext4', 'f2fs', 'reiserfs', 'ntfs', 'vfat', 'exfat'})
+
     def test_80_device_presence(self):
         '''Test the debug devices are present on the bus'''
         for d in self.vdevs:
