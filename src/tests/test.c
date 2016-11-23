@@ -35,6 +35,7 @@
 
 static GMainLoop *loop;
 static GThread *main_thread;
+static char* last_failure_message;
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -58,6 +59,8 @@ on_completed_expect_failure (UDisksJob   *object,
   g_assert (g_thread_self () == main_thread);
   if (expected_message != NULL)
     g_assert_cmpstr (message, ==, expected_message);
+  g_free (last_failure_message);
+  last_failure_message = g_strdup (message);
   g_assert (!success);
 }
 
@@ -94,8 +97,12 @@ test_spawned_job_missing_program (void)
   UDisksSpawnedJob *job;
 
   job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL, NULL);
-  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             (gpointer) "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure), NULL);
+  /* different GLib versions have different quoting style, be liberal */
+  g_assert (strstr (last_failure_message, "Error spawning command-line"));
+  g_assert (strstr (last_failure_message, "Failed to execute child process"));
+  g_assert (strstr (last_failure_message, "/path/to/unknown/file"));
+  g_assert (strstr (last_failure_message, "No such file or directory"));
   g_object_unref (job);
 }
 
@@ -169,8 +176,12 @@ test_spawned_job_override_signal_handler (void)
   job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL, NULL /* GCancellable */);
   handler_ran = FALSE;
   g_signal_connect (job, "spawned-job-completed", G_CALLBACK (on_spawned_job_completed), &handler_ran);
-  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             (gpointer) "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure), NULL);
+  /* different GLib versions have different quoting style, be liberal */
+  g_assert (strstr (last_failure_message, "Error spawning command-line"));
+  g_assert (strstr (last_failure_message, "Failed to execute child process"));
+  g_assert (strstr (last_failure_message, "/path/to/unknown/file"));
+  g_assert (strstr (last_failure_message, "No such file or directory"));
   g_assert (handler_ran);
   g_object_unref (job);
 }
