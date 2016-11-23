@@ -118,8 +118,8 @@ if __name__ == '__main__':
         daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
 
         # start the devel tree daemon
-        daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled',
-            '--force-load-modules'], shell=False, stdout=daemon_log, stderr=daemon_log)
+        daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled'],
+                                  shell=False, stdout=daemon_log, stderr=daemon_log)
         # give the daemon some time to initialize
         time.sleep(3)
         daemon.poll()
