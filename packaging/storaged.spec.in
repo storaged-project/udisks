@@ -37,6 +37,7 @@ BuildRequires: libacl-devel
 BuildRequires: chrpath
 BuildRequires: gtk-doc
 BuildRequires: intltool
+BuildRequires: redhat-rpm-config
 BuildRequires: libblockdev-part-devel  >= %{libblockdev_version}
 BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-kbd-devel   >= %{libblockdev_version}
