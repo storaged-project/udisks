@@ -55,12 +55,12 @@ udisks_module_init (UDisksDaemon *daemon)
 
   if (!bd_is_plugin_available (BD_PLUGIN_KBD) || !bd_is_plugin_available (BD_PLUGIN_SWAP))
     {
-      ret = bd_reinit (plugins, NULL, FALSE, &error);
+      ret = bd_reinit (plugins, FALSE, NULL, &error);
       if (!ret)
         {
           udisks_error ("Error initializing the kbd and swap libblockdev plugins: %s (%s, %d)",
                         error->message, g_quark_to_string (error->domain), error->code);
-          g_clear_error (error);
+          g_clear_error (&error);
           /* XXX: can do nothing more here even though we know the module will be unusable! */
         }
     }
