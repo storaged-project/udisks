@@ -10,6 +10,17 @@ function print_help()
     echo "  -h, --help                    Print this message"
 }
 
+function replace_version()
+{
+    version_script_path=$(readlink -f "$(dirname $0)/..")
+    pushd $version_script_path 2>&1 > /dev/null
+    spec_version=$(./version.sh -v)
+    spec_release=$(./version.sh -r)
+    popd 2>&1 > /dev/null
+    sed -i "s/^Version: .*$/Version: ${spec_version}/" storaged.spec
+    sed -i "s/^Release: .*$/Release: ${spec_release}%{?dist}/" storaged.spec
+}
+
 case "$1" in
     -h|--help)
         print_help
@@ -18,9 +29,11 @@ case "$1" in
 
     -l|--with-libblockdev-part)
         sed "s/@have_libblockdev_part_spec@/1/" storaged.spec.in > storaged.spec
+        replace_version
         ;;
 
     -p|--with-parted|*)
         sed "s/@have_libblockdev_part_spec@/0/" storaged.spec.in > storaged.spec
+        replace_version
         ;;
 esac

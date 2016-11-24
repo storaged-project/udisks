@@ -9,18 +9,11 @@
 %global libblockdev_version             2.1
 
 %define is_fedora                       0%{?rhel} == 0
-%define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
-%define git_hash                        %(git show --pretty=format:%h || true)
-%define build_date                      %(date '+%Y%m%d')
 
 Name:    storaged
 Summary: Disk Manager
 Version: 2.6.3
-%if %{is_git} == 0
 Release: 1%{?dist}
-%else
-Release: 0.%{build_date}git%{git_hash}%{?dist}
-%endif
 License: GPLv2+
 Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/storaged
