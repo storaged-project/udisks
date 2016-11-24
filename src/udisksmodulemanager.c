@@ -206,7 +206,7 @@ static void
 free_module_data (ModuleData *data)
 {
   if (! g_module_close (data->handle))
-    udisks_error ("Unloading failed: %s", g_module_error ());
+    udisks_critical ("Unloading failed: %s", g_module_error ());
   g_free (data);
 }
 
@@ -472,7 +472,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
         }
       else
         {
-          udisks_error ("Module loading failed: %s", g_module_error ());
+          udisks_critical ("Module loading failed: %s", g_module_error ());
         }
     }
 

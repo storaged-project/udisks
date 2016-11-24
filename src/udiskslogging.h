@@ -55,11 +55,21 @@ void udisks_log (UDisksLogLevel   level,
  * udisks_notice:
  * @args...: printf()-style format string and arguments
  *
- * Logging macro for %UDISKS_LOG_LEVEL_NOTICE.
+ * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_NOTICE, G_STRFUNC, G_STRLOC, args)
+#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_MESSAGE, G_STRFUNC, G_STRLOC, args)
+
+/**
+ * udisks_message:
+ * @args...: printf()-style format string and arguments
+ *
+ * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
+ *
+ * See #UDisksLogLevel for more details.
+ */
+#define udisks_message(args...)    udisks_log(UDISKS_LOG_LEVEL_MESSAGE, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_warning:
@@ -72,10 +82,21 @@ void udisks_log (UDisksLogLevel   level,
 #define udisks_warning(args...) udisks_log(UDISKS_LOG_LEVEL_WARNING, G_STRFUNC, G_STRLOC, args)
 
 /**
+ * udisks_critical:
+ * @args...: printf()-style format string and arguments
+ *
+ * Logging macro for %UDISKS_LOG_LEVEL_CRITICAL.
+ *
+ * See #UDisksLogLevel for more details.
+ */
+#define udisks_critical(args...)   udisks_log(UDISKS_LOG_LEVEL_CRITICAL, G_STRFUNC, G_STRLOC, args)
+
+/**
  * udisks_error:
  * @args...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_ERROR.
+ * Warning: THIS ALSO TERMINATES THE PROCESS with the abort() call!
  *
  * See #UDisksLogLevel for more details.
  */

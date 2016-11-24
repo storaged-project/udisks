@@ -69,7 +69,7 @@ on_name_lost (GDBusConnection *connection,
 {
   if (the_daemon == NULL)
     {
-      udisks_error ("Failed to connect to the system message bus");
+      udisks_critical ("Failed to connect to the system message bus");
     }
   else
     {

@@ -160,7 +160,7 @@ udisks_linux_block_bcache_get_daemon (UDisksLinuxBlockBcache *block)
     }
   else
     {
-      udisks_error ("%s", error->message);
+      udisks_critical ("%s", error->message);
       g_clear_error (&error);
     }
 
@@ -197,7 +197,7 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
   mode = bd_kbd_bcache_get_mode_str(bd_kbd_bcache_get_mode(dev_file, &error), &error);
   if (! stats || ! mode)
     {
-      udisks_error ("Can't get Bcache block device info for %s", dev_file);
+      udisks_critical ("Can't get Bcache block device info for %s", dev_file);
       rval = FALSE;
       goto out;
     }
