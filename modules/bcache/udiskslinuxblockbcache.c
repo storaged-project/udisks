@@ -161,7 +161,7 @@ udisks_linux_block_bcache_get_daemon (UDisksLinuxBlockBcache *block)
   else
     {
       udisks_error ("%s", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   return daemon;
@@ -215,7 +215,7 @@ out:
   if (stats)
     bd_kbd_bcache_stats_free (stats);
   if (error)
-    g_error_free (error);
+    g_clear_error (&error);
   g_free (dev_file);
 
   return rval;

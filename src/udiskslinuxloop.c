@@ -148,7 +148,7 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
                               g_quark_to_string (error->domain),
                               error->code);
             }
-          g_error_free (error);
+          g_clear_error (&error);
           udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
         }
       else
@@ -218,7 +218,7 @@ handle_delete (UDisksLoop            *loop,
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -404,7 +404,7 @@ handle_set_autoclear (UDisksLoop             *loop,
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

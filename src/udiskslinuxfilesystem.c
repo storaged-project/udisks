@@ -216,7 +216,7 @@ is_in_filesystem_file (const gchar *filesystems_file,
                       error->message,
                       g_quark_to_string (error->domain),
                       error->code);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1247,7 +1247,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1397,7 +1397,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   if (fs_type_to_use == NULL)
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1412,7 +1412,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   if (mount_options_to_use == NULL)
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1460,7 +1460,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   if (mount_point_to_use == NULL)
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1625,7 +1625,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1878,7 +1878,7 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

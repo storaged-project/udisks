@@ -694,7 +694,7 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1067,7 +1067,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1270,7 +1270,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1409,7 +1409,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -1531,7 +1531,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      g_clear_error (&error);
       goto out;
     }
 

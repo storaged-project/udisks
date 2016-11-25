@@ -10,7 +10,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
     def _create_vg(self, vgname, devices):
         self.udev_settle()  # Since the devices might not be ready yet
-        manager = self.get_object('', '/Manager')
+        manager = self.get_object('/Manager')
         vg_path = manager.VolumeGroupCreate(vgname, devices, self.no_options,
                                             dbus_interface=self.iface_prefix + '.Manager.LVM2')
         self.udev_settle()
@@ -36,7 +36,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         # Use all the virtual devices but the last one
         devs = dbus.Array()
         for d in self.vdevs[:-1]:
-            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
         vg = self._create_vg(vgname, devs)
@@ -73,7 +73,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.assertGreater(lvsize, new_lvsize)
 
         # Add one more device to the VG
-        new_dev_obj = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[-1]))
+        new_dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[-1]))
         self.assertIsNotNone(new_dev_obj)
         vg.AddDevice(new_dev_obj, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -122,7 +122,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         # Use all the virtual devices
         devs = dbus.Array()
         for d in self.vdevs:
-            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
         vg = self._create_vg(vgname, devs)
@@ -169,7 +169,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         # Use all the virtual devices
         devs = dbus.Array()
         for d in self.vdevs:
-            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
         vg = self._create_vg(vgname, devs)
@@ -206,7 +206,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         # Use all the virtual devices
         devs = dbus.Array()
         for d in self.vdevs:
-            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
         vg = self._create_vg(vgname, devs)
@@ -261,7 +261,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         # Use all the virtual devices
         devs = dbus.Array()
         for d in self.vdevs:
-            dev_obj = self.get_object('', '/block_devices/' + os.path.basename(d))
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
 
@@ -289,7 +289,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         vgname = 'storaged_test_pv_vg'
 
         # crete vg with one pv
-        old_pv = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        old_pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(old_pv)
 
         vg = self._create_vg(vgname, dbus.Array([old_pv]))
@@ -304,7 +304,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.assertIsNotNone(lv)
 
         # add a new pv to the vg
-        new_pv = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[1]))
+        new_pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[1]))
         vg.AddDevice(new_pv, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
 

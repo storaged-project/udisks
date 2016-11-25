@@ -1029,7 +1029,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
             {
               udisks_info ("Drive %s is in a sleep state",
                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-              g_error_free (local_error);
+              g_clear_error (&local_error);
             }
           else if (nowakeup && (local_error->domain == UDISKS_ERROR &&
                                 local_error->code == UDISKS_ERROR_DEVICE_BUSY))
@@ -1037,7 +1037,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
               /* typically because a "secure erase" operation is pending */
               udisks_info ("Drive %s is busy",
                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-              g_error_free (local_error);
+              g_clear_error (&local_error);
             }
           else
             {

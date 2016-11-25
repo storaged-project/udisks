@@ -162,7 +162,7 @@ udisks_linux_block_zram_get_daemon (UDisksLinuxBlockZRAM *zramblock)
   else
     {
       udisks_error ("%s", error->message);
-      g_error_free (error);
+      g_clear_error (&error);
     }
 
   return daemon;
@@ -219,7 +219,7 @@ out:
   if (zram_info)
     bd_kbd_zram_stats_free (zram_info);
   if (error)
-    g_error_free (error);
+    g_clear_error (&error);
   g_free (dev_file);
 
   return rval;

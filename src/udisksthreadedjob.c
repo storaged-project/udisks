@@ -98,7 +98,7 @@ udisks_threaded_job_finalize (GObject *object)
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
 
   if (job->job_error != NULL)
-    g_error_free (job->job_error);
+    g_clear_error (&(job->job_error));
 
   if (job->user_data_free_func != NULL)
     job->user_data_free_func (job->user_data);

@@ -45,20 +45,39 @@ class StoragedTestCase(unittest.TestCase):
 
 
     @classmethod
-    def get_object(self, iface_suffix, path_suffix):
+    def get_object(self, path_suffix):
+        # if given full path, just use it, otherwise prepend the prefix
+        if path_suffix.startswith(self.path_prefix):
+            path = path_suffix
+        else:
+            path = self.path_prefix + path_suffix
         try:
-            obj = self.bus.get_object(self.iface_prefix + iface_suffix, self.path_prefix + path_suffix)
+            # self.iface_prefix is the same as the DBus name we acquire
+            obj = self.bus.get_object(self.iface_prefix, path)
         except:
             obj = None
         return obj
 
+    @classmethod
+    def get_interface(self, obj, iface_suffix):
+        """Get interface for the given object either specified by an object path suffix
+        (appended to the common UDisks2/storaged prefix) or given as the object
+        itself.
+
+        :param obj: object to get the interface for
+        :type obj: str or dbus.proxies.ProxyObject
+        :param iface_suffix: suffix appended to the common UDisks2/storaged interface prefix
+        :type iface_suffix: str
+
+        """
+        if isinstance(obj, str):
+            obj = self.get_object(obj)
+        return dbus.Interface(obj, self.iface_prefix + iface_suffix)
+
 
     @classmethod
     def get_property(self, obj, iface_suffix, prop):
-        try:
-            res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
-        except:
-            res = None
+        res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
         return res
 
 
@@ -77,9 +96,7 @@ class StoragedTestCase(unittest.TestCase):
     @classmethod
     def write_file(self, filename, content):
         with open(filename, 'w') as f:
-            f.seek(0)
             f.write(content)
-            f.truncate()
 
 
     @classmethod
@@ -88,3 +105,18 @@ class StoragedTestCase(unittest.TestCase):
                              stderr=subprocess.PIPE)
         out = res.stdout.decode().strip()
         return (res.returncode, out)
+
+    @classmethod
+    def ay_to_str(self, ay):
+        """Convert a bytearray (terminated with '\0') to a string"""
+
+        return ''.join(chr(x) for x in ay[:-1])
+
+    @classmethod
+    def str_to_ay(self, string):
+        """Convert a string to a bytearray (terminated with '\0')"""
+
+        string += '\0'
+
+        return dbus.Array([dbus.Byte(ord(c)) for c in string],
+                          signature=dbus.Signature('y'), variant_level=1)

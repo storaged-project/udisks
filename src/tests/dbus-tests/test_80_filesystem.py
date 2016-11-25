@@ -29,7 +29,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create filesystem
@@ -54,7 +54,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         if not self._can_label:
             self.skipTest('Cannot set label on %s filesystem' % self._fs_name)
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create filesystem with label
@@ -93,7 +93,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create filesystem
@@ -135,7 +135,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         fstab = self.read_file('/etc/fstab')
         self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
-        disk = self.get_object('', '/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create filesystem
@@ -147,12 +147,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.addCleanup(tmp.cleanup)
 
         # configuration items as arrays of dbus.Byte
-        mnt = dbus.Array([dbus.Byte(ord(c)) for c in '%s\0' % tmp.name],
-                         signature=dbus.Signature('y'), variant_level=1)
-        fstype = dbus.Array([dbus.Byte(ord(c)) for c in '%s\0' % self._fs_name],
-                            signature=dbus.Signature('y'), variant_level=1)
-        opts = dbus.Array([dbus.Byte(ord(c)) for c in 'ro\0'],
-                          signature=dbus.Signature('y'), variant_level=1)
+        mnt = self.str_to_ay(tmp.name)
+        fstype = self.str_to_ay(self._fs_name)
+        opts = self.str_to_ay('ro')
 
         # set the new configuration
         conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
