@@ -1011,7 +1011,7 @@ class FS(UDisksTestCase):
         except GLib.GError as e:
             if 'UDisks2.Error.NotSupported' in e.message:
                 # these fses are known to not support relabeling
-                self.assertIn(type, ['minix', 'btrfs', 'f2fs'])
+                self.assertIn(type, ['minix', 'f2fs'])
                 supported = False
             else:
                 raise
