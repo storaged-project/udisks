@@ -247,32 +247,6 @@ has_option (const gchar *options,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-lookup_binary_blob (GVariant     *dict,
-                    const gchar  *name,
-                    GString     **contents)
-{
-  GVariantIter *iter;
-  guchar byte;
-  gsize size = 0;
-  gsize index = 0;
-
-  if (!g_variant_lookup (dict, name, "ay", &iter))
-    return FALSE;
-
-  size = g_variant_iter_n_children (iter);
-  *contents = g_string_sized_new (size);
-  (*contents)->len = size;
-
-  while (g_variant_iter_loop (iter, "y", &byte))
-    {
-      (*contents)->str[index++] = byte;
-    }
-
-  g_variant_iter_free (iter);
-  return TRUE;
-}
-
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unlock (UDisksEncrypted        *encrypted,
@@ -415,7 +389,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
     name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
   escaped_name = udisks_daemon_util_escape_and_quote (name);
 
-  if (lookup_binary_blob (options, "keyfile_contents", &effective_passphrase))
+  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
     {
       use_keyfile = TRUE;
     }
