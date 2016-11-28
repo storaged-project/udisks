@@ -6,7 +6,7 @@ import storagedtestcase
 
 
 class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
-    """This is LoopDevice related functions unit test"""
+    """Unit tests for the Loop interface of loop devices"""
 
     LOOP_DEVICE_FILENAME = 'loop_device.img'
 
@@ -70,3 +70,167 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         time.sleep(0.1)  # in this case SetUp does not always finish in time
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
         self.assertEqual(uid, 0)  # uid should be 0 since device is not created by Udisks
+
+class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
+    """Unit tests for the loop-related methods of the Manager object"""
+
+    LOOP_DEVICE_FILENAME = 'loop_device.img'
+
+    def setUp(self):
+        # create a file and fill it with some data
+        self.run_command('dd if=/dev/zero of=%s bs=10MiB count=1' % self.LOOP_DEVICE_FILENAME)
+        self.addCleanup(os.remove, self.LOOP_DEVICE_FILENAME)
+        self.manager = self.get_interface("/Manager", ".Manager")
+
+    def test_10_create_simple(self):
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, self.no_options)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription from array of Bytes to string plus removal of trailing \0
+        backing_file = self.ay_to_str(raw)
+        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+
+        # should use the whole file
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        self.assertEqual(size, 10 * 1024**2)
+
+        # should be writable
+        ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
+        self.assertFalse(ro)
+
+    def test_20_create_with_offset(self):
+        opts = dbus.Dictionary({"offset": dbus.UInt64(4096)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription from array of Bytes to string plus removal of trailing \0
+        backing_file = self.ay_to_str(raw)
+        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+
+        # should use the whole file except for the first 4096 bytes (offset)
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        self.assertEqual(size, 10 * 1024**2 - 4096)
+
+        # should be writable
+        ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
+        self.assertFalse(ro)
+
+    def test_30_create_with_offset_size(self):
+        opts = dbus.Dictionary({"offset": dbus.UInt64(4096), "size": dbus.UInt64(4 * 1024**2)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription from array of Bytes to string plus removal of trailing \0
+        backing_file = self.ay_to_str(raw)
+        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+
+        # should use just the space specified by the 'size' argument
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        self.assertEqual(size, 4 * 1024**2)
+
+        # should be writable
+        ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
+        self.assertFalse(ro)
+
+    def test_40_create_read_only(self):
+        opts = dbus.Dictionary({"read-only": dbus.Boolean(True)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription from array of Bytes to string plus removal of trailing \0
+        backing_file = self.ay_to_str(raw)
+        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+
+        # should use the whole file except for the first 4096 bytes (offset)
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        self.assertEqual(size, 10 * 1024**2)
+
+        # should be read-only
+        ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
+        self.assertTrue(ro)
+
+    def test_50_create_no_part_scan(self):
+        # create a partition on the file (future loop device)
+        ret, out = self.run_command("parted %s mklabel msdos" % self.LOOP_DEVICE_FILENAME)
+        self.assertEqual(ret, 0)
+        ret, out = self.run_command("parted %s mkpart primary ext2 1 10" % self.LOOP_DEVICE_FILENAME)
+        self.assertEqual(ret, 0)
+
+        opts = dbus.Dictionary({"no-part-scan": dbus.Boolean(True)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription from array of Bytes to string plus removal of trailing \0
+        backing_file = self.ay_to_str(raw)
+        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+
+        # should use the whole file except for the first 4096 bytes (offset)
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        self.assertEqual(size, 10 * 1024**2)
+
+        # should be writable
+        ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
+        self.assertFalse(ro)
+
+        # partitions shouldn't be scanned
+        self.assertFalse(os.path.exists("/dev/%sp1" % loop_dev))
+
+        # detach the file an try it again, this time requesting the partitions to be scanned
+        self.run_command("losetup -d /dev/%s" % loop_dev)
+
+        opts = dbus.Dictionary({"no-part-scan": dbus.Boolean(False)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        # partitions should be scanned
+        self.assertTrue(os.path.exists("/dev/%sp1" % loop_dev))

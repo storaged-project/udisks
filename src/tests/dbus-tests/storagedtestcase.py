@@ -107,6 +107,20 @@ class StoragedTestCase(unittest.TestCase):
         return (res.returncode, out)
 
     @classmethod
+    def ensure_modules_loaded(self):
+        manager_obj = self.get_object('/Manager')
+        manager = self.get_interface(manager_obj, '.Manager')
+        manager_intro = dbus.Interface(manager_obj, "org.freedesktop.DBus.Introspectable")
+        intro_data = manager_intro.Introspect()
+        modules_loaded = 'interface name="org.freedesktop.UDisks2.Manager.Bcache"' in intro_data
+
+        if not modules_loaded:
+            manager.EnableModules(dbus.Boolean(True))
+            intro_data = manager_intro.Introspect()
+            assert 'interface name="org.freedesktop.UDisks2.Manager.Bcache"' in intro_data
+
+
+    @classmethod
     def ay_to_str(self, ay):
         """Convert a bytearray (terminated with '\0') to a string"""
 
