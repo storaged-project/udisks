@@ -118,7 +118,7 @@ if __name__ == '__main__':
         daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
 
         # start the devel tree daemon
-        daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled'],
+        daemon = subprocess.Popen([daemon_bin_path, '--replace', '--uninstalled', '--debug'],
                                   shell=False, stdout=daemon_log, stderr=daemon_log)
         # give the daemon some time to initialize
         time.sleep(3)

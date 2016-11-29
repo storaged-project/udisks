@@ -199,6 +199,7 @@ class RAID0TestCase(RAIDLevel):
         # stop the array
         array.Stop(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
+        time.sleep(1)
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
         self.assertFalse(dbus_running)
 
@@ -208,6 +209,7 @@ class RAID0TestCase(RAIDLevel):
         # start the array
         array.Start(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
+        time.sleep(1)
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
         self.assertTrue(dbus_running)
 

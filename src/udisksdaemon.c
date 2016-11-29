@@ -268,7 +268,7 @@ udisks_daemon_constructed (GObject *object)
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {
-      udisks_error ("Error initializing polkit authority: %s (%s, %d)",
+      udisks_critical ("Error initializing polkit authority: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
@@ -279,7 +279,7 @@ udisks_daemon_constructed (GObject *object)
     {
       if (g_mkdir_with_parents ("/run/udisks2", 0700) != 0)
         {
-          udisks_error ("Error creating directory %s: %m", "/run/udisks2");
+          udisks_critical ("Error creating directory %s: %m", "/run/udisks2");
         }
     }
 
@@ -287,7 +287,7 @@ udisks_daemon_constructed (GObject *object)
     {
       if (g_mkdir_with_parents (PACKAGE_LOCALSTATE_DIR "/lib/udisks2", 0700) != 0)
         {
-          udisks_error ("Error creating directory %s: %m", PACKAGE_LOCALSTATE_DIR "/lib/udisks2");
+          udisks_critical ("Error creating directory %s: %m", PACKAGE_LOCALSTATE_DIR "/lib/udisks2");
         }
     }
 

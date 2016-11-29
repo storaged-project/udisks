@@ -203,7 +203,7 @@ udisks_linux_filesystem_btrfs_get_daemon (UDisksLinuxFilesystemBTRFS *l_fs_btrfs
     }
   else
     {
-      udisks_error ("%s", error->message);
+      udisks_critical ("%s", error->message);
       g_clear_error (&error);
     }
 
@@ -243,7 +243,7 @@ udisks_linux_filesystem_btrfs_update (UDisksLinuxFilesystemBTRFS *l_fs_btrfs,
 
   if (! btrfs_info)
     {
-      udisks_error ("Can't get BTRFS filesystem info for %s", dev_file);
+      udisks_critical ("Can't get BTRFS filesystem info for %s", dev_file);
       rval = FALSE;
       goto out;
     }

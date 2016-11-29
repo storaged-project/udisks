@@ -268,7 +268,7 @@ update_configuration (UDisksLinuxDrive       *drive,
     {
       if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
         {
-          udisks_error ("Error loading drive config file: %s (%s, %d)",
+          udisks_critical ("Error loading drive config file: %s (%s, %d)",
                         error->message, g_quark_to_string (error->domain), error->code);
         }
       g_clear_error (&error);
@@ -288,7 +288,7 @@ update_configuration (UDisksLinuxDrive       *drive,
           gint32 int_value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
             {
-              udisks_error ("Error parsing int32 key %s in group %s in drive config file %s: %s (%s, %d)",
+              udisks_critical ("Error parsing int32 key %s in group %s in drive config file %s: %s (%s, %d)",
                             mapping->key, mapping->group, path,
                             error->message, g_quark_to_string (error->domain), error->code);
               g_clear_error (&error);
@@ -303,7 +303,7 @@ update_configuration (UDisksLinuxDrive       *drive,
           gboolean bool_value = g_key_file_get_boolean (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
             {
-              udisks_error ("Error parsing boolean key %s in group %s in drive config file %s: %s (%s, %d)",
+              udisks_critical ("Error parsing boolean key %s in group %s in drive config file %s: %s (%s, %d)",
                             mapping->key, mapping->group, path,
                             error->message, g_quark_to_string (error->domain), error->code);
               g_clear_error (&error);

@@ -1360,7 +1360,7 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
   connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
   if (connection == NULL)
     {
-      udisks_error ("Error getting system bus: %s (%s, %d)",
+      udisks_critical ("Error getting system bus: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       goto out;
@@ -1385,7 +1385,7 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
                                                          &error);
   if (value == NULL)
     {
-      udisks_error ("Error inhibiting: %s (%s, %d)",
+      udisks_critical ("Error inhibiting: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       goto out;
@@ -1399,7 +1399,7 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
   ret->fd = g_unix_fd_list_get (fd_list, index, &error);
   if (ret->fd == -1)
     {
-      udisks_error ("Error getting fd: %s (%s, %d)",
+      udisks_critical ("Error getting fd: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       g_free (ret);
@@ -1435,7 +1435,7 @@ udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie *cookie)
       g_assert (cookie->magic == 0xdeadbeef);
       if (close (cookie->fd) != 0)
         {
-          udisks_error ("Error closing inhbit-fd: %m");
+          udisks_critical ("Error closing inhbit-fd: %m");
         }
       g_free (cookie);
     }

@@ -369,7 +369,7 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
   /* Get session info */
   if (libiscsi_get_session_info_by_id (ctx, &session_info, session_object->session_id) != 0)
     {
-      udisks_error ("Can not retrieve session information for %s", session_object->session_id);
+      udisks_critical ("Can not retrieve session information for %s", session_object->session_id);
       return;
     }
 

@@ -127,7 +127,7 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
  out:
   if (error != NULL)
     {
-      udisks_error ("Error probing device: %s (%s, %d)",
+      udisks_critical ("Error probing device: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }

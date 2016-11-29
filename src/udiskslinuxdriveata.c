@@ -1677,7 +1677,7 @@ apply_configuration_thread_func (gpointer user_data)
   fd = open (device_file, O_RDWR|O_NONBLOCK);
   if (fd == -1)
     {
-      udisks_error ("Error opening device file %s: %m", device_file);
+      udisks_critical ("Error opening device file %s: %m", device_file);
       goto out;
     }
 
@@ -1693,7 +1693,7 @@ apply_configuration_thread_func (gpointer user_data)
                                          &output,
                                          &error))
         {
-          udisks_error ("Error sending ATA command IDLE (timeout=%d) to %s: %s (%s, %d)",
+          udisks_critical ("Error sending ATA command IDLE (timeout=%d) to %s: %s (%s, %d)",
                         data->ata_pm_standby, device_file,
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
@@ -1727,7 +1727,7 @@ apply_configuration_thread_func (gpointer user_data)
                                          &output,
                                          &error))
         {
-          udisks_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_apm_level=%d) to %s: %s (%s, %d)",
+          udisks_critical ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_apm_level=%d) to %s: %s (%s, %d)",
                         (guint) input.feature, data->ata_apm_level, device_file,
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
@@ -1758,7 +1758,7 @@ apply_configuration_thread_func (gpointer user_data)
                                          &output,
                                          &error))
         {
-          udisks_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_aam_level=%d) to %s: %s (%s, %d)",
+          udisks_critical ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_aam_level=%d) to %s: %s (%s, %d)",
                         (guint) input.feature, data->ata_aam_level, device_file,
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
@@ -1786,7 +1786,7 @@ apply_configuration_thread_func (gpointer user_data)
                                          &output,
                                          &error))
         {
-          udisks_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
+          udisks_critical ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
                         (guint) input.feature, device_file,
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
@@ -1815,7 +1815,7 @@ apply_configuration_thread_func (gpointer user_data)
                                          &output,
                                          &error))
         {
-          udisks_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
+          udisks_critical ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
                         (guint) input.feature, device_file,
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
@@ -2209,7 +2209,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
                                          &output,
                                          &cleanup_error))
         {
-          udisks_error ("Failed to clear user password '%s' on %s (%s) while attemping clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
+          udisks_critical ("Failed to clear user password '%s' on %s (%s) while attemping clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
                         pass,
                         device_file,
                         udisks_drive_get_id (_drive),
