@@ -569,7 +569,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   if (block_device_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_error ("mounted-fs entry %s is invalid: no block-device key/value pair", s);
+      udisks_critical ("mounted-fs entry %s is invalid: no block-device key/value pair", s);
       g_free (s);
       attempt_no_cleanup = FALSE;
       goto out;
@@ -580,7 +580,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   if (fstab_mount_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_error ("mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
+      udisks_critical ("mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
       g_free (s);
       attempt_no_cleanup = FALSE;
       goto out;
@@ -713,7 +713,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
                                                       "umount -l %s",
                                                       escaped_mount_point))
             {
-              udisks_error ("Error cleaning up mount point %s: Error unmounting: %s",
+              udisks_critical ("Error cleaning up mount point %s: Error unmounting: %s",
                             mount_point, error_message);
               g_free (escaped_mount_point);
               g_free (error_message);
@@ -740,7 +740,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
             {
               if (g_rmdir (mount_point) != 0)
                 {
-                  udisks_error ("Error cleaning up mount point %s: Error removing directory: %m",
+                  udisks_critical ("Error cleaning up mount point %s: Error removing directory: %m",
                                 mount_point);
                   /* keep the entry so we can clean it up later */
                   keep = TRUE;
@@ -1105,7 +1105,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
   if (crypto_device_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_error ("unlocked-luks entry %s is invalid: no crypto-device key/value pair", s);
+      udisks_critical ("unlocked-luks entry %s is invalid: no crypto-device key/value pair", s);
       g_free (s);
       attempt_no_cleanup = TRUE;
       goto out;
@@ -1116,7 +1116,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
   if (dm_uuid_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_error ("unlocked-luks entry %s is invalid: no dm-uuid key/value pair", s);
+      udisks_critical ("unlocked-luks entry %s is invalid: no dm-uuid key/value pair", s);
       g_free (s);
       attempt_no_cleanup = TRUE;
       goto out;
@@ -1200,7 +1200,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
                                                       "cryptsetup luksClose %s",
                                                       escaped_device_file))
             {
-              udisks_error ("Error cleaning up LUKS device %s: %s",
+              udisks_critical ("Error cleaning up LUKS device %s: %s",
                             device_file_cleartext, error_message);
               g_free (escaped_device_file);
               g_free (error_message);
@@ -1544,7 +1544,7 @@ udisks_state_check_loop_entry (UDisksState  *state,
     {
       gchar *s;
       s = g_variant_print (value, TRUE);
-      udisks_error ("loop entry %s is invalid: no backing-file key/value pair", s);
+      udisks_critical ("loop entry %s is invalid: no backing-file key/value pair", s);
       g_free (s);
       goto out;
     }

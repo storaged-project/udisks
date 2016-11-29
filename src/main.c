@@ -33,6 +33,7 @@
 static GMainLoop *loop = NULL;
 static gboolean opt_replace = FALSE;
 static gboolean opt_no_debug = FALSE;
+static gboolean opt_debug = FALSE;
 static gboolean opt_no_sigint = FALSE;
 static gboolean opt_disable_modules = FALSE;
 static gboolean opt_force_load_modules = FALSE;
@@ -40,7 +41,8 @@ static gboolean opt_uninstalled = FALSE;
 static GOptionEntry opt_entries[] =
 {
   {"replace", 'r', 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
-  {"no-debug", 'n', 0, G_OPTION_ARG_NONE, &opt_no_debug, "Don't print debug information on stdout/stderr", NULL},
+  {"no-debug", 'n', 0, G_OPTION_ARG_NONE, &opt_no_debug, "Don't print debug information on stdout/stderr (IGNORED, see '--debug')", NULL},
+  {"debug", 'd', 0, G_OPTION_ARG_NONE, &opt_debug, "Print debug information on stdout/stderr", NULL},
   {"no-sigint", 's', 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
   {"disable-modules", 0, 0, G_OPTION_ARG_NONE, &opt_disable_modules, "Do not load modules even when asked for it", NULL},
   {"force-load-modules", 0, 0, G_OPTION_ARG_NONE, &opt_force_load_modules, "Activate modules on startup", NULL},
@@ -69,7 +71,7 @@ on_name_lost (GDBusConnection *connection,
 {
   if (the_daemon == NULL)
     {
-      udisks_error ("Failed to connect to the system message bus");
+      udisks_critical ("Failed to connect to the system message bus");
     }
   else
     {
@@ -126,24 +128,15 @@ main (int    argc,
       goto out;
     }
 
-  /* TODO: this hammer is too big - it would be a lot better to configure the
-   *       logging routines and avoid printf(3) overhead and so on
-   */
   if (opt_no_debug)
     {
-      gint dev_null_fd;
-      dev_null_fd = open ("/dev/null", O_RDWR);
-      if (dev_null_fd >= 0)
-        {
-          dup2 (dev_null_fd, STDIN_FILENO);
-          dup2 (dev_null_fd, STDOUT_FILENO);
-          dup2 (dev_null_fd, STDERR_FILENO);
-          close (dev_null_fd);
-        }
-      else
-        {
-          udisks_warning ("Error opening /dev/null: %m");
-        }
+      udisks_warning ("The --no-debug option is deprecated and ignored. See '--help'.");
+    }
+  if (opt_debug)
+    {
+      /* tell GLib logging to not throw away DEBUG and INFO messages (for our
+         "udisks" domain) unless already specied somehow by the user */
+      g_setenv("G_MESSAGES_DEBUG", "udisks", FALSE);
     }
 
   if (g_getenv ("PATH") == NULL)

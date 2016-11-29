@@ -22,6 +22,7 @@
 #define __UDISKS_LOGGING_H__
 
 #include "udisksdaemontypes.h"
+#include "config.h"
 
 G_BEGIN_DECLS
 
@@ -36,30 +37,50 @@ void udisks_log (UDisksLogLevel   level,
  * @args...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_DEBUG.
+ * Warning: ONLY WORKS WHEN COMPILED WITH --enable-debug
  *
  * See #UDisksLogLevel for more details.
  */
+#ifdef DEBUG
 #define udisks_debug(args...)   udisks_log(UDISKS_LOG_LEVEL_DEBUG, G_STRFUNC, G_STRLOC, args)
+#else
+#define udisks_debug(args...)
+#endif
 
 /**
  * udisks_info:
  * @args...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_INFO.
+ * Warning: ONLY WORKS WHEN COMPILED WITH --enable-debug
  *
  * See #UDisksLogLevel for more details.
  */
+#ifdef DEBUG
 #define udisks_info(args...)    udisks_log(UDISKS_LOG_LEVEL_INFO, G_STRFUNC, G_STRLOC, args)
+#else
+#define udisks_info(args...)
+#endif
 
 /**
  * udisks_notice:
  * @args...: printf()-style format string and arguments
  *
- * Logging macro for %UDISKS_LOG_LEVEL_NOTICE.
+ * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_NOTICE, G_STRFUNC, G_STRLOC, args)
+#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_MESSAGE, G_STRFUNC, G_STRLOC, args)
+
+/**
+ * udisks_message:
+ * @args...: printf()-style format string and arguments
+ *
+ * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
+ *
+ * See #UDisksLogLevel for more details.
+ */
+#define udisks_message(args...)    udisks_log(UDISKS_LOG_LEVEL_MESSAGE, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_warning:
@@ -72,10 +93,21 @@ void udisks_log (UDisksLogLevel   level,
 #define udisks_warning(args...) udisks_log(UDISKS_LOG_LEVEL_WARNING, G_STRFUNC, G_STRLOC, args)
 
 /**
+ * udisks_critical:
+ * @args...: printf()-style format string and arguments
+ *
+ * Logging macro for %UDISKS_LOG_LEVEL_CRITICAL.
+ *
+ * See #UDisksLogLevel for more details.
+ */
+#define udisks_critical(args...)   udisks_log(UDISKS_LOG_LEVEL_CRITICAL, G_STRFUNC, G_STRLOC, args)
+
+/**
  * udisks_error:
  * @args...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_ERROR.
+ * Warning: THIS ALSO TERMINATES THE PROCESS with the abort() call!
  *
  * See #UDisksLogLevel for more details.
  */

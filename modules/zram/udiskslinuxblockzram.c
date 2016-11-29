@@ -161,7 +161,7 @@ udisks_linux_block_zram_get_daemon (UDisksLinuxBlockZRAM *zramblock)
     }
   else
     {
-      udisks_error ("%s", error->message);
+      udisks_critical ("%s", error->message);
       g_clear_error (&error);
     }
 
@@ -197,7 +197,7 @@ udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
 
   if (! zram_info)
     {
-      udisks_error ("Can't get ZRAM block device info for %s", dev_file);
+      udisks_critical ("Can't get ZRAM block device info for %s", dev_file);
       rval = FALSE;
       goto out;
     }
