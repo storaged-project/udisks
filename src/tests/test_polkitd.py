@@ -16,7 +16,6 @@ This also provides some convenience API for launching the daemon and for
 writing unittest test cases involving polkit operations.
 '''
 
-import sys
 import os
 import argparse
 import unittest
@@ -174,14 +173,13 @@ def spawn(allowed_actions, on_bus=None):
             p = dbus.Interface(bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'),
                                'org.freedesktop.DBus').GetConnectionUnixProcessID(
                                    bus.get_name_owner('org.freedesktop.PolicyKit1'))
+            if p == pid:
+                break
         except dbus.exceptions.DBusException:
-            continue
-        if p == pid:
-            break
+            pass
         time.sleep(0.1)
     else:
-        sys.stderr.write('test polkitd failed to start up\n')
-        os.abort()
+        raise SystemError('test polkitd failed to start up')
 
     return pid
 
