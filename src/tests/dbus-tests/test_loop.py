@@ -15,6 +15,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.run_command('dd if=/dev/zero of=%s bs=10MiB count=1' % self.LOOP_DEVICE_FILENAME)
         ret_code, self.dev_name = self.run_command('losetup --find --show %s' % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret_code, 0)
+        time.sleep(0.5)
         self.device = self.get_object('/block_devices/' + os.path.basename(self.dev_name))
         self.iface = dbus.Interface(self.device, dbus_interface=self.iface_prefix + '.Loop')
 
@@ -60,14 +61,12 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(autoclear_flag, '1\n')
 
     def test_30_backingfile(self):
-        time.sleep(0.1)  # in this case SetUp does not always finish in time
         raw = self.get_property(self.device, '.Loop', 'BackingFile')
         # transcription from array of Bytes to string plus removal of trailing \0
         backing_file = self.ay_to_str(raw)
         self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
 
     def test_40_setupbyuid(self):
-        time.sleep(0.1)  # in this case SetUp does not always finish in time
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
         self.assertEqual(uid, 0)  # uid should be 0 since device is not created by Udisks
 
@@ -92,6 +91,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
+        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
@@ -118,6 +118,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
+        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
@@ -144,6 +145,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
+        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
@@ -170,6 +172,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
+        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
@@ -177,7 +180,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         backing_file = self.ay_to_str(raw)
         self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
 
-        # should use the whole file except for the first 4096 bytes (offset)
+        # should use the whole file
         size = self.get_property(loop_dev_obj, ".Block", "Size")
         self.assertEqual(size, 10 * 1024**2)
 
@@ -202,6 +205,7 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
+        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
