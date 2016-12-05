@@ -129,26 +129,6 @@ udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-
-static void
-swapspace_start_on_job_completed (UDisksJob   *job,
-                                  gboolean     success,
-                                  const gchar *message,
-                                  gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
-  if (success)
-    udisks_swapspace_complete_start (swapspace, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error activating swap: %s",
-                                           message);
-}
-
 static gboolean
 handle_start (UDisksSwapspace        *swapspace,
               GDBusMethodInvocation  *invocation,
@@ -157,11 +137,13 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlock *block;
-  UDisksBaseJob *job;
   GError *error;
   gchar *escaped_device = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
+  gboolean success = FALSE;
+  gint status = 0;
+  gchar *out_message = NULL;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (swapspace, &error);
@@ -204,44 +186,33 @@ handle_start (UDisksSwapspace        *swapspace,
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
-  job = udisks_daemon_launch_spawned_job (daemon,
-                                          object,
-                                          "swapspace-start", caller_uid,
-                                          NULL, /* cancellable */
-                                          0,    /* uid_t run_as_uid */
-                                          0,    /* uid_t run_as_euid */
-                                          NULL, /* input_string */
-                                          "swapon %s",
-                                          escaped_device);
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (swapspace_start_on_job_completed),
-                    invocation);
+  success = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                   object,
+                                                   "swapspace-start", caller_uid,
+                                                   NULL, /* cancellable */
+                                                   0,    /* uid_t run_as_uid */
+                                                   0,    /* uid_t run_as_euid */
+                                                   &status,
+                                                   &out_message,
+                                                   NULL, /* input_string */
+                                                   "swapon %s",
+                                                   escaped_device);
 
- out:
-  g_free (escaped_device);
-  g_clear_object (&object);
-  return TRUE;
-}
-
-static void
-swapspace_stop_on_job_completed (UDisksJob   *job,
-                                 gboolean     success,
-                                 const gchar *message,
-                                 gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
   if (success)
     udisks_swapspace_complete_start (swapspace, invocation);
   else
     g_dbus_method_invocation_return_error (invocation,
                                            UDISKS_ERROR,
                                            UDISKS_ERROR_FAILED,
-                                           "Error deactivating swap: %s",
-                                           message);
+                                           "Error activating swap: %s",
+                                           out_message);
+ out:
+  g_free (escaped_device);
+  g_clear_object (&object);
+  g_free (out_message);
+  return TRUE;
 }
+
 
 static gboolean
 handle_stop (UDisksSwapspace        *swapspace,
@@ -251,10 +222,12 @@ handle_stop (UDisksSwapspace        *swapspace,
   UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlock *block;
-  UDisksBaseJob *job;
   uid_t caller_uid;
   gid_t caller_gid;
   gchar *escaped_device = NULL;
+  gboolean success = FALSE;
+  gint status = 0;
+  gchar *out_message = NULL;
   GError *error = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
@@ -296,22 +269,28 @@ handle_stop (UDisksSwapspace        *swapspace,
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
-  job = udisks_daemon_launch_spawned_job (daemon,
-                                          object,
-                                          "swapspace-stop", caller_uid,
-                                          NULL, /* cancellable */
-                                          0,    /* uid_t run_as_uid */
-                                          0,    /* uid_t run_as_euid */
-                                          NULL, /* input_string */
-                                          "swapoff %s",
-                                          escaped_device);
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (swapspace_stop_on_job_completed),
-                    invocation);
-
+  success = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                   object,
+                                                   "swapspace-stop", caller_uid,
+                                                   NULL, /* cancellable */
+                                                   0,    /* uid_t run_as_uid */
+                                                   0,    /* uid_t run_as_euid */
+                                                   &status,
+                                                   &out_message,
+                                                   NULL, /* input_string */
+                                                   "swapoff %s",
+                                                   escaped_device);
+  if (success)
+    udisks_swapspace_complete_start (swapspace, invocation);
+  else
+    g_dbus_method_invocation_return_error (invocation,
+                                           UDISKS_ERROR,
+                                           UDISKS_ERROR_FAILED,
+                                           "Error deactivating swap: %s",
+                                           out_message);
  out:
   g_free (escaped_device);
+  g_free (out_message);
   return TRUE;
 }
 
