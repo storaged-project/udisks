@@ -22,7 +22,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         return vg
 
     def _remove_vg(self, vg):
-        vgname = self.get_property(vg, '.VolumeGroup', 'Name')
+        vgname = self.get_property_raw(vg, '.VolumeGroup', 'Name')
         vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
         ret, _out = self.run_command('vgs %s' % vgname)
@@ -43,11 +43,11 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         # Create linear LV on the VG
-        vgsize = int(self.get_property(vg, '.VolumeGroup', 'Size'))
-        vg_freesize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
-        self.assertEqual(vgsize, vg_freesize)
+        vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
+        vg_freesize = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_freesize.assertEqual(vgsize.value)
         lvname = 'storaged_test_lv'
-        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize), self.no_options,
+        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize.value), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
         self.assertIsNotNone(lv_path)
@@ -58,37 +58,33 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.assertIsNotNone(lv_block_path)
-        lvsize = int(self.get_property(lv, '.LogicalVolume', 'Size'))
-        self.assertEqual(lvsize, vgsize)
+        lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
+        lvsize.assertEqual(vgsize.value)
 
         # Shrink the LV
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
-        lv.Resize(dbus.UInt64(lvsize/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        lv.Resize(dbus.UInt64(lvsize.value/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
         lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
         self.assertIsNotNone(lv_block)
-        new_lvsize = int(self.get_property(lv, '.LogicalVolume', 'Size'))
-        self.assertGreater(lvsize, new_lvsize)
+        new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
+        new_lvsize.assertLess(lvsize.value)
 
         # Add one more device to the VG
         new_dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[-1]))
         self.assertIsNotNone(new_dev_obj)
         vg.AddDevice(new_dev_obj, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
-        time.sleep(1)
-        new_vgsize = int(self.get_property(vg, '.VolumeGroup', 'Size'))
-        self.assertGreater(new_vgsize, vgsize)
+        new_vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
+        new_vgsize.assertGreater(vgsize.value)
 
         # Resize the LV to the whole VG
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
-        lv.Resize(dbus.UInt64(new_vgsize), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
-        time.sleep(1)
-        new_lvsize = int(self.get_property(lv, '.LogicalVolume', 'Size'))
-        self.assertEqual(new_vgsize, new_lvsize)
+        lv.Resize(dbus.UInt64(new_vgsize.value), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
+        new_lvsize.assertEqual(new_vgsize.value)
 
         # rename the LV
         lvname = 'storaged_test_lv2'
@@ -101,7 +97,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.assertIsNotNone(lv)
 
         dbus_name = self.get_property(lv, '.LogicalVolume', 'Name')
-        self.assertEqual(lvname, dbus_name)
+        dbus_name.assertEqual(lvname)
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
         self.assertEqual(ret, 0)
@@ -129,7 +125,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         # Create thin pool on the VG
-        vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
+        vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         tpname = 'storaged_test_tp'
         tp_path = vg.CreateThinPoolVolume(tpname, dbus.UInt64(vgsize), self.no_options,
                                           dbus_interface=self.iface_prefix + '.VolumeGroup')
@@ -140,7 +136,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(ret, 0)
 
         tp = self.bus.get_object(self.iface_prefix, tp_path)
-        tpsize = int(self.get_property(tp, '.LogicalVolume', 'Size'))
+        tpsize = int(self.get_property_raw(tp, '.LogicalVolume', 'Size'))
 
         # Create thin volume in the pool with virtual size twice the backing pool
         tvname = 'storaged_test_tv'
@@ -158,8 +154,8 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.udev_settle()
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
         self.assertIsNotNone(lv_block)
-        blocksize = int(self.get_property(lv_block, '.Block', 'Size'))
-        self.assertGreater(blocksize, vgsize)
+        blocksize = self.get_property(lv_block, '.Block', 'Size')
+        blocksize.assertGreater(vgsize)
 
     def test_30_snapshot(self):
         '''Test LVM snapshoting'''
@@ -176,7 +172,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         # Create the origin LV
-        vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
+        vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         lvname = 'storaged_test_origin_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
@@ -191,7 +187,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create the LV's snapshot
         snapname = 'storaged_test_snap_lv'
-        vg_freesize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
+        vg_freesize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         snap_path = lv.CreateSnapshot(snapname, vg_freesize, self.no_options,
                                       dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
@@ -213,7 +209,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         # Create the origin LV
-        vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
+        vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         orig_lvname = 'storaged_test_origin_lv'
         lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
@@ -227,7 +223,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create the caching LV
         cache_lvname = 'storaged_test_cache_lv'
-        vgsize = int(self.get_property(vg, '.VolumeGroup', 'FreeSize'))
+        vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                              dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -278,7 +274,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         dbus_name = self.get_property(vg, '.VolumeGroup', 'Name')
-        self.assertEqual(vgname, dbus_name)
+        dbus_name.assertEqual(vgname)
 
         ret, _out = self.run_command('vgs %s' % vgname)
         self.assertEqual(ret, 0)

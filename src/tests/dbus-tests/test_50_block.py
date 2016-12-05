@@ -27,10 +27,10 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         usage = self.get_property(disk, '.Block', 'IdUsage')
-        self.assertEqual(usage, 'filesystem')
+        usage.assertEqual('filesystem')
 
         fstype = self.get_property(disk, '.Block', 'IdType')
-        self.assertEqual(fstype, 'xfs')
+        fstype.assertEqual('xfs')
 
         _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, 'xfs')
@@ -40,10 +40,10 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
         # check if the disk is empty
         usage = self.get_property(disk, '.Block', 'IdUsage')
-        self.assertEqual(usage, '')
+        usage.assertEqual('')
 
         fstype = self.get_property(disk, '.Block', 'IdType')
-        self.assertEqual(fstype, '')
+        fstype.assertEqual('')
 
         _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, '')
@@ -107,38 +107,36 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
                                signature=dbus.Signature('sv'))
         disk.AddConfigurationItem(('fstab', conf), self.no_options,
                                   dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
         # get the configuration
         old_conf = self.get_property(disk, '.Block', 'Configuration')
-        self.assertIsNotNone(old_conf)
-        self.assertEqual(old_conf[0][1]['dir'], mnt)
-        self.assertEqual(old_conf[0][1]['type'], fstype)
-        self.assertEqual(old_conf[0][1]['opts'], opts)
-        self.assertEqual(old_conf[0][1]['passno'], 0)
-        self.assertEqual(old_conf[0][1]['freq'], 0)
+        old_conf.assertTrue()
+        self.assertEqual(old_conf.value[0][1]['dir'], mnt)
+        self.assertEqual(old_conf.value[0][1]['type'], fstype)
+        self.assertEqual(old_conf.value[0][1]['opts'], opts)
+        self.assertEqual(old_conf.value[0][1]['passno'], 0)
+        self.assertEqual(old_conf.value[0][1]['freq'], 0)
 
         # update the configuration
         new_opts = self.str_to_ay('defaults,noauto')
-        new_conf = copy.deepcopy(old_conf)
+        new_conf = copy.deepcopy(old_conf.value)
         new_conf[0][1]['opts'] = new_opts
 
-        disk.UpdateConfigurationItem((old_conf[0][0], old_conf[0][1]), (new_conf[0][0], new_conf[0][1]),
+        disk.UpdateConfigurationItem((old_conf.value[0][0], old_conf.value[0][1]), (new_conf[0][0], new_conf[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
         time.sleep(5)
 
         # get the configuration after the update
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
-        self.assertIsNotNone(upd_conf)
-        self.assertEqual(upd_conf[0][1]['opts'], new_opts)
+        upd_conf.assertTrue()
+        self.assertEqual(upd_conf.value[0][1]['opts'], new_opts)
 
         # remove the configuration
-        disk.RemoveConfigurationItem((upd_conf[0][0], upd_conf[0][1]),
+        disk.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
-        conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.assertEqual(len(conf), 0)
+        upd_conf = self.get_property(disk, '.Block', 'Configuration')
+        upd_conf.assertFalse()
 
     def test_configuration_crypttab(self):
 
@@ -162,12 +160,11 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         conf = dbus.Dictionary({'passphrase-contents': passwd,
                                 'options': opts}, signature=dbus.Signature('sv'))
         disk.AddConfigurationItem(('crypttab', conf), self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
         # get the configuration
         old_conf = self.get_property(disk, '.Block', 'Configuration')
-        self.assertIsNotNone(old_conf)
-        self.assertEqual(old_conf[0][1]['options'], opts)
+        old_conf.assertTrue()
+        self.assertEqual(old_conf.value[0][1]['options'], opts)
 
         # get the secret configuration (passphrase)
         sec_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
@@ -185,16 +182,15 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
 
         # get the configuration after the update
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
-        self.assertIsNotNone(upd_conf)
-        self.assertEqual(upd_conf[0][1]['options'], new_opts)
+        upd_conf.assertTrue()
+        self.assertEqual(upd_conf.value[0][1]['options'], new_opts)
 
         # remove the configuration
-        disk.RemoveConfigurationItem((upd_conf[0][0], upd_conf[0][1]),
+        disk.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
-        conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.assertEqual(len(conf), 0)
+        upd_conf = self.get_property(disk, '.Block', 'Configuration')
+        upd_conf.assertFalse()
 
     def test_rescan(self):
 

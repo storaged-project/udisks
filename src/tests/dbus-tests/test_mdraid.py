@@ -119,25 +119,25 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         # if it's smaller than 31 characters
         nodename = os.uname().nodename
         if len(nodename + array_name) < 31:
-            self.assertEqual(dbus_name, "%s:%s" % (nodename, array_name))
+            dbus_name.assertEqual("%s:%s" % (nodename, array_name))
         else:
-            self.assertEqual(dbus_name, array_name)
+            dbus_name.assertEqual(array_name)
 
-        self.assertEqual(dbus_name, md_data['MD_NAME'])
+        dbus_name.assertEqual(md_data['MD_NAME'])
 
         dbus_level = self.get_property(array, '.MDRaid', 'Level')
-        self.assertEqual(dbus_level, self.level)
-        self.assertEqual(dbus_level, md_data['MD_LEVEL'])
+        dbus_level.assertEqual(self.level)
+        dbus_level.assertEqual(md_data['MD_LEVEL'])
 
         dbus_num_devices = self.get_property(array, '.MDRaid', 'NumDevices')
-        self.assertEqual(dbus_num_devices, len(self.members))
-        self.assertEqual(dbus_num_devices, int(md_data['MD_DEVICES']))
+        dbus_num_devices.assertEqual(len(self.members))
+        dbus_num_devices.assertEqual(int(md_data['MD_DEVICES']))
 
         dbus_uuid = self.get_property(array, '.MDRaid', 'UUID')
-        self.assertEqual(dbus_uuid, md_data['MD_UUID'])
+        dbus_uuid.assertEqual(md_data['MD_UUID'])
 
         dbus_chunk = self.get_property(array, '.MDRaid', 'ChunkSize')
-        self.assertEqual(dbus_chunk, self.chunk_size)
+        dbus_chunk.assertEqual(self.chunk_size)
 
         # check bitmap location
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
@@ -145,17 +145,17 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
 
         # raid0 does not support write-intent bitmaps -> BitmapLocation is set to an empty string
         if self.level == 'raid0':
-            self.assertEqual(self.ay_to_str(dbus_bitmap), '')
+            dbus_bitmap.assertEqual(self.str_to_ay(''))
         else:
-            self.assertEqual(self.ay_to_str(dbus_bitmap), sys_bitmap.strip())
+            dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap.strip()))
 
         # check size of the array based on given disks, there will be some
         # difference because of metadata, but this should be less than 0.5 %
         dbus_size = self.get_property(array, '.MDRaid', 'Size')
-        self.assertLessEqual(self.size - dbus_size, 0.005 * self.size)
+        self.assertLessEqual(self.size - dbus_size.value, 0.005 * self.size)
 
         _ret, out = self.run_command('lsblk -b -no SIZE /dev/md/%s' % array_name)
-        self.assertEqual(dbus_size, int(out))
+        self.assertEqual(dbus_size.value, int(out))
 
         # test if mdadm see all members
         for member in self.members:
@@ -165,7 +165,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
 
         # test if storaged see all (active) members
         dbus_devices = self.get_property(array, '.MDRaid', 'ActiveDevices')
-        for dbus_dev in dbus_devices:
+        for dbus_dev in dbus_devices.value:
             # get matching member from self.members -- match using name and last part of dbus path
             member = next((m for m in self.members if m.name == dbus_dev[0].split('/')[-1]), None)
             self.assertIsNotNone(member)
@@ -177,7 +177,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         path = str(array.object_path)
         for member in self.members:
             dbus_member = self.get_property(member.obj, '.Block', 'MDRaidMember')
-            self.assertEqual(dbus_member, path)
+            dbus_member.assertEqual(path)
 
 
 class RAID0TestCase(RAIDLevel):
@@ -194,14 +194,13 @@ class RAID0TestCase(RAIDLevel):
         array = self._array_create(name)
 
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
-        self.assertTrue(dbus_running)
+        dbus_running.assertTrue()
 
         # stop the array
         array.Stop(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
-        time.sleep(1)
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
-        self.assertFalse(dbus_running)
+        dbus_running.assertFalse()
 
         ret, _out = self.run_command('mdadm /dev/md/%s' % name)
         self.assertEqual(ret, 1)
@@ -209,9 +208,8 @@ class RAID0TestCase(RAIDLevel):
         # start the array
         array.Start(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
-        time.sleep(1)
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
-        self.assertTrue(dbus_running)
+        dbus_running.assertTrue()
 
         ret, _out = self.run_command('mdadm /dev/md/%s' % name)
         self.assertEqual(ret, 0)
@@ -241,7 +239,7 @@ class RAID0TestCase(RAIDLevel):
             self.assertEqual(out, '')
 
             dbus_member = self.get_property(member.obj, '.Block', 'MDRaidMember')
-            self.assertEqual(dbus_member, '/')  # default value for 'non-raid' devices is '/'
+            dbus_member.assertEqual('/')  # default value for 'non-raid' devices is '/'
 
 
 class RAID1TestCase(RAIDLevel):
@@ -275,7 +273,7 @@ class RAID1TestCase(RAIDLevel):
 
         # check ActiveDevices on dbus -- new device should be there with 'spare' status
         dbus_devices = self.get_property(array, '.MDRaid', 'ActiveDevices')
-        member = next((d for d in dbus_devices if d[0].split('/')[-1] == new_name), None)
+        member = next((d for d in dbus_devices.value if d[0].split('/')[-1] == new_name), None)
         self.assertIsNotNone(member)
         self.assertEqual(member[2], ['spare'])
 
@@ -289,7 +287,7 @@ class RAID1TestCase(RAIDLevel):
 
         # check if 'MDRaidMember' for new device is set
         dbus_member = self.get_property(new_obj, '.Block', 'MDRaidMember')
-        self.assertEqual(dbus_member, array_path)
+        dbus_member.assertEqual(array_path)
 
         # remove the device from the array
         d = dbus.Dictionary(signature='sv')
@@ -299,7 +297,7 @@ class RAID1TestCase(RAIDLevel):
 
         # check ActiveDevices on dbus -- new device shouldn't be there
         dbus_devices = self.get_property(array, '.MDRaid', 'ActiveDevices')
-        member = next((d for d in dbus_devices if d[0].split('/')[-1] == new_name), None)
+        member = next((d for d in dbus_devices.value if d[0].split('/')[-1] == new_name), None)
         self.assertIsNone(member)
 
         # check mdadm output
@@ -310,7 +308,7 @@ class RAID1TestCase(RAIDLevel):
 
         # check if 'MDRaidMember' for new device is unset after remove
         dbus_member = self.get_property(new_obj, '.Block', 'MDRaidMember')
-        self.assertEqual(dbus_member, '/')  # default value for 'non-raid' devices is '/'
+        dbus_member.assertEqual('/')  # default value for 'non-raid' devices is '/'
 
         # with 'wipe' option, device should be wiped
         _ret, out = self.run_command('lsblk -no FSTYPE %s' % new_path)
@@ -327,21 +325,19 @@ class RAID1TestCase(RAIDLevel):
         loc = self.str_to_ay('internal')
 
         array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
-        time.sleep(1)
 
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
-        self.assertEqual(sys_bitmap, self.ay_to_str(dbus_bitmap))
+        dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
 
         # change bitmap location back to 'none'
         loc = self.str_to_ay('none')
 
         array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
-        time.sleep(1)
 
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
-        self.assertEqual(sys_bitmap, self.ay_to_str(dbus_bitmap))
+        dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
 
     def test_request_action(self):
 

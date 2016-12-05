@@ -56,19 +56,19 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.udev_settle()
         autoclear_flag = self.get_property(self.device, '.Loop', 'Autoclear')
         # property should be set now
-        self.assertTrue(autoclear_flag)
+        autoclear_flag.assertTrue()
         autoclear_flag = self.read_file(flag_file_name)
         self.assertEqual(autoclear_flag, '1\n')
 
     def test_30_backingfile(self):
         raw = self.get_property(self.device, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
     def test_40_setupbyuid(self):
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
-        self.assertEqual(uid, 0)  # uid should be 0 since device is not created by Udisks
+        uid.assertEqual(0)  # uid should be 0 since device is not created by Udisks
 
 class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
     """Unit tests for the loop-related methods of the Manager object"""
@@ -91,21 +91,20 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
-        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
         # should use the whole file
         size = self.get_property(loop_dev_obj, ".Block", "Size")
-        self.assertEqual(size, 10 * 1024**2)
+        size.assertEqual(10 * 1024**2)
 
         # should be writable
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
-        self.assertFalse(ro)
+        ro.assertFalse()
 
     def test_20_create_with_offset(self):
         opts = dbus.Dictionary({"offset": dbus.UInt64(4096)}, signature=dbus.Signature('sv'))
@@ -118,21 +117,20 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
-        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
         # should use the whole file except for the first 4096 bytes (offset)
         size = self.get_property(loop_dev_obj, ".Block", "Size")
-        self.assertEqual(size, 10 * 1024**2 - 4096)
+        size.assertEqual(10 * 1024**2 - 4096)
 
         # should be writable
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
-        self.assertFalse(ro)
+        ro.assertFalse()
 
     def test_30_create_with_offset_size(self):
         opts = dbus.Dictionary({"offset": dbus.UInt64(4096), "size": dbus.UInt64(4 * 1024**2)}, signature=dbus.Signature('sv'))
@@ -145,21 +143,20 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
-        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
         # should use just the space specified by the 'size' argument
         size = self.get_property(loop_dev_obj, ".Block", "Size")
-        self.assertEqual(size, 4 * 1024**2)
+        size.assertEqual(4 * 1024**2)
 
         # should be writable
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
-        self.assertFalse(ro)
+        ro.assertFalse()
 
     def test_40_create_read_only(self):
         opts = dbus.Dictionary({"read-only": dbus.Boolean(True)}, signature=dbus.Signature('sv'))
@@ -172,21 +169,20 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
-        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
         # should use the whole file
         size = self.get_property(loop_dev_obj, ".Block", "Size")
-        self.assertEqual(size, 10 * 1024**2)
+        size.assertEqual(10 * 1024**2)
 
         # should be read-only
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
-        self.assertTrue(ro)
+        ro.assertTrue()
 
     def test_50_create_no_part_scan(self):
         # create a partition on the file (future loop device)
@@ -205,21 +201,20 @@ class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
-        time.sleep(0.5)
 
         # should use the right backing file
         raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
-        # transcription from array of Bytes to string plus removal of trailing \0
-        backing_file = self.ay_to_str(raw)
-        self.assertEqual(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME), backing_file)
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
 
         # should use the whole file except for the first 4096 bytes (offset)
         size = self.get_property(loop_dev_obj, ".Block", "Size")
-        self.assertEqual(size, 10 * 1024**2)
+        size.assertEqual(10 * 1024**2)
 
         # should be writable
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
-        self.assertFalse(ro)
+        ro.assertFalse()
 
         # partitions shouldn't be scanned
         self.assertFalse(os.path.exists("/dev/%sp1" % loop_dev))

@@ -2,6 +2,7 @@ import unittest
 import dbus
 import subprocess
 import os
+import time
 
 daemon_bin = None
 test_devs = None
@@ -13,6 +14,117 @@ def get_call_long(call):
         return call(*args, **kwargs)
 
     return call_long
+
+
+class DBusProperty(object):
+
+    TIMEOUT = 5
+
+    def __init__(self, obj, iface, prop):
+        self.obj = obj
+        self.iface = iface
+        self.prop = prop
+
+        self._value = None
+
+    @property
+    def value(self):
+        if self._value is None:
+            self._update_value()
+        return self._value
+
+    def _update_value(self):
+        self._value = self.obj.Get(self.iface, self.prop, dbus_interface=dbus.PROPERTIES_IFACE)
+
+    def _check(self, timeout, check_fn):
+        for _ in range(int(timeout / 0.5)):
+            self._update_value()
+            try:
+                if check_fn(self.value):
+                    return True
+            except Exception:
+                # ignore all exceptions -- they might be result of property
+                # not having the expected type (e.g. 'None' when checking for len)
+                pass
+            time.sleep(0.5)
+
+        return False
+
+    def assertEqual(self, value, timeout=TIMEOUT):
+        check_fn = lambda x: x == value
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s != %s' % (self._value, value))
+
+    def assertGreater(self, value, timeout=TIMEOUT):
+        check_fn = lambda x: x > value
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s is not grater than %s' % (self._value, value))
+
+    def assertLess(self, value, timeout=TIMEOUT):
+        check_fn = lambda x: x < value
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s is not less than %s' % (self._value, value))
+
+    def assertIn(self, lst, timeout=TIMEOUT):
+        check_fn = lambda x: x in lst
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s not found in %s' % (self._value, lst))
+
+    def assertNotIn(self, lst, timeout=TIMEOUT):
+        check_fn = lambda x: x not in lst
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s unexpectedly found in %s' % (self._value, lst))
+
+    def assertTrue(self, timeout=TIMEOUT):
+        check_fn = lambda x: bool(x)
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s is not true' % self._value)
+
+    def assertFalse(self, timeout=TIMEOUT):
+        check_fn = lambda x: not bool(x)
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s is not false' % self._value)
+
+    def assertIsNone(self, timeout=TIMEOUT):
+        check_fn = lambda x: x is None
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('%s is not None' % self._value)
+
+    def assertIsNotNone(self, timeout=TIMEOUT):
+        check_fn = lambda x: x is not None
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            raise AssertionError('unexpectedly None')
+
+    def assertLen(self, length, timeout=TIMEOUT):
+        check_fn = lambda x: len(x) == length
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            if not hasattr(self._value, '__len__'):
+                raise AssertionError('%s has no length' % type(self._value))
+            else:
+                raise AssertionError('Expected length %d, but %s has length %d' % (length,
+                                                                                   self._value,
+                                                                                   len(self._value)))
+
 
 class StoragedTestCase(unittest.TestCase):
     iface_prefix = None
@@ -78,6 +190,11 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def get_property(self, obj, iface_suffix, prop):
+        return DBusProperty(obj, self.iface_prefix + iface_suffix, prop)
+
+
+    @classmethod
+    def get_property_raw(self, obj, iface_suffix, prop):
         res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
         return res
 
@@ -90,7 +207,7 @@ class StoragedTestCase(unittest.TestCase):
     @classmethod
     def get_drive_name(self, device):
         """Get drive name for the given block device object"""
-        drive_name = self.get_property(device, '.Block', 'Drive').split('/')[-1]
+        drive_name = self.get_property_raw(device, '.Block', 'Drive').split('/')[-1]
         return drive_name
 
     @classmethod

@@ -91,24 +91,24 @@ class StoragedDriveAtaTest(StoragedTestCase):
             drive_name = self.get_drive_name(self.get_device(disk))
             drive_obj = self.get_object("/drives/%s" % drive_name)
 
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "AamSupported"), props["aam"] != "Unavailable")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "AamEnabled"), props["aam"] == "Enabled")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "ApmSupported"), props["apm"] != "Unavailable")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "ApmEnabled"), props["apm"] == "Enabled")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "ReadLookaheadSupported"), props["lookahead"] != "Unavailable")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "ReadLookaheadEnabled"), props["lookahead"] == "Enabled")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "SmartSupported"), props["smart_supported"].startswith("Available"))
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "SmartEnabled"), props["smart_enabled"] == "Enabled")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "WriteCacheSupported"), props["wcache"] != "Unavailable")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "WriteCacheEnabled"), props["wcache"] == "Enabled")
-            self.assertEqual(self.get_property(drive_obj, ".Drive.Ata", "SmartFailing"), not props["healthy"])
+            self.get_property(drive_obj, ".Drive.Ata", "AamSupported").assertEqual(props["aam"] != "Unavailable")
+            self.get_property(drive_obj, ".Drive.Ata", "AamEnabled").assertEqual(props["aam"] == "Enabled")
+            self.get_property(drive_obj, ".Drive.Ata", "ApmSupported").assertEqual(props["apm"] != "Unavailable")
+            self.get_property(drive_obj, ".Drive.Ata", "ApmEnabled").assertEqual(props["apm"] == "Enabled")
+            self.get_property(drive_obj, ".Drive.Ata", "ReadLookaheadSupported").assertEqual(props["lookahead"] != "Unavailable")
+            self.get_property(drive_obj, ".Drive.Ata", "ReadLookaheadEnabled").assertEqual(props["lookahead"] == "Enabled")
+            self.get_property(drive_obj, ".Drive.Ata", "SmartSupported").assertEqual(props["smart_supported"].startswith("Available"))
+            self.get_property(drive_obj, ".Drive.Ata", "SmartEnabled").assertEqual(props["smart_enabled"] == "Enabled")
+            self.get_property(drive_obj, ".Drive.Ata", "WriteCacheSupported").assertEqual(props["wcache"] != "Unavailable")
+            self.get_property(drive_obj, ".Drive.Ata", "WriteCacheEnabled").assertEqual(props["wcache"] == "Enabled")
+            self.get_property(drive_obj, ".Drive.Ata", "SmartFailing").assertEqual(not props["healthy"])
 
             attrs = self.get_attrs(disk)
             # temperature has ID 190
             temp_attr = attrs.get(190)
             if temp_attr:
                 # reported in Kelvins (double) by API, but in Celsius degrees (int) by CLI
-                temp_c = self.get_property(drive_obj, ".Drive.Ata", "SmartTemperature") - 273
+                temp_c = self.get_property(drive_obj, ".Drive.Ata", "SmartTemperature").value - 273
                 # nineth field is the raw value
                 self.assertEqual(int(temp_c), int(temp_attr[8]))
 
@@ -118,7 +118,7 @@ class StoragedDriveAtaTest(StoragedTestCase):
                 # reported in seconds by API, but in hours by CLI
                 pwon_s = self.get_property(drive_obj, ".Drive.Ata", "SmartPowerOnSeconds")
                 # nineth field is the raw value
-                self.assertEqual(int(pwon_s / 3600), int(pwon_attr[8]))
+                self.assertEqual(int(pwon_s.value / 3600), int(pwon_attr[8]))
 
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")
     def test_smart_get_attributes(self):
@@ -164,21 +164,21 @@ class StoragedDriveAtaTest(StoragedTestCase):
 
             # has to have a valid timestamp
             updated = self.get_property(drive_obj, ".Drive.Ata", "SmartUpdated")
-            self.assertTrue(updated)
-            orig = int(updated)
+            updated.assertTrue()
+            orig = int(updated.value)
 
             # wait at least a second so that the timestamp has a chance to change
             time.sleep(1)
             drive_ata.SmartUpdate(self.no_options)
             updated = self.get_property(drive_obj, ".Drive.Ata", "SmartUpdated")
-            self.assertTrue(updated)
-            self.assertGreater(int(updated), orig)
+            updated.assertTrue()
+            self.assertGreater(int(updated.value), orig)
 
-            orig = int(updated)
+            orig = int(updated.value)
             time.sleep(1)
             drive_ata.SmartUpdate(self.no_options)
             updated = self.get_property(drive_obj, ".Drive.Ata", "SmartUpdated")
-            self.assertTrue(updated)
-            self.assertGreater(int(updated), orig)
+            updated.assertTrue()
+            self.assertGreater(int(updated.value), orig)
             # the new timestamp should be less than 2 seconds off the previous one
-            self.assertLess(int(updated), orig+2)
+            self.assertLess(int(updated.value), orig+2)

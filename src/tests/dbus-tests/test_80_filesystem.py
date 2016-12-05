@@ -1,7 +1,6 @@
 import dbus
 import os
 import tempfile
-import time
 
 import storagedtestcase
 
@@ -38,10 +37,10 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
 
         # test dbus properties
         usage = self.get_property(disk, '.Block', 'IdUsage')
-        self.assertEqual(usage, 'filesystem')
+        usage.assertEqual('filesystem')
 
         fstype = self.get_property(disk, '.Block', 'IdType')
-        self.assertEqual(fstype, self._fs_name)
+        fstype.assertEqual(self._fs_name)
 
         # test system values
         _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
@@ -63,11 +62,10 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         d['label'] = label
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self._clean_format, disk)
-        time.sleep(1)
 
         # test dbus properties
         dbus_label = self.get_property(disk, '.Block', 'IdLabel')
-        self.assertEqual(dbus_label, label)
+        dbus_label.assertEqual(label)
 
         # test system values
         _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
@@ -76,11 +74,10 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         # change the label
         label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX storaged changes vfat labels to uppercase
         disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        time.sleep(1)
 
         # test dbus properties
         dbus_label = self.get_property(disk, '.Block', 'IdLabel')
-        self.assertEqual(dbus_label, label)
+        dbus_label.assertEqual(label)
 
         # test system values
         _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
@@ -102,7 +99,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
-        self.assertListEqual(mounts, [])
+        mounts.assertLen(0)
 
         # mount
         d = dbus.Dictionary(signature='sv')
@@ -113,8 +110,8 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
 
         # dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
-        self.assertEqual(len(dbus_mounts), 1)  # just one mountpoint
-        dbus_mnt = "".join(str(i) for i in dbus_mounts[0][:-1])  # mountpoints are arrays of bytes
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, mnt_path)
 
         # system mountpoint
@@ -163,8 +160,8 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
 
         # dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
-        self.assertEqual(len(dbus_mounts), 1)  # just one mountpoint
-        dbus_mnt = "".join([str(i) for i in dbus_mounts[0][:-1]])  # mountpoints are arrays of bytes
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, tmp.name)
 
         # system mountpoint
@@ -184,11 +181,10 @@ class Ext2TestCase(StoragedFSTestCase):
     def _invalid_label(self, disk):
         label = 'a' * 17  # at most 16 characters, longer should be truncated
         disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        time.sleep(1)
 
         # test dbus properties
         dbus_label = self.get_property(disk, '.Block', 'IdLabel')
-        self.assertEqual(dbus_label, label[0:16])
+        dbus_label.assertEqual(label[0:16])
 
         # test system values
         _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
