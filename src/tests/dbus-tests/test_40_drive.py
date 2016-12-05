@@ -9,14 +9,6 @@ import storagedtestcase
 class StoragedDriveTest(storagedtestcase.StoragedTestCase):
     """This is Drive related functions unit test"""
 
-    def get_device(self, dev_name):
-        dev = self.get_object('/block_devices/' + os.path.basename(dev_name))
-        return dev
-
-    def get_drive_name(self, device):
-        drive_name = self.get_property(device, '.Block', 'Drive').split('/')[-1]
-        return drive_name
-
     def get_drive(self, device):
         drive_name = self.get_drive_name(device)
         drive = self.get_object('/drives/' + os.path.basename(drive_name))

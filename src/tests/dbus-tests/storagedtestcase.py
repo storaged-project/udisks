@@ -1,6 +1,7 @@
 import unittest
 import dbus
 import subprocess
+import os
 
 daemon_bin = None
 test_devs = None
@@ -80,6 +81,17 @@ class StoragedTestCase(unittest.TestCase):
         res = obj.Get(self.iface_prefix + iface_suffix, prop, dbus_interface=dbus.PROPERTIES_IFACE)
         return res
 
+    @classmethod
+    def get_device(self, dev_name):
+        """Get block device object for a given device (e.g. "sda")"""
+        dev = self.get_object('/block_devices/' + os.path.basename(dev_name))
+        return dev
+
+    @classmethod
+    def get_drive_name(self, device):
+        """Get drive name for the given block device object"""
+        drive_name = self.get_property(device, '.Block', 'Drive').split('/')[-1]
+        return drive_name
 
     @classmethod
     def udev_settle(self):
