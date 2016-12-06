@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <mntent.h>
-#include <sys/types.h>
+#include <sys/sysmacros.h>
 #ifdef HAVE_ACL
 #include <sys/acl.h>
 #endif
@@ -293,7 +293,7 @@ static const gchar *vfat_allow_gid_self[] = { "gid=", NULL };
 /* this is assuming that ntfs-3g is used */
 
 static const gchar *ntfs_defaults[] = { "uid=", "gid=", NULL };
-static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", "locale=", "norecover", "ignore_case", "windows_names", "compression", "nocompression", NULL };
+static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", "locale=", "norecover", "ignore_case", "windows_names", "compression", "nocompression", "big_writes", NULL };
 static const gchar *ntfs_allow_uid_self[] = { "uid=", NULL };
 static const gchar *ntfs_allow_gid_self[] = { "gid=", NULL };
 
@@ -313,7 +313,7 @@ static const gchar *udf_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- exfat -------------------- */
 
-static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", "umask=0077", NULL };
+static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", NULL };
 static const gchar *exfat_allow[] = { "dmask=", "errors=", "fmask=", "iocharset=", "namecase=", "umask=", NULL };
 static const gchar *exfat_allow_uid_self[] = { "uid=", NULL };
 static const gchar *exfat_allow_gid_self[] = { "gid=", NULL };
