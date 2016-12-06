@@ -642,8 +642,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
-  /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", job_id++);
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", g_atomic_int_add (&job_id, 1));
   job_object = udisks_object_skeleton_new (job_object_path);
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
@@ -715,8 +714,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
-  /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", job_id++);
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", g_atomic_int_add (&job_id, 1));
   job_object = udisks_object_skeleton_new (job_object_path);
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
@@ -793,8 +791,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
-  /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", job_id++);
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", g_atomic_int_add (&job_id, 1));
   job_object = udisks_object_skeleton_new (job_object_path);
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
