@@ -920,6 +920,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                           G_CALLBACK (spawned_job_sync_on_completed),
                           &data);
 
+  udisks_spawned_job_start (UDISKS_SPAWNED_JOB (job));
   g_main_loop_run (data.loop);
 
   if (out_status != NULL)
