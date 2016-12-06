@@ -224,10 +224,7 @@ handle_bcache_create (UDisksManagerBcache    *object,
       goto out;
     }
 
-  if (! bcache)
-    bcache = g_strdup("Failed to get bcache device name");
-
-    udisks_manager_bcache_complete_bcache_create (object, invocation, bcache);
+  udisks_manager_bcache_complete_bcache_create (object, invocation, bcache);
 out:
   g_free (backing_dev);
   g_free (cache_dev);
