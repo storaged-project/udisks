@@ -217,7 +217,8 @@ handle_bcache_create (UDisksManagerBcache    *object,
                                      N_("Authentication is required to create bcache device."),
                                      invocation);
 
-  if (! bd_kbd_bcache_create (backing_dev, cache_dev, NULL, &bcache, &error))
+  /* XXX: the type casting below looks like a bug in libblockdev */
+  if (! bd_kbd_bcache_create (backing_dev, cache_dev, NULL, (const gchar **) &bcache, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
