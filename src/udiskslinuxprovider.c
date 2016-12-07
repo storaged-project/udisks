@@ -426,6 +426,8 @@ get_udisks_devices (UDisksLinuxProvider *provider)
   for (l = devices; l != NULL; l = l->next)
     {
       GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      if (!g_udev_device_get_is_initialized (device))
+        continue;
       udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
     }
   udisks_devices = g_list_reverse (udisks_devices);

@@ -29,23 +29,21 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
 
         # check dbus properties
         dbus_usage = self.get_property(disk, '.Block', 'IdUsage')
-        self.assertEqual(dbus_usage, 'crypto')
+        dbus_usage.assertEqual('crypto')
 
         dbus_type = self.get_property(disk, '.Block', 'IdType')
-        self.assertEqual(dbus_type, 'crypto_LUKS')
+        dbus_type.assertEqual('crypto_LUKS')
 
         device = self.get_property(disk, '.Block', 'Device')
-        device_path = "".join([str(i) for i in device[:-1]])  # device is an array of byte
-        self.assertEqual(device_path, self.vdevs[0])
-
-        dbus_uuid = self.get_property(disk, '.Block', 'IdUUID')
+        device.assertEqual(self.str_to_ay(self.vdevs[0]))  # device is an array of byte
 
         # check system values
         _ret, sys_type = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_type, 'crypto_LUKS')
 
         _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % self.vdevs[0])
-        self.assertEqual(sys_uuid, dbus_uuid)
+        dbus_uuid = self.get_property(disk, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual(sys_uuid)
 
         # get the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
@@ -56,26 +54,24 @@ class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
 
         # check dbus properties
         dbus_usage = self.get_property(luks, '.Block', 'IdUsage')
-        self.assertEqual(dbus_usage, 'filesystem')
+        dbus_usage.assertEqual('filesystem')
 
         dbus_type = self.get_property(luks, '.Block', 'IdType')
-        self.assertEqual(dbus_type, 'xfs')
+        dbus_type.assertEqual('xfs')
 
         device = self.get_property(luks, '.Block', 'Device')
-        device_path = "".join(str(i) for i in device[:-1])  # device is an array of byte
-        self.assertEqual(device_path, '/dev/' + dm_name)
-
-        dbus_uuid = self.get_property(luks, '.Block', 'IdUUID')
+        device.assertEqual(self.str_to_ay('/dev/' + dm_name))  # device is an array of byte
 
         crypto_dev = self.get_property(luks, '.Block', 'CryptoBackingDevice')
-        self.assertEqual(crypto_dev, disk.object_path)
+        crypto_dev.assertEqual(disk.object_path)
 
         # check system values
         _ret, sys_type = self.run_command('lsblk -d -no FSTYPE /dev/%s' % dm_name)
         self.assertEqual(sys_type, 'xfs')
 
         _ret, sys_uuid = self.run_command('lsblk -d -no UUID /dev/%s' % dm_name)
-        self.assertEqual(sys_uuid, dbus_uuid)
+        bus_uuid = self.get_property(luks, '.Block', 'IdUUID')
+        bus_uuid.assertEqual(sys_uuid)
 
     def test_close_open(self):
         disk_name = os.path.basename(self.vdevs[0])

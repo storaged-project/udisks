@@ -131,26 +131,6 @@ udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-
-static void
-swapspace_start_on_job_completed (UDisksJob   *job,
-                                  gboolean     success,
-                                  const gchar *message,
-                                  gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
-  if (success)
-    udisks_swapspace_complete_start (swapspace, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error activating swap: %s",
-                                           message);
-}
-
 static gboolean
 start_job_func (UDisksThreadedJob  *job,
                 GCancellable       *cancellable,
@@ -172,6 +152,25 @@ start_job_func (UDisksThreadedJob  *job,
   g_object_unref (block);
   g_free (device);
   return ret;
+}
+
+static void
+swapspace_start_on_job_completed (UDisksJob   *job,
+                                  gboolean     success,
+                                  const gchar *message,
+                                  gpointer     user_data)
+{
+  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
+  UDisksSwapspace *swapspace;
+  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
+  if (success)
+    udisks_swapspace_complete_start (swapspace, invocation);
+  else
+    g_dbus_method_invocation_return_error (invocation,
+                                           UDISKS_ERROR,
+                                           UDISKS_ERROR_FAILED,
+                                           "Error activating swap: %s",
+                                           message);
 }
 
 static gboolean
@@ -241,24 +240,6 @@ handle_start (UDisksSwapspace        *swapspace,
   return TRUE;
 }
 
-static void
-swapspace_stop_on_job_completed (UDisksJob   *job,
-                                 gboolean     success,
-                                 const gchar *message,
-                                 gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
-  if (success)
-    udisks_swapspace_complete_start (swapspace, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error deactivating swap: %s",
-                                           message);
-}
 
 static gboolean
 stop_job_func (UDisksThreadedJob  *job,
@@ -281,6 +262,25 @@ stop_job_func (UDisksThreadedJob  *job,
   g_object_unref (block);
   g_free (device);
   return ret;
+}
+
+static void
+swapspace_stop_on_job_completed (UDisksJob   *job,
+                                 gboolean     success,
+                                 const gchar *message,
+                                 gpointer     user_data)
+{
+  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
+  UDisksSwapspace *swapspace;
+  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
+  if (success)
+    udisks_swapspace_complete_start (swapspace, invocation);
+  else
+    g_dbus_method_invocation_return_error (invocation,
+                                           UDISKS_ERROR,
+                                           UDISKS_ERROR_FAILED,
+                                           "Error deactivating swap: %s",
+                                           message);
 }
 
 static gboolean

@@ -12,7 +12,7 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
         '''Testing the manager object presence'''
         self.assertIsNotNone(self.manager_obj)
         version = self.get_property(self.manager_obj, '.Manager', 'Version')
-        self.assertIsNotNone(version)
+        version.assertIsNotNone()
 
     def test_20_enable_modules(self):
         manager = self.get_interface(self.manager_obj, '.Manager')
@@ -29,7 +29,7 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
 
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')
-        self.assertEqual({str(s) for s in fss},
+        self.assertEqual({str(s) for s in fss.value},
                          {'nilfs2', 'btrfs', 'swap', 'ext3', 'udf', 'xfs', 'minix', 'ext2', 'ext4', 'f2fs', 'reiserfs', 'ntfs', 'vfat', 'exfat'})
 
     def test_80_device_presence(self):

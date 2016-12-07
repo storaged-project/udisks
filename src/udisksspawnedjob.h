@@ -37,6 +37,7 @@ UDisksSpawnedJob  *udisks_spawned_job_new              (const gchar  *command_li
                                                         UDisksDaemon *daemon,
                                                         GCancellable *cancellable);
 const gchar       *udisks_spawned_job_get_command_line (UDisksSpawnedJob *job);
+void udisks_spawned_job_start (UDisksSpawnedJob *job);
 
 G_END_DECLS
 

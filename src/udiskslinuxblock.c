@@ -357,8 +357,11 @@ update_hints (UDisksLinuxBlock  *block,
       connection_bus = udisks_drive_get_connection_bus (drive);
       removable = udisks_drive_get_media_removable (drive);
       if (removable ||
-          (g_strcmp0 (connection_bus, "usb") == 0 || g_strcmp0 (connection_bus, "ieee1394") == 0) ||
-          (g_str_has_prefix (device_file, "/dev/mmcblk") || g_str_has_prefix (device_file, "/dev/mspblk")))
+          g_strcmp0 (connection_bus, "usb") == 0 ||
+          g_strcmp0 (connection_bus, "ieee1394") == 0 ||
+          g_str_has_prefix (device_file, "/dev/mmcblk") ||
+          g_str_has_prefix (device_file, "/dev/msblk") ||
+          g_str_has_prefix (device_file, "/dev/mspblk"))
         {
           hint_system = FALSE;
           hint_auto = TRUE;

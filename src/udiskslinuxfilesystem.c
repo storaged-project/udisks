@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <mntent.h>
-#include <sys/types.h>
+#include <sys/sysmacros.h>
 #ifdef HAVE_ACL
 #include <sys/acl.h>
 #endif
@@ -293,7 +293,7 @@ static const gchar *vfat_allow_gid_self[] = { "gid=", NULL };
 /* this is assuming that ntfs-3g is used */
 
 static const gchar *ntfs_defaults[] = { "uid=", "gid=", NULL };
-static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", "locale=", "norecover", "ignore_case", "windows_names", "compression", "nocompression", NULL };
+static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", "locale=", "norecover", "ignore_case", "windows_names", "compression", "nocompression", "big_writes", NULL };
 static const gchar *ntfs_allow_uid_self[] = { "uid=", NULL };
 static const gchar *ntfs_allow_gid_self[] = { "gid=", NULL };
 
@@ -313,7 +313,7 @@ static const gchar *udf_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- exfat -------------------- */
 
-static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", "umask=0077", NULL };
+static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", NULL };
 static const gchar *exfat_allow[] = { "dmask=", "errors=", "fmask=", "iocharset=", "namecase=", "umask=", NULL };
 static const gchar *exfat_allow_uid_self[] = { "uid=", NULL };
 static const gchar *exfat_allow_gid_self[] = { "gid=", NULL };
@@ -1809,27 +1809,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-on_set_label_job_completed (UDisksJob   *job,
-                            gboolean     success,
-                            const gchar *message,
-                            gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksFilesystem *filesystem;
-
-  filesystem = UDISKS_FILESYSTEM (g_dbus_method_invocation_get_user_data (invocation));
-
-  if (success)
-    udisks_filesystem_complete_set_label (filesystem, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error setting label: %s",
-                                           message);
-}
-
 /* runs in thread dedicated to handling method call */
 static gboolean
 handle_set_label (UDisksFilesystem      *filesystem,
@@ -1843,13 +1822,15 @@ handle_set_label (UDisksFilesystem      *filesystem,
   const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
   const FSInfo *fs_info;
-  UDisksBaseJob *job;
   const gchar *action_id;
   const gchar *message;
   gchar *real_label = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
   gchar *command;
+  gint status = 0;
+  gchar *out_message = NULL;
+  gboolean success = FALSE;
   gchar *tmp;
   GError *error;
 
@@ -1995,24 +1976,32 @@ handle_set_label (UDisksFilesystem      *filesystem,
       g_free (tmp);
     }
 
-  job = udisks_daemon_launch_spawned_job (daemon,
-                                          object,
-                                          "filesystem-modify", caller_uid,
-                                          NULL, /* cancellable */
-                                          0,    /* uid_t run_as_uid */
-                                          0,    /* uid_t run_as_euid */
-                                          NULL, /* input_string */
-                                          "%s", command);
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (on_set_label_job_completed),
-                    invocation);
+  success = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                   object,
+                                                   "filesystem-modify", caller_uid,
+                                                   NULL, /* cancellable */
+                                                   0,    /* uid_t run_as_uid */
+                                                   0,    /* uid_t run_as_euid */
+                                                   &status,
+                                                   &out_message,
+                                                   NULL, /* input_string */
+                                                   "%s", command);
+
+  if (success)
+    udisks_filesystem_complete_set_label (filesystem, invocation);
+  else
+    g_dbus_method_invocation_return_error (invocation,
+                                           UDISKS_ERROR,
+                                           UDISKS_ERROR_FAILED,
+                                           "Error setting label: %s",
+                                           out_message);
 
  out:
   /* for some FSes we need to copy and modify label; free our copy */
   g_free (real_label);
   g_free (command);
   g_clear_object (&object);
+  g_free (out_message);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
