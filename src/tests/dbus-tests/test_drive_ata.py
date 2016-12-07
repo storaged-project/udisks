@@ -180,5 +180,3 @@ class StoragedDriveAtaTest(StoragedTestCase):
             updated = self.get_property(drive_obj, ".Drive.Ata", "SmartUpdated")
             updated.assertTrue()
             self.assertGreater(int(updated.value), orig)
-            # the new timestamp should be less than 2 seconds off the previous one
-            self.assertLess(int(updated.value), orig+2)
