@@ -173,6 +173,7 @@ udisks_base_job_get_type
 UDisksSpawnedJob
 udisks_spawned_job_new
 udisks_spawned_job_get_command_line
+udisks_spawned_job_start
 <SUBSECTION Standard>
 UDISKS_TYPE_SPAWNED_JOB
 UDISKS_SPAWNED_JOB

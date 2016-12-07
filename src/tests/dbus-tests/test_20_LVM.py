@@ -8,6 +8,11 @@ import storagedtestcase
 class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     '''This is a basic LVM test suite'''
 
+    @classmethod
+    def setUpClass(cls):
+        storagedtestcase.StoragedTestCase.setUpClass()
+        cls.ensure_modules_loaded()
+
     def _create_vg(self, vgname, devices):
         self.udev_settle()  # Since the devices might not be ready yet
         manager = self.get_object('/Manager')
