@@ -242,4 +242,11 @@ class NTFSTestCase(StoragedFSTestCase):
     _can_mount = True
 
 
+class BTRFSTestCase(StoragedFSTestCase):
+    _fs_name = 'btrfs'
+    _can_create = True and StoragedFSTestCase.command_exists('mkfs.btrfs')
+    _can_label = True and StoragedFSTestCase.command_exists('btrfs')
+    _can_mount = True
+
+
 del StoragedFSTestCase  # skip StoragedFSTestCase
