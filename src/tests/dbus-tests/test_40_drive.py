@@ -78,7 +78,8 @@ class StoragedDriveTest(storagedtestcase.StoragedTestCase):
 
         # validate that configration property has changed
         conf_value = self.get_property(self.cd_drive, '.Drive', 'Configuration')
-        self.assertEqual(str(conf_value['ata-pm-standby']), '286')
+        conf_value.assertIsNotNone()
+        self.assertEqual(str(conf_value.value['ata-pm-standby']), '286')
 
     def test_40_properties(self):
         ''' Test of Drive properties values '''
@@ -119,12 +120,12 @@ class StoragedDriveTest(storagedtestcase.StoragedTestCase):
 
         for prop_name, expected_val in expected_prop_vals.items():
             actual_val = self.get_property(self.cd_drive, '.Drive', prop_name)
-            self.assertEqual(expected_val, actual_val)
+            actual_val.assertEqual(expected_val)
 
         # timeDetected and TimeMediaDetected has the same value and SortKey value
         # is derived from it
         timedetected = self.get_property(self.cd_drive, '.Drive', 'TimeDetected')
         timemediadetected = self.get_property(self.cd_drive, '.Drive', 'TimeMediaDetected')
-        self.assertEqual(timedetected, timemediadetected)
+        self.assertEqual(timedetected.value, timemediadetected.value)
         sortkey = self.get_property(self.cd_drive, '.Drive', 'SortKey')
-        self.assertEqual(sortkey, '01hotplug/%s' % timedetected)
+        sortkey.assertEqual('01hotplug/%s' % timedetected.value)

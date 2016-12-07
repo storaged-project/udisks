@@ -46,7 +46,7 @@ class StoragedSwapSpaceTest(storagedtestcase.StoragedTestCase):
         # Active property is now in undefined state
         iface.Start(self.no_options)
         active = self.get_property(iface, '.Swapspace', 'Active')
-        self.assertTrue(active)  # swap should be active
+        active.assertTrue()  # swap should be active
 
         code, result = self.run_command('swapon --show')
         self.assertEqual(code, 0)
@@ -57,4 +57,4 @@ class StoragedSwapSpaceTest(storagedtestcase.StoragedTestCase):
 
         iface.Stop(self.no_options)
         active = self.get_property(iface, '.Swapspace', 'Active')
-        self.assertFalse(active)  # swap shouldn't be active
+        active.assertFalse()  # swap shouldn't be active

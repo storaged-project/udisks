@@ -35,7 +35,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_format, disk)
 
         pttype = self.get_property(disk, '.PartitionTable', 'Type')
-        self.assertEqual(pttype, 'dos')
+        pttype.assertEqual('dos')
 
         part_type = '0x8e'  # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
 
@@ -51,13 +51,13 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check dbus properties
         size = self.get_property(part, '.Partition', 'Size')
-        self.assertEqual(size, 100 * 1024**2)
+        size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
 
         dbus_type = self.get_property(part, '.Partition', 'Type')
-        self.assertEqual(dbus_type, part_type)
+        dbus_type.assertEqual(part_type)
 
         # check system values
         part_name = path.split('/')[-1]
@@ -77,11 +77,11 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         # check uuid and part number
         dbus_uuid = self.get_property(part, '.Partition', 'UUID')
         _ret, sys_uuid = self.run_command('lsblk -no PARTUUID /dev/%s' % part_name)
-        self.assertEqual(dbus_uuid, sys_uuid)
+        dbus_uuid.assertEqual(sys_uuid)
 
         dbus_num = self.get_property(part, '.Partition', 'Number')
         sys_num = int(self.read_file('%s/partition' % part_syspath))
-        self.assertEqual(dbus_num, sys_num)
+        dbus_num.assertEqual(sys_num)
 
     def test_create_extended_partition(self):
 
@@ -104,11 +104,11 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check dbus type (0x05, 0x0f, 0x85 are all exteded types, see https://en.wikipedia.org/wiki/Partition_type#PID_05h)
         dbus_pttype = self.get_property(ext_part, '.Partition', 'Type')
-        self.assertIn(dbus_pttype, ['0x05', '0x0f', '0x85'])
+        dbus_pttype.assertIn(['0x05', '0x0f', '0x85'])
 
         # check if its a 'container'
         dbus_cont = self.get_property(ext_part, '.Partition', 'IsContainer')
-        self.assertTrue(dbus_cont)
+        dbus_cont.assertTrue()
 
         # check system type
         part_name = str(ext_part.object_path).split('/')[-1]
@@ -127,7 +127,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check if its a 'contained'
         dbus_cont = self.get_property(log_part, '.Partition', 'IsContained')
-        self.assertTrue(dbus_cont)
+        dbus_cont.assertTrue()
 
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -136,7 +136,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         # create gpt partition table
         self._create_format(disk, 'gpt')
         pttype = self.get_property(disk, '.PartitionTable', 'Type')
-        self.assertEqual(pttype, 'gpt')
+        pttype.assertEqual('gpt')
 
         self.addCleanup(self._remove_format, disk)
 
@@ -155,16 +155,16 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check dbus properties
         size = self.get_property(part, '.Partition', 'Size')
-        self.assertEqual(size, 100 * 1024**2)
+        size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
 
         dbus_name = self.get_property(part, '.Partition', 'Name')
-        self.assertEqual(dbus_name, gpt_name)
+        dbus_name.assertEqual(gpt_name)
 
         dbus_type = self.get_property(part, '.Partition', 'Type')
-        self.assertEqual(dbus_type, gpt_type)
+        dbus_type.assertEqual(gpt_type)
 
         # check system values
         part_name = path.split('/')[-1]
@@ -206,16 +206,16 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check dbus properties
         size = self.get_property(part, '.Partition', 'Size')
-        self.assertEqual(size, 100 * 1024**2)
+        size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        self.assertEqual(offset, 2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
 
         usage = self.get_property(part, '.Block', 'IdUsage')
-        self.assertEqual(usage, 'filesystem')
+        usage.assertEqual('filesystem')
 
         fstype = self.get_property(part, '.Block', 'IdType')
-        self.assertEqual(fstype, 'xfs')
+        fstype.assertEqual('xfs')
 
         # check system values
         part_name = path.split('/')[-1]
@@ -308,7 +308,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value on types
         dbus_flags = self.get_property(part, '.Partition', 'Flags')
-        self.assertEqual(dbus_flags, 128)
+        dbus_flags.assertEqual(128)
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
@@ -336,7 +336,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value on types
         dbus_type = self.get_property(part, '.Partition', 'Type')
-        self.assertEqual(dbus_type, home_guid)
+        dbus_type.assertEqual(home_guid)
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
@@ -364,7 +364,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value on types
         dbus_type = self.get_property(part, '.Partition', 'Type')
-        self.assertEqual(dbus_type, part_type)
+        dbus_type.assertEqual(part_type)
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
@@ -392,7 +392,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value on types
         dbus_name = self.get_property(part, '.Partition', 'Name')
-        self.assertEqual(dbus_name, 'test')
+        dbus_name.assertEqual('test')
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
