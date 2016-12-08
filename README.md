@@ -1,5 +1,6 @@
 [![build status](https://phatina.fedorapeople.org/jenkins/storaged/build.svg)](https://phatina.fedorapeople.org/jenkins/storaged/build.log)
 
+TEST
 
 OVERVIEW
 ========
