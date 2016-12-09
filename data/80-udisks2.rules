@@ -153,3 +153,6 @@ ENV{ID_PART_TABLE_TYPE}=="dos", ENV{ID_PART_ENTRY_TYPE}=="0x0", ENV{ID_PART_ENTR
 
 # Zram devices setup
 KERNEL=="zram[0-9]", ENV{SYSTEMD_WANTS}="zram-setup@zram%n.service", TAG+="systemd"
+
+# Explicitly ignore ram block devices, they don't work with udev
+KERNEL=="ram*", ENV{UDISKS_IGNORE}="1"
