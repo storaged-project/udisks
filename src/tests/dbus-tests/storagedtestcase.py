@@ -214,6 +214,15 @@ class StoragedTestCase(unittest.TestCase):
     def udev_settle(self):
         self.run_command('udevadm settle')
 
+    @classmethod
+    def wipe_fs(self, device):
+        for _ in range(10):
+            ret, _out = self.run_command('wipefs -a %s' % device)
+            if ret == 0:
+                return True
+            time.sleep(1)
+
+        return False
 
     @classmethod
     def read_file(self, filename):
@@ -223,10 +232,13 @@ class StoragedTestCase(unittest.TestCase):
 
 
     @classmethod
-    def write_file(self, filename, content):
-        with open(filename, 'w') as f:
-            f.write(content)
-
+    def write_file(self, filename, content, ignore_nonexistent=False):
+        try:
+            with open(filename, 'w') as f:
+                f.write(content)
+        except FileNotFoundError as e:
+            if not ignore_nonexistent:
+                raise e
 
     @classmethod
     def run_command(self, command):
