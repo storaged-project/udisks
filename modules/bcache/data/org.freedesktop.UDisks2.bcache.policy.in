@@ -9,7 +9,7 @@
   <vendor_url>https://github.com/storaged-project/storaged</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <action id="org.freedesktop.UDisks2.bcache.manage-bcache">
+  <action id="org.freedesktop.udisks2.bcache.manage-bcache">
     <_description>Manage Bcache</_description>
     <_message>Authentication is required to manage Bcache</_message>
     <defaults>
