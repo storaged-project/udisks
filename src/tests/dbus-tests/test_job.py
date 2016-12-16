@@ -67,13 +67,13 @@ class StoragedJobTest(storagedtestcase.StoragedTestCase):
         erase_thread.start()
         erase_thread.join()
 
-        # unexpected exception occured in erase thread -- raise it
-        if self.exception is not None:
-            raise self.exception
-
         # erase thread finished, stop job searching
         watch_thread.run = False
         watch_thread.join()
+
+        # unexpected exception occured in erase thread -- raise it
+        if self.exception is not None:
+            raise self.exception
 
         # we should have the job dict now
         self.assertIsNotNone(self.job)
