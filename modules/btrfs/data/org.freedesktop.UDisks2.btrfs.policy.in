@@ -12,7 +12,7 @@
   <!-- ###################################################################### -->
   <!-- Manage BTRFS -->
 
-  <action id="org.freedesktop.UDisks2.btrfs.manage-btrfs">
+  <action id="org.freedesktop.udisks2.btrfs.manage-btrfs">
     <_description>Manage BTRFS</_description>
     <_message>Authentication is required to manage BTRFS</_message>
     <defaults>

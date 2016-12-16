@@ -3,13 +3,13 @@
 <!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
- 
+
 <policyconfig>
   <vendor>The Storaged Project</vendor>
   <vendor_url>https://github.com/storaged-project/storaged</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <action id="org.freedesktop.UDisks2.zram.manage-zram">
+  <action id="org.freedesktop.udisks2.zram.manage-zram">
     <_description>Manage zRAM</_description>
     <_message>Authentication is required to manage zRAM</_message>
     <defaults>
@@ -20,4 +20,3 @@
   </action>
 
 </policyconfig>
-
