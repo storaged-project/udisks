@@ -186,6 +186,19 @@ if test "x$with_systemdsystemunitdir" != "xno"; then
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$systemdsystemunitdir"])
 
+# kernel modules
+AC_ARG_WITH([modloaddir],
+  [AS_HELP_STRING([--with-modloaddir=DIR], [Directory for configuring kernel modules to load at boot])],
+  [modloaddir=$withval],
+  [modloaddir="/usr/lib/modules-load.d"])
+AC_SUBST([modloaddir], [$modloaddir])
+
+AC_ARG_WITH([modprobedir],
+  [AS_HELP_STRING([--with-modprobedir=DIR], [Directory for modprobe configuration])],
+  [modprobedir=$withval],
+  [modprobedir="/usr/lib/modprobe.d"])
+AC_SUBST([modprobedir], [$modprobedir])
+
 have_acl=no
 AC_ARG_ENABLE(acl, AS_HELP_STRING([--disable-acl], [disable acl support]))
 if test "x$enable_acl" != "xno"; then
