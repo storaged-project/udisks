@@ -232,6 +232,14 @@ create_conf_files (guint64   num_devices,
       goto out;
     }
 
+  if (g_mkdir_with_parents (PACKAGE_ZRAMCONF_DIR, 0755) != 0)
+      {
+        rval = FALSE;
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Error creating directory %s: %m", PACKAGE_ZRAMCONF_DIR);
+        goto out;
+      }
+
   for (i = 0; i < num_devices; i++)
     {
       g_free (filename);
