@@ -1,0 +1,318 @@
+import dbus
+import re
+import tempfile
+
+from bytesize import bytesize
+from collections import namedtuple
+from contextlib import contextmanager
+
+import storagedtestcase
+
+
+Device = namedtuple('Device', ['obj', 'path', 'name', 'size'])
+
+
+class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
+    '''This is a basic test suite for btrfs interface'''
+
+    @classmethod
+    def setUpClass(cls):
+        storagedtestcase.StoragedTestCase.setUpClass()
+        cls.ensure_modules_loaded()
+
+    @contextmanager
+    def _temp_mount(self, device):
+        tmp = tempfile.TemporaryDirectory()
+        self.run_command('mount %s %s' % (device, tmp.name))
+
+        try:
+            yield tmp.name
+        finally:
+            self.run_command('umount %s' % tmp.name)
+            tmp.cleanup()
+
+    def _clean_format(self, device):
+        d = dbus.Dictionary(signature='sv')
+        d['erase'] = True
+        device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+
+    def _get_devices(self, num_devices):
+        devices = []
+
+        for i in range(num_devices):
+            dev_path = self.vdevs[i]
+            dev_name = dev_path.split('/')[-1]
+
+            dev_obj = self.get_object('/block_devices/' + dev_name)
+            self.assertIsNotNone(dev_obj)
+
+            _ret, out = self.run_command('lsblk -b -no SIZE %s' % dev_path)  # get size of the device
+
+            dev = Device(dev_obj, dev_path, dev_name, int(out))
+            devices.append(dev)
+
+        return devices
+
+    def test_create(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.path],
+                             'test_single', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+
+        # check filesystem type
+        usage = self.get_property(dev.obj, '.Block', 'IdUsage')
+        usage.assertEqual('filesystem')
+
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        # check '.Filesystem.BTRFS' properties
+        dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
+        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        dbus_label.assertEqual('test_single')
+        dbus_label.assertEqual(sys_label)
+
+        dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
+        _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+        dbus_uuid.assertEqual(sys_uuid)
+
+        dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
+        dbus_devs.assertEqual(1)
+
+        # check size
+        with self._temp_mount(dev.path) as mnt:
+            _ret, out = self.run_command('btrfs filesystem show %s' % mnt)
+            m = re.search(r'.*devid +1 size (.+) used', out, flags=re.DOTALL)
+            sys_size = bytesize.Size(m.group(1))
+            self.assertEqual(sys_size.convert_to(bytesize.B), dev.size)
+
+    def test_create_raid(self):
+        devs = self._get_devices(2)
+
+        for dev in devs:
+            self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+
+        # invalid raid level
+        msg = 'Process reported exit code 1: ERROR: unknown profile raidN'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.CreateVolume([dev.path for dev in devs],
+                                 'test_raidN', 'raidN', 'raidN',
+                                 self.no_options,
+                                 dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+
+
+        manager.CreateVolume([dev.path for dev in devs],
+                             'test_raid1', 'raid1', 'raid1',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+
+        # check filesystem type
+        for dev in devs:
+            usage = self.get_property(dev.obj, '.Block', 'IdUsage')
+            usage.assertEqual('filesystem')
+
+            fstype = self.get_property(dev.obj, '.Block', 'IdType')
+            fstype.assertEqual('btrfs')
+
+            # check '.Filesystem.BTRFS' properties
+            dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
+            _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+            dbus_label.assertEqual('test_raid1')
+            dbus_label.assertEqual(sys_label)
+
+            dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
+            _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+            dbus_uuid.assertEqual(sys_uuid)
+
+            dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
+            dbus_devs.assertEqual(2)
+
+            # check data and metadata raid level
+            with self._temp_mount(dev.path) as mnt:
+                _ret, out = self.run_command('btrfs filesystem df %s' % mnt)
+                self.assertIn('Data, RAID1:', out)
+                self.assertIn('Metadata, RAID1:', out)
+
+    def test_subvolumes(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.path],
+                             'test_subvols', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        # not mounted, should fail
+        msg = 'org.freedesktop.UDisks2.Error.NotMounted: Volume not mounted'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            dev.obj.CreateSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+        with self._temp_mount(dev.path) as mnt:
+            # create a subvolume
+            dev.obj.CreateSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            _ret, out = self.run_command('btrfs subvolume list %s' % mnt)
+            name = out.strip().split(' ')[-1]
+            self.assertEqual(name, 'test_sub1')
+
+            # list all subvolumes
+            subs, num = dev.obj.GetSubvolumes(False, self.no_options,
+                                              dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            self.assertEqual(num, 1)
+            self.assertEqual(subs[0][2], 'test_sub1')  # name (path) is the third item
+
+            # delete the subvolume
+            dev.obj.RemoveSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            _ret, out = self.run_command('btrfs subvolume list %s' % mnt)
+            self.assertFalse(out)  # no subvolume -> empty output
+
+            # list all subvolumes
+            _subs, num = dev.obj.GetSubvolumes(False, self.no_options,
+                                               dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            self.assertEqual(num, 0)
+
+    def test_add_remove_device(self):
+        dev1, dev2 = self._get_devices(2)
+        self.addCleanup(self._clean_format, dev1.obj)
+        self.addCleanup(self._clean_format, dev2.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev1.path],
+                             'test_add_remove', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        fstype = self.get_property(dev1.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        # shouldn't be possible to remove only device
+        with self._temp_mount(dev1.path):
+            msg = 'unable to remove the only writeable device'
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+                dev1.obj.RemoveDevice(dev1.path, self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+        # add second device to the volume
+        with self._temp_mount(dev1.path):
+            dev1.obj.AddDevice(dev2.path, self.no_options,
+                               dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            fstype = self.get_property(dev2.obj, '.Block', 'IdType')
+            fstype.assertEqual('btrfs')
+
+        # check filesystem type of the new device
+        fstype = self.get_property(dev2.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        # check number of devices
+        dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
+        dbus_devs.assertEqual(2)
+
+        _ret, out = self.run_command('btrfs filesystem show %s' % dev1.path)
+        self.assertIn('Total devices 2 FS', out)
+        self.assertIn('path %s' % dev1.path, out)
+        self.assertIn('path %s' % dev2.path, out)
+
+        # remove the second device
+        with self._temp_mount(dev1.path):
+            dev1.obj.RemoveDevice(dev2.path, self.no_options,
+                                  dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            fstype = self.get_property(dev2.obj, '.Block', 'IdType')
+            fstype.assertFalse()
+
+        # check number of devices
+        # XXX: storaged currently reports wrong number of devices (2)
+        # 'handle_remove_device' sets the property to '1' but after unmounting
+        # the device 'on_mount_monitor_mount_removed' triggers another properties
+        # update and this sets the property to '2' for some unknown reason
+        dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
+        with self.assertRaises(AssertionError):
+            dbus_devs.assertEqual(1)
+
+        _ret, out = self.run_command('btrfs filesystem show %s' % dev1.path)
+        self.assertIn('Total devices 1 FS', out)
+        self.assertIn('path %s' % dev1.path, out)
+        self.assertNotIn('path %s' % dev2.path, out)
+
+    def test_snapshot(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.path],
+                             'test_snapshot', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        with self._temp_mount(dev.path) as mnt:
+            # create a subvolume
+            dev.obj.CreateSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+            # create snapshot
+            dev.obj.CreateSnapshot('test_sub1', 'test_sub1_snapshot', False, self.no_options,
+                                   dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+            # list snapshots
+            snaps, num = dev.obj.GetSubvolumes(True, self.no_options,
+                                               dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            self.assertEqual(num, 1)
+            self.assertEqual(snaps[0][2], 'test_sub1_snapshot')  # name (path) is the third item
+
+            _ret, out = self.run_command('btrfs subvolume list %s' % mnt)
+            self.assertIn('path test_sub1', out)
+            self.assertIn('path test_sub1_snapshot', out)
+
+    def test_resize(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.path],
+                             'test_snapshot', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        with self._temp_mount(dev.path) as mnt:
+            new_size = dev.size - 20 * 1024**2
+            dev.obj.Resize(dbus.UInt64(new_size), self.no_options,
+                           dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+            _ret, out = self.run_command('btrfs filesystem show %s' % mnt)
+            m = re.search(r'.*devid +1 size (.+) used', out, flags=re.DOTALL)
+            sys_size = bytesize.Size(m.group(1))
+            self.assertEqual(sys_size.convert_to(bytesize.B), new_size)
+
+    def test_label(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.path],
+                             'test_label', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        dev.obj.SetLabel('new_label', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+        dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
+        dbus_label.assertEqual('new_label')
+
+        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        self.assertEqual(sys_label, 'new_label')
