@@ -43,6 +43,17 @@
 #define _UDEV_ACTION_ONLINE     "online"
 #define _UDEV_ACTION_OFFLINE    "offline"
 
+static gboolean
+_lsm_local_check (UDisksObject *object);
+
+static void
+_lsm_local_connect (UDisksObject *object);
+
+static gboolean
+_lsm_local_update(UDisksObject *object,
+                         const gchar *uevent_action,
+                         GDBusInterface *_iface);
+
 gchar *
 udisks_module_id (void)
 {
@@ -166,6 +177,46 @@ _drive_update (UDisksObject   *object,
     }
 }
 
+static gboolean
+_lsm_local_check (UDisksObject *object)
+{
+  /* The LsmLocalDisk interface is designated available on all disk drives as
+   * there is no reliable way to determine whether LED control is properly
+   * supported. Client code can only invoke the appropriate procedures for
+   * controlling the lights and check for errors that may indicate failure.
+   */
+
+  return TRUE;
+}
+
+static void
+_lsm_local_connect (UDisksObject *object)
+{
+}
+
+static gboolean
+_lsm_local_update(UDisksObject *object,
+                  const gchar *uevent_action,
+                  GDBusInterface *_iface)
+{
+
+  if (strcmp (uevent_action, _UDEV_ACTION_ADD) == 0)
+    {
+      return udisks_linux_drive_lsm_local_update
+        (UDISKS_LINUX_DRIVE_LSM_LOCAL (_iface),
+         UDISKS_LINUX_DRIVE_OBJECT (object));
+    }
+  else if (strcmp (uevent_action, _UDEV_ACTION_REMOVE) == 0)
+    {
+      if (UDISKS_IS_LINUX_DRIVE_LSM_LOCAL (_iface))
+        g_object_unref
+          (UDISKS_LINUX_DRIVE_LSM_LOCAL (_iface));
+      return TRUE;
+    }
+  return FALSE;
+}
+
+
 UDisksModuleInterfaceInfo **
 udisks_module_get_block_object_iface_setup_entries (void)
 {
@@ -177,12 +228,18 @@ udisks_module_get_drive_object_iface_setup_entries (void)
 {
   UDisksModuleInterfaceInfo **iface;
 
-  iface = g_new0 (UDisksModuleInterfaceInfo *, 2);
+  iface = g_new0 (UDisksModuleInterfaceInfo *,
+                  3 /* With trailing NULL as terminator */);
   iface[0] = g_new0 (UDisksModuleInterfaceInfo, 1);
   iface[0]->has_func = &_drive_check;
   iface[0]->connect_func = &_drive_connect;
   iface[0]->update_func = &_drive_update;
   iface[0]->skeleton_type = UDISKS_TYPE_LINUX_DRIVE_LSM;
+  iface[1] = g_new0 (UDisksModuleInterfaceInfo, 1);
+  iface[1]->has_func = &_lsm_local_check;
+  iface[1]->connect_func = &_lsm_local_connect;
+  iface[1]->update_func = &_lsm_local_update;
+  iface[1]->skeleton_type = UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL;
 
   return iface;
 }

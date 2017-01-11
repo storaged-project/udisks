@@ -402,10 +402,10 @@ AC_ARG_ENABLE(
 if test "x$enable_lsm" = "xyes" \
         -o "x$enable_modules" = "xyes"; then
     PKG_CHECK_MODULES(
-        [LIBLSM], [libstoragemgmt >= 1.2.0],
+        [LIBLSM], [libstoragemgmt >= 1.3.0],
         [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
             have_lsm=yes],
-        [AC_MSG_ERROR([libstoragemgmt 1.2.0 or newer not found.])
+        [AC_MSG_ERROR([libstoragemgmt 1.3.0 or newer not found.])
             have_lsm=no])
 
     PKG_CHECK_MODULES(

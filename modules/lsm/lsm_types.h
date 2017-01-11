@@ -64,6 +64,25 @@ typedef struct _UDisksLinuxManagerLSM UDisksLinuxManagerLSM;
 GType udisks_linux_manager_lsm_get_type (void) G_GNUC_CONST;
 UDisksLinuxManagerLSM *udisks_linux_manager_lsm_new (void);
 
+struct _UDisksLinuxDriveLsmLocal;
+typedef struct _UDisksLinuxDriveLsmLocal UDisksLinuxDriveLsmLocal;
+
+GType udisks_linux_drive_lsm_local_get_type (void) G_GNUC_CONST;
+#define UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL \
+  (udisks_linux_drive_lsm_local_get_type ())
+#define UDISKS_LINUX_DRIVE_LSM_LOCAL(o) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL, \
+                               UDisksLinuxDriveLsmLocal))
+#define UDISKS_IS_LINUX_DRIVE_LSM_LOCAL(o) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL))
+
+UDisksLinuxDriveLsmLocal *
+udisks_linux_drive_lsm_local_new (void);
+
+gboolean
+udisks_linux_drive_lsm_local_update (UDisksLinuxDriveLsmLocal *lsm_local,
+                                     UDisksLinuxDriveObject *ud_lx_drv_obj);
+
 G_END_DECLS
 
 #endif /* __LSM_TYPES_H__ */
