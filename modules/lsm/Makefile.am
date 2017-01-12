@@ -73,6 +73,7 @@ libudisks2_lsm_la_SOURCES = \
 	lsm_data.h lsm_data.c \
 	lsm_linux_drive.c \
 	lsm_linux_manager.c \
+	lsm_local.c \
 	$(NULL)
 
 libudisks2_lsm_la_CPPFLAGS = \
