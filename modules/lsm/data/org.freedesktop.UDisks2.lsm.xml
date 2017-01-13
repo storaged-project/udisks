@@ -121,4 +121,72 @@
   -->
   <interface name="org.freedesktop.UDisks2.Manager.LSM">
   </interface>
+
+  <!--
+    org.freedesktop.UDisks2.Drive.LsmLocal:
+    @short_description: Interface exported on disk drive objects for managing
+                        local direct attached storage.
+    @since: 2.6.3
+
+    Objects implementing this interface also implement the
+    #org.freedesktop.UDisks2.Drive interface.
+    This interface will exist on all disk drive objects.
+  -->
+  <interface name="org.freedesktop.UDisks2.Drive.LsmLocal">
+    <!--
+        TurnIdentLEDOn:
+        @since: 2.6.3
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Turn on the identification LED of disk.
+        This method only works on SCSI enclosure disks yet.
+        Error 'org.freedesktop.UDisks2.Error.NotSupported' will be raised
+        if not supported.
+    -->
+    <method name="TurnIdentLEDOn">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        TurnIdentLEDOff:
+        @since: 2.6.3
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Turn off the identification LED of disk.
+        This method only works on SCSI enclosure disks yet.
+        Error 'org.freedesktop.UDisks2.Error.NotSupported' will be raised
+        if not supported.
+    -->
+    <method name="TurnIdentLEDOff">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        TurnFaultLEDOn:
+        @since: 2.6.3
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Turn on the fault LED of disk.
+        This method only works on SCSI enclosure disks yet.
+        Error 'org.freedesktop.UDisks2.Error.NotSupported' will be raised
+        if not supported.
+    -->
+    <method name="TurnFaultLEDOn">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        TurnFaultLEDOff:
+        @since: 2.6.3
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Turn off the fault LED of disk.
+        This method only works on SCSI enclosure disks yet.
+        Error 'org.freedesktop.UDisks2.Error.NotSupported' will be raised
+        if not supported.
+    -->
+    <method name="TurnFaultLEDOff">
+        <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
 </node>

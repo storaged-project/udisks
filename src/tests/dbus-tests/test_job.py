@@ -67,13 +67,13 @@ class StoragedJobTest(storagedtestcase.StoragedTestCase):
         erase_thread.start()
         erase_thread.join()
 
-        # unexpected exception occured in erase thread -- raise it
-        if self.exception is not None:
-            raise self.exception
-
         # erase thread finished, stop job searching
         watch_thread.run = False
         watch_thread.join()
+
+        # unexpected exception occured in erase thread -- raise it
+        if self.exception is not None:
+            raise self.exception
 
         # we should have the job dict now
         self.assertIsNotNone(self.job)
@@ -105,8 +105,13 @@ class StoragedJobTest(storagedtestcase.StoragedTestCase):
         erase_thread.start()
 
         # watch thread should end first -- we need the job before erase finishes
-        watch_thread.join()
-        self.assertIsNotNone(self.job)
+        watch_thread.join(timeout=10)
+        if not self.job:
+            watch_thread.run = False  # stop the watch thread now
+            if self.exception:  # exception in erase thread -- just raise it
+                raise self.exception
+            else:  # didn't find the job but no exception
+                self.fail('Failed to find the job objects.')
 
         job_path = self.job[0]
 

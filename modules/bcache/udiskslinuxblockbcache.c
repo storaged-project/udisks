@@ -305,7 +305,11 @@ handle_set_mode (UDisksBlockBcache      *block_,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-    udisks_block_bcache_complete_set_mode (block_, invocation);
+
+  /* update the property value -- there is no change event from bcache */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_block_bcache_complete_set_mode (block_, invocation);
+
 out:
   g_free (devname);
   g_free (modestr);

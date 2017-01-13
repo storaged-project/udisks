@@ -9,9 +9,6 @@ MODULE_SO = libudisks2_zram.so
 zramconfdir = $(libdir)/zram.conf.d
 zramconf_DATA =
 
-modprobedir = $(libdir)/modprobe.d
-modloaddir = $(libdir)/modules-load.d
-
 NULL =
 
 CPPFLAGS =                                                                     \
