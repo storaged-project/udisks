@@ -135,8 +135,8 @@
     <!--
         TurnIdentLEDOn:
         @since: 2.6.3
-        @options: Options (currently unused except for <link
-                  linkend="udisks-std-options">standard options</link>).
+        @options: Options (currently unused except for
+                  <link linkend="udisks-std-options">standard options</link>).
 
         Turn on the identification LED of disk.
         This method only works on SCSI enclosure disks yet.
@@ -150,8 +150,8 @@
     <!--
         TurnIdentLEDOff:
         @since: 2.6.3
-        @options: Options (currently unused except for <link
-                  linkend="udisks-std-options">standard options</link>).
+        @options: Options (currently unused except for
+                  <link linkend="udisks-std-options">standard options</link>).
 
         Turn off the identification LED of disk.
         This method only works on SCSI enclosure disks yet.
@@ -165,8 +165,8 @@
     <!--
         TurnFaultLEDOn:
         @since: 2.6.3
-        @options: Options (currently unused except for <link
-                  linkend="udisks-std-options">standard options</link>).
+        @options: Options (currently unused except for
+                  <link linkend="udisks-std-options">standard options</link>).
 
         Turn on the fault LED of disk.
         This method only works on SCSI enclosure disks yet.
@@ -180,8 +180,8 @@
     <!--
         TurnFaultLEDOff:
         @since: 2.6.3
-        @options: Options (currently unused except for <link
-                  linkend="udisks-std-options">standard options</link>).
+        @options: Options (currently unused except for
+                  <link linkend="udisks-std-options">standard options</link>).
 
         Turn off the fault LED of disk.
         This method only works on SCSI enclosure disks yet.
