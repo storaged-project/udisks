@@ -455,7 +455,7 @@ if test "x$enable_bcache" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    BCACHE_CFLAGS=""
+    BCACHE_CFLAGS="-DWITH_BD_BCACHE"
     BCACHE_LIBS="-lbd_kbd"
 
     if test "x$have_bcache" = "xno"; then
