@@ -55,6 +55,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         pass
 
     def test_label(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_label:
             self.skipTest('Cannot set label on %s filesystem' % self._fs_name)
 
@@ -92,6 +95,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self._invalid_label(disk)
 
     def test_mount_auto(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
@@ -130,6 +136,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.assertFalse(os.path.ismount(mnt_path))
 
     def test_mount_fstab(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
