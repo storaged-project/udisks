@@ -218,11 +218,6 @@ class RAID0TestCase(RAIDLevel):
         name = 'storaged_test_delete'
         array = self._array_create(name)
 
-        # stop the array
-        array.Stop(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
-        ret, _out = self.run_command('mdadm /dev/md/%s' % name)
-        self.assertEqual(ret, 1)
-
         # delete
         array.Delete(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
         self.udev_settle()
