@@ -13,4 +13,8 @@ modulesconf_DATA = udisks2_lsm.conf
 EXTRA_DIST = \
 	org.freedesktop.UDisks2.lsm.xml \
 	udisks2_lsm.conf \
+	$(polkit_in_files) \
 	$(NULL)
+
+clean-local:
+	rm -f *~ $(polkit_DATA)
