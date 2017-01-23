@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import unittest
 
 import storagedtestcase
 
@@ -49,7 +50,8 @@ class StoragedZRAMTest(storagedtestcase.StoragedTestCase):
     @classmethod
     def setUpClass(cls):
         storagedtestcase.StoragedTestCase.setUpClass()
-        cls.ensure_modules_loaded()
+        if not cls.check_module_loaded('ZRAM'):
+            raise unittest.SkipTest('Storaged module for zram tests not loaded, skipping.')
 
         cls._save_conf_files()
 

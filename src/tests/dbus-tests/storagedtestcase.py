@@ -249,17 +249,19 @@ class StoragedTestCase(unittest.TestCase):
         return (res.returncode, out.decode().strip())
 
     @classmethod
-    def ensure_modules_loaded(self):
+    def check_module_loaded(self, module):
         manager_obj = self.get_object('/Manager')
         manager = self.get_interface(manager_obj, '.Manager')
         manager_intro = dbus.Interface(manager_obj, "org.freedesktop.DBus.Introspectable")
         intro_data = manager_intro.Introspect()
-        modules_loaded = 'interface name="org.freedesktop.UDisks2.Manager.Bcache"' in intro_data
+        modules_loaded = 'interface name="org.freedesktop.UDisks2.Manager.%s"' % module in intro_data
 
         if not modules_loaded:
             manager.EnableModules(dbus.Boolean(True))
             intro_data = manager_intro.Introspect()
-            assert 'interface name="org.freedesktop.UDisks2.Manager.Bcache"' in intro_data
+            return 'interface name="org.freedesktop.UDisks2.Manager.%s"' % module in intro_data
+        else:
+            return True
 
 
     @classmethod

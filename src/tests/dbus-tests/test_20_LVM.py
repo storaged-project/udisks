@@ -1,6 +1,7 @@
 import dbus
 import os
 import time
+import unittest
 
 import storagedtestcase
 
@@ -11,7 +12,8 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     @classmethod
     def setUpClass(cls):
         storagedtestcase.StoragedTestCase.setUpClass()
-        cls.ensure_modules_loaded()
+        if not cls.check_module_loaded('LVM2'):
+            raise unittest.SkipTest('Storaged module for LVM tests not loaded, skipping.')
 
     def _create_vg(self, vgname, devices):
         self.udev_settle()  # Since the devices might not be ready yet
