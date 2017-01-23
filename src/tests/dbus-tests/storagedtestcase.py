@@ -242,10 +242,11 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def run_command(self, command):
-        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        out = res.stdout.decode().strip()
-        return (res.returncode, out)
+        res = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+
+        out, _err = res.communicate()
+        return (res.returncode, out.decode().strip())
 
     @classmethod
     def ensure_modules_loaded(self):
