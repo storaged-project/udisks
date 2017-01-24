@@ -70,7 +70,6 @@ class StoragedDriveTest(storagedtestcase.StoragedTestCase):
                                         'Failed: No usb device'):
                 drive.PowerOff(self.no_options)
 
-    @unittest.skip("Fails: Invalid path, see udiskslinuxdrive.c (239)")
     def test_30_setconfiguration(self):
         ''' Test of Drive.SetConfiguration method '''
         # set configuration value to some improbable value
