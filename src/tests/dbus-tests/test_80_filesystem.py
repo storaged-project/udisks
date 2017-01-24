@@ -24,6 +24,11 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         ret, _out = cls.run_command('type %s' % command)
         return ret == 0
 
+    @classmethod
+    def module_loaded(cls, module):
+        ret, _out = cls.run_command('lsmod | grep %s' % module)
+        return ret == 0
+
     def test_create_format(self):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
@@ -50,6 +55,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         pass
 
     def test_label(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_label:
             self.skipTest('Cannot set label on %s filesystem' % self._fs_name)
 
@@ -87,6 +95,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self._invalid_label(disk)
 
     def test_mount_auto(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
@@ -125,6 +136,9 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.assertFalse(os.path.ismount(mnt_path))
 
     def test_mount_fstab(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
@@ -243,6 +257,124 @@ class BTRFSTestCase(StoragedFSTestCase):
     _can_create = True and StoragedFSTestCase.command_exists('mkfs.btrfs')
     _can_label = True and StoragedFSTestCase.command_exists('btrfs')
     _can_mount = True
+
+
+class ReiserFSTestCase(StoragedFSTestCase):
+    _fs_name = 'reiserfs'
+    _can_create = True and StoragedFSTestCase.command_exists('mkfs.reiserfs')
+    _can_label = True and StoragedFSTestCase.command_exists('reiserfstune')
+    _can_mount = True
+
+
+class MinixTestCase(StoragedFSTestCase):
+    _fs_name = 'minix'
+    _can_create = True and StoragedFSTestCase.command_exists('mkfs.minix')
+    _can_label = False
+    _can_mount = True and StoragedFSTestCase.module_loaded('minix')
+
+
+class NILFS2TestCase(StoragedFSTestCase):
+    _fs_name = 'nilfs2'
+    _can_create = True and StoragedFSTestCase.command_exists('mkfs.nilfs2')
+    _can_label = True and StoragedFSTestCase.command_exists('nilfs-tune')
+    _can_mount = True and StoragedFSTestCase.module_loaded('nilfs2')
+
+
+class F2FSTestCase(StoragedFSTestCase):
+    _fs_name = 'f2fs'
+    _can_create = True and StoragedFSTestCase.command_exists('mkfs.f2fs')
+    _can_label = False
+    _can_mount = True and StoragedFSTestCase.module_loaded('f2fs')
+
+
+class FailsystemTestCase(StoragedFSTestCase):
+    # test that not supported operations fail 'nicely'
+
+    def test_create_format(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # try to create some nonexisting filesystem
+        msg = 'org.freedesktop.UDisks2.Error.NotSupported: Creation of file system '\
+              'type definitely-nonexisting-fs is not supported'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.Format('definitely-nonexisting-fs', self.no_options,
+                        dbus_interface=self.iface_prefix + '.Block')
+
+    def test_label(self):
+        # we need some filesystem that doesn't support labels
+        fs = MinixTestCase
+
+        if not fs._can_create:
+            self.skipTest('Cannot create %s filesystem to test not supported '
+                          'labelling.' % fs._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # try create minix filesystem with label
+        label = 'test'
+        d = dbus.Dictionary(signature='sv')
+        d['label'] = label
+
+        msg = 'org.freedesktop.UDisks2.Error.NotSupported: File system '\
+              'type %s does not support labels' % fs._fs_name
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.Format(fs._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
+
+        # create minix filesystem without label and try to set it later
+        disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+
+        msg = 'org.freedesktop.UDisks2.Error.NotSupported: Don\'t know how to '\
+              'change label on device of type filesystem:%s' % fs._fs_name
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.SetLabel('test', self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+    def test_mount_auto(self):
+        # we need some mountable filesystem, ext4 should do the trick
+        fs = Ext4TestCase
+
+        if not fs._can_create:
+            self.skipTest('Cannot create %s filesystem to test not supported '
+                          'mount options.' % fs._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._unmount, self.vdevs[0])  # paranoid cleanup
+
+        # wrong fstype
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = 'xfs'
+
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Error mounting %s .* mount: '\
+              'wrong fs type' % self.vdevs[0]
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+            self.assertIsNone(mnt_path)
+
+        # invalid option
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = fs._fs_name
+        d['options'] = 'definitely-nonexisting-option'
+
+        msg = 'org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option '\
+              '`definitely-nonexisting-option\' is not allowed'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+            self.assertIsNone(mnt_path)
+
+        # should not be mounted -- so lets try to unmount it
+        msg = 'org.freedesktop.UDisks2.Error.NotMounted: Device `%s\' is not '\
+              'mounted' % self.vdevs[0]
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+    def test_mount_fstab(self):
+        pass
 
 
 del StoragedFSTestCase  # skip StoragedFSTestCase

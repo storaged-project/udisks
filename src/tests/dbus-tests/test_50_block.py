@@ -48,6 +48,35 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, '')
 
+    def test_format_parttype(self):
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create partition table first
+        disk.Format('dos', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        # now create partition
+        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2),
+                                    '', '', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.PartitionTable')
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        # now format it to swap with 'update-partition-type'
+        d = dbus.Dictionary(signature='sv')
+        d['update-partition-type'] = True
+        part.Format('swap', d, dbus_interface=self.iface_prefix + '.Block')
+
+        # part type should be set to swap (0x42 or 0x82)
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        dbus_type.assertIn(['0x42', '0x82'])
+
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        self.assertIn(sys_type, ['0x42', '0x82'])
+
     def test_open(self):
 
         # format the disk
