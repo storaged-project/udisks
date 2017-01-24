@@ -5,6 +5,7 @@ import glob
 import os
 import re
 import time
+import unittest
 
 
 class StoragedISCSITest(storagedtestcase.StoragedTestCase):
@@ -24,7 +25,8 @@ class StoragedISCSITest(storagedtestcase.StoragedTestCase):
     @classmethod
     def setUpClass(cls):
         storagedtestcase.StoragedTestCase.setUpClass()
-        cls.ensure_modules_loaded()
+        if not cls.check_module_loaded('ISCSI.Initiator'):
+            raise unittest.SkipTest('Storaged module for iscsi tests not loaded, skipping.')
 
     def _force_lougout(self, target):
         self.run_command('iscsiadm --mode node --targetname %s --portal %s:%d '
