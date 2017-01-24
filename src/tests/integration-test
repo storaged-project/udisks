@@ -642,57 +642,9 @@ class FS(UDisksTestCase):
         self.assertEqual(obj.get_property('partition'), None)
         self.assertEqual(obj.get_property('partition-table'), None)
 
-    def test_ext2(self):
-        '''fs: ext2'''
-        self._do_fs_check('ext2')
-
-    def test_ext3(self):
-        '''fs: ext3'''
-        self._do_fs_check('ext3')
-
-    def test_ext4(self):
-        '''fs: ext4'''
-        self._do_fs_check('ext4')
-
-    def test_btrfs(self):
-        '''fs: btrfs'''
-        self._do_fs_check('btrfs')
-
-    def test_f2fs(self):
-        '''fs: f2fs'''
-        self._do_fs_check('f2fs')
-
-    def test_minix(self):
-        '''fs: minix'''
-        self._do_fs_check('minix')
-
-    def test_xfs(self):
-        '''fs: XFS'''
-        self._do_fs_check('xfs')
-
-    def test_ntfs(self):
-        '''fs: NTFS'''
-        self._do_fs_check('ntfs')
-
-    def test_vfat(self):
-        '''fs: FAT'''
-        self._do_fs_check('vfat')
-
     def test_exfat(self):
         '''fs: exFAT'''
         self._do_fs_check('exfat')
-
-    def test_reiserfs(self):
-        '''fs: reiserfs'''
-        self._do_fs_check('reiserfs')
-
-    def test_swap(self):
-        '''fs: swap'''
-        self._do_fs_check('swap')
-
-    def test_nilfs2(self):
-        '''fs: nilfs2'''
-        self._do_fs_check('nilfs2')
 
     def test_empty(self):
         '''fs: empty'''
