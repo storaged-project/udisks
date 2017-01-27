@@ -34,6 +34,7 @@
 #include "udisksspawnedjob.h"
 #include "udisks-daemon-marshal.h"
 #include "udisksdaemon.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udisksspawnedjob
@@ -130,6 +131,15 @@ static void udisks_spawned_job_release_resources (UDisksSpawnedJob *job);
 G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_BASE_JOB,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
 
+typedef GString AutowipeBuffer;
+static GType autowipe_buffer_get_type (void);
+static void autowipe_buffer_free (gpointer data);
+static gpointer autowipe_buffer_copy (gpointer data);
+
+G_DEFINE_BOXED_TYPE (AutowipeBuffer, autowipe_buffer,
+                     autowipe_buffer_copy,
+                     autowipe_buffer_free);
+
 static void
 udisks_spawned_job_finalize (GObject *object)
 {
@@ -142,12 +152,8 @@ udisks_spawned_job_finalize (GObject *object)
 
   g_free (job->command_line);
 
-  /* input string may contain key material - nuke contents */
   if (job->input_string != NULL)
-    {
-      memset (job->input_string->str, '\0', job->input_string->len);
-      g_string_free (job->input_string, TRUE);
-    }
+    g_boxed_free (autowipe_buffer_get_type (), (gpointer) job->input_string);
 
   if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize (object);
@@ -180,7 +186,6 @@ udisks_spawned_job_set_property (GObject      *object,
                                  GParamSpec   *pspec)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
-  const gchar* str_value;
 
   switch (prop_id)
     {
@@ -191,10 +196,9 @@ udisks_spawned_job_set_property (GObject      *object,
 
     case PROP_INPUT_STRING:
       g_assert (job->input_string == NULL);
-      str_value = g_value_get_string (value);
-      if (str_value != NULL)
+      job->input_string = (GString*) g_value_dup_boxed (value);
+      if (job->input_string != NULL)
         {
-          job->input_string = g_string_new (str_value);
           job->input_string_cursor = job->input_string->str;
         }
       break;
@@ -471,13 +475,16 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    *
    * String that will be written to stdin of the spawned program or
    * %NULL to not write anything.
+   *
+   * This is passed as autowipe_buffer (rather than G_TYPE_GSTRING) to nuke
+   * the contents after usage since the input string may contain key material.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_INPUT_STRING,
-                                   g_param_spec_string ("input-string",
+                                   g_param_spec_boxed  ("input-string",
                                                         "Input String",
                                                         "String to write to stdin of the spawned program",
-                                                        NULL,
+                                                        autowipe_buffer_get_type (),
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -579,7 +586,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  */
 UDisksSpawnedJob *
 udisks_spawned_job_new (const gchar  *command_line,
-                        const gchar  *input_string,
+                        GString      *input_string,
                         uid_t         run_as_uid,
                         uid_t         run_as_euid,
                         UDisksDaemon *daemon,
@@ -1004,4 +1011,27 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
 
  out:
   ;
+}
+
+/* manage strings with potentially unsafe content */
+
+static gpointer
+autowipe_buffer_copy (gpointer data)
+{
+  GString *orig = (GString*) data;
+  GString *copy = NULL;
+
+  if (orig != NULL)
+    {
+      copy = g_string_new_len (orig->str, orig->len);
+    }
+
+  return (gpointer) copy;
+}
+
+static void
+autowipe_buffer_free (gpointer data)
+{
+  GString *string = (GString*) data;
+  udisks_string_wipe_and_free (string);
 }

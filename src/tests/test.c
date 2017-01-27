@@ -403,13 +403,16 @@ test_spawned_job_input_string (void)
 {
   UDisksSpawnedJob *job;
   gchar *s;
+  GString *input;
 
+  input = g_string_new ("foobar");
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 7");
-  job = udisks_spawned_job_new (s, "foobar", getuid (), geteuid (), NULL, NULL);
+  job = udisks_spawned_job_new (s, input, getuid (), geteuid (), NULL, NULL);
   udisks_spawned_job_start (job);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (input_string_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
+  g_string_free (input, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
