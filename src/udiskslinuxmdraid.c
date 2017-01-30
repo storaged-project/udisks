@@ -1480,6 +1480,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
     }
 
   udisks_mdraid_complete_add_device (_mdraid, invocation);
+  udisks_linux_mdraid_update (mdraid, object);
 
  out:
   g_free (error_message);
