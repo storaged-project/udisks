@@ -101,7 +101,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
         manager = self.get_object('/Manager')
 
         # invalid raid level
-        msg = 'Process reported exit code 1: ERROR: unknown profile raidN'
+        msg = '[uU]nknown profile raidN'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.CreateVolume([dev.path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',
