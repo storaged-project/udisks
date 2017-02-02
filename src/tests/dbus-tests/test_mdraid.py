@@ -310,7 +310,6 @@ class RAID1TestCase(RAIDLevel):
         _ret, out = self.run_command('lsblk -no FSTYPE %s' % new_path)
         self.assertEqual(out, '')
 
-    @unittest.skip("Magically failing test")
     def test_bitmap_location(self):
         array_name = 'storaged_test_bitmap'
         array = self._array_create(array_name)
