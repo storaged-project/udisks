@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import unittest
 
 import storagedtestcase
 
@@ -14,7 +15,8 @@ class StoragedBcacheTest(storagedtestcase.StoragedTestCase):
     @classmethod
     def setUpClass(cls):
         storagedtestcase.StoragedTestCase.setUpClass()
-        cls.ensure_modules_loaded()
+        if not cls.check_module_loaded('Bcache'):
+            raise unittest.SkipTest('Storaged module for bcache tests not loaded, skipping.')
 
     def _force_remove(self, bcache_name, backing_dev, cache_dev):
         _ret, out = self.run_command('bcache-super-show %s | grep cset.uuid ' % cache_dev)

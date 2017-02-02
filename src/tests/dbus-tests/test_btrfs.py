@@ -1,6 +1,7 @@
 import dbus
 import re
 import tempfile
+import unittest
 
 from bytesize import bytesize
 from collections import namedtuple
@@ -18,7 +19,8 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
     @classmethod
     def setUpClass(cls):
         storagedtestcase.StoragedTestCase.setUpClass()
-        cls.ensure_modules_loaded()
+        if not cls.check_module_loaded('BTRFS'):
+            raise unittest.SkipTest('Storaged module for btrfs tests not loaded, skipping.')
 
     @contextmanager
     def _temp_mount(self, device):
@@ -99,7 +101,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
         manager = self.get_object('/Manager')
 
         # invalid raid level
-        msg = 'Process reported exit code 1: ERROR: unknown profile raidN'
+        msg = '[uU]nknown profile raidN'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.CreateVolume([dev.path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',

@@ -5,8 +5,20 @@ import os
 class StoragedBaseTest(storagedtestcase.StoragedTestCase):
     '''This is a base test suite'''
 
+    storaged_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM'])
+
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
+
+    def _get_modules(self):
+        content = self.read_file('/etc/os-release')
+        release = {key: value for (key, value) in [line.split('=') for line in content.split('\n') if line]}
+        distro = release['ID'].replace('"', '')
+
+        if distro in ('redhat', 'centos'):
+            return self.storaged_modules - {'Bcache'}
+        else:
+            return self.storaged_modules
 
     def test_10_manager(self):
         '''Testing the manager object presence'''
@@ -18,14 +30,18 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
         manager = self.get_interface(self.manager_obj, '.Manager')
         manager_intro = dbus.Interface(self.manager_obj, "org.freedesktop.DBus.Introspectable")
         intro_data = manager_intro.Introspect()
-        modules_loaded = 'interface name="org.freedesktop.UDisks2.Manager.Bcache"' in intro_data
+        modules = self._get_modules()
+        modules_loaded = any('interface name="%s.Manager.%s"' % (self.iface_prefix, module)
+                             in intro_data for module in modules)
 
         if modules_loaded:
             self.skipTest("Modules already loaded, nothing to test")
         else:
             manager.EnableModules(dbus.Boolean(True))
             intro_data = manager_intro.Introspect()
-            self.assertIn('interface name="org.freedesktop.UDisks2.Manager.Bcache"', intro_data)
+
+            for module in modules:
+                self.assertIn('interface name="%s.Manager.%s"' % (self.iface_prefix, module), intro_data)
 
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')
