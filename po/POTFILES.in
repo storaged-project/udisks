@@ -15,6 +15,7 @@ modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in
 modules/lvm2/udiskslinuxlogicalvolume.c
 modules/lvm2/udiskslinuxmanagerlvm2.c
 modules/lvm2/udiskslinuxvolumegroup.c
+modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in
 modules/zram/data/org.freedesktop.UDisks2.zram.policy.in
 modules/zram/udiskslinuxmanagerzram.c
 modules/zram/udiskslinuxblockzram.c
