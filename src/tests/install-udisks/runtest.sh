@@ -28,23 +28,23 @@
 . /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
-GIT_REPO="https://github.com/storaged-project/storaged.git"
-REPO_DIR="storaged"
+GIT_REPO="https://github.com/storaged-project/udisks.git"
+REPO_DIR="udisks"
 
 rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm git
 
-        rlRun "cd /home/storaged"
-        rlRun "su -c 'git clone $GIT_REPO' storaged"
+        rlRun "cd /home/udisks"
+        rlRun "su -c 'git clone $GIT_REPO' udisks"
         rlRun "cd $REPO_DIR"
-        rlRun "dnf builddep -y packaging/storaged.spec"
+        rlRun "dnf builddep -y packaging/udisks2.spec"
     rlPhaseEnd
 
     rlPhaseStartTest
-        rlRun "su -c './autogen.sh' storaged"
-        rlRun "su -c './configure --enable-modules --localstatedir=/var' storaged"
-        rlRun "su -c 'make' storaged"
+        rlRun "su -c './autogen.sh' udisks"
+        rlRun "su -c './configure --enable-modules --localstatedir=/var' udisks"
+        rlRun "su -c 'make' udisks"
 
         rlRun "make install"
         rlRun "cp data/org.freedesktop.UDisks2 /etc/dbus-1/system.d/"

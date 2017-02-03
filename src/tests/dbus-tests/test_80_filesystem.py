@@ -2,10 +2,10 @@ import dbus
 import os
 import tempfile
 
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
+class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     _fs_name = None
     _can_create = False
     _can_label = False
@@ -80,7 +80,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_label, label)
 
         # change the label
-        label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX storaged changes vfat labels to uppercase
+        label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX udisks changes vfat labels to uppercase
         disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
         # test dbus properties
@@ -186,10 +186,10 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         self.assertIn('ro', out)
 
 
-class Ext2TestCase(StoragedFSTestCase):
+class Ext2TestCase(UdisksFSTestCase):
     _fs_name = 'ext2'
-    _can_create = True and StoragedFSTestCase.command_exists('mke2fs')
-    _can_label = True and StoragedFSTestCase.command_exists('tune2fs')
+    _can_create = True and UdisksFSTestCase.command_exists('mke2fs')
+    _can_label = True and UdisksFSTestCase.command_exists('tune2fs')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -219,10 +219,10 @@ class Ext4TestCase(Ext2TestCase):
         pass
 
 
-class XFSTestCase(StoragedFSTestCase):
+class XFSTestCase(UdisksFSTestCase):
     _fs_name = 'xfs'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.xfs')
-    _can_label = True and StoragedFSTestCase.command_exists('xfs_admin')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.xfs')
+    _can_label = True and UdisksFSTestCase.command_exists('xfs_admin')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -232,10 +232,10 @@ class XFSTestCase(StoragedFSTestCase):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
-class VFATTestCase(StoragedFSTestCase):
+class VFATTestCase(UdisksFSTestCase):
     _fs_name = 'vfat'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.vfat')
-    _can_label = True and StoragedFSTestCase.command_exists('fatlabel')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.vfat')
+    _can_label = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -245,49 +245,49 @@ class VFATTestCase(StoragedFSTestCase):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
-class NTFSTestCase(StoragedFSTestCase):
+class NTFSTestCase(UdisksFSTestCase):
     _fs_name = 'ntfs'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.ntfs')
-    _can_label = True and StoragedFSTestCase.command_exists('ntfslabel')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.ntfs')
+    _can_label = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
 
 
-class BTRFSTestCase(StoragedFSTestCase):
+class BTRFSTestCase(UdisksFSTestCase):
     _fs_name = 'btrfs'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.btrfs')
-    _can_label = True and StoragedFSTestCase.command_exists('btrfs')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.btrfs')
+    _can_label = True and UdisksFSTestCase.command_exists('btrfs')
     _can_mount = True
 
 
-class ReiserFSTestCase(StoragedFSTestCase):
+class ReiserFSTestCase(UdisksFSTestCase):
     _fs_name = 'reiserfs'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.reiserfs')
-    _can_label = True and StoragedFSTestCase.command_exists('reiserfstune')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.reiserfs')
+    _can_label = True and UdisksFSTestCase.command_exists('reiserfstune')
     _can_mount = True
 
 
-class MinixTestCase(StoragedFSTestCase):
+class MinixTestCase(UdisksFSTestCase):
     _fs_name = 'minix'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.minix')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.minix')
     _can_label = False
-    _can_mount = True and StoragedFSTestCase.module_loaded('minix')
+    _can_mount = True and UdisksFSTestCase.module_loaded('minix')
 
 
-class NILFS2TestCase(StoragedFSTestCase):
+class NILFS2TestCase(UdisksFSTestCase):
     _fs_name = 'nilfs2'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.nilfs2')
-    _can_label = True and StoragedFSTestCase.command_exists('nilfs-tune')
-    _can_mount = True and StoragedFSTestCase.module_loaded('nilfs2')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
+    _can_label = True and UdisksFSTestCase.command_exists('nilfs-tune')
+    _can_mount = True and UdisksFSTestCase.module_loaded('nilfs2')
 
 
-class F2FSTestCase(StoragedFSTestCase):
+class F2FSTestCase(UdisksFSTestCase):
     _fs_name = 'f2fs'
-    _can_create = True and StoragedFSTestCase.command_exists('mkfs.f2fs')
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
     _can_label = False
-    _can_mount = True and StoragedFSTestCase.module_loaded('f2fs')
+    _can_mount = True and UdisksFSTestCase.module_loaded('f2fs')
 
 
-class FailsystemTestCase(StoragedFSTestCase):
+class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'
 
     def test_create_format(self):
@@ -377,4 +377,4 @@ class FailsystemTestCase(StoragedFSTestCase):
         pass
 
 
-del StoragedFSTestCase  # skip StoragedFSTestCase
+del UdisksFSTestCase  # skip UdisksFSTestCase

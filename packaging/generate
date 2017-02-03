@@ -17,10 +17,10 @@ case "$1" in
         ;;
 
     -l|--with-libblockdev-part)
-        sed "s/@have_libblockdev_part_spec@/1/" storaged.spec.in > storaged.spec
+        sed "s/@have_libblockdev_part_spec@/1/" udisks2.spec.in > udisks2.spec
         ;;
 
     -p|--with-parted|*)
-        sed "s/@have_libblockdev_part_spec@/0/" storaged.spec.in > storaged.spec
+        sed "s/@have_libblockdev_part_spec@/0/" udisks2.spec.in > udisks2.spec
         ;;
 esac

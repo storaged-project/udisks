@@ -13,7 +13,7 @@
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
-Name:    storaged
+Name:    udisks
 Summary: Disk Manager
 Version: 2.6.4
 %if %{is_git} == 0
@@ -23,8 +23,8 @@ Release: 0.%{build_date}git%{git_hash}%{?dist}
 %endif
 License: GPLv2+
 Group:   System Environment/Libraries
-URL:     https://github.com/storaged-project/storaged
-Source0: https://github.com/storaged-project/storaged/releases/download/storaged-%{version}/storaged-%{version}.tar.bz2
+URL:     https://github.com/storaged-project/udisks
+Source0: https://github.com/storaged-project/udisks/releases/download/udisks-%{version}/udisks-%{version}.tar.bz2
 
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: gobject-introspection-devel >= %{gobject_introspection_version}
@@ -81,10 +81,10 @@ Provides:  udisks2 = %{version}-%{release}
 Obsoletes: udisks2
 
 %description
-The Storaged project provides a daemon, tools and libraries to access and
+The Udisks project provides a daemon, tools and libraries to access and
 manipulate disks, storage devices and technologies.
 
-Storaged is a fork of UDisks2 and extends its DBus API; it is meant to be a
+Udisks is a fork of UDisks2 and extends its DBus API; it is meant to be a
 drop-in replacement for the original project.
 
 %package -n lib%{name}
@@ -182,7 +182,7 @@ This package contains module for ZRAM configuration.
 %endif
 
 %prep
-%setup -q -n storaged-%{version}
+%setup -q -n udisks-%{version}
 
 %build
 autoreconf -ivf

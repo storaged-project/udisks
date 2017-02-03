@@ -26,7 +26,7 @@ DISTCHECK_CONFIGURE_FLAGS =                                                    \
 	$(NULL)
 
 sign: dist
-	gpg --armor --detach-sign --output storaged-$(VERSION).tar.bz2.sign storaged-$(VERSION).tar.bz2
+	gpg --armor --detach-sign --output udisks-$(VERSION).tar.bz2.sign udisks-$(VERSION).tar.bz2
 
 shortlog:
 	git shortlog -r $$(git tag -l | tail -n 1)..HEAD
@@ -70,7 +70,7 @@ rpm: dist-bzip2
 		--define "_builddir $(RPMDIR)" \
 		--define "_srcrpmdir $(RPMDIR)" \
 		--define "_rpmdir $(RPMDIR)" \
-		-ba $(SRCDIR)/packaging/storaged.spec
+		-ba $(SRCDIR)/packaging/udisks2.spec
 srpm: dist-bzip2
 	rpmbuild \
 		--define "_sourcedir $(SRCDIR)" \
@@ -78,4 +78,4 @@ srpm: dist-bzip2
 		--define "_builddir $(RPMDIR)" \
 		--define "_srcrpmdir $(RPMDIR)" \
 		--define "_rpmdir $(RPMDIR)" \
-		-bs $(SRCDIR)/packaging/storaged.spec
+		-bs $(SRCDIR)/packaging/udisks2.spec

@@ -2,10 +2,10 @@ import time
 import dbus
 import os
 import tempfile
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
+class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
     """Unit tests for the Loop interface of loop devices"""
 
     LOOP_DEVICE_FILENAME = 'loop_device.img'
@@ -40,8 +40,8 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         if self.dev_name in result:
             self.fail('Test loop device was not deleted' % self.dev_name)
         # TODO: Device is still present on Dbus even when detached. This is
-        # probably a storaged and udisks2 issue. Not addressed for now to keep
-        # the same storaged/udisks2 functionality (japokorn, Nov 2016)
+        # probably a udisks and udisks2 issue. Not addressed for now to keep
+        # the same udisks/udisks2 functionality (japokorn, Nov 2016)
 
     def test_20_setautoclear(self):
         # autoclear detaches loop device as soon as it is umounted
@@ -70,7 +70,7 @@ class StoragedLoopDeviceTest(storagedtestcase.StoragedTestCase):
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
         uid.assertEqual(0)  # uid should be 0 since device is not created by Udisks
 
-class StoragedManagerLoopDeviceTest(storagedtestcase.StoragedTestCase):
+class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
     """Unit tests for the loop-related methods of the Manager object"""
 
     LOOP_DEVICE_FILENAME = 'loop_device.img'

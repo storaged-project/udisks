@@ -1,10 +1,10 @@
 import dbus
 import os
 
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedEncryptedTest(storagedtestcase.StoragedTestCase):
+class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     '''This is an encrypted device test suite'''
 
     def _create_luks(self, device, passphrase):

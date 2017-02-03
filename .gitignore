@@ -64,7 +64,7 @@ gtk-doc.make
 intltool-*
 libtool
 m4/
-packaging/storaged.spec
+packaging/udisks2.spec
 po/POTFILES
 po/Makefile.in.in
 src/*-marshal.*

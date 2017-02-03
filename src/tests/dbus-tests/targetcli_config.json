@@ -30,8 +30,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk4",
-      "name": "storaged_test_disk4",
+      "dev": "/var/tmp/udisks_test_disk4",
+      "name": "udisks_test_disk4",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -66,8 +66,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk3",
-      "name": "storaged_test_disk3",
+      "dev": "/var/tmp/udisks_test_disk3",
+      "name": "udisks_test_disk3",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -102,8 +102,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk2",
-      "name": "storaged_test_disk2",
+      "dev": "/var/tmp/udisks_test_disk2",
+      "name": "udisks_test_disk2",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -138,8 +138,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk1",
-      "name": "storaged_test_disk1",
+      "dev": "/var/tmp/udisks_test_disk1",
+      "name": "udisks_test_disk1",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -174,8 +174,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk_iscsi1",
-      "name": "storaged_test_iscsi1",
+      "dev": "/var/tmp/udisks_test_disk_iscsi1",
+      "name": "udisks_test_iscsi1",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -210,8 +210,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk_iscsi2",
-      "name": "storaged_test_iscsi2",
+      "dev": "/var/tmp/udisks_test_disk_iscsi2",
+      "name": "udisks_test_iscsi2",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -246,8 +246,8 @@
         "unmap_granularity_alignment": 0,
         "unmap_zeroes_data": 0
       },
-      "dev": "/var/tmp/storaged_test_disk_iscsi3",
-      "name": "storaged_test_iscsi3",
+      "dev": "/var/tmp/udisks_test_disk_iscsi3",
+      "name": "udisks_test_iscsi3",
       "plugin": "fileio",
       "size": 524288000,
       "write_back": true,
@@ -267,7 +267,7 @@
             {
               "alias": "ea4c386be4",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_disk4"
+              "storage_object": "/backstores/fileio/udisks_test_disk4"
             }
           ],
           "node_acls": [],
@@ -289,7 +289,7 @@
             {
               "alias": "7a8a8952a0",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_disk3"
+              "storage_object": "/backstores/fileio/udisks_test_disk3"
             }
           ],
           "node_acls": [],
@@ -311,7 +311,7 @@
             {
               "alias": "d0173d579b",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_disk2"
+              "storage_object": "/backstores/fileio/udisks_test_disk2"
             }
           ],
           "node_acls": [],
@@ -333,7 +333,7 @@
             {
               "alias": "d4a2f5275c",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_disk1"
+              "storage_object": "/backstores/fileio/udisks_test_disk1"
             }
           ],
           "node_acls": [],
@@ -367,7 +367,7 @@
             {
               "alias": "121c69c714",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_iscsi1"
+              "storage_object": "/backstores/fileio/udisks_test_iscsi1"
             }
           ],
           "node_acls": [],
@@ -404,7 +404,7 @@
           "tag": 1
         }
       ],
-      "wwn": "iqn.2003-01.storaged.test:iscsi-test-noauth"
+      "wwn": "iqn.2003-01.udisks.test:iscsi-test-noauth"
     },
     {
       "fabric": "iscsi",
@@ -430,7 +430,7 @@
             {
               "alias": "f466bcd8fb",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_iscsi2"
+              "storage_object": "/backstores/fileio/udisks_test_iscsi2"
             }
           ],
           "node_acls": [
@@ -445,7 +445,7 @@
                 "random_datain_seq_offsets": 0,
                 "random_r2t_offsets": 0
               },
-              "chap_password": "storaged",
+              "chap_password": "udisks",
               "chap_userid": "iqn.1994-05.com.redhat:iscsi-test",
               "mapped_luns": [
                 {
@@ -491,7 +491,7 @@
           "tag": 1
         }
       ],
-      "wwn": "iqn.2003-01.storaged.test:iscsi-test-chap"
+      "wwn": "iqn.2003-01.udisks.test:iscsi-test-chap"
     },
     {
       "fabric": "iscsi",
@@ -517,7 +517,7 @@
             {
               "alias": "f466bcd8fb",
               "index": 0,
-              "storage_object": "/backstores/fileio/storaged_test_iscsi3"
+              "storage_object": "/backstores/fileio/udisks_test_iscsi3"
             }
           ],
           "node_acls": [
@@ -532,10 +532,10 @@
                 "random_datain_seq_offsets": 0,
                 "random_r2t_offsets": 0
               },
-              "chap_password": "storaged",
+              "chap_password": "udisks",
               "chap_userid": "iqn.1994-05.com.redhat:iscsi-test",
-              "chap_mutual_password": "storaged-mutual",
-              "chap_mutual_userid": "iqn.2003-01.storaged.test:iscsi-test-mutual",
+              "chap_mutual_password": "udisks-mutual",
+              "chap_mutual_userid": "iqn.2003-01.udisks.test:iscsi-test-mutual",
               "mapped_luns": [
                 {
                   "alias": "2387cf5a50",
@@ -580,7 +580,7 @@
           "tag": 1
         }
       ],
-      "wwn": "iqn.2003-01.storaged.test:iscsi-test-mutual"
+      "wwn": "iqn.2003-01.udisks.test:iscsi-test-mutual"
     }
   ]
 }

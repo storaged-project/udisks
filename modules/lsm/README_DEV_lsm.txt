@@ -29,7 +29,7 @@
     systemctl start libstoragemgmt
     lsmcli ls -l -u ontap://root@na-sim -P      # Input ONTAP password.
  * It should print some information about this ONTAP array.
- * Compile and install Storaged project with lsm module:
+ * Compile and install Udisks project with lsm module:
     ./autogen.sh  --libdir=/usr/lib64 --prefix=/usr  --sysconfdir /etc \
         --enable-lsm
     make -j5

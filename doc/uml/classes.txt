@@ -2,35 +2,35 @@
 
 skinparam defaultFontName Monospaced
 
-StoragedDaemon "1" *-- StoragedModuleManager
+UdisksDaemon "1" *-- UdisksModuleManager
 
-class StoragedDaemon {
+class UdisksDaemon {
     GDBusConnection          *get_connection()
-    GDBusObjectManagerServer *storaged_daemon_get_object_manager()
-    StoragedMountMonitor     *storaged_daemon_get_mount_monitor()
-    StoragedFstabMonitor     *storaged_daemon_get_fstab_monitor()
-    StoragedCrypttabMonitor  *storaged_daemon_get_crypttab_monitor()
-    StoragedLinuxProvider    *storaged_daemon_get_linux_provider()
-    PolkitAuthority          *storaged_daemon_get_authority()
-    StoragedState            *storaged_daemon_get_state()
-    StoragedModuleManager    *storaged_daemon_get_module_manager()
-    gboolean                  storaged_daemon_get_disable_modules()
-    gboolean                  storaged_daemon_get_force_load_modules()
-    gboolean                  storaged_daemon_get_uninstalled()
+    GDBusObjectManagerServer *udisks_daemon_get_object_manager()
+    UdisksMountMonitor     *udisks_daemon_get_mount_monitor()
+    UdisksFstabMonitor     *udisks_daemon_get_fstab_monitor()
+    UdisksCrypttabMonitor  *udisks_daemon_get_crypttab_monitor()
+    UdisksLinuxProvider    *udisks_daemon_get_linux_provider()
+    PolkitAuthority          *udisks_daemon_get_authority()
+    UdisksState            *udisks_daemon_get_state()
+    UdisksModuleManager    *udisks_daemon_get_module_manager()
+    gboolean                  udisks_daemon_get_disable_modules()
+    gboolean                  udisks_daemon_get_force_load_modules()
+    gboolean                  udisks_daemon_get_uninstalled()
 }
 
-class StoragedModuleManager {
-    gboolean storaged_module_manager_get_modules_available ()
-    gboolean storaged_module_manager_get_uninstalled()
-    void     storaged_module_manager_load_modules()
+class UdisksModuleManager {
+    gboolean udisks_module_manager_get_modules_available ()
+    gboolean udisks_module_manager_get_uninstalled()
+    void     udisks_module_manager_load_modules()
 
-    GList   *storaged_module_manager_get_block_object_iface_infos()
-    GList   *storaged_module_manager_get_drive_object_iface_infos()
-    GList   *storaged_module_manager_get_module_object_new_funcs()
-    GList   *storaged_module_manager_get_new_manager_iface_funcs()
+    GList   *udisks_module_manager_get_block_object_iface_infos()
+    GList   *udisks_module_manager_get_drive_object_iface_infos()
+    GList   *udisks_module_manager_get_module_object_new_funcs()
+    GList   *udisks_module_manager_get_new_manager_iface_funcs()
 
-    void     storaged_module_manager_set_module_state_pointer()
-    gpointer storaged_module_manager_get_module_state_pointer()
+    void     udisks_module_manager_set_module_state_pointer()
+    gpointer udisks_module_manager_get_module_state_pointer()
 }
 
 @enduml

@@ -6,7 +6,7 @@
 
 <policyconfig>
   <vendor>The UDisks Project</vendor>
-  <vendor_url>https://github.com/storaged-project/storaged</vendor_url>
+  <vendor_url>https://github.com/storaged-project/udisks</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
   <!-- ###################################################################### -->
