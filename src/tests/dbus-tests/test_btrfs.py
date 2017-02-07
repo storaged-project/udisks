@@ -48,7 +48,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
             dev_obj = self.get_object('/block_devices/' + dev_name)
             self.assertIsNotNone(dev_obj)
 
-            _ret, out = self.run_command('lsblk -b -no SIZE %s' % dev_path)  # get size of the device
+            _ret, out = self.run_command('lsblk -d -b -no SIZE %s' % dev_path)  # get size of the device
 
             dev = Device(dev_obj, dev_path, dev_name, int(out))
             devices.append(dev)
@@ -74,12 +74,12 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
 
         # check '.Filesystem.BTRFS' properties
         dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
         dbus_label.assertEqual('test_single')
         dbus_label.assertEqual(sys_label)
 
         dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
-        _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % dev.path)
         dbus_uuid.assertEqual(sys_uuid)
 
         dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
@@ -124,12 +124,12 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
 
             # check '.Filesystem.BTRFS' properties
             dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
-            _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+            _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
             dbus_label.assertEqual('test_raid1')
             dbus_label.assertEqual(sys_label)
 
             dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
-            _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+            _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % dev.path)
             dbus_uuid.assertEqual(sys_uuid)
 
             dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
@@ -316,5 +316,5 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
         dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
         dbus_label.assertEqual('new_label')
 
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
         self.assertEqual(sys_label, 'new_label')

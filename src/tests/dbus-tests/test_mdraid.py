@@ -42,7 +42,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
             dev_name = os.path.basename(dev)
             dev_obj = self.get_object('/block_devices/' + dev_name)
             self.assertIsNotNone(dev_obj)
-            _ret, out = self.run_command('lsblk -b -no SIZE %s' % dev)  # get size of the device
+            _ret, out = self.run_command('lsblk -d -b -no SIZE %s' % dev)  # get size of the device
             self.members.append(Member(obj=dev_obj, path=dev, name=dev_name, size=int(out)))
 
     @property
@@ -155,7 +155,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         dbus_size = self.get_property(array, '.MDRaid', 'Size')
         self.assertLessEqual(self.size - dbus_size.value, 0.005 * self.size)
 
-        _ret, out = self.run_command('lsblk -b -no SIZE /dev/md/%s' % array_name)
+        _ret, out = self.run_command('lsblk -d -b -no SIZE /dev/md/%s' % array_name)
         self.assertEqual(dbus_size.value, int(out))
 
         # test if mdadm see all members
@@ -231,7 +231,7 @@ class RAID0TestCase(RAIDLevel):
 
         # check if members have been wiped and 'MDRaidMember' property is updated
         for member in self.members:
-            _ret, out = self.run_command('lsblk -no FSTYPE %s' % member.path)
+            _ret, out = self.run_command('lsblk -d -no FSTYPE %s' % member.path)
             self.assertEqual(out, '')
 
             dbus_member = self.get_property(member.obj, '.Block', 'MDRaidMember')
@@ -307,7 +307,7 @@ class RAID1TestCase(RAIDLevel):
         dbus_member.assertEqual('/')  # default value for 'non-raid' devices is '/'
 
         # with 'wipe' option, device should be wiped
-        _ret, out = self.run_command('lsblk -no FSTYPE %s' % new_path)
+        _ret, out = self.run_command('lsblk -d -no FSTYPE %s' % new_path)
         self.assertEqual(out, '')
 
     def test_bitmap_location(self):
