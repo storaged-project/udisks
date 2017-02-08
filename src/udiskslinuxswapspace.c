@@ -234,6 +234,7 @@ handle_start (UDisksSwapspace        *swapspace,
                     "completed",
                     G_CALLBACK (swapspace_start_on_job_completed),
                     invocation);
+  udisks_threaded_job_start (job);
 
  out:
   g_clear_object (&object);
@@ -344,6 +345,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                     "completed",
                     G_CALLBACK (swapspace_stop_on_job_completed),
                     invocation);
+  udisks_threaded_job_start (job);
 
  out:
   return TRUE;
