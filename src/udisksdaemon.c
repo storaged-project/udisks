@@ -1098,6 +1098,110 @@ udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  GMainContext *context;
+  GMainLoop    *loop;
+  gboolean      result;
+  GError       *error;
+} ThreadedJobSyncData;
+
+static gboolean
+threaded_job_sync_on_threaded_job_completed (UDisksThreadedJob *job,
+                                             gboolean           result,
+                                             GError            *error,
+                                             gpointer           user_data)
+{
+  ThreadedJobSyncData *data = user_data;
+  data->result = result;
+  if (error)
+    data->error = g_error_copy (error);
+  return FALSE; /* let other handlers run */
+}
+
+static void
+threaded_job_sync_on_completed (UDisksJob    *job,
+                                gboolean      success,
+                                const gchar  *message,
+                                gpointer      user_data)
+{
+  ThreadedJobSyncData *data = user_data;
+  g_main_loop_quit (data->loop);
+}
+
+/**
+ * udisks_daemon_launch_threaded_job_sync:
+ * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
+ * @job_func: The function to run in another thread.
+ * @user_data: User data to pass to @job_func.
+ * @user_data_free_func: Function to free @user_data with or %NULL.
+ * @cancellable: A #GCancellable or %NULL.
+ * @error: The #GError set by the #UDisksThreadedJobFunc.
+ *
+ * Like udisks_daemon_launch_threaded_job() but blocks the calling
+ * thread until the job completes.
+ *
+ * Returns: The @success parameter of the #UDisksJob::completed signal.
+ */
+gboolean
+udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
+                                        UDisksObject          *object,
+                                        const gchar           *job_operation,
+                                        uid_t                  job_started_by_uid,
+                                        UDisksThreadedJobFunc  job_func,
+                                        gpointer               user_data,
+                                        GDestroyNotify         user_data_free_func,
+                                        GCancellable          *cancellable,
+                                        GError               **error)
+{
+  UDisksBaseJob *job;
+  ThreadedJobSyncData data;
+
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  data.context = g_main_context_new ();
+  g_main_context_push_thread_default (data.context);
+  data.loop = g_main_loop_new (data.context, FALSE);
+  data.error = NULL;
+  data.result = FALSE;
+
+  job = udisks_daemon_launch_threaded_job (daemon,
+                                           object,
+                                           job_operation,
+                                           job_started_by_uid,
+                                           job_func,
+                                           user_data,
+                                           user_data_free_func,
+                                           cancellable);
+  g_signal_connect (job,
+                    "threaded-job-completed",
+                    G_CALLBACK (threaded_job_sync_on_threaded_job_completed),
+                    &data);
+  g_signal_connect_after (job,
+                          "completed",
+                          G_CALLBACK (threaded_job_sync_on_completed),
+                          &data);
+
+  udisks_threaded_job_start (UDISKS_THREADED_JOB (job));
+  g_main_loop_run (data.loop);
+
+  g_main_loop_unref (data.loop);
+  g_main_context_pop_thread_default (data.context);
+  g_main_context_unref (data.context);
+
+  if (data.error)
+    g_propagate_error (error, data.error);
+
+  /* note: the job object is freed in the ::completed handler */
+  return data.result;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_daemon_wait_for_object_sync:
  * @daemon: A #UDisksDaemon.
