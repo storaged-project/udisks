@@ -1479,10 +1479,9 @@ class Luks(UDisksTestCase):
         encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
         encrypted.call_lock_sync(no_options, None)
 
-        # Currently, we mimic cryptsetup which in passphrase-mode stops input
+        # We no longer mimic cryptsetup which in passphrase-mode stops input
         # at the first newline:
-        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          KEYFILE.decode('utf-8'), no_options, None)
+        encrypted.call_unlock_sync(KEYFILE.decode('utf-8'), no_options, None)
 
 
 # ----------------------------------------------------------------------------

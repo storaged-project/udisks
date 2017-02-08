@@ -37,6 +37,7 @@
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
 #include "udisksdaemonutil.h"
+#include "udiskslinuxencryptedhelpers.h"
 
 /**
  * SECTION:udisksstate
@@ -1180,37 +1181,31 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
     {
       if (is_unlocked)
         {
-          gchar *escaped_device_file;
-          gchar *error_message;
+          LuksJobData data;
+          GError *error = NULL;
 
           udisks_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exist)",
                          device_file_cleartext,
                          major (crypto_device), minor (crypto_device));
 
-          error_message = NULL;
-          escaped_device_file = udisks_daemon_util_escape_and_quote (device_file_cleartext);
-          if (!udisks_daemon_launch_spawned_job_sync (state->daemon,
-                                                      NULL, /* UDisksObject */
-                                                      "cleanup", 0, /* StartedByUID */
-                                                      NULL, /* GCancellable */
-                                                      0,    /* uid_t run_as_uid */
-                                                      0,    /* uid_t run_as_euid */
-                                                      NULL, /* gint *out_status */
-                                                      &error_message,
-                                                      NULL,  /* input_string */
-                                                      "cryptsetup luksClose %s",
-                                                      escaped_device_file))
+          data.map_name = device_file_cleartext;
+          if (!udisks_daemon_launch_threaded_job_sync (state->daemon,
+                                                       NULL, /* UDisksObject */
+                                                       "cleanup",
+                                                       0, /* StartedByUID */
+                                                       luks_close_job_func,
+                                                       &data,
+                                                       NULL, /* user_data_free_func */
+                                                       NULL, /* cancellable */
+                                                       &error))
             {
               udisks_critical ("Error cleaning up LUKS device %s: %s",
-                            device_file_cleartext, error_message);
-              g_free (escaped_device_file);
-              g_free (error_message);
+                               device_file_cleartext, error->message);
+              g_clear_error (&error);
               /* keep the entry so we can clean it up later */
               keep = TRUE;
               goto out2;
             }
-          g_free (escaped_device_file);
-          g_free (error_message);
         }
       else
         {

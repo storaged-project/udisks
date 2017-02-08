@@ -532,6 +532,27 @@ if test "x$have_fs" = "xno"; then
   AC_MSG_ERROR([BLOCKDEV FS support requested but header or library not found])
 fi
 
+# libblockdev crypto
+SAVE_CFLAGS=$CFLAGS
+SAVE_LDFLAGS=$LDFLAGS
+
+CFLAGS="$GLIB_CFLAGS"
+LDFLAGS="$GLIB_LIBS"
+AC_MSG_CHECKING([libblockdev-crypto presence])
+AC_TRY_COMPILE([#include <blockdev/crypto.h>], [],
+               [AC_MSG_RESULT([yes])
+               have_crypto=yes],
+               [AC_MSG_RESULT([no])
+               have_crypto=no])
+
+CFLAGS=$SAVE_CFLAGS
+LDFLAGS=$SAVE_LDFLAGS
+
+if test "x$have_crypto" = "xno"; then
+  AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
+fi
+
+
 # Internationalization
 #
 

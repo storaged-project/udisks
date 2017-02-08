@@ -7,7 +7,7 @@
 %global libblockdev_version             2.1
 %global with_gtk_doc                    1
 %global with_libblockdev_part           @have_libblockdev_part_spec@
-%global libblockdev_version             2.1
+%global libblockdev_version             2.4
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
@@ -39,13 +39,14 @@ BuildRequires: chrpath
 BuildRequires: gtk-doc
 BuildRequires: intltool
 BuildRequires: redhat-rpm-config
-BuildRequires: libblockdev-devel  >= %{libblockdev_version}
-BuildRequires: libblockdev-part-devel  >= %{libblockdev_version}
-BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel   >= %{libblockdev_version}
-BuildRequires: libblockdev-swap-devel  >= %{libblockdev_version}
+BuildRequires: libblockdev-devel        >= %{libblockdev_version}
+BuildRequires: libblockdev-part-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-btrfs-devel  >= %{libblockdev_version}
+BuildRequires: libblockdev-kbd-devel    >= %{libblockdev_version}
+BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
-BuildRequires: libblockdev-fs-devel  >= %{libblockdev_version}
+BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
+BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -62,8 +63,6 @@ Requires: xfsprogs
 # For mkfs.vfat
 Requires: dosfstools
 Requires: gdisk
-# For LUKS devices
-Requires: cryptsetup-luks
 # For ejecting removable disks
 Requires: eject
 
