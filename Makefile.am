@@ -1,5 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+
 NULL =
 
 SUBDIRS = data udisks src tools modules po doc packaging
@@ -30,6 +33,32 @@ shortlog:
 
 clean-local:
 	rm -f *~
+
+dbus-tests:
+	$(MAKE) all &>/dev/null
+	sudo src/tests/dbus-tests/run_tests.py -l dbus_tests.log |& tee dbus_tests_output.log \
+       && echo "dbus-tests: SUCCESS" >> RESULTS || echo "dbus-tests: FAILED" >> RESULTS
+	@tail -1 RESULTS | grep -q "dbus-tests: SUCCESS"
+
+unittests:
+	$(MAKE) all &>/dev/null
+	cd src/tests && ./udisks-test | tee -a ../../unittests_output.log \
+       && echo "unittests: SUCCESS" >> ../../RESULTS || echo "unittests: FAILED" >> ../../RESULTS
+	@tail -1 RESULTS | grep -q "unittests: SUCCESS"
+
+integration-tests:
+	$(MAKE) all &>/dev/null
+	cd src/tests && sudo ./integration-test | tee -a ../../integration_tests_output.log \
+       && echo "integration-tests: SUCCESS" >> ../../RESULTS || echo "integration-tests: FAILED" >> ../../RESULTS
+	@tail -1 RESULTS | grep -q "integration-tests: SUCCESS"
+
+ci: all
+	sudo rm -f *.log RESULTS STATUS
+	-$(MAKE) check
+	-$(MAKE) dbus-tests
+	-$(MAKE) unittests
+	-$(MAKE) integration-tests
+	@grep -q FAILED RESULTS && echo -n failure > STATUS || echo -n success > STATUS
 
 RPMDIR = `readlink -f $(top_builddir)/packaging`
 SRCDIR = `readlink -f $(top_srcdir)`
