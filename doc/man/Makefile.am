@@ -60,11 +60,14 @@ EXTRA_DIST =                                                                   \
 	udisksctl.xml                                                          \
 	udisksd.xml                                                            \
 	udisks2.conf.5.xml                                                     \
-	udisks2_lsm.conf.5.xml                                                 \
 	udisks-lvm.xml                                                         \
 	udisks.xml                                                             \
 	umount.udisks2.xml                                                     \
 	$(NULL)
+
+if HAVE_LSM
+EXTRA_DIST += udisks2_lsm.conf.5.xml
+endif # HAVE_LSM
 
 clean-local:
 	rm -f *~ *.[18]                                                        \
