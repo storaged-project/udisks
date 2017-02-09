@@ -15,7 +15,7 @@
 
 Name:    storaged
 Summary: Disk Manager
-Version: 2.6.3
+Version: 2.6.4
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
