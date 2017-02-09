@@ -34,6 +34,7 @@
 #include "udisksspawnedjob.h"
 #include "udisks-daemon-marshal.h"
 #include "udisksdaemon.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udisksspawnedjob
@@ -61,7 +62,8 @@ struct _UDisksSpawnedJob
 
   GMainContext *main_context;
 
-  gchar *input_string;
+  GString *input_string;
+
   uid_t run_as_uid;
   uid_t run_as_euid;
   gid_t real_egid;
@@ -129,6 +131,15 @@ static void udisks_spawned_job_release_resources (UDisksSpawnedJob *job);
 G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_BASE_JOB,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
 
+typedef GString AutowipeBuffer;
+static GType autowipe_buffer_get_type (void);
+static void autowipe_buffer_free (gpointer data);
+static gpointer autowipe_buffer_copy (gpointer data);
+
+G_DEFINE_BOXED_TYPE (AutowipeBuffer, autowipe_buffer,
+                     autowipe_buffer_copy,
+                     autowipe_buffer_free);
+
 static void
 udisks_spawned_job_finalize (GObject *object)
 {
@@ -141,12 +152,8 @@ udisks_spawned_job_finalize (GObject *object)
 
   g_free (job->command_line);
 
-  /* input string may contain key material - nuke contents */
   if (job->input_string != NULL)
-    {
-      memset (job->input_string, '\0', strlen (job->input_string));
-      g_free (job->input_string);
-    }
+    g_boxed_free (autowipe_buffer_get_type (), (gpointer) job->input_string);
 
   if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize (object);
@@ -189,7 +196,11 @@ udisks_spawned_job_set_property (GObject      *object,
 
     case PROP_INPUT_STRING:
       g_assert (job->input_string == NULL);
-      job->input_string = g_value_dup_string (value);
+      job->input_string = (GString*) g_value_dup_boxed (value);
+      if (job->input_string != NULL)
+        {
+          job->input_string_cursor = job->input_string->str;
+        }
       break;
 
     case PROP_RUN_AS_UID:
@@ -306,8 +317,14 @@ write_child_stdin (GIOChannel *channel,
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
   gsize bytes_written;
+  gsize bytes_to_write = 0;
 
-  if (job->input_string_cursor == NULL || *job->input_string_cursor == '\0')
+  if (job->input_string != NULL)
+    {
+      bytes_to_write = job->input_string->len - (job->input_string_cursor - job->input_string->str);
+    }
+
+  if (job->input_string_cursor == NULL || bytes_to_write == 0)
     {
       /* nothing left to write; close our end so the child will get EOF */
       g_io_channel_unref (job->child_stdin_channel);
@@ -321,7 +338,7 @@ write_child_stdin (GIOChannel *channel,
 
   g_io_channel_write_chars (channel,
                             job->input_string_cursor,
-                            strlen (job->input_string_cursor),
+                            bytes_to_write,
                             &bytes_written,
                             NULL);
   g_io_channel_flush (channel, NULL);
@@ -458,13 +475,16 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    *
    * String that will be written to stdin of the spawned program or
    * %NULL to not write anything.
+   *
+   * This is passed as autowipe_buffer (rather than G_TYPE_GSTRING) to nuke
+   * the contents after usage since the input string may contain key material.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_INPUT_STRING,
-                                   g_param_spec_string ("input-string",
+                                   g_param_spec_boxed  ("input-string",
                                                         "Input String",
                                                         "String to write to stdin of the spawned program",
-                                                        NULL,
+                                                        autowipe_buffer_get_type (),
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -566,7 +586,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  */
 UDisksSpawnedJob *
 udisks_spawned_job_new (const gchar  *command_line,
-                        const gchar  *input_string,
+                        GString      *input_string,
                         uid_t         run_as_uid,
                         uid_t         run_as_euid,
                         UDisksDaemon *daemon,
@@ -966,6 +986,8 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
       job->input_string_cursor = job->input_string;
 
       job->child_stdin_channel = g_io_channel_unix_new (job->child_stdin_fd);
+      // we want to write binary, suppress checking the encoding:
+      g_io_channel_set_encoding (job->child_stdin_channel, NULL, NULL);
       g_io_channel_set_flags (job->child_stdin_channel, G_IO_FLAG_NONBLOCK, NULL);
       job->child_stdin_source = g_io_create_watch (job->child_stdin_channel, G_IO_OUT);
       g_source_set_callback (job->child_stdin_source, (GSourceFunc) write_child_stdin, job, NULL);
@@ -989,4 +1011,27 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
 
  out:
   ;
+}
+
+/* manage strings with potentially unsafe content */
+
+static gpointer
+autowipe_buffer_copy (gpointer data)
+{
+  GString *orig = (GString*) data;
+  GString *copy = NULL;
+
+  if (orig != NULL)
+    {
+      copy = g_string_new_len (orig->str, orig->len);
+    }
+
+  return (gpointer) copy;
+}
+
+static void
+autowipe_buffer_free (gpointer data)
+{
+  GString *string = (GString*) data;
+  udisks_string_wipe_and_free (string);
 }

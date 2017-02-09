@@ -102,6 +102,20 @@ main (int argc, char *argv[])
       }
       break;
 
+    case 8:
+      /* read from stdin.. echo back the hex codes */
+      {
+        gint c;
+
+        g_print ("Woah, you said `");
+        while ((c = fgetc (stdin)) != EOF) {
+          g_print ("%02x", c);
+        }
+        g_print ("', partner!\n");
+        ret = 0;
+      }
+      break;
+
     default:
       g_assert_not_reached ();
       break;
