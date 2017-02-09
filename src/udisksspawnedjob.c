@@ -983,7 +983,8 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
 
   if (job->child_stdin_fd != -1)
     {
-      job->input_string_cursor = job->input_string;
+      if (job->input_string)
+        job->input_string_cursor = job->input_string->str;
 
       job->child_stdin_channel = g_io_channel_unix_new (job->child_stdin_fd);
       // we want to write binary, suppress checking the encoding:
