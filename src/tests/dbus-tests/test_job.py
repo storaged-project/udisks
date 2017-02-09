@@ -81,7 +81,7 @@ class StoragedJobTest(storagedtestcase.StoragedTestCase):
         # get all the properties from the dict
         properties = self.job[1][self.iface_prefix + '.Job']
 
-        _ret, disk_size = self.run_command('lsblk -b -no SIZE %s' % self.vdevs[0])  # get size of the device
+        _ret, disk_size = self.run_command('lsblk -d -b -no SIZE %s' % self.vdevs[0])  # get size of the device
         self.assertEqual(properties['Bytes'], int(disk_size))
 
         self.assertEqual(properties['StartedByUID'], os.getuid())

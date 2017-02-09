@@ -91,7 +91,7 @@ class StoragedDriveTest(storagedtestcase.StoragedTestCase):
             return self.read_file(os.path.join(sys_dir, value)).strip()
 
         serial = read_sys_file('wwid').rsplit(None, 1)[-1]  # get the last word in the file
-        ret_code, wwn = self.run_command('lsblk -no WWN %s' % self.cd_dev)
+        ret_code, wwn = self.run_command('lsblk -d -no WWN %s' % self.cd_dev)
         self.assertEqual(ret_code, 0)
 
         # values expected are preset by scsi_debug and do not change

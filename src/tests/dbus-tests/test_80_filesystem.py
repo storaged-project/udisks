@@ -48,7 +48,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         fstype.assertEqual(self._fs_name)
 
         # test system values
-        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
+        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, self._fs_name)
 
     def _invalid_label(self, disk):
@@ -76,7 +76,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         dbus_label.assertEqual(label)
 
         # test system values
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
         self.assertEqual(sys_label, label)
 
         # change the label
@@ -88,7 +88,7 @@ class StoragedFSTestCase(storagedtestcase.StoragedTestCase):
         dbus_label.assertEqual(label)
 
         # test system values
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
         self.assertEqual(sys_label, label)
 
         # test invalid label behaviour
@@ -201,7 +201,7 @@ class Ext2TestCase(StoragedFSTestCase):
         dbus_label.assertEqual(label[0:16])
 
         # test system values
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % self.vdevs[0])
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
         self.assertEqual(sys_label, label[0:16])
 
 
