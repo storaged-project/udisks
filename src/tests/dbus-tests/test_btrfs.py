@@ -48,7 +48,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
             dev_obj = self.get_object('/block_devices/' + dev_name)
             self.assertIsNotNone(dev_obj)
 
-            _ret, out = self.run_command('lsblk -b -no SIZE %s' % dev_path)  # get size of the device
+            _ret, out = self.run_command('lsblk -d -b -no SIZE %s' % dev_path)  # get size of the device
 
             dev = Device(dev_obj, dev_path, dev_name, int(out))
             devices.append(dev)
@@ -65,6 +65,8 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
 
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+
         # check filesystem type
         usage = self.get_property(dev.obj, '.Block', 'IdUsage')
         usage.assertEqual('filesystem')
@@ -74,12 +76,12 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
 
         # check '.Filesystem.BTRFS' properties
         dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
         dbus_label.assertEqual('test_single')
         dbus_label.assertEqual(sys_label)
 
         dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
-        _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % dev.path)
         dbus_uuid.assertEqual(sys_uuid)
 
         dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
@@ -124,12 +126,12 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
 
             # check '.Filesystem.BTRFS' properties
             dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
-            _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+            _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
             dbus_label.assertEqual('test_raid1')
             dbus_label.assertEqual(sys_label)
 
             dbus_uuid = self.get_property(dev.obj, '.Filesystem.BTRFS', 'uuid')
-            _ret, sys_uuid = self.run_command('lsblk -no UUID %s' % dev.path)
+            _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % dev.path)
             dbus_uuid.assertEqual(sys_uuid)
 
             dbus_devs = self.get_property(dev.obj, '.Filesystem.BTRFS', 'num_devices')
@@ -150,6 +152,8 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              'test_subvols', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -194,6 +198,9 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              'test_add_remove', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        with open("/sys/block/%s/uevent" % dev1.name, "w") as f:
+            f.write("change\n")
+
         fstype = self.get_property(dev1.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -208,8 +215,8 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
         with self._temp_mount(dev1.path):
             dev1.obj.AddDevice(dev2.path, self.no_options,
                                dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
-            fstype = self.get_property(dev2.obj, '.Block', 'IdType')
-            fstype.assertEqual('btrfs')
+        with open("/sys/block/%s/uevent" % dev2.name, "w") as f:
+            f.write("change\n")
 
         # check filesystem type of the new device
         fstype = self.get_property(dev2.obj, '.Block', 'IdType')
@@ -232,13 +239,13 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
             fstype.assertFalse()
 
         # check number of devices
-        # XXX: storaged currently reports wrong number of devices (2)
+        # XXX: storaged currently often reports wrong number of devices (2)
         # 'handle_remove_device' sets the property to '1' but after unmounting
         # the device 'on_mount_monitor_mount_removed' triggers another properties
         # update and this sets the property to '2' for some unknown reason
-        dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
-        with self.assertRaises(AssertionError):
-            dbus_devs.assertEqual(1)
+        # dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
+        # with self.assertRaises(AssertionError):
+        #     dbus_devs.assertEqual(1)
 
         _ret, out = self.run_command('btrfs filesystem show %s' % dev1.path)
         self.assertIn('Total devices 1 FS', out)
@@ -254,6 +261,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -285,6 +293,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -307,14 +316,17 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
                              'test_label', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
         dev.obj.SetLabel('new_label', self.no_options,
                          dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 
+        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+        self.udev_settle()
         dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
         dbus_label.assertEqual('new_label')
 
-        _ret, sys_label = self.run_command('lsblk -no LABEL %s' % dev.path)
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
         self.assertEqual(sys_label, 'new_label')

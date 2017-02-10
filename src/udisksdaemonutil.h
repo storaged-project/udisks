@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+void udisks_string_wipe_and_free (GString*);
+
 gchar *udisks_decode_udev_string (const gchar *str);
 
 void udisks_safe_append_to_object_path (GString      *str,

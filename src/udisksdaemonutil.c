@@ -56,6 +56,22 @@
  * Various utility routines.
  */
 
+
+/**
+ * udisks_string_wipe_and_free:
+ * @string: A string with potentially unsafe content or %NULL.
+ *
+ * Wipes the buffer and frees the string.
+ */
+void udisks_string_wipe_and_free (GString *string)
+{
+  if (string != NULL)
+    {
+      memset (string->str, '\0', string->len);
+      g_string_free (string, TRUE);
+    }
+}
+
 /**
  * udisks_decode_udev_string:
  * @str: An udev-encoded string or %NULL.

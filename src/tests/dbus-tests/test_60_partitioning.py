@@ -71,12 +71,12 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
-        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, part_type)
 
         # check uuid and part number
         dbus_uuid = self.get_property(part, '.Partition', 'UUID')
-        _ret, sys_uuid = self.run_command('lsblk -no PARTUUID /dev/%s' % part_name)
+        _ret, sys_uuid = self.run_command('lsblk -d -no PARTUUID /dev/%s' % part_name)
         dbus_uuid.assertEqual(sys_uuid)
 
         dbus_num = self.get_property(part, '.Partition', 'Number')
@@ -112,7 +112,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
 
         # check system type
         part_name = str(ext_part.object_path).split('/')[-1]
-        _ret, sys_pttype = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_pttype = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
@@ -179,10 +179,10 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
-        _ret, sys_name = self.run_command('lsblk -no PARTLABEL /dev/%s' % part_name)
+        _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, gpt_name)
 
-        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, gpt_type)
 
     def test_create_with_format(self):
@@ -230,7 +230,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
-        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE /dev/%s' % part_name)
+        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE /dev/%s' % part_name)
         self.assertEqual(sys_fstype, 'xfs')
 
 
@@ -314,7 +314,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_flags = self.run_command('lsblk -no PARTFLAGS /dev/%s' % part_name)
+        _ret, sys_flags = self.run_command('lsblk -d -no PARTFLAGS /dev/%s' % part_name)
         self.assertEqual(sys_flags, '0x80')
 
     def test_gpt_type(self):
@@ -342,7 +342,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, home_guid)
 
     def test_dos_type(self):
@@ -370,7 +370,7 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, part_type)
 
     def test_name(self):
@@ -398,5 +398,5 @@ class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_name = self.run_command('lsblk -no PARTLABEL /dev/%s' % part_name)
+        _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, 'test')

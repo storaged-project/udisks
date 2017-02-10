@@ -25,6 +25,7 @@
 
 #include "udiskslogging.h"
 #include "udisksdaemon.h"
+#include "udisksdaemonutil.h"
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udisksmountmonitor.h"
@@ -794,6 +795,76 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
 {
   va_list var_args;
   gchar *command_line;
+  GString *input_string_as_gstring = NULL;
+  UDisksBaseJob *job;
+
+  if (input_string != NULL)
+    input_string_as_gstring = g_string_new (input_string);
+
+  va_start (var_args, command_line_format);
+  command_line = g_strdup_vprintf (command_line_format, var_args);
+  va_end (var_args);
+
+  job = udisks_daemon_launch_spawned_job_gstring (daemon,
+                                          object,
+                                          job_operation,
+                                          job_started_by_uid,
+                                          cancellable,
+                                          run_as_uid,
+                                          run_as_euid,
+                                          input_string_as_gstring,
+                                          "%s",
+                                          command_line);
+
+  udisks_string_wipe_and_free (input_string_as_gstring);
+  return job;
+}
+
+/**
+ * udisks_daemon_launch_spawned_job_gstring:
+ * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
+ * @cancellable: A #GCancellable or %NULL.
+ * @run_as_uid: The #uid_t to run the command as.
+ * @run_as_euid: The effective #uid_t to run the command as.
+ * @input_string: A string to write to stdin of the spawned program or %NULL.
+ * @command_line_format: printf()-style format for the command line to spawn.
+ * @...: Arguments for @command_line_format.
+ *
+ * Launches a new job for @command_line_format.
+ *
+ * The job is started immediately - connect to the
+ * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
+ * signals to get notified when the job is done.
+ *
+ * The returned object will be exported on the bus until the
+ * #UDisksJob::completed signal is emitted on the object. It is not
+ * valid to use the returned object after this signal fires.
+ *
+ * This function is the same as udisks_daemon_launch_spawned_job, with
+ * the only difference that it takes a GString and is therefore able to
+ * handle binary inputs that contain NUL bytes.
+ *
+ * Returns: A #UDisksSpawnedJob object. Do not free, the object
+ * belongs to @manager.
+ */
+UDisksBaseJob *
+udisks_daemon_launch_spawned_job_gstring (
+                                  UDisksDaemon    *daemon,
+                                  UDisksObject    *object,
+                                  const gchar     *job_operation,
+                                  uid_t            job_started_by_uid,
+                                  GCancellable    *cancellable,
+                                  uid_t            run_as_uid,
+                                  uid_t            run_as_euid,
+                                  GString         *input_string,
+                                  const gchar     *command_line_format,
+                                  ...)
+{
+  va_list var_args;
+  gchar *command_line;
   UDisksSpawnedJob *job;
   UDisksObjectSkeleton *job_object;
   gchar *job_object_path;
@@ -901,6 +972,73 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
 {
   va_list var_args;
   gchar *command_line;
+  GString *input_string_as_gstring = NULL;
+  gboolean ret;
+
+  if (input_string != NULL)
+    input_string_as_gstring = g_string_new (input_string);
+
+  va_start (var_args, command_line_format);
+  command_line = g_strdup_vprintf (command_line_format, var_args);
+  va_end (var_args);
+
+  ret = udisks_daemon_launch_spawned_job_gstring_sync (daemon,
+                                          object,
+                                          job_operation,
+                                          job_started_by_uid,
+                                          cancellable,
+                                          run_as_uid,
+                                          run_as_euid,
+                                          out_status,
+                                          out_message,
+                                          input_string_as_gstring,
+                                          "%s",
+                                          command_line);
+
+  udisks_string_wipe_and_free (input_string_as_gstring);
+  return ret;
+}
+
+/**
+ * udisks_daemon_launch_spawned_job_gstring_sync:
+ * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
+ * @cancellable: A #GCancellable or %NULL.
+ * @run_as_uid: The #uid_t to run the command as.
+ * @run_as_euid: The effective #uid_t to run the command as.
+ * @input_string: A string to write to stdin of the spawned program or %NULL.
+ * @out_status: Return location for the @status parameter of the #UDisksSpawnedJob::spawned-job-completed signal.
+ * @out_message: Return location for the @message parameter of the #UDisksJob::completed signal.
+ * @command_line_format: printf()-style format for the command line to spawn.
+ * @...: Arguments for @command_line_format.
+ *
+ * Like udisks_daemon_launch_spawned_job() but blocks the calling
+ * thread until the job completes.
+ *
+ * This function is the same as udisks_daemon_launch_spawned_job_sync, with
+ * the only difference that it takes a GString and is therefore able to
+ * handle binary inputs that contain NUL bytes.
+ *
+ * Returns: The @success parameter of the #UDisksJob::completed signal.
+ */
+gboolean
+udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
+                                       UDisksObject    *object,
+                                       const gchar     *job_operation,
+                                       uid_t            job_started_by_uid,
+                                       GCancellable    *cancellable,
+                                       uid_t            run_as_uid,
+                                       uid_t            run_as_euid,
+                                       gint            *out_status,
+                                       gchar          **out_message,
+                                       GString         *input_string,
+                                       const gchar     *command_line_format,
+                                       ...)
+{
+  va_list var_args;
+  gchar *command_line;
   UDisksBaseJob *job;
   SpawnedJobSyncData data;
 
@@ -918,7 +1056,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
   va_start (var_args, command_line_format);
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
-  job = udisks_daemon_launch_spawned_job (daemon,
+  job = udisks_daemon_launch_spawned_job_gstring (daemon,
                                           object,
                                           job_operation,
                                           job_started_by_uid,

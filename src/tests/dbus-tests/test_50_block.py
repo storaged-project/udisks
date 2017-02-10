@@ -32,7 +32,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         fstype = self.get_property(disk, '.Block', 'IdType')
         fstype.assertEqual('xfs')
 
-        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
+        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, 'xfs')
 
         # remove the format
@@ -45,7 +45,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         fstype = self.get_property(disk, '.Block', 'IdType')
         fstype.assertEqual('')
 
-        _ret, sys_fstype = self.run_command('lsblk -no FSTYPE %s' % self.vdevs[0])
+        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, '')
 
     def test_format_parttype(self):
@@ -74,7 +74,7 @@ class StoragedBlockTest(storagedtestcase.StoragedTestCase):
         dbus_type.assertIn(['0x42', '0x82'])
 
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertIn(sys_type, ['0x42', '0x82'])
 
     def test_open(self):
