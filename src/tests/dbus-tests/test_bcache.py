@@ -18,6 +18,11 @@ class StoragedBcacheTest(storagedtestcase.StoragedTestCase):
         if not cls.check_module_loaded('Bcache'):
             raise unittest.SkipTest('Storaged module for bcache tests not loaded, skipping.')
 
+    def setUp(self):
+        if os.uname().machine == "i686":
+            self.skipTest("Skipping bcache tests on 32bit architecture")
+        super().setUp()
+
     def _force_remove(self, bcache_name, backing_dev, cache_dev):
         _ret, out = self.run_command('bcache-super-show %s | grep cset.uuid ' % cache_dev)
         cset_uuid = out.split()[-1]
