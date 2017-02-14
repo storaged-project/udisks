@@ -59,7 +59,8 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         md_name = next((name[1] for name in names if name[1]), None)  # get first non-empty name if exists
 
         # stop everything (twice)
-        self.run_command('mdadm --stop %s' % array_name)
+        if array_name:
+            self.run_command('mdadm --stop %s' % array_name)
 
         if md_name:
             self.run_command('mdadm --stop /dev/%s' % md_name)
@@ -68,7 +69,8 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         self.run_command('mdadm --zero-superblock --force %s' % ' '.join(array_members))
 
         # and stop again
-        self.run_command('mdadm --stop %s' % array_name)
+        if array_name:
+            self.run_command('mdadm --stop %s' % array_name)
 
         if md_name:
             self.run_command('mdadm --stop /dev/%s' % md_name)
@@ -189,6 +191,26 @@ class RAID0TestCase(RAIDLevel):
     @property
     def size(self):
         return len(self.members) * self.smallest_member.size
+
+    def test_create_noname(self):
+        array = self._array_create("")
+
+        # we didn't specify name -> we need to get it from members
+        names = [self.run_command('ls /sys/block/%s/holders' % os.path.basename(m.path)) for m in self.members]
+        md_name = next((name[1] for name in names if name[1]), None)  # get first non-empty name if exists
+        self.assertTrue(md_name)
+        self.assertTrue(os.path.exists("/dev/%s" % md_name))
+
+        dbus_name = self.get_property(array, '.MDRaid', 'Name')
+
+        # name of the array reported by 'mdadm' should look like 'nodename':'array_name'
+        # if it's smaller than 31 characters
+        # because we didn't specify name of the array, it should be just the number part from 'md12X'
+        nodename = os.uname().nodename
+        if len(nodename + md_name[2:]) < 31:
+            dbus_name.assertEqual("%s:%s" % (nodename, md_name[2:]))
+        else:
+            dbus_name.assertEqual(md_name[2:])
 
     def test_start_stop(self):
         name = 'storaged_test_start_stop'
