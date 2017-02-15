@@ -59,6 +59,7 @@ ci: all
 	-$(MAKE) unittests
 	-$(MAKE) integration-tests
 	@grep -q FAILED RESULTS && echo -n failure > STATUS || echo -n success > STATUS
+	@grep -q success STATUS
 
 RPMDIR = `readlink -f $(top_builddir)/packaging`
 SRCDIR = `readlink -f $(top_srcdir)`
