@@ -512,6 +512,26 @@ if test "x$have_mdraid" = "xno"; then
   AC_MSG_ERROR([BLOCKDEV MDRAID support requested but header or library not found])
 fi
 
+# libblockdev fs
+SAVE_CFLAGS=$CFLAGS
+SAVE_LDFLAGS=$LDFLAGS
+
+CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+LDFLAGS="$GLIB_LIBS"
+AC_MSG_CHECKING([libblockdev-fs presence])
+AC_TRY_COMPILE([#include <blockdev/fs.h>], [],
+               [AC_MSG_RESULT([yes])
+               have_fs=yes],
+               [AC_MSG_RESULT([no])
+               have_fs=no])
+
+CFLAGS=$SAVE_CFLAGS
+LDFLAGS=$SAVE_LDFLAGS
+
+if test "x$have_fs" = "xno"; then
+  AC_MSG_ERROR([BLOCKDEV FS support requested but header or library not found])
+fi
+
 # Internationalization
 #
 

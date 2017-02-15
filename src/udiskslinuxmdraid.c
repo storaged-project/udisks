@@ -31,6 +31,7 @@
 
 #include <glib/gstdio.h>
 
+#include <blockdev/fs.h>
 #include <blockdev/mdraid.h>
 
 #include "udiskslogging.h"
@@ -1035,11 +1036,8 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
-  gchar *escaped_device_file = NULL;
   const gchar *member_device_file = NULL;
-  gchar *escaped_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
   UDisksBaseJob *job = NULL;
@@ -1131,10 +1129,8 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
-  escaped_device_file = udisks_daemon_util_escape_and_quote (device_file);
 
   member_device_file = udisks_block_get_device (member_device);
-  escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
 
   /* if necessary, mark as faulty first */
   if (has_state (member_states, "in_sync"))
@@ -1165,25 +1161,13 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (opt_wipe)
     {
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  UDISKS_OBJECT (member_device_object),
-                                                  "format-erase", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "wipefs -a %s",
-                                                  escaped_member_device_file))
+      if (!bd_fs_wipe (member_device_file, TRUE, &error))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error wiping  %s after removal from RAID array %s: %s",
-                                                 member_device_file,
-                                                 device_file,
-                                                 error_message);
+          g_prefix_error (&error,
+                          "Error wiping  %s after removal from RAID array %s:",
+                          member_device_file,
+                          device_file);
+          g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
     }
@@ -1191,9 +1175,6 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_remove_device (_mdraid, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_device_file);
-  g_free (escaped_member_device_file);
   g_free (member_states);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);

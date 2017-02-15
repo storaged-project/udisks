@@ -251,11 +251,13 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
   BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
+  BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
 
-  /* the core daemon only needs the part, swap plugins and mdraid, additional
+  /* the core daemon only needs the part, swap, mdraid and fs plugin, additional
      plugins are required by various modules, but they make sure plugins are
      loaded themselves */
-  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &mdraid_plugin, NULL};
+  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &mdraid_plugin,
+                             &fs_plugin, NULL};
 
   error = NULL;
 

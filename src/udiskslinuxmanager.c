@@ -36,6 +36,7 @@
 
 #include <linux/loop.h>
 
+#include <blockdev/fs.h>
 #include <blockdev/mdraid.h>
 
 #include "udiskslogging.h"
@@ -725,41 +726,21 @@ handle_mdraid_create (UDisksManager         *_object,
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-      UDisksObject *object_for_block;
-      gchar *escaped_device;
-      object_for_block = udisks_daemon_util_dup_object (block, &error);
-      if (object_for_block == NULL)
+      if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, &error))
         {
-          g_dbus_method_invocation_return_gerror (invocation, error);
-          g_clear_error (&error);
-          goto out;
+          /* no signature to remove, ignore */
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+            g_clear_error (&error);
+          else
+            {
+              g_prefix_error (&error,
+                              "Error wiping device %s to be used in the RAID array:",
+                              udisks_block_get_device (block));
+              g_dbus_method_invocation_take_error (invocation, error);
+              success = FALSE;
+              goto out;
+            }
         }
-      escaped_device = udisks_daemon_util_escape (udisks_block_get_device (block));
-      if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                                  object_for_block,
-                                                  "format-erase", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL, /* input_string */
-                                                  "wipefs -a \"%s\"",
-                                                  escaped_device))
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error wiping device %s to be used in a RAID array: %s",
-                                                 udisks_block_get_device (block),
-                                                 error_message);
-          g_free (error_message);
-          g_object_unref (object_for_block);
-          g_free (escaped_device);
-          goto out;
-        }
-      g_object_unref (object_for_block);
-      g_free (escaped_device);
     }
 
   /* we have name from the user */
@@ -858,25 +839,17 @@ handle_mdraid_create (UDisksManager         *_object,
                            caller_uid);
 
   /* ... wipe the created RAID array */
-  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                              array_object,
-                                              "format-erase", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "wipefs -a %s",
-                                              raid_device_file))
+  if (!bd_fs_wipe (raid_device_file, TRUE, &error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error wiping raid device %s: %s",
-                                             raid_device_file,
-                                             error_message);
-      goto out;
+      if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+        g_clear_error (&error);
+      else
+        {
+          g_prefix_error (&error, "Error wiping raid device %s:", raid_device_file);
+          g_dbus_method_invocation_take_error (invocation, error);
+          success = FALSE;
+          goto out;
+        }
     }
 
   /* ... finally trigger uevents on the members - we want this so the
