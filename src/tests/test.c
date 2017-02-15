@@ -468,6 +468,7 @@ test_threaded_job_successful (void)
   UDisksThreadedJob *job;
 
   job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL, NULL);
+  udisks_threaded_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_success), NULL);
   g_object_unref (job);
 }
@@ -494,6 +495,7 @@ test_threaded_job_failure (void)
   UDisksThreadedJob *job;
 
   job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
+  udisks_threaded_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_object_unref (job);
@@ -510,6 +512,7 @@ test_threaded_job_cancelled_at_start (void)
   cancellable = g_cancellable_new ();
   g_cancellable_cancel (cancellable);
   job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL, cancellable);
+  udisks_threaded_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
@@ -550,6 +553,7 @@ test_threaded_job_cancelled_midway (void)
   count = 0;
   job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
+  udisks_threaded_job_start (job);
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
@@ -584,6 +588,7 @@ test_threaded_job_override_signal_handler (void)
   job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
   handler_ran = FALSE;
   g_signal_connect (job, "threaded-job-completed", G_CALLBACK (on_threaded_job_completed), &handler_ran);
+  udisks_threaded_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_assert (handler_ran);

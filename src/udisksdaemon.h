@@ -139,6 +139,16 @@ UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon     
                                                                GDestroyNotify         user_data_free_func,
                                                                GCancellable          *cancellable);
 
+gboolean                 udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
+                                                                 UDisksObject          *object,
+                                                                 const gchar           *job_operation,
+                                                                 uid_t                  job_started_by_uid,
+                                                                 UDisksThreadedJobFunc  job_func,
+                                                                 gpointer               user_data,
+                                                                 GDestroyNotify         user_data_free_func,
+                                                                 GCancellable          *cancellable,
+                                                                 GError               **error);
+
 /* Return value and *uuid_ret must be freed with g_free.  If return
    value is NULL, *uuid has not been changed.
  */

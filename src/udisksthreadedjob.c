@@ -211,23 +211,10 @@ run_task_job (GTask            *task,
 static void
 udisks_threaded_job_constructed (GObject *object)
 {
-  UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
-  GTask *task;
-
   if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed (object);
 
   g_assert (g_thread_supported ());
-
-  task = g_task_new (NULL,
-                     udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
-                     NULL,
-                     NULL);
-
-  g_task_set_task_data (task, job, NULL);
-  g_task_set_return_on_cancel (task, TRUE);
-  g_task_run_in_thread (task, run_task_job);
-  g_object_unref (task);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -340,9 +327,12 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
  *
  * Creates a new #UDisksThreadedJob instance.
  *
- * The job is started immediately - connect to the
- * #UDisksThreadedJob::threaded-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_threaded_job_start() to
+ * start the job after #UDisksThreadedJob::threaded-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the @job_func finishing
+ * before the signals are connected in which case the signal handlers are never
+ * triggered.
  *
  * Returns: A new #UDisksThreadedJob. Free with g_object_unref().
  */
@@ -362,6 +352,28 @@ udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
                                             "daemon", daemon,
                                             "cancellable", cancellable,
                                             NULL));
+}
+
+/**
+ * udisks_threaded_job_start:
+ * @job: the job to start
+ *
+ * Start the @job. Connect to the #UDisksThreadedJob::threaded-job-completed or
+ * #UDisksJob::completed signals to get notified when the job is done.
+ *
+ * */
+void udisks_threaded_job_start (UDisksThreadedJob *job) {
+  GTask *task;
+
+  task = g_task_new (NULL,
+                     udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
+                     NULL,
+                     NULL);
+
+  g_task_set_task_data (task, job, NULL);
+  g_task_set_return_on_cancel (task, TRUE);
+  g_task_run_in_thread (task, run_task_job);
+  g_object_unref (task);
 }
 
 /**
