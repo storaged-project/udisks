@@ -1,1 +1,1 @@
-EXTRA_DIST = storaged.spec.in generate
+EXTRA_DIST = udisks2.spec.in generate

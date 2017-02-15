@@ -1281,7 +1281,7 @@
 
         If the option <parameter>dry-run-first</parameter> is set to
         %TRUE then a dry run of the formatting command is performed
-        first, if Storaged knows how to do that.  The idea is that
+        first, if Udisks knows how to do that.  The idea is that
         this allows a deeper check of the parameters even when
         <parameter>no-block</parameter> is %TRUE.
 
@@ -1437,7 +1437,7 @@
         @size: The desired size of the partition, in bytes.
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
-        @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
         @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
         @format_type: The type to use for Format.
         @format_options: Options for Format.

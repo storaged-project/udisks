@@ -6,7 +6,7 @@ import time
 import subprocess
 import argparse
 import unittest
-import storagedtestcase
+import udiskstestcase
 import glob
 import shutil
 import tempfile
@@ -15,17 +15,13 @@ import re
 
 def find_daemon(projdir, system):
     if not system:
-        if os.path.exists(os.path.join(projdir, 'src', 'storaged')):
-            daemon_bin = 'storaged'
-        elif os.path.exists(os.path.join(projdir, 'src', 'udisksd')):
+        if os.path.exists(os.path.join(projdir, 'src', 'udisksd')):
             daemon_bin = 'udisksd'
         else:
             print("Cannot find the daemon binary", file=sys.stderr)
             sys.exit(1)
     else:
-        if os.path.exists('/usr/libexec/storaged/storaged'):
-            daemon_bin = 'storaged'
-        elif os.path.exists('/usr/libexec/udisks2/udisksd'):
+        if os.path.exists('/usr/libexec/udisks2/udisksd'):
             daemon_bin = 'udisksd'
 
     return daemon_bin
@@ -48,9 +44,9 @@ def setup_vdevs():
     for d in vdevs:
         with open('/sys/block/%s/device/model' %
                     os.path.basename(d)) as model_file:
-            assert model_file.read().strip() == 'storaged_test_d'
+            assert model_file.read().strip() == 'udisks_test_dis'
 
-    storagedtestcase.test_devs = vdevs
+    udiskstestcase.test_devs = vdevs
 
 def install_new_policy(projdir, tmpdir):
     '''Copies the polkit policies to the system directory and backs up eventually the existing files.
@@ -88,7 +84,7 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
-    argparser = argparse.ArgumentParser(description='storaged D-Bus test suite')
+    argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
                            help='write daemon log to a file')
     argparser.add_argument('testname', nargs='*',
@@ -108,10 +104,9 @@ if __name__ == '__main__':
 
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir, args.system)
-    storagedtestcase.daemon_bin = daemon_bin
 
     if not args.system:
-        tmpdir = tempfile.TemporaryDirectory(prefix='storaged-tst-')
+        tmpdir = tempfile.TemporaryDirectory(prefix='udisks-tst-')
         policy_files = install_new_policy(projdir, tmpdir)
         conf_files = install_new_dbus_conf(projdir, tmpdir)
 
@@ -150,7 +145,7 @@ if __name__ == '__main__':
 
     # remove the fake SCSI devices and their backing files
     subprocess.call(['targetcli', 'clearconfig confirm=True'])
-    for disk_file in glob.glob("/var/tmp/storaged_test_disk*"):
+    for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
         os.unlink(disk_file)
 
     if result.wasSuccessful():

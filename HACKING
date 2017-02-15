@@ -18,7 +18,7 @@ SOURCE CONTROL
 
 Anonymous checkouts:
 
-  $ git clone git@github.com:storaged-project/storaged.git
+  $ git clone git@github.com:storaged-project/udisks.git
 
 MAKING RELEASES
 ===============
@@ -41,7 +41,7 @@ Checklist for making a release:
    - Ensure newly added API is marked properly with "Since: X.Y"
    - Ensure that deprecated API is marked as such
 
- - Tag the release: git tag storaged-X.Y.Z
+ - Tag the release: git tag udisks-X.Y.Z
 
  - Post-release actions:
    - Bump the version in configure.in
@@ -54,7 +54,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 
  - Update the date in man pages to "$MONTH $YEAR" e.g. "October 2012"
 
- - At some point after the release, create the storaged-X-Y branch
+ - At some point after the release, create the udisks-X-Y branch
    - Perform the post-release actions above on the created branch
    - This is for maintenance releases
    - Do this when focus is on new feature development
@@ -63,7 +63,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 
 For maintenance releases, the rules are simple
 
- - Work on the storaged-X-Y branch
+ - Work on the udisks-X-Y branch
  - If possible, cherry-pick fixes from master ('git cherry-pick')
  - Do not add (or backport) any new API or features
  - Do not add, remove or change any translatable strings

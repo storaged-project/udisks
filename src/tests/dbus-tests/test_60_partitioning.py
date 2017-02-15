@@ -2,13 +2,13 @@ import dbus
 import os
 import time
 
-import storagedtestcase
+import udiskstestcase
 
 
 BLOCK_SIZE = 512
 
 
-class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
+class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
     '''This is a basic block device test suite'''
 
     def _remove_format(self, device):
@@ -54,7 +54,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
 
         dbus_type = self.get_property(part, '.Partition', 'Type')
         dbus_type.assertEqual(part_type)
@@ -158,7 +158,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
 
         dbus_name = self.get_property(part, '.Partition', 'Name')
         dbus_name.assertEqual(gpt_name)
@@ -209,7 +209,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # storaged adds 1 MiB to partition start
+        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
 
         usage = self.get_property(part, '.Block', 'IdUsage')
         usage.assertEqual('filesystem')
@@ -233,7 +233,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_fstype, 'xfs')
 
 
-class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
+class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
     '''This is a basic partition test suite'''
 
     def _remove_format(self, device):

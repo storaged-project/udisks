@@ -2,10 +2,10 @@
 
 import os
 import dbus
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedSwapSpaceTest(storagedtestcase.StoragedTestCase):
+class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
     """This is SwapSpace related functions unit test"""
 
     def get_device(self, dev_name):

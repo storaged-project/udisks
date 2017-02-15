@@ -1,6 +1,6 @@
----------------------------
-storaged 2.6.4 (unreleased)
----------------------------
+-------------------------
+udisks 2.6.4 (unreleased)
+-------------------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.

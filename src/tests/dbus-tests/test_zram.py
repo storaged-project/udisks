@@ -3,7 +3,7 @@ import re
 import time
 import unittest
 
-import storagedtestcase
+import udiskstestcase
 
 
 MODPROBECONF = '/usr/lib/modprobe.d/zram.conf'
@@ -11,7 +11,7 @@ MODLOADCONF = '/usr/lib/modules-load.d/zram.conf'
 ZRAMCONFDIR = '/usr/local/lib/zram.conf.d'
 
 
-class StoragedZRAMTest(storagedtestcase.StoragedTestCase):
+class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     '''This is a basic ZRAM test suite'''
 
     conf = {MODPROBECONF: None,
@@ -49,15 +49,15 @@ class StoragedZRAMTest(storagedtestcase.StoragedTestCase):
 
     @classmethod
     def setUpClass(cls):
-        storagedtestcase.StoragedTestCase.setUpClass()
+        udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('ZRAM'):
-            raise unittest.SkipTest('Storaged module for zram tests not loaded, skipping.')
+            raise unittest.SkipTest('Udisks module for zram tests not loaded, skipping.')
 
         cls._save_conf_files()
 
     @classmethod
     def tearDownClass(cls):
-        storagedtestcase.StoragedTestCase.tearDownClass()
+        udiskstestcase.UdisksTestCase.tearDownClass()
 
         cls._restore_conf_files()
 

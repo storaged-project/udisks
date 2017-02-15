@@ -1,4 +1,4 @@
-# Due to --uninstalled option passed to storaged
+# Due to --uninstalled option passed to udisks
 module_link:
 	$(AM_V_at) if [ ! -L ../$(MODULE_SO) ]; then ln -r -s .libs/$(MODULE_SO) ..; fi
 

@@ -1566,7 +1566,7 @@ msgstr "Intel RSTe RAID-Bestandteil (%s)"
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr "Intel Rapid Storaged Technology enterprise RAID-Bestandteil"
+msgstr "Intel Rapid Storage Technology enterprise RAID-Bestandteil"
 
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"

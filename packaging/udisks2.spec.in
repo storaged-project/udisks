@@ -13,7 +13,7 @@
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
-Name:    storaged
+Name:    udisks2
 Summary: Disk Manager
 Version: 2.6.4
 %if %{is_git} == 0
@@ -23,8 +23,8 @@ Release: 0.%{build_date}git%{git_hash}%{?dist}
 %endif
 License: GPLv2+
 Group:   System Environment/Libraries
-URL:     https://github.com/storaged-project/storaged
-Source0: https://github.com/storaged-project/storaged/releases/download/storaged-%{version}/storaged-%{version}.tar.bz2
+URL:     https://github.com/storaged-project/udisks
+Source0: https://github.com/storaged-project/udisks/releases/download/udisks-%{version}/udisks-%{version}.tar.bz2
 
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: gobject-introspection-devel >= %{gobject_introspection_version}
@@ -77,22 +77,19 @@ Requires: ntfsprogs
 # For /proc/self/mountinfo, only available in 2.6.26 or higher
 Conflicts: kernel < 2.6.26
 
-Provides:  udisks2 = %{version}-%{release}
-Obsoletes: udisks2
+Provides:  storaged = %{version}-%{release}
+Obsoletes: storaged
 
 %description
-The Storaged project provides a daemon, tools and libraries to access and
+The Udisks project provides a daemon, tools and libraries to access and
 manipulate disks, storage devices and technologies.
-
-Storaged is a fork of UDisks2 and extends its DBus API; it is meant to be a
-drop-in replacement for the original project.
 
 %package -n lib%{name}
 Summary: Dynamic library to access the udisksd daemon
 Group: System Environment/Libraries
 License: LGPLv2+
-Provides:  libudisks2 = %{version}-%{release}
-Obsoletes: libudisks2
+Provides:  libstoraged = %{version}-%{release}
+Obsoletes: libstoraged
 
 %description -n lib%{name}
 This package contains the dynamic library, which provides
@@ -105,6 +102,8 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: iscsi-initiator-utils
 BuildRequires: iscsi-initiator-utils-devel
+Provides:  storaged-iscsi = %{version}-%{release}
+Obsoletes: storaged-iscsi
 
 %description -n %{name}-iscsi
 This package contains module for iSCSI configuration.
@@ -116,6 +115,8 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: lvm2
 BuildRequires: lvm2-devel
+Provides:  storaged-lvm2 = %{version}-%{release}
+Obsoletes: storaged-lvm2
 
 %description -n %{name}-lvm2
 This package contains module for LVM2 configuration.
@@ -125,8 +126,8 @@ Summary: Development files for lib%{name}
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
-Provides:  libudisks2-devel = %{version}-%{release}
-Obsoletes: libudisks2-devel
+Provides:  libstoraged-devel = %{version}-%{release}
+Obsoletes: libstoraged-devel
 
 %description -n lib%{name}-devel
 This package contains the development files for the library lib%{name}, a
@@ -140,6 +141,8 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-kbd
 BuildRequires: libblockdev-kbd-devel
+Provides:  storaged-bcache = %{version}-%{release}
+Obsoletes: storaged-bcache
 
 %description -n %{name}-bcache
 This package contains module for Bcache configuration.
@@ -151,6 +154,8 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-btrfs
 BuildRequires: libblockdev-btrfs-devel
+Provides:  storaged-btrfs = %{version}-%{release}
+Obsoletes: storaged-btrfs
 
 %description -n %{name}-btrfs
 This package contains module for BTRFS configuration.
@@ -163,6 +168,8 @@ License: LGPLv2+
 Requires: libstoragemgmt
 BuildRequires: libstoragemgmt-devel
 BuildRequires: libconfig-devel
+Provides:  storaged-lsm = %{version}-%{release}
+Obsoletes: storaged-lsm
 
 %description -n %{name}-lsm
 This package contains module for LSM configuration.
@@ -176,13 +183,15 @@ Requires: libblockdev-kbd
 Requires: libblockdev-swap
 BuildRequires: libblockdev-kbd-devel
 BuildRequires: libblockdev-swap-devel
+Provides:  storaged-zram = %{version}-%{release}
+Obsoletes: storaged-zram
 
 %description -n %{name}-zram
 This package contains module for ZRAM configuration.
 %endif
 
 %prep
-%setup -q -n storaged-%{version}
+%setup -q -n udisks-%{version}
 
 %build
 autoreconf -ivf
