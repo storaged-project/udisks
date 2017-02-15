@@ -1,11 +1,11 @@
-import storagedtestcase
+import udiskstestcase
 import dbus
 import os
 
-class StoragedBaseTest(storagedtestcase.StoragedTestCase):
+class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
-    storaged_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM'])
+    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM'])
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
@@ -16,9 +16,9 @@ class StoragedBaseTest(storagedtestcase.StoragedTestCase):
         distro = release['ID'].replace('"', '')
 
         if distro in ('redhat', 'centos'):
-            return self.storaged_modules - {'Bcache'}
+            return self.udisks_modules - {'Bcache'}
         else:
-            return self.storaged_modules
+            return self.udisks_modules
 
     def test_10_manager(self):
         '''Testing the manager object presence'''

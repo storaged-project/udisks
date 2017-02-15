@@ -8,10 +8,10 @@ gi.require_version('GLib', '2.0')
 from gi.repository import GLib
 
 import safe_dbus
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedJobTest(storagedtestcase.StoragedTestCase):
+class UdisksJobTest(udiskstestcase.UdisksTestCase):
     '''This is a basic test suite for job objects and interface'''
 
     def setUp(self):

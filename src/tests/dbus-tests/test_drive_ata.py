@@ -4,7 +4,7 @@ import re
 import unittest
 import time
 
-from storagedtestcase import StoragedTestCase
+from udiskstestcase import UdisksTestCase
 
 # disks with (don't) support S.M.A.R.T.
 smart_unsupported = set()
@@ -12,13 +12,13 @@ smart_supported = set()
 
 sata_disks = (dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev))
 for disk in sata_disks:
-    ret, out = StoragedTestCase.run_command("smartctl -a /dev/%s" % disk)
+    ret, out = UdisksTestCase.run_command("smartctl -a /dev/%s" % disk)
     if ret == 0 and "device has SMART capability" in out:
         smart_supported.add(disk)
     else:
         smart_unsupported.add(disk)
 
-class StoragedDriveAtaTest(StoragedTestCase):
+class UdisksDriveAtaTest(UdisksTestCase):
     '''Noninvasive tests for the Drive.Ata interface'''
 
     def get_smart_setting(self, disk, attr, out_prefix):

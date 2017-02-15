@@ -1,4 +1,4 @@
-import storagedtestcase
+import udiskstestcase
 
 import dbus
 import glob
@@ -8,25 +8,25 @@ import time
 import unittest
 
 
-class StoragedISCSITest(storagedtestcase.StoragedTestCase):
+class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     '''Basic iSCSI test suite'''
 
     initiator = 'iqn.1994-05.com.redhat:iscsi-test'
-    password = 'storaged'
-    mutual_password = 'storaged-mutual'
+    password = 'udisks'
+    mutual_password = 'udisks-mutual'
 
     address = '127.0.0.1'
     port = 3260
 
-    noauth_iqn = 'iqn.2003-01.storaged.test:iscsi-test-noauth'
-    chap_iqn = 'iqn.2003-01.storaged.test:iscsi-test-chap'
-    mutual_iqn = 'iqn.2003-01.storaged.test:iscsi-test-mutual'
+    noauth_iqn = 'iqn.2003-01.udisks.test:iscsi-test-noauth'
+    chap_iqn = 'iqn.2003-01.udisks.test:iscsi-test-chap'
+    mutual_iqn = 'iqn.2003-01.udisks.test:iscsi-test-mutual'
 
     @classmethod
     def setUpClass(cls):
-        storagedtestcase.StoragedTestCase.setUpClass()
+        udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('ISCSI.Initiator'):
-            raise unittest.SkipTest('Storaged module for iscsi tests not loaded, skipping.')
+            raise unittest.SkipTest('Udisks module for iscsi tests not loaded, skipping.')
 
     def _force_lougout(self, target):
         self.run_command('iscsiadm --mode node --targetname %s --portal %s:%d '

@@ -449,7 +449,7 @@ handle_create_partition (UDisksPartitionTable   *table,
      temporarily, but it still happens that the block device is
      missing exactly when wipefs or mkfs try to access it.
 
-     Also, a pair of remove/add events will cause storaged to create a
+     Also, a pair of remove/add events will cause udisks to create a
      new internal UDisksObject to represent the block device of the
      partition.  The code currently doesn't handle this and waits for
      changes (such as an expected filesystem type or UUID) to a

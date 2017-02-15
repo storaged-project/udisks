@@ -1,15 +1,15 @@
 
-m4_define([storaged_major_version], [2])
-m4_define([storaged_minor_version], [6])
-m4_define([storaged_micro_version], [4])
+m4_define([udisks_major_version], [2])
+m4_define([udisks_minor_version], [6])
+m4_define([udisks_micro_version], [4])
 
-m4_define([udisks_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
+m4_define([udisks_version], [udisks_major_version.udisks_minor_version.udisks_micro_version])
 
-AC_INIT([storaged],[udisks_version],[https://storaged-project.github.io],[storaged])
+AC_INIT([udisks],[udisks_version],[https://storaged-project.github.io],[udisks])
 
-UDISKS_MAJOR_VERSION=storaged_major_version
-UDISKS_MINOR_VERSION=storaged_minor_version
-UDISKS_MICRO_VERSION=storaged_micro_version
+UDISKS_MAJOR_VERSION=udisks_major_version
+UDISKS_MINOR_VERSION=udisks_minor_version
+UDISKS_MICRO_VERSION=udisks_micro_version
 UDISKS_VERSION=udisks_version
 AC_SUBST(UDISKS_MAJOR_VERSION)
 AC_SUBST(UDISKS_MINOR_VERSION)
@@ -519,7 +519,7 @@ src/Makefile
 src/tests/Makefile
 tools/Makefile
 packaging/Makefile
-packaging/storaged.spec
+packaging/udisks2.spec
 modules/Makefile
 modules/btrfs/Makefile
 modules/btrfs/data/Makefile

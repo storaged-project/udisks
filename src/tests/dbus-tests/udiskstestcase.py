@@ -4,7 +4,6 @@ import subprocess
 import os
 import time
 
-daemon_bin = None
 test_devs = None
 
 def get_call_long(call):
@@ -126,7 +125,7 @@ class DBusProperty(object):
                                                                                    len(self._value)))
 
 
-class StoragedTestCase(unittest.TestCase):
+class UdisksTestCase(unittest.TestCase):
     iface_prefix = None
     path_prefix = None
     bus = None
@@ -136,12 +135,8 @@ class StoragedTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        if daemon_bin == 'udisksd':
-            self.iface_prefix = 'org.freedesktop.UDisks2'
-            self.path_prefix = '/org/freedesktop/UDisks2'
-        elif daemon_bin == 'storaged':
-            self.iface_prefix = 'org.storaged.Storaged'
-            self.path_prefix = '/org/storaged/Storaged'
+        self.iface_prefix = 'org.freedesktop.UDisks2'
+        self.path_prefix = '/org/freedesktop/UDisks2'
         self.bus = dbus.SystemBus()
         self._orig_call_async = self.bus.call_async
         self._orig_call_blocking = self.bus.call_blocking
@@ -174,12 +169,12 @@ class StoragedTestCase(unittest.TestCase):
     @classmethod
     def get_interface(self, obj, iface_suffix):
         """Get interface for the given object either specified by an object path suffix
-        (appended to the common UDisks2/storaged prefix) or given as the object
+        (appended to the common UDisks2 prefix) or given as the object
         itself.
 
         :param obj: object to get the interface for
         :type obj: str or dbus.proxies.ProxyObject
-        :param iface_suffix: suffix appended to the common UDisks2/storaged interface prefix
+        :param iface_suffix: suffix appended to the common UDisks2 interface prefix
         :type iface_suffix: str
 
         """

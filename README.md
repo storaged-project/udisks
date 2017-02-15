@@ -4,13 +4,10 @@
 OVERVIEW
 ========
 
-The Storaged project provides a daemon, tools and libraries to access and
+The Udisks project provides a daemon, tools and libraries to access and
 manipulate disks, storage devices and technologies.
 
-*Storaged is a fork of UDisks2 and extends its DBus API; it is meant to be a
-drop-in replacement for the original project.*
-
-For API stability and intended audience of Storaged, see the API STABILITY and
+For API stability and intended audience of Udisks, see the API STABILITY and
 AUDIENCE section of the `udisks(8)` man page (`doc/man/udisks.xml` in the
 tarball and git repository).
 
@@ -26,24 +23,24 @@ later).
 INSTALLATION
 ============
 
-Storaged has several dependencies listed in `packaging/storaged.spec`.
+Udisks has several dependencies listed in `packaging/udisks2.spec`.
 
 If you run rpm based distro, install the dependencies by:
 
-    # dnf builddep -y packaging/storaged.spec
+    # dnf builddep -y packaging/udisks2.spec
 
 AUTOTOOLS
 ---------
 
-To configure and install the Storaged, perform following tasks:
+To configure and install the Udisks, perform following tasks:
 
     $ ./autogen.sh
 
-Additional functionality of Storaged for monitoring and management is split
+Additional functionality of Udisks for monitoring and management is split
 into several modules: *BCache, BTRFS, iSCSI, libStorageManagement, LVM2, LVM
 Cache and zRAM*. By default, no additional module will be built.
 
-To build Storaged with (a) chosen module(s), provide or leave these
+To build Udisks with (a) chosen module(s), provide or leave these
 configuration options for the `configure` script:
 
     $ ./configure --enable-bcache --enable-btrfs --enable-iscsi
@@ -62,9 +59,9 @@ The actual build and installation:
 RELEASES
 ========
 
-Releases of Storaged are available in compressed tarballs from
+Releases of Udisks are available in compressed tarballs from
 
- https://github.com/storaged-project/storaged/releases
+ https://github.com/storaged-project/udisks/releases
 
 
 BUGS and DEVELOPMENT
@@ -72,4 +69,4 @@ BUGS and DEVELOPMENT
 
 Please report bugs via the GitHub's issues tracker at
 
- https://github.com/storaged-project/storaged/issues
+ https://github.com/storaged-project/udisks/issues

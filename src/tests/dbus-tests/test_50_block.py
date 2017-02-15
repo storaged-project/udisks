@@ -4,10 +4,10 @@ import fcntl
 import os
 import time
 
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedBlockTest(storagedtestcase.StoragedTestCase):
+class UdisksBlockTest(udiskstestcase.UdisksTestCase):
     '''This is a basic block device test suite'''
 
     def _clean_format(self, disk):

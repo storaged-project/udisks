@@ -5,8 +5,8 @@
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 
 <policyconfig>
-  <vendor>The Storaged Project</vendor>
-  <vendor_url>https://github.com/storaged-project/storaged</vendor_url>
+  <vendor>The Udisks Project</vendor>
+  <vendor_url>https://github.com/storaged-project/udisks</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
   <!-- ###################################################################### -->

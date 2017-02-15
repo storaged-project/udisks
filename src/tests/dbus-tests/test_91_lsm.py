@@ -1,9 +1,9 @@
 import os
 import dbus
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedLsmLocalTestCase(storagedtestcase.StoragedTestCase):
+class UdisksLsmLocalTestCase(udiskstestcase.UdisksTestCase):
     """
     Test suit for org.freedesktop.UDisks2.Drive.LsmLocal interface.
     """
@@ -26,7 +26,7 @@ class StoragedLsmLocalTestCase(storagedtestcase.StoragedTestCase):
         self.assertIsNotNone(dbus_blk_obj)
         dbus_drv_obj = self._get_dbus_drv_obj(dbus_blk_obj)
         self.assertIsNotNone(dbus_drv_obj)
-        for method_name in StoragedLsmLocalTestCase._LED_CONTROL_METHOD_NAMES:
+        for method_name in UdisksLsmLocalTestCase._LED_CONTROL_METHOD_NAMES:
             method = dbus_drv_obj.get_dbus_method(
                 method_name,
                 dbus_interface=self.iface_prefix + ".Drive.LsmLocal")

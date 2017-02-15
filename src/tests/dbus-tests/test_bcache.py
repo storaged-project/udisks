@@ -3,20 +3,25 @@ import re
 import time
 import unittest
 
-import storagedtestcase
+import udiskstestcase
 
 
 BLOCK_SIZE = 512
 
 
-class StoragedBcacheTest(storagedtestcase.StoragedTestCase):
+class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
     '''This is a basic bcache test suite'''
 
     @classmethod
     def setUpClass(cls):
-        storagedtestcase.StoragedTestCase.setUpClass()
+        udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('Bcache'):
-            raise unittest.SkipTest('Storaged module for bcache tests not loaded, skipping.')
+            raise unittest.SkipTest('Udisks module for bcache tests not loaded, skipping.')
+
+    def setUp(self):
+        if os.uname().machine == "i686":
+            self.skipTest("Skipping bcache tests on 32bit architecture")
+        super().setUp()
 
     def _force_remove(self, bcache_name, backing_dev, cache_dev):
         _ret, out = self.run_command('bcache-super-show %s | grep cset.uuid ' % cache_dev)

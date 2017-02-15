@@ -7,20 +7,20 @@ from bytesize import bytesize
 from collections import namedtuple
 from contextlib import contextmanager
 
-import storagedtestcase
+import udiskstestcase
 
 
 Device = namedtuple('Device', ['obj', 'path', 'name', 'size'])
 
 
-class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
+class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
     '''This is a basic test suite for btrfs interface'''
 
     @classmethod
     def setUpClass(cls):
-        storagedtestcase.StoragedTestCase.setUpClass()
+        udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('BTRFS'):
-            raise unittest.SkipTest('Storaged module for btrfs tests not loaded, skipping.')
+            raise unittest.SkipTest('Udisks module for btrfs tests not loaded, skipping.')
 
     @contextmanager
     def _temp_mount(self, device):
@@ -239,7 +239,7 @@ class StoragedBtrfsTest(storagedtestcase.StoragedTestCase):
             fstype.assertFalse()
 
         # check number of devices
-        # XXX: storaged currently often reports wrong number of devices (2)
+        # XXX: udisks currently reports wrong number of devices (2)
         # 'handle_remove_device' sets the property to '1' but after unmounting
         # the device 'on_mount_monitor_mount_removed' triggers another properties
         # update and this sets the property to '2' for some unknown reason

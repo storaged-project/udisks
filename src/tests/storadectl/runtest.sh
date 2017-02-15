@@ -34,14 +34,14 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "help"
-        rlRun "storagectl help > help.txt"
+        rlRun "udisksctl help > help.txt"
         if [ ! -s help.txt ]; then
             rlFail "No help displayed!"
         fi
     rlPhaseEnd
 
     rlPhaseStartTest "info"
-        rlRun "storagectl info -b /dev/vda2 > vda2.txt"
+        rlRun "udisksctl info -b /dev/vda2 > vda2.txt"
         # SIZE
         rlRun "cat vda2.txt | grep `lsblk -b | grep vda2 | awk {'print $4'}`"
         # IdType
@@ -50,13 +50,13 @@ rlJournalStart
         rlRun "cat vda2.txt | grep `lsblk -f | grep vda2 | awk {'print $2'}`"
         # Symlinks
         rlRun "SYMLINKS=`cat vda2.txt | grep Symlinks | awk {'print $2'}"
-        rlRun "diff `cat vda2.txt` `storagectl info -b $SYMLINKS"
+        rlRun "diff `cat vda2.txt` `udisksctl info -b $SYMLINKS"
         # UUID
         rlAssertGrep `lsblk --output-all | grep vda2 | awk {'print $6'}` vda2.txt
     rlPhaseEnd
 
     rlPhaseStartTest "dump"
-        rlRun "storagectl dump > dump.txt"
+        rlRun "udisksctl dump > dump.txt"
         for dev in `ll /dev/block/ | grep -v total | awk {'print $11'} | sed 's/..\///'`
         do
             rlAssertGrep " Device: /dev/$dev" dump.txt
@@ -64,7 +64,7 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "status"
-        rlRun "storagectl status > status.txt"
+        rlRun "udisksctl status > status.txt"
         rlRun "lsblk > lsblk.txt"
 
         for dev in `cat status.txt`
@@ -74,18 +74,18 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "monitor"
-        rlRun "storagectl monitor &"
-        rlRun "ps -ax | grep storagectl"
+        rlRun "udisksctl monitor &"
+        rlRun "ps -ax | grep udisksctl"
     rlPhaseEnd
 
     rlPhaseStartTest "mount"
         # not finished
-        rlRun "storagectl mount -b /dev/vda3"
+        rlRun "udisksctl mount -b /dev/vda3"
     rlPhaseEnd
 
     rlPhaseStartCleanup
         rlRun "rm -rf *.txt"
-        rlRun "pkill -9 storagectl"
+        rlRun "pkill -9 udisksctl"
     rlPhaseEnd
 
 rlJournalPrintText

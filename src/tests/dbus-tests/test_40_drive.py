@@ -3,10 +3,10 @@ import dbus
 import glob
 import os
 import unittest
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedDriveTest(storagedtestcase.StoragedTestCase):
+class UdisksDriveTest(udiskstestcase.UdisksTestCase):
     """This is Drive related functions unit test"""
 
     def get_drive(self, device):

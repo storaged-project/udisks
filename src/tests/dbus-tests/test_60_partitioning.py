@@ -2,13 +2,13 @@ import dbus
 import os
 import time
 
-import storagedtestcase
+import udiskstestcase
 
 
 BLOCK_SIZE = 512
 
 
-class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
+class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
     '''This is a basic block device test suite'''
 
     def _remove_format(self, device):
@@ -234,7 +234,7 @@ class StoragedPartitionTableTest(storagedtestcase.StoragedTestCase):
         self.assertEqual(sys_fstype, 'xfs')
 
 
-class StoragedPartitionTest(storagedtestcase.StoragedTestCase):
+class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
     '''This is a basic partition test suite'''
 
     def _remove_format(self, device):

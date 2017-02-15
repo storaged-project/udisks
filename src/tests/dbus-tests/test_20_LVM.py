@@ -3,17 +3,17 @@ import os
 import time
 import unittest
 
-import storagedtestcase
+import udiskstestcase
 
 
-class StoragedLVMTest(storagedtestcase.StoragedTestCase):
+class UdisksLVMTest(udiskstestcase.UdisksTestCase):
     '''This is a basic LVM test suite'''
 
     @classmethod
     def setUpClass(cls):
-        storagedtestcase.StoragedTestCase.setUpClass()
+        udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('LVM2'):
-            raise unittest.SkipTest('Storaged module for LVM tests not loaded, skipping.')
+            raise unittest.SkipTest('Udisks module for LVM tests not loaded, skipping.')
 
     def _create_vg(self, vgname, devices):
         self.udev_settle()  # Since the devices might not be ready yet
@@ -38,7 +38,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''
 
-        vgname = 'storaged_test_vg'
+        vgname = 'udisks_test_vg'
 
         # Use all the virtual devices but the last one
         devs = dbus.Array()
@@ -53,7 +53,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
         vg_freesize = self.get_property(vg, '.VolumeGroup', 'FreeSize')
         vg_freesize.assertEqual(vgsize.value)
-        lvname = 'storaged_test_lv'
+        lvname = 'udisks_test_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize.value), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -94,7 +94,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         new_lvsize.assertEqual(new_vgsize.value)
 
         # rename the LV
-        lvname = 'storaged_test_lv2'
+        lvname = 'udisks_test_lv2'
         new_lvpath = lv.Rename(lvname, self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
         time.sleep(1)
@@ -120,7 +120,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_20_thin(self):
         '''Test thin volumes functionality'''
 
-        vgname = 'storaged_test_thin_vg'
+        vgname = 'udisks_test_thin_vg'
 
         # Use all the virtual devices
         devs = dbus.Array()
@@ -133,7 +133,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create thin pool on the VG
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
-        tpname = 'storaged_test_tp'
+        tpname = 'udisks_test_tp'
         tp_path = vg.CreateThinPoolVolume(tpname, dbus.UInt64(vgsize), self.no_options,
                                           dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -146,7 +146,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         tpsize = int(self.get_property_raw(tp, '.LogicalVolume', 'Size'))
 
         # Create thin volume in the pool with virtual size twice the backing pool
-        tvname = 'storaged_test_tv'
+        tvname = 'udisks_test_tv'
         tv_path = vg.CreateThinVolume(tvname, dbus.UInt64(tpsize * 2), tp, self.no_options,
                                       dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -167,7 +167,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_30_snapshot(self):
         '''Test LVM snapshoting'''
 
-        vgname = 'storaged_test_snap_vg'
+        vgname = 'udisks_test_snap_vg'
 
         # Use all the virtual devices
         devs = dbus.Array()
@@ -180,7 +180,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create the origin LV
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
-        lvname = 'storaged_test_origin_lv'
+        lvname = 'udisks_test_origin_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -193,7 +193,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         time.sleep(1)
 
         # Create the LV's snapshot
-        snapname = 'storaged_test_snap_lv'
+        snapname = 'udisks_test_snap_lv'
         vg_freesize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         snap_path = lv.CreateSnapshot(snapname, vg_freesize, self.no_options,
                                       dbus_interface=self.iface_prefix + '.LogicalVolume')
@@ -204,7 +204,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_40_cache(self):
         '''Basic LVM cache test'''
 
-        vgname = 'storaged_test_cache_vg'
+        vgname = 'udisks_test_cache_vg'
 
         # Use all the virtual devices
         devs = dbus.Array()
@@ -217,7 +217,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         # Create the origin LV
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
-        orig_lvname = 'storaged_test_origin_lv'
+        orig_lvname = 'udisks_test_origin_lv'
         lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
@@ -229,7 +229,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         time.sleep(1)
 
         # Create the caching LV
-        cache_lvname = 'storaged_test_cache_lv'
+        cache_lvname = 'udisks_test_cache_lv'
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                              dbus_interface=self.iface_prefix + '.VolumeGroup')
@@ -238,7 +238,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.assertIsNotNone(cache_lv)
 
         # Add the cache to the origin
-        lv.CacheAttach('storaged_test_cache_lv', self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        lv.CacheAttach('udisks_test_cache_lv', self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
         time.sleep(1)
 
@@ -259,7 +259,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_50_rename_vg(self):
         ''' Test VG renaming '''
 
-        vgname = 'storaged_test_rename_vg'
+        vgname = 'udisks_test_rename_vg'
 
         # Use all the virtual devices
         devs = dbus.Array()
@@ -270,7 +270,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
 
         vg = self._create_vg(vgname, devs)
 
-        vgname = 'storaged_test_rename_vg2'
+        vgname = 'udisks_test_rename_vg2'
         new_vgpath = vg.Rename(vgname, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()
         time.sleep(1)
@@ -289,7 +289,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
     def test_60_pvs(self):
         ''' Test adding and removing PVs from VG '''
 
-        vgname = 'storaged_test_pv_vg'
+        vgname = 'udisks_test_pv_vg'
 
         # crete vg with one pv
         old_pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -299,7 +299,7 @@ class StoragedLVMTest(storagedtestcase.StoragedTestCase):
         self.addCleanup(self._remove_vg, vg)
 
         # create an lv on it
-        lvname = 'storaged_test_lv'
+        lvname = 'udisks_test_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(4 * 1024**2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.udev_settle()

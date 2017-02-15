@@ -6,7 +6,7 @@ import unittest
 from collections import namedtuple
 from contextlib import contextmanager
 
-import storagedtestcase
+import udiskstestcase
 
 
 Member = namedtuple('Member', ['obj', 'path', 'name', 'size'])
@@ -26,7 +26,7 @@ def wait_for_action(action_name):
                 time.sleep(1)
 
 
-class RAIDLevel(storagedtestcase.StoragedTestCase):
+class RAIDLevel(udiskstestcase.UdisksTestCase):
     level = None
     min_members = 0
     members = None
@@ -59,7 +59,8 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         md_name = next((name[1] for name in names if name[1]), None)  # get first non-empty name if exists
 
         # stop everything (twice)
-        self.run_command('mdadm --stop %s' % array_name)
+        if array_name:
+            self.run_command('mdadm --stop %s' % array_name)
 
         if md_name:
             self.run_command('mdadm --stop /dev/%s' % md_name)
@@ -68,7 +69,8 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
         self.run_command('mdadm --zero-superblock --force %s' % ' '.join(array_members))
 
         # and stop again
-        self.run_command('mdadm --stop %s' % array_name)
+        if array_name:
+            self.run_command('mdadm --stop %s' % array_name)
 
         if md_name:
             self.run_command('mdadm --stop /dev/%s' % md_name)
@@ -101,7 +103,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
             self.skipTest('Abstract class for RAID tests.')
 
         # create the array
-        array_name = 'storaged_test_' + self.level
+        array_name = 'udisks_test_' + self.level
         array = self._array_create(array_name)
 
         # check if /dev/md/'name' exists
@@ -164,7 +166,7 @@ class RAIDLevel(storagedtestcase.StoragedTestCase):
             self.assertIn('MD_DEVICE_%s_ROLE' % member.name, md_data.keys())
             self.assertEqual(md_data['MD_DEVICE_%s_DEV' % member.name], member.path)
 
-        # test if storaged see all (active) members
+        # test if udisks see all (active) members
         dbus_devices = self.get_property(array, '.MDRaid', 'ActiveDevices')
         for dbus_dev in dbus_devices.value:
             # get matching member from self.members -- match using name and last part of dbus path
@@ -190,8 +192,28 @@ class RAID0TestCase(RAIDLevel):
     def size(self):
         return len(self.members) * self.smallest_member.size
 
+    def test_create_noname(self):
+        array = self._array_create("")
+
+        # we didn't specify name -> we need to get it from members
+        names = [self.run_command('ls /sys/block/%s/holders' % os.path.basename(m.path)) for m in self.members]
+        md_name = next((name[1] for name in names if name[1]), None)  # get first non-empty name if exists
+        self.assertTrue(md_name)
+        self.assertTrue(os.path.exists("/dev/%s" % md_name))
+
+        dbus_name = self.get_property(array, '.MDRaid', 'Name')
+
+        # name of the array reported by 'mdadm' should look like 'nodename':'array_name'
+        # if it's smaller than 31 characters
+        # because we didn't specify name of the array, it should be just the number part from 'md12X'
+        nodename = os.uname().nodename
+        if len(nodename + md_name[2:]) < 31:
+            dbus_name.assertEqual("%s:%s" % (nodename, md_name[2:]))
+        else:
+            dbus_name.assertEqual(md_name[2:])
+
     def test_start_stop(self):
-        name = 'storaged_test_start_stop'
+        name = 'udisks_test_start_stop'
         array = self._array_create(name)
 
         dbus_running = self.get_property(array, '.MDRaid', 'Running')
@@ -216,7 +238,7 @@ class RAID0TestCase(RAIDLevel):
         self.assertEqual(ret, 0)
 
     def test_delete(self):
-        name = 'storaged_test_delete'
+        name = 'udisks_test_delete'
         array = self._array_create(name)
 
         # delete
@@ -248,7 +270,7 @@ class RAID1TestCase(RAIDLevel):
         return self.smallest_member.size
 
     def test_add_remove_device(self):
-        name = 'storaged_delete'
+        name = 'udisks_delete'
         array = self._array_create(name)
         array_path = str(array.object_path)
 
@@ -311,7 +333,7 @@ class RAID1TestCase(RAIDLevel):
         self.assertEqual(out, '')
 
     def test_bitmap_location(self):
-        array_name = 'storaged_test_bitmap'
+        array_name = 'udisks_test_bitmap'
         array = self._array_create(array_name)
 
         # get md_name ('/dev/md12X')
@@ -337,7 +359,7 @@ class RAID1TestCase(RAIDLevel):
 
     def test_request_action(self):
 
-        array_name = 'storaged_test_request'
+        array_name = 'udisks_test_request'
         array = self._array_create(array_name)
 
         # get md_name ('/dev/md12X')
