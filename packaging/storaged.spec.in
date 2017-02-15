@@ -10,12 +10,12 @@
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
-%define git_hash                        %(git show --pretty=format:%h || true)
+%define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
 Name:    storaged
 Summary: Disk Manager
-Version: 2.6.3
+Version: 2.6.4
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
