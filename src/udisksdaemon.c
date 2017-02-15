@@ -250,11 +250,12 @@ udisks_daemon_constructed (GObject *object)
   /* NULL means no specific so_name (implementation) */
   BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
   BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
+  BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
 
-  /* the core daemon only needs the part and swap plugins, additional plugins
-     are required by various modules, but they make sure plugins are loaded
-     themselves */
-  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, NULL};
+  /* the core daemon only needs the part, swap plugins and mdraid, additional
+     plugins are required by various modules, but they make sure plugins are
+     loaded themselves */
+  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &mdraid_plugin, NULL};
 
   error = NULL;
 
