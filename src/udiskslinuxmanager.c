@@ -759,7 +759,7 @@ handle_mdraid_create (UDisksManager         *_object,
   else
     {
       array_name = udisks_daemon_util_get_free_mdraid_device ();
-      if (raid_device_file == NULL)
+      if (array_name == NULL)
         {
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Unable to find free MD device");
