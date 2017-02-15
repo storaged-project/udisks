@@ -11,11 +11,8 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         self.manager_obj = self.get_object('/Manager')
 
     def _get_modules(self):
-        content = self.read_file('/etc/os-release')
-        release = {key: value for (key, value) in [line.split('=') for line in content.split('\n') if line]}
-        distro = release['ID'].replace('"', '')
-
-        if distro in ('redhat', 'centos'):
+        project, distro, version = self.distro
+        if ((project, distro) in (('redhat', 'enterprise_linux'), ('centos', 'centos')) and version.startswith("7")):
             return self.udisks_modules - {'Bcache'}
         else:
             return self.udisks_modules
