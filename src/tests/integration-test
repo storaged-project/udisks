@@ -1392,7 +1392,7 @@ class Luks(UDisksTestCase):
     def test_keyfile_equivalent(self):
         '''Setup device using passphrase, unlock using keyfile.'''
         encrypted = self.setup_crypto_device()
-        # wrong password, has bytes after a trailing NUL
+        # wrong password, has bytes after a trailing '\0'
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           '', self.keyfile_options(b's3kr1t\0X'), None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,

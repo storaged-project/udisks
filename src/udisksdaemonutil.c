@@ -81,10 +81,10 @@ void udisks_string_wipe_and_free (GString *string)
  * Looks up binary data in a dictionary #GVariant and returns it as #GString.
  *
  * If the value is a bytestring ("ay"), it can contain arbitrary binary data
- * including NUL values. If the value is a string ("s"), @out_text does not
- * include the terminating NUL character.
+ * including '\0' values. If the value is a string ("s"), @out_text does not
+ * include the terminating '\0' character.
  *
- * Returns: %TRUE if @dict contains an item @name of type "ay" that was
+ * Returns: %TRUE if @dict contains an item @name of type "ay" or "s" that was
  * successfully stored in @out_text, and %FALSE otherwise.
  */
 gboolean
@@ -107,11 +107,11 @@ udisks_variant_lookup_binary (GVariant     *dict,
  * it as a #GString.
  *
  * If the value is a bytestring ("ay"), it can contain arbitrary binary data
- * including NUL values. If the value is a string ("s"), @out_text does not
- * include the terminating NUL character.
+ * including '\0' values. If the value is a string ("s"), @out_text does not
+ * include the terminating '\0' character.
  *
- * Returns: %TRUE if @value is a bytestring #GVariant and was successfully
- * stored in @out_text, and %FALSE otherwise.
+ * Returns: %TRUE if @value is a bytestring or string #GVariant and was
+ * successfully stored in @out_text, and %FALSE otherwise.
  */
 gboolean
 udisks_variant_get_binary (GVariant  *value,
@@ -122,7 +122,6 @@ udisks_variant_get_binary (GVariant  *value,
 
   if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
       str = g_variant_get_string (value, &size);
-
   else if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING))
       str = g_variant_get_fixed_array (value, &size, sizeof (guchar));
 
