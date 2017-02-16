@@ -130,6 +130,7 @@ class UdisksTestCase(unittest.TestCase):
     path_prefix = None
     bus = None
     vdevs = None
+    distro = (None, None, None)       # (project, distro_name, version)
     no_options = dbus.Dictionary(signature="sv")
 
 
@@ -138,6 +139,14 @@ class UdisksTestCase(unittest.TestCase):
         self.iface_prefix = 'org.freedesktop.UDisks2'
         self.path_prefix = '/org/freedesktop/UDisks2'
         self.bus = dbus.SystemBus()
+
+        # get information about the distribution from systemd (hostname1)
+        sys_info = self.bus.get_object("org.freedesktop.hostname1", "/org/freedesktop/hostname1")
+        cpe = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemCPEName", dbus_interface=dbus.PROPERTIES_IFACE))
+
+        # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
+        self.distro = tuple(cpe.split(":")[2:5])
+
         self._orig_call_async = self.bus.call_async
         self._orig_call_blocking = self.bus.call_blocking
         self.bus.call_async = get_call_long(self._orig_call_async)
