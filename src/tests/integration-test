@@ -1451,6 +1451,38 @@ class Luks(UDisksTestCase):
 
         # correct password
         encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_lock_sync(no_options, None)
+
+    def test_ascii_keyfile_newline(self):
+
+        KEYFILE = b'ascii string\nwith newline\n'
+
+        # setup crypto device
+        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
+            'encrypt.passphrase': GLib.Variant('ay', KEYFILE),
+            'label': GLib.Variant('s', 'treasure')}))
+        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
+        encrypted = crypt_obj.get_property('encrypted')
+        encrypted.call_lock_sync(no_options, None)
+
+        # wrong password
+        missing_byte = self.keyfile_options(KEYFILE[:-1])
+        extra_bytes = self.keyfile_options(KEYFILE+b'\0X')
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          'h4ckpassword', no_options, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', missing_byte, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', extra_bytes, None)
+
+        # correct password
+        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # Currently, we mimic cryptsetup which in passphrase-mode stops input
+        # at the first newline:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          KEYFILE.decode('utf-8'), no_options, None)
 
 
 # ----------------------------------------------------------------------------
