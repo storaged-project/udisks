@@ -556,8 +556,6 @@ handle_mdraid_create (UDisksManager         *_object,
   GList *l;
   guint n;
   gchar *array_name = NULL;
-  gint status;
-  gchar *error_message = NULL;
   gchar *raid_device_file = NULL;
   gchar *raid_node = NULL;
   struct stat statbuf;
