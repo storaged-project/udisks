@@ -36,6 +36,9 @@
 
 #include <linux/loop.h>
 
+#include <blockdev/fs.h>
+#include <blockdev/mdraid.h>
+
 #include "udiskslogging.h"
 #include "udiskslinuxmanager.h"
 #include "udisksdaemon.h"
@@ -45,6 +48,7 @@
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
 #include "udiskslinuxfsinfo.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -530,27 +534,6 @@ wait_for_array_object (UDisksDaemon *daemon,
   return ret;
 }
 
-static gchar* md_node_from_name (const gchar *name, GError **error) {
-    gchar *symlink = NULL;
-    gchar *ret = NULL;
-    gchar *md_path = g_strdup_printf ("/dev/md/%s", name);
-
-    symlink = g_file_read_link (md_path, error);
-    if (!symlink) {
-        /* error is already populated */
-        g_free (md_path);
-        return NULL;
-    }
-
-    g_strstrip (symlink);
-    ret = g_path_get_basename (symlink);
-
-    g_free (symlink);
-    g_free (md_path);
-
-    return ret;
-}
-
 static const gchar *raid_level_whitelist[] = {"raid0", "raid1", "raid4", "raid5", "raid6", "raid10", NULL};
 
 static gboolean
@@ -573,19 +556,27 @@ handle_mdraid_create (UDisksManager         *_object,
   GList *l;
   guint n;
   gchar *array_name = NULL;
-  GString *str = NULL;
   gint status;
   gchar *error_message = NULL;
   gchar *raid_device_file = NULL;
-  gchar *raid_device_name = NULL;
+  gchar *raid_node = NULL;
   struct stat statbuf;
   dev_t raid_device_num;
+  UDisksBaseJob *job = NULL;
+  const gchar **disks = NULL;
+  guint disks_top = 0;
+  gboolean success = FALSE;
 
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               NULL, NULL,
+                                               &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
+      success = FALSE;
       goto out;
     }
 
@@ -601,7 +592,25 @@ handle_mdraid_create (UDisksManager         *_object,
                                                     arg_options,
                                                     message,
                                                     invocation))
-    goto out;
+    {
+      success = FALSE;
+      goto out;
+    }
+
+  /* Authentication checked -- lets create the job */
+  job = udisks_daemon_launch_simple_job (manager->daemon,
+                                         NULL,
+                                         "mdraid-create",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      success = FALSE;
+      goto out;
+    }
 
   /* validate level */
   for (n = 0; raid_level_whitelist[n] != NULL; n++)
@@ -613,6 +622,7 @@ handle_mdraid_create (UDisksManager         *_object,
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Unsupported RAID level %s", arg_level);
+      success = FALSE;
       goto out;
     }
 
@@ -621,14 +631,16 @@ handle_mdraid_create (UDisksManager         *_object,
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Chunk %" G_GUINT64_FORMAT " is not a multiple of 4KiB", arg_chunk);
+      success = FALSE;
       goto out;
     }
 
-  /* validate name */
+  /* validate chunk for raid1 */
   if (g_strcmp0 (arg_level, "raid1") == 0 && arg_chunk != 0)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Chunk must be zero for level 'raid1'");
+      success = FALSE;
       goto out;
     }
 
@@ -636,7 +648,8 @@ handle_mdraid_create (UDisksManager         *_object,
   if (strlen (arg_name) > 32)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Name is invalid");
+                                             "Name cannot be longer than 32 characters");
+      success = FALSE;
       goto out;
     }
 
@@ -647,6 +660,7 @@ handle_mdraid_create (UDisksManager         *_object,
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Must have at least two devices");
+      success = FALSE;
       goto out;
     }
 
@@ -671,6 +685,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Invalid object path %s at index %u",
                                                  arg_blocks[n], n);
+          success = FALSE;
           goto out;
         }
 
@@ -682,6 +697,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
+          success = FALSE;
           goto out;
         }
 
@@ -695,6 +711,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  "Error opening device %s: %m",
                                                  device_file);
           g_free (device_file);
+          success = FALSE;
           goto out;
         }
       close (fd);
@@ -709,52 +726,26 @@ handle_mdraid_create (UDisksManager         *_object,
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-      UDisksObject *object_for_block;
-      gchar *escaped_device;
-      object_for_block = udisks_daemon_util_dup_object (block, &error);
-      if (object_for_block == NULL)
+      if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, &error))
         {
-          g_dbus_method_invocation_return_gerror (invocation, error);
-          g_clear_error (&error);
-          goto out;
+          /* no signature to remove, ignore */
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+            g_clear_error (&error);
+          else
+            {
+              g_prefix_error (&error,
+                              "Error wiping device %s to be used in the RAID array:",
+                              udisks_block_get_device (block));
+              g_dbus_method_invocation_take_error (invocation, error);
+              success = FALSE;
+              goto out;
+            }
         }
-      escaped_device = udisks_daemon_util_escape (udisks_block_get_device (block));
-      if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                                  object_for_block,
-                                                  "format-erase", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL, /* input_string */
-                                                  "wipefs -a \"%s\"",
-                                                  escaped_device))
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error wiping device %s to be used in a RAID array: %s",
-                                                 udisks_block_get_device (block),
-                                                 error_message);
-          g_free (error_message);
-          g_object_unref (object_for_block);
-          g_free (escaped_device);
-          goto out;
-        }
-      g_object_unref (object_for_block);
-      g_free (escaped_device);
     }
-
-  /* Create the array... */
-  str = g_string_new ("mdadm");
 
   /* we have name from the user */
   if (strlen (arg_name) > 0)
-    {
-      array_name = udisks_daemon_util_escape (arg_name);
-      g_string_append_printf (str, " --create \"%s\"", array_name);
-    }
+      array_name = g_strdup (arg_name);
   /* we don't have name, get next 'free' /dev/mdX device */
   else
     {
@@ -763,60 +754,41 @@ handle_mdraid_create (UDisksManager         *_object,
         {
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Unable to find free MD device");
+          success = FALSE;
           goto out;
         }
-      g_string_append_printf (str, " --create %s", array_name);
     }
 
-  g_string_append_printf (str, " --run");
-  if (arg_chunk > 0)
-    g_string_append_printf (str, " --chunk %" G_GUINT64_FORMAT, (guint64) (arg_chunk / 1024LL));
-  g_string_append_printf (str, " --level %s", arg_level);
-  g_string_append_printf (str, " --raid-devices %u", num_devices);
+  /* names of members as gchar** for libblockdev */
+  disks = g_new0 (const gchar*, g_list_length (blocks) + 1);
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-      gchar *escaped_device;
-      escaped_device = udisks_daemon_util_escape (udisks_block_get_device (block));
-      g_string_append_printf (str, " \"%s\"", escaped_device);
-      g_free (escaped_device);
+      disks[disks_top++] = udisks_block_dup_device (block);
     }
+  disks[disks_top] = NULL;
 
-  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                              NULL,
-                                              "mdraid-create", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "%s",
-                                              str->str))
+  if (!bd_md_create (array_name, arg_level, disks, 0, NULL, FALSE, arg_chunk, NULL, &error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating RAID array: %s",
-                                             error_message);
-      g_free (error_message);
+      g_prefix_error (&error, "Error creating RAID array:");
+      g_dbus_method_invocation_take_error (invocation, error);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      success = FALSE;
       goto out;
     }
 
   /* User specified name of the array, we need to get the md node */
   if (strlen (arg_name) > 0)
     {
-      /* FIXME replace by 'bd_md_node_from_name' after rewriting this to use libblockdev */
-      raid_device_name = md_node_from_name (array_name, &error);
-      if (!raid_device_name)
+      raid_node = bd_md_node_from_name (array_name, &error);
+      if (!raid_node)
         {
-          g_prefix_error (&error,
-                          "Failed to get md node for array %s",
-                          array_name);
+          g_prefix_error (&error, "Failed to get md node for array %s", array_name);
           g_dbus_method_invocation_take_error (invocation, error);
+          success = FALSE;
           goto out;
         }
-      raid_device_file = g_strdup_printf ("/dev/%s", raid_device_name);
+      raid_device_file = g_strdup_printf ("/dev/%s", raid_node);
     }
 
   else
@@ -835,6 +807,7 @@ handle_mdraid_create (UDisksManager         *_object,
                       "Error waiting for array object after creating %s",
                       raid_device_file);
       g_dbus_method_invocation_take_error (invocation, error);
+      success = FALSE;
       goto out;
     }
 
@@ -845,6 +818,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                              UDISKS_ERROR_FAILED,
                                              "Error calling stat(2) on %s: %m",
                                              raid_device_file);
+      success = FALSE;
       goto out;
     }
   if (!S_ISBLK (statbuf.st_mode))
@@ -854,6 +828,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                              UDISKS_ERROR_FAILED,
                                              "Device file %s is not a block device",
                                              raid_device_file);
+      success = FALSE;
       goto out;
     }
   raid_device_num = statbuf.st_rdev;
@@ -864,25 +839,17 @@ handle_mdraid_create (UDisksManager         *_object,
                            caller_uid);
 
   /* ... wipe the created RAID array */
-  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                              array_object,
-                                              "format-erase", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "wipefs -a %s",
-                                              raid_device_file))
+  if (!bd_fs_wipe (raid_device_file, TRUE, &error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error wiping raid device %s: %s",
-                                             raid_device_file,
-                                             error_message);
-      goto out;
+      if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+        g_clear_error (&error);
+      else
+        {
+          g_prefix_error (&error, "Error wiping raid device %s:", raid_device_file);
+          g_dbus_method_invocation_take_error (invocation, error);
+          success = FALSE;
+          goto out;
+        }
     }
 
   /* ... finally trigger uevents on the members - we want this so the
@@ -899,6 +866,7 @@ handle_mdraid_create (UDisksManager         *_object,
         {
           g_dbus_method_invocation_return_gerror (invocation, error);
           g_clear_error (&error);
+          success = FALSE;
           goto out;
         }
       udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_for_block));
@@ -910,12 +878,18 @@ handle_mdraid_create (UDisksManager         *_object,
                                          invocation,
                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (array_object)));
 
+  success = TRUE;
+
  out:
+
+  if (job != NULL)
+    {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), success, NULL);
+    }
+
   g_free (raid_device_file);
-  g_free (raid_device_name);
+  g_free (raid_node);
   g_free (array_name);
-  if (str != NULL)
-    g_string_free (str, TRUE);
   g_list_free_full (blocks, g_object_unref);
   g_clear_object (&array_object);
 
