@@ -1206,6 +1206,20 @@ class Smart(UDisksTestCase):
 class Luks(UDisksTestCase):
     '''Check LUKS.'''
 
+    def setup_crypto_device(self):
+        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
+            'encrypt.passphrase': GLib.Variant('s', 's3kr1t'),
+            'label': GLib.Variant('s', 'treasure')}))
+        self.client.settle()
+        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
+        encrypted = crypt_obj.get_property('encrypted')
+        encrypted.call_lock_sync(no_options, None)
+        return encrypted
+
+    def unlock_crypto_device(self, encrypted):
+        return encrypted.call_unlock_sync(
+            's3kr1t', no_options, None)
+
     def tearDown(self):
         '''clean up behind failed test cases'''
 
@@ -1223,18 +1237,16 @@ class Luks(UDisksTestCase):
     def test_0_create_teardown(self):
         '''LUKS create/teardown'''
 
-        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('s', 's3kr1t'),
-            'label': GLib.Variant('s', 'treasure')}))
-        self.client.settle()
+        encrypted = self.setup_crypto_device()
+
+        block = self.udisks_block()
+        obj = self.client.get_object(block.get_object_path())
+        self.assertEqual(obj.get_property('filesystem'), None)
+        encrypted = obj.get_property('encrypted')
+        self.assertNotEqual(encrypted, None)
+        clear_dev = None
 
         try:
-            block = self.udisks_block()
-            obj = self.client.get_object(block.get_object_path())
-            self.assertEqual(obj.get_property('filesystem'), None)
-            encrypted = obj.get_property('encrypted')
-            self.assertNotEqual(encrypted, None)
-
             # check crypted device info
             self.assertEqual(block.get_property('id-type'), 'crypto_LUKS')
             self.assertEqual(block.get_property('id-usage'), 'crypto')
@@ -1244,7 +1256,6 @@ class Luks(UDisksTestCase):
 
             # check whether we can lock/unlock; we also need this to get the
             # cleartext device
-            encrypted.call_lock_sync(no_options, None)
             self.assertRaises(GLib.GError, encrypted.call_lock_sync,
                               no_options, None)
 
@@ -1252,8 +1263,7 @@ class Luks(UDisksTestCase):
             self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                               'h4ckpassword', no_options, None)
             # right password
-            clear_path = encrypted.call_unlock_sync('s3kr1t',
-                                                    no_options, None)
+            clear_path = self.unlock_crypto_device(encrypted)
 
             # check cleartext device info
             clear_obj = self.client.get_object(clear_path)
@@ -1281,15 +1291,15 @@ class Luks(UDisksTestCase):
         finally:
             # tear down cleartext device
             encrypted.call_lock_sync(no_options, None)
-            self.assertFalse(os.path.exists(clear_dev))
+            if clear_dev is not None:
+                self.assertFalse(os.path.exists(clear_dev))
 
     def test_luks_mount(self):
         '''LUKS mount/unmount'''
 
-        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
-        encrypted = crypt_obj.get_property('encrypted')
+        encrypted = self.setup_crypto_device()
 
-        path = encrypted.call_unlock_sync('s3kr1t', no_options, None)
+        path = self.unlock_crypto_device(encrypted)
         self.client.settle()
         obj = self.client.get_object(path)
         fs = obj.get_property('filesystem')
@@ -1326,9 +1336,9 @@ class Luks(UDisksTestCase):
         '''LUKS forced removal'''
 
         # unlock and mount it
+        encrypted = self.setup_crypto_device()
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
-        path = crypt_obj.get_property('encrypted').call_unlock_sync(
-            's3kr1t', no_options, None)
+        path = self.unlock_crypto_device(encrypted)
         try:
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
@@ -1355,9 +1365,7 @@ class Luks(UDisksTestCase):
                 self.readd_devices()
 
             # after putting it back, it should be mountable again
-            crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
-            path = crypt_obj.get_property('encrypted').call_unlock_sync(
-                's3kr1t', no_options, None)
+            path = self.unlock_crypto_device(encrypted)
             self.client.settle()
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
@@ -1375,6 +1383,106 @@ class Luks(UDisksTestCase):
                 no_options, None)
             self.client.settle()
             self.assertEqual(self.client.get_object(path), None)
+
+    def keyfile_options(self, keyfile_contents):
+        return GLib.Variant('a{sv}', {
+            'keyfile_contents': GLib.Variant('ay', keyfile_contents)
+        })
+
+    def test_keyfile_equivalent(self):
+        '''Setup device using passphrase, unlock using keyfile.'''
+        encrypted = self.setup_crypto_device()
+        # wrong password, has bytes after a trailing '\0'
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(b's3kr1t\0X'), None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(b's3kr1t\n'), None)
+        # correct password, specified as keyfile
+        encrypted.call_unlock_sync('', self.keyfile_options(b's3kr1t'), None)
+        encrypted.call_lock_sync(no_options, None)
+
+    def test_plaintext_keyfile(self):
+        '''Setup a device using a plaintext keyfile.'''
+        # Using a plaintext keyfile should be equivalent to passphrase
+        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
+            'encrypt.passphrase': GLib.Variant('ay', b's3kr1t'),
+            'label': GLib.Variant('s', 'treasure')}))
+
+        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
+        encrypted = crypt_obj.get_property('encrypted')
+        encrypted.call_lock_sync(no_options, None)
+
+        # wrong password
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          'h4ckpassword', no_options, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(b's3kr1t\0X'), None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(b's3kr1t\n'), None)
+
+        # correct password
+        encrypted.call_unlock_sync('', self.keyfile_options(b's3kr1t'), None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # correct password, specified as passphrase
+        encrypted.call_unlock_sync('s3kr1t', no_options, None)
+        encrypted.call_lock_sync(no_options, None)
+
+    def test_binary_keyfile(self):
+
+        KEYFILE = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff'
+
+        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
+            'encrypt.passphrase': GLib.Variant('ay', KEYFILE),
+            'label': GLib.Variant('s', 'treasure')}))
+        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
+        encrypted = crypt_obj.get_property('encrypted')
+        encrypted.call_lock_sync(no_options, None)
+
+        # wrong password
+        missing_byte = self.keyfile_options(KEYFILE[:-1])
+        extra_bytes = self.keyfile_options(KEYFILE+b'\0X')
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          'h4ckpassword', no_options, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', missing_byte, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', extra_bytes, None)
+
+        # correct password
+        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_lock_sync(no_options, None)
+
+    def test_ascii_keyfile_newline(self):
+
+        KEYFILE = b'ascii string\nwith newline\n'
+
+        # setup crypto device
+        self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
+            'encrypt.passphrase': GLib.Variant('ay', KEYFILE),
+            'label': GLib.Variant('s', 'treasure')}))
+        crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
+        encrypted = crypt_obj.get_property('encrypted')
+        encrypted.call_lock_sync(no_options, None)
+
+        # wrong password
+        missing_byte = self.keyfile_options(KEYFILE[:-1])
+        extra_bytes = self.keyfile_options(KEYFILE+b'\0X')
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          'h4ckpassword', no_options, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', missing_byte, None)
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', extra_bytes, None)
+
+        # correct password
+        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # Currently, we mimic cryptsetup which in passphrase-mode stops input
+        # at the first newline:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          KEYFILE.decode('utf-8'), no_options, None)
 
 
 # ----------------------------------------------------------------------------

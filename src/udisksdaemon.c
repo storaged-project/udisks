@@ -825,7 +825,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
  *
  * This function is the same as udisks_daemon_launch_spawned_job, with
  * the only difference that it takes a GString and is therefore able to
- * handle binary inputs that contain NUL bytes.
+ * handle binary inputs that contain '\0' bytes.
  *
  * Returns: A #UDisksSpawnedJob object. Do not free, the object
  * belongs to @manager.
@@ -999,7 +999,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
  *
  * This function is the same as udisks_daemon_launch_spawned_job_sync, with
  * the only difference that it takes a GString and is therefore able to
- * handle binary inputs that contain NUL bytes.
+ * handle binary inputs that contain '\0' bytes.
  *
  * Returns: The @success parameter of the #UDisksJob::completed signal.
  */

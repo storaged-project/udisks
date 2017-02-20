@@ -73,6 +73,69 @@ void udisks_string_wipe_and_free (GString *string)
 }
 
 /**
+ * udisks_variant_lookup_binary:
+ * @dict: A dictionary #GVariant.
+ * @name: The name of the item to lookup.
+ * @out_text: (out): Return location for the binary text as #GString.
+ *
+ * Looks up binary data in a dictionary #GVariant and returns it as #GString.
+ *
+ * If the value is a bytestring ("ay"), it can contain arbitrary binary data
+ * including '\0' values. If the value is a string ("s"), @out_text does not
+ * include the terminating '\0' character.
+ *
+ * Returns: %TRUE if @dict contains an item @name of type "ay" or "s" that was
+ * successfully stored in @out_text, and %FALSE otherwise.
+ */
+gboolean
+udisks_variant_lookup_binary (GVariant     *dict,
+                              const gchar  *name,
+                              GString     **out_text)
+{
+  GVariant* item = g_variant_lookup_value (dict, name, NULL);
+  if (item)
+    return udisks_variant_get_binary (item, out_text);
+  return FALSE;
+}
+
+/**
+ * udisks_variant_get_binary:
+ * @value: A #GVariant of type "ay" or "s".
+ * @out_text: (out): Return location for the binary text as #GString.
+ *
+ * Gets binary data contained in a BYTEARRAY or STRING #GVariant and returns
+ * it as a #GString.
+ *
+ * If the value is a bytestring ("ay"), it can contain arbitrary binary data
+ * including '\0' values. If the value is a string ("s"), @out_text does not
+ * include the terminating '\0' character.
+ *
+ * Returns: %TRUE if @value is a bytestring or string #GVariant and was
+ * successfully stored in @out_text, and %FALSE otherwise.
+ */
+gboolean
+udisks_variant_get_binary (GVariant  *value,
+                           GString  **out_text)
+{
+  const gchar* str = NULL;
+  gsize size = 0;
+
+  if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+      str = g_variant_get_string (value, &size);
+  else if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING))
+      str = g_variant_get_fixed_array (value, &size, sizeof (guchar));
+
+  if (str)
+    {
+      *out_text = g_string_new_len (str, size);
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+
+/**
  * udisks_decode_udev_string:
  * @str: An udev-encoded string or %NULL.
  *

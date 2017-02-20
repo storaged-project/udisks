@@ -987,6 +987,7 @@ encrypted_is_unlocked (UDisksObject *encrypted_object)
 static gchar   *opt_unlock_lock_object_path = NULL;
 static gchar   *opt_unlock_lock_device = NULL;
 static gboolean opt_unlock_lock_no_user_interaction = FALSE;
+static gchar   *opt_unlock_keyfile = NULL;
 
 static const GOptionEntry command_unlock_entries[] =
 {
@@ -1015,6 +1016,15 @@ static const GOptionEntry command_unlock_entries[] =
     G_OPTION_ARG_NONE,
     &opt_unlock_lock_no_user_interaction,
     "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    "key-file",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_unlock_keyfile,
+    "Keyfile for unlocking",
     NULL
   },
   {
@@ -1056,6 +1066,22 @@ static const GOptionEntry command_lock_entries[] =
   }
 };
 
+static GVariant*
+pack_binary_blob (const gchar *data,
+                  gsize        size)
+{
+  GVariantBuilder builder;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("ay"));
+
+  for (gsize i = 0; i < size; i++)
+  {
+    g_variant_builder_add (&builder, "y", data[i]);
+  }
+
+  return g_variant_builder_end (&builder);
+}
+
 static gint
 handle_command_unlock_lock (gint        *argc,
                             gchar      **argv[],
@@ -1078,6 +1104,9 @@ handle_command_unlock_lock (gint        *argc,
   GVariant *options;
   GVariantBuilder builder;
   gchar *passphrase;
+  gchar *keyfile_contents = NULL;
+  gsize  keyfile_size = 0;
+  GError *error = NULL;
 
   ret = 1;
   opt_unlock_lock_object_path = NULL;
@@ -1100,7 +1129,7 @@ handle_command_unlock_lock (gint        *argc,
   else
     g_option_context_set_summary (o, "Lock an encrypted device.");
   g_option_context_add_main_entries (o,
-                                     is_unlock ? command_lock_entries : command_unlock_entries,
+                                     is_unlock ? command_unlock_entries : command_lock_entries,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
@@ -1240,22 +1269,37 @@ handle_command_unlock_lock (gint        *argc,
                              "{sv}",
                              "auth.no_user_interaction", g_variant_new_boolean (TRUE));
     }
+  if (opt_unlock_keyfile)
+    {
+      if (!g_file_get_contents (opt_unlock_keyfile,
+                                &keyfile_contents,
+                                &keyfile_size,
+                                &error))
+      {
+        g_printerr ("Error unlocking %s: %s\n",
+                    udisks_block_get_device (block),
+                    error->message);
+        goto out;
+      }
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "keyfile_contents",
+                             pack_binary_blob (keyfile_contents, keyfile_size));
+    }
   options = g_variant_builder_end (&builder);
   g_variant_ref_sink (options);
 
-  if (is_unlock)
+  if (is_unlock && !opt_unlock_keyfile)
     passphrase = read_passphrase ();
 
  try_again:
   if (is_unlock)
     {
-      GError *error;
       gchar *cleartext_object_path;
       UDisksObject *cleartext_object;
 
-      error = NULL;
       if (!udisks_encrypted_call_unlock_sync (encrypted,
-                                              passphrase,
+                                              passphrase ? passphrase : "",
                                               options,
                                               &cleartext_object_path,
                                               NULL,                       /* GCancellable */
@@ -1287,9 +1331,6 @@ handle_command_unlock_lock (gint        *argc,
     }
   else
     {
-      GError *error;
-
-      error = NULL;
       if (!udisks_encrypted_call_lock_sync (encrypted,
                                             options,
                                             NULL,         /* GCancellable */
@@ -1322,6 +1363,11 @@ handle_command_unlock_lock (gint        *argc,
     {
       memset (passphrase, '\0', strlen (passphrase));
       g_free (passphrase);
+    }
+  if (keyfile_contents != NULL)
+    {
+      memset (keyfile_contents, '\0', keyfile_size);
+      g_free (keyfile_contents);
     }
   if (options != NULL)
     g_variant_unref (options);
