@@ -27,6 +27,13 @@ G_BEGIN_DECLS
 
 void udisks_string_wipe_and_free (GString*);
 
+gboolean udisks_variant_lookup_binary (GVariant     *dict,
+                                       const gchar  *name,
+                                       GString     **contents);
+
+gboolean udisks_variant_get_binary (GVariant  *variant,
+                                    GString  **contents);
+
 gchar *udisks_decode_udev_string (const gchar *str);
 
 void udisks_safe_append_to_object_path (GString      *str,

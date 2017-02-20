@@ -2727,7 +2727,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean take_ownership = FALSE;
-  gchar *encrypt_passphrase = NULL;
+  GString *encrypt_passphrase = NULL;
   gchar *erase_type = NULL;
   gchar *mapped_name = NULL;
   const gchar *label = NULL;
@@ -2757,7 +2757,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   error_message = NULL;
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
-  g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
+  udisks_variant_lookup_binary (options, "encrypt.passphrase", &encrypt_passphrase);
   g_variant_lookup (options, "erase", "s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
@@ -2991,7 +2991,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   if (encrypt_passphrase != NULL)
     {
       /* Create it */
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+      if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
                                                   object,
                                                   "format-mkfs", caller_uid,
                                                   NULL, /* cancellable */
@@ -3000,8 +3000,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                   &status,
                                                   &error_message,
                                                   encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksFormat \"%s\"",
-                                                  escaped_device))
+                                                  "cryptsetup luksFormat \"%s\" %s",
+                                                  escaped_device,
+                                                  "--key-file -"))
         {
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                  "Error creating LUKS device: %s", error_message));
@@ -3025,7 +3026,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       /* Open it */
       mapped_name = make_block_luksname (block);
       g_assert (mapped_name != NULL);
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+      if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
                                                   object,
                                                   "format-mkfs", caller_uid,
                                                   NULL, /* cancellable */
@@ -3034,9 +3035,10 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                   &status,
                                                   &error_message,
                                                   encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksOpen \"%s\" %s",
+                                                  "cryptsetup luksOpen \"%s\" %s %s",
                                                   escaped_device,
-                                                  mapped_name))
+                                                  mapped_name,
+                                                  "--key-file -"))
         {
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                  "Error opening LUKS device: %s", error_message));
@@ -3293,7 +3295,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   if (config_items)
     g_variant_unref (config_items);
   g_free (erase_type);
-  g_free (encrypt_passphrase);
+  udisks_string_wipe_and_free (encrypt_passphrase);
   g_clear_object (&cleartext_object);
   g_clear_object (&cleartext_block);
   g_clear_object (&udev_cleartext_device);
