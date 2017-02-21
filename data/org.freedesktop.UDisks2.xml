@@ -1800,9 +1800,13 @@
         ChangePassphrase:
         @passphrase: The existing passphrase.
         @new_passphrase: The new passphrase to use.
-        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>old_keyfile_contents</parameter> and <parameter>new_keyfile_contents</parameter> (of type 's' or 'ay').
 
         Changes the passphrase to @new_passphrase. An existing passphrase is required.
+
+        If <parameter>old_keyfile_contents</parameter> or
+        <parameter>new_keyfile_contents</parameter> are given, they take
+        precedence over the corresponding passphrase parameters individually.
 
         If the device in question is referenced in a system-wide
         configuration file (such as the
