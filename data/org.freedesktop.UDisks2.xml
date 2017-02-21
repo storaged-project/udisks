@@ -1776,6 +1776,10 @@
         then name, options and passphrase (if available) is used from that
         file after requesting additional authorization.
 
+        If an empty passphrase should be used to unlock the device, it has to be
+        passed using the @keyfile_contents parameter. Empty string passed as
+        @passphrase means "Use the passphrase from the configuration file".
+
         If the device is removed without being locked (e.g. the user
         yanking the device or pulling the media out) the cleartext
         device will be cleaned up.
