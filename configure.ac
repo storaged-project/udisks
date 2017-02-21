@@ -471,6 +471,26 @@ AC_SUBST([have_libblockdev_part_spec])
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
 
+# libblockdev loop
+SAVE_CFLAGS=$CFLAGS
+SAVE_LDFLAGS=$LDFLAGS
+
+CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+LDFLAGS="$GLIB_LIBS"
+AC_MSG_CHECKING([libblockdev-loop presence])
+AC_TRY_COMPILE([#include <loop.h>], [],
+               [AC_MSG_RESULT([yes])
+               have_loop=yes],
+               [AC_MSG_RESULT([no])
+               have_loop=no])
+
+CFLAGS=$SAVE_CFLAGS
+LDFLAGS=$SAVE_LDFLAGS
+
+if test "x$have_loop" = "xno"; then
+  AC_MSG_ERROR([Loop support requested but header or library not found])
+fi
+
 # libblockdev swap
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
