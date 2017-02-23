@@ -47,6 +47,7 @@ BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
+BuildRequires: libblockdev-lvm-devel    >= %{libblockdev_version}
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
