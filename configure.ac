@@ -233,29 +233,36 @@ AM_CONDITIONAL(HAVE_ACL, [test "$have_acl" = "yes"])
 
 # LVM2 module
 have_lvm2=no
-have_devmapper=no
 AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
 if test "x$enable_lvm2" = "xyes" \
      -o "x$enable_modules" = "xyes"; then
+
+  CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+  LDFLAGS="$GLIB_LIBS"
+  AC_MSG_CHECKING([libblockdev-lvm presence])
+  AC_TRY_COMPILE([#include <blockdev/lvm.h>], [],
+                 [AC_MSG_RESULT([yes])
+                 have_lvm2=yes],
+                 [AC_MSG_RESULT([no])
+                 have_lvm2=no])
+  CFLAGS=$SAVE_CFLAGS
+  LDFLAGS=$SAVE_LDFLAGS
+
+  # we still need these definitions for the udisks-lvm helper
   PKG_CHECK_MODULES(DEVMAPPER, devmapper >= 1.02,
-                    [AC_DEFINE(HAVE_DEVMAPPER, 1, [Define if DEVMAPPER is available]) have_devmapper=yes],
-                    have_devmapper=no)
-  if test "x$have_devmapper" = "xyes"; then
-    PKG_CHECK_MODULES(LVM2, lvm2app >= 2.2,
-                      [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available]) have_lvm2=yes],
-                      have_lvm2=no)
-  fi
+                    [AC_DEFINE(HAVE_DEVMAPPER, 1, [Define if DEVMAPPER is available])], [])
+  PKG_CHECK_MODULES(LVM2, lvm2app >= 2.2,
+                    [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available])],[])
   AC_SUBST(DEVMAPPER_CFLAGS)
   AC_SUBST(DEVMAPPER_LIBS)
   AC_SUBST(LVM2_CFLAGS)
   AC_SUBST(LVM2_LIBS)
-  if test \( "x$have_devmapper" = xno  -o "x$have_lvm2"      = xno  \) \
-       -a \( "x$enable_lvm2"    = xyes -o "x$enable_modules" = xyes \); then
+
+  if test \( "x$have_lvm2" = "xno" \); then
     AC_MSG_ERROR([lvm2 support requested but libraries not found])
   fi
 fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
-AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 
 # LVMCache
 have_lvmcache=no
