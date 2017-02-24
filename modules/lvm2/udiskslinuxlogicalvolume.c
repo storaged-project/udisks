@@ -39,6 +39,7 @@
 #include "udiskslvm2daemonutil.h"
 #include "udiskslvm2dbusutil.h"
 #include "udiskslvm2util.h"
+#include "jobhelpers.h"
 #include "udisks-lvm2-generated.h"
 
 /**
@@ -373,9 +374,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
   gid_t caller_gid;
   gboolean teardown_flag = FALSE;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_name = NULL;
-  gchar *error_message = NULL;
+  LVJobData data;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
@@ -421,36 +420,30 @@ handle_delete (UDisksLogicalVolume   *_volume,
     }
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-lvol-delete", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "lvremove -f %s/%s",
-                                              escaped_group_name,
-                                              escaped_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-delete",
+                                               caller_uid,
+                                               lvremove_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting logical volume: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
   udisks_logical_volume_complete_delete (_volume, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_group_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -508,11 +501,8 @@ handle_rename (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_name = NULL;
-  gchar *escaped_new_name = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -545,29 +535,25 @@ handle_rename (UDisksLogicalVolume   *_volume,
                                      invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-  escaped_new_name = udisks_daemon_util_escape_and_quote (new_name);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.new_lv_name = new_name;
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-rename", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "lvrename %s/%s %s",
-                                              escaped_group_name,
-                                              escaped_name,
-                                              escaped_new_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-rename",
+                                               caller_uid,
+                                               lvrename_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error renaming volume volume: %s",
-                                             error_message);
+                                             "Error renaming logical volume: %s",
+                                             error->message);
       goto out;
     }
 
@@ -584,10 +570,6 @@ handle_rename (UDisksLogicalVolume   *_volume,
   udisks_logical_volume_complete_rename (_volume, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_group_name);
-  g_free (escaped_new_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -607,12 +589,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  GString *cmd = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_name = NULL;
-  gchar *error_message = NULL;
-  gboolean resize_fsys = FALSE;
-  gboolean force = FALSE;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -645,48 +622,36 @@ handle_resize (UDisksLogicalVolume   *_volume,
                                      invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-  new_size -= new_size % 512;
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.new_lv_size = new_size;
 
-  g_variant_lookup (options, "resize_fsys", "b", &resize_fsys);
-  g_variant_lookup (options, "force", "b", &force);
+  data.resize_fs = FALSE;
+  data.force = FALSE;
+  g_variant_lookup (options, "resize_fsys", "b", &(data.resize_fs));
+  g_variant_lookup (options, "force", "b", &(data.force));
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvresize %s/%s -L %" G_GUINT64_FORMAT "b",
-                          escaped_group_name, escaped_name, new_size);
-  if (resize_fsys)
-    g_string_append (cmd, " -r");
-  if (force)
-    g_string_append (cmd, " -f");
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-resize", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-resize",
+                                               caller_uid,
+                                               lvresize_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error resizing logical volume: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
   udisks_logical_volume_complete_resize (_volume, invocation);
 
  out:
-  if (cmd)
-    g_string_free (cmd, TRUE);
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_group_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -742,10 +707,8 @@ handle_activate (UDisksLogicalVolume *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_name = NULL;
-  gchar *error_message = NULL;
   UDisksObject *block_object = NULL;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -778,27 +741,25 @@ handle_activate (UDisksLogicalVolume *_volume,
                                      invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-lvol-activate", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "lvchange %s/%s -ay -K --yes",
-                                              escaped_group_name,
-                                              escaped_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-activate",
+                                               caller_uid,
+                                               lvactivate_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
+
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error deleting logical volume: %s",
-                                             error_message);
+                                             "Error activating logical volume: %s",
+                                             error->message);
       goto out;
     }
 
@@ -821,9 +782,6 @@ handle_activate (UDisksLogicalVolume *_volume,
                                            g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object)));
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_group_name);
   g_clear_object (&block_object);
   g_clear_object (&object);
   return TRUE;
@@ -843,9 +801,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_name = NULL;
-  gchar *error_message = NULL;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -878,36 +834,30 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                        invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                UDISKS_OBJECT (object),
-                                                "lvm-lvol-deactivate", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "lvchange %s/%s -an -K --yes",
-                                                escaped_group_name,
-                                                escaped_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-deactivate",
+                                               caller_uid,
+                                               lvdeactivate_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error deleting logical volume: %s",
-                                             error_message);
+                                             "Error deactivating logical volume: %s",
+                                             error->message);
       goto out;
     }
 
   udisks_logical_volume_complete_deactivate (_volume, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_group_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -928,12 +878,8 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_origin_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath = NULL;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -965,37 +911,28 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
                                      N_("Authentication is required to create a snapshot of a logical volume"),
                                      invocation);
 
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (name);
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_origin_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-
-  cmd = g_string_new ("lvcreate");
-  g_string_append_printf (cmd, " -s %s/%s -n %s",
-                          escaped_group_name, escaped_origin_name, escaped_volume_name);
-
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.new_lv_name = name;
   if (size > 0)
-    {
-      size -= size % 512;
-      g_string_append_printf (cmd, " -L %" G_GUINT64_FORMAT "b", size);
-    }
+    data.new_lv_size = size;
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-lvol-snapshot", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-snapshot",
+                                               caller_uid,
+                                               lvsnapshot_create_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating snapshot: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -1012,12 +949,6 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   udisks_logical_volume_complete_create_snapshot (_volume, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_volume_name);
-  g_free (escaped_origin_name);
-  g_free (escaped_group_name);
-  if (cmd)
-    g_string_free (cmd, TRUE);
   g_clear_object (&object);
   return TRUE;
 }
@@ -1044,11 +975,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  GString *cmd = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_origin_name = NULL;
-  gchar *escaped_cache_name = NULL;
-  gchar *error_message;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -1080,46 +1007,30 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
                                        invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.pool_name = cache_name;
 
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_origin_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-  escaped_cache_name = udisks_daemon_util_escape_and_quote (cache_name);
-
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd,
-                          "lvconvert --type cache --cachepool %s/%s %s/%s -y",
-                          escaped_group_name,
-                          escaped_cache_name,
-                          escaped_group_name,
-                          escaped_origin_name);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                UDISKS_OBJECT (object),
-                                                "lvm-lv-make-cache", caller_uid,
-                                                NULL,
-                                                0,
-                                                0,
-                                                NULL,
-                                                &error_message,
-                                                NULL,
-                                                "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lv-make-cache",
+                                               caller_uid,
+                                               lvcache_attach_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
   udisks_logical_volume_complete_cache_attach (volume_, invocation);
 out:
-  g_free (error_message);
-  g_free (escaped_group_name);
-  g_free (escaped_origin_name);
-  g_free (escaped_cache_name);
-  if (cmd)
-    g_string_free (cmd, TRUE);
   g_clear_object (&object);
 
 return TRUE;
@@ -1150,10 +1061,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  GString *cmd = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_origin_name = NULL;
-  gchar *error_message;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -1184,43 +1092,30 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
                                        invocation);
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.destroy = destroy;
 
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
-  escaped_origin_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd,
-                          "lvconvert %s %s/%s -y",
-                          destroy ? "--splitcache" : "--uncache",
-                          escaped_group_name,
-                          escaped_origin_name);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                UDISKS_OBJECT (object),
-                                                "lvm-lv-split-cache", caller_uid,
-                                                NULL,
-                                                0,
-                                                0,
-                                                NULL,
-                                                &error_message,
-                                                NULL,
-                                                "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lv-split-cache",
+                                               caller_uid,
+                                               lvcache_detach_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
   udisks_logical_volume_complete_cache_split (volume_, invocation);
 out:
-  g_free (error_message);
-  g_free (escaped_group_name);
-  g_free (escaped_origin_name);
-  if (cmd)
-    g_string_free (cmd, TRUE);
   g_clear_object (&object);
 
   return TRUE;
@@ -1233,7 +1128,7 @@ handle_cache_split (UDisksLogicalVolume    *volume_,
                     GDBusMethodInvocation  *invocation,
                     GVariant               *options)
 {
-  return handle_cache_detach_or_split(volume_, invocation, options, TRUE);
+  return handle_cache_detach_or_split(volume_, invocation, options, FALSE);
 }
 
 static gboolean
@@ -1241,7 +1136,7 @@ handle_cache_detach (UDisksLogicalVolume    *volume_,
                      GDBusMethodInvocation  *invocation,
                      GVariant               *options)
 {
-  return handle_cache_detach_or_split(volume_, invocation, options, FALSE);
+  return handle_cache_detach_or_split(volume_, invocation, options, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

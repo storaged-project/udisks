@@ -75,6 +75,7 @@ libudisks2_lvm2_la_SOURCES =                                                   \
 	udiskslvm2util.h                    udiskslvm2util.c                   \
 	udiskslinuxmanagerlvm2.h            udiskslinuxmanagerlvm2.c           \
 	udiskslvm2state.h                   udiskslvm2state.c                  \
+	jobhelpers.h                        jobhelpers.c                       \
 	$(NULL)
 
 libudisks2_lvm2_la_CPPFLAGS =                                                  \
