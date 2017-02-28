@@ -28,6 +28,24 @@
 
 #include "jobhelpers.h"
 
+gboolean lvcreate_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    LVJobData *data = user_data;
+    return bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, NULL /* type */, NULL /* pvs */, NULL /* extra_args */, error);
+}
+
+gboolean lvcreate_thin_job_func (UDisksThreadedJob  *job,
+                                 GCancellable       *cancellable,
+                                 gpointer            user_data,
+                                 GError            **error)
+{
+    LVJobData *data = user_data;
+    return bd_lvm_thlvcreate (data->vg_name, data->pool_name, data->new_lv_name, data->new_lv_size, NULL /* extra_args */, error);
+}
+
 gboolean lvremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -116,4 +134,59 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
 {
     LVJobData *data = user_data;
     return bd_lvm_cache_detach (data->vg_name, data->lv_name, data->destroy, NULL /* extra_args */, error);
+}
+
+
+gboolean vgremove_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_vgremove (data->vg_name, NULL /* extra_args */, error);
+}
+
+gboolean vgrename_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_vgrename (data->vg_name, data->new_vg_name, NULL /* extra_args */, error);
+}
+
+gboolean vgextend_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_vgextend (data->vg_name, data->pv_path, NULL /* extra_args */, error);
+}
+
+gboolean vgreduce_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_vgreduce (data->vg_name, data->pv_path, NULL /* extra_args */, error);
+}
+
+gboolean pvremove_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_pvremove (data->pv_path, NULL /* extra_args */, error);
+}
+
+gboolean pvmove_job_func (UDisksThreadedJob  *job,
+                          GCancellable       *cancellable,
+                          gpointer            user_data,
+                          GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_pvmove (data->pv_path, NULL /* dest */, NULL /* extra_args */, error);
 }

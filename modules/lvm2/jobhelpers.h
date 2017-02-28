@@ -41,6 +41,22 @@ typedef struct {
   gboolean destroy;
 } LVJobData;
 
+typedef struct {
+  const gchar *vg_name;
+  const gchar *new_vg_name;
+  const gchar *pv_path;
+} VGJobData;
+
+gboolean lvcreate_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean lvcreate_thin_job_func (UDisksThreadedJob  *job,
+                                 GCancellable       *cancellable,
+                                 gpointer            user_data,
+                                 GError            **error);
+
 gboolean lvremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -80,6 +96,37 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
                                   GCancellable       *cancellable,
                                   gpointer            user_data,
                                   GError            **error);
+
+
+gboolean vgremove_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean vgrename_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean vgextend_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean vgreduce_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean pvremove_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+gboolean pvmove_job_func (UDisksThreadedJob  *job,
+                          GCancellable       *cancellable,
+                          gpointer            user_data,
+                          GError            **error);
 
 G_END_DECLS
 

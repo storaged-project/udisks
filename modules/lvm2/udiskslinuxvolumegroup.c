@@ -32,6 +32,8 @@
 
 #include <glib/gstdio.h>
 
+#include <blockdev/fs.h>
+
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxprovider.h>
 #include <src/udisksdaemon.h>
@@ -50,6 +52,8 @@
 #include "udiskslvm2dbusutil.h"
 #include "udiskslvm2util.h"
 #include "udisks-lvm2-generated.h"
+
+#include "jobhelpers.h"
 
 /**
  * SECTION:udiskslinuxvolume_group
@@ -258,10 +262,9 @@ handle_delete (UDisksVolumeGroup     *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean teardown_flag = FALSE;
-  gchar *escaped_name = NULL;
-  gchar *error_message = NULL;
   GList *objects_to_wipe = NULL;
   GList *l;
+  VGJobData data;
 
   g_variant_lookup (arg_options, "tear-down", "b", &teardown_flag);
 
@@ -321,25 +324,24 @@ handle_delete (UDisksVolumeGroup     *_group,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-delete", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "vgremove -f %s",
-                                              escaped_name))
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-delete",
+                                               caller_uid,
+                                               vgremove_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting volume group: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -354,8 +356,6 @@ handle_delete (UDisksVolumeGroup     *_group,
 
  out:
   g_list_free_full (objects_to_wipe, g_object_unref);
-  g_free (error_message);
-  g_free (escaped_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -383,10 +383,8 @@ handle_rename (UDisksVolumeGroup     *_group,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   gid_t caller_gid;
-  gchar *escaped_name = NULL;
-  gchar *escaped_new_name = NULL;
-  gchar *error_message = NULL;
   UDisksObject *group_object = NULL;
+  VGJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -418,27 +416,24 @@ handle_rename (UDisksVolumeGroup     *_group,
                                      N_("Authentication is required to rename a volume group"),
                                      invocation);
 
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  escaped_new_name = udisks_daemon_util_escape_and_quote (new_name);
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.new_vg_name = new_name;
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-rename", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "vgrename %s %s",
-                                              escaped_name,
-                                              escaped_new_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-rename",
+                                               caller_uid,
+                                               vgrename_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error renaming volume group: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -462,9 +457,6 @@ handle_rename (UDisksVolumeGroup     *_group,
                                        g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_new_name);
   g_clear_object (&object);
   return TRUE;
 }
@@ -482,13 +474,11 @@ handle_add_device (UDisksVolumeGroup     *_group,
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
   gid_t caller_gid;
-  const gchar *new_member_device_file = NULL;
-  gchar *escaped_new_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   UDisksObject *new_member_device_object = NULL;
   UDisksBlock *new_member_device = NULL;
-  gchar *escaped_name = NULL;
+  UDisksPhysicalVolume *physical_volume = NULL;
+  VGJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -549,38 +539,57 @@ handle_add_device (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  new_member_device_file = udisks_block_get_device (new_member_device);
-  escaped_new_member_device_file = udisks_daemon_util_escape_and_quote (new_member_device_file);
+  physical_volume = udisks_object_peek_physical_volume (new_member_device_object);
+  if (!physical_volume)
+    {
+      PVJobData pv_data;
+      pv_data.path = udisks_block_get_device (new_member_device);
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   UDISKS_OBJECT (object),
+                                                   "lvm-pv-create",
+                                                   caller_uid,
+                                                   pvcreate_job_func,
+                                                   &pv_data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* GCancellable */
+                                                   &error))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error creating LVM metadata on %s: %s",
+                                                 pv_data.path,
+                                                 error->message);
+          goto out;
+        }
+    }
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-add-device", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "vgextend %s %s",
-                                              escaped_name,
-                                              escaped_new_member_device_file))
+
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.pv_path = udisks_block_get_device (new_member_device);
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-add-device",
+                                               caller_uid,
+                                               vgextend_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error adding %s to volume group: %s",
-                                             new_member_device_file,
-                                             error_message);
+                                             data.pv_path,
+                                             error->message);
       goto out;
     }
 
   udisks_volume_group_complete_add_device (_group, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_new_member_device_file);
   g_clear_object (&new_member_device_object);
   g_clear_object (&new_member_device);
   g_clear_object (&object);
@@ -601,13 +610,10 @@ handle_remove_device (UDisksVolumeGroup     *_group,
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
   gid_t caller_gid;
-  const gchar *member_device_file = NULL;
-  gchar *escaped_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
-  gchar *escaped_name = NULL;
+  VGJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -656,53 +662,47 @@ handle_remove_device (UDisksVolumeGroup     *_group,
                                      N_("Authentication is required to remove a device from a volume group"),
                                      invocation);
 
-  escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  member_device_file = udisks_block_get_device (member_device);
-  escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.pv_path = udisks_block_get_device (member_device);
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-rem-device", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "vgreduce %s %s",
-                                              escaped_name,
-                                              escaped_member_device_file))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-rem-device",
+                                               caller_uid,
+                                               vgreduce_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error remove %s from volume group: %s",
-                                             member_device_file,
-                                             error_message);
+                                             data.pv_path,
+                                             error->message);
       goto out;
     }
 
   if (arg_wipe)
     {
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  UDISKS_OBJECT (member_device_object),
-                                                  "format-erase", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "wipefs -a %s",
-                                                  escaped_member_device_file))
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   UDISKS_OBJECT (object),
+                                                   "pv-format-erase",
+                                                   caller_uid,
+                                                   pvremove_job_func,
+                                                   &data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* GCancellable */
+                                                   &error))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
-                                                 "Error wiping  %s after removal from volume group %s: %s",
-                                                 member_device_file,
+                                                 "Error wiping %s after removal from volume group %s: %s",
+                                                 data.pv_path,
                                                  udisks_linux_volume_group_object_get_name (object),
-                                                 error_message);
+                                                 error->message);
           goto out;
         }
     }
@@ -710,9 +710,6 @@ handle_remove_device (UDisksVolumeGroup     *_group,
   udisks_volume_group_complete_remove_device (_group, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_name);
-  g_free (escaped_member_device_file);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&object);
@@ -732,12 +729,10 @@ handle_empty_device (UDisksVolumeGroup     *_group,
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
   gid_t caller_gid;
-  const gchar *member_device_file = NULL;
-  gchar *escaped_member_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
+  VGJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -786,35 +781,30 @@ handle_empty_device (UDisksVolumeGroup     *_group,
                                        N_("Authentication is required to empty a device in a volume group"),
                                        invocation);
 
-  member_device_file = udisks_block_get_device (member_device);
-  escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
+  data.pv_path = udisks_block_get_device (member_device);
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                UDISKS_OBJECT (member_device_object),
-                                                "lvm-vg-empty-device", caller_uid,
-                                                NULL, /* GCancellable */
-                                                0,    /* uid_t run_as_uid */
-                                                0,    /* uid_t run_as_euid */
-                                                NULL, /* gint *out_status */
-                                                &error_message,
-                                                NULL,  /* input_string */
-                                                "pvmove %s",
-                                                escaped_member_device_file))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-empty-device",
+                                               caller_uid,
+                                               pvmove_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error emptying %s: %s",
-                                             member_device_file,
-                                             error_message);
+                                             data.pv_path,
+                                             error->message);
       goto out;
     }
 
   udisks_volume_group_complete_remove_device (_group, invocation);
 
  out:
-  g_free (error_message);
-  g_free (escaped_member_device_file);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&object);
@@ -876,11 +866,8 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   gid_t caller_gid;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -912,30 +899,25 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
                                      N_("Authentication is required to create a logical volume"),
                                      invocation);
 
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  arg_size -= arg_size % 512;
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.new_lv_name = arg_name;
+  data.new_lv_size = arg_size;
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s -L %" G_GUINT64_FORMAT "b -n %s",
-                          escaped_group_name, arg_size, escaped_volume_name);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-create-volume", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-create-volume",
+                                               caller_uid,
+                                               lvcreate_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -952,10 +934,6 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
   udisks_volume_group_complete_create_plain_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_group_name);
-  g_free (escaped_volume_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&object);
   return TRUE;
 }
@@ -1093,12 +1071,8 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxLogicalVolumeObject *pool_object = NULL;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  gchar *escaped_pool_name = NULL;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -1138,31 +1112,26 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  arg_size -= arg_size % 512;
-  escaped_pool_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (pool_object));
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.new_lv_name = arg_name;
+  data.new_lv_size = arg_size;
+  data.pool_name = udisks_linux_logical_volume_object_get_name (pool_object);
 
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s --thinpool %s -V %" G_GUINT64_FORMAT "b -n %s",
-                          escaped_group_name, escaped_pool_name, arg_size, escaped_volume_name);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-create-volume", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-create-volume",
+                                               caller_uid,
+                                               lvcreate_thin_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -1179,11 +1148,6 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
   udisks_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_volume_name);
-  g_free (escaped_group_name);
-  g_free (escaped_pool_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&pool_object);
   g_clear_object (&object);
   return TRUE;
