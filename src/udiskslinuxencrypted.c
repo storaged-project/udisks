@@ -31,6 +31,7 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxencrypted.h"
+#include "udiskslinuxencryptedhelpers.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
@@ -258,9 +259,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksState *state;
-  gchar *error_message = NULL;
   gchar *name = NULL;
-  gchar *escaped_name = NULL;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block;
   UDisksLinuxDevice *cleartext_device = NULL;
@@ -272,10 +271,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gchar *crypttab_name = NULL;
   gchar *crypttab_passphrase = NULL;
   gchar *crypttab_options = NULL;
-  gchar *escaped_device = NULL;
-  gboolean use_keyfile = FALSE;
+  gchar *device = NULL;
   gboolean read_only = FALSE;
   GString *effective_passphrase = NULL;
+  LuksJobData data;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -334,19 +333,42 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  /* check if in crypttab file */
-  error = NULL;
-  if (!check_crypttab (block,
-                       TRUE,
-                       &is_in_crypttab,
-                       &crypttab_name,
-                       &crypttab_passphrase,
-                       &crypttab_options,
-                       &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
+  /* fallback mechanism: keyfile_contents -> passphrase -> crypttab_passphrase -> error (no key) */
+  if (!udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase)) {
+    if (passphrase && (strlen (passphrase) > 0))
+      {
+        effective_passphrase = g_string_new (passphrase);
+      }
+    else
+      {
+        /* check if in crypttab file */
+        error = NULL;
+        if (!check_crypttab (block,
+                             TRUE,
+                             &is_in_crypttab,
+                             &crypttab_name,
+                             &crypttab_passphrase,
+                             &crypttab_options,
+                             &error))
+          {
+            g_dbus_method_invocation_take_error (invocation, error);
+            goto out;
+          }
+        if (is_in_crypttab && crypttab_passphrase != NULL && strlen (crypttab_passphrase) > 0)
+          {
+            effective_passphrase = g_string_new (crypttab_passphrase);
+          }
+        else
+          {
+            g_dbus_method_invocation_return_error (invocation,
+                                                   UDISKS_ERROR,
+                                                   UDISKS_ERROR_FAILED,
+                                                   "No key available to unlock device %s",
+                                                   udisks_block_get_device (block));
+            goto out;
+          }
+      }
+  }
 
   /* Now, check that the user is actually authorized to unlock the device.
    */
@@ -387,49 +409,34 @@ handle_unlock (UDisksEncrypted        *encrypted,
     name = g_strdup (crypttab_name);
   else
     name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
-  escaped_name = udisks_daemon_util_escape_and_quote (name);
 
-  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
-    {
-      use_keyfile = TRUE;
-    }
-  /* if available, use and prefer the /etc/crypttab passphrase */
-  else if (is_in_crypttab && crypttab_passphrase != NULL && strlen (crypttab_passphrase) > 0)
-    {
-      effective_passphrase = g_string_new (crypttab_passphrase);
-    }
-  else
-    {
-      effective_passphrase = g_string_new (passphrase);
-    }
-
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  device = udisks_block_dup_device (block);
 
   /* TODO: support reading a 'readonly' option from @options */
   if (udisks_block_get_read_only (block))
     read_only = TRUE;
 
-  if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
-                                              object,
-                                              "encrypted-unlock", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              effective_passphrase,  /* input_string */
-                                              "cryptsetup luksOpen %s %s %s %s",
-                                              escaped_device,
-                                              escaped_name,
-                                              use_keyfile ? "--key-file -" : "",
-                                              read_only ? "--readonly" : ""))
+  data.device = device;
+  data.map_name = name;
+  data.passphrase = effective_passphrase;
+  data.read_only = read_only;
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               object,
+                                               "encrypted-unlock",
+                                               caller_uid,
+                                               luks_open_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* cancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error unlocking %s: %s",
                                              udisks_block_get_device (block),
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -469,13 +476,11 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
 
  out:
-  g_free (escaped_device);
+  g_free (device);
   g_free (crypttab_name);
   g_free (crypttab_passphrase);
   g_free (crypttab_options);
-  g_free (escaped_name);
   g_free (name);
-  g_free (error_message);
   g_clear_object (&cleartext_device);
   g_clear_object (&cleartext_object);
   g_clear_object (&object);
@@ -492,28 +497,19 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                              GVariant               *options,
                              GError                **error)
 {
-  UDisksObject *object;
-  UDisksBlock *block;
-  UDisksDaemon *daemon;
-  UDisksState *state;
-  gchar *error_message;
-  gchar *name;
-  gchar *escaped_name;
-  UDisksObject *cleartext_object;
-  UDisksBlock *cleartext_block;
-  UDisksLinuxDevice *device;
+  UDisksObject *object = NULL;
+  UDisksBlock *block = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksState *state = NULL;
+  UDisksObject *cleartext_object = NULL;
+  UDisksBlock *cleartext_block = NULL;
+  UDisksLinuxDevice *device = NULL;
   uid_t unlocked_by_uid;
   dev_t cleartext_device_from_file;
   uid_t caller_uid;
   gboolean ret;
-
-  object = NULL;
-  daemon = NULL;
-  error_message = NULL;
-  name = NULL;
-  escaped_name = NULL;
-  cleartext_object = NULL;
-  device = NULL;
+  LuksJobData data;
+  GError *loc_error = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, error);
   if (object == NULL)
@@ -611,19 +607,17 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
     }
 
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (g_udev_device_get_sysfs_attr (device->udev_device, "dm/name"));
+  data.map_name = g_udev_device_get_sysfs_attr (device->udev_device, "dm/name");
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "encrypted-lock", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "cryptsetup luksClose %s",
-                                              escaped_name))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               object,
+                                               "encrypted-lock",
+                                               caller_uid,
+                                               luks_close_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* cancellable */
+                                               &loc_error))
     {
       g_set_error (error,
                    UDISKS_ERROR,
@@ -631,8 +625,9 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                    "Error locking %s (%s): %s",
                    udisks_block_get_device (cleartext_block),
                    udisks_block_get_device (block),
-                   error_message);
+                   loc_error->message);
       ret = FALSE;
+      g_clear_error (&loc_error);
       goto out;
     }
 
@@ -644,9 +639,6 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
  out:
   if (device != NULL)
     g_object_unref (device);
-  g_free (escaped_name);
-  g_free (name);
-  g_free (error_message);
   if (cleartext_object != NULL)
     g_object_unref (cleartext_object);
   g_clear_object (&object);
@@ -683,12 +675,11 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  gchar *error_message = NULL;
   uid_t caller_uid;
   const gchar *action_id;
-  gchar *passphrases = NULL;
   GError *error = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device = NULL;
+  LuksJobData data;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -747,36 +738,37 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                                     invocation))
     goto out;
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  device = udisks_block_dup_device (block);
+  data.device = device;
+  data.passphrase = g_string_new (passphrase);
+  data.new_passphrase = g_string_new (new_passphrase);
 
-  passphrases = g_strdup_printf ("%s\n%s", passphrase, new_passphrase);
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "encrypted-modify", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              passphrases,  /* input_string */
-                                              "cryptsetup --force-password luksChangeKey %s",
-                                              escaped_device))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               object,
+                                               "encrypted-modify",
+                                               caller_uid,
+                                               luks_change_key_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* cancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error changing passphrase on device %s: %s",
                                              udisks_block_get_device (block),
-                                             error_message);
+                                             error->message);
+      g_clear_error (&error);
       goto out;
     }
 
   udisks_encrypted_complete_change_passphrase (encrypted, invocation);
 
  out:
-  g_free (escaped_device);
-  g_free (passphrases);
-  g_free (error_message);
+  g_free (device);
+  g_string_free (data.passphrase, FALSE);
+  g_string_free (data.new_passphrase, FALSE);
   g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
