@@ -136,6 +136,14 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
     return bd_lvm_cache_detach (data->vg_name, data->lv_name, data->destroy, NULL /* extra_args */, error);
 }
 
+gboolean vgcreate_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    VGJobData *data = user_data;
+    return bd_lvm_vgcreate (data->vg_name, data->pvs, 0 /* PE size*/, NULL /* extra_args */, error);
+}
 
 gboolean vgremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
@@ -171,6 +179,15 @@ gboolean vgreduce_job_func (UDisksThreadedJob  *job,
 {
     VGJobData *data = user_data;
     return bd_lvm_vgreduce (data->vg_name, data->pv_path, NULL /* extra_args */, error);
+}
+
+gboolean pvcreate_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    PVJobData *data = user_data;
+    return bd_lvm_pvcreate (data->path, 0 /* data_alignment */, 0 /* metadata_size */, NULL /* extra_args */, error);
 }
 
 gboolean pvremove_job_func (UDisksThreadedJob  *job,

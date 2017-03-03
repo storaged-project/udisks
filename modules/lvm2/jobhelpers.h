@@ -45,7 +45,12 @@ typedef struct {
   const gchar *vg_name;
   const gchar *new_vg_name;
   const gchar *pv_path;
+  const gchar **pvs;
 } VGJobData;
+
+typedef struct {
+  const gchar *path;
+} PVJobData;
 
 gboolean lvcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
@@ -98,6 +103,11 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
                                   GError            **error);
 
 
+gboolean vgcreate_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
 gboolean vgremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -114,6 +124,12 @@ gboolean vgextend_job_func (UDisksThreadedJob  *job,
                             GError            **error);
 
 gboolean vgreduce_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error);
+
+
+gboolean pvcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
                             GError            **error);
