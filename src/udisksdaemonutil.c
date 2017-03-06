@@ -58,6 +58,24 @@
 
 
 /**
+ * udisks_string_concat:
+ * @a: First part
+ * @b: Second part
+ *
+ * Returns: A new #GString holding the concatenation of the inputs.
+ */
+GString* udisks_string_concat (GString *a,
+                               GString *b)
+{
+  GString *result;
+  result = g_string_sized_new (a->len + b->len);
+  g_string_append_len (result, a->str, a->len);
+  g_string_append_len (result, b->str, b->len);
+  return result;
+}
+
+
+/**
  * udisks_string_wipe_and_free:
  * @string: A string with potentially unsafe content or %NULL.
  *

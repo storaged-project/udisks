@@ -740,8 +740,14 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
   device = udisks_block_dup_device (block);
   data.device = device;
-  data.passphrase = g_string_new (passphrase);
-  data.new_passphrase = g_string_new (new_passphrase);
+
+  /* handle keyfiles */
+  if (!udisks_variant_lookup_binary (options, "old_keyfile_contents",
+                                     &(data.passphrase)))
+    data.passphrase = g_string_new (passphrase);
+  if (!udisks_variant_lookup_binary (options, "new_keyfile_contents",
+                                     &(data.new_passphrase)))
+    data.new_passphrase = g_string_new (new_passphrase);
 
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                object,
@@ -767,8 +773,8 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
  out:
   g_free (device);
-  g_string_free (data.passphrase, FALSE);
-  g_string_free (data.new_passphrase, FALSE);
+  udisks_string_wipe_and_free (data.passphrase);
+  udisks_string_wipe_and_free (data.new_passphrase);
   g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */

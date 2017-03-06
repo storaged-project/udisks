@@ -348,8 +348,13 @@ dup_id_from_config_name (const gchar *conf_filename)
   gchar *id;
 
   udisks_debug ("Found config file %s", conf_filename);
-  id = g_strndup (conf_filename, strlen (conf_filename) - strlen(".conf"));
-  return id;
+
+  if (g_str_has_suffix (conf_filename, ".conf"))
+    {
+      id = g_strndup (conf_filename, strlen (conf_filename) - 5);
+      return id;
+    }
+  return NULL;
 }
 
 static void
@@ -367,8 +372,8 @@ on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
     {
       gchar *filename = g_file_get_basename (file);
       gchar *id = dup_id_from_config_name (filename);
-      if (g_str_has_suffix (filename, ".conf"))
-        synthesize_uevent_for_id (provider, id, "change");
+      if (id)
+          synthesize_uevent_for_id (provider, id, "change");
       g_free (id);
       g_free (filename);
     }
