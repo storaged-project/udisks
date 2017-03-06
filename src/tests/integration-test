@@ -1484,6 +1484,62 @@ class Luks(UDisksTestCase):
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           KEYFILE.decode('utf-8'), no_options, None)
 
+    def test_change_passphrase(self):
+
+        KEYFILE0 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\0'
+        KEYFILE1 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\1'
+
+        encrypted = self.setup_crypto_device()
+
+        # change: passphrase -> passphrase
+        encrypted.call_change_passphrase_sync('s3kr1t', 'passphrase', no_options, None)
+
+        # verify new password:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          's3kr1t', no_options, None)
+        encrypted.call_unlock_sync('passphrase', no_options, None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # change: passphrase -> keyfile
+        encrypted.call_change_passphrase_sync(
+            'passphrase', '', GLib.Variant('a{sv}', {
+                'new_keyfile_contents': GLib.Variant('ay', KEYFILE0),
+            }),
+            None)
+
+        # verify new password:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          'passphrase', no_options, None)
+        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE0), None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # change: keyfile -> keyfile
+        encrypted.call_change_passphrase_sync(
+            '', '', GLib.Variant('a{sv}', {
+                'old_keyfile_contents': GLib.Variant('ay', KEYFILE0),
+                'new_keyfile_contents': GLib.Variant('ay', KEYFILE1),
+            }),
+            None)
+
+        # verify new password:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(KEYFILE0), None)
+        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE1), None)
+        encrypted.call_lock_sync(no_options, None)
+
+        # change: keyfile -> passphrase
+        encrypted.call_change_passphrase_sync(
+            '', 's3kr1t', GLib.Variant('a{sv}', {
+                'old_keyfile_contents': GLib.Variant('ay', KEYFILE1),
+            }),
+            None)
+
+        # verify new password:
+        self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
+                          '', self.keyfile_options(KEYFILE1), None)
+        encrypted.call_unlock_sync('s3kr1t', no_options, None)
+        encrypted.call_lock_sync(no_options, None)
+
 
 # ----------------------------------------------------------------------------
 

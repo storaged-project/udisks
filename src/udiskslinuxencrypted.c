@@ -686,9 +686,11 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   gchar *error_message = NULL;
   uid_t caller_uid;
   const gchar *action_id;
-  gchar *passphrases = NULL;
+  GString *keyfiles = NULL;
   GError *error = NULL;
   gchar *escaped_device = NULL;
+  GString *old_effective_passphrase = NULL;
+  GString *new_effective_passphrase = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -749,8 +751,18 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
-  passphrases = g_strdup_printf ("%s\n%s", passphrase, new_passphrase);
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+  /* handle keyfiles */
+  if (!udisks_variant_lookup_binary (options, "old_keyfile_contents",
+                                     &old_effective_passphrase))
+    old_effective_passphrase = g_string_new (passphrase);
+  if (!udisks_variant_lookup_binary (options, "new_keyfile_contents",
+                                     &new_effective_passphrase))
+    new_effective_passphrase = g_string_new (new_passphrase);
+
+  keyfiles = udisks_string_concat (old_effective_passphrase,
+                                   new_effective_passphrase);
+
+  if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
                                               object,
                                               "encrypted-modify", caller_uid,
                                               NULL, /* GCancellable */
@@ -758,8 +770,14 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                               0,    /* uid_t run_as_euid */
                                               NULL, /* gint *out_status */
                                               &error_message,
-                                              passphrases,  /* input_string */
-                                              "cryptsetup --force-password luksChangeKey %s",
+                                              keyfiles,  /* input_string */
+                                              "cryptsetup"
+                                              " --key-file=-"
+                                              " --keyfile-size=%" G_GSIZE_FORMAT
+                                              " --new-keyfile-size=%" G_GSIZE_FORMAT
+                                              " luksChangeKey %s -",
+                                              old_effective_passphrase->len,
+                                              new_effective_passphrase->len,
                                               escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -775,7 +793,9 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
  out:
   g_free (escaped_device);
-  g_free (passphrases);
+  udisks_string_wipe_and_free (old_effective_passphrase);
+  udisks_string_wipe_and_free (new_effective_passphrase);
+  udisks_string_wipe_and_free (keyfiles);
   g_free (error_message);
   g_clear_object (&object);
 
