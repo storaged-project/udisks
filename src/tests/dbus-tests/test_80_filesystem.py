@@ -350,8 +350,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = 'xfs'
 
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error mounting %s .* mount: '\
-              'wrong fs type' % self.vdevs[0]
+        msg = '[Ww]rong fs type'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)
