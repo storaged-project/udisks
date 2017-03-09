@@ -106,6 +106,12 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(str(luks.object_path), objects.keys())
 
+        # no password
+        msg = 'org.freedesktop.UDisks2.Error.Failed: No key available.*'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.Unlock("", self.no_options,
+                        dbus_interface=self.iface_prefix + '.Encrypted')
+
         # wrong password
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error unlocking %s *' % self.vdevs[0]
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
