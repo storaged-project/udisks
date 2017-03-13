@@ -37,6 +37,32 @@ gboolean lvcreate_job_func (UDisksThreadedJob  *job,
     return bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, NULL /* type */, NULL /* pvs */, NULL /* extra_args */, error);
 }
 
+gboolean lvcreate_thin_pool_job_func (UDisksThreadedJob  *job,
+                                      GCancellable       *cancellable,
+                                      gpointer            user_data,
+                                      GError            **error)
+{
+    guint64 md_size = 0;
+    LVJobData *data = user_data;
+
+    /* get metadata size */
+    md_size = bd_lvm_get_thpool_meta_size (data->new_lv_size, BD_LVM_DEFAULT_CHUNK_SIZE, 100 /* snapshots */, error);
+    if (md_size == 0)
+      /* error is set */
+      return FALSE;
+
+    md_size = bd_lvm_round_size_to_pe (md_size, data->extent_size, TRUE /* round_up */, error);
+    if (md_size == 0)
+      /* error is set */
+      return FALSE;
+
+    /* create a thin pool of given total size (with part of space being used for
+       metadata), but also leave space for the pmspare device (of the same size
+       as metadata space) which need to be created */
+    return bd_lvm_thpoolcreate (data->vg_name, data->new_lv_name, data->new_lv_size - 2*md_size, md_size, BD_LVM_DEFAULT_CHUNK_SIZE,
+                                NULL /* profile */, NULL /* extra_args */, error);
+}
+
 gboolean lvcreate_thin_job_func (UDisksThreadedJob  *job,
                                  GCancellable       *cancellable,
                                  gpointer            user_data,

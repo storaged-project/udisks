@@ -953,12 +953,8 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   gid_t caller_gid;
-  gchar *escaped_volume_name = NULL;
-  gchar *escaped_group_name = NULL;
-  int size_percentage;
-  GString *cmd = NULL;
-  gchar *error_message = NULL;
   const gchar *lv_objpath;
+  LVJobData data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -990,46 +986,26 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
                                      N_("Authentication is required to create a thin pool volume"),
                                      invocation);
 
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
-  escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  arg_size -= arg_size % 512;
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.new_lv_name = arg_name;
+  data.new_lv_size = arg_size;
+  data.extent_size = udisks_volume_group_get_extent_size (UDISKS_VOLUME_GROUP (group));
 
-  /* HACK - https://bugzilla.redhat.com/show_bug.cgi?id=1314770
-   *
-   * We want to say "take this amount of space and turn it into a thin
-   * pool with all your defaults" but ordinarily lvcreate understands
-   * the "-l" option as "make me a thin pool for this much data and
-   * use as much extra space as is needed according to your defaults".
-   *
-   * But when using the "NNN%FREE" syntax with the "-l" option
-   * lvcreate will do what we want.
-   *
-   * Unfortunately, the "NNN%FREE" syntax only allows integers, so the
-   * resolution is limited.
-   */
-
-  size_percentage = arg_size * 100 / udisks_volume_group_get_free_size (_group);
-
-  cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvcreate %s -T -l %d%%FREE --thinpool %s",
-                          escaped_group_name, size_percentage, escaped_volume_name);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              UDISKS_OBJECT (object),
-                                              "lvm-vg-create-volume", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s", cmd->str))
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-create-volume",
+                                               caller_uid,
+                                               lvcreate_thin_pool_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume: %s",
-                                             error_message);
+                                             error->message);
       goto out;
     }
 
@@ -1046,10 +1022,6 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
   udisks_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
 
  out:
-  g_free (error_message);
-  g_free (escaped_volume_name);
-  g_free (escaped_group_name);
-  g_string_free (cmd, TRUE);
   g_clear_object (&object);
   return TRUE;
 }
