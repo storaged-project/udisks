@@ -64,8 +64,7 @@ udisks_module_init (UDisksDaemon *daemon)
   gboolean ret = FALSE;
   GError *error = NULL;
 
-  /* NULL means no specific so_name (implementation) */
-  BDPluginSpec lvm_plugin = {BD_PLUGIN_LVM, NULL};
+  BDPluginSpec lvm_plugin = {BD_PLUGIN_LVM, "libbd_lvm.so.2"};
   BDPluginSpec *plugins[] = {&lvm_plugin, NULL};
 
   if (!bd_is_plugin_available (BD_PLUGIN_LVM))
