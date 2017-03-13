@@ -646,6 +646,10 @@ class FS(UDisksTestCase):
         '''fs: exFAT'''
         self._do_fs_check('exfat')
 
+    def test_ext4(self):
+        '''fs: ext4'''
+        self._do_fs_check('ext4')
+
     def test_empty(self):
         '''fs: empty'''
 
@@ -1000,6 +1004,16 @@ class FS(UDisksTestCase):
             self.sync()
             self.sync()
             cd_fs = self.udisks_filesystem(cd=True)
+
+            # forcing mount CD drive as 'rw' should fail
+            try:
+                ro_options = GLib.Variant('a{sv}', {'options': GLib.Variant('s', 'rw')})
+                mount_path = cd_fs.call_mount_sync(ro_options, None)
+            except GLib.GError as e:
+                self.assertIn('is write-protected but `rw\' option given', str(e))
+            else:
+                self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
+                self.fail('Mounting read-only device didn\'t fail with \'rw\' option.')
 
             mount_path = cd_fs.call_mount_sync(no_options, None)
             try:
