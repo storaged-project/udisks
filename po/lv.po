@@ -4,22 +4,22 @@
 #
 # Translators:
 # Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2013
-# Peter Hatina <phatina@redhat.com>, 2015. #zanata
+# Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Vojtěch Trefný <vtrefny@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-30 10:43+0200\n"
-"PO-Revision-Date: 2015-09-10 08:41-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"POT-Creation-Date: 2016-10-06 19:16+0200\n"
+"PO-Revision-Date: 2017-02-15 09:23-0500\n"
+"Last-Translator: Vojtěch Trefný <vtrefny@redhat.com>\n"
 "Language-Team: Latvian\n"
-"Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
-"2);\n"
-"X-Generator: Zanata 3.9.5\n"
+"Language: lv\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+"X-Generator: Zanata 3.9.6\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -42,7 +42,7 @@ msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
 msgstr ""
-"Montēt/atmontēt datņu sistēmas, kas ir definētas fstab datnē ar  x-storaged-"
+"Montēt/atmontēt datņu sistēmas, kas ir definētas fstab datnē ar  x-udisks-"
 "auth opciju"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:6
@@ -111,7 +111,7 @@ msgstr "Pārvaldīt cikla ierīces"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#.
+#. 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:342
 msgid "Authentication is required to set up a loop device"
@@ -213,7 +213,8 @@ msgid "Modify a system device"
 msgstr "Modificēt sistēmas ierīci"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
-msgid "Authentication is required to modify a device plugged into another seat"
+msgid ""
+"Authentication is required to modify a device plugged into another seat"
 msgstr ""
 "Jāautentificējas, lai modificētu ierīci, kas ir pievienota citai vietai"
 
@@ -247,7 +248,8 @@ msgstr "Vajag autentificēties, lai mainītu sistēmas konfigurāciju"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide configuration"
+"Authentication is required to retrieve secrets from system-wide "
+"configuration"
 msgstr ""
 "Vajag autentificēties, lai saņemtu noslēpumus no sistēmas konfigurācijas"
 
@@ -328,7 +330,7 @@ msgid "Cancel job"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#.
+#. 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr ""
@@ -601,7 +603,7 @@ msgstr "Vajag autentificēties, lai modificētu ierīci"
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#.
+#. 
 #: ../src/udiskslinuxblock.c:1199
 msgid "Authentication is required to read system-level secrets"
 msgstr "Vajag autentificēties, lai nolasītu sistēmas noslēpumus"
@@ -611,7 +613,8 @@ msgstr "Vajag autentificēties, lai nolasītu sistēmas noslēpumus"
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Vajag autentificēties, lai pievienotu ierakstu /etc/fstab datnei"
 
-#. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
+#. Translators: shown in authentication dialog - do not tranlsate
+#. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1887
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "Vajag autentificēties, lai pievienotu ierakstu /etc/crypttab datnei"
@@ -621,7 +624,8 @@ msgstr "Vajag autentificēties, lai pievienotu ierakstu /etc/crypttab datnei"
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Vajag autentificēties, lai izņemtu ierakstu no /etc/fstab datnes"
 
-#. Translators: shown in authentication dialog - do not translate /etc/crypttab
+#. Translators: shown in authentication dialog - do not translate
+#. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1964
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
@@ -632,7 +636,8 @@ msgstr "Vajag autentificēties, lai izņemtu ierakstu no /etc/crypttab datnes"
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Vajag autentificēties, lai modificētu /etc/fstab datni"
 
-#. Translators: shown in authentication dialog - do not translate /etc/crypttab
+#. Translators: shown in authentication dialog - do not translate
+#. /etc/crypttab
 #: ../src/udiskslinuxblock.c:2054
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Vajag autentificēties, lai modificētu /etc/crypttab datni"
@@ -643,14 +648,14 @@ msgstr "Vajag autentificēties, lai modificētu /etc/crypttab datni"
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxblock.c:2840 ../src/udiskslinuxdriveata.c:2331
+#. 
+#: ../src/udiskslinuxblock.c:2840 ../src/udiskslinuxdriveata.c:2330
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 
@@ -660,7 +665,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:2852
 msgid "Authentication is required to format $(drive)"
 msgstr ""
@@ -670,7 +675,7 @@ msgstr ""
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
 
-#: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2343
+#: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2342
 msgid "Formatting Device"
 msgstr ""
 
@@ -679,7 +684,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3399
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
@@ -689,7 +694,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3463
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
@@ -699,7 +704,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3529
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
@@ -709,7 +714,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxblock.c:3590
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
@@ -719,7 +724,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1007
 msgid "Authentication is required to eject $(drive)"
 msgstr ""
@@ -729,7 +734,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1095
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
@@ -739,7 +744,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxdrive.c:1411
 msgid "Authentication is required to power off $(drive)"
 msgstr ""
@@ -749,8 +754,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:814
+#. 
+#: ../src/udiskslinuxdriveata.c:813
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr ""
 
@@ -759,8 +764,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:825
+#. 
+#: ../src/udiskslinuxdriveata.c:824
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
 
@@ -769,8 +774,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:959
+#. 
+#: ../src/udiskslinuxdriveata.c:958
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
 
@@ -779,8 +784,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:1209
+#. 
+#: ../src/udiskslinuxdriveata.c:1208
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
 
@@ -789,8 +794,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:1296
+#. 
+#: ../src/udiskslinuxdriveata.c:1295
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
 
@@ -799,8 +804,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:1397
+#. 
+#: ../src/udiskslinuxdriveata.c:1396
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr ""
 
@@ -809,8 +814,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:1531
+#. 
+#: ../src/udiskslinuxdriveata.c:1530
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 
@@ -819,8 +824,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:2424
+#. 
+#: ../src/udiskslinuxdriveata.c:2423
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr ""
 
@@ -829,8 +834,8 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/udiskslinuxdriveata.c:2434
+#. 
+#: ../src/udiskslinuxdriveata.c:2433
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr ""
 
@@ -839,7 +844,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxencrypted.c:357 ../src/udiskslinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
@@ -850,11 +855,11 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxencrypted.c:591
 msgid ""
-"Authentication is required to lock the encrypted device $(drive) unlocked by "
-"another user"
+"Authentication is required to lock the encrypted device $(drive) unlocked by"
+" another user"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
@@ -862,7 +867,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1268 ../src/udiskslinuxfilesystem.c:1430
 msgid "Authentication is required to mount $(drive)"
 msgstr ""
@@ -876,7 +881,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1337
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
@@ -892,7 +897,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1684
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
@@ -905,7 +910,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1731
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
@@ -915,7 +920,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxfilesystem.c:1963
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
@@ -926,7 +931,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr ""
@@ -937,14 +942,14 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:574
 msgid "Authentication is required to create a RAID array"
@@ -952,7 +957,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:721
 msgid "Authentication is required to start a RAID array"
@@ -960,7 +965,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:892
 msgid "Authentication is required to stop a RAID array"
@@ -968,7 +973,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1120
 msgid "Authentication is required to remove a device from a RAID array"
@@ -976,7 +981,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1316
 msgid "Authentication is required to add a device to a RAID array"
@@ -984,7 +989,7 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1446
 msgid ""
@@ -994,10 +999,11 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#.
+#. 
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1570
-msgid "Authentication is required to start/stop data scrubbing of a RAID array"
+msgid ""
+"Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
 #: ../src/udiskslinuxmdraid.c:1662
@@ -1009,7 +1015,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartition.c:278 ../src/udiskslinuxpartition.c:459
 #: ../src/udiskslinuxpartition.c:788
 msgid "Authentication is required to modify the partition on device $(drive)"
@@ -1020,7 +1026,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartition.c:892
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr ""
@@ -1030,7 +1036,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxpartitiontable.c:392
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr ""
@@ -1040,7 +1046,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
@@ -1050,12 +1056,13 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
 
-#. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
+#. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
+#. a partition
 #: ../udisks/udisksclient.c:1098
 msgctxt "dos-part-flag"
 msgid "Bootable"
@@ -1063,15 +1070,16 @@ msgstr "Ielādējams"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
 msgstr "Sistēmas"
 
-#. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
+#. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
+#. partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -1079,7 +1087,7 @@ msgstr "Novecojis BIOS ielādējams"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -1087,7 +1095,7 @@ msgstr "Tikai lasāms"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -1095,13 +1103,14 @@ msgstr "Slēpts"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../udisks/udisksclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
 msgstr "Nav automātiski montējams"
 
-#. Translators: Partition info. First %s is the type, second %s is a list of flags
+#. Translators: Partition info. First %s is the type, second %s is a list of
+#. flags
 #: ../udisks/udisksclient.c:1149
 #, c-format
 msgctxt "partition-info"
@@ -1114,49 +1123,57 @@ msgctxt "partition-info"
 msgid "Unknown"
 msgstr "Nezināms"
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
 msgstr ""
 
-#. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
+#. Translators: SI prefix and standard unit symbol, translate cautiously (or
+#. not at all)
 #: ../udisks/udisksclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
@@ -1164,7 +1181,7 @@ msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#.
+#. 
 #: ../udisks/udisksclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
@@ -1173,7 +1190,7 @@ msgstr "%s (%s baiti)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#.
+#. 
 #: ../udisks/udisksclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
@@ -1234,33 +1251,37 @@ msgctxt "media"
 msgid "Flash"
 msgstr "Zibatmiņa"
 
-#. Translators: This word is used to describe the optical disc type, it may appear
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
 msgstr "CD"
 
-#. Translators: This word is used to describe the optical disc type, it may appear
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
 msgstr "DVD"
 
-#. Translators: This word is used to describe the optical disc type, it may appear
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
 msgstr "Blu-Ray"
 
-#. Translators: This word is used to describe the optical disc type, it may appear
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../udisks/udisksclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1557,8 +1578,9 @@ msgid "VMFS Member"
 msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
-#. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#.
+#. * First %s is the raw filesystem type obtained from udev, second %s is
+#. version.
+#. 
 #: ../udisks/udisksclient.c:2030
 #, c-format
 msgctxt "fs-type"
@@ -1567,7 +1589,7 @@ msgstr "Nezināms (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#.
+#. 
 #: ../udisks/udisksclient.c:2039
 #, c-format
 msgctxt "fs-type"
@@ -1575,7 +1597,7 @@ msgid "Unknown (%s)"
 msgstr "Nezināms (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#.
+#. 
 #: ../udisks/udisksclient.c:2045 ../udisks/udisksclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
@@ -1646,13 +1668,15 @@ msgctxt "part-type"
 msgid "ZFS"
 msgstr ""
 
-#. Extended Boot Partition, see http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
+#. Extended Boot Partition, see
+#. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr ""
 
-#. Discoverable Linux Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
+#. Discoverable Linux Partitions, see
+#. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
 #: ../udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
@@ -1914,7 +1938,8 @@ msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD šifrētais"
 
-#. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html
+#. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
+#. features-part-7-gpt.html
 #: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "VMWare VMFS"
@@ -1925,7 +1950,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr ""
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
+#. /disk-format
 #: ../udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
@@ -2322,7 +2348,8 @@ msgctxt "unknown-job"
 msgid "Unknown (%s)"
 msgstr ""
 
-#. Translators: 'Thumb' here refers to "USB thumb drive", see http://en.wikipedia.org/wiki/Thumb_drive
+#. Translators: 'Thumb' here refers to "USB thumb drive", see
+#. http://en.wikipedia.org/wiki/Thumb_drive
 #: ../udisks/udisksobjectinfo.c:162
 msgctxt "media-type"
 msgid "Thumb"
@@ -2512,8 +2539,9 @@ msgstr ""
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %u is the partition number.
-#. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#.
+#. *              The %s is the description for the block device (e.g. "5 GB
+#. Block Device").
+#. 
 #: ../udisks/udisksobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
@@ -2521,9 +2549,10 @@ msgid "Partition %u of %s"
 msgstr "Nodalījums %d no %s"
 
 #. Translators: String used for one-liner description of a block device.
-#. *              The first %s is the description of the object (e.g. "50 GB Block Device").
+#. *              The first %s is the description of the object (e.g. "50 GB
+#. Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
@@ -2541,8 +2570,9 @@ msgstr ""
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %u is the partition number.
-#. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#.
+#. *              The %s is the description for the loop device (e.g. "5 GB
+#. Loop Device").
+#. 
 #: ../udisks/udisksobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
@@ -2550,10 +2580,12 @@ msgid "Partition %u of %s"
 msgstr "Nodalījums %d no %s"
 
 #. Translators: String used for one-liner description of a loop device.
-#. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
-#. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
+#. *              The first %s is the description of the object (e.g. "2 GB
+#. Loop Device").
+#. *              The second %s is the name of the backing file (e.g.
+#. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
@@ -2598,7 +2630,7 @@ msgstr ""
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
@@ -2607,8 +2639,9 @@ msgstr ""
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %u is the partition number.
-#. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#.
+#. *              The %s is the description for the drive (e.g. "2 TB
+#. RAID-5").
+#. 
 #: ../udisks/udisksobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
@@ -2619,66 +2652,73 @@ msgstr "Nodalījums %d no %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
 msgstr ""
 
-#. Translators: String used for one-liner description of non-running RAID array.
+#. Translators: String used for one-liner description of non-running RAID
+#. array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
 msgstr ""
 
-#. Translators: String used for one-liner description of running RAID array w/o a name.
+#. Translators: String used for one-liner description of running RAID array
+#. w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
 msgstr "%s — %s"
 
-#. Translators: String used for one-liner description of non-running RAID array w/o a name.
+#. Translators: String used for one-liner description of non-running RAID
+#. array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
 msgstr "%s"
 
-#. Translators: Used to describe drive without removable media. The %s is the type, e.g. 'Thumb'
+#. Translators: Used to describe drive without removable media. The %s is the
+#. type, e.g. 'Thumb'
 #: ../udisks/udisksobjectinfo.c:591
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
 msgstr "%s dzinis"
 
-#. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy'
+#. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
+#. or 'Floppy'
 #: ../udisks/udisksobjectinfo.c:595
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
 msgstr "%s disks"
 
-#. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash'
+#. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
+#. 'CompactFlash'
 #: ../udisks/udisksobjectinfo.c:599
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
 msgstr "%s karte"
 
-#. Translators: Used to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM'
+#. Translators: Used to describe optical discs. The %s is the type, e.g.
+#. 'CD-R' or 'DVD-ROM'
 #: ../udisks/udisksobjectinfo.c:603
 #, c-format
 msgctxt "optical-media"
@@ -2692,13 +2732,15 @@ msgctxt "drive-with-size"
 msgid "%s Drive"
 msgstr "%s dzinis"
 
-#. Translators: Used to describe a drive we know very little about (removable media or size not known)
+#. Translators: Used to describe a drive we know very little about (removable
+#. media or size not known)
 #: ../udisks/udisksobjectinfo.c:628
 msgctxt "generic-drive"
 msgid "Drive"
 msgstr "Dzinis"
 
-#. Translators: Used to describe a non-rotating drive (rotation rate either unknown
+#. Translators: Used to describe a non-rotating drive (rotation rate either
+#. unknown
 #. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
 #: ../udisks/udisksobjectinfo.c:639
 #, c-format
@@ -2706,66 +2748,76 @@ msgctxt "disk-non-rotational"
 msgid "%s Disk"
 msgstr "%s disks"
 
-#. Translators: Used to describe a non-rotating drive (rotation rate either unknown
-#. * or it's a solid-state drive). The drive is either using removable media or its
+#. Translators: Used to describe a non-rotating drive (rotation rate either
+#. unknown
+#. * or it's a solid-state drive). The drive is either using removable media
+#. or its
 #. * size not known.
 #: ../udisks/udisksobjectinfo.c:646
 msgctxt "disk-non-rotational"
 msgid "Disk"
 msgstr "Disks"
 
-#. Translators: Used to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.
+#. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
+#. e.g. '20 GB'.
 #: ../udisks/udisksobjectinfo.c:654
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
 msgstr "%s Cietais disks"
 
-#. Translators: Used to describe a hard-disk drive (HDD) (removable media or size not known)
+#. Translators: Used to describe a hard-disk drive (HDD) (removable media or
+#. size not known)
 #: ../udisks/udisksobjectinfo.c:659
 msgctxt "disk-hdd"
 msgid "Hard Disk"
 msgstr "Cietais disks"
 
-#. Translators: Used to describe a card reader. The %s is the card type e.g. 'CompactFlash'.
+#. Translators: Used to describe a card reader. The %s is the card type e.g.
+#. 'CompactFlash'.
 #: ../udisks/udisksobjectinfo.c:667
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
 msgstr "%s karšu lasītājs"
 
-#. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
+#. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
+#. and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
 msgstr "%s %s dzinis"
 
-#. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#.
+#. Translators: Used to describe drive. The first %s is the drive type e.g.
+#. 'Thumb'.
+#. 
 #: ../udisks/udisksobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
 msgstr "%s dzinis"
 
-#. Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc"
+#. Translators: String used for a blank disc. The %s is the disc type e.g.
+#. "CD-RW Disc"
 #: ../udisks/udisksobjectinfo.c:763
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
 msgstr "Tukšs %s"
 
-#. Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc"
+#. Translators: String used for a mixed disc. The %s is the disc type e.g.
+#. "CD-ROM Disc"
 #: ../udisks/udisksobjectinfo.c:771
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
 msgstr "Jaukts %s"
 
-#. Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc"
+#. Translators: String used for an audio disc. The %s is the disc type e.g.
+#. "CD-ROM Disc"
 #: ../udisks/udisksobjectinfo.c:779
 #, c-format
 msgctxt "optical-media"
@@ -2774,8 +2826,9 @@ msgstr "Audio %s"
 
 #. Translators: Used to describe a partition of a drive.
 #. *              The %u is the partition number.
-#. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#.
+#. *              The %s is the description for the drive (e.g. "2 GB Thumb
+#. Drive").
+#. 
 #: ../udisks/udisksobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
@@ -2783,22 +2836,27 @@ msgid "Partition %u of %s"
 msgstr "Nodalījums %d no %s"
 
 #. Translators: String used for one-liner description of drive.
-#. *              The first %s is the description of the object (e.g. "80 GB Disk" or "Partition 2 of 2 GB Thumb Drive").
-#. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
+#. *              The first %s is the description of the object (e.g. "80 GB
+#. Disk" or "Partition 2 of 2 GB Thumb Drive").
+#. *              The second %s is the name of the object (e.g. "INTEL
+#. SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
 msgstr "%s — %s [%s] (%s)"
 
-#. Translators: String used for one-liner description of drive w/o known fw revision.
-#. *              The first %s is the description of the object (e.g. "80 GB Disk").
-#. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
+#. Translators: String used for one-liner description of drive w/o known fw
+#. revision.
+#. *              The first %s is the description of the object (e.g. "80 GB
+#. Disk").
+#. *              The second %s is the name of the object (e.g. "INTEL
+#. SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../udisks/udisksobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
