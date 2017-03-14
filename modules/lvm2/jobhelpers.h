@@ -150,6 +150,14 @@ gboolean pvmove_job_func (UDisksThreadedJob  *job,
                           gpointer            user_data,
                           GError            **error);
 
+
+void vg_list_free (BDLVMVGdata **vg_list);
+
+void vgs_task_func (GTask        *task,
+                    gpointer      source_obj,
+                    gpointer      task_data,
+                    GCancellable *cancellable);
+
 G_END_DECLS
 
 #endif  /* __LVM_JOB_HEPLERS_H__ */

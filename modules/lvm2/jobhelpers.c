@@ -233,3 +233,29 @@ gboolean pvmove_job_func (UDisksThreadedJob  *job,
     VGJobData *data = user_data;
     return bd_lvm_pvmove (data->pv_path, NULL /* dest */, NULL /* extra_args */, error);
 }
+
+
+void vg_list_free (BDLVMVGdata **vg_list) {
+  if (!vg_list)
+    /* nothing to do */
+    return;
+
+  for (BDLVMVGdata **vg_list_p = vg_list; *vg_list_p; vg_list_p++)
+    bd_lvm_vgdata_free (*vg_list_p);
+  g_free (vg_list);
+}
+
+void vgs_task_func (GTask        *task,
+                    gpointer      source_obj,
+                    gpointer      task_data,
+                    GCancellable *cancellable)
+{
+  BDLVMVGdata** ret = NULL;
+  GError *error = NULL;
+
+  ret = bd_lvm_vgs (&error);
+  if (ret)
+    g_task_return_pointer (task, ret, (GDestroyNotify) vg_list_free);
+  else
+    g_task_return_error (task, error);
+}
