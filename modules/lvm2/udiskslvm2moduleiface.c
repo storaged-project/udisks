@@ -140,13 +140,15 @@ lvm_update_vgs (GObject      *source_obj,
 
   GTask *task = G_TASK (result);
   GError *error = NULL;
-  BDLVMVGdata **vgs = g_task_propagate_pointer (task, &error);
+  VGsPVsData *data = g_task_propagate_pointer (task, &error);
+  BDLVMVGdata **vgs = NULL;
+  BDLVMPVdata **pvs = NULL;
 
   GHashTableIter vg_name_iter;
   gpointer key, value;
-  const gchar *name;
+  const gchar *vg_name;
 
-  if (!vgs)
+  if (!data)
     {
       if (error)
         udisks_warning ("LVM2 plugin: %s", error->message);
@@ -156,6 +158,11 @@ lvm_update_vgs (GObject      *source_obj,
 
       return;
     }
+  vgs = data->vgs;
+  pvs = data->pvs;
+
+  /* free the data container (but not 'vgs' and 'pvs') */
+  g_free (data);
 
   manager = udisks_daemon_get_object_manager (daemon);
   state = get_module_state (daemon);
@@ -168,11 +175,11 @@ lvm_update_vgs (GObject      *source_obj,
       UDisksLinuxVolumeGroupObject *group;
       gboolean found = FALSE;
 
-      name = key;
+      vg_name = key;
       group = value;
 
       for (BDLVMVGdata **vgs_p=vgs; !found && (*vgs_p); vgs_p++)
-          found = g_strcmp0 ((*vgs_p)->name, name) == 0;
+          found = g_strcmp0 ((*vgs_p)->name, vg_name) == 0;
 
       if (!found)
         {
@@ -187,20 +194,35 @@ lvm_update_vgs (GObject      *source_obj,
   for (BDLVMVGdata **vgs_p=vgs; *vgs_p; vgs_p++)
     {
       UDisksLinuxVolumeGroupObject *group;
-      name = (*vgs_p)->name;
+      GSList *vg_pvs = NULL;
+      vg_name = (*vgs_p)->name;
       group = g_hash_table_lookup (udisks_lvm2_state_get_name_to_volume_group (state),
-                                   name);
+                                   vg_name);
 
       if (group == NULL)
         {
-          group = udisks_linux_volume_group_object_new (daemon, name);
+          group = udisks_linux_volume_group_object_new (daemon, vg_name);
           g_hash_table_insert (udisks_lvm2_state_get_name_to_volume_group (state),
-                               g_strdup (name), group);
+                               g_strdup (vg_name), group);
         }
-      udisks_linux_volume_group_object_update (group);
+
+      for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
+        if (g_strcmp0 ((*pvs_p)->vg_name, vg_name) == 0)
+            vg_pvs = g_slist_prepend (vg_pvs, *pvs_p);
+
+      udisks_linux_volume_group_object_update (group, *vgs_p, vg_pvs);
     }
 
-  vg_list_free (vgs);
+  /* this is safe to do -- all BDLVMPVdata objects are still existing because
+     the function that frees them is scheduled in main loop by the
+     udisks_linux_volume_group_object_update() call above */
+  for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
+    if ((*pvs_p)->vg_name == NULL)
+      bd_lvm_pvdata_free (*pvs_p);
+
+  /* only free the containers, the contents were passed further */
+  g_free (vgs);
+  g_free (pvs);
 }
 
 static void

@@ -53,6 +53,11 @@ typedef struct {
   const gchar *path;
 } PVJobData;
 
+typedef struct {
+  BDLVMVGdata **vgs;
+  BDLVMPVdata **pvs;
+} VGsPVsData;
+
 gboolean lvcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -152,8 +157,16 @@ gboolean pvmove_job_func (UDisksThreadedJob  *job,
 
 
 void vg_list_free (BDLVMVGdata **vg_list);
+void pv_list_free (BDLVMPVdata **pv_list);
+void lv_list_free (BDLVMLVdata **lv_list);
+void vgs_pvs_data_free (VGsPVsData *data);
 
 void vgs_task_func (GTask        *task,
+                    gpointer      source_obj,
+                    gpointer      task_data,
+                    GCancellable *cancellable);
+
+void lvs_task_func (GTask        *task,
                     gpointer      source_obj,
                     gpointer      task_data,
                     GCancellable *cancellable);

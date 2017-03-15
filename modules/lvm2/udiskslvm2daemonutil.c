@@ -400,9 +400,9 @@ udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
 gboolean
 udisks_daemon_util_lvm2_name_is_reserved (const gchar *name)
 {
- /* XXX - get this from lvm2app */
-
- return (strstr (name, "_mlog")
+ return (strchr (name, '[')
+         || strchr (name, ']')
+         || strstr (name, "_mlog")
          || strstr (name, "_mimage")
          || strstr (name, "_rimage")
          || strstr (name, "_rmeta")

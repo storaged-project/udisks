@@ -22,6 +22,8 @@
 #ifndef __UDISKS_LINUX_LOGICAL_VOLUME_H__
 #define __UDISKS_LINUX_LOGICAL_VOLUME_H__
 
+#include <blockdev/lvm.h>
+
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
 #include "udisks-lvm2-generated.h"
@@ -36,7 +38,7 @@ GType                udisks_linux_logical_volume_get_type (void) G_GNUC_CONST;
 UDisksLogicalVolume *udisks_linux_logical_volume_new      (void);
 void                 udisks_linux_logical_volume_update   (UDisksLinuxLogicalVolume     *logical_volume,
                                                            UDisksLinuxVolumeGroupObject *group_object,
-                                                           GVariant                     *info,
+                                                           BDLVMLVdata                  *lv_info,
                                                            gboolean                     *needs_polling_ret);
 void                   udisks_linux_logical_volume_update_etctabs (UDisksLinuxLogicalVolume     *logical_volume,
                                                                    UDisksLinuxVolumeGroupObject *group_object);

@@ -23,6 +23,8 @@
 #include <fcntl.h>
 #include <glib/gi18n-lib.h>
 
+#include <blockdev/lvm.h>
+
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxblockobject.h>
 #include <src/udisksdaemon.h>
@@ -119,7 +121,7 @@ udisks_linux_logical_volume_new (void)
 void
 udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume,
                                     UDisksLinuxVolumeGroupObject *group_object,
-                                    GVariant                     *info,
+                                    BDLVMLVdata                  *lv_info,
                                     gboolean                     *needs_polling_ret)
 {
   UDisksLogicalVolume *iface;
@@ -127,45 +129,28 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
   gboolean active;
   const char *pool_objpath;
   const char *origin_objpath;
-  const gchar *dev_file;
-  const gchar *str;
-  const gchar *uuid;
-  guint64 num;
-  guint64 size;
-  guint64 metadata_size;
+  guint64 size = 0;
 
   iface = UDISKS_LOGICAL_VOLUME (logical_volume);
 
-  if (g_variant_lookup (info, "name", "&s", &str))
-    udisks_logical_volume_set_name (iface, str);
+  udisks_logical_volume_set_name (iface, lv_info->lv_name);
+  udisks_logical_volume_set_uuid (iface, lv_info->uuid);
 
-  if (g_variant_lookup (info, "uuid", "&s", &uuid))
-    udisks_logical_volume_set_uuid (iface, uuid);
-
-  size = 0;
-  metadata_size = 0;
-
-  if (g_variant_lookup (info, "size", "t", &num))
-    size = num;
-
-  if (g_variant_lookup (info, "lv_metadata_size", "t", &num))
-    metadata_size = num;
-
+  size = lv_info->size;
   type = "block";
   active = FALSE;
-  if (g_variant_lookup (info, "lv_attr", "&s", &str)
-      && str && strlen (str) > 6)
+  if (lv_info->attr)
     {
-      char volume_type = str[0];
-      char state       = str[4];
-      char target_type = str[6];
+      gchar volume_type = lv_info->attr[0];
+      gchar state       = lv_info->attr[4];
+      gchar target_type = lv_info->attr[6];
 
       if (target_type == 't')
         *needs_polling_ret = TRUE;
 
       if (target_type == 't' && volume_type == 't') {
         type = "pool";
-        size += metadata_size;
+        /* FIXME: size += lv_info->metadata_size; */
       }
 
       if (state == 'a')
@@ -175,29 +160,22 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
   udisks_logical_volume_set_active (iface, active);
   udisks_logical_volume_set_size (iface, size);
 
-  if (g_variant_lookup (info, "data_percent", "t", &num)
-      && (int64_t)num >= 0)
-    udisks_logical_volume_set_data_allocated_ratio (iface, num/100000000.0);
-
-  if (g_variant_lookup (info, "metadata_percent", "t", &num)
-      && (int64_t)num >= 0)
-    udisks_logical_volume_set_metadata_allocated_ratio (iface, num/100000000.0);
+  udisks_logical_volume_set_data_allocated_ratio (iface, lv_info->data_percent / 100.0);
+  udisks_logical_volume_set_metadata_allocated_ratio (iface, lv_info->metadata_percent / 100.0);
 
   pool_objpath = "/";
-  if (g_variant_lookup (info, "pool_lv", "&s", &str)
-      && str != NULL && *str)
+  if (lv_info->pool_lv)
     {
-      UDisksLinuxLogicalVolumeObject *pool_object = udisks_linux_volume_group_object_find_logical_volume_object (group_object, str);
+      UDisksLinuxLogicalVolumeObject *pool_object = udisks_linux_volume_group_object_find_logical_volume_object (group_object, lv_info->pool_lv);
       if (pool_object)
         pool_objpath = g_dbus_object_get_object_path (G_DBUS_OBJECT (pool_object));
     }
   udisks_logical_volume_set_thin_pool (iface, pool_objpath);
 
   origin_objpath = "/";
-  if (g_variant_lookup (info, "origin", "&s", &str)
-      && str != NULL && *str)
+  if (lv_info->origin)
     {
-      UDisksLinuxLogicalVolumeObject *origin_object = udisks_linux_volume_group_object_find_logical_volume_object (group_object, str);
+      UDisksLinuxLogicalVolumeObject *origin_object = udisks_linux_volume_group_object_find_logical_volume_object (group_object, lv_info->origin);
       if (origin_object)
         origin_objpath = g_dbus_object_get_object_path (G_DBUS_OBJECT (origin_object));
     }
@@ -205,10 +183,9 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
 
   udisks_logical_volume_set_volume_group (iface, g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
 
-  dev_file = NULL;
-  if (logical_volume->needs_udev_hack
-      && g_variant_lookup (info, "lv_path", "&s", &dev_file))
+  if (logical_volume->needs_udev_hack)
     {
+      gchar *dev_file = g_strdup_printf ("/dev/%s/%s", lv_info->vg_name, lv_info->lv_name);
       /* LVM2 versions before 2.02.105 sometimes incorrectly leave the
        * DM_UDEV_DISABLE_OTHER_RULES flag set for thin volumes. As a
        * workaround, we trigger an extra udev "change" event which
@@ -218,6 +195,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
        */
       udisks_daemon_util_lvm2_trigger_udev (dev_file);
       logical_volume->needs_udev_hack = FALSE;
+      g_free (dev_file);
     }
 }
 

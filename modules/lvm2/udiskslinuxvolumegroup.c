@@ -33,6 +33,7 @@
 #include <glib/gstdio.h>
 
 #include <blockdev/fs.h>
+#include <blockdev/lvm.h>
 
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxprovider.h>
@@ -135,27 +136,15 @@ udisks_linux_volume_group_new (void)
  */
 void
 udisks_linux_volume_group_update (UDisksLinuxVolumeGroup *volume_group,
-                                  GVariant               *info,
+                                  BDLVMVGdata            *vg_info,
                                   gboolean               *needs_polling_ret)
 {
   UDisksVolumeGroup *iface = UDISKS_VOLUME_GROUP (volume_group);
-  const gchar *str;
-  guint64 num;
-
-  if (g_variant_lookup (info, "name", "&s", &str))
-    udisks_volume_group_set_name (iface, str);
-
-  if (g_variant_lookup (info, "uuid", "&s", &str))
-    udisks_volume_group_set_uuid (iface, str);
-
-  if (g_variant_lookup (info, "size", "t", &num))
-    udisks_volume_group_set_size (iface, num);
-
-  if (g_variant_lookup (info, "free-size", "t", &num))
-    udisks_volume_group_set_free_size (iface, num);
-
-  if (g_variant_lookup (info, "extent-size", "t", &num))
-    udisks_volume_group_set_extent_size (iface, num);
+  udisks_volume_group_set_name (iface, vg_info->name);
+  udisks_volume_group_set_uuid (iface, vg_info->uuid);
+  udisks_volume_group_set_size (iface, vg_info->size);
+  udisks_volume_group_set_free_size (iface, vg_info->free);
+  udisks_volume_group_set_extent_size (iface, vg_info->extent_size);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

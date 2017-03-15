@@ -245,17 +245,63 @@ void vg_list_free (BDLVMVGdata **vg_list) {
   g_free (vg_list);
 }
 
+void pv_list_free (BDLVMPVdata **pv_list) {
+  if (!pv_list)
+    /* nothing to do */
+    return;
+
+  for (BDLVMPVdata **pv_list_p = pv_list; *pv_list_p; pv_list_p++)
+    bd_lvm_pvdata_free (*pv_list_p);
+  g_free (pv_list);
+}
+
+void lv_list_free (BDLVMLVdata **lv_list) {
+  if (!lv_list)
+    /* nothing to do */
+    return;
+
+  for (BDLVMLVdata **lv_list_p = lv_list; *lv_list_p; lv_list_p++)
+    bd_lvm_lvdata_free (*lv_list_p);
+  g_free (lv_list);
+}
+
+void vgs_pvs_data_free (VGsPVsData *data) {
+  vg_list_free (data->vgs);
+  pv_list_free (data->pvs);
+  g_free (data);
+}
+
 void vgs_task_func (GTask        *task,
                     gpointer      source_obj,
                     gpointer      task_data,
                     GCancellable *cancellable)
 {
-  BDLVMVGdata** ret = NULL;
   GError *error = NULL;
+  VGsPVsData *ret = g_new0 (VGsPVsData, 1);
 
-  ret = bd_lvm_vgs (&error);
-  if (ret)
-    g_task_return_pointer (task, ret, (GDestroyNotify) vg_list_free);
-  else
+  ret->vgs = bd_lvm_vgs (&error);
+  if (!ret)
     g_task_return_error (task, error);
+
+  ret->pvs = bd_lvm_pvs (&error);
+  if (!ret)
+    g_task_return_error (task, error);
+  else
+    g_task_return_pointer (task, ret, (GDestroyNotify) vgs_pvs_data_free);
+}
+
+void lvs_task_func (GTask        *task,
+                    gpointer      source_obj,
+                    gpointer      task_data,
+                    GCancellable *cancellable)
+{
+  GError *error = NULL;
+  BDLVMLVdata **ret = NULL;
+  gchar *vg_name = (gchar*) task_data;
+
+  ret = bd_lvm_lvs (vg_name, &error);
+  if (!ret)
+    g_task_return_error (task, error);
+  else
+    g_task_return_pointer (task, ret, (GDestroyNotify) lv_list_free);
 }

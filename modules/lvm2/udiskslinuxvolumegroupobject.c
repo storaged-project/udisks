@@ -92,6 +92,11 @@ static void etctabs_changed (UDisksFstabMonitor *monitor,
                              UDisksFstabEntry   *entry,
                              gpointer            user_data);
 
+typedef struct {
+  BDLVMVGdata *vg_info;
+  GSList *vg_pvs;
+} VGUpdateData;
+
 static void
 udisks_linux_volume_group_object_finalize (GObject *_object)
 {
@@ -384,20 +389,18 @@ update_progress_for_device (UDisksDaemon *daemon,
 static void
 update_operations (UDisksDaemon *daemon,
                    const gchar  *lv_name,
-                   GVariant     *lv_info,
+                   BDLVMLVdata  *lv_info,
                    gboolean     *needs_polling_ret)
 {
-  const gchar *move_pv;
-  guint64 copy_percent;
-
-  if (lv_is_pvmove_volume (lv_name)
-      && g_variant_lookup (lv_info, "move_pv", "&s", &move_pv)
-      && g_variant_lookup (lv_info, "copy_percent", "t", &copy_percent))
+  if (lv_is_pvmove_volume (lv_name))
     {
-      update_progress_for_device (daemon,
-                                  "lvm-vg-empty-device",
-                                  move_pv,
-                                  copy_percent/100000000.0);
+      if (lv_info->move_pv && lv_info->copy_percent)
+        {
+          update_progress_for_device (daemon,
+                                      "lvm-vg-empty-device",
+                                      lv_info->move_pv,
+                                      lv_info->copy_percent/100.0);
+        }
       *needs_polling_ret = TRUE;
     }
 }
@@ -429,7 +432,7 @@ update_block (UDisksLinuxBlockObject       *block_object,
               GHashTable                   *new_pvs)
 {
   UDisksBlock *block;
-  GVariant *pv_info;
+  BDLVMPVdata *pv_info;
 
   block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
   if (block == NULL)
@@ -486,74 +489,83 @@ update_block (UDisksLinuxBlockObject       *block_object,
 }
 
 static void
-update_with_variant (GPid pid,
-                     GVariant *info,
-                     GError *error,
-                     gpointer user_data)
+update_vg (GObject      *source_obj,
+           GAsyncResult *result,
+           gpointer      user_data)
 {
-  UDisksLinuxVolumeGroupObject *object = user_data;
   UDisksDaemon *daemon;
   GDBusObjectManagerServer *manager;
-  GVariantIter *iter;
   GHashTableIter volume_iter;
   gpointer key, value;
   GHashTable *new_lvs;
   GHashTable *new_pvs;
   GList *objects, *l;
   gboolean needs_polling = FALSE;
+  GError *error = NULL;
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-  manager = udisks_daemon_get_object_manager (daemon);
+  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
+  GTask *task = G_TASK (result);
+  VGUpdateData *data = user_data;
+  BDLVMLVdata **lvs = g_task_propagate_pointer (task, &error);
+  BDLVMVGdata *vg_info = data->vg_info;
+  GSList *vg_pvs = data->vg_pvs;
 
-  if (error)
+  /* free the data container (but not 'vg_info' and 'vg_pvs') */
+  g_free (data);
+
+  if (!lvs)
     {
-      udisks_warning ("Failed to update LVM volume group %s: %s",
-                      udisks_linux_volume_group_object_get_name (object),
-                      error->message);
+      if (error)
+        {
+          udisks_warning ("Failed to update LVM volume group %s: %s",
+                          udisks_linux_volume_group_object_get_name (object),
+                          error->message);
+        }
+      else
+        {
+          /* this should never happen */
+          udisks_warning ("Failed to update LVM volume group %s: no error reported",
+                          udisks_linux_volume_group_object_get_name (object));
+        }
+      g_slist_free_full (vg_pvs, (GDestroyNotify) bd_lvm_pvdata_free);
+      bd_lvm_vgdata_free (vg_info);
       g_object_unref (object);
       return;
     }
 
-  udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), info, &needs_polling);
+  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  manager = udisks_daemon_get_object_manager (daemon);
+
+  udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), vg_info, &needs_polling);
 
   if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object)))
     g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
 
   new_lvs = g_hash_table_new (g_str_hash, g_str_equal);
 
-  if (g_variant_lookup (info, "lvs", "aa{sv}", &iter))
+  for (BDLVMLVdata **lvs_p=lvs; *lvs_p; lvs_p++)
     {
-      GVariant *lv_info = NULL;
-      while (g_variant_iter_loop (iter, "@a{sv}", &lv_info))
+      UDisksLinuxLogicalVolumeObject *volume;
+      BDLVMLVdata *lv_info = *lvs_p;
+      const gchar *lv_name = lv_info->lv_name;
+      update_operations (daemon, lv_name, lv_info, &needs_polling);
+
+      if (udisks_daemon_util_lvm2_name_is_reserved (lv_name))
+        continue;
+
+      volume = g_hash_table_lookup (object->logical_volumes, lv_name);
+      if (volume == NULL)
         {
-          const gchar *name;
-          UDisksLinuxLogicalVolumeObject *volume;
-
-          g_variant_lookup (lv_info, "name", "&s", &name);
-
-          update_operations (daemon, name, lv_info, &needs_polling);
-
-          if (lv_is_pvmove_volume (name))
-            needs_polling = TRUE;
-
-          if (udisks_daemon_util_lvm2_name_is_reserved (name))
-            continue;
-
-          volume = g_hash_table_lookup (object->logical_volumes, name);
-          if (volume == NULL)
-            {
-              volume = udisks_linux_logical_volume_object_new (daemon, object, name);
-              udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
-              udisks_linux_logical_volume_object_update_etctabs (volume);
-              g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
-              g_hash_table_insert (object->logical_volumes, g_strdup (name), g_object_ref (volume));
-            }
-          else
-            udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
-
-          g_hash_table_insert (new_lvs, (gchar *)name, volume);
+          volume = udisks_linux_logical_volume_object_new (daemon, object, lv_name);
+          udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+          udisks_linux_logical_volume_object_update_etctabs (volume);
+          g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
+          g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), g_object_ref (volume));
         }
-      g_variant_iter_free (iter);
+      else
+        udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+
+      g_hash_table_insert (new_lvs, (gchar *)lv_name, volume);
     }
 
   g_hash_table_iter_init (&volume_iter, object->logical_volumes);
@@ -576,19 +588,13 @@ update_with_variant (GPid pid,
                                          needs_polling);
 
   /* Update block objects. */
-
-  new_pvs = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, (GDestroyNotify)g_variant_unref);
-  if (g_variant_lookup (info, "pvs", "aa{sv}", &iter))
+  new_pvs = g_hash_table_new (g_str_hash, g_str_equal);
+  for (GSList *vg_pvs_p=vg_pvs; vg_pvs_p; vg_pvs_p=vg_pvs_p->next)
     {
-      const gchar *name;
-      GVariant *pv_info;
-      while (g_variant_iter_next (iter, "@a{sv}", &pv_info))
-        {
-          if (g_variant_lookup (pv_info, "device", "&s", &name))
-            g_hash_table_insert (new_pvs, (gchar *)name, pv_info);
-          else
-            g_variant_unref (pv_info);
-        }
+      BDLVMPVdata *pv_info = vg_pvs_p->data;
+      gchar *pv_name = pv_info->pv_name;
+      if (pv_name)
+        g_hash_table_insert (new_pvs, pv_name, pv_info);
     }
 
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (manager));
@@ -602,22 +608,31 @@ update_with_variant (GPid pid,
   g_hash_table_destroy (new_lvs);
   g_hash_table_destroy (new_pvs);
 
+  g_slist_free_full (vg_pvs, (GDestroyNotify) bd_lvm_pvdata_free);
+  bd_lvm_vgdata_free (vg_info);
+  lv_list_free (lvs);
+
   g_object_unref (object);
 }
 
 void
-udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object)
+udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, BDLVMVGdata *vg_info, GSList *pvs)
 {
-  UDisksDaemon *daemon = udisks_linux_volume_group_object_get_daemon (object);
+  VGUpdateData *data = g_new0 (VGUpdateData, 1);
+  gchar *vg_name = g_strdup (vg_info->name);
+  GTask *task = NULL;
 
-  const gchar *args[] = { NULL, "-b", "show", object->name, NULL };
-  if (udisks_daemon_get_uninstalled (daemon))
-    args[0] = BUILD_DIR "modules/lvm2/udisks-lvm";
-  else
-    args[0] = LVM_HELPER_DIR "udisks-lvm";
+  data->vg_info = vg_info;
+  data->vg_pvs = pvs;
 
-  udisks_daemon_util_lvm2_spawn_for_variant (args, G_VARIANT_TYPE("a{sv}"),
-                                             update_with_variant, g_object_ref (object));
+  /* the callback (update_vg) is called in the default main loop (context) */
+  task = g_task_new (g_object_ref (object), NULL /* cancellable */, update_vg, data /* callback_data */);
+  g_task_set_task_data (task, vg_name, g_free);
+
+  /* holds a reference to 'task' until it is finished */
+  g_task_run_in_thread (task, (GTaskThreadFunc) lvs_task_func);
+
+  g_object_unref (task);
 }
 
 static void
