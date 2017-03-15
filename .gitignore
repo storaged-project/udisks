@@ -33,7 +33,6 @@ config.log
 config.status
 configure
 data/*.service
-doc/man/udisks-lvm.xml
 doc/man/udisks.xml
 doc/man/udisks2.conf.5.xml
 doc/man/udisks2.conf.5.xml.in
@@ -71,7 +70,6 @@ src/*-marshal.*
 src/tests/udisks-test
 src/tests/udisks-test-helper
 src/udisksd
-modules/lvm2/udisks-lvm
 stamp-*
 tools/udisksctl
 tools/umount.udisks2

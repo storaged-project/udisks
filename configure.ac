@@ -248,16 +248,6 @@ if test "x$enable_lvm2" = "xyes" \
   CFLAGS=$SAVE_CFLAGS
   LDFLAGS=$SAVE_LDFLAGS
 
-  # we still need these definitions for the udisks-lvm helper
-  PKG_CHECK_MODULES(DEVMAPPER, devmapper >= 1.02,
-                    [AC_DEFINE(HAVE_DEVMAPPER, 1, [Define if DEVMAPPER is available])], [])
-  PKG_CHECK_MODULES(LVM2, lvm2app >= 2.2,
-                    [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available])],[])
-  AC_SUBST(DEVMAPPER_CFLAGS)
-  AC_SUBST(DEVMAPPER_LIBS)
-  AC_SUBST(LVM2_CFLAGS)
-  AC_SUBST(LVM2_LIBS)
-
   if test \( "x$have_lvm2" = "xno" \); then
     AC_MSG_ERROR([lvm2 support requested but libraries not found])
   fi
@@ -609,7 +599,6 @@ doc/udisks2-sections.txt.in
 doc/udisks2.types.in
 doc/version.xml
 doc/man/Makefile
-doc/man/udisks-lvm.xml
 doc/man/udisks.xml
 doc/man/udisksd.xml
 doc/man/udisksctl.xml
@@ -625,7 +614,6 @@ doc/udisks2-docs.xml.lsm.dbus
 doc/udisks2-docs.xml.lsm.generated
 doc/udisks2-sections.txt.lsm.sections
 doc/udisks2.types.lsm
-doc/udisks2-docs.xml.lvm2.man
 doc/udisks2-docs.xml.lvm2.dbus
 doc/udisks2-docs.xml.lvm2.generated
 doc/udisks2-sections.txt.lvm2.sections

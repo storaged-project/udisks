@@ -252,7 +252,7 @@ systemctl try-restart udisks2
 %{_prefix}/lib/udev/rules.d/80-udisks2.rules
 %{_sbindir}/umount.udisks2
 
-%dir %{_prefix}/lib/udisks2
+
 %{_libexecdir}/udisks2/udisksd
 
 %{_bindir}/udisksctl
@@ -275,15 +275,10 @@ systemctl try-restart udisks2
 %{_libdir}/girepository-1.0/UDisks-2.0.typelib
 
 %files -n %{name}-lvm2
-%dir %{_prefix}/lib/udisks2
 %dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/lvm-nolocking
 %dir %{_libdir}/udisks2/modules
-%{_prefix}/lib/udisks2/udisks-lvm
-%{_libdir}/udisks2/lvm-nolocking/lvm.conf
 %{_libdir}/udisks2/modules/libudisks2_lvm2.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lvm2.policy
-%{_mandir}/man8/udisks-lvm.8*
 
 %files -n %{name}-iscsi
 %dir %{_libdir}/udisks2

@@ -108,31 +108,6 @@ libudisks2_lvm2_la_LIBADD =                                                    \
 
 # ------------------------------------------------------------------------------
 
-udisksdprivdir = $(prefix)/lib/udisks2
-udisksdpriv_PROGRAMS = udisks-lvm
-
-udisks_lvm_SOURCES =                                                           \
-	udiskslvmhelper.c                                                      \
-	$(NULL)
-
-udisks_lvm_CPPFLAGS =                                                          \
-	$(CPPFLAGS)                                                            \
-	$(NULL)
-
-udisks_lvm_CFLAGS =                                                            \
-	-DG_LOG_DOMAIN=\"udisks-lvm-helper\"                                   \
-	$(DEVMAPPER_CFLAGS)                                                    \
-	$(LVM2_CFLAGS)                                                         \
-	$(NULL)
-
-udisks_lvm_LDADD =                                                             \
-	$(GLIB_LIBS)                                                           \
-	$(DEVMAPPER_LIBS)                                                      \
-	$(LVM2_LIBS)                                                           \
-	$(NULL)
-
-# ------------------------------------------------------------------------------
-
 CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
 
 EXTRA_DIST =                                                                   \

@@ -33,14 +33,6 @@ gboolean udisks_daemon_util_lvm2_wipe_block      (UDisksDaemon  *daemon,
                                                   UDisksBlock   *block,
                                                   GError       **error);
 
-GPid udisks_daemon_util_lvm2_spawn_for_variant (const gchar        **argv,
-                                                const GVariantType  *type,
-                                                void (*callback) (GPid      pid,
-                                                                  GVariant *result,
-                                                                  GError   *error,
-                                                                  gpointer  user_data),
-                                                gpointer             user_data);
-
 gboolean udisks_daemon_util_lvm2_name_is_reserved (const gchar *name);
 
 UDisksLinuxVolumeGroupObject * udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
