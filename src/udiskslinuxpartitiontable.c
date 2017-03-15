@@ -32,6 +32,7 @@
 #include <glib/gstdio.h>
 
 #include <blockdev/part.h>
+#include <blockdev/fs.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxpartitiontable.h"
@@ -197,8 +198,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   WaitForPartitionData *wait_data = NULL;
   UDisksObject *partition_object = NULL;
   UDisksBlock *partition_block = NULL;
-  gchar *escaped_partition_device = NULL;
-  gchar *error_message = NULL;
   BDPartSpec *part_spec = NULL;
   BDPartTypeReq part_type = 0;
   const gchar *table_type;
@@ -391,32 +390,25 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
-  escaped_partition_device = udisks_daemon_util_escape_and_quote (part_spec->path);
-
   /* wipe the newly created partition if wanted */
   if (part_spec->type != BD_PART_TYPE_EXTENDED)
     {
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  partition_object,
-                                                  "partition-create", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "wipefs -a %s",
-                                                  escaped_partition_device))
+      if (!bd_fs_wipe (part_spec->path, TRUE, &error))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error wiping newly created partition %s: %s",
-                                                 udisks_block_get_device (partition_block),
-                                                 error_message);
-          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error_message);
-          g_clear_object (&partition_object);
-          goto out;
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+            g_clear_error (&error);
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error wiping newly created partition %s: %s",
+                                                     udisks_block_get_device (partition_block),
+                                                     error->message);
+              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+              g_clear_object (&partition_object);
+              goto out;
+            }
         }
     }
 
@@ -427,8 +419,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
  out:
   g_free (wait_data);
   g_free (part_spec);
-  g_free (error_message);
-  g_free (escaped_partition_device);
+  g_clear_error (&error);
   g_clear_object (&partition_block);
   g_free (device_name);
   g_clear_object (&object);
