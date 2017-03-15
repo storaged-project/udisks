@@ -39,6 +39,13 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         part_type = '0x8e'  # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
 
+        # first try to create partition with name -> should fail because mbr
+        # doesn't support partition names
+        msg = 'MBR partition table does not support names'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, 'name',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+
         # create partition
         path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, '',
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
@@ -330,6 +337,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
 
+        # first try some invalid guid
+        msg = 'org.freedesktop.UDisks2.Error.Failed: .* is not a valid UUID'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('aaaa', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
         # set part type/guid (home partition)
         home_guid = '933ac7e1-2eb4-4f13-b844-0e14e2aef915'
         part.SetType(home_guid, self.no_options,
@@ -358,6 +371,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
 
+        # try to set part type to an extended partition type -- should fail
+        msg = 'Refusing to change partition type to that of an extended partition'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('0x05', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
         # set part type/id
         part_type = '0x8e'   # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
         part.SetType(part_type, self.no_options,
@@ -385,6 +404,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
+
+        # first try some invalid name (longer than 36 characters)
+        msg = 'Max partition name length is 36 characters'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetName('a' * 37, self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
 
         # set part name
         part.SetName('test', self.no_options,
