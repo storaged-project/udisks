@@ -42,6 +42,7 @@
 #include "udiskslvm2daemonutil.h"
 #include "udiskslvm2dbusutil.h"
 #include "udisks-lvm2-generated.h"
+#include "jobhelpers.h"
 
 /**
  * SECTION:udiskslinuxvolumegroupobject
@@ -66,7 +67,7 @@ struct _UDisksLinuxVolumeGroupObject
   gchar *name;
 
   GHashTable *logical_volumes;
-  GPid poll_pid;
+  guint32 poll_epoch;
   guint poll_timeout_id;
   gboolean poll_requested;
 
@@ -176,6 +177,9 @@ udisks_linux_volume_group_object_set_property (GObject      *__object,
 static void
 udisks_linux_volume_group_object_init (UDisksLinuxVolumeGroupObject *object)
 {
+  object->poll_epoch = 0;
+  object->poll_timeout_id = 0;
+  object->poll_requested = FALSE;
 }
 
 static void
@@ -636,54 +640,58 @@ udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, B
 }
 
 static void
-poll_with_variant (GPid pid,
-                   GVariant *info,
-                   GError *error,
-                   gpointer user_data)
+poll_vg_update (GObject      *source_obj,
+                GAsyncResult *result,
+                gpointer      user_data)
 {
-  UDisksLinuxVolumeGroupObject *object = user_data;
   UDisksDaemon *daemon;
-  GVariantIter *iter;
   gboolean needs_polling;
+  GError *error = NULL;
+  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
+  GTask *task = G_TASK (result);
+  guint32 epoch_started = GPOINTER_TO_UINT (user_data);
+  BDLVMLVdata **lvs = g_task_propagate_pointer (task, &error);
 
-  if (pid != object->poll_pid)
+  if (epoch_started != object->poll_epoch)
     {
+      /* epoch has changed -> another poll update is on the way */
+      lv_list_free (lvs);
       g_object_unref (object);
       return;
     }
 
-  object->poll_pid = 0;
-
-  if (error)
+  if (!lvs)
     {
-      udisks_warning ("Failed to poll LVM volume group %s: %s",
-                      udisks_linux_volume_group_object_get_name (object),
-                      error->message);
+      if (error)
+        udisks_warning ("Failed to poll LVM volume group %s: %s",
+                        udisks_linux_volume_group_object_get_name (object),
+                        error->message);
+      else
+        /* this should never happen */
+        udisks_warning ("Failed to poll LVM volume group %s: no error reported",
+                        udisks_linux_volume_group_object_get_name (object));
+
       g_object_unref (object);
       return;
     }
 
   daemon = udisks_linux_volume_group_object_get_daemon (object);
 
-  udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), info, &needs_polling);
+  /* XXX: we used to do this, but it seems to be pointless (how could a VG change without emitting a uevent on the PVs?) */
+  /* udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), info, &needs_polling); */
 
-  if (g_variant_lookup (info, "lvs", "aa{sv}", &iter))
+  for (BDLVMLVdata **lvs_p=lvs; *lvs_p; lvs_p++)
     {
-      GVariant *lv_info = NULL;
-      while (g_variant_iter_loop (iter, "@a{sv}", &lv_info))
-        {
-          const gchar *name;
-          UDisksLinuxLogicalVolumeObject *volume;
-
-          g_variant_lookup (lv_info, "name", "&s", &name);
-          update_operations (daemon, name, lv_info, &needs_polling);
-          volume = g_hash_table_lookup (object->logical_volumes, name);
-          if (volume)
-            udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
-        }
-      g_variant_iter_free (iter);
+      UDisksLinuxLogicalVolumeObject *volume;
+      BDLVMLVdata *lv_info = *lvs_p;
+      const gchar *lv_name = lv_info->lv_name;
+      update_operations (daemon, lv_name, lv_info, &needs_polling);
+      volume = g_hash_table_lookup (object->logical_volumes, lv_name);
+      if (volume)
+        udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
     }
 
+  lv_list_free (lvs);
   g_object_unref (object);
 }
 
@@ -722,15 +730,23 @@ poll_timeout (gpointer user_data)
 static void
 poll_now (UDisksLinuxVolumeGroupObject *object)
 {
-  const gchar *args[] = { LVM_HELPER_DIR "udisks-lvm", "-b", "show", object->name, NULL };
+  gchar *vg_name = g_strdup (udisks_linux_volume_group_object_get_name (object));
+  GTask *task = NULL;
 
   object->poll_timeout_id = g_timeout_add (5000, poll_timeout, g_object_ref (object));
 
-  if (object->poll_pid)
-    kill (object->poll_pid, SIGINT);
+  /* starting a new poll -> increment the epoch */
+  object->poll_epoch++;
 
-  object->poll_pid = udisks_daemon_util_lvm2_spawn_for_variant (args, G_VARIANT_TYPE("a{sv}"),
-                                                                poll_with_variant, g_object_ref (object));
+  /* the callback (poll_vg_update) is called in the default main loop (context) */
+  task = g_task_new (g_object_ref (object), NULL /* cancellable */,
+                     poll_vg_update, GUINT_TO_POINTER (object->poll_epoch) /* callback_data */);
+  g_task_set_task_data (task, vg_name, g_free);
+
+  /* holds a reference to 'task' until it is finished */
+  g_task_run_in_thread (task, (GTaskThreadFunc) lvs_task_func);
+
+  g_object_unref (task);
 }
 
 void
