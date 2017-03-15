@@ -41,6 +41,7 @@
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxpartition.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxpartitiontable
@@ -204,6 +205,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   uid_t caller_uid;
   gid_t caller_gid;
   GError *error = NULL;
+  UDisksBaseJob *job = NULL;
 
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
@@ -301,11 +303,30 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-create",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
   part_spec = bd_part_create_part (device_name, part_type, offset,
                                    size, BD_PART_ALIGN_OPTIMAL, &error);
   if (!part_spec)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating partition on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
 
@@ -314,7 +335,9 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     {
       if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
         {
+          g_prefix_error (&error, "Error setting name for newly created partition: ");
           g_dbus_method_invocation_take_error (invocation, error);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
           goto out;
         }
     }
@@ -333,6 +356,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         {
           g_prefix_error (&error, "Error setting type for newly created partition: ");
           g_dbus_method_invocation_take_error (invocation, error);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
           goto out;
         }
     }
@@ -354,6 +378,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     {
       g_prefix_error (&error, "Error waiting for partition to appear: ");
       g_dbus_method_invocation_take_error (invocation, error);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
   partition_block = udisks_object_get_block (partition_object);
@@ -362,6 +387,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Partition object is not a block device");
       g_clear_object (&partition_object);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
       goto out;
     }
 
@@ -388,6 +414,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                  "Error wiping newly created partition %s: %s",
                                                  udisks_block_get_device (partition_block),
                                                  error_message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error_message);
           g_clear_object (&partition_object);
           goto out;
         }
@@ -395,6 +422,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_object));
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
   g_free (wait_data);
