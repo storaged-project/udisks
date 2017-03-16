@@ -122,6 +122,7 @@ void
 udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume,
                                     UDisksLinuxVolumeGroupObject *group_object,
                                     BDLVMLVdata                  *lv_info,
+                                    BDLVMLVdata                  *meta_lv_info,
                                     gboolean                     *needs_polling_ret)
 {
   UDisksLogicalVolume *iface;
@@ -148,10 +149,10 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
       if (target_type == 't')
         *needs_polling_ret = TRUE;
 
-      if (target_type == 't' && volume_type == 't') {
+      if (target_type == 't' && volume_type == 't')
         type = "pool";
-        /* FIXME: size += lv_info->metadata_size; */
-      }
+      if (meta_lv_info && meta_lv_info->size)
+        size += meta_lv_info->size;
 
       if (state == 'a')
         active = TRUE;

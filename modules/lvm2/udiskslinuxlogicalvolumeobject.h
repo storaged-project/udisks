@@ -45,6 +45,7 @@ const gchar                    *udisks_linux_logical_volume_object_get_name     
 
 void                            udisks_linux_logical_volume_object_update           (UDisksLinuxLogicalVolumeObject *object,
                                                                                      BDLVMLVdata                    *lv_info,
+                                                                                     BDLVMLVdata                    *meta_lv_info,
                                                                                      gboolean                       *needs_polling_ret);
 void                            udisks_linux_logical_volume_object_update_etctabs   (UDisksLinuxLogicalVolumeObject *object);
 

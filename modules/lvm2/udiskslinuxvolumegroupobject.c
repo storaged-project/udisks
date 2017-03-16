@@ -492,6 +492,34 @@ update_block (UDisksLinuxBlockObject       *block_object,
     }
 }
 
+/**
+ * cmp_int_lv_name: (skip)
+ *
+ * Compare name of an internal LV (possibly enclosed in square brackets) with a
+ * given other name.
+ */
+static gboolean
+cmp_int_lv_name (const gchar *int_lv_name, const gchar *lv_name)
+{
+  const gchar *c = NULL;
+  if (!int_lv_name || !lv_name)
+    return FALSE;
+
+  if (*int_lv_name == '[')
+    int_lv_name++;
+
+  for (c=int_lv_name; *c != '\0' && *c != ']'; c++)
+    if (*c != lv_name[c - int_lv_name])
+      return FALSE;
+
+  if (*c == ']')
+    c++;
+  if (*c == '\0')
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 update_vg (GObject      *source_obj,
            GAsyncResult *result,
@@ -552,22 +580,30 @@ update_vg (GObject      *source_obj,
       UDisksLinuxLogicalVolumeObject *volume;
       BDLVMLVdata *lv_info = *lvs_p;
       const gchar *lv_name = lv_info->lv_name;
+      BDLVMLVdata *meta_lv_info = NULL;
+
       update_operations (daemon, lv_name, lv_info, &needs_polling);
 
       if (udisks_daemon_util_lvm2_name_is_reserved (lv_name))
         continue;
 
+      if (lv_info->metadata_lv && *(lv_info->metadata_lv) != '\0')
+        /* this is not cheap to do, but not many LVs have a metadata LV */
+        for (BDLVMLVdata **lvs_p2=lvs; !meta_lv_info && *lvs_p2; lvs_p2++)
+          if (cmp_int_lv_name ((*lvs_p2)->lv_name, lv_info->metadata_lv))
+            meta_lv_info = *lvs_p2;
+
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume == NULL)
         {
           volume = udisks_linux_logical_volume_object_new (daemon, object, lv_name);
-          udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+          udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
           udisks_linux_logical_volume_object_update_etctabs (volume);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
           g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), g_object_ref (volume));
         }
       else
-        udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
 
       g_hash_table_insert (new_lvs, (gchar *)lv_name, volume);
     }
@@ -684,11 +720,19 @@ poll_vg_update (GObject      *source_obj,
     {
       UDisksLinuxLogicalVolumeObject *volume;
       BDLVMLVdata *lv_info = *lvs_p;
+      BDLVMLVdata *meta_lv_info = NULL;
       const gchar *lv_name = lv_info->lv_name;
+
+      if (lv_info->metadata_lv && *(lv_info->metadata_lv) != '\0')
+        /* this is not cheap to do, but not many LVs have a metadata LV */
+        for (BDLVMLVdata **lvs_p=lvs; !meta_lv_info && *lvs_p; lvs_p++)
+          if (cmp_int_lv_name ((*lvs_p)->lv_name, lv_info->metadata_lv))
+            meta_lv_info = *lvs_p;
+
       update_operations (daemon, lv_name, lv_info, &needs_polling);
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume)
-        udisks_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
     }
 
   lv_list_free (lvs);

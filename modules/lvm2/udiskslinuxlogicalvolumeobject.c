@@ -295,13 +295,14 @@ udisks_linux_logical_volume_object_get_name (UDisksLinuxLogicalVolumeObject *obj
 void
 udisks_linux_logical_volume_object_update (UDisksLinuxLogicalVolumeObject *object,
                                            BDLVMLVdata *lv_info,
+                                           BDLVMLVdata *meta_lv_info,
                                            gboolean *needs_polling_ret)
 {
   g_return_if_fail (UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT (object));
 
   udisks_linux_logical_volume_update (UDISKS_LINUX_LOGICAL_VOLUME (object->iface_logical_volume),
                                       object->volume_group,
-                                      lv_info,
+                                      lv_info, meta_lv_info,
                                       needs_polling_ret);
 }
 
