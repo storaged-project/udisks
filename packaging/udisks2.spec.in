@@ -333,7 +333,7 @@ systemctl try-restart udisks2
 %endif
 
 %changelog
-* Tue Mar  3 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.6.4-1
+* Tue Mar 14 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.6.4-1
 - Version 2.6.4
 
 * Mon Nov 14 2016 Tomas Smetana <tsmetana@redhat.com> - 2.6.3-1
