@@ -1,7 +1,15 @@
 import dbus
 import os
 import tempfile
+import unittest
 
+from multiprocessing import Process, Pipe
+
+import gi
+gi.require_version('GLib', '2.0')
+from gi.repository import GLib
+
+import safe_dbus
 import udiskstestcase
 
 
@@ -238,11 +246,271 @@ class VFATTestCase(UdisksFSTestCase):
     _can_label = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
 
+    username = 'udisks_mount_test'
+
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+    def _add_user(self):
+        ret, out = self.run_command('useradd -M -p "" %s' % self.username)
+        if ret != 0:
+            self.fail('Failed to create user %s: %s' % (self.username, out))
+
+        ret, uid = self.run_command('id -u %s' % self.username)
+        if ret != 0:
+            self.fail('Failed to get UID for user %s' % self.username)
+
+        ret, gid = self.run_command('id -g %s' % self.username)
+        if ret != 0:
+            self.fail('Failed to get GID for user %s.' % self.username)
+
+        return (uid, gid)
+
+    def _remove_user(self):
+        ret, out = self.run_command('userdel %s' % self.username)
+        if ret != 0:
+            self.fail('Failed to remove user user %s: %s' % (self.username, out))
+
+    def _set_user_mountable(self, disk):
+        # create a tempdir
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+
+        # configuration items as arrays of dbus.Byte
+        mnt = self.str_to_ay(tmp.name)
+        fstype = self.str_to_ay(self._fs_name)
+        opts = self.str_to_ay('users,x-udisks-auth')
+
+        # set the new configuration
+        conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
+                               signature=dbus.Signature('sv'))
+        disk.AddConfigurationItem(('fstab', conf), self.no_options,
+                                  dbus_interface=self.iface_prefix + '.Block')
+
+    def _mount_as_user_fstab(self, pipe, uid, gid, device):
+        """ Try to mount and then unmount @device as user with given @uid and
+            @gid.
+            @device should be listed in /etc/fstab with proper options so user
+            is able to run these operations and this shouldn't fail.
+        """
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+        # try to mount the device
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Mount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            pipe.send([False, 'Mount DBus call failed: %s' % str(e)])
+            pipe.close()
+            return
+
+        ret, out = self.run_command('grep \"%s\" /proc/mounts' % device)
+        if ret != 0:
+            pipe.send([False, '%s not mounted' % device])
+            pipe.close()
+            return
+
+        if 'uid=%s,gid=%s' % (uid, gid) not in out:
+            pipe.send([False, '%s not mounted with given uid/gid.\nMount info: %s' % (device, out)])
+            pipe.close()
+            return
+
+        # and now try to unmount it
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Unmount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            pipe.send([False, 'Unmount DBus call failed: %s' % str(e)])
+            pipe.close()
+            return
+
+        ret, _out = self.run_command('grep \"%s\" /proc/mounts' % device)
+        if ret == 0:
+            pipe.send([False, '%s mounted after unmount called' % device])
+            pipe.close()
+            return
+
+        pipe.send([True, ''])
+        pipe.close()
+        return
+
+    def _mount_as_user_fstab_fail(self, pipe, uid, gid, device):
+        """ Try to mount @device as user with given @uid and @gid.
+            @device shouldn't be listed in /etc/fstab when running this, so
+            this is expected to fail.
+        """
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+        # try to mount the device -- it should fail
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Mount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            msg = 'GDBus.Error:org.freedesktop.UDisks2.Error.NotAuthorizedCanObtain: Not authorized to perform operation'
+            if msg in str(e):
+                pipe.send([True, ''])
+                pipe.close()
+                return
+            else:
+                pipe.send([False, 'Mount DBus call failed with unexpected exception: %s' % str(e)])
+                pipe.close()
+                return
+
+        ret, _out = self.run_command('grep \"%s\" /proc/mounts' % device)
+        if ret == 0:
+            pipe.send([False, '%s was mounted for UID %d without proper record in fstab' % (device, uid)])
+            pipe.close()
+            return
+        else:
+            pipe.send([False, 'Mount DBus call didn\'t fail but %s doesn\'t seem to be mounted.' % device])
+            pipe.close()
+            return
+
+    def _unmount_as_user_fstab_fail(self, pipe, uid, gid, device):
+        """ Try to unmount @device as user with given @uid and @gid.
+            @device shouldn't be listed in /etc/fstab when running this, so
+            this is expected to fail.
+        """
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+        # try to mount the device -- it should fail
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Unmount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            msg = 'GDBus.Error:org.freedesktop.UDisks2.Error.NotAuthorizedCanObtain: Not authorized to perform operation'
+            if msg in str(e):
+                pipe.send([True, ''])
+                pipe.close()
+                return
+            else:
+                pipe.send([False, 'Unmount DBus call failed with unexpected exception: %s' % str(e)])
+                pipe.close()
+                return
+
+        ret, _out = self.run_command('grep \"%s\" /proc/mounts' % device)
+        if ret == 0:
+            pipe.send([False, 'Unmount DBus call didn\'t fail but %s seems to be still mounted.' % device])
+            pipe.close()
+            return
+        else:
+            pipe.send([False, '%s was unmounted for UID %d without proper record in fstab' % (device, uid)])
+            pipe.close()
+            return
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_mount_fstab_user(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        # this test will change /etc/fstab, we might want to revert the changes after it finishes
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+
+        # create user for our test
+        self.addCleanup(self._remove_user)
+        uid, gid = self._add_user()
+
+        # add the disk to fstab
+        self._set_user_mountable(disk)
+
+        # create pipe to get error (if any)
+        parent_conn, child_conn = Pipe()
+
+        proc = Process(target=self._mount_as_user_fstab, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
+        proc.start()
+        res = parent_conn.recv()
+        parent_conn.close()
+        proc.join()
+
+        if not res[0]:
+            self.fail(res[1])
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_mount_fstab_user_fail(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        # this test will change /etc/fstab, we might want to revert the changes after it finishes
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+
+        # create user for our test
+        self.addCleanup(self._remove_user)
+        uid, gid = self._add_user()
+
+        # add unmount cleanup now in case something wrong happens in the other process
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # create pipe to get error (if any)
+        parent_conn, child_conn = Pipe()
+
+        proc = Process(target=self._mount_as_user_fstab_fail, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
+        proc.start()
+        res = parent_conn.recv()
+        parent_conn.close()
+        proc.join()
+
+        if not res[0]:
+            self.fail(res[1])
+
+        # now mount it as root and test that user can't unmount it
+        mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertIsNotNone(mnt_path)
+        self.assertTrue(os.path.ismount(mnt_path))
+
+        # create pipe to get error (if any)
+        parent_conn, child_conn = Pipe()
+
+        proc = Process(target=self._unmount_as_user_fstab_fail, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
+        proc.start()
+        res = parent_conn.recv()
+        parent_conn.close()
+        proc.join()
+
+        if not res[0]:
+            self.fail(res[1])
+
+        self.assertTrue(os.path.ismount(mnt_path))
+        self._unmount(mnt_path)
 
 
 class NTFSTestCase(UdisksFSTestCase):
@@ -350,8 +618,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = 'xfs'
 
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error mounting %s .* mount: '\
-              'wrong fs type' % self.vdevs[0]
+        msg = '[Ww]rong fs type'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)

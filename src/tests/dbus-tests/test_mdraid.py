@@ -332,7 +332,7 @@ class RAID1TestCase(RAIDLevel):
         dbus_member.assertEqual('/')  # default value for 'non-raid' devices is '/'
 
         # with 'wipe' option, device should be wiped
-        _ret, out = self.run_command('lsblk -d -no FSTYPE %s' % new_path)
+        _ret, out = self.run_command('lsblk -d -no FSTYPE %s' % new_dev)
         self.assertEqual(out, '')
 
     def test_bitmap_location(self):

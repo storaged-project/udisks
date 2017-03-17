@@ -249,8 +249,12 @@ class UdisksTestCase(unittest.TestCase):
         res = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
-        out, _err = res.communicate()
-        return (res.returncode, out.decode().strip())
+        out, err = res.communicate()
+        if res.returncode != 0:
+            output = out.decode().strip() + "\n\n" + err.decode().strip()
+        else:
+            output = out.decode().strip()
+        return (res.returncode, output)
 
     @classmethod
     def check_module_loaded(self, module):
