@@ -253,6 +253,8 @@ systemctl try-restart udisks2
 %{_sbindir}/umount.udisks2
 
 
+%dir %{_libdir}/udisks2
+%dir %{_libdir}/udisks2/modules
 %{_libexecdir}/udisks2/udisksd
 
 %{_bindir}/udisksctl
@@ -275,14 +277,10 @@ systemctl try-restart udisks2
 %{_libdir}/girepository-1.0/UDisks-2.0.typelib
 
 %files -n %{name}-lvm2
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_lvm2.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lvm2.policy
 
 %files -n %{name}-iscsi
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_iscsi.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.iscsi.policy
 
@@ -300,20 +298,14 @@ systemctl try-restart udisks2
 
 %if %{is_fedora}
 %files -n %{name}-bcache
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_bcache.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.bcache.policy
 
 %files -n %{name}-btrfs
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_btrfs.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.btrfs.policy
 
 %files -n %{name}-lsm
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_lsm.so
 %{_mandir}/man5/udisks2_lsm.conf.*
@@ -321,8 +313,6 @@ systemctl try-restart udisks2
 %attr(0600,root,root) %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
 
 %files -n %{name}-zram
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
