@@ -34,6 +34,9 @@ UDisksDrive *udisks_linux_drive_new      (void);
 gboolean     udisks_linux_drive_update   (UDisksLinuxDrive       *drive,
                                           UDisksLinuxDriveObject *object);
 
+gboolean udisks_linux_device_is_multipath (UDisksLinuxDevice *ud_lx_dev);
+GUdevDevice *udisks_linux_device_get_udev (UDisksLinuxDevice *ud_lx_dev);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_DRIVE_H__ */
