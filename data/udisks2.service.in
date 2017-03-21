@@ -5,7 +5,7 @@ Documentation=man:udisks(8)
 [Service]
 Type=dbus
 BusName=org.freedesktop.UDisks2
-ExecStart=@udisksdprivdir@/udisksd --no-debug
+ExecStart=@udisksdprivdir@/udisksd
 KillSignal=SIGINT
 
 [Install]
