@@ -38,7 +38,7 @@
 
     <!--
         CreateVolume:
-        @devices: A list of devices to create BTRFS volume from.
+        @devices: An array of object paths to objects implementing the #org.freedesktop.UDisks2.Block interface.
         @label: The label for the new volume.
         @data_level: The RAID level for the new volume.
         @md_level: The RAID level for metadata.
@@ -50,7 +50,7 @@
         No additional options are currently defined.
     -->
     <method name="CreateVolume">
-      <arg name="devices" type="as" direction="in"/>
+      <arg name="devices" type="ao" direction="in"/>
       <arg name="label" type="s" direction="in"/>
       <arg name="data_level" type="s" direction="in"/>
       <arg name="md_level" type="s" direction="in"/>
@@ -74,7 +74,7 @@
 
     <!--
         AddDevice:
-        @device: A device to be added to BTRFS volume.
+        @device: Object path of a device to be added to BTRFS volume.
         @options: Additional options.
         @since: 2.3.0
 
@@ -83,13 +83,13 @@
         No additional options are currently defined.
     -->
     <method name="AddDevice">
-      <arg name="device" type="s" direction="in"/>
+      <arg name="device" type="o" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
     </method>
 
     <!--
         RemoveDevice:
-        @device: A device to be removed from BTRFS volume.
+        @device: Object path of a device to be removed from BTRFS volume.
         @options: Additional options.
         @since: 2.3.0
 
@@ -98,7 +98,7 @@
         No additional options are currently defined.
     -->
     <method name="RemoveDevice">
-      <arg name="device" type="s" direction="in"/>
+      <arg name="device" type="o" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
     </method>
 

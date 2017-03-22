@@ -452,6 +452,9 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   GError *error = NULL;
   gchar *mount_point = NULL;
   gchar *device = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksObject *new_device_object = NULL;
+  UDisksBlock *new_device_block = NULL;
 
   object = udisks_daemon_util_dup_object (fs_btrfs, &error);
   if (! object)
@@ -460,8 +463,10 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs);
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
                                      btrfs_policy_action_id,
                                      arg_options,
@@ -477,7 +482,29 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
-  device = g_strdup (arg_device);
+  new_device_object = udisks_daemon_find_object (daemon, arg_device);
+  if (new_device_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Invalid object path %s",
+                                             arg_device);
+      goto out;
+    }
+
+  new_device_block = udisks_object_get_block (new_device_object);
+  if (new_device_block == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Object path %s is not a block device",
+                                             arg_device);
+      goto out;
+    }
+
+  device = udisks_block_dup_device (new_device_block);
 
   /* Add/remove the device to/from the volume. */
   if (! device_action (mount_point, device, NULL, &error))
@@ -495,6 +522,8 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
 out:
   /* Release the resources */
   g_clear_object (&object);
+  g_clear_object (&new_device_object);
+  g_clear_object (&new_device_block);
   g_free ((gpointer) mount_point);
   g_free ((gpointer) device);
 
