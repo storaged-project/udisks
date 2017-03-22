@@ -153,8 +153,8 @@
 
     <!--
         CreateSnapshot:
-        @source: A path to source subvolume.
-        @dest: A path to new snapshot volume.
+        @source: Name of the source subvolume.
+        @dest: Name for the new snapshot volume.
         @ro: True if the snapshot should be read-only; False otherwise.
         @options: Additional options.
         @since: 2.1.3
