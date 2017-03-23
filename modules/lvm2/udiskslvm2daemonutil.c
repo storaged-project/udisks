@@ -35,6 +35,8 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 
+#include <blockdev/lvm.h>
+
 #include <limits.h>
 #include <stdlib.h>
 
@@ -219,7 +221,10 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
 
   /* Try to bring affected volume group back into consistency. */
   if (volume_group_name != NULL)
-    run_sync ("vgreduce", volume_group_name, "--removemissing", NULL, NULL);
+    if (!bd_lvm_vgreduce (volume_group_name, NULL /* device */, NULL /* extra */, &local_error)) {
+      udisks_warning ("%s", local_error->message);
+      g_clear_error (&local_error);
+    }
 
   /* Make sure lvmetad knows about all this.
    *
