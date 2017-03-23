@@ -118,10 +118,11 @@ GOBJECT_INTROSPECTION_CHECK([0.6.2])
 # Behavior
 #
 
+fhs_media=no
 AC_ARG_ENABLE(fhs-media,
               [AS_HELP_STRING([--enable-fhs-media],
                               [Mount devices in /media instead of /run/media [default=no]])],
-              fhs_media=yes,
+              AS_IF([test "x$enable_fhs_media" == "xyes"], [fhs_media=yes]),
               fhs_media=no)
 if test "x$fhs_media" = "xyes"; then
   AC_DEFINE([HAVE_FHS_MEDIA], 1, [Define to 1 to use /media for mounting])
