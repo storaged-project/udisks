@@ -138,19 +138,25 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         self.assertIn('/dev/%s' % zram_name, swaps)
 
         # test some properties
-        sys_reads = self.read_file('/sys/block/%s/num_reads' % zram_name).strip()
+        sys_stat = self.read_file('/sys/block/%s/stat' % zram_name).strip().split()
+        self.assertEqual(len(sys_stat), 11)
+        sys_reads = sys_stat[0]
+        sys_writes = sys_stat[4]
+
         dbus_reads = self.get_property(zram, '.Block.ZRAM', 'num_reads')
         dbus_reads.assertEqual(int(sys_reads))
 
-        sys_writes = self.read_file('/sys/block/%s/num_writes' % zram_name).strip()
         dbus_writes = self.get_property(zram, '.Block.ZRAM', 'num_writes')
         dbus_writes.assertEqual(int(sys_writes))
 
-        sys_compr = self.read_file('/sys/block/%s/compr_data_size' % zram_name).strip()
+        sys_mmstat = self.read_file('/sys/block/%s/mm_stat' % zram_name).strip().split()
+        self.assertEqual(len(sys_mmstat), 7)
+        sys_compr = sys_mmstat[1]
+        sys_orig = sys_mmstat[0]
+
         dbus_compr = self.get_property(zram, '.Block.ZRAM', 'compr_data_size')
         dbus_compr.assertEqual(int(sys_compr))
 
-        sys_orig = self.read_file('/sys/block/%s/orig_data_size' % zram_name).strip()
         dbus_orig = self.get_property(zram, '.Block.ZRAM', 'orig_data_size')
         dbus_orig.assertEqual(int(sys_orig))
 

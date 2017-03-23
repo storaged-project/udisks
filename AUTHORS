@@ -2,9 +2,12 @@ Original author:
   David Zeuthen <davidz@redhat.com>, <zeuthen@gmail.com>
 
 Maintainer:
-  Peter Hatina <phatina@redhat.com>
+  Vratislav Podzimek <vpodzime@redhat.com>
 
 Contributors:
   Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
   Tomas Bzatek <tbzatek@redhat.com>
   Marius Vollmer <mvollmer@redhat.com>
+  Tomas Smetana <tsmetana@redhat.com>
+  Peter Hatina <phatina@redhat.com>
+  Vojtech Trefny <vtrefny@redhat.com>

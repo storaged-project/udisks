@@ -1,17 +1,170 @@
--------------------------
-udisks 2.6.4 (unreleased)
--------------------------
+---------------------------
+udisks 2.6.5 (unreleased)
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.6.4:
+(TODO: make shortlog)
+
+Thanks to all our contributors.
+
+Vojtech Trefny
+(TODO: date)
+
+------------
+udisks 2.6.4
+------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.6.3:
-(TODO: make shortlog)
+
+Gris Ge (1):
+      lsm module: Add SCSI enclosure disk LED control methods
+
+Hielke Christian Braun (1):
+      Allow NTFS mount option "big_writes"
+
+Jan Pokorny (3):
+      Added Loop device tests
+      Added drive and swapspace tests
+      SetConfiguration fix
+
+João Paulo Rechi Vita (1):
+      Don't coldplug uninitilized udev devices
+
+Mantas Mikulėnas (1):
+      Detect old (non-Pro) MemoryStick cards
+
+Marius Vollmer (1):
+      udev: Ignore ram block devices
+
+Martin Pitt (7):
+      exfat: Drop umask=0077 default
+      src/tests/test_polkitd.py: Drop unused Gio import
+      test_polkitd.py: Fix waiting for mock polkit to start
+      tests: Accept fancy quotes in GLib error messages
+      udisks2.service: Add KillSignal=SIGINT
+      LSM: Add policy file to POTFILES.in (#190)
+      Rename storaged back to udisks
+
+Mike Frysinger (1):
+      Include sys/sysmacros.h for major/minor/makedev
+
+Philip Withnall (1):
+      build: Declare use of C99 features and check for -std=gnu99 in autoconf
+
+Ritesh Khadgaray (1):
+      btrfs: Add support for changing label
+
+Thomas Gläßle (15):
+      Use GString for input in _UDisksSpawnedJob internally
+      Use binary IO channel for input_string
+      Change udisks_spawned_job_new's `input_string` param to GString
+      Add test for binary input string
+      Add launch functions taking GString inputs
+      Add doc-comments for _gstring launch functions
+      Add keyfile_contents blob to unlock options
+      Add --key-file option to udisksctl unlock
+      Document the keyfile_contents option
+      Improve unpacking routine for binary blobs
+      Allow binary passphrases for Block.Format
+      Add tests for keyfile support
+      Fix minor doc issues as requested by @vpodzime
+      Add Luks test for ascii text with newline
+      Add keyfile parameters to ChangePassphrase
+
+Tomas Smetana (1):
+      Post-release bump to 2.6.4
+
+Vojtech Trefny (34):
+      Recalculate partition size after end_bytes adjustments
+      Set name when creating partition with libblockdev
+      Set partition type when creating a new partition
+      Add more tests for partitioning
+      Add a common method for converting string to 'ay'
+      Do not use '--name' when creating new mdraid
+      Add 'redhat_rpm_config' to BuildRequires
+      Add dbus tests for MDRaid
+      Add dbus tests for job objects
+      DBus tests: Use checks that automatically wait for property update
+      DBus tests: Add BTRFSTestCase to filesystem tests.
+      Fix PolicyKit action ids for bcache, btrfs and zram modules
+      Job tests: Stop the watch thread before raising exception
+      Job tests: do not wait for the job forever
+      Fix values for 'modprobedir' and 'modloaddir'
+      Always try to create the ZRAM config directory first
+      Update value of the property after changing bcache mode
+      Add dbus tests for bcache module
+      Add dbus tests for ZRAM
+      DBus tests for Filesystems.BTRFS
+      DBus tests for ISCSI module
+      Add LSM polkit files to the source archive
+      Add LSM policy file to packaged files for the storaged-lsm package
+      Add some missing tests to filesystem interface DBus tests
+      Add some missing tests to encrypted interface DBus tests
+      Test changing of part type in StoragedBlockTest dbus test
+      Skip all filesystem tests if we cannot create that fs
+      DBus tests: Use subprocess.Popen instead of subprocess.run
+      DBus tests: Check if storaged module is available for test
+      Trigger update on the mdraid object after bitmap location change
+      DBus tests: Always use lsblk with -d (--nodeps) option
+      Do not try to put LSM files in source archive without LSM support
+      Fix creating mdraid without name
+      Make Udisks2 provide/obsolete storaged packages
+
+Vratislav Podzimek (43):
+      Install the DBus config file for tests
+      Replace g_error_free() with g_clear_error()
+      Remove the false argument of StoragedTestCase.get_object()
+      Add method to StoragedTestCase to get DBus interface
+      Make StoragedTestCase.get_object() work with a full object path
+      Do not swallow exceptions in StoragedTestCase.get_property()
+      Add a common method for converting 'ay' to string
+      Add tests for the Manager.LoopSetup method
+      Add test for the EnableModules() method
+      Add a tests for the Manager.SupportedFilesystems property
+      Use GLib logging framework instead of custom code
+      Add a --debug option and mark --no-debug as deprecated
+      Only enable debug logging when compiled with --enable-debug
+      Give MD RAID some time to actually change its state
+      Test what we can from the Drives.Ata interface
+      Always wait after loop device creation in tests
+      Use launch_spawned_job_sync() for setting file system's label
+      Use launch_spawned_job_sync() for swap operations
+      Do not start spawned jobs automatically
+      Make sure modules are loaded for the LVM tests
+      Increase the job_id atomically
+      Cast the out parameter for bcache_create to const gchar **
+      Trust libblockdev it will give us bcache device on success
+      Don't be so strict about SMART update timestamp
+      Only use structured logging with GLib >= 2.50
+      Fix docs for the new LsmLocal interface
+      Build with libblockdev's bcache functionality enabled
+      Do not stop the MD array before deletion in DBus tests
+      Skip the MD RAID bitmap location test for now
+      Disable all the FS integration tests but exfat
+      Be less strict about the btrfs error for invalid RAID level
+      Fix how job->input_string_cursor is reset
+      Fix failing btrfs tests
+      Fix how the git HEAD hash is determined in spec
+      Bump version in the spec template
+      Skip bcache tests on 32bit Intel
+      Add Makefile targets for running tests and the who CI set
+      Make sure we get the right exit status from 'make ci'
+      Use smaller scsi_debug devices for integration tests
+      Do not run MD RAID tests on Fedora 25
+      Use data from systemd (hostname1) to determine distribution
+      Fallback to crypttab passphrase only if none given
+      Only trim ".conf" from filename if it really has it
 
 Thanks to all our contributors.
 
-Tomas Smetana
-(TODO: date)
+Vojtech Trefny
+2017-03-14
 
 --------------
 storaged 2.6.3
@@ -1514,4 +1667,3 @@ Thanks to all our contributors.
 
 David Zeuthen,
 Jan 20, 2012
-

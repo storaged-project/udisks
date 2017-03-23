@@ -29,7 +29,7 @@ sign: dist
 	gpg --armor --detach-sign --output udisks-$(VERSION).tar.bz2.sign udisks-$(VERSION).tar.bz2
 
 shortlog:
-	git shortlog -r $$(git tag -l | tail -n 1)..HEAD
+	git shortlog -r --no-merges $$(git tag -l | tail -n 1)..HEAD
 
 clean-local:
 	rm -f *~
