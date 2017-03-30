@@ -21,6 +21,8 @@
 #ifndef __UDISKS_LINUX_VOLUME_GROUP_H__
 #define __UDISKS_LINUX_VOLUME_GROUP_H__
 
+#include <blockdev/lvm.h>
+
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
 #include "udisks-lvm2-generated.h"
@@ -34,7 +36,7 @@ G_BEGIN_DECLS
 GType              udisks_linux_volume_group_get_type  (void) G_GNUC_CONST;
 UDisksVolumeGroup *udisks_linux_volume_group_new       (void);
 void               udisks_linux_volume_group_update    (UDisksLinuxVolumeGroup  *volume_group,
-                                                        GVariant                *info,
+                                                        BDLVMVGdata             *vg_info,
                                                         gboolean                *needs_polling_ret);
 
 GList *udisks_linux_volume_group_get_logical_volumes (UDisksVolumeGroup *group,

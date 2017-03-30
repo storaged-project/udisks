@@ -35,6 +35,8 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 
+#include <blockdev/lvm.h>
+
 #include <limits.h>
 #include <stdlib.h>
 
@@ -219,7 +221,10 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
 
   /* Try to bring affected volume group back into consistency. */
   if (volume_group_name != NULL)
-    run_sync ("vgreduce", volume_group_name, "--removemissing", NULL, NULL);
+    if (!bd_lvm_vgreduce (volume_group_name, NULL /* device */, NULL /* extra */, &local_error)) {
+      udisks_warning ("%s", local_error->message);
+      g_clear_error (&local_error);
+    }
 
   /* Make sure lvmetad knows about all this.
    *
@@ -243,142 +248,6 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
 
 /* -------------------------------------------------------------------------------- */
 
-struct VariantReaderData {
-  const GVariantType *type;
-  void (*callback) (GPid pid, GVariant *result, GError *error, gpointer user_data);
-  gpointer user_data;
-  GPid pid;
-  GIOChannel *output_channel;
-  GByteArray *output;
-  gint output_watch;
-};
-
-static gboolean
-variant_reader_child_output (GIOChannel *source,
-                             GIOCondition condition,
-                             gpointer user_data)
-{
-  struct VariantReaderData *data = user_data;
-  guint8 buf[1024];
-  gsize bytes_read;
-
-  g_io_channel_read_chars (source, (gchar *)buf, sizeof buf, &bytes_read, NULL);
-  g_byte_array_append (data->output, buf, bytes_read);
-  return TRUE;
-}
-
-/* This function is called when a spawned processed has exited */
-static void
-variant_reader_watch_child (GPid     pid,
-                            gint     status,
-                            gpointer user_data)
-{
-  struct VariantReaderData *data = user_data;
-  guint8 *buf;
-  gsize buf_size;
-  GVariant *result;
-  GError *error = NULL;
-
-  data->pid = 0;
-
-  if (!g_spawn_check_exit_status (status, &error))
-    {
-      data->callback (pid, NULL, error, data->user_data);
-      g_clear_error (&error);
-      g_byte_array_free (data->output, TRUE);
-    }
-  else
-    {
-      if (g_io_channel_read_to_end (data->output_channel, (gchar **)&buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
-        {
-          g_byte_array_append (data->output, buf, buf_size);
-          g_free (buf);
-        }
-
-      result = g_variant_new_from_data (data->type,
-                                        data->output->data,
-                                        data->output->len,
-                                        TRUE,
-                                        g_free, NULL);
-      g_byte_array_free (data->output, FALSE);
-      data->callback (pid, result, NULL, data->user_data);
-      g_variant_unref (result);
-    }
-}
-
-static void
-variant_reader_destroy (gpointer user_data)
-{
-  int rc = 0;
-  struct VariantReaderData *data = user_data;
-  gint fd = g_io_channel_unix_get_fd(data->output_channel);
-  g_source_remove (data->output_watch);
-  g_io_channel_unref (data->output_channel);
-  g_free (data);
-
-  /* Make sure to close the underlying file descriptor, this apparently is
-   * not done when the channel gets cleaned up.  Documentation doesn't mention
-   * it, but this keeps us from exhausting all the file descriptors we have for
-   * the process.
-   */
-  rc = close(fd);
-  if (rc != 0 )
-    {
-      int ec = errno;
-      udisks_warning ("Error on close (errno %d): %s", ec, g_strerror (ec));
-    }
-}
-
-GPid
-udisks_daemon_util_lvm2_spawn_for_variant (const gchar        **argv,
-                                           const GVariantType  *type,
-                                           void (*callback)    (GPid pid,
-                                                                GVariant *result,
-                                                                GError   *error,
-                                                                gpointer  user_data),
-                                           gpointer             user_data)
-{
-  GError *error = NULL;
-  struct VariantReaderData *data;
-  GPid pid;
-  gint output_fd;
-
-  if (!g_spawn_async_with_pipes (NULL,
-                                 (gchar **)argv,
-                                 NULL,
-                                 G_SPAWN_DO_NOT_REAP_CHILD,
-                                 NULL,
-                                 NULL,
-                                 &pid,
-                                 NULL,
-                                 &output_fd,
-                                 NULL,
-                                 &error))
-    {
-      callback (0, NULL, error, user_data);
-      g_clear_error (&error);
-      return 0;
-    }
-
-  data = g_new0 (struct VariantReaderData, 1);
-
-  data->type = type;
-  data->callback = callback;
-  data->user_data = user_data;
-
-  data->pid = pid;
-  data->output = g_byte_array_new ();
-  data->output_channel = g_io_channel_unix_new (output_fd);
-  g_io_channel_set_encoding (data->output_channel, NULL, NULL);
-  g_io_channel_set_flags (data->output_channel, G_IO_FLAG_NONBLOCK, NULL);
-  data->output_watch = g_io_add_watch (data->output_channel, G_IO_IN, variant_reader_child_output, data);
-
-  /* Call the function 'variant_reader_watch_child' when this process exits */
-  g_child_watch_add_full (G_PRIORITY_DEFAULT_IDLE,
-                          pid, variant_reader_watch_child, data, variant_reader_destroy);
-  return pid;
-}
-
 UDisksLinuxVolumeGroupObject *
 udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
                                                   const gchar  *name)
@@ -400,9 +269,9 @@ udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
 gboolean
 udisks_daemon_util_lvm2_name_is_reserved (const gchar *name)
 {
- /* XXX - get this from lvm2app */
-
- return (strstr (name, "_mlog")
+ return (strchr (name, '[')
+         || strchr (name, ']')
+         || strstr (name, "_mlog")
          || strstr (name, "_mimage")
          || strstr (name, "_rimage")
          || strstr (name, "_rmeta")

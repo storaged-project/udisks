@@ -22,6 +22,8 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 
+#include <blockdev/lvm.h>
+
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxblockobject.h>
 #include <src/udisksdaemon.h>
@@ -111,20 +113,20 @@ void
 udisks_linux_physical_volume_update   (UDisksLinuxPhysicalVolume    *physical_volume,
                                        UDisksLinuxBlockObject       *object,
                                        UDisksLinuxVolumeGroupObject *group_object,
-                                       GVariant                     *info)
+                                       BDLVMPVdata                  *pv_info)
 {
   UDisksPhysicalVolume *iface;
-  guint64 num;
 
   iface = UDISKS_PHYSICAL_VOLUME (physical_volume);
 
   udisks_physical_volume_set_volume_group (iface, g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
 
-  if (g_variant_lookup (info, "size", "t", &num))
-    udisks_physical_volume_set_size (iface, num);
-
-  if (g_variant_lookup (info, "free-size", "t", &num))
-    udisks_physical_volume_set_free_size (iface, num);
+  /* udiskslinuxvolumegroupobject.c:487 looks like we may not be given actual pv_info */
+  if (pv_info)
+    {
+      udisks_physical_volume_set_size (iface, pv_info->pv_size);
+      udisks_physical_volume_set_free_size (iface, pv_info->pv_free);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -139,7 +141,7 @@ physical_volume_iface_init (UDisksPhysicalVolumeIface *iface)
 void
 udisks_linux_block_object_update_lvm_pv (UDisksLinuxBlockObject       *object,
                                          UDisksLinuxVolumeGroupObject *group_object,
-                                         GVariant                     *info)
+                                         BDLVMPVdata                  *pv_info)
 {
   UDisksPhysicalVolume *iface_physical_volume;
 
@@ -151,14 +153,14 @@ udisks_linux_block_object_update_lvm_pv (UDisksLinuxBlockObject       *object,
         {
           iface_physical_volume = udisks_linux_physical_volume_new ();
           udisks_linux_physical_volume_update (UDISKS_LINUX_PHYSICAL_VOLUME (iface_physical_volume),
-                                               object, group_object, info);
+                                               object, group_object, pv_info);
           g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object),
                                                 G_DBUS_INTERFACE_SKELETON (iface_physical_volume));
           g_object_unref (iface_physical_volume);
         }
       else
         udisks_linux_physical_volume_update (UDISKS_LINUX_PHYSICAL_VOLUME (iface_physical_volume),
-                                             object, group_object, info);
+                                             object, group_object, pv_info);
     }
   else
     {

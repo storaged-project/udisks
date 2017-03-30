@@ -22,6 +22,8 @@
 #ifndef __UDISKS_LINUX_MDRAID_OBJECT_H__
 #define __UDISKS_LINUX_MDRAID_OBJECT_H__
 
+#include <blockdev/lvm.h>
+
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
 
@@ -42,7 +44,8 @@ UDisksLinuxVolumeGroupObject   *udisks_linux_logical_volume_object_get_volume_gr
 const gchar                    *udisks_linux_logical_volume_object_get_name         (UDisksLinuxLogicalVolumeObject *object);
 
 void                            udisks_linux_logical_volume_object_update           (UDisksLinuxLogicalVolumeObject *object,
-                                                                                     GVariant                       *info,
+                                                                                     BDLVMLVdata                    *lv_info,
+                                                                                     BDLVMLVdata                    *meta_lv_info,
                                                                                      gboolean                       *needs_polling_ret);
 void                            udisks_linux_logical_volume_object_update_etctabs   (UDisksLinuxLogicalVolumeObject *object);
 

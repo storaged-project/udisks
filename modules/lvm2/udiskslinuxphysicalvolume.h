@@ -22,6 +22,8 @@
 #ifndef __UDISKS_LINUX_PHYSICAL_VOLUME_H__
 #define __UDISKS_LINUX_PHYSICAL_VOLUME_H__
 
+#include <blockdev/lvm.h>
+
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
 
@@ -38,11 +40,11 @@ UDisksPhysicalVolume *udisks_linux_physical_volume_new      (void);
 void                  udisks_linux_physical_volume_update   (UDisksLinuxPhysicalVolume    *physical_volume,
                                                              UDisksLinuxBlockObject       *object,
                                                              UDisksLinuxVolumeGroupObject *group_object,
-                                                             GVariant                     *info);
+                                                             BDLVMPVdata                  *pv_info);
 
 void                  udisks_linux_block_object_update_lvm_pv (UDisksLinuxBlockObject       *object,
                                                                UDisksLinuxVolumeGroupObject *group_object,
-                                                               GVariant                     *info);
+                                                               BDLVMPVdata                  *pv_info);
 
 
 G_END_DECLS
