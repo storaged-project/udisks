@@ -927,6 +927,7 @@ dbus_freedesktop_guint32_get (GDBusMethodInvocation   *invocation,
   if (out_value != NULL)
     *out_value = fetched;
 
+  g_variant_unref (value);
   ret = TRUE;
 out:
   return ret;
