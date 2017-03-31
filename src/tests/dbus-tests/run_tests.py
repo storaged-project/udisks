@@ -11,6 +11,13 @@ import glob
 import shutil
 import tempfile
 import re
+try:
+    from blivet import Blivet
+except ImportError:
+    SKIP_CLEAN = True
+else:
+    import force_clean
+    SKIP_CLEAN = False
 
 
 def find_daemon(projdir, system):
@@ -38,15 +45,16 @@ def setup_vdevs():
 
     devs = {dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev)}
 
-    vdevs = ["/dev/%s" % dev for dev in (devs - orig_devs)]
+    vdevs = ["/dev/%s" % dev for dev in (devs - orig_devs)]  #pylint: disable=superfluous-parens
 
     # let's be 100% sure that we pick a virtual one
     for d in vdevs:
         with open('/sys/block/%s/device/model' %
-                    os.path.basename(d)) as model_file:
+                  os.path.basename(d)) as model_file:
             assert model_file.read().strip() == 'udisks_test_dis'
 
     udiskstestcase.test_devs = vdevs
+
 
 def install_new_policy(projdir, tmpdir):
     '''Copies the polkit policies to the system directory and backs up eventually the existing files.
@@ -62,6 +70,7 @@ def install_new_policy(projdir, tmpdir):
 
     return restore_list
 
+
 def install_new_dbus_conf(projdir, tmpdir):
     '''Copies the DBus config file(s) to the system directory and backs up eventually the existing files.
        Returns a list of files that need to be restored.'''
@@ -75,6 +84,7 @@ def install_new_dbus_conf(projdir, tmpdir):
 
     return restore_list
 
+
 def restore_files(restore_list, tmpdir):
     for f in restore_list:
         shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
@@ -83,6 +93,10 @@ def restore_files(restore_list, tmpdir):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
+    if not SKIP_CLEAN:
+        cleaner = force_clean.ForceClean()
+    else:
+        print('Blivet not installed: Skipping force clean')
 
     argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -105,6 +119,9 @@ if __name__ == '__main__':
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir, args.system)
 
+    if not SKIP_CLEAN:
+        cleaner.record_state()
+
     if not args.system:
         tmpdir = tempfile.TemporaryDirectory(prefix='udisks-tst-')
         policy_files = install_new_policy(projdir, tmpdir)
@@ -118,7 +135,7 @@ if __name__ == '__main__':
         # give the daemon some time to initialize
         time.sleep(3)
         daemon.poll()
-        if daemon.returncode != None:
+        if daemon.returncode is not None:
             print("Fatal: Unable to start the daemon process", file=sys.stderr)
             sys.exit(1)
     else:
@@ -143,10 +160,13 @@ if __name__ == '__main__':
         restore_files(conf_files, tmpdir)
         tmpdir.cleanup()
 
-    # remove the fake SCSI devices and their backing files
-    subprocess.call(['targetcli', 'clearconfig confirm=True'])
-    for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
-        os.unlink(disk_file)
+    if not SKIP_CLEAN:
+        cleaner.restore_state()
+    else:
+        # remove the fake SCSI devices and their backing files
+        subprocess.call(['targetcli', 'clearconfig confirm=True'])
+        for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
+            os.unlink(disk_file)
 
     if result.wasSuccessful():
         sys.exit(0)
