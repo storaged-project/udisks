@@ -2,7 +2,7 @@ import os
 import subprocess
 import glob
 import syslog
-from blivet import Blivet
+import blivet
 
 
 class ForceClean(object):
@@ -51,13 +51,13 @@ class ForceClean(object):
             syslog.syslog("Following devices were not removed after UDisks2 D-Bus" +
                           " tests and will be removed by force: %s" % str(diff)[1:-1])
 
-        blvt = Blivet()
+        blvt = blivet.Blivet()
         blvt.reset()
         for device in diff:
             # kill all processes that are using the device
             # get list of mountpoints from blivet mountpoint dictionary
             mountpoints = [mpoint for mpoint, dev in
-                           blvt.mounts.mounts_cache.mountpoints.items()
+                           blivet.mounts.mounts_cache.mountpoints.items()
                            if dev == device]
 
             for mountpoint in mountpoints:
