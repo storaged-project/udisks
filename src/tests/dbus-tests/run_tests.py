@@ -154,7 +154,9 @@ if __name__ == '__main__':
     if not args.system:
         daemon.terminate()
         daemon.wait()
-        daemon_log.close()
+
+        if args.logfile:
+            daemon_log.close()
 
         restore_files(policy_files, tmpdir)
         restore_files(conf_files, tmpdir)
