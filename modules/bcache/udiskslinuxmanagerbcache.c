@@ -158,6 +158,8 @@ udisks_linux_manager_bcache_class_init (UDisksLinuxManagerBcacheClass *klass)
 static void
 udisks_linux_manager_bcache_init (UDisksLinuxManagerBcache *self)
 {
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**

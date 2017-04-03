@@ -163,6 +163,8 @@ udisks_linux_manager_zram_class_init (UDisksLinuxManagerZRAMClass *klass)
 static void
 udisks_linux_manager_zram_init (UDisksLinuxManagerZRAM *self)
 {
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**
