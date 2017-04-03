@@ -38,10 +38,10 @@
 
      <!--
         BcacheCreate:
-        @backing_dev: backing (slow) device of the cache
-        @cache_dev: cache (fast) device of the cache
+        @backing_dev: object path of the backing (slow) device of the cache
+        @cache_dev: object path of the cache (fast) device of the cache
         @options: Additional options.
-        @bcache: name of the new bcache device
+        @bcache: object path of the new bcache device
         @since: 2.4.0
 
         Create new bcache device.
@@ -49,10 +49,10 @@
         No additional options are currently defined.
     -->
     <method name = "BcacheCreate">
-      <arg name="backing_dev" direction="in" type="s"/>
-      <arg name="cache_dev" direction="in" type="s"/>
+      <arg name="backing_dev" direction="in" type="o"/>
+      <arg name="cache_dev" direction="in" type="o"/>
       <arg name="options" direction="in" type="a{sv}"/>
-      <arg name="bcache" direction="out" type="s"/>
+      <arg name="bcache" direction="out" type="o"/>
     </method>
 
   </interface>

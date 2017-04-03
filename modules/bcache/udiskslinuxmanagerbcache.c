@@ -25,6 +25,8 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
+#include <src/udiskslinuxblock.h>
+#include <src/udiskslinuxblockobject.h>
 #include "udisks-bcache-generated.h"
 #include "udiskslinuxblockbcache.h"
 #include "udiskslinuxmanagerbcache.h"
@@ -195,6 +197,28 @@ UDisksDaemon *udisks_linux_manager_bcache_get_daemon (UDisksLinuxManagerBcache* 
   return manager->daemon;
 }
 
+static UDisksObject *
+wait_for_bcache_object (UDisksDaemon *daemon,
+                        gpointer      user_data)
+{
+  UDisksObject *object = NULL;
+  UDisksBlock *block = NULL;
+
+  object = udisks_daemon_find_block_by_device_file (daemon, (const gchar *) user_data);
+  if (object == NULL)
+      goto out;
+
+  block = udisks_object_peek_block (object);
+  if (block == NULL)
+    {
+      g_clear_object (&object);
+      goto out;
+    }
+
+  out:
+    return object;
+}
+
 static gboolean
 handle_bcache_create (UDisksManagerBcache    *object,
                       GDBusMethodInvocation  *invocation,
@@ -204,12 +228,16 @@ handle_bcache_create (UDisksManagerBcache    *object,
 {
   GError *error = NULL;
   UDisksLinuxManagerBcache *manager = UDISKS_LINUX_MANAGER_BCACHE (object);
-  gchar *backing_dev;
-  gchar *cache_dev;
-  gchar *bcache = NULL;
 
-  backing_dev = g_strdup (arg_backing_dev);
-  cache_dev = g_strdup (arg_cache_dev);
+  UDisksObject *backing_dev_object = NULL;
+  UDisksBlock *backing_dev_block = NULL;
+  const gchar *backing_dev_path = NULL;
+  UDisksObject *cache_dev_object = NULL;
+  UDisksBlock *cache_dev_block = NULL;
+  const gchar *cache_dev_path = NULL;
+  gchar *bcache_name = NULL;
+  gchar *bcache_file = NULL;
+  UDisksObject *bcache_object = NULL;
 
   /* Policy check */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_bcache_get_daemon (manager),
@@ -219,17 +247,95 @@ handle_bcache_create (UDisksManagerBcache    *object,
                                      N_("Authentication is required to create bcache device."),
                                      invocation);
 
+  /* get path for the backing device */
+  backing_dev_object = udisks_daemon_find_object (manager->daemon, arg_backing_dev);
+  if (backing_dev_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Invalid object path %s",
+                                             arg_backing_dev);
+      goto out;
+    }
+
+  backing_dev_block = udisks_object_get_block (backing_dev_object);
+  if (backing_dev_block == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Object path %s is not a block device",
+                                             arg_backing_dev);
+      goto out;
+    }
+
+  backing_dev_path = udisks_block_dup_device (backing_dev_block);
+
+  /* get path for the cache device */
+  cache_dev_object = udisks_daemon_find_object (manager->daemon, arg_cache_dev);
+  if (cache_dev_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Invalid object path %s",
+                                             arg_cache_dev);
+      goto out;
+    }
+
+  cache_dev_block = udisks_object_get_block (cache_dev_object);
+  if (cache_dev_block == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Object path %s is not a block device",
+                                             arg_cache_dev);
+      goto out;
+    }
+
+  cache_dev_path = udisks_block_dup_device (cache_dev_block);
+
   /* XXX: the type casting below looks like a bug in libblockdev */
-  if (! bd_kbd_bcache_create (backing_dev, cache_dev, NULL, (const gchar **) &bcache, &error))
+  if (! bd_kbd_bcache_create (backing_dev_path, cache_dev_path, NULL, (const gchar **) &bcache_name, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
-  udisks_manager_bcache_complete_bcache_create (object, invocation, bcache);
+  bcache_file = g_strdup_printf ("/dev/%s", bcache_name);
+  /* sit and wait for the bcache object to show up */
+  bcache_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                      wait_for_bcache_object,
+                                                      bcache_file,
+                                                      NULL,
+                                                      10, /* timeout_seconds */
+                                                      &error);
+
+  if (bcache_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for bcache object after creating %s",
+                      bcache_name);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_manager_bcache_complete_bcache_create (object,
+                                                invocation,
+                                                g_dbus_object_get_object_path (G_DBUS_OBJECT (bcache_object)));
 out:
-  g_free (backing_dev);
-  g_free (cache_dev);
+  g_free ((gchar *) backing_dev_path);
+  g_free ((gchar *) cache_dev_path);
+  g_free (bcache_name);
+  g_free (bcache_file);
+  g_object_unref (bcache_object);
+  g_clear_object (&backing_dev_object);
+  g_clear_object (&backing_dev_block);
+  g_clear_object (&cache_dev_object);
+  g_clear_object (&cache_dev_block);
+
   return TRUE;
 }
 

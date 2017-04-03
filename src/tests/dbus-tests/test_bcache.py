@@ -50,17 +50,21 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
 
         return size
 
+    def _obj_path_from_path(self, device_path):
+        return self.path_prefix + '/block_devices/' + os.path.basename(device_path)
+
     def test_create_destroy(self):
         '''Test creating a new bcache and its properties'''
 
         manager = self.get_object('/Manager')
-        bcache_name = manager.BcacheCreate(self.vdevs[0], self.vdevs[1], self.no_options,
+        bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
+                                           self._obj_path_from_path(self.vdevs[1]), self.no_options,
                                            dbus_interface=self.iface_prefix + '.Manager.Bcache')
-        time.sleep(3)
+        self.assertIsNotNone(bcache_path)
+        bcache_name = bcache_path.split('/')[-1]
         self.addCleanup(self._force_remove, bcache_name, self.vdevs[0], self.vdevs[1])
 
         bcache = self.get_object('/block_devices/' + bcache_name)
-        self.assertIsNotNone(bcache)
 
         self.assertTrue(os.path.exists('/sys/block/%s/bcache' % bcache_name))
 
@@ -116,9 +120,11 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
         '''Test if it's possible to change cache mode on existing bcache'''
 
         manager = self.get_object('/Manager')
-        bcache_name = manager.BcacheCreate(self.vdevs[0], self.vdevs[1], self.no_options,
+        bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
+                                           self._obj_path_from_path(self.vdevs[1]), self.no_options,
                                            dbus_interface=self.iface_prefix + '.Manager.Bcache')
-        time.sleep(3)
+        self.assertIsNotNone(bcache_path)
+        bcache_name = bcache_path.split('/')[-1]
         self.addCleanup(self._force_remove, bcache_name, self.vdevs[0], self.vdevs[1])
 
         bcache = self.get_object('/block_devices/' + bcache_name)
