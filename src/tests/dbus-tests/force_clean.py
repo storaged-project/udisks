@@ -2,7 +2,6 @@ import os
 import subprocess
 import glob
 import syslog
-import blivet
 
 
 class ForceClean(object):
@@ -51,6 +50,7 @@ class ForceClean(object):
             syslog.syslog("Following devices were not removed after UDisks2 D-Bus" +
                           " tests and will be removed by force: %s" % str(diff)[1:-1])
 
+        import blivet
         blvt = blivet.Blivet()
         blvt.reset()
         for device in diff:
