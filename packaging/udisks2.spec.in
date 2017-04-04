@@ -41,13 +41,17 @@ BuildRequires: intltool
 BuildRequires: redhat-rpm-config
 BuildRequires: libblockdev-devel        >= %{libblockdev_version}
 BuildRequires: libblockdev-part-devel   >= %{libblockdev_version}
-BuildRequires: libblockdev-btrfs-devel  >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel    >= %{libblockdev_version}
 BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
-BuildRequires: libblockdev-lvm-devel    >= %{libblockdev_version}
+
+Requires: libblockdev        >= %{libblockdev_version}
+Requires: libblockdev-part   >= %{libblockdev_version}
+Requires: libblockdev-swap   >= %{libblockdev_version}
+Requires: libblockdev-mdraid >= %{libblockdev_version}
+Requires: libblockdev-fs     >= %{libblockdev_version}
+Requires: libblockdev-crypto >= %{libblockdev_version}
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -116,7 +120,9 @@ Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: lvm2
+Requires: libblockdev-lvm >= %{libblockdev_version}
 BuildRequires: lvm2-devel
+BuildRequires: libblockdev-lvm-devel >= %{libblockdev_version}
 Provides:  storaged-lvm2 = %{version}-%{release}
 Obsoletes: storaged-lvm2
 
@@ -142,7 +148,7 @@ Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-kbd >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel
+BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
 Provides:  storaged-bcache = %{version}-%{release}
 Obsoletes: storaged-bcache
 
@@ -155,7 +161,7 @@ Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-btrfs >= %{libblockdev_version}
-BuildRequires: libblockdev-btrfs-devel
+BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
 Provides:  storaged-btrfs = %{version}-%{release}
 Obsoletes: storaged-btrfs
 
@@ -181,9 +187,9 @@ Summary: Module for ZRAM
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
-Requires: libblockdev-kbd
-Requires: libblockdev-swap
-BuildRequires: libblockdev-kbd-devel
+Requires: libblockdev-kbd >= %{libblockdev_version}
+Requires: libblockdev-swap >= %{libblockdev_version}
+BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-swap-devel
 Provides:  storaged-zram = %{version}-%{release}
 Obsoletes: storaged-zram
