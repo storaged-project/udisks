@@ -88,14 +88,14 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
-    <property name="mode" type="s" access="read"/>
-    <property name="state" type="s" access="read"/>
-    <property name="block_size" type="t" access="read"/>
-    <property name="cache_size" type="t" access="read"/>
-    <property name="cache_used" type="t" access="read"/>
-    <property name="hits" type="t" access="read"/>
-    <property name="misses" type="t" access="read"/>
-    <property name="bypass_hits" type="t" access="read"/>
-    <property name="bypass_misses" type="t" access="read"/>
+    <property name="Mode" type="s" access="read"/>
+    <property name="State" type="s" access="read"/>
+    <property name="BlockSize" type="t" access="read"/>
+    <property name="CacheSize" type="t" access="read"/>
+    <property name="CacheUsed" type="t" access="read"/>
+    <property name="Hits" type="t" access="read"/>
+    <property name="Misses" type="t" access="read"/>
+    <property name="BypassHits" type="t" access="read"/>
+    <property name="BypassMisses" type="t" access="read"/>
 
   </interface>
