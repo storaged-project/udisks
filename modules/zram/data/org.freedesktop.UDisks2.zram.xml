@@ -81,11 +81,16 @@
 
     <!--
         Refresh:
+        @options: Additional options.
         @since: 2.3.0
 
         Used to refresh properties changed over time.
+
+        No additional options are currently defined.
     -->
-    <method name="Refresh"/>
+    <method name="Refresh">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
 
     <!--
         Activate:

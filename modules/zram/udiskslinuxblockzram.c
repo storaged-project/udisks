@@ -290,7 +290,8 @@ out:
 
 static gboolean
 handle_refresh (UDisksBlockZRAM       *zramblock_,
-                GDBusMethodInvocation *invocation)
+                GDBusMethodInvocation *invocation,
+                GVariant              *options)
 {
   UDisksLinuxBlockZRAM *zramblock = UDISKS_LINUX_BLOCK_ZRAM (zramblock_);
   UDisksObject *object = NULL;

@@ -126,7 +126,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         zram.Activate(1, self.no_options, dbus_interface=self.iface_prefix + '.Block.ZRAM')
         self.addCleanup(self._swapoff, '/dev/%s' % zram_name)
         time.sleep(1)
-        zram.Refresh(dbus_interface=self.iface_prefix + '.Block.ZRAM')
+        zram.Refresh(self.no_options, dbus_interface=self.iface_prefix + '.Block.ZRAM')
 
         # check if is active
         active = self.get_property(zram, '.Block.ZRAM', 'Active')
@@ -163,7 +163,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         # deactivate the ZRAM device
         zram.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.Block.ZRAM')
         time.sleep(1)
-        zram.Refresh(dbus_interface=self.iface_prefix + '.Block.ZRAM')
+        zram.Refresh(self.no_options, dbus_interface=self.iface_prefix + '.Block.ZRAM')
 
         # check if is not active
         active = self.get_property(zram, '.Block.ZRAM', 'Active')
