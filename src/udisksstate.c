@@ -1794,6 +1794,79 @@ udisks_state_add_loop (UDisksState   *state,
 }
 
 /**
+ * node_cb:
+ * @child:          Element in the list you are visiting
+ * @compare_data:   Data used for comparison
+ * @user_data:      Data supplied by call to iterate list
+ *
+ * Returns: %TRUE if the iteration should stop, else %FALSE
+ */
+typedef gboolean (*node_cb)(GVariant *child, gpointer compare_data,
+                            gpointer user_data);
+
+
+/**
+ * interate_list:
+ * @list:           The list to iterate over
+ * @visit:          The function called on each element in the list
+ * @compare_data:   Data used for comparison
+ * @user_data:      Pointer to user supplied data
+ *
+ * Returns: %TRUE if iteration was stopped by node_cb, else %FALSE
+ */
+static gboolean
+interate_list (GVariant *list, node_cb visit, gpointer compare_data,
+               gpointer user_data)
+{
+  gboolean rc = FALSE;
+  GVariantIter iter;
+  GVariant *child = NULL;
+
+  if (!list)
+    return rc;
+
+  g_variant_iter_init (&iter, list);
+
+  while (!rc && ((child = g_variant_iter_next_value (&iter)) != NULL))
+    {
+      rc = visit (child, compare_data, user_data);
+      g_variant_unref (child);
+    }
+
+  return rc;
+}
+
+static gboolean
+_udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
+                                     gpointer user_data )
+{
+  gboolean ret = FALSE;
+  const gchar *iter_device_file = NULL;
+  GVariant *details = NULL;
+  uid_t *out_uid = (uid_t *) user_data;
+
+  g_variant_get (child, "{&s@a{sv}}", &iter_device_file, &details);
+
+  if (g_strcmp0 (iter_device_file, ((gchar*)compare_data)) == 0)
+    {
+      if (out_uid != NULL)
+        {
+          GVariant *lookup_value;
+          lookup_value = lookup_asv (details, "setup-by-uid");
+          *out_uid = 0;
+          if (lookup_value != NULL)
+            {
+              *out_uid = g_variant_get_uint32 (lookup_value);
+              g_variant_unref (lookup_value);
+            }
+        }
+    }
+    g_variant_unref (details);
+
+    return ret;
+}
+
+/**
  * udisks_state_has_loop:
  * @state: A #UDisksState
  * @device_file: A loop device file.
@@ -1834,45 +1907,9 @@ udisks_state_has_loop (UDisksState   *state,
       goto out;
     }
 
-  /* look through list */
-  if (value != NULL)
-    {
-      GVariantIter iter;
-      GVariant *child;
-      g_variant_iter_init (&iter, value);
-      while ((child = g_variant_iter_next_value (&iter)) != NULL)
-        {
-          const gchar *iter_device_file;
-          GVariant *details;
-
-          g_variant_get (child,
-                         "{&s@a{sv}}",
-                         &iter_device_file,
-                         &details);
-
-          if (g_strcmp0 (iter_device_file, device_file) == 0)
-            {
-              ret = TRUE;
-              if (out_uid != NULL)
-                {
-                  GVariant *lookup_value;
-                  lookup_value = lookup_asv (details, "setup-by-uid");
-                  *out_uid = 0;
-                  if (lookup_value != NULL)
-                    {
-                      *out_uid = g_variant_get_uint32 (lookup_value);
-                      g_variant_unref (lookup_value);
-                    }
-                }
-              g_variant_unref (details);
-              g_variant_unref (child);
-              goto out;
-            }
-          g_variant_unref (details);
-          g_variant_unref (child);
-        }
-    }
-
+  ret = interate_list (value,
+                       _udisks_state_has_loop_list_visitor,
+                       (gpointer) device_file, (gpointer) out_uid);
  out:
   if (value != NULL)
     g_variant_unref (value);
@@ -2123,6 +2160,37 @@ udisks_state_add_mdraid (UDisksState   *state,
   g_mutex_unlock (&state->lock);
 }
 
+static gboolean
+_udisks_state_has_mdraid_list_visitor (GVariant *child, gpointer compare_data,
+                                       gpointer user_data )
+{
+  gboolean ret = FALSE;
+  guint64 iter_raid_device;
+  GVariant *details;
+  dev_t *raid_device = (dev_t*) compare_data;
+  uid_t *out_uid = (uid_t*) user_data;
+
+  g_variant_get (child, "{t@a{sv}}", &iter_raid_device, &details);
+
+  if (iter_raid_device == *raid_device)
+    {
+      ret = TRUE;
+      if (out_uid != NULL)
+        {
+          GVariant *lookup_value;
+          lookup_value = lookup_asv (details, "started-by-uid");
+          *out_uid = 0;
+          if (lookup_value != NULL)
+            {
+              *out_uid = g_variant_get_uint32 (lookup_value);
+              g_variant_unref (lookup_value);
+            }
+        }
+      g_variant_unref (details);
+    }
+  return ret;
+}
+
 /**
  * udisks_state_has_mdraid:
  * @state: A #UDisksState
@@ -2160,45 +2228,8 @@ udisks_state_has_mdraid (UDisksState   *state,
       goto out;
     }
 
-  /* look through list */
-  if (value != NULL)
-    {
-      GVariantIter iter;
-      GVariant *child;
-      g_variant_iter_init (&iter, value);
-      while ((child = g_variant_iter_next_value (&iter)) != NULL)
-        {
-          guint64 iter_raid_device;
-          GVariant *details;
-
-          g_variant_get (child,
-                         "{t@a{sv}}",
-                         &iter_raid_device,
-                         &details);
-
-          if (iter_raid_device == raid_device)
-            {
-              ret = TRUE;
-              if (out_uid != NULL)
-                {
-                  GVariant *lookup_value;
-                  lookup_value = lookup_asv (details, "started-by-uid");
-                  *out_uid = 0;
-                  if (lookup_value != NULL)
-                    {
-                      *out_uid = g_variant_get_uint32 (lookup_value);
-                      g_variant_unref (lookup_value);
-                    }
-                }
-              g_variant_unref (details);
-              g_variant_unref (child);
-              goto out;
-            }
-          g_variant_unref (details);
-          g_variant_unref (child);
-        }
-    }
-
+  ret = interate_list (value, _udisks_state_has_mdraid_list_visitor,
+                       (gpointer) &raid_device, (gpointer) out_uid);
  out:
   if (value != NULL)
     g_variant_unref (value);
