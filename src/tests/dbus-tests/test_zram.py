@@ -91,15 +91,15 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
             self.assertTrue(os.path.exists('/dev/%s' % zram_name))
 
             sys_size = self.read_file('/sys/block/%s/disksize' % zram_name).strip()
-            dbus_size = self.get_property(zram, '.Block.ZRAM', 'disksize')
+            dbus_size = self.get_property(zram, '.Block.ZRAM', 'Disksize')
             dbus_size.assertEqual(int(sys_size))
 
             sys_alg = self.read_file('/sys/block/%s/comp_algorithm' % zram_name).strip()
-            dbus_alg = self.get_property(zram, '.Block.ZRAM', 'comp_algorithm')
+            dbus_alg = self.get_property(zram, '.Block.ZRAM', 'CompAlgorithm')
             dbus_alg.assertEqual(sys_alg)
 
             sys_streams = self.read_file('/sys/block/%s/max_comp_streams' % zram_name).strip()
-            dbus_streams = self.get_property(zram, '.Block.ZRAM', 'max_comp_streams')
+            dbus_streams = self.get_property(zram, '.Block.ZRAM', 'MaxCompStreams')
             dbus_streams.assertEqual(int(sys_streams))
 
         # destroy zrams
@@ -129,7 +129,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         zram.Refresh(dbus_interface=self.iface_prefix + '.Block.ZRAM')
 
         # check if is active
-        active = self.get_property(zram, '.Block.ZRAM', 'active')
+        active = self.get_property(zram, '.Block.ZRAM', 'Active')
         active.assertTrue()
 
         # and if is in /proc/swaps
@@ -143,10 +143,10 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         sys_reads = sys_stat[0]
         sys_writes = sys_stat[4]
 
-        dbus_reads = self.get_property(zram, '.Block.ZRAM', 'num_reads')
+        dbus_reads = self.get_property(zram, '.Block.ZRAM', 'NumReads')
         dbus_reads.assertEqual(int(sys_reads))
 
-        dbus_writes = self.get_property(zram, '.Block.ZRAM', 'num_writes')
+        dbus_writes = self.get_property(zram, '.Block.ZRAM', 'NumWrites')
         dbus_writes.assertEqual(int(sys_writes))
 
         sys_mmstat = self.read_file('/sys/block/%s/mm_stat' % zram_name).strip().split()
@@ -154,10 +154,10 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         sys_compr = sys_mmstat[1]
         sys_orig = sys_mmstat[0]
 
-        dbus_compr = self.get_property(zram, '.Block.ZRAM', 'compr_data_size')
+        dbus_compr = self.get_property(zram, '.Block.ZRAM', 'ComprDataSize')
         dbus_compr.assertEqual(int(sys_compr))
 
-        dbus_orig = self.get_property(zram, '.Block.ZRAM', 'orig_data_size')
+        dbus_orig = self.get_property(zram, '.Block.ZRAM', 'OrigDataSize')
         dbus_orig.assertEqual(int(sys_orig))
 
         # deactivate the ZRAM device
@@ -166,7 +166,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         zram.Refresh(dbus_interface=self.iface_prefix + '.Block.ZRAM')
 
         # check if is not active
-        active = self.get_property(zram, '.Block.ZRAM', 'active')
+        active = self.get_property(zram, '.Block.ZRAM', 'Active')
         active.assertFalse()
 
         # and if is not in /proc/swaps
