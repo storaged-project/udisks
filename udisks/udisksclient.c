@@ -848,95 +848,10 @@ udisks_client_get_mdraid_for_block (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/**
- * udisks_client_get_block_for_mdraid:
- * @client: A #UDisksClient.
- * @raid: A #UDisksMDRaid.
- *
- * Gets the RAID device (e.g. <filename>/dev/md0</filename>) for @raid.
- *
- * In the case of a <ulink
- * url="http://en.wikipedia.org/wiki/Split-brain_(computing)">split-brain
- * syndrome</ulink>, it is undefined which RAID device is
- * returned. For example this can happen if
- * <filename>/dev/sda</filename> and <filename>/dev/sdb</filename> are
- * components of a two-disk RAID-1 and <filename>/dev/md0</filename>
- * and <filename>/dev/md1</filename> are two degraded arrays, each one
- * using exactly one of the two devices. Use
- * udisks_client_get_all_blocks_for_mdraid() to get all RAID devices.
- *
- * Returns: (transfer full): A #UDisksBlock or %NULL if no RAID device is running.
- *
- * Since: 2.1
- */
-UDisksBlock *
-udisks_client_get_block_for_mdraid (UDisksClient *client,
-                                    UDisksMDRaid *raid)
-{
-  UDisksBlock *ret = NULL;
-  GList *l, *object_proxies = NULL;
-  GDBusObject *raid_object;
-  const gchar *raid_objpath;
-
-  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
-  g_return_val_if_fail (UDISKS_IS_MDRAID (raid), NULL);
-
-  raid_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (raid));
-  if (raid_object == NULL)
-    goto out;
-
-  raid_objpath = g_dbus_object_get_object_path (raid_object);
-
-  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
-  for (l = object_proxies; l != NULL; l = l->next)
-    {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlock *block;
-
-      block = udisks_object_get_block (object);
-      if (block == NULL)
-        continue;
-
-      /* ignore partitions */
-      if (udisks_object_peek_partition (object) != NULL)
-        continue;
-
-      if (g_strcmp0 (udisks_block_get_mdraid (block), raid_objpath) == 0)
-        {
-          ret = block;
-          goto out;
-        }
-      g_object_unref (block);
-    }
-
- out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
-  return ret;
-}
-
-/**
- * udisks_client_get_all_blocks_for_mdraid:
- * @client: A #UDisksClient.
- * @raid: A #UDisksMDRaid.
- *
- * Gets all RAID devices (e.g. <filename>/dev/md0</filename> and <filename>/dev/md1</filename>) for @raid.
- *
- * This is usually only useful in <ulink
- * url="http://en.wikipedia.org/wiki/Split-brain_(computing)">split-brain
- * situations</ulink> — see udisks_client_get_block_for_mdraid() for
- * an example — and is normally used only to convey the problem in an
- * user interface.
- *
- * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
- *   returned list should be freed with g_list_free() after each
- *   element has been freed with g_object_unref().
- *
- * Since: 2.1
- */
-GList *
-udisks_client_get_all_blocks_for_mdraid (UDisksClient *client,
-                                         UDisksMDRaid *raid)
+static GList *
+_udisks_client_get_block_or_blocks_for_mdraid (UDisksClient *client,
+                                               UDisksMDRaid *raid,
+                                               gboolean only_first_one)
 {
   GList *ret = NULL;
   GList *l, *object_proxies = NULL;
@@ -969,6 +884,9 @@ udisks_client_get_all_blocks_for_mdraid (UDisksClient *client,
       if (g_strcmp0 (udisks_block_get_mdraid (block), raid_objpath) == 0)
         {
           ret = g_list_prepend (ret, block);
+
+          if (only_first_one)
+            goto out;
         }
       else
         {
@@ -981,6 +899,69 @@ udisks_client_get_all_blocks_for_mdraid (UDisksClient *client,
   g_list_free (object_proxies);
   ret = g_list_reverse (ret);
   return ret;
+}
+
+/**
+ * udisks_client_get_block_for_mdraid:
+ * @client: A #UDisksClient.
+ * @raid: A #UDisksMDRaid.
+ *
+ * Gets the RAID device (e.g. <filename>/dev/md0</filename>) for @raid.
+ *
+ * In the case of a <ulink
+ * url="http://en.wikipedia.org/wiki/Split-brain_(computing)">split-brain
+ * syndrome</ulink>, it is undefined which RAID device is
+ * returned. For example this can happen if
+ * <filename>/dev/sda</filename> and <filename>/dev/sdb</filename> are
+ * components of a two-disk RAID-1 and <filename>/dev/md0</filename>
+ * and <filename>/dev/md1</filename> are two degraded arrays, each one
+ * using exactly one of the two devices. Use
+ * udisks_client_get_all_blocks_for_mdraid() to get all RAID devices.
+ *
+ * Returns: (transfer full): A #UDisksBlock or %NULL if no RAID device is running.
+ *
+ * Since: 2.1
+ */
+UDisksBlock *
+udisks_client_get_block_for_mdraid (UDisksClient *client,
+                                    UDisksMDRaid *raid)
+{
+  GList *b_list = NULL;
+  UDisksBlock *ret = NULL;
+
+  b_list = _udisks_client_get_block_or_blocks_for_mdraid (client, raid, TRUE);
+  if (b_list)
+   {
+      ret = (g_list_first (b_list))->data;
+      g_list_free (b_list);
+   }
+  return ret;
+}
+
+/**
+ * udisks_client_get_all_blocks_for_mdraid:
+ * @client: A #UDisksClient.
+ * @raid: A #UDisksMDRaid.
+ *
+ * Gets all RAID devices (e.g. <filename>/dev/md0</filename> and <filename>/dev/md1</filename>) for @raid.
+ *
+ * This is usually only useful in <ulink
+ * url="http://en.wikipedia.org/wiki/Split-brain_(computing)">split-brain
+ * situations</ulink> — see udisks_client_get_block_for_mdraid() for
+ * an example — and is normally used only to convey the problem in an
+ * user interface.
+ *
+ * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ *
+ * Since: 2.1
+ */
+GList *
+udisks_client_get_all_blocks_for_mdraid (UDisksClient *client,
+                                         UDisksMDRaid *raid)
+{
+  return _udisks_client_get_block_or_blocks_for_mdraid (client, raid, FALSE);
 }
 
 /**
