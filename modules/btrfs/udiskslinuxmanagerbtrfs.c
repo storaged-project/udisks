@@ -152,6 +152,8 @@ udisks_linux_manager_btrfs_class_init (UDisksLinuxManagerBTRFSClass *klass)
 static void
 udisks_linux_manager_btrfs_init (UDisksLinuxManagerBTRFS *self)
 {
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**

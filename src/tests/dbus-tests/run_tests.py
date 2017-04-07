@@ -11,14 +11,7 @@ import glob
 import shutil
 import tempfile
 import re
-try:
-    from blivet import Blivet
-except ImportError:
-    SKIP_CLEAN = True
-else:
-    import force_clean
-    SKIP_CLEAN = False
-
+import importlib
 
 def find_daemon(projdir, system):
     if not system:
@@ -93,10 +86,13 @@ def restore_files(restore_list, tmpdir):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
-    if not SKIP_CLEAN:
-        cleaner = force_clean.ForceClean()
-    else:
+
+    skip_clean = not importlib.find_loader('blivet')
+    if skip_clean:
         print('Blivet not installed: Skipping force clean')
+    else:
+        import force_clean
+        cleaner = force_clean.ForceClean()
 
     argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -119,7 +115,7 @@ if __name__ == '__main__':
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir, args.system)
 
-    if not SKIP_CLEAN:
+    if not skip_clean:
         cleaner.record_state()
 
     if not args.system:
@@ -154,13 +150,15 @@ if __name__ == '__main__':
     if not args.system:
         daemon.terminate()
         daemon.wait()
-        daemon_log.close()
+
+        if args.logfile:
+            daemon_log.close()
 
         restore_files(policy_files, tmpdir)
         restore_files(conf_files, tmpdir)
         tmpdir.cleanup()
 
-    if not SKIP_CLEAN:
+    if not skip_clean:
         cleaner.restore_state()
     else:
         # remove the fake SCSI devices and their backing files

@@ -186,7 +186,8 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
   gchar *dev_file = NULL;
   gboolean rval = FALSE;
   BDKBDBcacheStats *stats;
-  const gchar* mode = NULL;
+  BDKBDBcacheMode mode;
+  const gchar* mode_str = NULL;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_BCACHE (block), FALSE);
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
@@ -194,15 +195,28 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
   dev_file = udisks_linux_block_object_get_device_file (object);
 
   stats = bd_kbd_bcache_status (dev_file, &error);
-  mode = bd_kbd_bcache_get_mode_str(bd_kbd_bcache_get_mode(dev_file, &error), &error);
-  if (! stats || ! mode)
+  if (! stats)
     {
-      udisks_critical ("Can't get Bcache block device info for %s", dev_file);
+      udisks_critical ("Can't get Bcache block device info for %s: %s", dev_file, error->message);
+      rval = FALSE;
+      goto out;
+    }
+  mode = bd_kbd_bcache_get_mode(dev_file, &error);
+  if (mode == BD_KBD_MODE_UNKNOWN)
+    {
+      udisks_critical ("Can't get Bcache mode for %s: %s", dev_file, error->message);
+      rval = FALSE;
+      goto out;
+    }
+  mode_str = bd_kbd_bcache_get_mode_str(mode, &error);
+  if (! mode_str)
+    {
+      udisks_critical ("Can't get Bcache mode string for %s: %s", dev_file, error->message);
       rval = FALSE;
       goto out;
     }
 
-  udisks_block_bcache_set_mode (iface, mode);
+  udisks_block_bcache_set_mode (iface, mode_str);
   udisks_block_bcache_set_state (iface, stats->state);
   udisks_block_bcache_set_block_size (iface, stats->block_size);
   udisks_block_bcache_set_cache_size (iface, stats->cache_size);
