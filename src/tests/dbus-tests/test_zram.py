@@ -70,6 +70,11 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
         return [path for path in objects.keys() if re.match(r'.*/block_devices/zram[0-9]+$', path)]
 
+    def _get_algorithm(self, zram_name):
+        # comp_algorithm contains all supported algorithms, the right one is in square brackets
+        modes = self.read_file('/sys/block/%s/comp_algorithm' % zram_name)
+        return next((x[1:-1] for x in modes.split() if re.match(r'^\[.*\]$', x)), None)
+
     def _swapoff(self, swap):
         self.run_command('swapoff %s' % swap)
 
@@ -94,7 +99,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
             dbus_size = self.get_property(zram, '.Block.ZRAM', 'Disksize')
             dbus_size.assertEqual(int(sys_size))
 
-            sys_alg = self.read_file('/sys/block/%s/comp_algorithm' % zram_name).strip()
+            sys_alg = self._get_algorithm(zram_name)
             dbus_alg = self.get_property(zram, '.Block.ZRAM', 'CompAlgorithm')
             dbus_alg.assertEqual(sys_alg)
 

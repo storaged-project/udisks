@@ -168,6 +168,21 @@ udisks_linux_block_zram_get_daemon (UDisksLinuxBlockZRAM *zramblock)
   return daemon;
 }
 
+static gchar *
+extract_comp_algorithm (const gchar *alg_str)
+{
+  gchar *begin = NULL;
+  gchar *end = NULL;
+
+  begin = strchr (alg_str, '[');
+  end = strchr (alg_str, ']');
+  if (! begin || ! end)
+      return NULL;
+  begin++;
+
+  return g_strndup (begin, end - begin);
+}
+
 /**
  * udisks_linux_block_zram_update:
  * @zramblock: A #UDisksLinuxBlockZRAM
@@ -187,6 +202,7 @@ udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
   gchar *dev_file = NULL;
   gboolean rval = FALSE;
   BDKBDZramStats *zram_info;
+  gchar *algorithm = NULL;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_ZRAM (zramblock), FALSE);
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
@@ -202,6 +218,14 @@ udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
       goto out;
     }
 
+  algorithm = extract_comp_algorithm (zram_info->comp_algorithm);
+  if (! algorithm)
+    {
+      udisks_critical ("Failed to determine comp algorithm from '%s'", zram_info->comp_algorithm);
+      rval = FALSE;
+      goto out;
+    }
+
   /* Update the interface */
   udisks_block_zram_set_disksize (iface, zram_info->disksize);
   udisks_block_zram_set_num_reads (iface, zram_info->num_reads);
@@ -209,7 +233,7 @@ udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
   udisks_block_zram_set_invalid_io (iface, zram_info->invalid_io);
   udisks_block_zram_set_zero_pages (iface, zram_info->zero_pages);
   udisks_block_zram_set_max_comp_streams (iface, zram_info->max_comp_streams);
-  udisks_block_zram_set_comp_algorithm (iface, zram_info->comp_algorithm);
+  udisks_block_zram_set_comp_algorithm (iface, algorithm);
   udisks_block_zram_set_orig_data_size (iface, zram_info->orig_data_size);
   udisks_block_zram_set_compr_data_size (iface, zram_info->compr_data_size);
   udisks_block_zram_set_mem_used_total (iface, zram_info->mem_used_total);
@@ -220,6 +244,7 @@ out:
     bd_kbd_zram_stats_free (zram_info);
   if (error)
     g_clear_error (&error);
+  g_free (algorithm);
   g_free (dev_file);
 
   return rval;
