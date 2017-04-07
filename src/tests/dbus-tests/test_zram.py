@@ -80,11 +80,8 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
     def test_create_destroy(self):
         manager = self.get_object('/Manager')
-        manager.CreateDevices([10 * 1024**2, 10 * 1024**2], [1, 2], self.no_options,
-                              dbus_interface=self.iface_prefix + '.Manager.ZRAM')
-        time.sleep(3)
-
-        zrams = self._get_zrams()
+        zrams = manager.CreateDevices([10 * 1024**2, 10 * 1024**2], [1, 2], self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Manager.ZRAM')
         self.assertEqual(len(zrams), 2)
 
         # zram devices properties
@@ -115,11 +112,8 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
     def test_activate_deactivate(self):
         manager = self.get_object('/Manager')
-        manager.CreateDevices([10 * 1024**2], [1], self.no_options,
-                              dbus_interface=self.iface_prefix + '.Manager.ZRAM')
-        time.sleep(3)
-
-        zrams = self._get_zrams()
+        zrams = manager.CreateDevices([10 * 1024**2], [1], self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Manager.ZRAM')
         self.assertEqual(len(zrams), 1)
 
         zram = self.bus.get_object(self.iface_prefix, zrams[0])

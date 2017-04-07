@@ -41,6 +41,7 @@
         @sizes: Requested sizes (in bytes) for created zRAM devices.
         @num_streams: Number of streams for created zRAM devices.
         @options: Additional options.
+        @zrams: object paths of the new ZRAM devices
         @since: 2.3.0
 
         Creates num_devices zram devices.
@@ -51,6 +52,7 @@
       <arg name="sizes" direction="in" type="at"/>
       <arg name="num_streams" direction="in" type="at"/>
       <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="zrams" direction="out" type="ao"/>
     </method>
 
     <!--
