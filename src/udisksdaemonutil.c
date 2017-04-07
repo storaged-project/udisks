@@ -879,6 +879,61 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+dbus_freedesktop_guint32_get (GDBusMethodInvocation   *invocation,
+                              GCancellable            *cancellable,
+                              const gchar             *method,
+                              guint32                 *out_value,
+                              GError                 **error)
+{
+  gboolean ret = FALSE;
+  GError *local_error = NULL;
+  GVariant *value;
+  guint32 fetched = 0;
+  const gchar *caller = g_dbus_method_invocation_get_sender (invocation);
+
+
+  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
+                                       "org.freedesktop.DBus",  /* bus name */
+                                       "/org/freedesktop/DBus", /* object path */
+                                       "org.freedesktop.DBus",  /* interface */
+                                       method, /* method */
+                                       g_variant_new ("(s)", caller),
+                                       G_VARIANT_TYPE ("(u)"),
+                                       G_DBUS_CALL_FLAGS_NONE,
+                                       -1, /* timeout_msec */
+                                       cancellable,
+                                       &local_error);
+  if (value == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error determining uid of caller %s: %s (%s, %d)",
+                   caller,
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_clear_error (&local_error);
+      goto out;
+    }
+
+  {
+    G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+    G_STATIC_ASSERT (sizeof (pid_t) == sizeof (guint32));
+  }
+
+  g_variant_get (value, "(u)", &fetched);
+  if (out_value != NULL)
+    *out_value = fetched;
+
+  g_variant_unref (value);
+  ret = TRUE;
+out:
+  return ret;
+}
+
+
 /**
  * udisks_daemon_util_get_caller_uid_sync:
  * @daemon: A #UDisksDaemon.
@@ -904,48 +959,19 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                                         GError                 **error)
 {
   gboolean ret;
-  const gchar *caller;
-  GVariant *value;
-  GError *local_error;
   uid_t uid;
 
   /* TODO: cache this on @daemon */
 
   ret = FALSE;
 
-  caller = g_dbus_method_invocation_get_sender (invocation);
-
-  local_error = NULL;
-  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
-                                       "org.freedesktop.DBus",  /* bus name */
-                                       "/org/freedesktop/DBus", /* object path */
-                                       "org.freedesktop.DBus",  /* interface */
-                                       "GetConnectionUnixUser", /* method */
-                                       g_variant_new ("(s)", caller),
-                                       G_VARIANT_TYPE ("(u)"),
-                                       G_DBUS_CALL_FLAGS_NONE,
-                                       -1, /* timeout_msec */
-                                       cancellable,
-                                       &local_error);
-  if (value == NULL)
+  if (!dbus_freedesktop_guint32_get (invocation, cancellable,
+                                     "GetConnectionUnixUser",
+                                     &uid, error))
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error determining uid of caller %s: %s (%s, %d)",
-                   caller,
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_clear_error (&local_error);
       goto out;
     }
 
-  {
-    G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
-  }
-
-  g_variant_get (value, "(u)", &uid);
   if (out_uid != NULL)
     *out_uid = uid;
 
@@ -1006,55 +1032,15 @@ udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
                                         pid_t                   *out_pid,
                                         GError                 **error)
 {
-  gboolean ret;
-  const gchar *caller;
-  GVariant *value;
-  GError *local_error;
-  pid_t pid;
+  // "GetConnectionUnixProcessID"
 
   /* TODO: cache this on @daemon */
+  /* NOTE: pid_t is a signed 32 bit, but the
+   * GetConnectionUnixProcessID dbus method returns an unsigned */
 
-  ret = FALSE;
-
-  caller = g_dbus_method_invocation_get_sender (invocation);
-
-  local_error = NULL;
-  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
-                                       "org.freedesktop.DBus",  /* bus name */
-                                       "/org/freedesktop/DBus", /* object path */
-                                       "org.freedesktop.DBus",  /* interface */
-                                       "GetConnectionUnixProcessID", /* method */
-                                       g_variant_new ("(s)", caller),
-                                       G_VARIANT_TYPE ("(u)"),
-                                       G_DBUS_CALL_FLAGS_NONE,
-                                       -1, /* timeout_msec */
-                                       cancellable,
-                                       &local_error);
-  if (value == NULL)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error determining uid of caller %s: %s (%s, %d)",
-                   caller,
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_clear_error (&local_error);
-      goto out;
-    }
-
-  {
-    G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
-  }
-  g_variant_get (value, "(u)", &pid);
-  if (out_pid != NULL)
-    *out_pid = pid;
-
-  ret = TRUE;
-
- out:
-  return ret;
+  return dbus_freedesktop_guint32_get (invocation, cancellable,
+                                       "GetConnectionUnixProcessID",
+                                       (guint32*)(out_pid), error);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
