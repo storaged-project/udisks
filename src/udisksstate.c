@@ -1699,7 +1699,7 @@ typedef gboolean (*node_cb)(GVariant *child, gpointer compare_data,
 
 
 /**
- * interate_list:
+ * iterate_list:
  * @list:           The list to iterate over
  * @visit:          The function called on each element in the list
  * @compare_data:   Data used for comparison
@@ -1708,8 +1708,8 @@ typedef gboolean (*node_cb)(GVariant *child, gpointer compare_data,
  * Returns: %TRUE if iteration was stopped by node_cb, else %FALSE
  */
 static gboolean
-interate_list (GVariant *list, node_cb visit, gpointer compare_data,
-               gpointer user_data)
+iterate_list (GVariant *list, node_cb visit, gpointer compare_data,
+              gpointer user_data)
 {
   gboolean rc = FALSE;
   GVariantIter iter;
@@ -1792,9 +1792,9 @@ udisks_state_has_loop (UDisksState   *state,
                             G_VARIANT_TYPE ("a{sa{sv}}"), &ok);
   if (ok && value)
    {
-      ret = interate_list (value,
-                           _udisks_state_has_loop_list_visitor,
-                           (gpointer) device_file, (gpointer) out_uid);
+      ret = iterate_list (value,
+                          _udisks_state_has_loop_list_visitor,
+                          (gpointer) device_file, (gpointer) out_uid);
       g_variant_unref (value);
    }
     
@@ -2075,8 +2075,8 @@ udisks_state_has_mdraid (UDisksState   *state,
                             G_VARIANT_TYPE ("a{ta{sv}}"), &ok);
   if (ok && value)
     {
-      ret = interate_list (value, _udisks_state_has_mdraid_list_visitor,
-                           (gpointer) &raid_device, (gpointer) out_uid);
+      ret = iterate_list (value, _udisks_state_has_mdraid_list_visitor,
+                          (gpointer) &raid_device, (gpointer) out_uid);
       g_variant_unref (value);
     }
 
