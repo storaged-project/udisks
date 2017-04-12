@@ -1247,15 +1247,14 @@ wait_on_recheck (gpointer user_data)
   return FALSE; /* remove the source */
 }
 
-UDisksObject *
-udisks_daemon_wait_for_object_sync (UDisksDaemon          *daemon,
-                                    UDisksDaemonWaitFunc   wait_func,
-                                    gpointer               user_data,
-                                    GDestroyNotify         user_data_free_func,
-                                    guint                  timeout_seconds,
-                                    GError               **error)
+static gpointer wait_for_objects (UDisksDaemon                *daemon,
+                                  UDisksDaemonWaitFuncGeneric  wait_func,
+                                  gpointer                     user_data,
+                                  GDestroyNotify               user_data_free_func,
+                                  guint                        timeout_seconds,
+                                  GError                     **error)
 {
-  UDisksObject *ret;
+  gpointer ret;
   WaitData data;
 
   /* TODO: support GCancellable */
@@ -1327,6 +1326,38 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon          *daemon,
     g_main_context_unref (data.context);
 
   return ret;
+}
+
+UDisksObject *
+udisks_daemon_wait_for_object_sync (UDisksDaemon               *daemon,
+                                    UDisksDaemonWaitFuncObject  wait_func,
+                                    gpointer                    user_data,
+                                    GDestroyNotify              user_data_free_func,
+                                    guint                       timeout_seconds,
+                                    GError                      **error)
+{
+  return (UDisksObject *) wait_for_objects (daemon,
+                                            (UDisksDaemonWaitFuncGeneric) wait_func,
+                                            user_data,
+                                            user_data_free_func,
+                                            timeout_seconds,
+                                            error);
+}
+
+UDisksObject **
+udisks_daemon_wait_for_objects_sync (UDisksDaemon                 *daemon,
+                                     UDisksDaemonWaitFuncObjects   wait_func,
+                                     gpointer                      user_data,
+                                     GDestroyNotify                user_data_free_func,
+                                     guint                         timeout_seconds,
+                                     GError                      **error)
+{
+  return (UDisksObject **) wait_for_objects (daemon,
+                                             (UDisksDaemonWaitFuncGeneric) wait_func,
+                                             user_data,
+                                             user_data_free_func,
+                                             timeout_seconds,
+                                             error);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

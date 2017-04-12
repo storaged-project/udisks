@@ -310,6 +310,57 @@ out:
   return rval;
 
 }
+
+static UDisksObject **
+wait_for_zram_objects (UDisksDaemon *daemon,
+                       gpointer      user_data)
+{
+  gchar **zram_p = NULL;
+  gint next_obj = 0;
+  gboolean success = TRUE;
+  gint num_zrams = 0;
+  UDisksObject **objects = NULL;
+  gchar **zram_paths = (gchar **) user_data;
+
+  num_zrams = g_strv_length ((gchar **) user_data);
+  objects = g_new0 (UDisksObject *, num_zrams);
+
+  for (zram_p = zram_paths; *zram_p != NULL; zram_p++, next_obj++)
+    {
+      UDisksObject *object = NULL;
+      UDisksBlock *block = NULL;
+
+      object = udisks_daemon_find_block_by_device_file (daemon, *zram_p);
+      if (object == NULL)
+        {
+          success = FALSE;
+          break;
+        }
+
+      block = udisks_object_peek_block (object);
+      if (block == NULL)
+        {
+          success = FALSE;
+          g_object_unref (object);
+          break;
+        }
+
+      success = TRUE;
+      objects[next_obj] = object;
+    }
+
+  if (! success && objects)
+    {
+      for (int i = 0; i < num_zrams; i++)
+        if (objects[i])
+          g_object_unref (objects[i]);
+      g_free (objects);
+      return NULL;
+    }
+
+  return objects;
+}
+
 static gboolean
 handle_create_devices (UDisksManagerZRAM     *object,
                        GDBusMethodInvocation *invocation,
@@ -323,6 +374,9 @@ handle_create_devices (UDisksManagerZRAM     *object,
   gsize streams_len;
   guint64 *sizes;
   guint64 *num_streams;
+  gchar **zram_paths = NULL;
+  UDisksObject **zram_objects = NULL;
+  const gchar **zram_object_paths = NULL;
 
   /* Policy check */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
@@ -351,8 +405,42 @@ handle_create_devices (UDisksManagerZRAM     *object,
       delete_conf_files (&error);
       goto out;
     }
-  udisks_manager_zram_complete_create_devices(object, invocation);
+
+  zram_paths = g_new0 (gchar *, sizes_len);
+  for (int i = 0; i < sizes_len; i++)
+    zram_paths[i] = g_strdup_printf ("/dev/zram%d", i);
+
+  /* sit and wait for the bcache object to show up */
+  zram_objects = udisks_daemon_wait_for_objects_sync (manager->daemon,
+                                                      wait_for_zram_objects,
+                                                      zram_paths,
+                                                      NULL,
+                                                      10, /* timeout_seconds */
+                                                      &error);
+
+  if (zram_objects == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for ZRAM objects after creating.");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+
+  zram_object_paths = g_new0 (const gchar *, sizes_len);
+  for (int i = 0; i < sizes_len; i++)
+    zram_object_paths[i] = g_dbus_object_get_object_path (G_DBUS_OBJECT (zram_objects[i]));
+
+  udisks_manager_zram_complete_create_devices (object,
+                                               invocation,
+                                               zram_object_paths);
 out:
+  if (zram_paths)
+    for (int i = 0; i < sizes_len; i++)
+      g_free (zram_paths[i]);
+
+  g_free (zram_paths);
+
   return TRUE;
 }
 
