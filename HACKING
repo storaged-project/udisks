@@ -32,6 +32,9 @@ Checklist for making a release:
 
  - Update the NEWS file
 
+ - Update the AUTHORS file if we have any new authors since last release.  The
+   git command `git shortlog -se` helps.
+
  - Check that everything works
    - Run 'make check'
    - Run 'sudo ./integration-test' in src/tests
