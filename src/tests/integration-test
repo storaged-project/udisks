@@ -99,7 +99,7 @@ class UDisksTestCase(unittest.TestCase):
 
         if os.geteuid() != 0:
             print('this test suite needs to run as root', file=sys.stderr)
-            sys.exit(0)
+            sys.exit(1)
 
         # run from local build tree if we are in one, otherwise use system instance
         klass.daemon_path = os.path.join(srcdir, 'src', '.libs', 'udisksd')
@@ -365,7 +365,7 @@ class UDisksTestCase(unittest.TestCase):
             if not os.path.exists(d):
                 sys.stderr.write('The directory %s does not exist; please '
                                  'create it before running these tests.\n' % d)
-                sys.exit(0)
+                sys.exit(1)
 
     @classmethod
     def setup_vdev(klass):
