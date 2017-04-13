@@ -1180,22 +1180,28 @@ class Smart(UDisksTestCase):
         This is a best-effort readonly test.
         '''
         hd = '/dev/sda'
+        has_smart = False
 
         if not os.path.exists(hd):
             self.write_stderr('[skip] ')
             return
 
-        has_smart = subprocess.call(['skdump', '--can-smart', hd],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT) == 0
+        process = subprocess.Popen(['skdump', '--can-smart', hd],
+                                   stdout=subprocess.PIPE)
+
+        (output, err) = process.communicate()
+        exit_code = process.wait()
+
+        if exit_code == 0 and output.decode().strip() == 'YES':
+            has_smart = True
 
         block = self.client.get_block_for_dev(os.stat(hd).st_rdev)
         self.assertNotEqual(block, None)
         drive = self.client.get_drive_for_block(block)
         ata = self.client.get_object(drive.get_object_path()).get_property('drive-ata')
-        self.assertEqual(ata is not None, has_smart)
 
         if has_smart:
+            self.assertEqual(ata is not None, has_smart)
             self.write_stderr('[avail] ')
             self.assertEqual(ata.get_property('smart-supported'), True)
             self.assertEqual(ata.get_property('smart-enabled'), True)
