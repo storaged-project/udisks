@@ -49,41 +49,97 @@ def setup_vdevs():
     udiskstestcase.test_devs = vdevs
 
 
-def install_new_policy(projdir, tmpdir):
-    '''Copies the polkit policies to the system directory and backs up eventually the existing files.
-       Returns a list of files that need to be restored.'''
-    files = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
+def _copy_files(source_files, target_dir, tmpdir):
+    """
+    Copies the source files to the target directory.  If the file exists in the
+    target dir it's backed up to tmpdir and placed on a list of files to
+    restore.  If the file doesn't exist it's flagged to be deleted.
+    Use restore_files for processing.
+
+    Returns a list of files that need to be restored or deleted.
+    """
     restore_list = []
-    for f in files:
-        tgt = '/usr/share/polkit-1/actions/' + os.path.basename(f)
+    for f in source_files:
+        tgt = os.path.join(target_dir, os.path.basename(f))
         if os.path.exists(tgt):
             shutil.move(tgt, tmpdir.name)
-            restore_list.append(tgt)
-        shutil.copy(f, '/usr/share/polkit-1/actions/')
+            restore_list.append((tgt, False))
+        else:
+            restore_list.append((tgt, True))
+
+        print("Coping file: %s to %s directory!" % (f, target_dir))
+        shutil.copy(f, target_dir)
 
     return restore_list
+
+
+def install_new_policy(projdir, tmpdir):
+    """
+    Copies the polkit policy files.
+    """
+    files = glob.glob(projdir + '/data/*.policy') + \
+            glob.glob(projdir + '/modules/*/data/*.policy')
+    return _copy_files(files, '/usr/share/polkit-1/actions/', tmpdir)
 
 
 def install_new_dbus_conf(projdir, tmpdir):
-    '''Copies the DBus config file(s) to the system directory and backs up eventually the existing files.
-       Returns a list of files that need to be restored.'''
-    restore_list = []
-    config = os.path.join(projdir, "data/org.freedesktop.UDisks2.conf")
-    tgt = os.path.join('/etc/dbus-1/system.d/', os.path.basename(config))
-    if os.path.exists(tgt):
-        shutil.move(tgt, tmpdir.name)
-        restore_list.append(tgt)
-    shutil.copy(config, '/etc/dbus-1/system.d/')
+    """
+    Copies the DBus config file(s)
 
-    return restore_list
+    Returns a list of files that need to be restored or deleted.
+    """
+    return _copy_files([os.path.join(projdir,
+                                    "data/org.freedesktop.UDisks2.conf"), ],
+                       '/etc/dbus-1/system.d/',
+                       tmpdir)
+
+
+def install_new_udev_rules(projdir, tmpdir):
+    """
+    Copies the udev rules file to correct location.
+
+    Returns a list of file(s) that need to be restored or deleted.
+    """
+    tgt = ""
+    for p in ['/usr/lib/udev/rules.d/', '/lib/udev/rules.d']:
+        if os.path.exists(p):
+            tgt = p
+            break
+
+    assert tgt
+    return _copy_files([os.path.join(projdir,
+                                    "data/80-udisks2.rules"), ],
+                       tgt,
+                       tmpdir)
 
 
 def restore_files(restore_list, tmpdir):
-    for f in restore_list:
-        shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
+    banner = False
+    for f, delete in restore_list:
+        if delete:
+            if not banner:
+                print("*NOT* deleting the following file(s) that we placed there!")
+                banner = True
+            print(f)
+            # os.unlink(f)
+            # The other test(s) needs these files, lets leave until we get
+            # this common code integrated with them as well.
+            pass
+        else:
+            shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
+
+
+def udev_shake():
+    assert subprocess.call(['udevadm', 'control', '--reload']) == 0
+    assert subprocess.call(['udevadm', 'trigger']) == 0
+    assert subprocess.call(['udevadm', 'settle']) == 0
 
 
 if __name__ == '__main__':
+    files_to_restore = []
+    tmpdir = None
+    daemon = None
+    cleaner = None
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
@@ -120,8 +176,11 @@ if __name__ == '__main__':
 
     if not args.system:
         tmpdir = tempfile.TemporaryDirectory(prefix='udisks-tst-')
-        policy_files = install_new_policy(projdir, tmpdir)
-        conf_files = install_new_dbus_conf(projdir, tmpdir)
+        files_to_restore.extend(install_new_policy(projdir, tmpdir))
+        files_to_restore.extend(install_new_dbus_conf(projdir, tmpdir))
+        files_to_restore.extend(install_new_udev_rules(projdir, tmpdir))
+
+        udev_shake()
 
         daemon_bin_path = os.path.join(projdir, 'src', daemon_bin)
 
@@ -154,9 +213,10 @@ if __name__ == '__main__':
         if args.logfile:
             daemon_log.close()
 
-        restore_files(policy_files, tmpdir)
-        restore_files(conf_files, tmpdir)
+        restore_files(files_to_restore, tmpdir)
         tmpdir.cleanup()
+
+        udev_shake()
 
     if not skip_clean:
         cleaner.restore_state()
