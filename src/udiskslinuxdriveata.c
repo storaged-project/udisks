@@ -861,9 +861,9 @@ handle_smart_update (UDisksDriveAta        *_drive,
                                                   NULL, /* cancellable */
                                                   &error))
     {
-      udisks_warning ("Error updating ATA smart for %s: %s (%s, %d)",
-                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
-                      error->message, g_quark_to_string (error->domain), error->code);
+      udisks_debug ("Error updating ATA smart for %s: %s (%s, %d)",
+                    g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                    error->message, g_quark_to_string (error->domain), error->code);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
