@@ -1073,6 +1073,12 @@ class FS(UDisksTestCase):
 
 class Fstab(UDisksTestCase):
     """Test /etc/fstab custom options"""
+    block = None
+    fs = None
+    mount_point = ""
+    orig_fstab = ""
+    p1label = ""
+    p1uuid = ""
 
     @classmethod
     def setUpClass(cls):
@@ -1100,13 +1106,13 @@ class Fstab(UDisksTestCase):
             raise SystemError('blkid does not contain partition UUID')
 
         cls.mkfs('ext2', partition=1, label='udtestfst')
-        cls.mountpoint = tempfile.mkdtemp()
+        cls.mount_point = tempfile.mkdtemp()
         cls.block = cls.udisks_block(partition=1)
         cls.fs = cls.udisks_filesystem(partition=1)
 
     @classmethod
     def tearDownClass(cls):
-        os.rmdir(cls.mountpoint)
+        os.rmdir(cls.mount_point)
         os.unlink(cls.orig_fstab)
 
     def tearDown(self):
@@ -1118,7 +1124,7 @@ class Fstab(UDisksTestCase):
 
         with open('/etc/fstab', 'a') as f:
             f.write('%s %s ext4 defaults,nosuid,noexec 0 0\n' %
-                    (self.devname(partition=1), self.mountpoint))
+                    (self.devname(partition=1), self.mount_point))
         os.sync()
         self.do_test()
 
@@ -1127,7 +1133,7 @@ class Fstab(UDisksTestCase):
 
         with open('/etc/fstab', 'a') as f:
             f.write('LABEL=udtestfst %s ext4 defaults,nosuid,noexec 0 0\n' %
-                    self.mountpoint)
+                    self.mount_point)
         os.sync()
         self.do_test()
 
@@ -1136,7 +1142,7 @@ class Fstab(UDisksTestCase):
 
         with open('/etc/fstab', 'a') as f:
             f.write('PARTUUID=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
-                    (self.p1uuid, self.mountpoint))
+                    (self.p1uuid, self.mount_point))
 
         os.sync()
         self.do_test()
@@ -1146,7 +1152,7 @@ class Fstab(UDisksTestCase):
 
         with open('/etc/fstab', 'a') as f:
             f.write('PARTLABEL=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
-                    (self.p1label, self.mountpoint))
+                    (self.p1label, self.mount_point))
 
         os.sync()
         self.do_test()
@@ -1156,14 +1162,14 @@ class Fstab(UDisksTestCase):
 
         with open('/etc/fstab', 'a') as f:
             f.write('UUID=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
-                    (self.block.get_property('id-uuid'), self.mountpoint))
+                    (self.block.get_property('id-uuid'), self.mount_point))
         os.sync()
         self.do_test()
 
     def do_test(self):
         self.assertEqual(self.fs.get_property('mount-points'), [])
         mount_path = self.fs.call_mount_sync(no_options, None)
-        self.assertEqual(mount_path, self.mountpoint)
+        self.assertEqual(mount_path, self.mount_point)
         with open('/proc/self/mounts') as f:
             for line in f:
                 if line.startswith(self.devname()):
