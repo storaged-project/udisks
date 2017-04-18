@@ -273,15 +273,15 @@ class UDisksTestCase(unittest.TestCase):
         return subprocess.call(['mountpoint', path], stdout=subprocess.PIPE) == 0
 
     @classmethod
-    def mkfs(cls, type, label=None, partition=None):
+    def mkfs(cls, fs_type, label=None, partition=None):
         """Create file system using mkfs."""
 
-        if type == 'minix':
+        if fs_type == 'minix':
             assert label is None, 'minix does not support labels'
 
         # work around mkswap not properly cleaning up an existing reiserfs
         # signature (mailed kzak about it)
-        if type == 'swap':
+        if fs_type == 'swap':
             subprocess.check_call(['wipefs', '-a', cls.devname(partition)],
                                   stdout=subprocess.PIPE)
 
@@ -301,9 +301,10 @@ class UDisksTestCase(unittest.TestCase):
                      'btrfs': ['-f'],
                      'reiserfs': ['-ff']}
 
-        cmd = [mkcmd.get(type, 'mkfs.' + type)] + extra_opt.get(type, [])
+        cmd = [mkcmd.get(fs_type, 'mkfs.' + fs_type)]
+        cmd += extra_opt.get(fs_type, [])
         if label:
-            cmd += [label_opt.get(type, '-L'), label]
+            cmd += [label_opt.get(fs_type, '-L'), label]
         cmd.append(cls.devname(partition))
 
         subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -316,11 +317,11 @@ class UDisksTestCase(unittest.TestCase):
         cls.sync()
 
     @classmethod
-    def fs_create(cls, partition, type, options):
+    def fs_create(cls, partition, fs_type, options):
         """Create file system using udisks."""
 
         block = cls.udisks_block(partition)
-        block.call_format_sync(type, options, None)
+        block.call_format_sync(fs_type, options, None)
 
     @classmethod
     def retry_busy(cls, fn, *args):
@@ -779,21 +780,21 @@ class FS(UDisksTestCase):
         self.assertProperty(fs, 'mount-points', [])
         self.assertEqual(new_mount_path, mount_path)
 
-    def _do_fs_check(self, type):
+    def _do_fs_check(self, fs_type):
         """Run checks for a particular file system."""
-        if type == 'ntfs':
+        if fs_type == 'ntfs':
             mkfs = 'mkntfs'
         else:
-            mkfs = 'mkfs.' + type
+            mkfs = 'mkfs.' + fs_type
 
-        if type != 'swap' and subprocess.call(['which', mkfs],
-                                              stdout=subprocess.PIPE) != 0:
+        if fs_type != 'swap' and subprocess.call(['which', mkfs],
+                                                 stdout=subprocess.PIPE) != 0:
             self.write_stderr('[no %s, skip] ' % mkfs)
 
             # check correct D-Bus exception
             try:
-                self.fs_create(None, type, no_options)
-                self.fail('Expected failure for missing mkfs.' + type)
+                self.fs_create(None, fs_type, no_options)
+                self.fail('Expected failure for missing mkfs.' + fs_type)
             except GLib.GError as e:
                 self.assertIn('UDisks2.Error.Failed', e.message)
             return
@@ -801,41 +802,41 @@ class FS(UDisksTestCase):
         # do checks with command line tools (mkfs/mount/umount)
         self.write_stderr('[cli] ')
 
-        self._do_cli_check(type)
-        if type != 'minix':
-            self._do_cli_check(type, 'test%stst' % type)
+        self._do_cli_check(fs_type)
+        if fs_type != 'minix':
+            self._do_cli_check(fs_type, 'test%stst' % fs_type)
 
         # put a different fs here instead of zeroing, so that we verify that
         # udisks overrides existing FS (e. g. XFS complains then), and does not
         # leave traces of other FS around
-        if type == 'ext3':
+        if fs_type == 'ext3':
             self.mkfs('swap')
         else:
             self.mkfs('ext3')
 
         # do checks with udisks operations
         self.write_stderr('[ud] ')
-        self._do_udisks_check(type)
-        if type != 'minix':
-            self._do_udisks_check(type, 'test%stst' % type)
+        self._do_udisks_check(fs_type)
+        if fs_type != 'minix':
+            self._do_udisks_check(fs_type, 'test%stst' % fs_type)
             # also test fs_create with an empty label
-            self._do_udisks_check(type, '')
+            self._do_udisks_check(fs_type, '')
 
-    def _do_cli_check(self, type, label=None):
+    def _do_cli_check(self, fs_type, label=None):
         """udisks correctly picks up file system changes from command line tools"""
 
-        self.mkfs(type, label)
+        self.mkfs(fs_type, label)
 
         block = self.udisks_block()
 
-        self.assertProperty(block, 'id-usage', (type == 'swap') and 'other' or 'filesystem')
-        self.assertProperty(block, 'id-type', type)
+        self.assertProperty(block, 'id-usage', (fs_type == 'swap') and 'other' or 'filesystem')
+        self.assertProperty(block, 'id-type', fs_type)
         l = block.get_property('id-label')
-        if type == 'vfat':
+        if fs_type == 'vfat':
             l = l.lower()  # VFAT is case insensitive
         self.assertEqual(l, label or '')
         self.assertEqual(block.get_property('hint-name'), '')
-        if type != 'minix':
+        if fs_type != 'minix':
             self.assertEqual(block.get_property('id-uuid'), self.blkid()['ID_FS_UUID'])
 
         obj = self.client.get_object(self.block.get_object_path())
@@ -843,17 +844,17 @@ class FS(UDisksTestCase):
         self.assertEqual(obj.get_property('partition-table'), None)
 
         fs = obj.get_property('filesystem')
-        if type == 'swap':
+        if fs_type == 'swap':
             self.assertEqual(fs, None)
         else:
             self.assertNotEqual(fs, None)
 
-        if type == 'swap':
+        if fs_type == 'swap':
             return
 
         # mount it on two points
-        if type == 'ntfs' and subprocess.call(['which', 'mount.ntfs-3g'],
-                                              stdout=subprocess.PIPE) == 0:
+        if fs_type == 'ntfs' and subprocess.call(['which', 'mount.ntfs-3g'],
+                                                 stdout=subprocess.PIPE) == 0:
             # prefer mount.ntfs-3g if we have it (on Debian; Ubuntu
             # defaults to ntfs-3g if installed); TODO: check other distros
             mount_prog = 'mount.ntfs-3g'
@@ -874,7 +875,7 @@ class FS(UDisksTestCase):
 
         self.assertProperty(fs, 'mount-points', [mount_a])
 
-        if type != 'ntfs':
+        if fs_type != 'ntfs':
             # ntfs-3g does not support multiple mounts
             subprocess.check_call([mount_prog, self.device, mount_b])
             self.assertProperty(fs, 'mount-points', set([mount_a, mount_b]))
@@ -884,7 +885,7 @@ class FS(UDisksTestCase):
         subprocess.call(['umount', mount_a])
         self.assertProperty(fs, 'mount-points', [])
 
-    def _do_udisks_check(self, type, label=None):
+    def _do_udisks_check(self, fs_type, label=None):
         """udisks API correctly changes file system"""
 
         # create fs
@@ -892,27 +893,27 @@ class FS(UDisksTestCase):
             options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', label)})
         else:
             options = no_options
-        self.fs_create(None, type, options)
+        self.fs_create(None, fs_type, options)
 
         # properties
         id = self.blkid()
-        self.assertEqual(id['ID_FS_USAGE'], type == 'swap' and 'other' or 'filesystem')
-        self.assertEqual(id['ID_FS_TYPE'], type)
+        self.assertEqual(id['ID_FS_USAGE'], fs_type == 'swap' and 'other' or 'filesystem')
+        self.assertEqual(id['ID_FS_TYPE'], fs_type)
         l = id.get('ID_FS_LABEL', '')
-        if type == 'vfat':
+        if fs_type == 'vfat':
             l = l.lower()  # VFAT is case insensitive
         self.assertEqual(l, label or '')
 
         block = self.udisks_block()
-        self.assertProperty(block, 'id-usage', (type == 'swap') and 'other' or 'filesystem')
-        self.assertProperty(block, 'id-type', type)
-        if type == 'vfat' and label:
+        self.assertProperty(block, 'id-usage', (fs_type == 'swap') and 'other' or 'filesystem')
+        self.assertProperty(block, 'id-type', fs_type)
+        if fs_type == 'vfat' and label:
             # VFAT is case insensitive
             self.assertEventually(lambda: block.get_property('id-label').lower(), label.lower())
         else:
             self.assertProperty(block, 'id-label', label or '')
 
-        if type == 'swap':
+        if fs_type == 'swap':
             return
 
         obj = self.client.get_object(self.block.get_object_path())
@@ -928,7 +929,7 @@ class FS(UDisksTestCase):
 
         self.assertIn('/media/', mount_path)
         if label:
-            if type == 'vfat':
+            if fs_type == 'vfat':
                 self.assertTrue(mount_path.lower().endswith(label))
             else:
                 self.assertTrue(mount_path.endswith(label))
@@ -943,7 +944,7 @@ class FS(UDisksTestCase):
         st = os.stat(mount_path)
         self.assertEqual((st.st_uid, st.st_gid), (0, 0))
 
-        self._do_file_perms_checks(type, mount_path)
+        self._do_file_perms_checks(fs_type, mount_path)
 
         # unmount
         self.retry_busy(fs.call_unmount_sync, no_options, None)
@@ -963,8 +964,8 @@ class FS(UDisksTestCase):
 
         # change label
         supported = True
-        l = 'n"a\m\\"e' + type
-        if type == 'vfat':
+        l = 'n"a\m\\"e' + fs_type
+        if fs_type == 'vfat':
             # VFAT does not support some characters
             self.assertRaises(GLib.GError, fs.call_set_label_sync, l, no_options, None)
             l = "n@a$me"
@@ -973,7 +974,7 @@ class FS(UDisksTestCase):
         except GLib.GError as e:
             if 'UDisks2.Error.NotSupported' in e.message:
                 # these fses are known to not support relabeling
-                self.assertIn(type, ['minix', 'f2fs'])
+                self.assertIn(fs_type, ['minix', 'f2fs'])
                 supported = False
             else:
                 raise
@@ -982,7 +983,7 @@ class FS(UDisksTestCase):
             block = self.udisks_block()
             blkid_label = self.blkid().get('ID_FS_LABEL_ENC', '').replace('\\x22', '"').replace(
                 '\\x5c', '\\').replace('\\x24', '$')
-            if type == 'vfat':
+            if fs_type == 'vfat':
                 # EXFAIL: often (but not always) the label appears in all upper case
                 self.assertEqual(blkid_label.upper(), l.upper())
                 self.assertEventually(lambda: block.get_property('id-label').upper(), l.upper())
@@ -1002,7 +1003,7 @@ class FS(UDisksTestCase):
         # this is known-broken for reiserfs and xfs right now:
         # https://github.com/karelzak/util-linux/issues/17
         # https://github.com/karelzak/util-linux/issues/18
-        if type not in ['reiserfs', 'xfs']:
+        if fs_type not in ['reiserfs', 'xfs']:
             # the scsi_debug CD drive content is the same as for the HD drive, but
             # udev does not know about this; so give it a nudge to re-probe
             subprocess.call(['udevadm', 'trigger', '--action=change',
@@ -1033,13 +1034,13 @@ class FS(UDisksTestCase):
                 self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
                 self.assertProperty(cd_fs, 'mount-points', [])
 
-    def _do_file_perms_checks(self, type, mount_point):
+    def _do_file_perms_checks(self, fs_type, mount_point):
         """Check for permissions for data files and executables.
 
         This particularly checks sane and useful permissions on non-Unix file
         systems like vfat.
         """
-        if type in BROKEN_PERMISSIONS_FS:
+        if fs_type in BROKEN_PERMISSIONS_FS:
             return
 
         f = os.path.join(mount_point, 'simpledata.txt')
