@@ -71,6 +71,7 @@ import test_polkitd
 # GI_TYPELIB_PATH=udisks LD_LIBRARY_PATH=udisks/.libs
 VDEV_SIZE = 64000000  # size of virtual test device
 
+
 # Those file systems are known to have a broken handling of permissions, in
 # particular the executable bit
 BROKEN_PERMISSIONS_FS = ['ntfs', 'exfat']
@@ -1450,18 +1451,18 @@ class Luks(UDisksTestCase):
 
     def test_binary_keyfile(self):
 
-        KEYFILE = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff'
+        key_file = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff'
 
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', KEYFILE),
+            'encrypt.passphrase': GLib.Variant('ay', key_file),
             'label': GLib.Variant('s', 'treasure')}))
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
         encrypted = crypt_obj.get_property('encrypted')
         encrypted.call_lock_sync(no_options, None)
 
         # wrong password
-        missing_byte = self.keyfile_options(KEYFILE[:-1])
-        extra_bytes = self.keyfile_options(KEYFILE+b'\0X')
+        missing_byte = self.keyfile_options(key_file[:-1])
+        extra_bytes = self.keyfile_options(key_file+b'\0X')
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           'h4ckpassword', no_options, None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
@@ -1470,24 +1471,24 @@ class Luks(UDisksTestCase):
                           '', extra_bytes, None)
 
         # correct password
-        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_unlock_sync('', self.keyfile_options(key_file), None)
         encrypted.call_lock_sync(no_options, None)
 
     def test_ascii_keyfile_newline(self):
 
-        KEYFILE = b'ascii string\nwith newline\n'
+        key_file = b'ascii string\nwith newline\n'
 
         # setup crypto device
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', KEYFILE),
+            'encrypt.passphrase': GLib.Variant('ay', key_file),
             'label': GLib.Variant('s', 'treasure')}))
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
         encrypted = crypt_obj.get_property('encrypted')
         encrypted.call_lock_sync(no_options, None)
 
         # wrong password
-        missing_byte = self.keyfile_options(KEYFILE[:-1])
-        extra_bytes = self.keyfile_options(KEYFILE+b'\0X')
+        missing_byte = self.keyfile_options(key_file[:-1])
+        extra_bytes = self.keyfile_options(key_file+b'\0X')
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           'h4ckpassword', no_options, None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
@@ -1496,17 +1497,17 @@ class Luks(UDisksTestCase):
                           '', extra_bytes, None)
 
         # correct password
-        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE), None)
+        encrypted.call_unlock_sync('', self.keyfile_options(key_file), None)
         encrypted.call_lock_sync(no_options, None)
 
         # We no longer mimic cryptsetup which in passphrase-mode stops input
         # at the first newline:
-        encrypted.call_unlock_sync(KEYFILE.decode('utf-8'), no_options, None)
+        encrypted.call_unlock_sync(key_file.decode('utf-8'), no_options, None)
 
     def test_change_passphrase(self):
 
-        KEYFILE0 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\0'
-        KEYFILE1 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\1'
+        key_file_0 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\0'
+        key_file_1 = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff\1'
 
         encrypted = self.setup_crypto_device()
 
@@ -1522,40 +1523,40 @@ class Luks(UDisksTestCase):
         # change: passphrase -> keyfile
         encrypted.call_change_passphrase_sync(
             'passphrase', '', GLib.Variant('a{sv}', {
-                'new_keyfile_contents': GLib.Variant('ay', KEYFILE0),
+                'new_keyfile_contents': GLib.Variant('ay', key_file_0),
             }),
             None)
 
         # verify new password:
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           'passphrase', no_options, None)
-        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE0), None)
+        encrypted.call_unlock_sync('', self.keyfile_options(key_file_0), None)
         encrypted.call_lock_sync(no_options, None)
 
         # change: keyfile -> keyfile
         encrypted.call_change_passphrase_sync(
             '', '', GLib.Variant('a{sv}', {
-                'old_keyfile_contents': GLib.Variant('ay', KEYFILE0),
-                'new_keyfile_contents': GLib.Variant('ay', KEYFILE1),
+                'old_keyfile_contents': GLib.Variant('ay', key_file_0),
+                'new_keyfile_contents': GLib.Variant('ay', key_file_1),
             }),
             None)
 
         # verify new password:
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', self.keyfile_options(KEYFILE0), None)
-        encrypted.call_unlock_sync('', self.keyfile_options(KEYFILE1), None)
+                          '', self.keyfile_options(key_file_0), None)
+        encrypted.call_unlock_sync('', self.keyfile_options(key_file_1), None)
         encrypted.call_lock_sync(no_options, None)
 
         # change: keyfile -> passphrase
         encrypted.call_change_passphrase_sync(
             '', 's3kr1t', GLib.Variant('a{sv}', {
-                'old_keyfile_contents': GLib.Variant('ay', KEYFILE1),
+                'old_keyfile_contents': GLib.Variant('ay', key_file_1),
             }),
             None)
 
         # verify new password:
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', self.keyfile_options(KEYFILE1), None)
+                          '', self.keyfile_options(key_file_1), None)
         encrypted.call_unlock_sync('s3kr1t', no_options, None)
         encrypted.call_lock_sync(no_options, None)
 
