@@ -88,10 +88,11 @@ class UDisksTestCase(unittest.TestCase):
     This provides static functions which are useful for all test cases.
     """
     daemon = None
-    daemon_path = None
     daemon_log = None
+    daemon_path = None
+    dbus = None
     device = None
-
+    cd_device = ""
     client = None
     manager = None
 
