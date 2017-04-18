@@ -878,7 +878,7 @@ class FS(UDisksTestCase):
         if fs_type != 'ntfs':
             # ntfs-3g does not support multiple mounts
             subprocess.check_call([mount_prog, self.device, mount_b])
-            self.assertProperty(fs, 'mount-points', set([mount_a, mount_b]))
+            self.assertProperty(fs, 'mount-points', {mount_a, mount_b})
             subprocess.call(['umount', mount_b])
 
         # unmount it
