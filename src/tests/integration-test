@@ -1629,12 +1629,12 @@ if __name__ == '__main__':
                            help='write daemon log to a file')
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
-    args = argparser.parse_args()
+    cli_args = argparser.parse_args()
 
-    UDisksTestCase.init(logfile=args.logfile)
-    if args.testname:
+    UDisksTestCase.init(logfile=cli_args.logfile)
+    if cli_args.testname:
         tests = unittest.TestLoader().loadTestsFromNames(
-            args.testname, __import__('__main__'))
+            cli_args.testname, __import__('__main__'))
     else:
         tests = unittest.TestLoader().loadTestsFromName('__main__')
     if unittest.TextTestRunner(verbosity=2).run(tests).wasSuccessful():
