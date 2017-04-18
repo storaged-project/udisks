@@ -896,10 +896,10 @@ class FS(UDisksTestCase):
         self.fs_create(None, fs_type, options)
 
         # properties
-        id = self.blkid()
-        self.assertEqual(id['ID_FS_USAGE'], fs_type == 'swap' and 'other' or 'filesystem')
-        self.assertEqual(id['ID_FS_TYPE'], fs_type)
-        l = id.get('ID_FS_LABEL', '')
+        b_id = self.blkid()
+        self.assertEqual(b_id['ID_FS_USAGE'], fs_type == 'swap' and 'other' or 'filesystem')
+        self.assertEqual(b_id['ID_FS_TYPE'], fs_type)
+        l = b_id.get('ID_FS_LABEL', '')
         if fs_type == 'vfat':
             l = l.lower()  # VFAT is case insensitive
         self.assertEqual(l, label or '')
