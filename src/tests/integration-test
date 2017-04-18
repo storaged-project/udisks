@@ -33,8 +33,9 @@
 import sys
 import os
 import contextlib
+from os.path import dirname
 
-srcdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+srcdir = dirname(dirname(dirname(os.path.realpath(__file__))))
 libdir = os.path.join(srcdir, 'udisks', '.libs')
 
 # as we can't change LD_LIBRARY_PATH within a running program, and doing
@@ -65,7 +66,7 @@ gi.require_version('UDisks', '2.0')
 from gi.repository import GLib, Gio, UDisks
 
 # find local test_polkit.py
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, dirname(__file__))
 import test_polkitd
 
 # GI_TYPELIB_PATH=udisks LD_LIBRARY_PATH=udisks/.libs
@@ -95,7 +96,7 @@ class UDisksTestCase(unittest.TestCase):
     manager = None
 
     @classmethod
-    def init(klass, logfile=None):
+    def init(cls, logfile=None):
         """start daemon and set up test environment"""
 
         if os.geteuid() != 0:
@@ -103,27 +104,28 @@ class UDisksTestCase(unittest.TestCase):
             sys.exit(1)
 
         # run from local build tree if we are in one, otherwise use system instance
-        klass.daemon_path = os.path.join(srcdir, 'src', '.libs', 'udisksd')
-        if (os.access(klass.daemon_path, os.X_OK)):
+        cls.daemon_path = os.path.join(srcdir, 'src', '.libs', 'udisksd')
+        if (os.access(cls.daemon_path, os.X_OK)):
             print('Testing binaries from local build tree')
-            klass.check_build_tree_config()
+            cls.check_build_tree_config()
         else:
             print('Testing installed system binaries')
-            klass.daemon_path = None
-            for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service'):
+            cls.daemon_path = None
+            for l in open('/usr/share/dbus-1/system-services/'
+                          'org.freedesktop.UDisks2.service'):
                 if l.startswith('Exec='):
-                    klass.daemon_path = l.split('=', 1)[1].split()[0]
+                    cls.daemon_path = l.split('=', 1)[1].split()[0]
                     break
-            assert klass.daemon_path, 'could not determine daemon path from D-BUS .service file'
+            assert cls.daemon_path, 'could not determine daemon path from D-BUS .service file'
 
-        print('daemon path: ' + klass.daemon_path)
+        print('daemon path: ' + cls.daemon_path)
 
-        (klass.device, klass.cd_device) = klass.setup_vdev()
+        (cls.device, cls.cd_device) = cls.setup_vdev()
 
         # start polkit and udisks on a private DBus
-        klass.dbus = Gio.TestDBus()
-        klass.dbus.up()
-        os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = klass.dbus.get_bus_address()
+        cls.dbus = Gio.TestDBus()
+        cls.dbus.up()
+        os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = cls.dbus.get_bus_address()
         # do not try to communicate with the current desktop session; this will
         # confuse it, as it cannot see this D-BUS instance
         try:
@@ -131,58 +133,59 @@ class UDisksTestCase(unittest.TestCase):
         except KeyError:
             pass
         if logfile:
-            klass.daemon_log = open(logfile, 'w')
+            cls.daemon_log = open(logfile, 'w')
         else:
-            klass.daemon_log = tempfile.TemporaryFile()
-        atexit.register(klass.cleanup)
+            cls.daemon_log = tempfile.TemporaryFile()
+        atexit.register(cls.cleanup)
 
-        klass.start_daemon()
+        cls.start_daemon()
 
     @classmethod
-    def cleanup(klass):
+    def cleanup(cls):
         """stop daemon again and clean up test environment"""
 
-        subprocess.call(['umount', klass.device], stderr=subprocess.PIPE)  # if a test failed
+        # if a test failed
+        subprocess.call(['umount', cls.device], stderr=subprocess.PIPE)
 
-        klass.stop_daemon()
+        cls.stop_daemon()
 
-        klass.teardown_vdev(klass.device)
-        klass.device = None
+        cls.teardown_vdev(cls.device)
+        cls.device = None
 
         del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
-        klass.dbus.down()
+        cls.dbus.down()
 
     @classmethod
-    def start_daemon(klass):
-        assert klass.daemon is None
-        klass.daemon = subprocess.Popen([klass.daemon_path, '--replace'],
-                                        stdout=klass.daemon_log,
-                                        stderr=subprocess.STDOUT)
-        assert klass.daemon.pid, 'daemon failed to start'
+    def start_daemon(cls):
+        assert cls.daemon is None
+        cls.daemon = subprocess.Popen([cls.daemon_path, '--replace'],
+                                      stdout=cls.daemon_log,
+                                      stderr=subprocess.STDOUT)
+        assert cls.daemon.pid, 'daemon failed to start'
 
         # wait until the daemon has started up
         timeout = 10
-        klass.manager = None
-        while klass.manager is None and timeout > 0:
+        cls.manager = None
+        while cls.manager is None and timeout > 0:
             time.sleep(0.2)
-            klass.client = UDisks.Client.new_sync(None)
-            assert klass.client is not None
-            klass.manager = klass.client.get_manager()
+            cls.client = UDisks.Client.new_sync(None)
+            assert cls.client is not None
+            cls.manager = cls.client.get_manager()
             timeout -= 1
-        assert klass.manager, 'daemon failed to start'
-        assert klass.daemon.pid, 'daemon failed to start'
+        assert cls.manager, 'daemon failed to start'
+        assert cls.daemon.pid, 'daemon failed to start'
 
-        klass.sync()
+        cls.sync()
 
     @classmethod
-    def stop_daemon(klass):
-        assert klass.daemon
-        os.kill(klass.daemon.pid, signal.SIGTERM)
+    def stop_daemon(cls):
+        assert cls.daemon
+        os.kill(cls.daemon.pid, signal.SIGTERM)
         os.wait()
-        klass.daemon = None
+        cls.daemon = None
 
     @classmethod
-    def sync(klass):
+    def sync(cls):
         """Wait until pending events finished processing.
 
         This should only be called for situations where we genuinely have an
@@ -194,29 +197,29 @@ class UDisksTestCase(unittest.TestCase):
         timeout = 100
         # wait until all GDBus events have been processed
         while context.pending() and timeout > 0:
-            klass.client.settle()
+            cls.client.settle()
             time.sleep(0.1)
             timeout -= 1
         if timeout <= 0:
-            klass.write_stderr('[wait timeout!] ')
+            cls.write_stderr('[wait timeout!] ')
 
     @classmethod
-    def zero_device(klass):
-        subprocess.call(['dd', 'if=/dev/zero', 'of=' + klass.device, 'bs=10M'],
+    def zero_device(cls):
+        subprocess.call(['dd', 'if=/dev/zero', 'of=' + cls.device, 'bs=10M'],
                         stderr=subprocess.PIPE)
         time.sleep(0.5)
-        klass.sync()
+        cls.sync()
 
     @classmethod
-    def devname(klass, partition=None, cd=False):
+    def devname(cls, partition=None, cd=False):
         """Get name of test device or one of its partitions
 
         If cd is True, return the CD device, otherwise the hard disk device.
         """
         if cd:
-            dev = klass.cd_device
+            dev = cls.cd_device
         else:
-            dev = klass.device
+            dev = cls.device
         if partition:
             if dev[-1].isdigit():
                 return dev + 'p' + str(partition)
@@ -226,35 +229,35 @@ class UDisksTestCase(unittest.TestCase):
             return dev
 
     @classmethod
-    def udisks_block(klass, partition=None, cd=False):
+    def udisks_block(cls, partition=None, cd=False):
         """Get UDisksBlock object for test device or partition
 
         If cd is True, return the CD device, otherwise the hard disk device.
         """
-        assert klass.client
-        devname = klass.devname(partition, cd)
+        assert cls.client
+        devname = cls.devname(partition, cd)
         dev_t = os.stat(devname).st_rdev
-        block = klass.client.get_block_for_dev(dev_t)
+        block = cls.client.get_block_for_dev(dev_t)
         assert block, 'did not find an UDisksBlock object for %s' % devname
         return block
 
     @classmethod
-    def udisks_filesystem(klass, partition=None, cd=False):
+    def udisks_filesystem(cls, partition=None, cd=False):
         """Get UDisksFilesystem object for test device or partition
 
         Return None if there is no file system on that device.
 
         If cd is True, return the CD device, otherwise the hard disk device.
         """
-        block = klass.udisks_block(partition, cd)
-        return klass.client.get_object(block.get_object_path()).get_filesystem()
+        block = cls.udisks_block(partition, cd)
+        return cls.client.get_object(block.get_object_path()).get_filesystem()
 
     @classmethod
-    def blkid(klass, partition=None, device=None):
+    def blkid(cls, partition=None, device=None):
         """Call blkid and return dictionary of results."""
 
         if not device:
-            device = klass.devname(partition)
+            device = cls.devname(partition)
         result = {}
         cmd = subprocess.Popen(['blkid', '-p', '-o', 'udev', device], stdout=subprocess.PIPE)
         for l in cmd.stdout:
@@ -264,13 +267,13 @@ class UDisksTestCase(unittest.TestCase):
         return result
 
     @classmethod
-    def is_mountpoint(klass, path):
+    def is_mountpoint(cls, path):
         """Check if given path is a mount point."""
 
         return subprocess.call(['mountpoint', path], stdout=subprocess.PIPE) == 0
 
     @classmethod
-    def mkfs(klass, type, label=None, partition=None):
+    def mkfs(cls, type, label=None, partition=None):
         """Create file system using mkfs."""
 
         if type == 'minix':
@@ -279,7 +282,7 @@ class UDisksTestCase(unittest.TestCase):
         # work around mkswap not properly cleaning up an existing reiserfs
         # signature (mailed kzak about it)
         if type == 'swap':
-            subprocess.check_call(['wipefs', '-a', klass.devname(partition)],
+            subprocess.check_call(['wipefs', '-a', cls.devname(partition)],
                                   stdout=subprocess.PIPE)
 
         mkcmd = {'swap': 'mkswap',
@@ -301,7 +304,7 @@ class UDisksTestCase(unittest.TestCase):
         cmd = [mkcmd.get(type, 'mkfs.' + type)] + extra_opt.get(type, [])
         if label:
             cmd += [label_opt.get(type, '-L'), label]
-        cmd.append(klass.devname(partition))
+        cmd.append(cls.devname(partition))
 
         subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -309,18 +312,18 @@ class UDisksTestCase(unittest.TestCase):
         # tell us when they are done; so do a little kludge here to know how
         # long we need to wait
         subprocess.call(['udevadm', 'trigger', '--action=change',
-                         '--sysname-match=' + os.path.basename(klass.devname(partition))])
-        klass.sync()
+                         '--sysname-match=' + os.path.basename(cls.devname(partition))])
+        cls.sync()
 
     @classmethod
-    def fs_create(klass, partition, type, options):
+    def fs_create(cls, partition, type, options):
         """Create file system using udisks."""
 
-        block = klass.udisks_block(partition)
+        block = cls.udisks_block(partition)
         block.call_format_sync(type, options, None)
 
     @classmethod
-    def retry_busy(klass, fn, *args):
+    def retry_busy(cls, fn, *args):
         """Call a function until it does not fail with "Busy"."""
 
         timeout = 10
@@ -330,18 +333,19 @@ class UDisksTestCase(unittest.TestCase):
             except GLib.GError as e:
                 if 'UDisks2.Error.DeviceBusy' not in e.message:
                     raise
-                klass.write_stderr('[busy] ')
+                cls.write_stderr('[busy] ')
                 time.sleep(0.3)
                 timeout -= 1
 
     @classmethod
-    def check_build_tree_config(klass):
+    def check_build_tree_config(cls):
         """Check configuration of build tree"""
 
         # read make variables
         make_vars = {}
         var_re = re.compile('^([a-zA-Z_]+) = (.*)$')
-        make = subprocess.Popen(['make', '-p', '/dev/null'], stdout=subprocess.PIPE)
+        make = subprocess.Popen(['make', '-p', '/dev/null'],
+                                stdout=subprocess.PIPE)
         for l in make.stdout:
             l = l.decode('UTF-8')
             m = var_re.match(l)
@@ -369,7 +373,7 @@ class UDisksTestCase(unittest.TestCase):
                 sys.exit(1)
 
     @classmethod
-    def setup_vdev(klass):
+    def setup_vdev(cls):
         """create virtual test devices
 
         It is zeroed out initially.
@@ -393,7 +397,8 @@ class UDisksTestCase(unittest.TestCase):
                         'ENV{ID_CDROM_MEDIA}=="?*", '
                         'IMPORT{program}="/sbin/blkid -o udev -p -u noraid $tempnode"\n')
             # reload udev
-            subprocess.call('sync; pkill --signal HUP udevd || pkill --signal HUP systemd-udevd',
+            subprocess.call('sync; pkill --signal HUP udevd || '
+                            'pkill --signal HUP systemd-udevd',
                             shell=True)
 
         # craete a fake SCSI hard drive
@@ -442,14 +447,14 @@ class UDisksTestCase(unittest.TestCase):
         return (rw_dev, ro_dev)
 
     @classmethod
-    def teardown_vdev(klass, device):
+    def teardown_vdev(cls, device):
         """release and remove virtual test device"""
 
-        klass.remove_device(device)
+        cls.remove_device(device)
         assert subprocess.call(['rmmod', 'scsi_debug']) == 0, 'Failure to rmmod scsi_debug'
 
     @classmethod
-    def remove_device(klass, device):
+    def remove_device(cls, device):
         """remove virtual test device"""
 
         device = device.split('/')[-1]
@@ -459,11 +464,11 @@ class UDisksTestCase(unittest.TestCase):
             f.close()
         while os.path.exists(device):
             time.sleep(0.1)
-        klass.sync()
+        cls.sync()
         time.sleep(0.5)  # TODO
 
     @classmethod
-    def readd_devices(klass):
+    def readd_devices(cls):
         """re-add virtual test devices after removal"""
 
         scan_files = glob('/sys/bus/pseudo/devices/adapter*/host*/scsi_host/host*/scan')
@@ -471,12 +476,12 @@ class UDisksTestCase(unittest.TestCase):
         for f in scan_files:
             open(f, 'w').write('- - -\n')
         timeout = 100
-        while not os.path.exists(klass.device) and timeout > 0:
+        while not os.path.exists(cls.device) and timeout > 0:
             time.sleep(0.1)
             timeout -= 1
-        assert os.path.exists(klass.device), 'timed out waiting for %s to exist' % klass.device
+        assert os.path.exists(cls.device), 'timed out waiting for %s to exist' % cls.device
         time.sleep(0.5)
-        klass.sync()
+        cls.sync()
 
     def assertEventually(self, fn, value):
         """Check that an function is eventually equal to value.
@@ -503,7 +508,7 @@ class UDisksTestCase(unittest.TestCase):
         self.assertEventually(lambda: obj.get_property(name), value)
 
     @classmethod
-    def write_stderr(klass, msg):
+    def write_stderr(cls, msg):
         """Write to stderr without buffering"""
         sys.stderr.write(msg)
         sys.stderr.flush()
@@ -1069,40 +1074,39 @@ class Fstab(UDisksTestCase):
     """Test /etc/fstab custom options"""
 
     @classmethod
-    def setUpClass(kls):
-        kls.orig_fstab = '/etc/fstab.udiskstest'
-        shutil.copy2('/etc/fstab', kls.orig_fstab)
+    def setUpClass(cls):
+        cls.orig_fstab = '/etc/fstab.udiskstest'
+        shutil.copy2('/etc/fstab', cls.orig_fstab)
 
         # create one partition
         subprocess.check_call(
-            ['parted', '-s', kls.device, 'mklabel', 'gpt'],
-            stdout=subprocess.PIPE)
+            ['parted', '-s', cls.device, 'mklabel', 'gpt'], stdout=subprocess.PIPE)
         subprocess.check_call(
-            ['parted', '-s', kls.device, 'mkpart', 'primary', '0', '64'],
+            ['parted', '-s', cls.device, 'mkpart', 'primary', '0', '64'],
             stdout=subprocess.PIPE)
-        kls.p1label = 'udtestp1'
+        cls.p1label = 'udtestp1'
         subprocess.check_call(
-            ['parted', '-s', kls.device, 'name', '1', kls.p1label],
+            ['parted', '-s', cls.device, 'name', '1', cls.p1label],
             stdout=subprocess.PIPE)
-        kls.sync()
+        cls.sync()
         blkid = subprocess.check_output(
-            ['blkid', '-oudev', '-p', kls.devname(1)], universal_newlines=True).splitlines()
+            ['blkid', '-oudev', '-p', cls.devname(1)], universal_newlines=True).splitlines()
         for line in blkid:
             if line.startswith('ID_PART_ENTRY_UUID='):
-                kls.p1uuid = line.split('=', 1)[1]
+                cls.p1uuid = line.split('=', 1)[1]
                 break
         else:
             raise SystemError('blkid does not contain partition UUID')
 
-        kls.mkfs('ext2', partition=1, label='udtestfst')
-        kls.mountpoint = tempfile.mkdtemp()
-        kls.block = kls.udisks_block(partition=1)
-        kls.fs = kls.udisks_filesystem(partition=1)
+        cls.mkfs('ext2', partition=1, label='udtestfst')
+        cls.mountpoint = tempfile.mkdtemp()
+        cls.block = cls.udisks_block(partition=1)
+        cls.fs = cls.udisks_filesystem(partition=1)
 
     @classmethod
-    def tearDownClass(kls):
-        os.rmdir(kls.mountpoint)
-        os.unlink(kls.orig_fstab)
+    def tearDownClass(cls):
+        os.rmdir(cls.mountpoint)
+        os.unlink(cls.orig_fstab)
 
     def tearDown(self):
         shutil.copy2(self.orig_fstab, '/etc/fstab')
@@ -1272,7 +1276,8 @@ class Luks(UDisksTestCase):
             self.assertEqual(block.get_property('id-type'), 'crypto_LUKS')
             self.assertEqual(block.get_property('id-usage'), 'crypto')
             self.assertEqual(block.get_property('id-label'), '')
-            self.assertEqual(block.get_property('id-uuid'), self.blkid()['ID_FS_UUID'])
+            self.assertEqual(block.get_property('id-uuid'),
+                             self.blkid()['ID_FS_UUID'])
             self.assertEqual(block.get_property('device'), self.devname())
 
             # check whether we can lock/unlock; we also need this to get the
