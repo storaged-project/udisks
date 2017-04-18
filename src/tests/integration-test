@@ -1242,7 +1242,8 @@ class Luks(UDisksTestCase):
         encrypted.call_lock_sync(no_options, None)
         return encrypted
 
-    def unlock_crypto_device(self, encrypted):
+    @staticmethod
+    def unlock_crypto_device(encrypted):
         return encrypted.call_unlock_sync(
             's3kr1t', no_options, None)
 
@@ -1290,7 +1291,7 @@ class Luks(UDisksTestCase):
             self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                               'h4ckpassword', no_options, None)
             # right password
-            clear_path = self.unlock_crypto_device(encrypted)
+            clear_path = Luks.unlock_crypto_device(encrypted)
 
             # check cleartext device info
             clear_obj = self.client.get_object(clear_path)
@@ -1326,7 +1327,7 @@ class Luks(UDisksTestCase):
 
         encrypted = self.setup_crypto_device()
 
-        path = self.unlock_crypto_device(encrypted)
+        path = Luks.unlock_crypto_device(encrypted)
         self.client.settle()
         obj = self.client.get_object(path)
         fs = obj.get_property('filesystem')
@@ -1365,7 +1366,7 @@ class Luks(UDisksTestCase):
         # unlock and mount it
         encrypted = self.setup_crypto_device()
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
-        path = self.unlock_crypto_device(encrypted)
+        path = Luks.unlock_crypto_device(encrypted)
         try:
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
@@ -1392,7 +1393,7 @@ class Luks(UDisksTestCase):
                 self.readd_devices()
 
             # after putting it back, it should be mountable again
-            path = self.unlock_crypto_device(encrypted)
+            path = Luks.unlock_crypto_device(encrypted)
             self.client.settle()
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
