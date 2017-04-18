@@ -1015,7 +1015,7 @@ class FS(UDisksTestCase):
             # forcing mount CD drive as 'rw' should fail
             try:
                 ro_options = GLib.Variant('a{sv}', {'options': GLib.Variant('s', 'rw')})
-                mount_path = cd_fs.call_mount_sync(ro_options, None)
+                cd_fs.call_mount_sync(ro_options, None)
             except GLib.GError as e:
                 self.assertIn('is write-protected but `rw\' option given', str(e))
             else:
@@ -1263,7 +1263,7 @@ class Luks(UDisksTestCase):
     def test_0_create_teardown(self):
         """LUKS create/teardown"""
 
-        encrypted = self.setup_crypto_device()
+        self.setup_crypto_device()
 
         block = self.udisks_block()
         obj = self.client.get_object(block.get_object_path())
