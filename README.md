@@ -70,3 +70,31 @@ BUGS and DEVELOPMENT
 Please report bugs via the GitHub's issues tracker at
 
  https://github.com/storaged-project/udisks/issues
+ 
+ ### Running out of development source tree
+ If you would like to run out of the source tree for development without installing,
+ please do the following below.  
+ 
+ **Note: Assuming you are in the base of the source tree and
+ you don't have udisks already installed**
+ 
+ * Build the source `$ ./autogen.sh --enable-modules --enable-debug && make`
+ * To run the daemon and splunk around with dbus clients
+   * copy the needed files, policy kit, dbus config, and udev rules
+     ```
+     sudo cp data/*.policy /usr/share/polkit-1/actions/
+     sudo cp modules/*/data/*.policy /usr/share/polkit-1/actions/
+     
+     sudo cp data/org.freedesktop.UDisks2.conf /etc/dbus-1/system.d/
+     
+     sudo cp data/80-udisks2.rules /usr/lib/udev/rules.d/
+     ```
+   * Get the udev rules to run `sudo udevadm control --reload && udevadm trigger && udevadm settle`
+ * Start the daemon `# ./udisksd --debug --uninstalled --force-load-modules`
+ * Start a client, eg. `# d-feet`
+ 
+ ### Run the unit tests
+
+ `./autogen.sh --enable-modules --enable-debug && make && make ci`
+   
+ 
