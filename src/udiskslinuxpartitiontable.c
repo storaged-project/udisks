@@ -199,6 +199,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   UDisksObject *partition_object = NULL;
   UDisksBlock *partition_block = NULL;
   BDPartSpec *part_spec = NULL;
+  BDPartSpec *overlapping_part = NULL;
   BDPartTypeReq part_type = 0;
   const gchar *table_type;
   uid_t caller_uid;
@@ -315,6 +316,41 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
+  /* Users might want to specify logical partitions start and size using size of
+   * of the extended partition. If this happens we need to shift start (offset)
+   * of the logical partition.
+   * XXX: We really shouldn't allow creation of overlapping partitions and
+   *      and just automatically fix this. But udisks currently doesn't have
+   *      functions to get free regions on the disks so this is a somewhat valid
+   *      use case. But we should definitely provide some functionality to get
+   *      right "numbers" and stop doing this.
+  */
+  overlapping_part = bd_part_get_part_by_pos (device_name, offset, &error);
+  if (overlapping_part != NULL && ! (overlapping_part->type & BD_PART_TYPE_FREESPACE))
+    {
+      // extended partition or metadata of the extended partition
+      if (overlapping_part->type & BD_PART_TYPE_EXTENDED || overlapping_part->type & (BD_PART_TYPE_LOGICAL | BD_PART_TYPE_METADATA))
+        {
+          if (overlapping_part->start == offset)
+            {
+              // just add 1 byte, libblockdev will adjust it
+              offset += 1;
+              udisks_warning ("Requested start of the logical partition overlaps "
+                              "with extended partition metadata. Start of the "
+                              "partition moved to %"G_GUINT64_FORMAT".", offset);
+            }
+        }
+      else
+        {
+          // overlapping partition is not a free space nor an extended part -> error
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Requested start for the new partition %"G_GUINT64_FORMAT" "
+                                                 "overlaps with existing partition %s.",
+                                                  offset, overlapping_part->path);
+          goto out;
+        }
+    }
+
   part_spec = bd_part_create_part (device_name, part_type, offset,
                                    size, BD_PART_ALIGN_OPTIMAL, &error);
   if (!part_spec)
@@ -419,6 +455,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
  out:
   g_free (wait_data);
   g_free (part_spec);
+  g_free (overlapping_part);
   g_clear_error (&error);
   g_clear_object (&partition_block);
   g_free (device_name);

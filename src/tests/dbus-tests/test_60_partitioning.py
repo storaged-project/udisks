@@ -123,7 +123,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
-        log_path = disk.CreatePartition(dbus.UInt64(2 * 1024**2), dbus.UInt64(50 * 1024**2), '', '',
+        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -135,6 +135,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         # check if its a 'contained'
         dbus_cont = self.get_property(log_part, '.Partition', 'IsContained')
         dbus_cont.assertTrue()
+
+        # create one more logical partition
+        log_path = disk.CreatePartition(dbus.UInt64(101 * 1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
 
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
