@@ -231,5 +231,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
         path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
+        time.sleep(1)
+
         # partitions should be scanned
         self.assertTrue(os.path.exists("/dev/%sp1" % loop_dev))
