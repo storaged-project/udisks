@@ -1530,14 +1530,14 @@ has_whitespace (const gchar *s)
 }
 
 static gchar *
-make_block_luksname (UDisksBlock *block)
+make_block_luksname (UDisksBlock *block, GError **error)
 {
-  const gchar *uuid = udisks_block_get_id_uuid (block);
+  gchar *uuid = bd_crypto_luks_uuid (udisks_block_get_device (block), error);
 
-  if (uuid && *uuid)
+  if (uuid)
     return g_strdup_printf ("luks-%s", uuid);
-
-  return NULL;
+  else
+    return NULL;
 }
 
 static gboolean
@@ -3022,8 +3022,14 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
 
       /* Open it */
-      mapped_name = make_block_luksname (block);
-      g_assert (mapped_name != NULL);
+      mapped_name = make_block_luksname (block, &error);
+      if (!mapped_name)
+        {
+          g_prefix_error (&error, "Failed to get LUKS UUID: ");
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+
       data.map_name = mapped_name;
       data.read_only = FALSE;
       if (!udisks_daemon_launch_threaded_job_sync (daemon,
