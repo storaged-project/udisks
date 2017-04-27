@@ -1995,6 +1995,13 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                    NULL, /* input_string */
                                                    "%s", command);
 
+  /* XXX: label property is automatically updated after an udev change
+   * event for this device, but udev sometimes returns the old label
+   * so just trigger the uevent again now to be sure the property
+   * has been updated
+  */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+
   if (success)
     udisks_filesystem_complete_set_label (filesystem, invocation);
   else
