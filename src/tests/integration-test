@@ -1632,6 +1632,108 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
 
 # ----------------------------------------------------------------------------
 
+
+def setup_lio():
+    """create virtual test devices"""
+
+    orig_devs = {dev for dev in os.listdir("/dev") if
+                 re.match(r'sd[a-z]+$', dev)}
+
+    # create fake SCSI hard drives
+    assert subprocess.call(
+        ["targetcli",
+         "restoreconfig dbus-tests/targetcli_config.json"]) == 0
+    time.sleep(0.1)
+
+    devs = {dev for dev in os.listdir("/dev") if
+            re.match(r'sd[a-z]+$', dev)}
+
+    vdevs = ["/dev/%s" % dev for dev in (devs - orig_devs)]
+
+    # let's be 100% sure that we pick a virtual one
+    for d in vdevs:
+        with open('/sys/block/%s/device/model' %
+                  os.path.basename(d)) as model_file:
+            assert model_file.read().strip() == 'udisks_test_dis'
+
+    assert len(vdevs) >= 4
+    return vdevs
+
+
+def remove_lio():
+    # remove the fake SCSI devices and their backing files
+    assert subprocess.call(['targetcli', 'clearconfig confirm=True']) == 0
+    for disk_file in glob("/var/tmp/udisks_test_disk*"):
+        os.unlink(disk_file)
+
+
+class MDRaid(UDisksTestCase):
+    """
+    Test some of the code we are refactoring.
+    """
+    devices = None
+
+    def setUp(self):
+        self.assertEqual(len(glob('/dev/md/int_test*')), 0)
+        self.md_device = '/dev/md/int_test0'
+
+        self.md_legs = self.devices[:2]
+        create = ['mdadm', '--create', self.md_device, '--level=1',
+                  '--metadata=0.90', '--raid-devices=2']
+        create.extend(self.md_legs)
+        self.assertEqual(subprocess.call(create), 0)
+        self.sync()
+
+    def tearDown(self):
+        self.assertEqual(
+            subprocess.call(['mdadm', '--stop', self.md_device]), 0)
+        zero = ['mdadm', '--zero-superblock', '--force']
+        zero.extend(self.md_legs)
+        self.assertEqual(subprocess.call(zero), 0)
+
+    def test_md_raid_methods(self):
+        self.assertIsNotNone(self.devices)
+
+        block_path = "/org/freedesktop/UDisks2/block_devices/%s" % os.path.basename(self.md_legs[0])
+        bo = self.client.get_object(block_path)
+        block_interface = bo.get_interface('org.freedesktop.UDisks2.Block')
+        mdraid_path = block_interface.get_property('mdraid-member')
+        mdraid_object = self.client.get_object(mdraid_path)
+
+        i = mdraid_object.get_interface('org.freedesktop.UDisks2.MDRaid')
+
+        block = UDisks.Client.get_block_for_mdraid(self.client, i)
+        self.assertIsNotNone(block)
+        self.assertEqual(
+            block.get_property('mdraid'), i.get_object_path())
+
+        block_list = UDisks.Client.get_all_blocks_for_mdraid(
+            self.client, i)
+        self.assertIsNotNone(block_list)
+        self.assertIsInstance(block_list, list)
+        for b in block_list:
+            self.assertEqual(
+                b.get_property('mdraid'), i.get_object_path())
+
+        block_list = UDisks.Client.get_members_for_mdraid(
+            self.client, i)
+        self.assertIsNotNone(block_list)
+        self.assertIsInstance(block_list, list)
+        for b in block_list:
+            self.assertEqual(
+                b.get_property('mdraid-member'),
+                i.get_object_path())
+
+    @classmethod
+    def setUpClass(cls):
+        cls.devices = setup_lio()
+
+    @classmethod
+    def tearDownClass(cls):
+        remove_lio()
+
+# ----------------------------------------------------------------------------
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='udisks2 integration test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
