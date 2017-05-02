@@ -321,6 +321,13 @@ static const gchar *exfat_allow[] = { "dmask=", "errors=", "fmask=", "iocharset=
 static const gchar *exfat_allow_uid_self[] = { "uid=", NULL };
 static const gchar *exfat_allow_gid_self[] = { "gid=", NULL };
 
+/* ---------------------- hfs+ -------------------- */
+
+static const gchar *hfsplus_defaults[] = { "uid=", "gid=", "nls=utf8", NULL };
+static const gchar *hfsplus_allow[] = { "creator=", "type=", "umask=", "session=", "part=", "decompose", "nodecompose", "force", "nls=", NULL };
+static const gchar *hfsplus_allow_uid_self[] = { "uid=", NULL };
+static const gchar *hfsplus_allow_gid_self[] = { "gid=", NULL };
+
 /* ------------------------------------------------ */
 /* TODO: support context= */
 
@@ -333,6 +340,7 @@ static const FSMountOptions fs_mount_options[] =
     { "iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
     { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
     { "exfat", exfat_defaults, exfat_allow, exfat_allow_uid_self, exfat_allow_gid_self },
+    { "hfsplus", hfsplus_defaults, hfsplus_allow, hfsplus_allow_uid_self, hfsplus_allow_gid_self },
   };
 
 /* ------------------------------------------------ */
@@ -1947,6 +1955,13 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                    &out_message,
                                                    NULL, /* input_string */
                                                    "%s", command);
+
+  /* XXX: label property is automatically updated after an udev change
+   * event for this device, but udev sometimes returns the old label
+   * so just trigger the uevent again now to be sure the property
+   * has been updated
+  */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   if (success)
     udisks_filesystem_complete_set_label (filesystem, invocation);

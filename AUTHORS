@@ -4,10 +4,66 @@ Original author:
 Maintainer:
   Vratislav Podzimek <vpodzime@redhat.com>
 
-Contributors:
-  Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
-  Tomas Bzatek <tbzatek@redhat.com>
+Contributors (In alphabetical order):
+  Alban Browaeys <prahal@yahoo.com>
+  Andrey Jr. Melnikov <temnota.am@gmail.com>
+  Ayan George <ayan.george@canonical.com>
+  astien Nocera <hadess@hadess.net>
+  Benedikt Morbach <benedikt.morbach@googlemail.com>
+  Claudio Saavedra <csaavedra@igalia.com>
+  Colin Walters <walters@verbum.org>
+  Daniele Napolitano <dnax88@gmail.com>
+  David Heidelberger <david.heidelberger@ixit.cz>
+  David King <dking@redhat.com>
+  Denis Kasak <dkasak@termina.org.uk>
+  Dmitrijs Ledkovs <dmitrijs.ledkovs@canonical.com>
+  Dominika Hodovska <dhodovsk@redhat.com>
+  Edward Sheldrake <ejsheldrake@gmail.com>
+  Evan Dandrea <evand@ubuntu.com>
+  Evan Nemerson <evan@coeus-group.com>
+  Gris Ge <fge@redhat.com>
+  Hielke Christian Braun <hcb@unco.de>
+  Jan Pokorny <japokorn@redhat.com>
+  Jiro SEKIBA <jir@unicus.jp>
+  João Paulo Rechi Vita <jprvita@endlessm.com>
+  Kylie McClain <somasis@exherbo.org>
+  Linus Torvalds <torvalds@linux-foundation.org>
+  Lubomir Rintel <lkundrak@v3.sk>
+  Mantas Mikulėnas <grawity@gmail.com>
   Marius Vollmer <mvollmer@redhat.com>
-  Tomas Smetana <tsmetana@redhat.com>
-  Peter Hatina <phatina@redhat.com>
+  Marti Raudsepp <marti@juffo.org>
+  Martin Hatina <mhatina@redhat.com>
+  Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
+  Mathieu Trudel-Lapierre <mathieu.trudel-lapierre@canonical.com>
+  Matt Zimmerman <mdz@ubuntu.com>
+  Matthias Clasen <mclasen@redhat.com>
+  Maxim Levitsky <maximlevitsky@gmail.com>
+  Michael Biebl <biebl@debian.org>
+  Michael Catanzaro <mcatanzaro@gnome.org>
+  Mike Frysinger <vapier@gentoo.org>
+  Nicolas Lécureuil <nicolas.lecureuil@free.fr>
+  Ondrej Holy <oholy@redhat.com>
+  Pawel Baldysiak <pawel.baldysiak@intel.com>
+  Pawel Wieczorkiewicz <pwieczorkiewicz@suse.de>
+  Peter Hatina <phatina@gmail.com>, <phatina@redhat.com>
+  Peter Paluch <peter.paluch@fri.uniza.sk>
+  Philip Withnall <withnall@endlessm.com>
+  Phillip Susi <psusi@ubuntu.com>
+  Richard Hughes <richard@hughsie.com>
+  Ritesh Khadgaray <khadgaray@gmail.com>
+  Ross Lagerwall <rosslagerwall@gmail.com>
+  Samikshan Bairagya <samikshan@gmail.com>
+  Samuli Suominen <ssuominen@gentoo.org>
+  Simon McVittie <simon.mcvittie@collabora.co.uk>
+  Sitsofe Wheeler <sitsofe@yahoo.com>
+  Stef Walter <stefw@redhat.com>
+  Stefan Sauer <ensonic@users.sf.net>
+  Thomas Gläßle <t_glaessle@gmx.de>
+  Timo Gurr <timo.gurr@gmail.com>
+  Tom Yan <tom.ty89@gmail.com>
+  Tomas Bzatek <tbzatek@redhat.com>
+  Tomas Smetana <tomas@smetana.name>, <tsmetana@redhat.com>
+  Tony Asleson <tasleson@redhat.com>
+  tuxce <tuxce.net@gmail.com>
+  Vincent Untz <vuntz@gnome.org>
   Vojtech Trefny <vtrefny@redhat.com>

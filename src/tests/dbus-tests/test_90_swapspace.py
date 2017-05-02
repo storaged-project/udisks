@@ -12,10 +12,6 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
         dev = self.get_object('/block_devices/' + os.path.basename(dev_name))
         return dev
 
-    def get_swapspace_iface(self, device):
-        iface = dbus.Interface(device, dbus_interface=self.iface_prefix + '.Swapspace')
-        return iface
-
     def setUp(self):
         # create new fake swap device
         self.assertTrue(len(self.vdevs) > 0)
@@ -31,6 +27,10 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
     def test_10_create(self):
         # test creating of the swap device
         self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        fstype = self.get_property(self.device, '.Block', 'IdType')
+        fstype.assertEqual('swap')
+
         code, _ = self.run_command('swapon %s' % self.dev)
         self.assertEqual(code, 0)
         code, result = self.run_command('swapon --show')
@@ -39,13 +39,14 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
         self.assertIn('%s ' % self.dev, result)
 
     def test_20_start_stop(self):
-        self.run_command('mkswap %s' % self.dev)
-        iface = self.get_swapspace_iface(self.device)
-        self.udev_settle()
+        self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
-        # Active property is now in undefined state
-        iface.Start(self.no_options)
-        active = self.get_property(iface, '.Swapspace', 'Active')
+        fstype = self.get_property(self.device, '.Block', 'IdType')
+        fstype.assertEqual('swap')
+
+        # start the swap
+        self.device.Start(self.no_options, dbus_interface=self.iface_prefix + '.Swapspace')
+        active = self.get_property(self.device, '.Swapspace', 'Active')
         active.assertTrue()  # swap should be active
 
         code, result = self.run_command('swapon --show')
@@ -55,6 +56,6 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
         # trailing space added to prevent false positive checks (e.g. /dev/sda vs. /dev/sda1)
         self.assertIn('%s ' % self.dev, result)
 
-        iface.Stop(self.no_options)
-        active = self.get_property(iface, '.Swapspace', 'Active')
+        self.device.Stop(self.no_options, dbus_interface=self.iface_prefix + '.Swapspace')
+        active = self.get_property(self.device, '.Swapspace', 'Active')
         active.assertFalse()  # swap shouldn't be active
