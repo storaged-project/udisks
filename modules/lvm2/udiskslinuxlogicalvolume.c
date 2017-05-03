@@ -341,36 +341,32 @@ teardown_logical_volume (UDisksLogicalVolume   *volume,
 }
 
 static gboolean
-handle_delete (UDisksLogicalVolume   *_volume,
-               GDBusMethodInvocation *invocation,
-               GVariant              *options)
+common_setup (UDisksLinuxLogicalVolume           *volume,
+              GDBusMethodInvocation              *invocation,
+              GVariant                           *options,
+              const gchar                        *auth_err_msg,
+              UDisksLinuxLogicalVolumeObject    **object,
+              UDisksDaemon                      **daemon,
+              uid_t                              *out_uid,
+              gid_t                              *out_gid)
 {
+  gboolean rc = FALSE;
   GError *error = NULL;
-  UDisksLinuxLogicalVolume *volume = UDISKS_LINUX_LOGICAL_VOLUME (_volume);
-  UDisksLinuxLogicalVolumeObject *object = NULL;
-  UDisksDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  gboolean teardown_flag = FALSE;
-  UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
 
-  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
-
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
+  *object = udisks_daemon_util_dup_object (volume, &error);
+  if (*object == NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  *daemon = udisks_linux_logical_volume_object_get_daemon (*object);
 
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+  if (!udisks_daemon_util_get_caller_uid_sync (*daemon,
                                                invocation,
                                                NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
+                                               out_uid,
+                                               out_gid,
                                                NULL,
                                                &error))
     {
@@ -380,12 +376,37 @@ handle_delete (UDisksLogicalVolume   *_volume,
     }
 
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (*daemon,
+                                     UDISKS_OBJECT (*object),
                                      lvm2_policy_action_id,
                                      options,
-                                     N_("Authentication is required to delete a logical volume"),
+                                     auth_err_msg,
                                      invocation);
+  rc = TRUE;
+ out:
+  return rc;
+}
+
+static gboolean
+handle_delete (UDisksLogicalVolume   *_volume,
+               GDBusMethodInvocation *invocation,
+               GVariant              *options)
+{
+  GError *error = NULL;
+  UDisksLinuxLogicalVolume *volume = UDISKS_LINUX_LOGICAL_VOLUME (_volume);
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  uid_t caller_uid;
+  gboolean teardown_flag = FALSE;
+  UDisksLinuxVolumeGroupObject *group_object;
+  LVJobData data;
+
+  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
+
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to delete a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   if (teardown_flag &&
       !teardown_logical_volume (_volume,
@@ -478,40 +499,14 @@ handle_rename (UDisksLogicalVolume   *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
   const gchar *lv_objpath;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to rename a logical volume"),
-                                     invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to rename a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -566,39 +561,13 @@ handle_resize (UDisksLogicalVolume   *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to resize a logical volume"),
-                                     invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to resize a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -684,40 +653,14 @@ handle_activate (UDisksLogicalVolume *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
   UDisksObject *block_object = NULL;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to activate a logical volume"),
-                                     invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to activate a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -778,39 +721,13 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       UDISKS_OBJECT (object),
-                                       lvm2_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to deactivate a logical volume"),
-                                       invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to deactivate a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -855,40 +772,14 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
   const gchar *lv_objpath = NULL;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to create a snapshot of a logical volume"),
-                                     invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to create a snapshot of a logical volume"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -956,34 +847,10 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 NULL,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       UDISKS_OBJECT (object),
-                                       lvm2_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to convert logical volume to cache"),
-                                       invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to convert logical volume to cache"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -1042,33 +909,10 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
 
-  object = udisks_daemon_util_dup_object (volume, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 NULL,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       UDISKS_OBJECT (object),
-                                       lvm2_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to split cache pool LV off of a cache LV"),
-                                       invocation);
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to split cache pool LV off of a cache LV"),
+                     &object, &daemon, &caller_uid, NULL))
+    goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
