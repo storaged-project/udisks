@@ -52,6 +52,11 @@ Checklist for making a release:
    - Prepare NEWS file - append " (unreleased)" to version number
      - Commit message: Start writing NEWS for X.Y.Z
 
+ - Upload new documentation to storaged.org website
+   - https://github.com/storaged-project/storaged-project.github.io
+   - Create new folder X.Y.Z in "doc/udisks2-api/" and update the "latest" symlink
+   - Add link to the new version to "doc/udisks2-api/index.html"
+
 When doing the first micro release in a new minor series (for example
 starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 
