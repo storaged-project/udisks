@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -34,8 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <linux/loop.h>
-
+#include <blockdev/loop.h>
 #include <blockdev/fs.h>
 #include <blockdev/mdraid.h>
 
@@ -311,19 +309,14 @@ handle_loop_setup (UDisksManager          *object,
   gchar proc_path[64];
   gchar path[8192];
   ssize_t path_len;
-  gint loop_fd = -1;
-  gint loop_control_fd = -1;
-  gint allocated_loop_number = -1;
   gchar *loop_device = NULL;
-  struct loop_info64 li64;
+  const gchar *loop_name = NULL;
   UDisksObject *loop_object = NULL;
   gboolean option_read_only = FALSE;
   gboolean option_no_part_scan = FALSE;
   guint64 option_offset = 0;
   guint64 option_size = 0;
   uid_t caller_uid;
-  struct stat fd_statbuf;
-  gboolean fd_statbuf_valid = FALSE;
   WaitForLoopData wait_data;
 
   /* we need the uid of the caller for the loop file */
@@ -384,75 +377,21 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "size", "t", &option_size);
   g_variant_lookup (options, "no-part-scan", "b", &option_no_part_scan);
 
-  /* it's not a problem if fstat fails... for example, this can happen if the user
-   * passes a fd to a file on the GVfs fuse mount
-   */
-  if (fstat (fd, &fd_statbuf) == 0)
-    fd_statbuf_valid = TRUE;
-
-  /* serialize access to /dev/loop-control */
-  g_mutex_lock (&(manager->lock));
-
-  loop_control_fd = open ("/dev/loop-control", O_RDWR);
-  if (loop_control_fd == -1)
+  error = NULL;
+  if (!bd_loop_setup_from_fd (fd,
+                              option_offset,
+                              option_size,
+                              option_read_only,
+                              !option_no_part_scan,
+                              &loop_name,
+                              &error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error opening /dev/loop-control: %m");
-      g_mutex_unlock (&(manager->lock));
+      g_prefix_error (&error, "Error creating loop device: ");
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
-  allocated_loop_number = ioctl (loop_control_fd, LOOP_CTL_GET_FREE);
-  if (allocated_loop_number < 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error allocating free loop device: %m");
-      g_mutex_unlock (&(manager->lock));
-      goto out;
-    }
-
-  loop_device = g_strdup_printf ("/dev/loop%d", allocated_loop_number);
-  loop_fd = open (loop_device, option_read_only ? O_RDONLY : O_RDWR);
-  if (loop_fd == -1)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot open %s: %m", loop_device);
-      g_mutex_unlock (&(manager->lock));
-      goto out;
-    }
-
-  /* update the loop file - need to do this before getting the uevent for the device  */
-  udisks_state_add_loop (udisks_daemon_get_state (manager->daemon),
-                         loop_device,
-                         path,
-                         fd_statbuf_valid ? fd_statbuf.st_dev : 0,
-                         caller_uid);
-
-  memset (&li64, '\0', sizeof (li64));
-  strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE - 1);
-  if (option_read_only)
-    li64.lo_flags |= LO_FLAGS_READ_ONLY;
-  if (!option_no_part_scan)
-    li64.lo_flags |= 8; /* Use LO_FLAGS_PARTSCAN when 3.2 has been out for a while */
-  li64.lo_offset = option_offset;
-  li64.lo_sizelimit = option_size;
-  if (ioctl (loop_fd, LOOP_SET_FD, fd) < 0 || ioctl (loop_fd, LOOP_SET_STATUS64, &li64) < 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error setting up loop device %s: %m",
-                                             loop_device);
-      g_mutex_unlock (&(manager->lock));
-      goto out;
-    }
-  g_mutex_unlock (&(manager->lock));
+  loop_device = g_strdup_printf ("/dev/%s", loop_name);
 
   /* Determine the resulting object */
   error = NULL;
@@ -486,10 +425,7 @@ handle_loop_setup (UDisksManager          *object,
   if (loop_object != NULL)
     g_object_unref (loop_object);
   g_free (loop_device);
-  if (loop_control_fd != -1)
-    close (loop_control_fd);
-  if (loop_fd != -1)
-    close (loop_fd);
+  g_free (loop_name);
   if (fd != -1)
     close (fd);
   return TRUE; /* returning TRUE means that we handled the method invocation */

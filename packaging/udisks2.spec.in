@@ -41,6 +41,7 @@ BuildRequires: intltool
 BuildRequires: redhat-rpm-config
 BuildRequires: libblockdev-devel        >= %{libblockdev_version}
 BuildRequires: libblockdev-part-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-loop-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
@@ -48,6 +49,7 @@ BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
 
 Requires: libblockdev        >= %{libblockdev_version}
 Requires: libblockdev-part   >= %{libblockdev_version}
+Requires: libblockdev-loop   >= %{libblockdev_version}
 Requires: libblockdev-swap   >= %{libblockdev_version}
 Requires: libblockdev-mdraid >= %{libblockdev_version}
 Requires: libblockdev-fs     >= %{libblockdev_version}
