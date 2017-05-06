@@ -171,6 +171,17 @@ AC_SUBST(HAVE_LIBSYSTEMD_LOGIN)
 AC_SUBST(LIBSYSTEMD_LOGIN_CFLAGS)
 AC_SUBST(LIBSYSTEMD_LOGIN_LIBS)
 
+PKG_CHECK_MODULES(LIBELOGIND, [libelogind >= 219],
+                  [have_libelogind=yes],
+                  [have_libelogins=no])
+AM_CONDITIONAL(HAVE_LIBELOGIND, test x$have_libelogind = xyes)
+if test "x$have_libelogind" = "xyes"; then
+  AC_DEFINE([HAVE_LIBELOGIND], 1, [Define to 1 if libelogind is available])
+fi
+AC_SUBST(HAVE_LIBELOGIND)
+AC_SUBST(LIBELOGIND_CFLAGS)
+AC_SUBST(LIBELOGIND_LIBS)
+
 # udevdir
 AC_ARG_WITH([udevdir],
             AS_HELP_STRING([--with-udevdir=DIR], [Directory for udev]),
@@ -601,6 +612,7 @@ echo "
         udevdir:                    ${udevdir}
         systemdsystemunitdir:       ${systemdsystemunitdir}
         using libsystemd-login:     ${have_libsystemd_login}
+        using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
         libblockdev_part support:   ${have_libblockdev_part}
