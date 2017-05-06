@@ -100,6 +100,7 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(ACL_CFLAGS)                                                          \
 	$(LIBSYSTEMD_LOGIN_CFLAGS)                                             \
+	$(LIBELOGIND_CFLAGS)                                                   \
 	$(PART_CFLAGS)                                                         \
 	$(NULL)
 
@@ -112,6 +113,7 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \
 	$(LIBSYSTEMD_LOGIN_LIBS)                                               \
+	$(LIBELOGIND_LIBS)                                                     \
 	$(PART_LDFLAGS)                                                        \
 	$(top_builddir)/udisks/libudisks2.la                                   \
 	$(NULL)
