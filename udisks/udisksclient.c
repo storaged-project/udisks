@@ -65,6 +65,7 @@ struct _UDisksClient
 typedef struct
 {
   GObjectClass parent_class;
+  GHashTable *changed_blacklist;
 } UDisksClientClass;
 
 enum
@@ -126,12 +127,19 @@ static void
 udisks_client_finalize (GObject *object)
 {
   UDisksClient *client = UDISKS_CLIENT (object);
+  UDisksClientClass *client_class = UDISKS_CLIENT_GET_CLASS (client);
 
   if (client->changed_timeout_source != NULL)
     g_source_destroy (client->changed_timeout_source);
 
   if (client->initialization_error != NULL)
     g_clear_error (&(client->initialization_error));
+
+  if (client_class->changed_blacklist != NULL)
+    {
+      g_hash_table_destroy (client_class->changed_blacklist);
+      client_class->changed_blacklist = NULL;
+    }
 
   /* might be NULL if failing early in the constructor */
   if (client->object_manager != NULL)
@@ -204,6 +212,11 @@ udisks_client_class_init (UDisksClientClass *klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_client_finalize;
   gobject_class->get_property = udisks_client_get_property;
+
+  klass->changed_blacklist = g_hash_table_new (g_str_hash, g_str_equal);
+  g_hash_table_insert (klass->changed_blacklist, (gpointer) "SmartSelftestPercentRemaining", NULL);
+  g_hash_table_insert (klass->changed_blacklist, (gpointer) "SyncRate", NULL);
+  g_hash_table_insert (klass->changed_blacklist, (gpointer) "SyncRemainingTime", NULL);
 
   /**
    * UDisksClient:object-manager:
@@ -1589,7 +1602,24 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
                                        gpointer                    user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
-  udisks_client_queue_changed (client);
+  UDisksClientClass *client_class = UDISKS_CLIENT_GET_CLASS (client);
+
+  GVariantIter *iter = NULL;
+  const gchar *property_name = NULL;
+
+  /* never emit the change signal for Job objects */
+  if (g_strcmp0 (g_dbus_proxy_get_interface_name (interface_proxy), "org.freedesktop.UDisks2.Drive.Job"))
+    return;
+
+  while (g_variant_iter_next (iter, "{&sv}", &property_name, NULL))
+    {
+      if (! g_hash_table_contains (client_class->changed_blacklist, property_name))
+        {
+          /* one of the properties is not on the blacklist -> emit change signal */
+          udisks_client_queue_changed (client);
+          return;
+        }
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
