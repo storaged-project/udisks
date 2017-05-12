@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 #define UDISKS_TYPE_CLIENT  (udisks_client_get_type ())
 #define UDISKS_CLIENT(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_CLIENT, UDisksClient))
 #define UDISKS_IS_CLIENT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_CLIENT))
+#define UDISKS_CLIENT_GET_CLASS(o)  (G_TYPE_INSTANCE_GET_CLASS ((o), UDISKS_TYPE_CLIENT, UDisksClientClass))
 
 GType               udisks_client_get_type           (void) G_GNUC_CONST;
 void                udisks_client_new                (GCancellable        *cancellable,
