@@ -1,17 +1,66 @@
 ---------------------------
-udisks 2.6.5 (unreleased)
+udisks 2.6.6 (unreleased)
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.6.4:
+Changes since 2.6.5:
 (TODO: make shortlog)
 
 Thanks to all our contributors.
 
 Vojtech Trefny
 (TODO: date)
+
+---------------------------
+udisks 2.6.5
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.6.4:
+
+Jan Pokorny (1):
+      Added after test cleanup
+
+Timo Gurr (1):
+      Remove the deprecated --no-debug from the udisks2.service file
+
+Tony Asleson (3):
+      README.md: Add development notes
+      Update AUTHORS file
+      HACKING: Add blurb about AUTHORS file
+
+Vojtech Trefny (16):
+      Post-release version bump to 2.6.5
+      Exclude merge commits from 'make shortlog'
+      Update AUTHORS file
+      Fix bogus date in changelog
+      DBus tests: Fix reading zRAM properties for tests
+      Fix fhs-media configure option
+      Do not log warning for smart update errors
+      Fix dependency for udevadm (#1424869)
+      Fix permissions when mounting HFS+
+      Fix typo in data/Makefile.am
+      Fix failures in swap tests
+      Manually trigger uevent after changing filesystem label
+      Add readme for translators
+      Update link to the latest documentation
+      HACKING: add "documentation update" to release checklist
+      Blacklist some changes for the UDisks.Client change signal (#1438232)
+
+Vratislav Podzimek (1):
+      Give kernel a time to scan partitions on a loop device
+
+udeved (1):
+      support elogind
+
+Thanks to all our contributors.
+
+Vojtech Trefny
+2017-05-15
 
 ------------
 udisks 2.6.4

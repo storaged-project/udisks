@@ -7,13 +7,15 @@
 # Tommy He <lovenemesis@gmail.com>, 2012
 # Wylmer Wang <wantinghard@gmail.com>, 2013
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Jerry Lee <lchopn@gmail.com>, 2017. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-10-06 01:35-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-04-11 05:11-0400\n"
+"Last-Translator: Jerry Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (China)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -329,262 +331,234 @@ msgid "Authentication is required to cancel a job started by another user"
 msgstr "取消由其他用户启动的任务需要身份验证"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
-#, fuzzy
 msgid "Manage Bcache"
-msgstr "管理交换空间"
+msgstr "管理 Bcache"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage Bcache"
-msgstr "管理交换空间需要身份验证"
+msgstr "管理 Bcache 需要身份验证"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:246
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "需要授权来修改设备"
+msgstr "删除 bcache 设备需要身份验证。"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:289
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "需要授权来修改设备"
+msgstr "设定 bcache 设备的模式需要身份验证。"
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "重新扫描设备需要认证"
+msgstr "创建 bcache 设备需要身份验证。"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "管理 BTRFS"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "管理 RAID 阵列需要认证"
+msgstr "管理 BRTFS 需要身份验证"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:587
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "取消任务需要身份验证"
+msgstr "更改 BRTFS 卷的标签需要身份验证"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:468
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
-msgstr "向 RAID 阵列添加设备需要身份验证"
+msgstr "将设备添加到卷需要身份验证"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:655
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "创建 RAID 阵列需要身份验证"
+msgstr "创建新的快照需要身份验证"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:714
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "重新扫描设备需要认证"
+msgstr "检查和修复卷需要身份验证"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:767
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "弹出媒体需要身份验证"
+msgstr "改变卷的容量"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:206
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "重新扫描设备需要认证"
+msgstr "创建一个新的卷需要身份验证"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "管理 iSCSI"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr ""
+msgstr "管理 iSCSI 需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
-#, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "格式化 $(drive) 需要身份验证"
+msgstr "执行 iSCSI 登出需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "登出失败：%s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "打开 %s 时出错：%s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "读取 %s 时出错：%s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "管理 RAID 阵列需要认证"
+msgstr "变更 iSCSI initiator 名称需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
-msgstr ""
+msgstr "空的 initiator 名称"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "写入 %s 时出错：%s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "给驱动器断电需要认证"
+msgstr "寻找 Targets 时需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "寻找失败：%s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "给驱动器断电需要认证"
+msgstr "发现 firmware Targets 时需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "给驱动器断电需要认证"
+msgstr "执行 iSCSI 登入需要身份验证"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "登入失败：%s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "管理 LVM"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "管理 LVM 时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "删除逻辑卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:544
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "重命名逻辑卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "重新扫描设备需要认证"
+msgstr "更改逻辑卷大小时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "激活逻辑卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:877
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "关闭逻辑卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:965
 msgid "Authentication is required to create a snapshot of a logical volume"
-msgstr ""
+msgstr "给逻辑卷创建快照时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1036
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1142
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "编译时没有启用 LVMCache"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "打开设备需要身份验证"
+msgstr "转换逻辑卷到缓存时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "转换卷错误：%s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
-#, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "给驱动器断电需要认证"
+msgstr "从一个缓存池 LV 分出一个缓存 LV 时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "创建卷组时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "删除卷组时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "重命名卷组时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "向卷组添加设备时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "从卷组移除一个设备时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "从卷组清空一个设备时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "创建逻辑卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
-#, fuzzy
 msgid "Authentication is required to create a thin pool volume"
-msgstr "在  $(drive) 上创建分区需要身份验证"
+msgstr "创建一个瘦部署池卷时需要身份验证"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
-#, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr "在  $(drive) 上创建分区需要身份验证"
+msgstr "创建一个瘦部署卷时需要身份验证"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "管理 RAID 阵列"
+msgstr "管理 zRAM"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "管理 RAID 阵列需要认证"
+msgstr "管理 zRAM 时需要身份验证"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:322
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "取消任务需要身份验证"
+msgstr "添加 zRAM 内核模块时需要身份验证"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:363
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "打开设备需要身份验证"
+msgstr "移除 zRAM 内核模块时需要身份验证"
 
 #: ../modules/zram/udiskslinuxblockzram.c:256
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "打开设备需要身份验证"
+msgstr "启用 zRAM 设备时需要身份验证"
 
 #: ../modules/zram/udiskslinuxblockzram.c:356
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "需要授权来修改设备"
+msgstr "禁用 zRAM 设备时需要身份验证"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -659,7 +633,7 @@ msgstr "格式化 $(drive) 需要身份验证"
 #: ../src/udiskslinuxblock.c:2894 ../src/udiskslinuxmdraid.c:1681
 #: ../src/udiskslinuxpartition.c:918
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "修改系统配置时需要身份验证"
 
 #: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2342
 msgid "Formatting Device"
@@ -994,7 +968,7 @@ msgstr "启动/停止 RAID 阵列的数据清理需要身份验证"
 
 #: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "删除 RAID 阵列时需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1114,56 +1088,56 @@ msgstr "未知"
 #: ../udisks/udisksclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1487,26 +1461,26 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
-msgstr ""
+msgstr "Intel 快速存储技术 RAID 成员（版本 %s）"
 
 #: ../udisks/udisksclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Intel RSTe RAID 成员（%s）"
 
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Intel快速存储技术 RAID 成员"
 
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Intel RSTe RAID 成员"
 
 #: ../udisks/udisksclient.c:1953
 #, c-format
@@ -1964,7 +1938,7 @@ msgstr "ChromeOS 保留区"
 #: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Intel FFS 保留"
 
 #: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
@@ -2532,7 +2506,7 @@ msgstr "块设备"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr " %s 中的分区 %u"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2563,7 +2537,7 @@ msgstr "回环设备"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "分区 %d / %s"
+msgstr "分区 %u / %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2632,7 +2606,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "分区 %d ;/ %s"
+msgstr "分区 %u ;/ %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2819,7 +2793,7 @@ msgstr "音频 %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "分区 %d ;/ %s"
+msgstr "分区 %u ;/ %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

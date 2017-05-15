@@ -6,12 +6,13 @@
 # Piotr Drąg <piotrdrag@gmail.com>, 2012,2014
 # Piotr Drąg <piotrdrag@gmail.com>, 2016. #zanata
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-11-16 07:49-0500\n"
+"PO-Revision-Date: 2017-03-28 11:10-0400\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish\n"
 "MIME-Version: 1.0\n"
@@ -1238,7 +1239,7 @@ msgstr "TB"
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
-msgstr "%s (%s bajtów)"
+msgstr "%s (%s B)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
@@ -1247,7 +1248,7 @@ msgstr "%s (%s bajtów)"
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
-msgstr "%s (%s bajtów)"
+msgstr "%s (%s B)"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1794
@@ -2600,7 +2601,7 @@ msgstr "Urządzenie blokowe"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Partycja %u z %s"
+msgstr "%u. partycja z %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2631,7 +2632,7 @@ msgstr "Urządzenie zwrotne"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Partycja %u z %s"
+msgstr "%u. partycja z %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2700,7 +2701,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Partycja %u z %s"
+msgstr "%u. partycja z %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2887,7 +2888,7 @@ msgstr "Dźwiękowa płyta %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Partycja %u z %s"
+msgstr "%u. partycja z %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

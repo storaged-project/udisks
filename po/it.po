@@ -5,13 +5,15 @@
 # Translators:
 # Milo Casagrande <milo@ubuntu.com>, 2012-2013
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Alessio Ciregia <alciregi@gmail.com>, 2017. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-10-06 01:36-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-04-11 12:17-0400\n"
+"Last-Translator: Alessio Ciregia <alciregi@gmail.com>\n"
 "Language-Team: Italian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -354,263 +356,242 @@ msgstr ""
 "È richiesto autenticarsi per annullare un lavoro iniziato da un altro utente"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
-#, fuzzy
 msgid "Manage Bcache"
-msgstr "Gestisce lo spazio di swap"
+msgstr "Gestisce Bcache"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage Bcache"
-msgstr "È richiesto autenticarsi per gestire lo spazio di swap"
+msgstr "È richiesto autenticarsi per gestire un volume Bcache"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:246
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "È richiesto autenticarsi per modificare un dispositivo"
+msgstr "È richiesto autenticarsi per eliminare un dispositivo bcache."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:289
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "È richiesto autenticarsi per modificare un dispositivo"
+msgstr ""
+"È richiesto autenticarsi per impostare la modalità di un dispositivo bcache."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "È richiesto autenticarsi per rianalizzare un dispositivo"
+msgstr "È richiesto autenticarsi per creare un dispositivo bcache."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "Gestisci BTRFS"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "È richiesto autenticarsi per gestire array RAID"
+msgstr "È richiesto autenticarsi per gestire BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:587
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "È richiesto autenticarsi per annullare un lavoro"
+msgstr "È richiesto autenticarsi per cambiare etichetta a un volume BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:468
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
-msgstr ""
-"È richiesto autenticarsi per aggiungere un dispositivo a un array RAID"
+msgstr "È richiesto autenticarsi per aggiungere il dispositivo al volume"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:655
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "È richiesto autenticarsi per creare un array RAID"
+msgstr "È richiesto autenticarsi per creare un nuovo snapshot"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:714
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "È richiesto autenticarsi per rianalizzare un dispositivo"
+msgstr "È richiesto autenticarsi per controllare e riparare il volume"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:767
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "È richiesto autenticarsi per espellere il supporto"
+msgstr "È richiesto autenticarsi per ridimensionare il volume"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:206
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "È richiesto autenticarsi per rianalizzare un dispositivo"
+msgstr "È richiesto autenticarsi per creare un nuovo volume"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Gestisci iSCSI"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr ""
+msgstr "È richiesto autenticarsi per gestire iSCSI"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "È richiesto autenticarsi per formattare $(drive)"
+msgstr "È richiesto autenticarsi per effettuare il logout iSCSI"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Logout fallito: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "Errore aprendo %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Errore leggendo %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "È richiesto autenticarsi per gestire array RAID"
+msgstr "È richiesto autenticarsi per cambiare il nome dell'initiator iSCSI"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
-msgstr ""
+msgstr "Nome initiator vuoto"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "Errore scrivendo in %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "È richiesto autenticarsi per spegnere un'unità"
+msgstr "È richiesto autenticarsi per trovare i target"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "Ricerca fallita: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "È richiesto autenticarsi per spegnere un'unità"
+msgstr "È richiesto autenticarsi per trovare i target firmware"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "È richiesto autenticarsi per spegnere un'unità"
+msgstr "È richiesto autenticarsi per effettuare il login iSCSI"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "Login fallito: %s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Gestisci LVM"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "È richiesto autenticarsi per gestire LVM"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per eliminare il volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:544
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per rinominare il volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "È richiesto autenticarsi per rianalizzare un dispositivo"
+msgstr "È richiesto autenticarsi per ridimensionare il volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per attivare il volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:877
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per disattivare il volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:965
 msgid "Authentication is required to create a snapshot of a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per creare uno snapshot di un volume logico"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1036
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1142
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "LVMCache non abilitata al momento della compilazione."
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
 #, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "È richiesto autenticarsi per aprire un dispositivo"
+msgstr "È richiesto autenticarsi per convertire un volume logico in cache"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "Errore nel convertire il volume: %s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
 #, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "È richiesto autenticarsi per spegnere un'unità"
+msgstr "È richiesto autenticarsi per spegnere la cache del pool LV"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "È richiesto autenticarsi per creare un un volume group"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "È richiesto autenticarsi per eliminare un volume group"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "È richiesto autenticarsi per rinominare un volume group"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
+"È richiesto autenticarsi per aggiungere un dispositivo a un volume group"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
+"È richiesto autenticarsi per rimuovere un dispositivo da un volume group"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "È richiesto autenticarsi per svuotare un device in "
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "È richiesto autenticarsi per creare un volume logico"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
 #, fuzzy
 msgid "Authentication is required to create a thin pool volume"
-msgstr "È richiesto autenticarsi per creare una partizione su $(drive)"
+msgstr "È richiesto autenticarsi per creare un thin pool volume"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
 #, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr "È richiesto autenticarsi per creare una partizione su $(drive)"
+msgstr "È richiesto autenticarsi per creare un thin volume"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "Gestisce array RAID"
+msgstr "Gestisce zRAM"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "È richiesto autenticarsi per gestire array RAID"
+msgstr "È richiesto autenticarsi per gestire un volume zRAM"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:322
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "È richiesto autenticarsi per annullare un lavoro"
+msgstr "È richiesto autenticarsi per aggiungere il modulo zRAM al kernel"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:363
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "È richiesto autenticarsi per aprire un dispositivo"
+msgstr "È richiesto autenticarsi per rimuovere il modulo zRAM dal kernel"
 
 #: ../modules/zram/udiskslinuxblockzram.c:256
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "È richiesto autenticarsi per aprire un dispositivo"
+msgstr "È richiesto autenticarsi per a abilitare un dispositivo zRAM"
 
 #: ../modules/zram/udiskslinuxblockzram.c:356
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "È richiesto autenticarsi per modificare un dispositivo"
+msgstr "È richiesto autenticarsi per disabilitare un dispositivo zRAM"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -687,7 +668,7 @@ msgstr "È richiesto autenticarsi per formattare $(drive)"
 #: ../src/udiskslinuxblock.c:2894 ../src/udiskslinuxmdraid.c:1681
 #: ../src/udiskslinuxpartition.c:918
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "È richiesto autenticarsi per modificare la configurazione del sistema"
 
 #: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2342
 msgid "Formatting Device"
@@ -1046,7 +1027,7 @@ msgstr ""
 
 #: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "È richiesto autenticarsi per cancellare un array RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1169,56 +1150,56 @@ msgstr "Sconosciuta"
 #: ../udisks/udisksclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1545,23 +1526,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
-msgstr ""
+msgstr "Intel Rapid Storage Technology enterprise RAID Member (versione %s)"
 
 #: ../udisks/udisksclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Intel RSTe RAID Member (%s)"
 
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Intel Rapid Storage Technology enterprise RAID Member"
 
 #: ../udisks/udisksclient.c:1952
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Intel RSTe RAID Member"
 
 #: ../udisks/udisksclient.c:1953
 #, c-format
@@ -2019,7 +2000,7 @@ msgstr "Riservata ChromeOS"
 #: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Intel FFS Reserved"
 
 #: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
@@ -2587,7 +2568,7 @@ msgstr "Dispositivo a blocchi"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Partizione n° %d su %s"
+msgstr "Partizione n° %u su %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2618,7 +2599,7 @@ msgstr "Dispositivo di loop"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Partizione n° %d su %s"
+msgstr "Partizione n° %u su %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2687,7 +2668,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Partizione n° %d su %s"
+msgstr "Partizione n° %u su %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2874,7 +2855,7 @@ msgstr "%s audio"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Partizione n° %d su %s"
+msgstr "Partizione n° %u su %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

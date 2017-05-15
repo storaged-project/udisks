@@ -4,15 +4,14 @@
 #
 # Translators:
 # Rafael Ferreira <rafael.f.f1@gmail.com>, 2012,2014
-# Marco Aurélio Krause <ouesten@me.com>, 2016. #zanata
-# Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Daniel Lara <danniel@fedoraproject.org>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-11-20 12:12-0500\n"
-"Last-Translator: Marco Aurélio Krause <ouesten@me.com>\n"
+"PO-Revision-Date: 2017-04-11 09:46-0400\n"
+"Last-Translator: Daniel Lara <danniel@fedoraproject.org>\n"
 "Language-Team: Portuguese (Brazil)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -151,11 +150,11 @@ msgstr "Autenticação é necessária para gerenciar o espaço de swap"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr "Gerenciar vetores de RAID"
+msgstr "Gerenciar Arrays de RAID"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr "Autenticação é necessária para gerenciar vetores RAID"
+msgstr "Autenticação é necessária para gerenciar Arrays de  RAID"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:28
 msgid "Power off drive"
@@ -411,12 +410,12 @@ msgstr "Gerenciar iSCSI "
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr "A autenticação é necessária para gerenciar iSCSI "
+msgstr "Autenticação é necessária para gerenciar iSCSI "
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "Autenticação é necessária para formatar $(drive)"
+msgstr "A autenticação é necessária para executar logout iSCSI"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
@@ -964,7 +963,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:574
 msgid "Authentication is required to create a RAID array"
-msgstr "Autenticação é necessária para criar um vetor de RAID"
+msgstr "Autenticação é necessária para criar um array de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -972,7 +971,7 @@ msgstr "Autenticação é necessária para criar um vetor de RAID"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:721
 msgid "Authentication is required to start a RAID array"
-msgstr "Autenticação é necessária para iniciar um vetor de RAID"
+msgstr "Autenticação é necessária para iniciar um array de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -980,7 +979,7 @@ msgstr "Autenticação é necessária para iniciar um vetor de RAID"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:892
 msgid "Authentication is required to stop a RAID array"
-msgstr "Autenticação é necessária para parar um vetor de RAID"
+msgstr "Autenticação é necessária para parar um array de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -989,7 +988,7 @@ msgstr "Autenticação é necessária para parar um vetor de RAID"
 #: ../src/udiskslinuxmdraid.c:1120
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
-"Autenticação é necessária para remover uma unidade de um vetor de RAID"
+"Autenticação é necessária para remover uma unidade de um array de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -998,7 +997,7 @@ msgstr ""
 #: ../src/udiskslinuxmdraid.c:1316
 msgid "Authentication is required to add a device to a RAID array"
 msgstr ""
-"Autenticação é necessária para adicionar um dispositivo a um vetor de RAID"
+"Autenticação é necessária para adicionar um dispositivo a um array de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -1009,8 +1008,8 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
-"Autenticação é necessária para configurar a write-intent bitmap em um vetor "
-"de RAID"
+"Autenticação é necessária para configurar a write-intent bitmap em um array"
+"  de RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
@@ -1021,11 +1020,11 @@ msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Autenticação é necessária para iniciar/parar organização de dados de um "
-"vetor de RAID"
+"array de RAID"
 
 #: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
-msgstr "Autenticação é necessária para remover um vetor RAID"
+msgstr "Autenticação é necessária para remover um array RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1506,7 +1505,7 @@ msgstr "Dispositivo ZFS  (ZPool versão %s)"
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
-msgstr "ZFS (v%s)Device"
+msgstr "ZFS (v%s)"
 
 #: ../udisks/udisksclient.c:1950
 msgctxt "fs-type"
@@ -1519,7 +1518,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr "Membro RAID empresarial Intel Rapid Storage Technology (versão %s)"
@@ -2328,12 +2327,12 @@ msgstr "ATA Enhanced Secure Erase"
 #: ../udisks/udisksclient.c:2518
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr "Parando vetor de RAID"
+msgstr "Parando array de RAID"
 
 #: ../udisks/udisksclient.c:2519
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr "Iniciando vetor de RAID"
+msgstr "Iniciando array de RAID"
 
 #: ../udisks/udisksclient.c:2520
 msgctxt "job"
@@ -2343,12 +2342,12 @@ msgstr "Marcando dispositivo como defeituoso"
 #: ../udisks/udisksclient.c:2521
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr "Removendo dispositivo do vetor"
+msgstr "Removendo dispositivo do Array"
 
 #: ../udisks/udisksclient.c:2522
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr "Adicionando dispositivo do vetor"
+msgstr "Adicionando dispositivo do array"
 
 #: ../udisks/udisksclient.c:2523
 msgctxt "job"
@@ -2358,7 +2357,7 @@ msgstr "Definindo Write-Intent Bitmap"
 #: ../udisks/udisksclient.c:2524
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr "Criando um vetor de RAID"
+msgstr "Criando um Array de RAID"
 
 #: ../udisks/udisksclient.c:2532
 #, c-format
@@ -2564,7 +2563,7 @@ msgstr "Dispositivo de bloco"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Partição %d de %s"
+msgstr "Partição %u de %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2613,37 +2612,37 @@ msgstr "%s — %s (%s)"
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr "Vetor de RAID-0"
+msgstr "Array de RAID-0"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr "Vetor de RAID-1"
+msgstr "Array de RAID-1"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr "Vetor de RAID-4"
+msgstr "Array  de RAID-4"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr "Vetor de RAID-5"
+msgstr "Array de RAID-5"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr "Vetor de RAID-6"
+msgstr "Array de RAID-6"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr "Vetor de RAID-10"
+msgstr "Array de RAID-10"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr "Vetor de RAID"
+msgstr "Array de RAID"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').

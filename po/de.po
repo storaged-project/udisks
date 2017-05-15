@@ -8,15 +8,17 @@
 # Daniel Winzen <d@winzen4.de>, 2012
 # Ettore Atalan <atalanttore@googlemail.com>, 2014
 # c72578 <c72578@yahoo.de>, 2014
-# FloH. <postfuerflo@gmail.com>, 2016. #zanata
+# Florian H. <postfuerflo@gmail.com>, 2016. #zanata
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Mario Blättermann <mario.blaettermann@gmail.com>, 2017. #zanata
+# Thomas Eichhorn <tomislav@posteo.de>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-10-17 10:51-0400\n"
-"Last-Translator: FloH. <postfuerflo@gmail.com>\n"
+"PO-Revision-Date: 2017-04-13 01:37-0400\n"
+"Last-Translator: Thomas Eichhorn <tomislav@posteo.de>\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -368,71 +370,63 @@ msgstr ""
 "anderen Benutzer gestartet wurde"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
-#, fuzzy
 msgid "Manage Bcache"
-msgstr "Auslagerungsspeicher verwalten"
+msgstr "Bcache verwalten"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage Bcache"
-msgstr "Legitimation ist zum Verwalten von Auslagerungsspeicher erforderlich"
+msgstr "Legitimation ist zum Verwalten von Bcache erforderlich"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:246
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "Legitimation ist zum Verändern eines Geräts erforderlich"
+msgstr "Legitimation ist zum Entfernen eines Bcache-Geräts erforderlich."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:289
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "Legitimation ist zum Verändern eines Geräts erforderlich"
+msgstr ""
+"Legitimation ist zum Ändern des Modus eines Bcache-Geräts erforderlich."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+msgstr "Legitimation ist zum Erstellen eines Bcache-Geräts erforderlich."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
 msgstr "Btrfs verwalten"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+msgstr "Legitimation ist zum Verwalten von BTRFS erforderlich"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:587
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "Das Abbrechen eines Auftrags erfordert Legitimation"
+msgstr ""
+"Legitimation ist zum Ändern der Bezeichnung eines BTRFS-Datenträgers "
+"erforderlich"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:468
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
 msgstr ""
-"Legitimierung ist zum Hinzufügen eines Geräts zu einer RAID-Anordnung "
-"notwendig"
+"Legitimierung ist zum Hinzufügen des Geräts zu einem Datenträger notwendig"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:655
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
+msgstr ""
+"Legitimierung ist zum Erstellen eines neuen Schnappschusses erforderlich"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:714
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+msgstr ""
+"Legitimation ist zum Prüfen und Reparieren des Datenträgers erforderlich"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:767
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "Legitimation ist zum Auswerfen von Medien erforderlich"
+msgstr "Legitimation ist zur Größenänderung des Datenträgers erforderlich"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:206
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+msgstr "Legitimation ist zum Anlegen eines neuen Datenträgers erforderlich"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
@@ -444,9 +438,8 @@ msgstr "Legitimation ist zum Verwalten von iSCSI-Anordnungen erforderlich"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
-#, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "Legitimierung ist zum Formatieren von $(drive) notwendig"
+msgstr "Legitimierung ist für eine iSCSI-Abmeldung notwendig"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
@@ -466,14 +459,12 @@ msgid "Error reading %s: %s"
 msgstr "Fehler beim Lesen von %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+msgstr "Legitimation ist zum Ändern des iSCSI-Initiatornamens erforderlich"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
-#, fuzzy
 msgid "Empty initiator name"
-msgstr "Eintragsname fehlt."
+msgstr "Leerer Initiatorname"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
@@ -481,9 +472,8 @@ msgid "Error writing to %s: %s"
 msgstr "Fehler beim Schreiben in %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+msgstr "Legitimierung ist zum Suchen von Zielen notwendig"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
@@ -492,14 +482,12 @@ msgid "Discovery failed: %s"
 msgstr "Erkennung fehlgeschlagen: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+msgstr "Legitimierung ist zum Suchen von Firmware-Zielen notwendig"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+msgstr "Legitimierung ist für eine iSCSI-Anmeldung notwendig"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
@@ -525,9 +513,10 @@ msgstr ""
 "Authentifizierung ist erforderlich, um ein logischen Volumen umzubenennen"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+msgstr ""
+"Legitimation ist für eine Größenänderung eines logischen Datenträgers "
+"erforderlich"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
@@ -549,9 +538,10 @@ msgid "LVMCache not enabled at compile time."
 msgstr "LVMCache ist bei der Kompilierung nicht aktiviert"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+msgstr ""
+"Legitimation ist für eine Umwandlung eines logischen Datenträgers in einen "
+"Zwischenspeicher erforderlich"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
@@ -560,9 +550,10 @@ msgid "Error converting volume: %s"
 msgstr "Fehler beim Konvertieren des Volumens:%s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
-#, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+msgstr ""
+"Eine Authentifizierung wird benötigt, um einen Cache-Pool-LV von einem "
+"Cache-LV zu trennen"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
@@ -602,46 +593,37 @@ msgstr ""
 "Authentifizierung ist erforderlich, um ein logisches Volumen zu erstellen"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
-#, fuzzy
 msgid "Authentication is required to create a thin pool volume"
 msgstr ""
-"Legitimierung ist zum Erstellen einer Partition auf $(drive) erforderlich"
+"Eine Authentifizierung wird für die Erstellung eines Thin-Pool-Volumens"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
-#, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr ""
-"Legitimierung ist zum Erstellen einer Partition auf $(drive) erforderlich"
+msgstr "Eine Authentifizierung wird für die Erstellung eines Thin-Volumens"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "RAID-Anordnungen verwalten"
+msgstr "zRAM verwalten"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+msgstr "Legitimation ist zum Verwalten von zRAM erforderlich"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:322
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "Das Abbrechen eines Auftrags erfordert Legitimation"
+msgstr "Legitimation ist zum Hinzufügen eines zRAM-Kernelmoduls erforderlich"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:363
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+msgstr "Legitimation ist zum Entfernen eines zRAM-Kernelmoduls erforderlich"
 
 #: ../modules/zram/udiskslinuxblockzram.c:256
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+msgstr "Legitimation ist zum Aktivieren eines zRAM-Geräts erforderlich"
 
 #: ../modules/zram/udiskslinuxblockzram.c:356
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "Legitimation ist zum Verändern eines Geräts erforderlich"
+msgstr "Legitimation ist zum Ausschalten eines zRAM-Geräts erforderlich"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -1589,7 +1571,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""

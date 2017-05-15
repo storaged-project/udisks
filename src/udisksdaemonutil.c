@@ -44,7 +44,15 @@
 #if defined(HAVE_LIBSYSTEMD_LOGIN)
 #include <systemd/sd-daemon.h>
 #include <systemd/sd-login.h>
+#endif
 
+#if defined(HAVE_ELOGIND) && !defined(HAVE_LIBSYSTEMD_LOGIN)
+#include <elogind/sd-login.h>
+/* re-use HAVE_LIBSYSTEMD_LOGIN to not clutter the source file */
+#define HAVE_LIBSYSTEMD_LOGIN 1
+#endif
+
+#if defined(HAVE_LIBSYSTEMD_LOGIN)
 #define LOGIND_AVAILABLE() (access("/run/systemd/seats/", F_OK) >= 0)
 #endif
 

@@ -16,7 +16,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.6.5
+Version: 2.6.6
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
@@ -328,6 +328,9 @@ systemctl try-restart udisks2
 %endif
 
 %changelog
+* Mon May 15 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.6.5-1
+- Version 2.6.5
+
 * Tue Mar 14 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.6.4-1
 - Version 2.6.4
 

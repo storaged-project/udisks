@@ -6,13 +6,14 @@
 # aurisc4 <aurisc4@gmail.com>, 2013
 # aurisc4 <aurisc4@gmail.com>, 2013
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-10-06 01:35-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-03-15 11:04-0400\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Lithuanian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2560,7 +2561,7 @@ msgstr "Blokinis įrenginys"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %d iš %s"
+msgstr "Skirsnis %u iš %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2591,7 +2592,7 @@ msgstr "Ciklinis įrenginys"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %d iš %s"
+msgstr "Skirsnis %u iš %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2660,7 +2661,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %d iš %s"
+msgstr "Skirsnis %u iš %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2847,7 +2848,7 @@ msgstr "Garso %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %d iš %s"
+msgstr "Skirsnis %u iš %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

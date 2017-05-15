@@ -6,14 +6,16 @@
 # davidz <zeuthen@gmail.com>, 2012
 # Joe Hansen <joedalton2@yahoo.dk>, 2013,2015
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # Vojtěch Trefný <vtrefny@redhat.com>, 2017. #zanata
+# scootergrisen <scootergrisen@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2017-02-15 09:16-0500\n"
-"Last-Translator: Vojtěch Trefný <vtrefny@redhat.com>\n"
+"PO-Revision-Date: 2017-04-26 07:06-0400\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Danish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -99,13 +101,13 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr "Ændr adgangsfrase for en krypteret enhed"
+msgstr "Skift adgangskode for en krypteret enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr ""
-"Godkendelse er krævet for at ændre adgangsfrasen for en krypteret enhed"
+"Godkendelse er krævet for at skifte adgangskoden for en krypteret enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:18
 msgid "Manage loop devices"
@@ -131,7 +133,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr "Ændr loop-enheder"
+msgstr "Rediger loop-enheder"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:23
 msgid ""
@@ -202,7 +204,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:38
 msgid "Modify a device"
-msgstr "Ændr en enhed"
+msgstr "Rediger en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:39
 msgid "Authentication is required to modify a device"
@@ -210,7 +212,7 @@ msgstr "Godkendelse er krævet for at ændre en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:40
 msgid "Modify a system device"
-msgstr "Ændr en systemenhed"
+msgstr "Rediger en systemenhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
 msgid ""
@@ -239,7 +241,7 @@ msgstr "Åbn en systemenhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:47
 msgid "Modify system-wide configuration"
-msgstr "Ændr konfiguration på tværs af systemet"
+msgstr "Rediger konfiguration på tværs af systemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:48
 msgid "Authentication is required to modify system-wide configuration"
@@ -255,7 +257,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:50
 msgid "Modify drive settings"
-msgstr "Ændr drevindstillinger"
+msgstr "Rediger drevindstillinger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:51
 msgid "Authentication is required to modify drive settings"
@@ -295,11 +297,11 @@ msgstr "Godkendelse er krævet for at aktivere/deaktivere SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:60
 msgid "Check power state"
-msgstr "Kontroller strømtilstand"
+msgstr "Tjek strømtilstand"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:61
 msgid "Authentication is required to check the power state"
-msgstr "Godkendelse er krævet for at kontrollere strømtilstanden"
+msgstr "Godkendelse er krævet for at tjekke strømtilstanden"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:62
 msgid "Send standby command"
@@ -319,11 +321,11 @@ msgstr "Send standby-kommando til drev på et andet sæde"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:66
 msgid "Securely erase a hard disk"
-msgstr "Slet på sikker vis en harddisk"
+msgstr "Slet en harddisk på sikker vis"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:67
 msgid "Authentication is required to securely erase a hard disk"
-msgstr "Godkendelse er krævet for på sikker vis at slette en harddisk"
+msgstr "Godkendelse er krævet for at slette en harddisk på sikker vis"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:68
 msgid "Cancel job"
@@ -345,262 +347,239 @@ msgstr ""
 "Godkendelse er krævet for at afbryde et job startet af en anden bruger"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
-#, fuzzy
 msgid "Manage Bcache"
-msgstr "Håndter swapplads"
+msgstr "Håndter Bcache"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage Bcache"
-msgstr "Godkendelse er krævet for at håndtere swapplads"
+msgstr "Godkendelse er krævet for at håndtere Bcache"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:246
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "Godkendelse er krævet for at ændre en enhed"
+msgstr "Godkendelse er krævet for at ødelægge bcache-enhed."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:289
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "Godkendelse er krævet for at ændre en enhed"
+msgstr "Godkendelse er krævet for at sætte tilstand af bcache-enhed."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "Godkendelse er krævet for at skanne en enhed igen"
+msgstr "Godkendelse er krævet for at oprette bcache-enhed."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "Håndter BTRFS"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "Godkendelse er krævet for at håndtere RAID-arrayer"
+msgstr "Godkendelse er krævet for at håndtere BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:587
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "Godkendelse er krævet for at afbryde et job"
+msgstr "Godkendelse er krævet for at skifte etiket for BTRFS-diskenhed"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:468
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
-msgstr "Godkendelse er krævet for at tilføje en enhed til en RAID-array"
+msgstr "Godkendelse er krævet for at tilføje enheden til diskenheden"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:655
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "Godkendelse er krævet for at oprette en RAID-array"
+msgstr "Godkendelse er krævet for at oprette et nyt øjebliksbillede"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:714
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "Godkendelse er krævet for at skanne en enhed igen"
+msgstr "Godkendelse er krævet for at tjekke og reparere diskenheden"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:767
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "Godkendelse er krævet for at skubbe medie ud"
+msgstr "Godkendelse er krævet for at ændre størrelse på en diskenhed"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:206
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "Godkendelse er krævet for at skanne en enhed igen"
+msgstr "Godkendelse er krævet for at oprette en ny diskenhed"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Håndter iSCSI"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr ""
+msgstr "Godkendelse er krævet for at håndtere iSCSI"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
-#, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "Godkendelse er krævet for at formatere $(drive)"
+msgstr "Godkendelse er krævet for at udføre iSCSI-udlogning"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Udlogning mislykkedes: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "Fejl ved åbning af %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Fejl ved læsning af %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "Godkendelse er krævet for at håndtere RAID-arrayer"
+msgstr "Godkendelse er krævet for at skifte iSCSI-indledernavn"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
-msgstr ""
+msgstr "Tomt indledernavn"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "Fejl ved skrivning til %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "Godkendelse er krævet for at slukke et drev"
+msgstr "Godkendelse er krævet for at opdage mål"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "Opdagelse mislykkedes: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "Godkendelse er krævet for at slukke et drev"
+msgstr "Godkendelse er krævet for at opdage firmwaremål"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "Godkendelse er krævet for at slukke et drev"
+msgstr "Godkendelse er krævet for at udføre iSCSI-indlogning"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "Indlogning mislykkedes: %s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Håndter LVM"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "Godkendelse er krævet for at håndtere LVM"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Godkendelse er krævet for at slette en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:544
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Godkendelse er krævet for at omdøbe en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "Godkendelse er krævet for at skanne en enhed igen"
+msgstr "Godkendelse er krævet for at ændre størrelse på en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Godkendelse er krævet for at aktivere en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:877
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Godkendelse er krævet for at deaktivere en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:965
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
+"Godkendelse er krævet for at oprette et øjebliksbillede af en logisk "
+"diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1036
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1142
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "LVMCache ikke aktiveret ved kompileringstid."
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "Godkendelse er krævet for at åbne en enhed"
+msgstr ""
+"Godkendelse er krævet for at konvertere logisk diskenhed til mellemlager"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "Fejl ved konvertering af diskenhed: %s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
-#, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "Godkendelse er krævet for at slukke et drev"
+msgstr ""
+"Godkendelse er krævet for at opdele mellemlager-pool-LV væk fra en "
+"mellemlager-LV"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at oprette en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at slette en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at omdøbe en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at tilføje en enhed til en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at fjerne en enhed fra en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "Godkendelse er krævet for at tømme en enhed i en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "Godkendelse er krævet for at oprette en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
-#, fuzzy
 msgid "Authentication is required to create a thin pool volume"
-msgstr "Godkendelse er krævet for at oprette en partition på $(drive)"
+msgstr "Godkendelse er krævet for at oprette en thin pool diskenhed"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
-#, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr "Godkendelse er krævet for at oprette en partition på $(drive)"
+msgstr "Godkendelse er krævet for at oprette en thin diskenhed"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "Håndter RAID-arrayer"
+msgstr "Håndter zRAM"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "Godkendelse er krævet for at håndtere RAID-arrayer"
+msgstr "Godkendelse er krævet for at håndtere zRAM"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:322
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "Godkendelse er krævet for at afbryde et job"
+msgstr "Godkendelse er krævet for at tilføje zRAM-kernemodul"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:363
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Godkendelse er krævet for at åbne en enhed"
+msgstr "Godkendelse er krævet for at fjerne zRAM-kernemodul"
 
 #: ../modules/zram/udiskslinuxblockzram.c:256
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "Godkendelse er krævet for at åbne en enhed"
+msgstr "Godkendelse er krævet for at aktivere zRAM-enhed"
 
 #: ../modules/zram/udiskslinuxblockzram.c:356
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "Godkendelse er krævet for at ændre en enhed"
+msgstr "Godkendelse er krævet for at deaktivere zRAM-enhed"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -709,8 +688,7 @@ msgstr "Godkendelse er krævet for at åbne $(drive) for skrivning"
 #. 
 #: ../src/udiskslinuxblock.c:3529
 msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr ""
-"Godkendelse er krævet for at åbne $(drive) for sammenligning (benchmark)"
+msgstr "Godkendelse er krævet for at åbne $(drive) for at benchmarke"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -800,7 +778,7 @@ msgstr "Godkendelse er krævet for at starte en SMART-egentest på $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:1295
 msgid "Authentication is required to check power state for $(drive)"
-msgstr "Godkendelse er krævet for at kontrollere strømtilstand for $(drive)"
+msgstr "Godkendelse er krævet for at tjekke strømtilstand for $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
@@ -931,7 +909,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1963
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr "Godkendelse er krævet for at ændre filsystemetiketten på $(drive)"
+msgstr "Godkendelse er krævet for at skifte filsystemetiketten på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1242,7 +1220,7 @@ msgstr "SD High Capacity"
 #: ../udisks/udisksclient.c:1819
 msgctxt "media"
 msgid "Floppy"
-msgstr "Floppy"
+msgstr "Diskette"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1824
@@ -1512,7 +1490,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr "Intel Rapid Storage Technology enterprise RAID-medlem (version %s)"
@@ -1712,7 +1690,7 @@ msgstr "Linux-serverdatapartition"
 #: ../udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr "Linux Swap"
+msgstr "Linux-swap"
 
 #: ../udisks/udisksclient.c:2236
 msgctxt "part-type"
@@ -1732,7 +1710,7 @@ msgstr "Linux LVM"
 #: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "Linux Reserved"
-msgstr "Linux Reserveret"
+msgstr "Linux-reserveret"
 
 #. Microsoft
 #: ../udisks/udisksclient.c:2241
@@ -1743,7 +1721,7 @@ msgstr "Basisdata"
 #: ../udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "Microsoft Reserved"
-msgstr "Microsoft Reserveret"
+msgstr "Microsoft-reserveret"
 
 #: ../udisks/udisksclient.c:2243
 msgctxt "part-type"
@@ -1896,27 +1874,27 @@ msgstr "Solaris Alternate Sector"
 #: ../udisks/udisksclient.c:2275
 msgctxt "part-type"
 msgid "Solaris Reserved"
-msgstr "Solaris Reserved"
+msgstr "Solaris-reserveret"
 
 #: ../udisks/udisksclient.c:2276
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
-msgstr "Solaris Reserveret (2)"
+msgstr "Solaris-reserveret (2)"
 
 #: ../udisks/udisksclient.c:2277
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
-msgstr "Solaris Reserveret (3)"
+msgstr "Solaris-reserveret (3)"
 
 #: ../udisks/udisksclient.c:2278
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
-msgstr "Solaris Reserveret (4)"
+msgstr "Solaris-reserveret (4)"
 
 #: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
-msgstr "Solaris Reserveret (5)"
+msgstr "Solaris-reserveret (5)"
 
 #. NetBSD
 #: ../udisks/udisksclient.c:2281
@@ -1981,7 +1959,7 @@ msgstr "ChromeOS-rodfilsystem"
 #: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
-msgstr "ChromeOS Reserveret"
+msgstr "ChromeOS-reserveret"
 
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
@@ -1989,7 +1967,7 @@ msgstr "ChromeOS Reserveret"
 #: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr "Intel FFS Reserveret"
+msgstr "Intel FFS-reserveret"
 
 #: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
@@ -1999,7 +1977,7 @@ msgstr "Apple HFS/HFS"
 #: ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Apple Partition Map"
-msgstr "Apple Partition Map"
+msgstr "Apple-partitionskort"
 
 #: ../udisks/udisksclient.c:2305
 msgctxt "part-type"
@@ -2246,7 +2224,7 @@ msgstr "Låser enhed"
 #: ../udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr "Ændrer krypteret enhed"
+msgstr "Redigerer krypteret enhed"
 
 #: ../udisks/udisksclient.c:2504
 msgctxt "job"
@@ -2271,7 +2249,7 @@ msgstr "Afmonterer filsystem"
 #: ../udisks/udisksclient.c:2508
 msgctxt "job"
 msgid "Modifying Filesystem"
-msgstr "Ændrer filsystem"
+msgstr "Redigerer filsystem"
 
 #: ../udisks/udisksclient.c:2509
 msgctxt "job"
@@ -2291,7 +2269,7 @@ msgstr "Sætter loop-enhed op"
 #: ../udisks/udisksclient.c:2512
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr "Ændrer partition"
+msgstr "Redigerer partition"
 
 #: ../udisks/udisksclient.c:2513
 msgctxt "job"
@@ -2369,7 +2347,7 @@ msgstr "USB-drev"
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
 msgid "Floppy"
-msgstr "Diskettedrev"
+msgstr "Diskette"
 
 #: ../udisks/udisksobjectinfo.c:165
 msgctxt "media-type"
@@ -2557,7 +2535,7 @@ msgstr "Blokenhed"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Partition %d af %s"
+msgstr "Partition %u af %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2588,7 +2566,7 @@ msgstr "Loop-enhed"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Partition %d af %s"
+msgstr "Partition %u af %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2657,7 +2635,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Partition %d af %s"
+msgstr "Partition %u af %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2844,7 +2822,7 @@ msgstr "Lyd-%s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Partition %d af %s"
+msgstr "Partition %u af %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
