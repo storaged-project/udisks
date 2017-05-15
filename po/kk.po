@@ -11,8 +11,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2017-03-13 12:28-0400\n"
-"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"PO-Revision-Date: 2017-03-27 12:28-0400\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Kazakh\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -42,6 +42,8 @@ msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
 msgstr ""
+"fstab файлында  x-udisks-auth опциясымен көрсетілген файлдық жүйелерді "
+"тіркеу/тіркеуден босату"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
@@ -79,6 +81,8 @@ msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
 msgstr ""
+"crypttab файлында  x-udisks-auth опциясымен көрсетілген шифрленген "
+"құрылғыларды босату"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
@@ -104,7 +108,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:18
 msgid "Manage loop devices"
-msgstr "loop құрылғыларын басқару"
+msgstr "Loop құрылғыларын басқару"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -112,11 +116,11 @@ msgstr "loop құрылғыларын басқару"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:342
 msgid "Authentication is required to set up a loop device"
-msgstr "loop құрылғысын жасау үшін аутентификация керек"
+msgstr "Loop құрылғысын жасау үшін аутентификация керек"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:20
 msgid "Delete loop devices"
-msgstr ""
+msgstr "Loop құрылғыларын өшіру"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:21
 msgid ""
@@ -127,12 +131,14 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr ""
+msgstr "Loop құрылғыларын өзгерту"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
+"Басқа пайдаланушымен орнатылған loop құрылғысын өзгерту  үшін аутентификация"
+" керек"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:24
 msgid "Manage swapspace"
@@ -247,7 +253,7 @@ msgstr "Жүйелік баптауларды түрлендіру үшін ау
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
-msgstr ""
+msgstr "Жүйелік баптаулар ішінен парольдерді алу үшін аутентификация керек"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:50
 msgid "Modify drive settings"
@@ -267,11 +273,11 @@ msgstr "SMART мәліметін жаңарту үшін аутентифика�
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:54
 msgid "Set SMART data from blob"
-msgstr ""
+msgstr "SMART деректерін бинарлы файлдан орнату"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:55
 msgid "Authentication is required to set SMART data from blob"
-msgstr ""
+msgstr "SMART деректерін бинарлы файлдан орнату үшін аутентификация керек"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:56
 msgid "Run SMART self-test"
@@ -312,6 +318,7 @@ msgstr "Жүйелік жетекке күту режиміне өту кома�
 #: ../data/org.freedesktop.UDisks2.policy.in.h:65
 msgid "Send standby command to drive on other seat"
 msgstr ""
+"Басқа отыру орнына жалғанған жетекке күту режиміне өту командасын жіберу"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:66
 msgid "Securely erase a hard disk"
@@ -350,23 +357,20 @@ msgid "Authentication is required to manage Bcache"
 msgstr "Bcache басқару үшін аутентификация керек"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:246
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "Құрылғыны түрлендіру үшін аутентификация керек"
+msgstr "bcache құрылғысын жою үшін аутентификация керек."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:289
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "Құрылғыны түрлендіру үшін аутентификация керек"
+msgstr "bcache құрылғысының режимін орнату үшін аутентификация керек."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:217
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "Құрылғыны ашу үшін аутентификация керек"
+msgstr "bcache құрылғысын жасау үшін аутентификация керек."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "BTRFS басқару"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
 msgid "Authentication is required to manage BTRFS"
@@ -374,54 +378,47 @@ msgstr "BTRFS басқару үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:587
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "BTRFS томының белгісін ауыстыру үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:468
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
-msgstr "Құрылғыны түрлендіру үшін аутентификация керек"
+msgstr "Томға құрылғыны қосу үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:655
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "Жаңа снапшотты жасау үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:714
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "Шифрленген құрылғыны ашу үшін аутентификация керек"
+msgstr "Томды тексеру және жөндеу үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:767
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "Тасушыны шығару үшін аутентификация керек"
+msgstr "Томның өлшемін өзгерту үшін аутентификация керек"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:206
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "Жаңа томды жасау үшін аутентификация керек"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "iSCSI басқару"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr ""
+msgstr "iSCSI басқару үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
-#, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "$(drive) пішімдеу үшін аутентификация керек"
+msgstr "iSCSI шығуын жасау үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Шығу сәтсіз аяқталды: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
@@ -432,42 +429,38 @@ msgstr "%s ашу қатесі: %s"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "%s оқу қатесі: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "RAID массивтерін басқару үшін аутентификация керек"
+msgstr "iSCSI инициаторын өзгерту үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
-msgstr ""
+msgstr "Инициатор аты бос"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "%s ішіне жазу қатесі: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "Құрылғыны ашу үшін аутентификация керек"
+msgstr "Мақсаттарды табу үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "Табу сәтсіз аяқталды: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "$(drive) оқу үшін ашу  үшін аутентификация керек"
+msgstr "Бинарлы кодтар мақсаттарын табу үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "$(drive) жазу үшін ашу үшін аутентификация керек"
+msgstr "iSCSI кіруін жасау үшін аутентификация керек"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
@@ -484,87 +477,84 @@ msgstr "LVM басқару үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Логикалық томды өшіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:544
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Логикалық томның атын өзгерту үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:644
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "loop құрылғысын жасау үшін аутентификация керек"
+msgstr "Логикалық томның өлшемін өзгерту үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:777
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Логикалық томды белсендіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:877
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Логикалық томды сөндіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:965
 msgid "Authentication is required to create a snapshot of a logical volume"
-msgstr ""
+msgstr "Логикалық томның снапшотын жасау үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1036
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1142
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "LVMCache компиляциялау уақытында іске қосылмаған."
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1079
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "Құрылғыны ашу үшін аутентификация керек"
+msgstr "Логикалық томды жасау кэшке түрлендіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1110
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1212
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "Томды түрлендіру қатесі: %s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:1183
-#, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "loop құрылғысын жасау үшін аутентификация керек"
+msgstr ""
+"Кэш пулының логикалық томын кэш логикалық томынан ажырату үшін "
+"аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Томдар тобын жасау үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Томдар тобын өшіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Томдар тобының атын өзгерту үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "Томдар тобына құрылғыны қосу үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "Томдар тобынан құрылғыны өшіру үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "Томдар тобында құрылғыны нөлдеу үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "Логикалық томды жасау үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1012
-#, fuzzy
 msgid "Authentication is required to create a thin pool volume"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "Жұқа пул томын жасау үшін аутентификация керек"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:1130
-#, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "Жұқа томды жасау үшін аутентификация керек"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
 msgid "Manage zRAM"
@@ -575,24 +565,20 @@ msgid "Authentication is required to manage zRAM"
 msgstr "zRAM басқару үшін аутентификация керек"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:322
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "Тапсырманы үзу үшін аутентификация керек"
+msgstr "zRAM ядро модулін қосу үшін аутентификация керек"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:363
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Құрылғыны ашу үшін аутентификация керек"
+msgstr "zRAM ядро модулін өшіру үшін аутентификация керек"
 
 #: ../modules/zram/udiskslinuxblockzram.c:256
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "Құрылғыны ашу үшін аутентификация керек"
+msgstr "zRAM құрылғысын іске қосу үшін аутентификация керек"
 
 #: ../modules/zram/udiskslinuxblockzram.c:356
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "Құрылғыны түрлендіру үшін аутентификация керек"
+msgstr "zRAM құрылғысын сөндіру үшін аутентификация керек"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -600,7 +586,7 @@ msgstr "Құрылғыны түрлендіру үшін аутентифика�
 #. 
 #: ../src/udiskslinuxblock.c:1199
 msgid "Authentication is required to read system-level secrets"
-msgstr ""
+msgstr "Жүйелік"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1869
@@ -667,7 +653,7 @@ msgstr "$(drive) пішімдеу үшін аутентификация кере
 #: ../src/udiskslinuxblock.c:2894 ../src/udiskslinuxmdraid.c:1681
 #: ../src/udiskslinuxpartition.c:918
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Жүйелік баптауларды өзгерту үшін аутентификация керек"
 
 #: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2342
 msgid "Formatting Device"
@@ -762,6 +748,8 @@ msgstr "$(drive) ішінен SMART деректерін жаңарту үшін
 #: ../src/udiskslinuxdriveata.c:824
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
+"$(drive) ішіне SMART деректерін бинарлы файлдан орнату үшін аутентификация "
+"керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -924,7 +912,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1963
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr ""
+msgstr "$(drive) белгісін ауыстыру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -935,7 +923,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr ""
+msgstr "$(drive) loop құрылғысын өшіру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -946,7 +934,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
-msgstr ""
+msgstr "$(drive) loop құрылғысын өзгерту үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -997,6 +985,7 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
+"RAID массивіне жазу мақсатының бит маскасын орнату үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
@@ -1006,10 +995,12 @@ msgstr ""
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
+"RAID массивінде деректерді тазартуды іске қосу/сөндіру үшін аутентификация "
+"керек"
 
 #: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "RAID массивін өшіру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1030,7 +1021,7 @@ msgstr "$(drive) құрылғысында бөлімді өзгерту үшін
 #. 
 #: ../src/udiskslinuxpartition.c:892
 msgid "Authentication is required to delete the partition $(drive)"
-msgstr ""
+msgstr "$(drive) ішінен бөлімді өшіру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
@@ -1040,7 +1031,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxpartitiontable.c:392
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr ""
+msgstr "$(drive) ішінде бөлімді жасау үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -1050,7 +1041,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr ""
+msgstr "$(drive) ішіндегі своп аймағын белсендіру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
@@ -1060,7 +1051,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr ""
+msgstr "$(drive) ішіндегі своп аймағын сөндіру үшін аутентификация керек"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -1502,7 +1493,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr "Intel Rapid Storage Technology enterprise RAID мүшесі (нұсқасы %s)"
@@ -2236,17 +2227,17 @@ msgstr "Құрылғы блокталуда"
 #: ../udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr ""
+msgstr "Шифрленген құрылғыны өзгерту"
 
 #: ../udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr ""
+msgstr "Своп құрылғысын іске қосу"
 
 #: ../udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr ""
+msgstr "Своп құрылғысын тоқтату"
 
 #: ../udisks/udisksclient.c:2506
 msgctxt "job"
@@ -2276,7 +2267,7 @@ msgstr "Файлдық жүйені жасау"
 #: ../udisks/udisksclient.c:2511
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr ""
+msgstr "Loop құрылғысын іске қосу"
 
 #: ../udisks/udisksclient.c:2512
 msgctxt "job"
@@ -2321,7 +2312,7 @@ msgstr "RAID массивін іске қосу"
 #: ../udisks/udisksclient.c:2520
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Құрылғыны мәселелері бар етіп белгілеу"
 
 #: ../udisks/udisksclient.c:2521
 msgctxt "job"
@@ -2336,7 +2327,7 @@ msgstr "Массивке құрылғыны қосу"
 #: ../udisks/udisksclient.c:2523
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Жазу мақсатының бит маскасын орнату"
 
 #: ../udisks/udisksclient.c:2524
 msgctxt "job"
@@ -2547,7 +2538,7 @@ msgstr "Блоктық құрылғы"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Бөлім %u, %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2563,11 +2554,11 @@ msgstr "%s (%s)"
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s Loop құрылғысы"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Loop құрылғысы"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %u is the partition number.
@@ -2578,7 +2569,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Бөлім %u, %s құрылғысынан"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2647,7 +2638,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Бөлім %u, %s құрылғысынан"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2834,7 +2825,7 @@ msgstr "Аудио %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Бөлім %u, %s құрылғысынан"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

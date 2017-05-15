@@ -6,13 +6,15 @@
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2012-2013
 # Lasse Liehu <larso@gmx.com>, 2014
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Toni Rantala <trantalafilo@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-06 19:16+0200\n"
-"PO-Revision-Date: 2016-10-06 01:37-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-04-12 10:45-0400\n"
+"Last-Translator: Toni Rantala <trantalafilo@gmail.com>\n"
 "Language-Team: Finnish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,7 +68,7 @@ msgstr "Avaa salatun laitteen lukitus"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr ""
+msgstr "Salatun laitteen lukituksen avaaminen vaatii tunnistautumisen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted system device"
@@ -84,22 +86,24 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr ""
+msgstr "Lukitse toisen käyttäjän avaama salattu laite"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
 msgstr ""
+"Toisen käyttäjän avaaman salatun laitteen lukitseminen vaatii "
+"tunnistautumisen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr ""
+msgstr "Vaihda salatun laitteen salasana"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr ""
+msgstr "Salatun laitteen salasanan vaihto vaatii tunnistautumisen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:18
 msgid "Manage loop devices"
@@ -209,11 +213,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:42
 msgid "Rescan a device"
-msgstr ""
+msgstr "Skannaa laite uudelleen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:43
 msgid "Authentication is required to rescan a device"
-msgstr ""
+msgstr "Laitteen uudelleen skannaaminen vaatii tunnistautumisen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:44
 msgid "Open a device"
@@ -275,7 +279,7 @@ msgstr "Tunnistautuminen vaaditaan SMART-itsetestien suorittamista varten"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "Ota/Poista SMART käytöstä"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
@@ -283,11 +287,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:60
 msgid "Check power state"
-msgstr ""
+msgstr "Tarkista virran tila"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:61
 msgid "Authentication is required to check the power state"
-msgstr ""
+msgstr "Virran tilan tarkistus vaatii tunnistautumisen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:62
 msgid "Send standby command"
@@ -359,7 +363,7 @@ msgstr "Tunnistautuminen vaaditaan laitteen avaamiseksi"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "BTRFS hallinta"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
 #, fuzzy
@@ -399,7 +403,7 @@ msgstr "Tunnistautuminen vaaditaan RAID-pakan luomista varten"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "iSCSI hallinta"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
@@ -415,18 +419,18 @@ msgstr "Tunnistautuminen vaaditaan kohteen $(drive) alustamiseksi"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Uloskirjautuminen epäonnistui: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "Virhe avattaessa %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Virhe luettaessa %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
 #, fuzzy
@@ -466,15 +470,15 @@ msgstr "Tunnistautuminen vaaditaan aseman virran sammuttamista varten"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "Sisäänkirjautuminen epäonnistui: %s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "LVM hallinta"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "LVM hallinta vaatii tunnistautumisen"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:409
 msgid "Authentication is required to delete a logical volume"
@@ -669,7 +673,7 @@ msgstr "Tunnistautuminen vaaditaan kohteen $(drive) alustamiseksi"
 #: ../src/udiskslinuxblock.c:2894 ../src/udiskslinuxmdraid.c:1681
 #: ../src/udiskslinuxpartition.c:918
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Tunnistautuminen vaaditaan järjestelmän asetusten muuttamiseksi"
 
 #: ../src/udiskslinuxblock.c:2898 ../src/udiskslinuxdriveata.c:2342
 msgid "Formatting Device"
@@ -684,6 +688,7 @@ msgstr "Alustetaan laitetta"
 #: ../src/udiskslinuxblock.c:3399
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
+"Tunnistautuminen vaaditaan kohteen $(drive) avaamiseksi lukemista varten"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -694,6 +699,8 @@ msgstr ""
 #: ../src/udiskslinuxblock.c:3463
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
+"Tunnistautuminen vaaditaan kohteen $(drive) avaamiseksi kirjoittamista "
+"varten"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -723,7 +730,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1007
 msgid "Authentication is required to eject $(drive)"
-msgstr ""
+msgstr "Tunnistautuminen vaaditaan kohteen $(drive) poistamiseksi"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
@@ -869,6 +876,8 @@ msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
 msgstr ""
+"Tunnistautuminen vaaditaan laitteen $(drive) lukitsemista varten jonka "
+"lukituksen toinen käyttäjä on avannut"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1018,7 +1027,7 @@ msgstr ""
 
 #: ../src/udiskslinuxmdraid.c:1662
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "Tunnistautuminen vaaditan RAID-pakan poistamiseksi"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1030,6 +1039,7 @@ msgstr ""
 #: ../src/udiskslinuxpartition.c:788
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
+"Tunnistautuminen vaaditaan laitteen $(drive) osioiden muokkaamista varten"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
@@ -1138,56 +1148,56 @@ msgstr "Tuntematon"
 #: ../udisks/udisksclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "Kit"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "Mit"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "Git"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "Tit"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "Kt"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "Mt"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "Gt"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "Tt"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1217,7 +1227,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1799
 msgctxt "media"
 msgid "MemoryStick"
-msgstr ""
+msgstr "Muistitikku"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1804
@@ -1241,7 +1251,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1819
 msgctxt "media"
 msgid "Floppy"
-msgstr ""
+msgstr "Levyke"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1824
@@ -1259,7 +1269,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1834
 msgctxt "media"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -1454,12 +1464,12 @@ msgstr "exFAT (versio %s)"
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
-msgstr ""
+msgstr "Swap (versio %s)"
 
 #: ../udisks/udisksclient.c:1943 ../udisks/udisksclient.c:1944
 msgctxt "fs-type"
 msgid "Swap"
-msgstr ""
+msgstr "Swap"
 
 #: ../udisks/udisksclient.c:1945
 #, c-format
@@ -1470,7 +1480,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1945 ../udisks/udisksclient.c:1946
 msgctxt "fs-type"
 msgid "LVM2 PV"
-msgstr ""
+msgstr "LVM2 PV"
 
 #: ../udisks/udisksclient.c:1946
 msgctxt "fs-type"
@@ -1481,12 +1491,12 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Linux RAID jäsen(versio %s)"
 
 #: ../udisks/udisksclient.c:1947 ../udisks/udisksclient.c:1948
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Linux RAID jäsen"
 
 #: ../udisks/udisksclient.c:1949
 #, c-format
@@ -1511,7 +1521,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
@@ -1665,7 +1675,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "EFI System"
-msgstr ""
+msgstr "EFI-järjestelmä"
 
 #: ../udisks/udisksclient.c:2224
 msgctxt "part-type"
@@ -1676,7 +1686,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2226
 msgctxt "part-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #. Extended Boot Partition, see
 #. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
@@ -1690,17 +1700,17 @@ msgstr ""
 #: ../udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
-msgstr ""
+msgstr "Linux juuriosio (x86)"
 
 #: ../udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
-msgstr ""
+msgstr "Linux juuriosio (x86_64)"
 
 #: ../udisks/udisksclient.c:2232
 msgctxt "part-type"
 msgid "Linux Home Partition"
-msgstr ""
+msgstr "Linux kotiosio"
 
 #: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
@@ -1711,7 +1721,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr ""
+msgstr "Linux Swap"
 
 #: ../udisks/udisksclient.c:2236
 msgctxt "part-type"
@@ -1721,12 +1731,12 @@ msgstr "Linux-tiedostojärjestelmä"
 #: ../udisks/udisksclient.c:2237
 msgctxt "part-type"
 msgid "Linux RAID"
-msgstr ""
+msgstr "Linux RAID"
 
 #: ../udisks/udisksclient.c:2238 ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "Linux LVM"
-msgstr ""
+msgstr "Linux LVM"
 
 #: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
@@ -1791,7 +1801,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "Apple Boot"
-msgstr ""
+msgstr "Apple Boot"
 
 #: ../udisks/udisksclient.c:2253
 msgctxt "part-type"
@@ -1817,7 +1827,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "HP-UX Service"
-msgstr ""
+msgstr "HP-UX palvelu"
 
 #. FreeBSD
 #: ../udisks/udisksclient.c:2260
@@ -1833,17 +1843,17 @@ msgstr ""
 #: ../udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "FreeBSD Swap"
-msgstr ""
+msgstr "FreeBSD Swap"
 
 #: ../udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "FreeBSD UFS"
-msgstr ""
+msgstr "FreeBSD UFS"
 
 #: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
-msgstr ""
+msgstr "FreeBSD Vinum"
 
 #: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
@@ -1859,12 +1869,12 @@ msgstr ""
 #: ../udisks/udisksclient.c:2268
 msgctxt "part-type"
 msgid "Solaris Root"
-msgstr ""
+msgstr "Solaris juuri"
 
 #: ../udisks/udisksclient.c:2269
 msgctxt "part-type"
 msgid "Solaris Swap"
-msgstr ""
+msgstr "Solaris Swap"
 
 #: ../udisks/udisksclient.c:2270
 msgctxt "part-type"
@@ -1921,7 +1931,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2281
 msgctxt "part-type"
 msgid "NetBSD Swap"
-msgstr ""
+msgstr "NetBSD Swap"
 
 #: ../udisks/udisksclient.c:2282
 msgctxt "part-type"
@@ -1946,14 +1956,14 @@ msgstr ""
 #: ../udisks/udisksclient.c:2286
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
-msgstr ""
+msgstr "NetBSD salattu"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
 #: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "VMWare VMFS"
-msgstr ""
+msgstr "VMWare VMFS"
 
 #: ../udisks/udisksclient.c:2289
 msgctxt "part-type"
@@ -2018,7 +2028,7 @@ msgstr "Ajuri"
 #: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "Driver 4.3"
-msgstr ""
+msgstr "Ajuri 4.3"
 
 #: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
@@ -2054,7 +2064,7 @@ msgstr "FAT 32 (Windows)"
 #: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "Extended"
-msgstr ""
+msgstr "Laajennettu"
 
 #: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
@@ -2069,7 +2079,7 @@ msgstr "EFI (FAT-12/16/32)"
 #: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Linux swap"
-msgstr ""
+msgstr "Linux swap"
 
 #: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
@@ -2079,7 +2089,7 @@ msgstr "Linux"
 #: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "Linux Extended"
-msgstr ""
+msgstr "Linux laajennettu"
 
 #: ../udisks/udisksclient.c:2324
 msgctxt "part-type"
@@ -2114,7 +2124,7 @@ msgstr "W95 FAT32"
 #: ../udisks/udisksclient.c:2330
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
-msgstr ""
+msgstr "W95 FAT32 (LBA)"
 
 #: ../udisks/udisksclient.c:2331
 msgctxt "part-type"
@@ -2124,7 +2134,7 @@ msgstr "W95 FAT16 (LBA)"
 #: ../udisks/udisksclient.c:2332
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
-msgstr ""
+msgstr "W95 Ext d (LBA)"
 
 #: ../udisks/udisksclient.c:2333
 msgctxt "part-type"
@@ -2185,7 +2195,7 @@ msgstr "Minix"
 #: ../udisks/udisksclient.c:2344 ../udisks/udisksclient.c:2345
 msgctxt "part-type"
 msgid "Hibernation"
-msgstr ""
+msgstr "Horrostila"
 
 #: ../udisks/udisksclient.c:2346
 msgctxt "part-type"
@@ -2215,12 +2225,12 @@ msgstr "Solaris"
 #: ../udisks/udisksclient.c:2352
 msgctxt "part-type"
 msgid "BeOS BFS"
-msgstr ""
+msgstr "BeOS BFS"
 
 #: ../udisks/udisksclient.c:2353
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
-msgstr ""
+msgstr "SkyOS SkyFS"
 
 #: ../udisks/udisksclient.c:2499
 msgctxt "job"
@@ -2245,17 +2255,17 @@ msgstr "Lukitaan laite"
 #: ../udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr ""
+msgstr "Muokataan salattua laitetta"
 
 #: ../udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr ""
+msgstr "Käynnistetään SWAP-laitetta"
 
 #: ../udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr ""
+msgstr "Pysäytetään SWAP-laitetta"
 
 #: ../udisks/udisksclient.c:2506
 msgctxt "job"
@@ -2330,7 +2340,7 @@ msgstr "Käynnistetään RAID-pakkaa"
 #: ../udisks/udisksclient.c:2520
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Merkitään laitetta virheelliseksi"
 
 #: ../udisks/udisksclient.c:2521
 msgctxt "job"
@@ -2368,7 +2378,7 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
 msgid "Floppy"
-msgstr ""
+msgstr "Levyke"
 
 #: ../udisks/udisksobjectinfo.c:165
 msgctxt "media-type"
@@ -2526,17 +2536,17 @@ msgstr "HDDVD-RW"
 #: ../udisks/udisksobjectinfo.c:194
 msgctxt "media-type"
 msgid "MO"
-msgstr ""
+msgstr "MO"
 
 #: ../udisks/udisksobjectinfo.c:195
 msgctxt "media-type"
 msgid "MRW"
-msgstr ""
+msgstr "MRW"
 
 #: ../udisks/udisksobjectinfo.c:196
 msgctxt "media-type"
 msgid "MRW-W"
-msgstr ""
+msgstr "MRW-W"
 
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
@@ -2556,7 +2566,7 @@ msgstr ""
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Osio %d/%s"
+msgstr "Osio %u/%s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2587,7 +2597,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Osio %d/%s"
+msgstr "Osio %u/%s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2600,7 +2610,7 @@ msgstr "Osio %d/%s"
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
@@ -2645,7 +2655,7 @@ msgstr "RAID-pakka"
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %u is the partition number.
@@ -2656,7 +2666,7 @@ msgstr ""
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Osio %d/%s"
+msgstr "Osio %u/%s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2667,7 +2677,7 @@ msgstr "Osio %d/%s"
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2678,7 +2688,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2690,7 +2700,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2799,7 +2809,7 @@ msgstr "Kortinlukija (%s)"
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr ""
+msgstr "%s %s asema"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
@@ -2832,7 +2842,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
-msgstr ""
+msgstr "Audio %s"
 
 #. Translators: Used to describe a partition of a drive.
 #. *              The %u is the partition number.
@@ -2843,7 +2853,7 @@ msgstr ""
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Osio %d/%s"
+msgstr "Osio %u/%s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2857,7 +2867,7 @@ msgstr "Osio %d/%s"
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2871,4 +2881,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
