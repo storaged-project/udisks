@@ -102,6 +102,79 @@ udisks_linux_partition_new (void)
                                          NULL));
 }
 
+static gboolean
+check_authorization (UDisksPartition       *partition,
+                     GDBusMethodInvocation *invocation,
+                     GVariant              *options,
+                     uid_t                 *caller_uid)
+{
+  UDisksDaemon *daemon = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  GError *error = NULL;
+  gboolean rc = TRUE;
+
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_get_block (object);
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               caller_uid,
+                                               NULL,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests modifying a partition (changing type, flags, name etc.).
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to modify the partition on device $(drive)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, *caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_user_seat (daemon, object, *caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+  if (udisks_daemon_util_check_authorization_sync (daemon,
+                                                   object,
+                                                   action_id,
+                                                   options,
+                                                   message,
+                                                   invocation))
+    {
+      rc = TRUE;
+    }
+
+out:
+  g_clear_object (&block);
+  g_clear_object (&object);
+
+  return rc;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
