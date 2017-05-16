@@ -27,7 +27,7 @@
       <command>udisksd</command>
       <arg><option>--help</option></arg>
       <arg><option>--replace</option></arg>
-      <arg><option>--no-debug</option></arg>
+      <arg><option>--debug</option></arg>
       <arg><option>--no-sigint</option></arg>
       <arg><option>--force-load-modules</option></arg>
     </cmdsynopsis>
@@ -74,10 +74,10 @@
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>--no-debug</option></term>
+        <term><option>--debug</option></term>
         <listitem>
           <para>
-            Do not print debug or informational messages on stdout/stderr.
+            Print debug or informational messages on stdout/stderr.
           </para>
         </listitem>
       </varlistentry>
