@@ -95,6 +95,13 @@ if test -z "$XSLTPROC"; then
   AC_MSG_ERROR([xsltproc is needed])
 fi
 
+if test -z "$enable_modules"; then
+  enable_modules=no
+fi
+if test -z "$enable_available_modules"; then
+  enable_available_modules=no
+fi
+
 GTK_DOC_CHECK([1.3],[--flavour no-tmpl])
 
 AC_ARG_ENABLE(man,
@@ -246,7 +253,8 @@ AM_CONDITIONAL(HAVE_ACL, [test "$have_acl" = "yes"])
 have_lvm2=no
 AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
 if test "x$enable_lvm2" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
 
   CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
   LDFLAGS="$GLIB_LIBS"
@@ -259,8 +267,10 @@ if test "x$enable_lvm2" = "xyes" \
   CFLAGS=$SAVE_CFLAGS
   LDFLAGS=$SAVE_LDFLAGS
 
-  if test \( "x$have_lvm2" = "xno" \); then
-    AC_MSG_ERROR([lvm2 support requested but libraries not found])
+  if test "x$have_lvm2" = "xno"; then
+     if test "x$enable_lvm2" = "xyes" -o "x$enable_modules" = "xyes"; then
+         AC_MSG_ERROR([lvm2 support requested but libraries not found])
+     fi
   fi
 fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
@@ -269,10 +279,13 @@ AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
 have_lvmcache=no
 AC_ARG_ENABLE(lvmcache, AS_HELP_STRING([--enable-lvmcache], [enable LVMCache support]))
 if test "x$enable_lvmcache" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
 
   if test "x$have_lvm2" = "xno"; then
-    AC_MSG_ERROR([lvmcache support requested, but lvm2 module not enabled])
+     if test "x$enable_lvmcache" = "xyes" -o "x$enable_modules" = "xyes"; then
+         AC_MSG_ERROR([lvmcache support requested, but lvm2 module not enabled])
+     fi
   fi
   have_lvmcache=yes
   AC_DEFINE(HAVE_LVMCACHE, 1, [Define if lvmcache is available])
@@ -285,7 +298,8 @@ have_libiscsi_session_info="no"
 have_libiscsi_session_info_msg=""
 AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
 if test "x$enable_iscsi" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
   # libiscsi.h
   AC_CHECK_HEADER([libiscsi.h],
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
@@ -316,7 +330,9 @@ if test "x$enable_iscsi" = "xyes" \
   fi
 
   if test "x$have_iscsi" = "xno"; then
-    AC_MSG_ERROR([iSCSI support requested but libraries not found])
+     if test "x$enable_iscsi" = "xyes" -o "x$enable_modules" = "xyes"; then
+         AC_MSG_ERROR([iSCSI support requested but libraries not found])
+     fi
   fi
   AC_SUBST([ISCSI_LIBS])
 fi
@@ -327,7 +343,8 @@ AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" 
 have_btrfs=no
 AC_ARG_ENABLE(btrfs, AS_HELP_STRING([--enable-btrfs], [enable BTRFS support]))
 if test "x$enable_btrfs" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -347,7 +364,9 @@ if test "x$enable_btrfs" = "xyes" \
     LDFLAGS=$SAVE_LDFLAGS
 
     if test "x$have_btrfs" = "xno"; then
-      AC_MSG_ERROR([BTRFS support requested but header or library not found])
+     if test "x$enable_btrfs" = "xyes" -o "x$enable_modules" = "xyes"; then
+         AC_MSG_ERROR([BTRFS support requested but header or library not found])
+     fi
     fi
 fi
 AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
@@ -358,7 +377,8 @@ have_swap="no"
 have_zram="no"
 AC_ARG_ENABLE(zram, AS_HELP_STRING([--enable-zram], [enable ZRAM support]))
 if test "x$enable_zram" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -374,7 +394,9 @@ if test "x$enable_zram" = "xyes" \
                     have_kbd=no])
 
     if test "x$have_kbd" = "xno"; then
-      AC_MSG_ERROR([KBD support requested but header or library not found])
+        if test "x$enable_zram" = "xyes" -o "x$enable_modules" = "xyes"; then
+            AC_MSG_ERROR([KBD support requested but header or library not found])
+        fi
     fi
 
     CFLAGS="$GLIB_CFLAGS"
@@ -392,7 +414,9 @@ if test "x$enable_zram" = "xyes" \
     LDFLAGS=$SAVE_LDFLAGS
 
     if test "x$have_swap" = "xno"; then
-      AC_MSG_ERROR([SWAP support requested but header or library not found])
+        if test "x$enable_zram" = "xyes" -o "x$enable_modules" = "xyes"; then
+            AC_MSG_ERROR([SWAP support requested but header or library not found])
+        fi
     fi
 
     have_zram="yes"
@@ -409,7 +433,8 @@ have_lsm=no
 AC_ARG_ENABLE(
     lsm, AS_HELP_STRING([--enable-lsm], [enable LibStorageMgmt support]))
 if test "x$enable_lsm" = "xyes" \
-        -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
     PKG_CHECK_MODULES(
         [LIBLSM], [libstoragemgmt >= 1.3.0],
         [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
@@ -425,7 +450,9 @@ if test "x$enable_lsm" = "xyes" \
             have_lsm=no])
 
   if test "x$have_lsm" = "xno"; then
-    AC_MSG_ERROR([LibStorageMgmt support requested but libraries not found])
+      if test "x$enable_lsm" = "xyes" -o "x$enable_modules" = "xyes"; then
+          AC_MSG_ERROR([LibStorageMgmt support requested but libraries not found])
+      fi
   fi
 fi
 AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
@@ -434,7 +461,8 @@ AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 have_bcache=no
 AC_ARG_ENABLE(bcache, AS_HELP_STRING([--enable-bcache], [enable Bcache support]))
 if test "x$enable_bcache" = "xyes" \
-     -o "x$enable_modules" = "xyes"; then
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -452,7 +480,9 @@ if test "x$enable_bcache" = "xyes" \
     LDFLAGS=$SAVE_LDFLAGS
 
     if test "x$have_bcache" = "xno"; then
-      AC_MSG_ERROR([Bcache support requested but header or library not found])
+        if test "x$enable_bcache" = "xyes" -o "x$enable_modules" = "xyes"; then
+            AC_MSG_ERROR([Bcache support requested but header or library not found])
+        fi
     fi
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
@@ -598,6 +628,14 @@ AC_DEFINE([PACKAGE_NAME_UDISKS2], ["udisks2"], [Full package name for UDisks2 co
 # Generate
 #
 
+if test "x$enable_modules" = "xyes"; then
+  enable_modules_info=yes
+elif test "x$enable_available_modules" = "xyes"; then
+    enable_modules_info=available
+else
+  enable_modules_info=no
+fi
+
 AC_OUTPUT([
 Makefile
 data/Makefile
@@ -696,6 +734,8 @@ echo "
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}
         Building man pages:         ${enable_man}
+
+        Enable modules:             ${enable_modules_info}
 
         BTRFS module:               ${have_btrfs}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
