@@ -43,6 +43,10 @@ BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-kbd-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-swap-devel  >= %{libblockdev_version}
 
+# Needed for the systemd-related macros used in this file
+%{?systemd_requires}
+BuildRequires: systemd
+
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
 # Needed to pull in the udev daemon
@@ -225,14 +229,28 @@ chrpath --delete %{buildroot}/%{_libexecdir}/udisks2/udisksd
 %find_lang udisks2
 
 %post -n %{name}
+%systemd_post udisks2.service
 udevadm control --reload
 udevadm trigger
-# Restart udisks2, if it's running...
-systemctl try-restart udisks2
+
+%preun -n %{name}
+%systemd_preun udisks2.service
+
+%postun -n %{name}
+%systemd_postun_with_restart udisks2.service
 
 %post -n lib%{name} -p /sbin/ldconfig
 
 %postun -n lib%{name} -p /sbin/ldconfig
+
+%post -n %{name}-zram
+%systemd_post zram-setup@.service
+
+%preun -n %{name}-zram
+%systemd_preun zram-setup@.service
+
+%postun -n %{name}-zram
+%systemd_postun zram-setup@.service
 
 %files -f udisks2.lang
 %doc README.md AUTHORS NEWS HACKING
@@ -246,8 +264,8 @@ systemctl try-restart udisks2
 
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
-%{_prefix}/lib/systemd/system/udisks2.service
-%{_prefix}/lib/udev/rules.d/80-udisks2.rules
+%{_unitdir}/udisks2.service
+%{_udevrulesdir}/80-udisks2.rules
 %{_sbindir}/umount.udisks2
 
 %dir %{_prefix}/lib/udisks2
@@ -329,7 +347,7 @@ systemctl try-restart udisks2
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
-%{_prefix}/lib/systemd/system/zram-setup@.service
+%{_unitdir}/zram-setup@.service
 %endif
 
 %changelog
