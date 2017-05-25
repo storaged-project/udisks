@@ -669,11 +669,6 @@ common_job (UDisksDaemon    *daemon,
  *
  * Launches a new simple job.
  *
- * The job is started immediately - When the job is done, call
- * udisks_simple_job_complete() on the returned object. Long-running
- * jobs should periodically check @cancellable to see if they have
- * been cancelled.
- *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object. It is not
  * valid to use the returned object after this signal fires.
@@ -711,9 +706,12 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  *
  * Launches a new job by running @job_func in a new dedicated thread.
  *
- * The job is started immediately - connect to the
- * #UDisksThreadedJob::threaded-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_threaded_job_start() to
+ * start the job after #UDisksThreadedJob::threaded-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the @job_func finishing
+ * before the signals are connected in which case the signal handlers are never
+ * triggered.
  *
  * Long-running jobs should periodically check @cancellable to see if
  * they have been cancelled.
@@ -765,9 +763,12 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
  *
  * Launches a new job for @command_line_format.
  *
- * The job is started immediately - connect to the
- * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_spawned_job_start() to start
+ * the job after #UDisksSpawnedJob::spawned-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the spawned process
+ * terminating before the signals are connected in which case the signal
+ * handlers are never triggered.
  *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object. It is not
@@ -830,9 +831,12 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
  *
  * Launches a new job for @command_line_format.
  *
- * The job is started immediately - connect to the
- * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_spawned_job_start() to start
+ * the job after #UDisksSpawnedJob::spawned-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the spawned process
+ * terminating before the signals are connected in which case the signal
+ * handlers are never triggered.
  *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object. It is not
