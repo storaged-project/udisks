@@ -248,6 +248,9 @@ AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
 if test "x$enable_lvm2" = "xyes" \
      -o "x$enable_modules" = "xyes"; then
 
+  SAVE_CFLAGS=$CFLAGS
+  SAVE_LDFLAGS=$LDFLAGS
+
   CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-lvm presence])
