@@ -200,6 +200,18 @@ Obsoletes: storaged-zram
 
 %description -n %{name}-zram
 This package contains module for ZRAM configuration.
+
+%package -n %{name}-multipath
+Summary: Module for Multipath
+Group: System Environment/Libraries
+Requires: %{name}%{?_isa} = %{version}-%{release}
+License: LGPLv2+
+Requires: libdmmp
+BuildRequires: libdmmp-devel
+Provides:  %{name}-multipath = %{version}-%{release}
+
+%description -n %{name}-multipath
+This package contains module for LSM configuration.
 %endif
 
 %prep
@@ -218,7 +230,8 @@ autoreconf -ivf
     --enable-modules
 %else
     --enable-iscsi    \
-    --enable-lvm2
+    --enable-lvm2     \
+    --enable-multipath
 %endif
 make %{?_smp_mflags}
 
@@ -343,6 +356,12 @@ udevadm trigger
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
 %{_unitdir}/zram-setup@.service
+%{_prefix}/lib/systemd/system/zram-setup@.service
+
+%files -n %{name}-multipath
+%dir %{_libdir}/udisks2
+%dir %{_libdir}/udisks2/modules
+%{_libdir}/udisks2/modules/libudisks2_multipath.so
 %endif
 
 %changelog
