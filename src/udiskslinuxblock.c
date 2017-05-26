@@ -434,6 +434,26 @@ update_hints (UDisksLinuxBlock  *block,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+static void
+process_device_symlinks (const gchar      *device,
+                         UDisksLinuxBlock *block,
+                         gpointer          object,
+                         GList           **ret)
+{
+  const gchar *const *symlinks;
+  guint n;
+
+  if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+    *ret = g_list_prepend (*ret, g_object_ref (object));
+  else
+    {
+      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+      if (symlinks != NULL)
+        for (n = 0; symlinks[n] != NULL; n++)
+          if (g_strcmp0 (device, symlinks[n]) == 0)
+            *ret = g_list_prepend (*ret, g_object_ref (object));
+    }
+}
 
 static GList *
 find_fstab_entries_for_device (UDisksLinuxBlock *block,
@@ -450,14 +470,12 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
-      const gchar *const *symlinks;
       const gchar *fsname;
       const gchar *device = NULL;
       const gchar *label = NULL;
       const gchar *uuid = NULL;
       const gchar *partuuid = NULL;
       const gchar *partlabel = NULL;
-      guint n;
 
       fsname = udisks_fstab_entry_get_fsname (entry);
       device = NULL;
@@ -489,24 +507,7 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
 
       if (device != NULL)
         {
-          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
-            {
-              ret = g_list_prepend (ret, g_object_ref (entry));
-            }
-          else
-            {
-              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-              if (symlinks != NULL)
-                {
-                  for (n = 0; symlinks[n] != NULL; n++)
-                    {
-                      if (g_strcmp0 (device, symlinks[n]) == 0)
-                        {
-                          ret = g_list_prepend (ret, g_object_ref (entry));
-                        }
-                    }
-                }
-            }
+          process_device_symlinks (device, block, entry, &ret);
         }
       else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
         {
@@ -557,12 +558,10 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      const gchar *const *symlinks;
       const gchar *device_in_entry;
       const gchar *device = NULL;
       const gchar *label = NULL;
       const gchar *uuid = NULL;
-      guint n;
 
       device_in_entry = udisks_crypttab_entry_get_device (entry);
       if (g_str_has_prefix (device_in_entry, "UUID="))
@@ -585,24 +584,7 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
 
       if (device != NULL)
         {
-          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
-            {
-              ret = g_list_prepend (ret, g_object_ref (entry));
-            }
-          else
-            {
-              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-              if (symlinks != NULL)
-                {
-                  for (n = 0; symlinks[n] != NULL; n++)
-                    {
-                      if (g_strcmp0 (device, symlinks[n]) == 0)
-                        {
-                          ret = g_list_prepend (ret, g_object_ref (entry));
-                        }
-                    }
-                }
-            }
+          process_device_symlinks (device, block, entry, &ret);
         }
       else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
         {
