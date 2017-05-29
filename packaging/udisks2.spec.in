@@ -253,6 +253,7 @@ udevadm trigger
 
 %postun -n lib%{name} -p /sbin/ldconfig
 
+%if %{is_fedora}
 %post -n %{name}-zram
 %systemd_post zram-setup@.service
 
@@ -261,6 +262,7 @@ udevadm trigger
 
 %postun -n %{name}-zram
 %systemd_postun zram-setup@.service
+%endif
 
 %files -f udisks2.lang
 %doc README.md AUTHORS NEWS HACKING
