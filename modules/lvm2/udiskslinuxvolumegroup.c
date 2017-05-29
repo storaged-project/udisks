@@ -586,13 +586,13 @@ handle_add_device (UDisksVolumeGroup     *_group,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
 static gboolean
-handle_remove_device (UDisksVolumeGroup     *_group,
+handle_remove_common (UDisksVolumeGroup     *_group,
                       GDBusMethodInvocation *invocation,
                       const gchar           *member_device_objpath,
-                      gboolean               arg_wipe,
-                      GVariant              *options)
+                      GVariant              *options,
+                      gboolean               is_remove,
+                      gboolean               arg_wipe)
 {
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
   UDisksDaemon *daemon;
@@ -603,6 +603,26 @@ handle_remove_device (UDisksVolumeGroup     *_group,
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
   VGJobData data;
+  const gchar *authentication_error_msg = NULL;
+  const gchar *job_operation = NULL;
+  UDisksThreadedJobFunc job_func = NULL;
+  gboolean do_wipe = FALSE;
+
+  if (is_remove)
+    {
+      authentication_error_msg = N_("Authentication is required to remove a device from a volume group");
+      job_operation = "lvm-vg-rem-device";
+      job_func = vgreduce_job_func;
+
+      if (arg_wipe)
+        do_wipe = TRUE;
+    }
+  else
+    {
+      authentication_error_msg = N_("Authentication is required to empty a device in a volume group");
+      job_operation = "lvm-vg-empty-device";
+      job_func = pvmove_job_func;
+    }
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -648,17 +668,19 @@ handle_remove_device (UDisksVolumeGroup     *_group,
                                      UDISKS_OBJECT (object),
                                      lvm2_policy_action_id,
                                      options,
-                                     N_("Authentication is required to remove a device from a volume group"),
+                                     authentication_error_msg,
                                      invocation);
 
-  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  if (is_remove)
+    data.vg_name = udisks_linux_volume_group_object_get_name (object);
+
   data.pv_path = udisks_block_get_device (member_device);
 
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                UDISKS_OBJECT (object),
-                                               "lvm-vg-rem-device",
+                                               job_operation,
                                                caller_uid,
-                                               vgreduce_job_func,
+                                               job_func,
                                                &data,
                                                NULL, /* user_data_free_func */
                                                NULL, /* GCancellable */
@@ -667,13 +689,13 @@ handle_remove_device (UDisksVolumeGroup     *_group,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error remove %s from volume group: %s",
+                                             (is_remove) ? "Error remove %s from volume group: %s" : "Error emptying %s: %s",
                                              data.pv_path,
                                              error->message);
       goto out;
     }
 
-  if (arg_wipe)
+  if (do_wipe)
     {
       if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                    UDISKS_OBJECT (object),
@@ -705,6 +727,18 @@ handle_remove_device (UDisksVolumeGroup     *_group,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+
+static gboolean
+handle_remove_device (UDisksVolumeGroup     *_group,
+                      GDBusMethodInvocation *invocation,
+                      const gchar           *member_device_objpath,
+                      gboolean               arg_wipe,
+                      GVariant              *options)
+{
+  return handle_remove_common (_group, invocation, member_device_objpath,
+                               options, TRUE, arg_wipe);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
@@ -713,91 +747,8 @@ handle_empty_device (UDisksVolumeGroup     *_group,
                      const gchar           *member_device_objpath,
                      GVariant              *options)
 {
-  UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
-  UDisksDaemon *daemon;
-  UDisksLinuxVolumeGroupObject *object;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  GError *error = NULL;
-  UDisksObject *member_device_object = NULL;
-  UDisksBlock *member_device = NULL;
-  VGJobData data;
-
-  object = udisks_daemon_util_dup_object (group, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  member_device_object = udisks_daemon_find_object (daemon, member_device_objpath);
-  if (member_device_object == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No device for given object path");
-      goto out;
-    }
-
-  member_device = udisks_object_get_block (member_device_object);
-  if (member_device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No block interface on given object");
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       UDISKS_OBJECT (object),
-                                       lvm2_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to empty a device in a volume group"),
-                                       invocation);
-
-  data.pv_path = udisks_block_get_device (member_device);
-
-  if (!udisks_daemon_launch_threaded_job_sync (daemon,
-                                               UDISKS_OBJECT (object),
-                                               "lvm-vg-empty-device",
-                                               caller_uid,
-                                               pvmove_job_func,
-                                               &data,
-                                               NULL, /* user_data_free_func */
-                                               NULL, /* GCancellable */
-                                               &error))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error emptying %s: %s",
-                                             data.pv_path,
-                                             error->message);
-      goto out;
-    }
-
-  udisks_volume_group_complete_remove_device (_group, invocation);
-
- out:
-  g_clear_object (&member_device_object);
-  g_clear_object (&member_device);
-  g_clear_object (&object);
-  return TRUE; /* returning TRUE means that we handled the method invocation */
+ return handle_remove_common (_group, invocation, member_device_objpath,
+                              options, FALSE, FALSE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -842,12 +793,19 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+enum VolumeType { VOL_PLAIN, VOL_THIN_POOL, VOL_THIN_VOLUME };
+typedef void (*VolumeCompletionFunc) (UDisksVolumeGroup     *object,
+                                      GDBusMethodInvocation *invocation,
+                                      const gchar           *result);
+
 static gboolean
-handle_create_plain_volume (UDisksVolumeGroup     *_group,
-                            GDBusMethodInvocation *invocation,
-                            const gchar           *arg_name,
-                            guint64                arg_size,
-                            GVariant              *options)
+handle_create_volume (UDisksVolumeGroup              *_group,
+                      GDBusMethodInvocation          *invocation,
+                      const gchar                    *arg_name,
+                      guint64                         arg_size,
+                      GVariant                       *options,
+                      enum VolumeType                 vol_creation_type,
+                      const gchar                    *arg_pool)
 {
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
@@ -857,6 +815,29 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
   gid_t caller_gid;
   const gchar *lv_objpath;
   LVJobData data;
+  UDisksLinuxLogicalVolumeObject *pool_object = NULL;
+  const gchar *auth_error_msg = NULL;
+  UDisksThreadedJobFunc create_function = NULL;
+  VolumeCompletionFunc completion_function = NULL;
+
+  if (VOL_PLAIN == vol_creation_type)
+    {
+      auth_error_msg = N_("Authentication is required to create a logical volume");
+      create_function = lvcreate_job_func;
+      completion_function = udisks_volume_group_complete_create_plain_volume;
+    }
+  else if (VOL_THIN_VOLUME == vol_creation_type)
+    {
+      auth_error_msg = N_("Authentication is required to create a thin volume");
+      create_function = lvcreate_thin_job_func;
+      completion_function = udisks_volume_group_complete_create_thin_volume;
+    }
+  else
+    {
+      auth_error_msg = N_("Authentication is required to create a thin pool volume");
+      create_function = lvcreate_thin_pool_job_func;
+      completion_function = udisks_volume_group_complete_create_thin_pool_volume;
+    }
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -885,18 +866,33 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
                                      UDISKS_OBJECT (object),
                                      lvm2_policy_action_id,
                                      options,
-                                     N_("Authentication is required to create a logical volume"),
+                                     auth_error_msg,
                                      invocation);
 
   data.vg_name = udisks_linux_volume_group_object_get_name (object);
   data.new_lv_name = arg_name;
   data.new_lv_size = arg_size;
 
+  if (VOL_THIN_POOL == vol_creation_type)
+    data.extent_size = udisks_volume_group_get_extent_size (UDISKS_VOLUME_GROUP (group));
+
+  if (VOL_THIN_VOLUME == vol_creation_type)
+    {
+      pool_object = UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (udisks_daemon_find_object (daemon, arg_pool));
+      if (pool_object == NULL || !UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT (pool_object))
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Not a logical volume");
+          goto out;
+        }
+      data.pool_name = udisks_linux_logical_volume_object_get_name (pool_object);
+    }
+
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                UDISKS_OBJECT (object),
                                                "lvm-vg-create-volume",
                                                caller_uid,
-                                               lvcreate_job_func,
+                                               create_function,
                                                &data,
                                                NULL, /* user_data_free_func */
                                                NULL, /* GCancellable */
@@ -920,11 +916,23 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  udisks_volume_group_complete_create_plain_volume (_group, invocation, lv_objpath);
+  completion_function (_group, invocation, lv_objpath);
 
  out:
+  g_clear_object (&pool_object);
   g_clear_object (&object);
   return TRUE;
+}
+
+static gboolean
+handle_create_plain_volume (UDisksVolumeGroup     *_group,
+                            GDBusMethodInvocation *invocation,
+                            const gchar           *arg_name,
+                            guint64                arg_size,
+                            GVariant              *options)
+{
+  return handle_create_volume(_group, invocation, arg_name, arg_size, options,
+                              VOL_PLAIN, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -936,83 +944,8 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
                                 guint64                arg_size,
                                 GVariant              *options)
 {
-  GError *error = NULL;
-  UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
-  UDisksLinuxVolumeGroupObject *object = NULL;
-  UDisksDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  const gchar *lv_objpath;
-  LVJobData data;
-
-  object = udisks_daemon_util_dup_object (group, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to create a thin pool volume"),
-                                     invocation);
-
-  data.vg_name = udisks_linux_volume_group_object_get_name (object);
-  data.new_lv_name = arg_name;
-  data.new_lv_size = arg_size;
-  data.extent_size = udisks_volume_group_get_extent_size (UDISKS_VOLUME_GROUP (group));
-
-  if (!udisks_daemon_launch_threaded_job_sync (daemon,
-                                               UDISKS_OBJECT (object),
-                                               "lvm-vg-create-volume",
-                                               caller_uid,
-                                               lvcreate_thin_pool_job_func,
-                                               &data,
-                                               NULL, /* user_data_free_func */
-                                               NULL, /* GCancellable */
-                                               &error))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating volume: %s",
-                                             error->message);
-      goto out;
-    }
-
-  lv_objpath = wait_for_logical_volume_path (object, arg_name, &error);
-  if (lv_objpath == NULL)
-    {
-      g_prefix_error (&error,
-                      "Error waiting for logical volume object for %s",
-                      arg_name);
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  udisks_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
-
- out:
-  g_clear_object (&object);
-  return TRUE;
+  return handle_create_volume(_group, invocation, arg_name, arg_size, options,
+                              VOL_THIN_POOL, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1023,95 +956,10 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
                            const gchar           *arg_name,
                            guint64                arg_size,
                            const gchar           *arg_pool,
-                           GVariant *options)
+                           GVariant              *options)
 {
-  GError *error = NULL;
-  UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
-  UDisksLinuxVolumeGroupObject *object = NULL;
-  UDisksDaemon *daemon;
-  uid_t caller_uid;
-  gid_t caller_gid;
-  UDisksLinuxLogicalVolumeObject *pool_object = NULL;
-  const gchar *lv_objpath;
-  LVJobData data;
-
-  object = udisks_daemon_util_dup_object (group, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                     UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
-                                     options,
-                                     N_("Authentication is required to create a thin volume"),
-                                     invocation);
-
-  pool_object = UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (udisks_daemon_find_object (daemon, arg_pool));
-  if (pool_object == NULL || !UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT (pool_object))
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Not a logical volume");
-      goto out;
-    }
-
-  data.vg_name = udisks_linux_volume_group_object_get_name (object);
-  data.new_lv_name = arg_name;
-  data.new_lv_size = arg_size;
-  data.pool_name = udisks_linux_logical_volume_object_get_name (pool_object);
-
-  if (!udisks_daemon_launch_threaded_job_sync (daemon,
-                                               UDISKS_OBJECT (object),
-                                               "lvm-vg-create-volume",
-                                               caller_uid,
-                                               lvcreate_thin_job_func,
-                                               &data,
-                                               NULL, /* user_data_free_func */
-                                               NULL, /* GCancellable */
-                                               &error))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating volume: %s",
-                                             error->message);
-      goto out;
-    }
-
-  lv_objpath = wait_for_logical_volume_path (object, arg_name, &error);
-  if (lv_objpath == NULL)
-    {
-      g_prefix_error (&error,
-                      "Error waiting for logical volume object for %s",
-                      arg_name);
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  udisks_volume_group_complete_create_thin_pool_volume (_group, invocation, lv_objpath);
-
- out:
-  g_clear_object (&pool_object);
-  g_clear_object (&object);
-  return TRUE;
+  return handle_create_volume(_group, invocation, arg_name, arg_size, options,
+                              VOL_THIN_VOLUME, arg_pool);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
