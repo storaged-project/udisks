@@ -12,10 +12,6 @@ man_MANS +=                                                                    \
 	udisks2.conf.5                                                         \
 	$(NULL)
 
-if HAVE_LVM2
-man_MANS += udisks-lvm.8
-endif # HAVE_LVM2
-
 if HAVE_LSM
 man_MANS += udisks2_lsm.conf.5
 endif # HAVE_LSM
@@ -41,11 +37,6 @@ udisks2.conf.5.xml: udisks2.conf.5.xml.in
 udisks2.conf.5 : udisks2.conf.5.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-if HAVE_LVM2
-udisks-lvm.8 : udisks-lvm.xml
-	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
-endif # HAVE_LVM2
-
 if HAVE_LSM
 # Hack: Autotools expand @sysconfdir@ as %{prefix}/etc; that's why we sed this
 # to real prefix, so it doesn't appear like this in the man page.
@@ -60,7 +51,6 @@ EXTRA_DIST =                                                                   \
 	udisksctl.xml                                                          \
 	udisksd.xml                                                            \
 	udisks2.conf.5.xml                                                     \
-	udisks-lvm.xml                                                         \
 	udisks.xml                                                             \
 	umount.udisks2.xml                                                     \
 	$(NULL)

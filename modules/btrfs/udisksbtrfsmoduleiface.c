@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <blockdev/blockdev.h>
+
 #include <modules/udisksmoduleiface.h>
 
 #include <udisks/udisks-generated.h>
@@ -45,6 +47,25 @@ udisks_module_id (void)
 gpointer
 udisks_module_init (UDisksDaemon *daemon)
 {
+  gboolean ret = FALSE;
+  GError *error = NULL;
+
+  /* NULL means no specific so_name (implementation) */
+  BDPluginSpec btrfs_plugin = {BD_PLUGIN_BTRFS, NULL};
+  BDPluginSpec *plugins[] = {&btrfs_plugin, NULL};
+
+  if (!bd_is_plugin_available (BD_PLUGIN_BTRFS))
+    {
+      ret = bd_reinit (plugins, FALSE, NULL, &error);
+      if (!ret)
+        {
+          udisks_error ("Error initializing the btrfs libblockdev plugin: %s (%s, %d)",
+                        error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+          /* XXX: can do nothing more here even though we know the module will be unusable! */
+        }
+    }
+
   return udisks_btrfs_state_new (daemon);
 }
 

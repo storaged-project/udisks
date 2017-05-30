@@ -37,9 +37,8 @@
 #include <glib/gstdio.h>
 #include <gio/gunixfdlist.h>
 
-#ifdef HAVE_LIBBLOCKDEV_PART
 #include <blockdev/part.h>
-#endif /* HAVE_LIBBLOCKDEV_PART */
+#include <blockdev/fs.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxblock.h"
@@ -62,6 +61,7 @@
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxpartition.h"
 #include "udiskslinuxencrypted.h"
+#include "udiskslinuxencryptedhelpers.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -434,6 +434,26 @@ update_hints (UDisksLinuxBlock  *block,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+static void
+process_device_symlinks (const gchar      *device,
+                         UDisksLinuxBlock *block,
+                         gpointer          object,
+                         GList           **ret)
+{
+  const gchar *const *symlinks;
+  guint n;
+
+  if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+    *ret = g_list_prepend (*ret, g_object_ref (object));
+  else
+    {
+      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+      if (symlinks != NULL)
+        for (n = 0; symlinks[n] != NULL; n++)
+          if (g_strcmp0 (device, symlinks[n]) == 0)
+            *ret = g_list_prepend (*ret, g_object_ref (object));
+    }
+}
 
 static GList *
 find_fstab_entries_for_device (UDisksLinuxBlock *block,
@@ -450,14 +470,12 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
-      const gchar *const *symlinks;
       const gchar *fsname;
       const gchar *device = NULL;
       const gchar *label = NULL;
       const gchar *uuid = NULL;
       const gchar *partuuid = NULL;
       const gchar *partlabel = NULL;
-      guint n;
 
       fsname = udisks_fstab_entry_get_fsname (entry);
       device = NULL;
@@ -489,24 +507,7 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
 
       if (device != NULL)
         {
-          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
-            {
-              ret = g_list_prepend (ret, g_object_ref (entry));
-            }
-          else
-            {
-              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-              if (symlinks != NULL)
-                {
-                  for (n = 0; symlinks[n] != NULL; n++)
-                    {
-                      if (g_strcmp0 (device, symlinks[n]) == 0)
-                        {
-                          ret = g_list_prepend (ret, g_object_ref (entry));
-                        }
-                    }
-                }
-            }
+          process_device_symlinks (device, block, entry, &ret);
         }
       else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
         {
@@ -557,12 +558,10 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      const gchar *const *symlinks;
       const gchar *device_in_entry;
       const gchar *device = NULL;
       const gchar *label = NULL;
       const gchar *uuid = NULL;
-      guint n;
 
       device_in_entry = udisks_crypttab_entry_get_device (entry);
       if (g_str_has_prefix (device_in_entry, "UUID="))
@@ -585,24 +584,7 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
 
       if (device != NULL)
         {
-          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
-            {
-              ret = g_list_prepend (ret, g_object_ref (entry));
-            }
-          else
-            {
-              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-              if (symlinks != NULL)
-                {
-                  for (n = 0; symlinks[n] != NULL; n++)
-                    {
-                      if (g_strcmp0 (device, symlinks[n]) == 0)
-                        {
-                          ret = g_list_prepend (ret, g_object_ref (entry));
-                        }
-                    }
-                }
-            }
+          process_device_symlinks (device, block, entry, &ret);
         }
       else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
         {
@@ -1530,14 +1512,14 @@ has_whitespace (const gchar *s)
 }
 
 static gchar *
-make_block_luksname (UDisksBlock *block)
+make_block_luksname (UDisksBlock *block, GError **error)
 {
-  const gchar *uuid = udisks_block_get_id_uuid (block);
+  gchar *uuid = bd_crypto_luks_uuid (udisks_block_get_device (block), error);
 
-  if (uuid && *uuid)
+  if (uuid)
     return g_strdup_printf ("luks-%s", uuid);
-
-  return NULL;
+  else
+    return NULL;
 }
 
 static gboolean
@@ -2733,7 +2715,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gchar *erase_type = NULL;
   gchar *mapped_name = NULL;
   const gchar *label = NULL;
-  gchar *escaped_device = NULL;
+  gchar *device_name = NULL;
   gboolean was_partitioned = FALSE;
   UDisksInhibitCookie *inhibit_cookie = NULL;
   gboolean no_block = FALSE;
@@ -2742,10 +2724,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
-#ifdef HAVE_LIBBLOCKDEV_PART
   BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
-  gchar *device_name = NULL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -2882,8 +2861,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   inhibit_cookie = udisks_daemon_util_inhibit_system_sync (N_("Formatting Device"));
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
-
   was_partitioned = (udisks_object_peek_partition_table (object) != NULL);
 
   if (teardown_flag)
@@ -2895,27 +2872,25 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
+  device_name = udisks_block_dup_device (block);
+
   /* First wipe the device... */
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "format-erase", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "wipefs -a %s",
-                                              escaped_device))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error wiping device: %s",
-                                             error_message);
-      g_free (error_message);
-      goto out;
-    }
+  if (! bd_fs_wipe (device_name, TRUE, &error)) {
+    if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+      /* no signature to remove, ignore */
+      g_clear_error (&error);
+    else
+      {
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Error wiping device: %s",
+                                               error->message);
+        g_clear_error (&error);
+        goto out;
+      }
+  }
+
   /* ...then wait until this change has taken effect */
   wait_data = g_new0 (FormatWaitData, 1);
   wait_data->object = object;
@@ -2994,23 +2969,24 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   if (encrypt_passphrase != NULL)
     {
+      LuksJobData data;
+      data.device = device_name;
+      data.passphrase = encrypt_passphrase;
+
       /* Create it */
-      if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
-                                                  object,
-                                                  "format-mkfs", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksFormat \"%s\" %s",
-                                                  escaped_device,
-                                                  "--key-file -"))
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   object,
+                                                   "format-mkfs",
+                                                   caller_uid,
+                                                   luks_format_job_func,
+                                                   &data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* cancellable */
+                                                   &error))
         {
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Error creating LUKS device: %s", error_message));
-          g_free (error_message);
+                                 "Error creating LUKS device: %s", error->message));
+          g_clear_error (&error);
           goto out;
         }
 
@@ -3028,25 +3004,29 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
 
       /* Open it */
-      mapped_name = make_block_luksname (block);
-      g_assert (mapped_name != NULL);
-      if (!udisks_daemon_launch_spawned_job_gstring_sync (daemon,
-                                                  object,
-                                                  "format-mkfs", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksOpen \"%s\" %s %s",
-                                                  escaped_device,
-                                                  mapped_name,
-                                                  "--key-file -"))
+      mapped_name = make_block_luksname (block, &error);
+      if (!mapped_name)
+        {
+          g_prefix_error (&error, "Failed to get LUKS UUID: ");
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+
+      data.map_name = mapped_name;
+      data.read_only = FALSE;
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   object,
+                                                   "format-mkfs",
+                                                   caller_uid,
+                                                   luks_open_job_func,
+                                                   &data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* cancellable */
+                                                   &error))
         {
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Error opening LUKS device: %s", error_message));
-          g_free (error_message);
+                                 "Error opening LUKS device: %s", error->message));
+          g_clear_error (&error);
           goto out;
         }
 
@@ -3111,13 +3091,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-#ifdef HAVE_LIBBLOCKDEV_PART
     if (g_strcmp0 (type, "dos") == 0)
       part_table_type = BD_PART_TABLE_MSDOS;
     else if (g_strcmp0 (type, "gpt") == 0)
       part_table_type = BD_PART_TABLE_GPT;
     if (part_table_type == BD_PART_TABLE_UNDEF)
-#endif /* HAVE_LIBBLOCKDEV_PART */
       {
         /* Build and run mkfs shell command */
         tmp = subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
@@ -3140,18 +3118,15 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             goto out;
           }
       }
-#ifdef HAVE_LIBBLOCKDEV_PART
     else
       {
         /* Create the partition table. */
-        device_name = g_strdup (udisks_block_get_device (block));
         if (! bd_part_create_table (device_name, part_table_type, TRUE, &error))
           {
             handle_format_failure (invocation, error);
             goto out;
           }
       }
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
@@ -3297,7 +3272,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
  out:
   udisks_daemon_util_uninhibit_system_sync (inhibit_cookie);
-  g_free (escaped_device);
+  g_free (device_name);
   g_free (mapped_name);
   g_free (command);
   if (config_items)
@@ -3311,9 +3286,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_clear_object (&partition_table);
   g_clear_object (&partition);
   g_clear_object (&object);
-#ifdef HAVE_LIBBLOCKDEV_PART
-  g_free (device_name);
-#endif /* HAVE_LIBBLOCKDEV_PART */
 }
 
 struct FormatCompleteData {

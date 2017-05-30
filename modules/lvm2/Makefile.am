@@ -75,6 +75,7 @@ libudisks2_lvm2_la_SOURCES =                                                   \
 	udiskslvm2util.h                    udiskslvm2util.c                   \
 	udiskslinuxmanagerlvm2.h            udiskslinuxmanagerlvm2.c           \
 	udiskslvm2state.h                   udiskslvm2state.c                  \
+	jobhelpers.h                        jobhelpers.c                       \
 	$(NULL)
 
 libudisks2_lvm2_la_CPPFLAGS =                                                  \
@@ -103,31 +104,6 @@ libudisks2_lvm2_la_LIBADD =                                                    \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
-	$(NULL)
-
-# ------------------------------------------------------------------------------
-
-udisksdprivdir = $(prefix)/lib/udisks2
-udisksdpriv_PROGRAMS = udisks-lvm
-
-udisks_lvm_SOURCES =                                                           \
-	udiskslvmhelper.c                                                      \
-	$(NULL)
-
-udisks_lvm_CPPFLAGS =                                                          \
-	$(CPPFLAGS)                                                            \
-	$(NULL)
-
-udisks_lvm_CFLAGS =                                                            \
-	-DG_LOG_DOMAIN=\"udisks-lvm-helper\"                                   \
-	$(DEVMAPPER_CFLAGS)                                                    \
-	$(LVM2_CFLAGS)                                                         \
-	$(NULL)
-
-udisks_lvm_LDADD =                                                             \
-	$(GLIB_LIBS)                                                           \
-	$(DEVMAPPER_LIBS)                                                      \
-	$(LVM2_LIBS)                                                           \
 	$(NULL)
 
 # ------------------------------------------------------------------------------

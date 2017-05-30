@@ -29,6 +29,7 @@ CPPFLAGS =                                                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
+	$(BLOCKDEV_CFLAGS)                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
@@ -87,8 +88,7 @@ libudisks2_zram_la_CFLAGS =                                                    \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
-	$(KBD_CFLAGS)                                                          \
-	$(SWAP_CFLAGS)                                                         \
+	$(BLOCKDEV_CFLAGS)                                                     \
 	$(NULL)
 
 libudisks2_zram_la_LDFLAGS =                                                   \
@@ -105,8 +105,7 @@ libudisks2_zram_la_LIBADD =                                                    \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
-	$(KBD_LIBS)                                                            \
-	$(SWAP_LIBS)                                                           \
+	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
 # ------------------------------------------------------------------------------

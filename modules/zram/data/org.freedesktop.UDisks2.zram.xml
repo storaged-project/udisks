@@ -41,6 +41,7 @@
         @sizes: Requested sizes (in bytes) for created zRAM devices.
         @num_streams: Number of streams for created zRAM devices.
         @options: Additional options.
+        @zrams: object paths of the new ZRAM devices
         @since: 2.3.0
 
         Creates num_devices zram devices.
@@ -51,6 +52,7 @@
       <arg name="sizes" direction="in" type="at"/>
       <arg name="num_streams" direction="in" type="at"/>
       <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="zrams" direction="out" type="ao"/>
     </method>
 
     <!--
@@ -81,11 +83,16 @@
 
     <!--
         Refresh:
+        @options: Additional options.
         @since: 2.3.0
 
         Used to refresh properties changed over time.
+
+        No additional options are currently defined.
     -->
-    <method name="Refresh"/>
+    <method name="Refresh">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
 
     <!--
         Activate:
@@ -137,9 +144,9 @@
       Values set during device initialisation
 
     -->
-    <property name="disksize" type="t" access="read"/>
-    <property name="max_comp_streams" type="t" access="read"/>
-    <property name="comp_algorithm" type="s" access="read"/>
+    <property name="Disksize" type="t" access="read"/>
+    <property name="MaxCompStreams" type="t" access="read"/>
+    <property name="CompAlgorithm" type="s" access="read"/>
 
     <!--
 
@@ -147,14 +154,13 @@
       after Refresh method call
 
     -->
-    <property name="active" type="b" access="read"/>
-    <property name="num_reads" type="t" access="read"/>
-    <property name="num_writes" type="t" access="read"/>
-    <property name="invalid_io" type="t" access="read"/>
-    <property name="zero_pages" type="t" access="read"/>
-    <property name="orig_data_size" type="t" access="read"/>
-    <property name="compr_data_size" type="t" access="read"/>
-    <property name="mem_used_total" type="t" access="read"/>
+    <property name="Active" type="b" access="read"/>
+    <property name="NumReads" type="t" access="read"/>
+    <property name="NumWrites" type="t" access="read"/>
+    <property name="InvalidIo" type="t" access="read"/>
+    <property name="ZeroPages" type="t" access="read"/>
+    <property name="OrigDataSize" type="t" access="read"/>
+    <property name="ComprDataSize" type="t" access="read"/>
+    <property name="MemUsedTotal" type="t" access="read"/>
 
   </interface>
-

@@ -31,9 +31,8 @@
 
 #include <glib/gstdio.h>
 
-#ifdef HAVE_LIBBLOCKDEV_PART
 #include <blockdev/part.h>
-#endif /* HAVE_LIBBLOCKDEV_PART */
+#include <blockdev/fs.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxpartitiontable.h"
@@ -43,6 +42,7 @@
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxpartition.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxpartitiontable
@@ -131,151 +131,6 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-ranges_overlap (guint64 a_offset, guint64 a_size,
-                guint64 b_offset, guint64 b_size)
-{
-  guint64 a1 = a_offset, a2 = a_offset + a_size;
-  guint64 b1 = b_offset, b2 = b_offset + b_size;
-  gboolean ret = FALSE;
-
-  /* There are only two cases when these intervals can overlap
-   *
-   * 1.  [a1-------a2]
-   *               [b1------b2]
-   *
-   * 2.            [a1-------a2]
-   *     [b1------b2]
-   */
-
-  if (a1 <= b1)
-    {
-      /* case 1 */
-      if (a2 > b1)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
-  else
-    {
-      /* case 2 */
-      if (b2 > a1)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
-
- out:
-  return ret;
-}
-
-static gboolean
-have_partition_in_range (UDisksPartitionTable *table,
-                         UDisksObject         *object,
-                         guint64               start,
-                         guint64               end,
-                         gboolean              ignore_container)
-{
-  gboolean ret = FALSE;
-  UDisksDaemon *daemon = NULL;
-  GDBusObjectManager *object_manager = NULL;
-  const gchar *table_object_path;
-  GList *objects = NULL, *l;
-
-  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  object_manager = G_DBUS_OBJECT_MANAGER (udisks_daemon_get_object_manager (daemon));
-
-  table_object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-
-  objects = g_dbus_object_manager_get_objects (object_manager);
-  for (l = objects; l != NULL; l = l->next)
-    {
-      UDisksObject *i_object = UDISKS_OBJECT (l->data);
-      UDisksPartition *i_partition = NULL;
-
-      i_partition = udisks_object_get_partition (i_object);
-
-      if (i_partition == NULL)
-        goto cont;
-
-      if (g_strcmp0 (udisks_partition_get_table (i_partition), table_object_path) != 0)
-        goto cont;
-
-      if (ignore_container && udisks_partition_get_is_container (i_partition))
-        goto cont;
-
-      if (!ranges_overlap (start, end - start,
-                           udisks_partition_get_offset (i_partition), udisks_partition_get_size (i_partition)))
-        goto cont;
-
-      ret = TRUE;
-      g_clear_object (&i_partition);
-      goto out;
-
-    cont:
-      g_clear_object (&i_partition);
-    }
-
- out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
-  return ret;
-}
-
-static UDisksPartition *
-find_container_partition (UDisksPartitionTable *table,
-                          UDisksObject         *object,
-                          guint64               start,
-                          guint64               end)
-{
-  UDisksPartition *ret = NULL;
-  UDisksDaemon *daemon = NULL;
-  GDBusObjectManager *object_manager = NULL;
-  const gchar *table_object_path;
-  GList *objects = NULL, *l;
-
-  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  object_manager = G_DBUS_OBJECT_MANAGER (udisks_daemon_get_object_manager (daemon));
-
-  table_object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-
-  objects = g_dbus_object_manager_get_objects (object_manager);
-  for (l = objects; l != NULL; l = l->next)
-    {
-      UDisksObject *i_object = UDISKS_OBJECT (l->data);
-      UDisksPartition *i_partition = NULL;
-
-      i_partition = udisks_object_get_partition (i_object);
-
-      if (i_partition == NULL)
-        goto cont;
-
-      if (g_strcmp0 (udisks_partition_get_table (i_partition), table_object_path) != 0)
-        goto cont;
-
-      if (udisks_partition_get_is_container (i_partition)
-          && ranges_overlap (start, end - start,
-                             udisks_partition_get_offset (i_partition),
-                             udisks_partition_get_size (i_partition)))
-        {
-          ret = i_partition;
-          goto out;
-        }
-
-    cont:
-      g_clear_object (&i_partition);
-    }
-
- out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
-  return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 typedef struct
 {
   UDisksObject *partition_table_object;
@@ -339,22 +194,19 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
-  gchar *error_message = NULL;
   gchar *device_name = NULL;
-  gchar *command_line = NULL;
   WaitForPartitionData *wait_data = NULL;
   UDisksObject *partition_object = NULL;
   UDisksBlock *partition_block = NULL;
-  UDisksPartition *partition = NULL;
-  gchar *escaped_partition_device = NULL;
+  BDPartSpec *part_spec = NULL;
+  BDPartSpec *overlapping_part = NULL;
+  BDPartTypeReq part_type = 0;
   const gchar *table_type;
   uid_t caller_uid;
   gid_t caller_gid;
-  gboolean do_wipe = TRUE;
-  gboolean set_type = FALSE;
-  GError *error;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
     {
@@ -413,29 +265,14 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                     invocation))
     goto out;
 
-#ifndef HAVE_LIBBLOCKDEV_PART
-  device_name = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
-#else
   device_name = g_strdup (udisks_block_get_device (block));
-#endif /* HAVE_LIBBLOCKDEV_PART */
 
   table_type = udisks_partition_table_get_type_ (table);
   wait_data = g_new0 (WaitForPartitionData, 1);
   if (g_strcmp0 (table_type, "dos") == 0)
     {
-      guint64 start_mib;
-      guint64 end_bytes;
-      guint64 max_end_bytes;
-#ifndef HAVE_LIBBLOCKDEV_PART
-      const gchar *part_type;
-#else
-      BDPartTypeReq part_type;
-#endif /* HAVE_LIBBLOCKDEV_PART */
       char *endp;
       gint type_as_int;
-      gboolean is_logical = FALSE;
-
-      max_end_bytes = udisks_block_get_size (block);
 
       if (strlen (name) > 0)
         {
@@ -449,188 +286,14 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       if (type[0] != '\0' && *endp == '\0' &&
           (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
-          set_type = FALSE;  // do not set part type for extended partitions
-#ifndef HAVE_LIBBLOCKDEV_PART
-          part_type = "extended";
-#else
           part_type = BD_PART_TYPE_REQ_EXTENDED;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-          do_wipe = FALSE;  // wiping an extended partition destroys it
-          if (have_partition_in_range (table, object, offset, offset + size, FALSE))
-            {
-              g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                     "Requested range is already occupied by a partition");
-              goto out;
-            }
         }
       else
-        {
-          set_type = TRUE;
-          if (have_partition_in_range (table, object, offset, offset + size, FALSE))
-            {
-              if (have_partition_in_range (table, object, offset, offset + size, TRUE))
-                {
-                  g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                         "Requested range is already occupied by a partition");
-                  goto out;
-                }
-              else
-                {
-                  UDisksPartition *container = find_container_partition (table, object,
-                                                                         offset, offset + size);
-                  g_assert (container != NULL);
-                  is_logical = TRUE;
-#ifndef HAVE_LIBBLOCKDEV_PART
-                  part_type = "logical ext2";
-#else
-                  part_type = BD_PART_TYPE_REQ_LOGICAL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-                  max_end_bytes = (udisks_partition_get_offset(container)
-                                   + udisks_partition_get_size(container));
-                }
-            }
-          else
-            {
-#ifndef HAVE_LIBBLOCKDEV_PART
-              part_type = "primary ext2";
-#else
-              part_type = BD_PART_TYPE_REQ_NORMAL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-            }
-        }
-
-      /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
-       * Also round up size to nearest multiple of 512
-       */
-      start_mib = offset / MIB_SIZE + 1L;
-      end_bytes = start_mib * MIB_SIZE + ((size + 511L) & (~511L));
-
-      /* Now reduce size until we are not
-       *
-       *  - overlapping neighboring partitions; or
-       *  - exceeding the end of the disk
-       */
-      while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
-                                                                           object,
-                                                                           start_mib * MIB_SIZE,
-                                                                           end_bytes, is_logical) ||
-                                                  end_bytes > max_end_bytes))
-        {
-          /* TODO: if end_bytes is sufficiently big this could be *a lot* of loop iterations
-           *       and thus a potential DoS attack...
-           */
-          end_bytes -= 512L;
-        }
-      wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
-      wait_data->ignore_container = is_logical;
-
-#ifndef HAVE_LIBBLOCKDEV_PART
-      command_line = g_strdup_printf ("parted --align optimal --script %s "
-                                      "\"mkpart %s %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
-                                      device_name,
-                                      part_type,
-                                      start_mib,
-                                      end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
-#else
-      size = end_bytes - (start_mib * MIB_SIZE); /* recalculate size with the new end_bytes */
-      if (! bd_part_create_part (device_name, part_type, start_mib * MIB_SIZE,
-                                 size, BD_PART_ALIGN_OPTIMAL, &error))
-        {
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
-
-      goto partition_table_created;
-#endif /* HAVE_LIBBLOCKDEV_PART */
+        part_type = BD_PART_TYPE_REQ_NEXT;
     }
   else if (g_strcmp0 (table_type, "gpt") == 0)
     {
-      guint64 start_mib;
-      guint64 end_bytes;
-#ifndef HAVE_LIBBLOCKDEV_PART
-      gchar *escaped_name;
-      gchar *escaped_escaped_name;
-#else
-      BDPartSpec *part_spec = NULL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-      set_type = TRUE;
-      /* GPT is easy, no extended/logical crap */
-      if (have_partition_in_range (table, object, offset, offset + size, FALSE))
-        {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Requested range is already occupied by a partition");
-          goto out;
-        }
-
-      /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
-       * Also round up size to nearest multiple of 512
-       */
-      start_mib = offset / MIB_SIZE + 1L;
-      end_bytes = start_mib * MIB_SIZE + ((size + 511L) & (~511L));
-
-      /* Now reduce size until we are not
-       *
-       *  - overlapping neighboring partitions; or
-       *  - exceeding the end of the disk (note: the 33 LBAs is the Secondary GPT)
-       */
-      while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
-                                                                           object,
-                                                                           start_mib * MIB_SIZE,
-                                                                           end_bytes, FALSE) ||
-                                                  (end_bytes > udisks_block_get_size (block) - 33*512)))
-        {
-          /* TODO: if end_bytes is sufficiently big this could be *a lot* of loop iterations
-           *       and thus a potential DoS attack...
-           */
-          end_bytes -= 512L;
-        }
-      wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
-#ifndef HAVE_LIBBLOCKDEV_PART
-      /* bah, parted(8) is broken with empty names (it sets the name to 'ext2' in that case)
-       * TODO: file bug
-       */
-      if (strlen (name) == 0)
-        {
-          name = " ";
-        }
-
-      escaped_name = udisks_daemon_util_escape (name);
-      escaped_escaped_name = udisks_daemon_util_escape (escaped_name);
-
-      command_line = g_strdup_printf ("parted --align optimal --script %s "
-                                      "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
-                                      device_name,
-                                      escaped_escaped_name,
-                                      start_mib,
-                                      end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
-
-      g_free (escaped_escaped_name);
-      g_free (escaped_name);
-#else
-      size = end_bytes - (start_mib * MIB_SIZE); /* recalculate size with the new end_bytes */
-      part_spec = bd_part_create_part (device_name, BD_PART_TYPE_REQ_NORMAL, start_mib * MIB_SIZE,
-                                       size, BD_PART_ALIGN_OPTIMAL, &error);
-      if (!part_spec)
-        {
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
-
-      /* set name if given */
-      if (strlen (name) > 0)
-        {
-          if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
-            {
-              g_dbus_method_invocation_take_error (invocation, error);
-              g_free (part_spec);
-              goto out;
-            }
-        }
-
-      g_free (part_spec);
-
-      goto partition_table_created;
-#endif /* HAVE_LIBBLOCKDEV_PART */
+      part_type = BD_PART_TYPE_REQ_NORMAL;
     }
   else
     {
@@ -640,32 +303,101 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "partition-create", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s",
-                                              command_line))
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-create",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  /* Users might want to specify logical partitions start and size using size of
+   * of the extended partition. If this happens we need to shift start (offset)
+   * of the logical partition.
+   * XXX: We really shouldn't allow creation of overlapping partitions and
+   *      and just automatically fix this. But udisks currently doesn't have
+   *      functions to get free regions on the disks so this is a somewhat valid
+   *      use case. But we should definitely provide some functionality to get
+   *      right "numbers" and stop doing this.
+  */
+  overlapping_part = bd_part_get_part_by_pos (device_name, offset, &error);
+  if (overlapping_part != NULL && ! (overlapping_part->type & BD_PART_TYPE_FREESPACE))
+    {
+      // extended partition or metadata of the extended partition
+      if (overlapping_part->type & BD_PART_TYPE_EXTENDED || overlapping_part->type & (BD_PART_TYPE_LOGICAL | BD_PART_TYPE_METADATA))
+        {
+          if (overlapping_part->start == offset)
+            {
+              // just add 1 byte, libblockdev will adjust it
+              offset += 1;
+              udisks_warning ("Requested start of the logical partition overlaps "
+                              "with extended partition metadata. Start of the "
+                              "partition moved to %"G_GUINT64_FORMAT".", offset);
+            }
+        }
+      else
+        {
+          // overlapping partition is not a free space nor an extended part -> error
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Requested start for the new partition %"G_GUINT64_FORMAT" "
+                                                 "overlaps with existing partition %s.",
+                                                  offset, overlapping_part->path);
+          goto out;
+        }
+    }
+
+  part_spec = bd_part_create_part (device_name, part_type, offset,
+                                   size, BD_PART_ALIGN_OPTIMAL, &error);
+  if (!part_spec)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating partition on %s: %s",
                                              udisks_block_get_device (block),
-                                             error_message);
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
 
-#ifdef HAVE_LIBBLOCKDEV_PART
-partition_table_created:
-#endif /* HAVE_LIBBLOCKDEV_PART */
-  /* this is sometimes needed because parted(8) does not generate the uevent itself */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  /* set name if given */
+  if (g_strcmp0 (table_type, "gpt") == 0 && strlen (name) > 0)
+    {
+      if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
+        {
+          g_prefix_error (&error, "Error setting name for newly created partition: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
+    }
+
+  /* set type if given and if not extended partition */
+  if (part_spec->type != BD_PART_TYPE_EXTENDED && strlen (type) > 0)
+    {
+      gboolean ret = FALSE;
+
+      if (g_strcmp0 (table_type, "gpt") == 0)
+          ret = bd_part_set_part_type (device_name, part_spec->path, type, &error);
+      else if (g_strcmp0 (table_type, "dos") == 0)
+          ret = bd_part_set_part_id (device_name, part_spec->path, type, &error);
+
+      if (!ret)
+        {
+          g_prefix_error (&error, "Error setting type for newly created partition: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
+    }
+
+  wait_data->ignore_container = (part_spec->type == BD_PART_TYPE_LOGICAL);
+  wait_data->pos_to_wait_for = (part_spec->start + part_spec->size) / 2L;
 
   /* sit and wait for the partition to show up */
   g_warn_if_fail (wait_data->pos_to_wait_for > 0);
@@ -681,6 +413,7 @@ partition_table_created:
     {
       g_prefix_error (&error, "Error waiting for partition to appear: ");
       g_dbus_method_invocation_take_error (invocation, error);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
   partition_block = udisks_object_get_block (partition_object);
@@ -689,77 +422,43 @@ partition_table_created:
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Partition object is not a block device");
       g_clear_object (&partition_object);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
       goto out;
-    }
-  escaped_partition_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_block));
-
-  /* set partition type */
-  if (strlen (type) == 0)
-      set_type = FALSE;
-
-  if (set_type)
-    {
-      partition = udisks_object_get_partition (partition_object);
-      if (!partition)
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error getting newly created partition");
-          goto out;
-        }
-
-      if (! udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
-                                                  type,
-                                                  caller_uid,
-                                                  NULL,
-                                                  &error))
-        {
-          g_prefix_error (&error, "Error setting type for newly created partition: ");
-          g_dbus_method_invocation_take_error (invocation, error);
-          g_clear_object (&partition);
-          goto out;
-        }
-
-      g_clear_object (&partition);
     }
 
   /* wipe the newly created partition if wanted */
-  if (do_wipe)
+  if (part_spec->type != BD_PART_TYPE_EXTENDED)
     {
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  partition_object,
-                                                  "partition-create", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "wipefs -a %s",
-                                                  escaped_partition_device))
+      if (!bd_fs_wipe (part_spec->path, TRUE, &error))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error wiping newly created partition %s: %s",
-                                                 udisks_block_get_device (partition_block),
-                                                 error_message);
-          g_clear_object (&partition_object);
-          goto out;
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+            g_clear_error (&error);
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error wiping newly created partition %s: %s",
+                                                     udisks_block_get_device (partition_block),
+                                                     error->message);
+              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+              g_clear_object (&partition_object);
+              goto out;
+            }
         }
     }
 
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_object));
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
-  g_free (escaped_partition_device);
   g_free (wait_data);
+  g_free (part_spec);
+  g_free (overlapping_part);
+  g_clear_error (&error);
   g_clear_object (&partition_block);
-  g_free (command_line);
   g_free (device_name);
-  g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);
   return partition_object;

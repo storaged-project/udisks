@@ -152,6 +152,8 @@ udisks_linux_manager_btrfs_class_init (UDisksLinuxManagerBTRFSClass *klass)
 static void
 udisks_linux_manager_btrfs_init (UDisksLinuxManagerBTRFS *self)
 {
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**
@@ -189,7 +191,7 @@ udisks_linux_manager_btrfs_get_daemon (UDisksLinuxManagerBTRFS *manager)
 static gboolean
 handle_create_volume (UDisksManagerBTRFS    *manager,
                       GDBusMethodInvocation *invocation,
-                      const gchar *const    *arg_devices,
+                      const gchar *const    *arg_blocks,
                       const gchar           *arg_label,
                       const gchar           *arg_data_level,
                       const gchar           *arg_md_level,
@@ -197,6 +199,8 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
 {
   UDisksLinuxManagerBTRFS *l_manager = UDISKS_LINUX_MANAGER_BTRFS (manager);
   GError *error = NULL;
+  const gchar **devices = NULL;
+  guint num_devices = 0;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_btrfs_get_daemon (l_manager),
@@ -206,7 +210,44 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
                                      N_("Authentication is required to create a new volume"),
                                      invocation);
 
-  if (! bd_btrfs_create_volume ((const gchar const **)arg_devices, arg_label, arg_data_level, arg_md_level, NULL, &error))
+  num_devices = g_strv_length ((gchar**) arg_blocks);
+  devices = alloca (sizeof (const gchar*) * (num_devices + 1));
+  devices[num_devices] = NULL;
+
+  for (guint n = 0; arg_blocks != NULL && arg_blocks[n] != NULL; n++)
+    {
+      UDisksObject *object = NULL;
+      UDisksBlock *block = NULL;
+
+      object = udisks_daemon_find_object (l_manager->daemon, arg_blocks[n]);
+      if (object == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Invalid object path %s",
+                                                 arg_blocks[n]);
+          goto out;
+        }
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Object path %s is not a block device",
+                                                 arg_blocks[n]);
+          g_object_unref (object);
+          goto out;
+        }
+
+      devices[n] = udisks_block_dup_device (block);
+      g_object_unref (object);
+      g_object_unref (block);
+    }
+
+  if (!bd_btrfs_create_volume (devices, arg_label, arg_data_level, arg_md_level, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

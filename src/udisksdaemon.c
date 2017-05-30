@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <blockdev/blockdev.h>
 
 #include "udiskslogging.h"
 #include "udisksdaemon.h"
@@ -244,8 +245,31 @@ udisks_daemon_constructed (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
   GError *error;
+  gboolean ret = FALSE;
 
+  /* NULL means no specific so_name (implementation) */
+  BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
+  BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
+  BDPluginSpec loop_plugin = {BD_PLUGIN_LOOP, NULL};
+  BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
+  BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
+  BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
+
+  /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
+     Additional plugins are required by various modules, but they make sure
+     plugins are loaded themselves. */
+  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
+                             &fs_plugin, &crypto_plugin, NULL};
   error = NULL;
+
+  ret = bd_ensure_init (plugins, NULL, &error);
+  if (!ret)
+    {
+      udisks_error ("Error initializing libblockdev library: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+    }
+
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {
@@ -604,42 +628,16 @@ static guint job_id = 0;
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/**
- * udisks_daemon_launch_simple_job:
- * @daemon: A #UDisksDaemon.
- * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
- * @job_operation: The operation for the job.
- * @job_started_by_uid: The user who started the job.
- * @cancellable: A #GCancellable or %NULL.
- *
- * Launches a new simple job.
- *
- * The job is started immediately - When the job is done, call
- * udisks_simple_job_complete() on the returned object. Long-running
- * jobs should periodically check @cancellable to see if they have
- * been cancelled.
- *
- * The returned object will be exported on the bus until the
- * #UDisksJob::completed signal is emitted on the object. It is not
- * valid to use the returned object after this signal fires.
- *
- * Returns: A #UDisksSimpleJob object. Do not free, the object
- * belongs to @manager.
- */
-UDisksBaseJob *
-udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
-                                 UDisksObject    *object,
-                                 const gchar     *job_operation,
-                                 uid_t            job_started_by_uid,
-                                 GCancellable    *cancellable)
+static UDisksBaseJob *
+common_job (UDisksDaemon    *daemon,
+            UDisksObject    *object,
+            const gchar     *job_operation,
+            uid_t            job_started_by_uid,
+            gpointer         job)
 {
-  UDisksSimpleJob *job;
-  UDisksObjectSkeleton *job_object;
   gchar *job_object_path;
+  UDisksObjectSkeleton *job_object;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-
-  job = udisks_simple_job_new (daemon, cancellable);
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
@@ -661,6 +659,38 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   return UDISKS_BASE_JOB (job);
 }
 
+/**
+ * udisks_daemon_launch_simple_job:
+ * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
+ * @cancellable: A #GCancellable or %NULL.
+ *
+ * Launches a new simple job.
+ *
+ * The returned object will be exported on the bus until the
+ * #UDisksJob::completed signal is emitted on the object. It is not
+ * valid to use the returned object after this signal fires.
+ *
+ * Returns: A #UDisksSimpleJob object. Do not free, the object
+ * belongs to @manager.
+ */
+UDisksBaseJob *
+udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
+                                 UDisksObject    *object,
+                                 const gchar     *job_operation,
+                                 uid_t            job_started_by_uid,
+                                 GCancellable    *cancellable)
+{
+  UDisksSimpleJob *job;
+
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+
+  job = udisks_simple_job_new (daemon, cancellable);
+  return common_job (daemon, object, job_operation, job_started_by_uid, job);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
@@ -676,9 +706,12 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  *
  * Launches a new job by running @job_func in a new dedicated thread.
  *
- * The job is started immediately - connect to the
- * #UDisksThreadedJob::threaded-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_threaded_job_start() to
+ * start the job after #UDisksThreadedJob::threaded-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the @job_func finishing
+ * before the signals are connected in which case the signal handlers are never
+ * triggered.
  *
  * Long-running jobs should periodically check @cancellable to see if
  * they have been cancelled.
@@ -701,8 +734,6 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
                                     GCancellable          *cancellable)
 {
   UDisksThreadedJob *job;
-  UDisksObjectSkeleton *job_object;
-  gchar *job_object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (job_func != NULL, NULL);
@@ -712,25 +743,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
                                  user_data_free_func,
                                  daemon,
                                  cancellable);
-  if (object != NULL)
-    udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
-
-  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", g_atomic_int_add (&job_id, 1));
-  job_object = udisks_object_skeleton_new (job_object_path);
-  udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
-  g_free (job_object_path);
-
-  udisks_job_set_cancelable (UDISKS_JOB (job), TRUE);
-  udisks_job_set_operation (UDISKS_JOB (job), job_operation);
-  udisks_job_set_started_by_uid (UDISKS_JOB (job), job_started_by_uid);
-
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (job_object));
-  g_signal_connect_after (job,
-                          "completed",
-                          G_CALLBACK (on_job_completed),
-                          g_object_ref (daemon));
-
-  return UDISKS_BASE_JOB (job);
+  return common_job (daemon, object, job_operation, job_started_by_uid, job);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -750,9 +763,12 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
  *
  * Launches a new job for @command_line_format.
  *
- * The job is started immediately - connect to the
- * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_spawned_job_start() to start
+ * the job after #UDisksSpawnedJob::spawned-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the spawned process
+ * terminating before the signals are connected in which case the signal
+ * handlers are never triggered.
  *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object. It is not
@@ -815,9 +831,12 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
  *
  * Launches a new job for @command_line_format.
  *
- * The job is started immediately - connect to the
- * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
- * signals to get notified when the job is done.
+ * The job is not started automatically! Use udisks_spawned_job_start() to start
+ * the job after #UDisksSpawnedJob::spawned-job-completed or
+ * #UDisksJob::completed signals are connected (to get notified when the job is
+ * done). This is to prevent a race condition with the spawned process
+ * terminating before the signals are connected in which case the signal
+ * handlers are never triggered.
  *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object. It is not
@@ -846,8 +865,6 @@ udisks_daemon_launch_spawned_job_gstring (
   va_list var_args;
   gchar *command_line;
   UDisksSpawnedJob *job;
-  UDisksObjectSkeleton *job_object;
-  gchar *job_object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
@@ -859,25 +876,7 @@ udisks_daemon_launch_spawned_job_gstring (
   job = udisks_spawned_job_new (command_line, input_string, run_as_uid, run_as_euid, daemon, cancellable);
   g_free (command_line);
 
-  if (object != NULL)
-    udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
-
-  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%u", g_atomic_int_add (&job_id, 1));
-  job_object = udisks_object_skeleton_new (job_object_path);
-  udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
-  g_free (job_object_path);
-
-  udisks_job_set_cancelable (UDISKS_JOB (job), TRUE);
-  udisks_job_set_operation (UDISKS_JOB (job), job_operation);
-  udisks_job_set_started_by_uid (UDISKS_JOB (job), job_started_by_uid);
-
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (job_object));
-  g_signal_connect_after (job,
-                          "completed",
-                          G_CALLBACK (on_job_completed),
-                          g_object_ref (daemon));
-
-  return UDISKS_BASE_JOB (job);
+  return common_job (daemon, object, job_operation, job_started_by_uid, job);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1078,6 +1077,110 @@ udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  GMainContext *context;
+  GMainLoop    *loop;
+  gboolean      result;
+  GError       *error;
+} ThreadedJobSyncData;
+
+static gboolean
+threaded_job_sync_on_threaded_job_completed (UDisksThreadedJob *job,
+                                             gboolean           result,
+                                             GError            *error,
+                                             gpointer           user_data)
+{
+  ThreadedJobSyncData *data = user_data;
+  data->result = result;
+  if (error)
+    data->error = g_error_copy (error);
+  return FALSE; /* let other handlers run */
+}
+
+static void
+threaded_job_sync_on_completed (UDisksJob    *job,
+                                gboolean      success,
+                                const gchar  *message,
+                                gpointer      user_data)
+{
+  ThreadedJobSyncData *data = user_data;
+  g_main_loop_quit (data->loop);
+}
+
+/**
+ * udisks_daemon_launch_threaded_job_sync:
+ * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
+ * @job_func: The function to run in another thread.
+ * @user_data: User data to pass to @job_func.
+ * @user_data_free_func: Function to free @user_data with or %NULL.
+ * @cancellable: A #GCancellable or %NULL.
+ * @error: The #GError set by the #UDisksThreadedJobFunc.
+ *
+ * Like udisks_daemon_launch_threaded_job() but blocks the calling
+ * thread until the job completes.
+ *
+ * Returns: The @success parameter of the #UDisksJob::completed signal.
+ */
+gboolean
+udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
+                                        UDisksObject          *object,
+                                        const gchar           *job_operation,
+                                        uid_t                  job_started_by_uid,
+                                        UDisksThreadedJobFunc  job_func,
+                                        gpointer               user_data,
+                                        GDestroyNotify         user_data_free_func,
+                                        GCancellable          *cancellable,
+                                        GError               **error)
+{
+  UDisksBaseJob *job;
+  ThreadedJobSyncData data;
+
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  data.context = g_main_context_new ();
+  g_main_context_push_thread_default (data.context);
+  data.loop = g_main_loop_new (data.context, FALSE);
+  data.error = NULL;
+  data.result = FALSE;
+
+  job = udisks_daemon_launch_threaded_job (daemon,
+                                           object,
+                                           job_operation,
+                                           job_started_by_uid,
+                                           job_func,
+                                           user_data,
+                                           user_data_free_func,
+                                           cancellable);
+  g_signal_connect (job,
+                    "threaded-job-completed",
+                    G_CALLBACK (threaded_job_sync_on_threaded_job_completed),
+                    &data);
+  g_signal_connect_after (job,
+                          "completed",
+                          G_CALLBACK (threaded_job_sync_on_completed),
+                          &data);
+
+  udisks_threaded_job_start (UDISKS_THREADED_JOB (job));
+  g_main_loop_run (data.loop);
+
+  g_main_loop_unref (data.loop);
+  g_main_context_pop_thread_default (data.context);
+  g_main_context_unref (data.context);
+
+  if (data.error)
+    g_propagate_error (error, data.error);
+
+  /* note: the job object is freed in the ::completed handler */
+  return data.result;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_daemon_wait_for_object_sync:
  * @daemon: A #UDisksDaemon.
@@ -1120,15 +1223,14 @@ wait_on_recheck (gpointer user_data)
   return FALSE; /* remove the source */
 }
 
-UDisksObject *
-udisks_daemon_wait_for_object_sync (UDisksDaemon          *daemon,
-                                    UDisksDaemonWaitFunc   wait_func,
-                                    gpointer               user_data,
-                                    GDestroyNotify         user_data_free_func,
-                                    guint                  timeout_seconds,
-                                    GError               **error)
+static gpointer wait_for_objects (UDisksDaemon                *daemon,
+                                  UDisksDaemonWaitFuncGeneric  wait_func,
+                                  gpointer                     user_data,
+                                  GDestroyNotify               user_data_free_func,
+                                  guint                        timeout_seconds,
+                                  GError                     **error)
 {
-  UDisksObject *ret;
+  gpointer ret;
   WaitData data;
 
   /* TODO: support GCancellable */
@@ -1200,6 +1302,38 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon          *daemon,
     g_main_context_unref (data.context);
 
   return ret;
+}
+
+UDisksObject *
+udisks_daemon_wait_for_object_sync (UDisksDaemon               *daemon,
+                                    UDisksDaemonWaitFuncObject  wait_func,
+                                    gpointer                    user_data,
+                                    GDestroyNotify              user_data_free_func,
+                                    guint                       timeout_seconds,
+                                    GError                      **error)
+{
+  return (UDisksObject *) wait_for_objects (daemon,
+                                            (UDisksDaemonWaitFuncGeneric) wait_func,
+                                            user_data,
+                                            user_data_free_func,
+                                            timeout_seconds,
+                                            error);
+}
+
+UDisksObject **
+udisks_daemon_wait_for_objects_sync (UDisksDaemon                 *daemon,
+                                     UDisksDaemonWaitFuncObjects   wait_func,
+                                     gpointer                      user_data,
+                                     GDestroyNotify                user_data_free_func,
+                                     guint                         timeout_seconds,
+                                     GError                      **error)
+{
+  return (UDisksObject **) wait_for_objects (daemon,
+                                             (UDisksDaemonWaitFuncGeneric) wait_func,
+                                             user_data,
+                                             user_data_free_func,
+                                             timeout_seconds,
+                                             error);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

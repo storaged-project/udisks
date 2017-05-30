@@ -4,9 +4,10 @@
 %global systemd_version                 208
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
+%global libblockdev_version             2.1
 %global with_gtk_doc                    1
 %global with_libblockdev_part           @have_libblockdev_part_spec@
-%global libblockdev_version             2.1
+%global libblockdev_version             2.4
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
@@ -38,10 +39,21 @@ BuildRequires: chrpath
 BuildRequires: gtk-doc
 BuildRequires: intltool
 BuildRequires: redhat-rpm-config
-BuildRequires: libblockdev-part-devel  >= %{libblockdev_version}
-BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel   >= %{libblockdev_version}
-BuildRequires: libblockdev-swap-devel  >= %{libblockdev_version}
+BuildRequires: libblockdev-devel        >= %{libblockdev_version}
+BuildRequires: libblockdev-part-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-loop-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
+BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
+BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
+
+Requires: libblockdev        >= %{libblockdev_version}
+Requires: libblockdev-part   >= %{libblockdev_version}
+Requires: libblockdev-loop   >= %{libblockdev_version}
+Requires: libblockdev-swap   >= %{libblockdev_version}
+Requires: libblockdev-mdraid >= %{libblockdev_version}
+Requires: libblockdev-fs     >= %{libblockdev_version}
+Requires: libblockdev-crypto >= %{libblockdev_version}
 
 # Needed for the systemd-related macros used in this file
 %{?systemd_requires}
@@ -62,12 +74,8 @@ Requires: xfsprogs
 # For mkfs.vfat
 Requires: dosfstools
 Requires: gdisk
-# For LUKS devices
-Requires: cryptsetup-luks
 # For ejecting removable disks
 Requires: eject
-# For MD-RAID
-Requires: mdadm
 
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
@@ -118,7 +126,9 @@ Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: lvm2
+Requires: libblockdev-lvm >= %{libblockdev_version}
 BuildRequires: lvm2-devel
+BuildRequires: libblockdev-lvm-devel >= %{libblockdev_version}
 Provides:  storaged-lvm2 = %{version}-%{release}
 Obsoletes: storaged-lvm2
 
@@ -143,8 +153,8 @@ Summary: Module for Bcache
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
-Requires: libblockdev-kbd
-BuildRequires: libblockdev-kbd-devel
+Requires: libblockdev-kbd >= %{libblockdev_version}
+BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
 Provides:  storaged-bcache = %{version}-%{release}
 Obsoletes: storaged-bcache
 
@@ -156,8 +166,8 @@ Summary: Module for BTRFS
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
-Requires: libblockdev-btrfs
-BuildRequires: libblockdev-btrfs-devel
+Requires: libblockdev-btrfs >= %{libblockdev_version}
+BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
 Provides:  storaged-btrfs = %{version}-%{release}
 Obsoletes: storaged-btrfs
 
@@ -183,9 +193,9 @@ Summary: Module for ZRAM
 Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
-Requires: libblockdev-kbd
-Requires: libblockdev-swap
-BuildRequires: libblockdev-kbd-devel
+Requires: libblockdev-kbd >= %{libblockdev_version}
+Requires: libblockdev-swap >= %{libblockdev_version}
+BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-swap-devel
 Provides:  storaged-zram = %{version}-%{release}
 Obsoletes: storaged-zram
@@ -243,6 +253,7 @@ udevadm trigger
 
 %postun -n lib%{name} -p /sbin/ldconfig
 
+%if %{is_fedora}
 %post -n %{name}-zram
 %systemd_post zram-setup@.service
 
@@ -251,6 +262,7 @@ udevadm trigger
 
 %postun -n %{name}-zram
 %systemd_postun zram-setup@.service
+%endif
 
 %files -f udisks2.lang
 %doc README.md AUTHORS NEWS HACKING
@@ -268,7 +280,9 @@ udevadm trigger
 %{_udevrulesdir}/80-udisks2.rules
 %{_sbindir}/umount.udisks2
 
-%dir %{_prefix}/lib/udisks2
+
+%dir %{_libdir}/udisks2
+%dir %{_libdir}/udisks2/modules
 %{_libexecdir}/udisks2/udisksd
 
 %{_bindir}/udisksctl
@@ -291,19 +305,10 @@ udevadm trigger
 %{_libdir}/girepository-1.0/UDisks-2.0.typelib
 
 %files -n %{name}-lvm2
-%dir %{_prefix}/lib/udisks2
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/lvm-nolocking
-%dir %{_libdir}/udisks2/modules
-%{_prefix}/lib/udisks2/udisks-lvm
-%{_libdir}/udisks2/lvm-nolocking/lvm.conf
 %{_libdir}/udisks2/modules/libudisks2_lvm2.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lvm2.policy
-%{_mandir}/man8/udisks-lvm.8*
 
 %files -n %{name}-iscsi
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_iscsi.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.iscsi.policy
 
@@ -321,20 +326,14 @@ udevadm trigger
 
 %if %{is_fedora}
 %files -n %{name}-bcache
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_bcache.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.bcache.policy
 
 %files -n %{name}-btrfs
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %{_libdir}/udisks2/modules/libudisks2_btrfs.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.btrfs.policy
 
 %files -n %{name}-lsm
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_lsm.so
 %{_mandir}/man5/udisks2_lsm.conf.*
@@ -342,8 +341,6 @@ udevadm trigger
 %attr(0600,root,root) %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
 
 %files -n %{name}-zram
-%dir %{_libdir}/udisks2
-%dir %{_libdir}/udisks2/modules
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy

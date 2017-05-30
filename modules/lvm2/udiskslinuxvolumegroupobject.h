@@ -26,6 +26,7 @@
 #include "udisks-lvm2-generated.h"
 
 #include <gudev/gudev.h>
+#include <blockdev/lvm.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +39,9 @@ UDisksLinuxVolumeGroupObject   *udisks_linux_volume_group_object_new           (
                                                                                 const gchar                  *name);
 const gchar                    *udisks_linux_volume_group_object_get_name      (UDisksLinuxVolumeGroupObject *object);
 UDisksDaemon                   *udisks_linux_volume_group_object_get_daemon    (UDisksLinuxVolumeGroupObject *object);
-void                            udisks_linux_volume_group_object_update        (UDisksLinuxVolumeGroupObject *object);
+void                            udisks_linux_volume_group_object_update        (UDisksLinuxVolumeGroupObject *object,
+                                                                                BDLVMVGdata *vginfo,
+                                                                                GSList *pvs);
 
 void                            udisks_linux_volume_group_object_poll          (UDisksLinuxVolumeGroupObject *object);
 

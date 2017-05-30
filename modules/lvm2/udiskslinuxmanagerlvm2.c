@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <alloca.h>
 
 #include <glib/gi18n-lib.h>
 
@@ -39,6 +40,7 @@
 #include "udiskslvm2daemonutil.h"
 #include "udiskslvm2util.h"
 #include "udisks-lvm2-generated.h"
+#include "jobhelpers.h"
 
 /**
  * SECTION:udiskslinuxmanagerlvm2
@@ -213,11 +215,9 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   GList *blocks = NULL;
   GList *l;
   guint n;
-  gchar *escaped_name = NULL;
-  GString *str = NULL;
-  gint status;
-  gchar *error_message = NULL;
   UDisksObject *group_object = NULL;
+  const gchar **pvs = NULL;
+  VGJobData data;
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
@@ -279,6 +279,9 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     }
   blocks = g_list_reverse (blocks);
 
+  /* XXX: is it okay to allocate memory on stack here? */
+  pvs = (const gchar**) alloca (sizeof(gchar*) * n);
+
   /* wipe existing devices */
   for (l = blocks; l != NULL; l = l->next)
     {
@@ -289,37 +292,52 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
         }
     }
 
-  /* Create the volume group... */
-  escaped_name = udisks_daemon_util_escape_and_quote (arg_name);
-  str = g_string_new ("vgcreate");
-  g_string_append_printf (str, " %s", escaped_name);
-  for (l = blocks; l != NULL; l = l->next)
+  /* Create the PVs... */
+  for (n = 0, l = blocks; l != NULL; l = l->next, n++)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-      gchar *escaped_device;
-      escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
-      g_string_append_printf (str, " %s", escaped_device);
-      g_free (escaped_device);
+      PVJobData pv_data;
+      pvs[n] = udisks_block_get_device (block);
+      pv_data.path = pvs[n];
+      if (!udisks_daemon_launch_threaded_job_sync (manager->daemon,
+                                                   NULL,
+                                                   "lvm-pv-create",
+                                                   caller_uid,
+                                                   pvcreate_job_func,
+                                                   &pv_data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* GCancellable */
+                                                   &error))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error creating a physical volume: %s",
+                                                 error->message);
+          goto out;
+        }
     }
+  pvs[n] = NULL;
 
-  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
-                                              NULL,
-                                              "lvm-vg-create", caller_uid,
-                                              NULL, /* cancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              &status,
-                                              &error_message,
-                                              NULL, /* input_string */
-                                              "%s",
-                                              str->str))
+  /* Create the volume group... */
+  data.vg_name = arg_name;
+  data.pvs = pvs;
+
+  if (!udisks_daemon_launch_threaded_job_sync (manager->daemon,
+                                               NULL,
+                                               "lvm-vg-create",
+                                               caller_uid,
+                                               vgcreate_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume group: %s",
-                                             error_message);
-      g_free (error_message);
+                                             error->message);
       goto out;
     }
 
@@ -352,12 +370,8 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   udisks_manager_lvm2_complete_volume_group_create (_object,
                                                     invocation,
                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
-
  out:
-  if (str != NULL)
-    g_string_free (str, TRUE);
   g_list_free_full (blocks, g_object_unref);
-  g_free (escaped_name);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import udiskstestcase
 
 
-Device = namedtuple('Device', ['obj', 'path', 'name', 'size'])
+Device = namedtuple('Device', ['obj', 'obj_path', 'path', 'name', 'size'])
 
 
 class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
@@ -50,7 +50,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
             _ret, out = self.run_command('lsblk -d -b -no SIZE %s' % dev_path)  # get size of the device
 
-            dev = Device(dev_obj, dev_path, dev_name, int(out))
+            dev = Device(dev_obj, dbus.ObjectPath(dev_obj.object_path), dev_path, dev_name, int(out))
             devices.append(dev)
 
         return devices
@@ -60,7 +60,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev.path],
+        manager.CreateVolume([dev.obj_path],
                              'test_single', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -105,13 +105,13 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         # invalid raid level
         msg = '[uU]nknown profile raidN'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
-            manager.CreateVolume([dev.path for dev in devs],
+            manager.CreateVolume([dev.obj_path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',
                                  self.no_options,
                                  dbus_interface=self.iface_prefix + '.Manager.BTRFS')
 
 
-        manager.CreateVolume([dev.path for dev in devs],
+        manager.CreateVolume([dev.obj_path for dev in devs],
                              'test_raid1', 'raid1', 'raid1',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -148,7 +148,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev.path],
+        manager.CreateVolume([dev.obj_path],
                              'test_subvols', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -194,7 +194,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev2.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev1.path],
+        manager.CreateVolume([dev1.obj_path],
                              'test_add_remove', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -208,12 +208,12 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         with self._temp_mount(dev1.path):
             msg = 'unable to remove the only writeable device'
             with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
-                dev1.obj.RemoveDevice(dev1.path, self.no_options,
+                dev1.obj.RemoveDevice(dev1.obj_path, self.no_options,
                                       dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 
         # add second device to the volume
         with self._temp_mount(dev1.path):
-            dev1.obj.AddDevice(dev2.path, self.no_options,
+            dev1.obj.AddDevice(dev2.obj_path, self.no_options,
                                dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
         with open("/sys/block/%s/uevent" % dev2.name, "w") as f:
             f.write("change\n")
@@ -233,7 +233,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         # remove the second device
         with self._temp_mount(dev1.path):
-            dev1.obj.RemoveDevice(dev2.path, self.no_options,
+            dev1.obj.RemoveDevice(dev2.obj_path, self.no_options,
                                   dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
             fstype = self.get_property(dev2.obj, '.Block', 'IdType')
             fstype.assertFalse()
@@ -257,7 +257,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev.path],
+        manager.CreateVolume([dev.obj_path],
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -289,7 +289,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev.path],
+        manager.CreateVolume([dev.obj_path],
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
@@ -312,7 +312,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, dev.obj)
 
         manager = self.get_object('/Manager')
-        manager.CreateVolume([dev.path],
+        manager.CreateVolume([dev.obj_path],
                              'test_label', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')

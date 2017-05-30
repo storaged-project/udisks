@@ -57,15 +57,26 @@ gboolean                  udisks_daemon_get_uninstalled       (UDisksDaemon    *
  *
  * Returns: (transfer full): %NULL if the object to wait for was not found, otherwise a full reference to a #UDisksObject.
  */
-typedef UDisksObject *(*UDisksDaemonWaitFunc) (UDisksDaemon *daemon,
-                                               gpointer      user_data);
+typedef gpointer (*UDisksDaemonWaitFuncGeneric) (UDisksDaemon *daemon,
+                                                 gpointer      user_data);
+typedef UDisksObject *(*UDisksDaemonWaitFuncObject) (UDisksDaemon *daemon,
+                                                     gpointer      user_data);
+typedef UDisksObject **(*UDisksDaemonWaitFuncObjects) (UDisksDaemon *daemon,
+                                                       gpointer      user_data);
 
-UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon         *daemon,
-                                                               UDisksDaemonWaitFunc  wait_func,
-                                                               gpointer              user_data,
-                                                               GDestroyNotify        user_data_free_func,
-                                                               guint                 timeout_seconds,
-                                                               GError              **error);
+UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon              *daemon,
+                                                               UDisksDaemonWaitFuncObject wait_func,
+                                                               gpointer                   user_data,
+                                                               GDestroyNotify             user_data_free_func,
+                                                               guint                      timeout_seconds,
+                                                               GError                   **error);
+
+UDisksObject             **udisks_daemon_wait_for_objects_sync  (UDisksDaemon                *daemon,
+                                                                 UDisksDaemonWaitFuncObjects  wait_func,
+                                                                 gpointer                     user_data,
+                                                                 GDestroyNotify               user_data_free_func,
+                                                                 guint                        timeout_seconds,
+                                                                 GError                       **error);
 
 GList                    *udisks_daemon_get_objects           (UDisksDaemon         *daemon);
 
@@ -138,6 +149,16 @@ UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon     
                                                                gpointer               user_data,
                                                                GDestroyNotify         user_data_free_func,
                                                                GCancellable          *cancellable);
+
+gboolean                 udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
+                                                                 UDisksObject          *object,
+                                                                 const gchar           *job_operation,
+                                                                 uid_t                  job_started_by_uid,
+                                                                 UDisksThreadedJobFunc  job_func,
+                                                                 gpointer               user_data,
+                                                                 GDestroyNotify         user_data_free_func,
+                                                                 GCancellable          *cancellable,
+                                                                 GError               **error);
 
 /* Return value and *uuid_ret must be freed with g_free.  If return
    value is NULL, *uuid has not been changed.

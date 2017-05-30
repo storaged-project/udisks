@@ -34,6 +34,8 @@
 #include <sys/acl.h>
 #endif
 #include <errno.h>
+#include <blockdev/fs.h>
+#include <blockdev/utils.h>
 
 #include <glib/gstdio.h>
 
@@ -47,6 +49,7 @@
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
 #include "udiskslinuxdevice.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -1166,7 +1169,7 @@ handle_mount (UDisksFilesystem      *filesystem,
               GDBusMethodInvocation *invocation,
               GVariant              *options)
 {
-  UDisksObject *object;
+  UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -1174,37 +1177,23 @@ handle_mount (UDisksFilesystem      *filesystem,
   gid_t caller_gid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
-  gchar *fs_type_to_use;
-  gchar *mount_options_to_use;
-  gchar *mount_point_to_use;
-  gchar *fstab_mount_options;
-  gchar *escaped_fs_type_to_use;
-  gchar *escaped_mount_options_to_use;
-  gchar *escaped_mount_point_to_use;
-  gchar *error_message;
-  gchar *caller_user_name;
-  GError *error;
-  const gchar *action_id;
-  const gchar *message;
-  gboolean system_managed;
-  gchar *escaped_device = NULL;
+  gchar *fs_type_to_use = NULL;
+  gchar *mount_options_to_use = NULL;
+  gchar *mount_point_to_use = NULL;
+  gchar *fstab_mount_options = NULL;
+  gchar *caller_user_name = NULL;
+  GError *error = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  gboolean system_managed = FALSE;
+  gboolean success = FALSE;
+  gchar *device = NULL;
+  UDisksBaseJob *job = NULL;
 
-  object = NULL;
-  error_message = NULL;
-  fs_type_to_use = NULL;
-  mount_options_to_use = NULL;
-  mount_point_to_use = NULL;
-  fstab_mount_options = NULL;
-  escaped_fs_type_to_use = NULL;
-  escaped_mount_options_to_use = NULL;
-  escaped_mount_point_to_use = NULL;
-  caller_user_name = NULL;
-  system_managed = FALSE;
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
@@ -1215,6 +1204,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
+  device = udisks_block_dup_device (block);
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
   if (is_system_managed (block, &mount_point_to_use, &fstab_mount_options))
@@ -1239,7 +1229,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_ALREADY_MOUNTED,
                                              "Device %s is already mounted at %s.\n",
-                                             udisks_block_get_device (block),
+                                             device,
                                              str->str);
       g_string_free (str, TRUE);
       goto out;
@@ -1261,7 +1251,6 @@ handle_mount (UDisksFilesystem      *filesystem,
 
   if (system_managed)
     {
-      gint status;
       gboolean mount_fstab_as_root = FALSE;
 
       if (!has_option (fstab_mount_options, "x-udisks-auth"))
@@ -1305,28 +1294,44 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error creating directory `%s' to be used for mounting %s: %m",
                                                      mount_point_to_use,
-                                                     udisks_block_get_device (block));
+                                                     device);
               goto out;
             }
         }
 
-      escaped_mount_point_to_use   = udisks_daemon_util_escape_and_quote (mount_point_to_use);
     mount_fstab_again:
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object,
-                                                  "filesystem-mount", caller_uid,
-                                                  NULL,  /* GCancellable */
-                                                  mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
-                                                  mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "mount %s",
-                                                  escaped_mount_point_to_use))
+      job = udisks_daemon_launch_simple_job (daemon,
+                                             UDISKS_OBJECT (object),
+                                             "filesystem-mount",
+                                             mount_fstab_as_root ? 0 : caller_uid,
+                                             NULL /* cancellable */);
+
+      if (!mount_fstab_as_root)
         {
-          /* mount(8) exits with status 1 on "incorrect invocation or permissions" - if this is
-           * is so, try as as root */
-          if (!mount_fstab_as_root && WIFEXITED (status) && WEXITSTATUS (status) == 1)
+          BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
+          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
+          const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
+
+          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, extra_args, &error);
+
+          g_free (uid_arg.opt);
+          g_free (uid_arg.val);
+          g_free (gid_arg.opt);
+          g_free (gid_arg.val);
+        }
+      else
+        {
+          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, NULL, &error);
+        }
+
+      if (!success)
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      else
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+      if (!success)
+        {
+          if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
             {
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
@@ -1353,12 +1358,12 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error mounting system-managed device %s: %s",
-                                                 udisks_block_get_device (block),
-                                                 error_message);
+                                                 device,
+                                                 error->message);
           goto out;
         }
       udisks_notice ("Mounted %s (system) at %s on behalf of uid %u",
-                     udisks_block_get_device (block),
+                     device,
                      mount_point_to_use,
                      caller_uid);
 
@@ -1392,7 +1397,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
-                                             udisks_block_get_device (block),
+                                             device,
                                              probed_fs_usage);
       goto out;
     }
@@ -1483,39 +1488,30 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  escaped_fs_type_to_use       = udisks_daemon_util_escape_and_quote (fs_type_to_use);
-  escaped_mount_options_to_use = udisks_daemon_util_escape_and_quote (mount_options_to_use);
-  escaped_mount_point_to_use   = udisks_daemon_util_escape_and_quote (mount_point_to_use);
-  escaped_device               = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-mount",
+                                         0,
+                                         NULL /* cancellable */);
 
-  /* run mount(8) */
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "filesystem-mount", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "mount -t %s -o %s %s %s",
-                                              escaped_fs_type_to_use,
-                                              escaped_mount_options_to_use,
-                                              escaped_device,
-                                              escaped_mount_point_to_use))
+  if (!bd_fs_mount (device, mount_point_to_use, fs_type_to_use, mount_options_to_use, NULL, &error))
     {
       /* ugh, something went wrong.. we need to clean up the created mount point */
       if (g_rmdir (mount_point_to_use) != 0)
         udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
+
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error mounting %s at %s: %s",
-                                             udisks_block_get_device (block),
+                                             device,
                                              mount_point_to_use,
-                                             error_message);
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
+  else
+    udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
   /* update the mounted-fs file */
   udisks_state_add_mounted_fs (state,
@@ -1525,23 +1521,19 @@ handle_mount (UDisksFilesystem      *filesystem,
                                FALSE); /* fstab_mounted */
 
   udisks_notice ("Mounted %s at %s on behalf of uid %u",
-                 udisks_block_get_device (block),
+                 device,
                  mount_point_to_use,
                  caller_uid);
 
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
  out:
-  g_free (escaped_device);
-  g_free (error_message);
-  g_free (escaped_fs_type_to_use);
-  g_free (escaped_mount_options_to_use);
-  g_free (escaped_mount_point_to_use);
   g_free (fs_type_to_use);
   g_free (mount_options_to_use);
   g_free (mount_point_to_use);
   g_free (fstab_mount_options);
   g_free (caller_user_name);
+  g_free (device);
   g_clear_object (&object);
 
   /* only allow a single call at a time */
@@ -1553,11 +1545,9 @@ handle_mount (UDisksFilesystem      *filesystem,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static guint
-get_error_code_for_umount (gint         exit_status,
-                           const gchar *error_message)
+get_error_code_for_umount (const gchar *error_message)
 {
-  if (strstr (error_message, "device is busy") != NULL ||
-      strstr (error_message, "target is busy") != NULL)
+  if (strstr (error_message, "busy") != NULL)
     return UDISKS_ERROR_DEVICE_BUSY;
   else
     return UDISKS_ERROR_FAILED;
@@ -1573,31 +1563,21 @@ handle_unmount (UDisksFilesystem      *filesystem,
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksState *state;
-  gchar *mount_point;
-  gchar *fstab_mount_options;
-  gchar *escaped_mount_point;
-  GError *error;
+  gchar *mount_point = NULL;
+  gchar *fstab_mount_options = NULL;
+  GError *error = NULL;
   uid_t mounted_by_uid;
   uid_t caller_uid;
-  gint status = 0;
-  gchar *error_message;
   const gchar *const *mount_points;
-  gboolean opt_force;
-  gboolean rc;
-  gboolean system_managed;
+  gboolean opt_force = FALSE;
+  gboolean system_managed = FALSE;
   gboolean fstab_mounted;
-  gchar *escaped_device = NULL;
-
-  mount_point = NULL;
-  fstab_mount_options = NULL;
-  escaped_mount_point = NULL;
-  error_message = NULL;
-  opt_force = FALSE;
+  gboolean success;
+  UDisksBaseJob *job = NULL;
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
@@ -1608,7 +1588,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
-  system_managed = FALSE;
 
   if (options != NULL)
     {
@@ -1653,27 +1632,37 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
       unmount_fstab_as_root = FALSE;
     unmount_fstab_again:
-      escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
-      /* right now -l is the only way to "force unmount" file systems... */
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object,
-                                                  "filesystem-unmount", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
-                                                  unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "umount %s %s",
-                                                  opt_force ? "-l" : "",
-                                                  escaped_mount_point))
+
+      job = udisks_daemon_launch_simple_job (daemon,
+                                             UDISKS_OBJECT (object),
+                                             "filesystem-unmount",
+                                             unmount_fstab_as_root ? 0 : caller_uid,
+                                             NULL);
+
+      if (!unmount_fstab_as_root)
         {
-          /* umount(8) does not (yet) have a specific exits status for
-           * "insufficient permissions" so just try again as root
-           *
-           * TODO: file bug asking for such an exit status
-           */
-          if (!unmount_fstab_as_root && WIFEXITED (status) && WEXITSTATUS (status) != 0)
+          BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
+          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
+          const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
+
+          success = bd_fs_unmount (mount_point, FALSE, opt_force, extra_args, &error);
+
+          g_free (uid_arg.opt);
+          g_free (uid_arg.val);
+          g_free (gid_arg.opt);
+          g_free (gid_arg.val);
+        }
+      else
+          success = bd_fs_unmount (mount_point, FALSE, opt_force, NULL, &error);
+
+      if (!success)
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      else
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+      if (!success)
+        {
+          if (!unmount_fstab_as_root && error->code == BD_FS_ERROR_AUTH)
             {
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
@@ -1698,10 +1687,11 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
-                                                 get_error_code_for_umount (status, error_message),
+                                                 get_error_code_for_umount (error->message),
                                                  "Error unmounting system-managed device %s: %s",
                                                  udisks_block_get_device (block),
-                                                 error_message);
+                                                 error->message);
+
           goto out;
         }
       udisks_notice ("Unmounted %s (system) from %s on behalf of uid %u",
@@ -1747,52 +1737,26 @@ handle_unmount (UDisksFilesystem      *filesystem,
         goto out;
     }
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-unmount",
+                                         0,
+                                         NULL);
 
-  /* otherwise go ahead and unmount the filesystem */
-  if (mount_point != NULL)
-    {
-      escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
-      rc = udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object,
-                                                  "filesystem-unmount", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "umount %s %s",
-                                                  opt_force ? "-l" : "",
-                                                  escaped_mount_point);
-    }
-  else
-    {
-      /* mount_point == NULL */
-      rc = udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object,
-                                                  "filesystem-unmount", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "umount %s %s",
-                                                  opt_force ? "-l" : "",
-                                                  escaped_device);
-    }
-
-  if (!rc)
+  if (!bd_fs_unmount (mount_point ? mount_point : udisks_block_get_device (block),
+                      FALSE, opt_force, NULL, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             get_error_code_for_umount (status, error_message),
+                                             get_error_code_for_umount (error->message),
                                              "Error unmounting %s: %s",
                                              udisks_block_get_device (block),
-                                             error_message);
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
+  else
+    udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
   /* OK, filesystem unmounted.. the state/cleanup routines will remove the mountpoint for us */
 
@@ -1803,9 +1767,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
   udisks_filesystem_complete_unmount (filesystem, invocation);
 
  out:
-  g_free (escaped_device);
-  g_free (error_message);
-  g_free (escaped_mount_point);
   g_free (mount_point);
   g_free (fstab_mount_options);
   g_clear_object (&object);

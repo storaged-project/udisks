@@ -57,6 +57,36 @@
  */
 
 /**
+ * sata_protocol:
+ * @cdb: The CDB byte array to be updated (bytes 1 & 2)
+ * @protocol: The specified protocol
+ *
+ * Set the CDB bytes 1 & 2 for correct SATA protocol.
+ */
+static void
+sata_protocol (guint8 cdb[], UDisksAtaCommandProtocol protocol)
+{
+  switch (protocol)
+    {
+    case UDISKS_ATA_COMMAND_PROTOCOL_NONE:
+      cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
+      cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
+      break;
+    case UDISKS_ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
+      cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
+      cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
+      break;
+    case UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
+      cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
+      cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+    }
+}
+
+/**
  * udisks_ata_send_command_sync:
  * @fd: A file descriptor for a ATA device.
  * @timeout_msec: Timeout in milli-seconds for the command. Use -1 for the default (5 seconds) timeout and %G_MAXINT for no timeout.
@@ -141,24 +171,7 @@ udisks_ata_send_command_sync (gint                       fd,
        * from http://www.t10.org/ftp/t10/document.04/04-262r8.pdf
        */
       cdb[0] = 0xa1;                        /* OPERATION CODE: 12 byte pass through */
-      switch (protocol)
-        {
-        case UDISKS_ATA_COMMAND_PROTOCOL_NONE:
-          cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
-          cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
-          break;
-        case UDISKS_ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
-          cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
-          cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
-          break;
-        case UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
-          cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
-          cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
-          break;
-        default:
-          g_assert_not_reached ();
-          break;
-        }
+      sata_protocol (cdb, protocol);        /* Set the protocol bytes */
       cdb[3] = input->feature;              /* FEATURES */
       cdb[4] = input->count;                /* SECTORS */
       cdb[5] = (input->lba >>  0) & 0xff;   /* LBA LOW */
@@ -178,24 +191,7 @@ udisks_ata_send_command_sync (gint                       fd,
        * from http://www.t10.org/ftp/t10/document.04/04-262r8.pdf
        */
       cdb[0] = 0x85;                        /* OPERATION CODE: 16 byte pass through */
-      switch (protocol)
-        {
-        case UDISKS_ATA_COMMAND_PROTOCOL_NONE:
-          cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
-          cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
-          break;
-        case UDISKS_ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
-          cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
-          cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
-          break;
-        case UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
-          cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
-          cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
-          break;
-        default:
-          g_assert_not_reached ();
-          break;
-        }
+      sata_protocol (cdb, protocol);        /* Set the protocol bytes */
       cdb[ 3] = (input->feature >>  8) & 0xff;   /* FEATURES */
       cdb[ 4] = (input->feature >>  0) & 0xff;   /* FEATURES */
       cdb[ 5] = (input->count >>  8) & 0xff;     /* SECTORS */

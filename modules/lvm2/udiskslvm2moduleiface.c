@@ -25,6 +25,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <blockdev/blockdev.h>
+#include <blockdev/lvm.h>
+
 #include <modules/udisksmoduleiface.h>
 
 #include <udisks/udisks-generated.h>
@@ -40,6 +43,7 @@
 #include "udiskslvm2dbusutil.h"
 #include "udiskslvm2daemonutil.h"
 #include "udiskslvm2state.h"
+#include "jobhelpers.h"
 
 #include "udiskslinuxmanagerlvm2.h"
 #include "udiskslinuxvolumegroupobject.h"
@@ -57,6 +61,24 @@ udisks_module_id (void)
 gpointer
 udisks_module_init (UDisksDaemon *daemon)
 {
+  gboolean ret = FALSE;
+  GError *error = NULL;
+
+  BDPluginSpec lvm_plugin = {BD_PLUGIN_LVM, "libbd_lvm.so.2"};
+  BDPluginSpec *plugins[] = {&lvm_plugin, NULL};
+
+  if (!bd_is_plugin_available (BD_PLUGIN_LVM))
+    {
+      ret = bd_reinit (plugins, FALSE, NULL, &error);
+      if (!ret)
+        {
+          udisks_error ("Error initializing the lvm libblockdev plugin: %s (%s, %d)",
+                        error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+          /* XXX: can do nothing more here even though we know the module will be unusable! */
+        }
+    }
+
   return udisks_lvm2_state_new (daemon);
 }
 
@@ -107,24 +129,39 @@ udisks_module_get_drive_object_iface_setup_entries (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-lvm_update_from_variant (GPid      pid,
-                         GVariant *volume_groups,
-                         GError   *error,
-                         gpointer  user_data)
+lvm_update_vgs (GObject      *source_obj,
+                GAsyncResult *result,
+                gpointer      user_data)
 {
   UDisksLVM2State *state;
-  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  UDisksDaemon *daemon = UDISKS_DAEMON (source_obj);
   GDBusObjectManagerServer *manager;
-  GVariantIter var_iter;
+
+  GTask *task = G_TASK (result);
+  GError *error = NULL;
+  VGsPVsData *data = g_task_propagate_pointer (task, &error);
+  BDLVMVGdata **vgs = NULL;
+  BDLVMPVdata **pvs = NULL;
+
   GHashTableIter vg_name_iter;
   gpointer key, value;
-  const gchar *name;
+  const gchar *vg_name;
 
-  if (error != NULL)
+  if (!data)
     {
-      udisks_warning ("LVM2 plugin: %s", error->message);
+      if (error)
+        udisks_warning ("LVM2 plugin: %s", error->message);
+      else
+        /* this should never happen */
+        udisks_warning ("LVM2 plugin: failure but no error when getting VGs!");
+
       return;
     }
+  vgs = data->vgs;
+  pvs = data->pvs;
+
+  /* free the data container (but not 'vgs' and 'pvs') */
+  g_free (data);
 
   manager = udisks_daemon_get_object_manager (daemon);
   state = get_module_state (daemon);
@@ -134,20 +171,14 @@ lvm_update_from_variant (GPid      pid,
                           udisks_lvm2_state_get_name_to_volume_group (state));
   while (g_hash_table_iter_next (&vg_name_iter, &key, &value))
     {
-      const gchar *vg;
       UDisksLinuxVolumeGroupObject *group;
       gboolean found = FALSE;
 
-      name = key;
+      vg_name = key;
       group = value;
 
-      g_variant_iter_init (&var_iter, volume_groups);
-      while (g_variant_iter_next (&var_iter, "&s", &vg))
-        if (g_strcmp0 (vg, name) == 0)
-          {
-            found = TRUE;
-            break;
-          }
+      for (BDLVMVGdata **vgs_p=vgs; !found && (*vgs_p); vgs_p++)
+          found = g_strcmp0 ((*vgs_p)->name, vg_name) == 0;
 
       if (!found)
         {
@@ -159,42 +190,50 @@ lvm_update_from_variant (GPid      pid,
     }
 
   /* Add new groups and update existing groups */
-  g_variant_iter_init (&var_iter, volume_groups);
-  while (g_variant_iter_next (&var_iter, "&s", &name))
+  for (BDLVMVGdata **vgs_p=vgs; *vgs_p; vgs_p++)
     {
       UDisksLinuxVolumeGroupObject *group;
+      GSList *vg_pvs = NULL;
+      vg_name = (*vgs_p)->name;
       group = g_hash_table_lookup (udisks_lvm2_state_get_name_to_volume_group (state),
-                                   name);
+                                   vg_name);
 
       if (group == NULL)
         {
-          group = udisks_linux_volume_group_object_new (daemon, name);
+          group = udisks_linux_volume_group_object_new (daemon, vg_name);
           g_hash_table_insert (udisks_lvm2_state_get_name_to_volume_group (state),
-                               g_strdup (name), group);
+                               g_strdup (vg_name), group);
         }
-      udisks_linux_volume_group_object_update (group);
+
+      for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
+        if (g_strcmp0 ((*pvs_p)->vg_name, vg_name) == 0)
+            vg_pvs = g_slist_prepend (vg_pvs, *pvs_p);
+
+      udisks_linux_volume_group_object_update (group, *vgs_p, vg_pvs);
     }
+
+  /* this is safe to do -- all BDLVMPVdata objects are still existing because
+     the function that frees them is scheduled in main loop by the
+     udisks_linux_volume_group_object_update() call above */
+  for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
+    if ((*pvs_p)->vg_name == NULL)
+      bd_lvm_pvdata_free (*pvs_p);
+
+  /* only free the containers, the contents were passed further */
+  g_free (vgs);
+  g_free (pvs);
 }
 
 static void
-lvm_update (UDisksDaemon *daemon,
-            gboolean      ignore_locks)
+lvm_update (UDisksDaemon *daemon)
 {
-  const gchar *args[5];
-  int i = 0;
+  /* the callback (lvm_update_vgs) is called in the default main loop (context) */
+  GTask *task = g_task_new (daemon, NULL /* cancellable */, lvm_update_vgs, NULL /* callback_data */);
 
-  if (udisks_daemon_get_uninstalled (daemon))
-    args[i++] = BUILD_DIR "modules/lvm2/udisks-lvm";
-  else
-    args[i++] = LVM_HELPER_DIR "udisks-lvm";
-  args[i++] = "-b";
-  if (ignore_locks)
-    args[i++] = "-f";
-  args[i++] = "list";
-  args[i++] = NULL;
+  /* holds a reference to 'task' until it is finished */
+  g_task_run_in_thread (task, (GTaskThreadFunc) vgs_task_func);
 
-  udisks_daemon_util_lvm2_spawn_for_variant (args, G_VARIANT_TYPE("as"),
-                                             lvm_update_from_variant, daemon);
+  g_object_unref (task);
 }
 
 static gboolean
@@ -205,7 +244,7 @@ delayed_lvm_update (gpointer user_data)
 
   state = get_module_state (daemon);
 
-  lvm_update (daemon, FALSE);
+  lvm_update (daemon);
   udisks_lvm2_state_set_lvm_delayed_update_id (state, 0);
   return FALSE;
 }
@@ -222,12 +261,13 @@ trigger_delayed_lvm_update (UDisksDaemon *daemon)
 
   if (! udisks_lvm2_state_get_coldplug_done (state))
     {
-      /* Spawn immediately and ignore locks when doing coldplug, i.e. when lvm2 module
-       * has just been activated. This is not 100% effective as this affects only the
-       * first request but from the plugin nature we don't know whether coldplugging
-       * has been finished or not. Might be subject to change in the future. */
+      /* Update immediately when doing coldplug, i.e. when lvm2 module has just
+       * been activated. This is not 100% effective as this affects only the
+       * first request but from the plugin nature we don't know whether
+       * coldplugging has been finished or not. Might be subject to change in
+       * the future. */
       udisks_lvm2_state_set_coldplug_done (state, TRUE);
-      lvm_update (daemon, TRUE);
+      lvm_update (daemon);
     }
   else
     {

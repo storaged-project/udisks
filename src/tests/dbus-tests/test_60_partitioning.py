@@ -39,6 +39,13 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         part_type = '0x8e'  # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
 
+        # first try to create partition with name -> should fail because mbr
+        # doesn't support partition names
+        msg = 'MBR partition table does not support names'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, 'name',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+
         # create partition
         path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, '',
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
@@ -54,7 +61,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
+        offset.assertEqual(1024**2)
 
         dbus_type = self.get_property(part, '.Partition', 'Type')
         dbus_type.assertEqual(part_type)
@@ -69,7 +76,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
         self.assertEqual(sys_type, part_type)
@@ -93,7 +100,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._remove_format, disk)
 
         # create extended partition
-        ext_path = disk.CreatePartition(dbus.UInt64(0), dbus.UInt64(100 * 1024**2), '0x05', '',
+        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '0x05', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -116,7 +123,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
-        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
+        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -128,6 +135,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         # check if its a 'contained'
         dbus_cont = self.get_property(log_part, '.Partition', 'IsContained')
         dbus_cont.assertTrue()
+
+        # create one more logical partition
+        log_path = disk.CreatePartition(dbus.UInt64(101 * 1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
 
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -148,6 +160,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
                                     gpt_type, gpt_name,
                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
+        self.udev_settle()
         part = self.bus.get_object(self.iface_prefix, path)
         self.assertIsNotNone(part)
 
@@ -158,7 +171,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
+        offset.assertEqual(1024**2)
 
         dbus_name = self.get_property(part, '.Partition', 'Name')
         dbus_name.assertEqual(gpt_name)
@@ -176,7 +189,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, gpt_name)
@@ -209,7 +222,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         size.assertEqual(100 * 1024**2)
 
         offset = self.get_property(part, '.Partition', 'Offset')
-        offset.assertEqual(2 * 1024**2)  # udisks adds 1 MiB to partition start
+        offset.assertEqual(1024**2)
 
         usage = self.get_property(part, '.Block', 'IdUsage')
         usage.assertEqual('filesystem')
@@ -227,7 +240,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_size * BLOCK_SIZE, 100 * 1024**2)
 
         sys_start = int(self.read_file('%s/start' % part_syspath))
-        self.assertEqual(sys_start * BLOCK_SIZE, 2 * 1024**2)
+        self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE /dev/%s' % part_name)
         self.assertEqual(sys_fstype, 'xfs')
@@ -257,6 +270,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
                                         self.no_options,
                                         dbus_interface=self.iface_prefix + '.PartitionTable')
 
+        self.udev_settle()
         part = self.bus.get_object(self.iface_prefix, path)
         self.assertIsNotNone(part)
 
@@ -328,6 +342,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
 
+        # first try some invalid guid
+        msg = 'org.freedesktop.UDisks2.Error.Failed: .* is not a valid UUID'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('aaaa', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
         # set part type/guid (home partition)
         home_guid = '933ac7e1-2eb4-4f13-b844-0e14e2aef915'
         part.SetType(home_guid, self.no_options,
@@ -356,6 +376,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
 
+        # try to set part type to an extended partition type -- should fail
+        msg = 'Refusing to change partition type to that of an extended partition'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('0x05', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
         # set part type/id
         part_type = '0x8e'   # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
         part.SetType(part_type, self.no_options,
@@ -383,6 +409,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         self._create_format(part, 'xfs')
         self.addCleanup(self._remove_format, part)
+
+        # first try some invalid name (longer than 36 characters)
+        msg = 'Max partition name length is 36 characters'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetName('a' * 37, self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
 
         # set part name
         part.SetName('test', self.no_options,

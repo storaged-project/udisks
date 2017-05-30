@@ -24,6 +24,7 @@ CPPFLAGS =                                                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
+	$(BLOCKDEV_CFLAGS)													   \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
@@ -57,6 +58,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udiskslinuxpartitiontable.h    udiskslinuxpartitiontable.c             \
 	udiskslinuxfilesystem.h        udiskslinuxfilesystem.c                 \
 	udiskslinuxencrypted.h         udiskslinuxencrypted.c                  \
+	udiskslinuxencryptedhelpers.h udiskslinuxencryptedhelpers.c            \
 	udiskslinuxswapspace.h         udiskslinuxswapspace.c                  \
 	udiskslinuxloop.h              udiskslinuxloop.c                       \
 	udiskslinuxdriveobject.h       udiskslinuxdriveobject.c                \
@@ -102,6 +104,7 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(LIBSYSTEMD_LOGIN_CFLAGS)                                             \
 	$(LIBELOGIND_CFLAGS)                                                   \
 	$(PART_CFLAGS)                                                         \
+	$(SWAP_CFLAGS)                                                         \
 	$(NULL)
 
 libudisks_daemon_la_LIBADD =                                                   \
@@ -109,12 +112,14 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
 	$(GUDEV_LIBS)                                                          \
+	$(BLOCKDEV_LIBS)                                                          \
 	$(LIBATASMART_LIBS)                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \
 	$(LIBSYSTEMD_LOGIN_LIBS)                                               \
 	$(LIBELOGIND_LIBS)                                                     \
 	$(PART_LDFLAGS)                                                        \
+	$(SWAP_LIBS)                                                        \
 	$(top_builddir)/udisks/libudisks2.la                                   \
 	$(NULL)
 
@@ -135,6 +140,7 @@ udisksd_LDADD =                                                                \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
+	$(BLOCKDEV_LIBS)                                                       \
 	libudisks-daemon.la                                                    \
 	$(NULL)
 

@@ -31,9 +31,7 @@
 
 #include <glib/gstdio.h>
 
-#ifdef HAVE_LIBBLOCKDEV_PART
 #include <blockdev/part.h>
-#endif /* HAVE_LIBBLOCDEV_PART */
 
 #include "udiskslogging.h"
 #include "udiskslinuxpartition.h"
@@ -42,6 +40,7 @@
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxpartition
@@ -101,6 +100,79 @@ udisks_linux_partition_new (void)
 {
   return UDISKS_PARTITION (g_object_new (UDISKS_TYPE_LINUX_PARTITION,
                                          NULL));
+}
+
+static gboolean
+check_authorization (UDisksPartition       *partition,
+                     GDBusMethodInvocation *invocation,
+                     GVariant              *options,
+                     uid_t                 *caller_uid)
+{
+  UDisksDaemon *daemon = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  GError *error = NULL;
+  gboolean rc = TRUE;
+
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_get_block (object);
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               caller_uid,
+                                               NULL,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests modifying a partition (changing type, flags, name etc.).
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to modify the partition on device $(drive)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, *caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_user_seat (daemon, object, *caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+  if (udisks_daemon_util_check_authorization_sync (daemon,
+                                                   object,
+                                                   action_id,
+                                                   options,
+                                                   message,
+                                                   invocation))
+    {
+      rc = TRUE;
+    }
+
+out:
+  g_clear_object (&block);
+  g_clear_object (&object);
+
+  return rc;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -212,35 +284,32 @@ udisks_linux_partition_update (UDisksLinuxPartition   *partition,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* If libblockdev-part isn't present at compile-time, this runs in thread
- * dedicated to handling @invocation. */
 static gboolean
 handle_set_flags (UDisksPartition       *partition,
                   GDBusMethodInvocation *invocation,
                   guint64                flags,
                   GVariant              *options)
 {
-  const gchar *action_id = NULL;
-  const gchar *message = NULL;
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
-  gchar *error_message = NULL;
   gchar *device_name = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
-  gchar *command_line = NULL;
   gint fd = -1;
   uid_t caller_uid;
-  gid_t caller_gid;
-#ifdef HAVE_LIBBLOCKDEV_PART
   gchar *partition_name = NULL;
-  gboolean bootable;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-  GError *error;
+  gboolean bootable = FALSE;
+  GError *error = NULL;
+  guint64 bd_flags = 0;
+  UDisksBaseJob *job = NULL;
 
-  error = NULL;
+  if (!check_authorization (partition, invocation, options, &caller_uid))
+    {
+      goto out;
+    }
+
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
@@ -250,141 +319,96 @@ handle_set_flags (UDisksPartition       *partition,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
   partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
   partition_table = udisks_object_get_partition_table (partition_table_object);
   partition_table_block = udisks_object_get_block (partition_table_object);
+  device_name = udisks_block_dup_device (partition_table_block);
+  partition_name = udisks_block_dup_device (block);
 
-  action_id = "org.freedesktop.udisks2.modify-device";
-  /* Translators: Shown in authentication dialog when the user
-   * requests modifying a partition (changing type, flags, name etc.).
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
+  fd = open (partition_name, O_RDONLY);
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-modify",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
     {
-      if (udisks_block_get_hint_system (block))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-system";
-        }
-      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
-        }
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
     }
 
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
-
-  device_name = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
-      /* TODO: implement once
-       * https://github.com/rhinstaller/libblockdev/issues/80 is resolved.
-       */
-      command_line = g_strdup_printf ("sgdisk --attributes %u:=:0x%08x%08x %s",
-                                      udisks_partition_get_number (partition),
-                                      (guint32) (flags >> 32),
-                                      (guint32) (flags & 0xffffffff),
-                                      device_name);
+      if (flags & 1) /* 1 << 0 */
+          bd_flags |= BD_PART_FLAG_GPT_SYSTEM_PART;
+      if (flags & 0x1000000000000000) /* 1 << 60 */
+          bd_flags |= BD_PART_FLAG_GPT_READ_ONLY;
+      if (flags & 0x4000000000000000) /* 1 << 62 */
+          bd_flags |= BD_PART_FLAG_GPT_HIDDEN;
+      if (flags & 0x8000000000000000) /* 1 << 63 */
+          bd_flags |= BD_PART_FLAG_GPT_NO_AUTOMOUNT;
+
+      if (!bd_part_set_part_flags (device_name,
+                                   partition_name,
+                                   bd_flags,
+                                   &error))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error setting partition flags on %s: %s",
+                                                 udisks_block_get_device (block),
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "dos") == 0)
     {
-#ifndef HAVE_LIBBLOCKDEV_PART
-      command_line = g_strdup_printf ("parted --script %s \"set %u boot %s\"",
-                                      device_name,
-                                      udisks_partition_get_number (partition),
-                                      flags & 0x80 ? "on" : "off");
-#else
       /* 7th bit - the partition is marked as bootable */
       bootable = !!(flags & 1 << 7); /* Narrow possible values to TRUE/FALSE */
-      device_name = g_strdup (udisks_block_get_device (partition_table_block));
-      partition_name = g_strdup (udisks_block_get_device (block));
 
-      if (! bd_part_set_part_flag (device_name,
-                                   partition_name,
-                                   BD_PART_FLAG_BOOT,
-                                   bootable,
-                                   &error))
+      if (!bd_part_set_part_flag (device_name,
+                                  partition_name,
+                                  BD_PART_FLAG_BOOT,
+                                  bootable,
+                                  &error))
       {
-        g_dbus_method_invocation_take_error (invocation, error);
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Error setting partition flags on %s: %s",
+                                               udisks_block_get_device (block),
+                                               error->message);
+        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+        goto out;
+      }
+    }
+    else
+      {
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_NOT_SUPPORTED,
+                                               "No support for modifying a partition a table of type `%s'",
+                                               udisks_partition_table_get_type_ (partition_table));
+        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
         goto out;
       }
 
-      goto flags_set;
-#endif /* HAVE_LIBBLOCKDEV_PART */
-    }
-  else
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_NOT_SUPPORTED,
-                                             "No support for modifying a partition a table of type `%s'",
-                                             udisks_partition_table_get_type_ (partition_table));
-      goto out;
-    }
-
-  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
-  fd = open (udisks_block_get_device (block), O_RDONLY);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "partition-modify", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s",
-                                              command_line))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error setting partition flags on %s: %s",
-                                             udisks_block_get_device (block),
-                                             error_message);
-      goto out;
-    }
-
-#ifdef HAVE_LIBBLOCKDEV_PART
-flags_set:
-#endif /* HAVE_LIBBLOCKDEV_PART */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
-
   udisks_partition_complete_set_flags (partition, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
   if (fd != -1)
     close (fd);
-  g_free (command_line);
   g_free (device_name);
-  g_free (error_message);
-#ifdef HAVE_LIBBLOCKDEV_PART
   g_free (partition_name);
-#endif /* HAVE_LIBBLOCDEV_PART */
+  g_clear_error (&error);
   g_clear_object (&object);
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
@@ -404,24 +428,24 @@ handle_set_name (UDisksPartition       *partition,
                  const gchar           *name,
                  GVariant              *options)
 {
-  const gchar *action_id = NULL;
-  const gchar *message = NULL;
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
-  gchar *error_message = NULL;
   gchar *device_name = NULL;
-  gchar *escaped_name = NULL;
+  gchar *partition_name = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
-  gchar *command_line = NULL;
   gint fd = -1;
   uid_t caller_uid;
-  gid_t caller_gid;
-  GError *error;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
 
-  error = NULL;
+  if (!check_authorization (partition, invocation, options, &caller_uid))
+    {
+      goto out;
+    }
+
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
@@ -432,53 +456,29 @@ handle_set_name (UDisksPartition       *partition,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
 
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
   partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
   partition_table = udisks_object_get_partition_table (partition_table_object);
   partition_table_block = udisks_object_get_block (partition_table_object);
 
-  action_id = "org.freedesktop.udisks2.modify-device";
-  /* Translators: Shown in authentication dialog when the user
-   * requests modifying a partition (changing type, flags, name etc.).
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
-    {
-      if (udisks_block_get_hint_system (block))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-system";
-        }
-      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
-        }
-    }
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
+  device_name = udisks_block_dup_device (partition_table_block);
+  partition_name = udisks_block_dup_device (block);
 
-  device_name = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
-  escaped_name = udisks_daemon_util_escape_and_quote (name);
+  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
+  fd = open (partition_name, O_RDONLY);
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-modify",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
       if (strlen (name) > 36)
@@ -487,16 +487,24 @@ handle_set_name (UDisksPartition       *partition,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
                                                  "Max partition name length is 36 characters");
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
           goto out;
         }
-      /* We are assuming that the sgdisk(8) command accepts UTF-8
-       *
-       * TODO is this assumption true or do we need to pass UTF-16? How is that going to work?
-       */
-      command_line = g_strdup_printf ("sgdisk --change-name %u:%s %s",
-                                      udisks_partition_get_number (partition),
-                                      escaped_name,
-                                      device_name);
+
+      if (!bd_part_set_part_name (device_name,
+                                  partition_name,
+                                  name,
+                                  &error))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error setting partition name on %s: %s",
+                                                 udisks_block_get_device (block),
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
     }
   else
     {
@@ -508,40 +516,16 @@ handle_set_name (UDisksPartition       *partition,
       goto out;
     }
 
-  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
-  fd = open (udisks_block_get_device (block), O_RDONLY);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "partition-modify", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s",
-                                              command_line))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error setting partition flags on %s: %s",
-                                             udisks_block_get_device (block),
-                                             error_message);
-      goto out;
-    }
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
-
   udisks_partition_complete_set_name (partition, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
   if (fd != -1)
     close (fd);
-  g_free (command_line);
-  g_free (escaped_name);
   g_free (device_name);
-  g_free (error_message);
+  g_free (partition_name);
+  g_clear_error (&error);
   g_clear_object (&object);
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
@@ -609,14 +593,14 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
-  gchar *error_message = NULL;
   gchar *device_name = NULL;
-  gchar *escaped_type = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
-  gchar *command_line = NULL;
   gint fd = -1;
+  gchar *partition_name = NULL;
+  GError *loc_error = NULL;
+  UDisksBaseJob *job = NULL;
 
   object = udisks_daemon_util_dup_object (partition, error);
   if (object == NULL)
@@ -629,8 +613,25 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
   partition_table = udisks_object_get_partition_table (partition_table_object);
   partition_table_block = udisks_object_get_block (partition_table_object);
 
-  device_name = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
-  escaped_type = udisks_daemon_util_escape_and_quote (type);
+  device_name = udisks_block_dup_device (partition_table_block);
+  partition_name = udisks_block_dup_device (block);
+
+  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
+  fd = open (partition_name, O_RDONLY);
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-modify",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Failed to create a job object");
+      goto out;
+    }
+
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
       /* check that it's a valid GUID */
@@ -641,12 +642,21 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                        UDISKS_ERROR_FAILED,
                        "Given type `%s' is not a valid UUID",
                        type);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
         }
-      command_line = g_strdup_printf ("sgdisk --typecode %u:%s %s",
-                                      udisks_partition_get_number (UDISKS_PARTITION (partition)),
-                                      escaped_type,
-                                      device_name);
+
+      if (!bd_part_set_part_type (device_name, partition_name, type, &loc_error))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error setting partition type on %s: %s",
+                       udisks_block_get_device (block),
+                       loc_error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
+          goto out;
+        }
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "dos") == 0)
     {
@@ -659,6 +669,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                        UDISKS_ERROR_FAILED,
                        "Given type `%s' is not a valid",
                        type);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
         }
       if (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85)
@@ -668,12 +679,20 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                        UDISKS_ERROR_FAILED,
                        "Refusing to change partition type to that of an extended partition. "
                        "Delete the partition and create a new extended partition instead.");
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
         }
-      command_line = g_strdup_printf ("sfdisk --change-id %s %u 0x%02x",
-                                      device_name,
-                                      udisks_partition_get_number (UDISKS_PARTITION (partition)),
-                                      type_as_int);
+      if (!bd_part_set_part_id (device_name, partition_name, type, &loc_error))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error setting partition type on %s: %s",
+                       udisks_block_get_device (block),
+                       loc_error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
+          goto out;
+        }
     }
   else
     {
@@ -682,49 +701,25 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                    UDISKS_ERROR_NOT_SUPPORTED,
                    "No support for modifying a partition a table of type `%s'",
                    udisks_partition_table_get_type_ (partition_table));
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
       goto out;
     }
-
-  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
-  fd = open (udisks_block_get_device (block), O_RDONLY);
-
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              object,
-                                              "partition-modify", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "%s",
-                                              command_line))
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error setting partition flags on %s: %s",
-                   udisks_block_get_device (block),
-                   error_message);
-      goto out;
-    }
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   ret = TRUE;
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
   if (fd != -1)
     close (fd);
-  g_free (command_line);
-  g_free (escaped_type);
+  g_free (partition_name);
   g_free (device_name);
-  g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
   g_clear_object (&object);
+  g_clear_error (&loc_error);
 
   return ret;
 }
@@ -738,90 +733,20 @@ handle_set_type (UDisksPartition       *partition,
                  const gchar           *type,
                  GVariant              *options)
 {
-  const gchar *action_id = NULL;
-  const gchar *message = NULL;
-  UDisksBlock *block = NULL;
-  UDisksObject *object = NULL;
-  UDisksDaemon *daemon = NULL;
-  UDisksObject *partition_table_object = NULL;
-  UDisksPartitionTable *partition_table = NULL;
-  UDisksBlock *partition_table_block = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
-  GError *error;
+  GError *error = NULL;
 
-  error = NULL;
-  object = udisks_daemon_util_dup_object (partition, &error);
-  if (object == NULL)
+  if (check_authorization (partition, invocation, options, &caller_uid))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
+    if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition), type, caller_uid, NULL, &error))
+      {
+        g_dbus_method_invocation_take_error (invocation, error);
+      }
+    else
+      {
+        udisks_partition_complete_set_type (partition, invocation);
+      }
     }
-
-  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  block = udisks_object_get_block (object);
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
-  partition_table = udisks_object_get_partition_table (partition_table_object);
-  partition_table_block = udisks_object_get_block (partition_table_object);
-
-  action_id = "org.freedesktop.udisks2.modify-device";
-  /* Translators: Shown in authentication dialog when the user
-   * requests modifying a partition (changing type, flags, name etc.).
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
-    {
-      if (udisks_block_get_hint_system (block))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-system";
-        }
-      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
-        }
-    }
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
-
-  if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition), type, caller_uid, NULL, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  udisks_partition_complete_set_type (partition, invocation);
-
- out:
-  g_clear_object (&object);
-  g_clear_object (&block);
-  g_clear_object (&partition_table_object);
-  g_clear_object (&partition_table);
-  g_clear_object (&partition_table_block);
-  g_clear_object (&object);
-
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -833,28 +758,25 @@ handle_delete (UDisksPartition       *partition,
                GDBusMethodInvocation *invocation,
                GVariant              *options)
 {
-  const gchar *action_id = NULL;
-  const gchar *message = NULL;
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
-  gchar *error_message = NULL;
   gchar *device_name = NULL;
-#ifdef HAVE_LIBBLOCKDEV_PART
   gchar *partition_name = NULL;
-#endif /* HAVE_LIBBLOCKDEV_PART */
   UDisksObject *partition_table_object = NULL;
-  UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
-  gchar *command_line = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   gboolean teardown_flag = FALSE;
-  GError *error;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
-  error = NULL;
+  if (!check_authorization (partition, invocation, options, &caller_uid))
+    {
+      goto out;
+    }
+
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
@@ -864,62 +786,11 @@ handle_delete (UDisksPartition       *partition,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &caller_gid,
-                                               NULL,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
   partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
-  partition_table = udisks_object_get_partition_table (partition_table_object);
   partition_table_block = udisks_object_get_block (partition_table_object);
-
-  action_id = "org.freedesktop.udisks2.modify-device";
-  /* Translators: Shown in authentication dialog when the user
-   * requests deleting a partition.
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to delete the partition $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
-    {
-      if (udisks_block_get_hint_system (block))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-system";
-        }
-      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
-        }
-    }
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
 
   if (teardown_flag)
     {
-      if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                        NULL,
-                                                        "org.freedesktop.udisks2.modify-system-configuration",
-                                                        options,
-                                                        N_("Authentication is required to modify the system configuration"),
-                                                        invocation))
-        goto out;
-
       if (!udisks_linux_block_teardown (block, invocation, options, &error))
         {
           if (invocation != NULL)
@@ -930,56 +801,46 @@ handle_delete (UDisksPartition       *partition,
         }
     }
 
-#ifndef HAVE_LIBBLOCKDEV_PART
-  device_name = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
+  device_name = g_strdup (udisks_block_get_device (partition_table_block));
+  partition_name = g_strdup (udisks_block_get_device (block));
 
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              partition_table_object,
-                                              "partition-delete", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "parted --script %s \"rm %u\"",
-                                              device_name,
-                                              udisks_partition_get_number (partition)))
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-delete",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (! bd_part_delete_part (device_name, partition_name, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting partition %s: %s",
                                              udisks_block_get_device (block),
-                                             error_message);
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
-#else
-  device_name = g_strdup (udisks_block_get_device (partition_table_block));
-  partition_name = g_strdup (udisks_block_get_device (block));
-
-  if (! bd_part_delete_part (device_name, partition_name, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-#endif /* HAVE_LIBBLOCKDEV_PART */
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_table_object));
 
   udisks_partition_complete_delete (partition, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
-  g_free (command_line);
   g_free (device_name);
-#ifdef HAVE_LIBBLOCKDEV_PART
   g_free (partition_name);
-#endif /* HAVE_LIBBLOCKDEV_PART */
-  g_free (error_message);
+  g_clear_error (&error);
   g_clear_object (&object);
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
-  g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
   g_clear_object (&object);
 

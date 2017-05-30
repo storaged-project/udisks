@@ -1232,6 +1232,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                                                     g_object_ref (drive),
                                                                                     g_object_unref,
                                                                                     NULL)); /* GCancellable */
+      udisks_threaded_job_start (drive->selftest_job);
     }
   G_UNLOCK (object_lock);
 
