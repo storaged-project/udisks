@@ -62,7 +62,7 @@ BuildRequires: systemd
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
 # Needed to pull in the udev daemon
-Requires: systemd-udev >= %{systemd_version}
+Requires: udev >= %{systemd_version}
 # We need at least this version for bugfixes/features etc.
 Requires: libatasmart >= %{libatasmart_version}
 # For mount, umount, mkswap
