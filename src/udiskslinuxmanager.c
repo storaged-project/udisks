@@ -425,7 +425,7 @@ handle_loop_setup (UDisksManager          *object,
   if (loop_object != NULL)
     g_object_unref (loop_object);
   g_free (loop_device);
-  g_free (loop_name);
+  g_free ((gpointer) loop_name);
   if (fd != -1)
     close (fd);
   return TRUE; /* returning TRUE means that we handled the method invocation */
