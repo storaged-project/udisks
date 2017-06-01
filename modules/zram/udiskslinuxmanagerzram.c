@@ -407,8 +407,8 @@ handle_create_devices (UDisksManagerZRAM     *object,
     }
 
   zram_paths = g_new0 (gchar *, sizes_len);
-  for (int i = 0; i < sizes_len; i++)
-    zram_paths[i] = g_strdup_printf ("/dev/zram%d", i);
+  for (gsize i = 0; i < sizes_len; i++)
+    zram_paths[i] = g_strdup_printf ("/dev/zram%" G_GSIZE_FORMAT, i);
 
   /* sit and wait for the bcache object to show up */
   zram_objects = udisks_daemon_wait_for_objects_sync (manager->daemon,
@@ -428,7 +428,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
 
 
   zram_object_paths = g_new0 (const gchar *, sizes_len);
-  for (int i = 0; i < sizes_len; i++)
+  for (gsize i = 0; i < sizes_len; i++)
     zram_object_paths[i] = g_dbus_object_get_object_path (G_DBUS_OBJECT (zram_objects[i]));
 
   udisks_manager_zram_complete_create_devices (object,
@@ -436,7 +436,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
                                                zram_object_paths);
 out:
   if (zram_paths)
-    for (int i = 0; i < sizes_len; i++)
+    for (gsize i = 0; i < sizes_len; i++)
       g_free (zram_paths[i]);
 
   g_free (zram_paths);
