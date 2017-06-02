@@ -36,8 +36,7 @@ Checklist for making a release:
    git command `git shortlog -se` helps.
 
  - Check that everything works
-   - Run 'make check'
-   - Run 'sudo ./integration-test' in src/tests
+   - Run 'make check' and 'make ci'
    - Check that you have no uncommitted or unpushed changes
    - Check there are no glaring TODO or FIXME
    - Sanity-check all new API
@@ -47,10 +46,9 @@ Checklist for making a release:
  - Tag the release: git tag udisks-X.Y.Z
 
  - Post-release actions:
-   - Bump the version in configure.in
-     - Commit message: Post-release version bump to X.Y.Z
+   - Bump the version in configure.in and packaging/udisks2.spec
    - Prepare NEWS file - append " (unreleased)" to version number
-     - Commit message: Start writing NEWS for X.Y.Z
+     - Commit message: Post-release version bump to X.Y.Z
 
  - Upload new documentation to storaged.org website
    - https://github.com/storaged-project/storaged-project.github.io
