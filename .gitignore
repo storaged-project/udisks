@@ -63,7 +63,6 @@ gtk-doc.make
 intltool-*
 libtool
 m4/
-packaging/udisks2.spec
 po/POTFILES
 po/Makefile.in.in
 src/*-marshal.*
@@ -82,4 +81,3 @@ udisks/udisksversion.h
 
 data/org.freedesktop.UDisks2.conf
 data/org.freedesktop.UDisks2.policy
-

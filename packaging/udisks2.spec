@@ -4,9 +4,7 @@
 %global systemd_version                 208
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
-%global libblockdev_version             2.1
 %global with_gtk_doc                    1
-%global with_libblockdev_part           @have_libblockdev_part_spec@
 %global libblockdev_version             2.4
 
 %define is_fedora                       0%{?rhel} == 0
