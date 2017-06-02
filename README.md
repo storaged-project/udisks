@@ -1,4 +1,4 @@
-[![build status](https://phatina.fedorapeople.org/jenkins/storaged/build.svg)](https://phatina.fedorapeople.org/jenkins/storaged/build.log)
+**We are now using the [*sink*](https://github.com/cockpit-project/cockpituous/tree/master/sink) tool for gathering results of our tests.**
 
 
 OVERVIEW
