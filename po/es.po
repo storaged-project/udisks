@@ -2005,7 +2005,7 @@ msgstr "ZFS"
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
 #: ../udisks/udisksclient.c:1951
-#, c-format
+#, fuzzy, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
