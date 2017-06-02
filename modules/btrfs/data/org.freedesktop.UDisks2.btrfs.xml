@@ -48,6 +48,8 @@
         Creates a new volume from @devices.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name="CreateVolume">
       <arg name="devices" type="ao" direction="in"/>
@@ -81,6 +83,8 @@
         Adds the @device to the volume.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name="AddDevice">
       <arg name="device" type="o" direction="in"/>
@@ -96,6 +100,8 @@
         Removes the @device from the volume.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name="RemoveDevice">
       <arg name="device" type="o" direction="in"/>

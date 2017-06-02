@@ -47,6 +47,8 @@
         Create new bcache device.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name = "BcacheCreate">
       <arg name="backing_dev" direction="in" type="o"/>
@@ -57,6 +59,12 @@
 
   </interface>
 
+  <!--
+      org.freedesktop.UDisks2.Block.Bcache:
+      @short_description: A bcache block device
+
+      <emphasis>Names of the properties where changed in version 2.7.0.</emphasis>
+  -->
   <interface name = "org.freedesktop.UDisks2.Block.Bcache">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
 

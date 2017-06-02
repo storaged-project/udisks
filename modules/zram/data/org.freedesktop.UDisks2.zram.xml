@@ -47,6 +47,8 @@
         Creates num_devices zram devices.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name = "CreateDevices">
       <arg name="sizes" direction="in" type="at"/>
@@ -77,6 +79,7 @@
 
       One of zram devices created by manager.
 
+      <emphasis>Names of the properties where changed in version 2.7.0.</emphasis>
   -->
   <interface name = "org.freedesktop.UDisks2.Block.ZRAM">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
@@ -89,6 +92,8 @@
         Used to refresh properties changed over time.
 
         No additional options are currently defined.
+
+        <emphasis>Changed in version 2.7.0.</emphasis>
     -->
     <method name="Refresh">
       <arg name="options" direction="in" type="a{sv}"/>
