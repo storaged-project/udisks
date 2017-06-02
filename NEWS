@@ -1,17 +1,123 @@
 ---------------------------
-udisks 2.6.6 (unreleased)
+udisks 2.7.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.6.5:
-(TODO: make shortlog)
+
+Jan Pokorny (1):
+      Loop devices now uses libblockdev
+
+Tony Asleson (37):
+      udisksata.c: Move SATA protocol to common function
+      udisksdaemonutil.c: Create common function for uid/pid
+      udisksdaemonutil.c: Fix GVariant resource leak
+      udisksstate.c: Make common list iterator
+      udisksstate.c: Move log into udisks_state_get
+      udisksstate.c: Move log into udisks_state_set
+      udisksstate.c: Correct function spelling
+      integration-test: Improve SMART available check
+      integration-test: exit 1 on fail
+      run_tests.py: Install udev rules file
+      integration-test: pep 257 corrections
+      integration-test: pep8 local variable to be lower case
+      integration-test: Rename klass to cls
+      integration-test: Rename type to fs_type
+      integration-test: Rename id to b_id
+      integration-test: Use set literal
+      integration-test: Remove unused variables
+      integration-test: Rename args to prevent outer scope shadow
+      integration-test: Make unlock_crypto_device static
+      integration-test: Make keyfile_options static
+      integration-test: Make class variables explicit for Fstab
+      integration-test: Make class variables explicit for UDisksTestCase
+      udisksclient.c: Use common function for mdraid blocks
+      udisksclient.c: Common impl. for udisks_client_get_members_for_mdraid
+      integration-test: Add tests for client *mdraid functions
+      udisks-pygi-example.py: Make it work
+      udiskslinuxlogicalvolume.c: Dupe code removal
+      udiskslinuxpartition.c: Add common authorization func.
+      udiskslinuxpartition.c: handle_set_type, use common auth
+      udiskslinuxpartition.c: handle_set_name, use common auth
+      udiskslinuxpartition.c: handle_delete, use common auth
+      udiskslinuxpartition.c: handle_set_flags, use common auth
+      udisksdaemon.c: Use common function for job creation
+      udiskslinuxvolumegroup.c: Add remove/empty device func
+      configure.ac: Save/Restore compiler/linker flags
+      udiskslinuxblock.c: Use common device handling func.
+      udiskslinuxvolumegroup.c: Add common LV create func.
+
+Vojtech Trefny (36):
+      Use libblockdev swap plugin for swapspace
+      Use libblockdev for partitioning code
+      Fix bd_reinit and g_clear_error calls in btrfs, zram and bcache
+      Use libblockdev for MDRAID code
+      Use libblockdev for wipefs calls in MDRAID code
+      Add libblockdev MDRAID and FS plugins to BuildRequires
+      Remove unused variables in handle_mdraid_create
+      Use libblockdev FS plugin for mounting and unmounting devices
+      Add tests for mounting as a non-root user
+      DBus tests: Include stderr in the run_command method output
+      DBus tests: Fix checking for fstype in MDRaid test
+      Add tests for mounting read-only devices as read-write
+      Create Job objects for partitioning related actions
+      Use libblockdev for wiping newly created partitions
+      DBus tests: Add some 'failing' tests for partitioning
+      Change btrfs module API to be consistent with udisks core
+      Fix docstring of 'CreateSnapshot' method in '.Filesystem.BTRFS'
+      Fix Requires and BuildRequires for libblockdev
+      DBus tests: Do not try to close log if it isn't a file
+      DBus tests: Fix checking for mounpoints in the cleanup script
+      Bcache, btrfs and zRAM modules: Handle invocations in threads
+      Fix API for BcacheCreate function
+      Change bcache properties do CamelCase
+      Do not try to set GError over the top of a previous GError
+      DBus tests: Do not try to import blivet before running tests
+      Change zRAM properties to CamelCase
+      Add 'options' parameter do zRAM 'Refresh' function
+      zRAM: Extract used CompAlgorithm as a single value
+      Change ZRAM 'CreateDevices' function to return newly created ZRAMs
+      Move new partition start if overlaps with extended partition metadata
+      Use libblockdev to get LUKS UUID for LUKS open
+      Post-release version bump to 2.6.6
+      Remove "--no-debug" option from udisksd manpage
+      Remove "--no-debug" option from udisksd manpage
+      Run post actions for udisks2-zram package only on Fedora
+      Fix two gcc warnings
+
+Vratislav Podzimek (25):
+      Use libblockdev as a library not just the plugins
+      Do not start threaded jobs automatically
+      Add a function for running threaded jobs synchronously
+      Use libblockdev for LUKS operations
+      Require and initialize the libblockdev-lvm plugin
+      Check that blockdev/lvm.h is available if LVM2 support requested
+      Use libblockdev-lvm for LV operations
+      Use libblockdev-lvm for VG operations
+      Use libblockdev-lvm for VolumeGroupCreate() too
+      Also create thin pools using libblockdev-lvm
+      Get VGs with bd_lvm_vgs() run in a thread
+      Update information about PVs, LVs and VGs using libblockdev-lvm
+      Use libblockdev-lvm when updating VG on Poll() call
+      Get rid of the udisks-lvm helper program
+      Use info for metadata LV when updating LV which has one
+      Let the udisks2 package own the common directories
+      Use bd_lvm_vgreduce() instead of running 'vgreduce'
+      REMOVE-ME: use the CLI-based libblockdev-lvm plugin
+      Use systemd-defined macros in the spec file template
+      Make sure we have the AX_CHECK_ENABLE_DEBUG macro
+      Add a new configure option --enable-available-modules
+      Also check if libblockdev supports bcache
+      Fix documentation of the daemon job launching functions
+      Use systemd-defined macros in the spec file template
+      Require 'udev' not 'systemd-udev'
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date)
+2017-06-02
 
 ---------------------------
 udisks 2.6.5
