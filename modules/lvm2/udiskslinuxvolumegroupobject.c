@@ -430,6 +430,21 @@ block_object_update_lvm_iface (UDisksLinuxBlockObject *object,
 }
 
 static void
+lv_object_update_block_path (UDisksLinuxBlockObject       *block_object,
+                             UDisksLinuxLogicalVolumeObject *lv_object)
+{
+  UDisksLogicalVolume *lv = NULL;
+  const char *block_objpath = NULL;
+
+  lv = udisks_object_peek_logical_volume (UDISKS_OBJECT (lv_object));
+  if (lv)
+    {
+      block_objpath = g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object));
+      udisks_logical_volume_set_block_device (UDISKS_LOGICAL_VOLUME (lv), block_objpath);
+    }
+}
+
+static void
 update_block (UDisksLinuxBlockObject       *block_object,
               UDisksLinuxVolumeGroupObject *group_object,
               GHashTable                   *new_lvs,
@@ -459,6 +474,7 @@ update_block (UDisksLinuxBlockObject       *block_object,
             && (lv_object = g_hash_table_lookup (new_lvs, block_lv_name)))
           {
             block_object_update_lvm_iface (block_object, g_dbus_object_get_object_path (G_DBUS_OBJECT (lv_object)));
+            lv_object_update_block_path (block_object, lv_object);
           }
 
         g_object_unref(device);
