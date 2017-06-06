@@ -442,14 +442,14 @@ if test "x$enable_lsm" = "xyes" \
         [LIBLSM], [libstoragemgmt >= 1.3.0],
         [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
             have_lsm=yes],
-        [AC_MSG_ERROR([libstoragemgmt 1.3.0 or newer not found.])
+        [AC_MSG_WARN([libstoragemgmt 1.3.0 or newer not found.])
             have_lsm=no])
 
     PKG_CHECK_MODULES(
         [LIBCONFIG], [libconfig >= 1.3.2],
         [AC_DEFINE(HAVE_LSM, 1, [Define if libconfig is available])
             have_lsm=yes],
-        [AC_MSG_ERROR([libconfig 1.3.2 or newer not found.])
+        [AC_MSG_WARN([libconfig 1.3.2 or newer not found.])
             have_lsm=no])
 
   if test "x$have_lsm" = "xno"; then
