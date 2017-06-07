@@ -4,7 +4,7 @@
 OVERVIEW
 ========
 
-The Udisks project provides a daemon, tools and libraries to access and
+The UDisks2 project provides a daemon, tools and libraries to access and
 manipulate disks, storage devices and technologies.
 
 For API stability and intended audience of Udisks, see the API STABILITY and
