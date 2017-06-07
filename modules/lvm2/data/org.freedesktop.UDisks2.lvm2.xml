@@ -410,6 +410,13 @@
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
+    <!-- BlockDevice:
+         @since: 2.7.1
+
+         For an active LV, the object path of its block device.
+    -->
+    <property name="BlockDevice" type="o" access="read"/>
+
     <!-- Activate:
          @options: Additional options.
          @result: The UDisks2 object path of the block device.

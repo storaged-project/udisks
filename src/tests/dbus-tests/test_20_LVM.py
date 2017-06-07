@@ -68,16 +68,30 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         lvsize.assertEqual(vgsize.value)
 
+        # check that the 'BlockDevice' property is set after Activate
+        lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
+        lv_prop_block.assertEqual(lv_block_path)
+
         # Shrink the LV
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
+
+        # check that the 'BlockDevice' property is unset after Deactivate
+        lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
+        lv_prop_block.assertEqual('/')
+
         lv.Resize(dbus.UInt64(lvsize.value/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         self.udev_settle()
         lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
         self.assertIsNotNone(lv_block)
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertLess(lvsize.value)
+
+        # check that the 'BlockDevice' property is set after Activate
+        lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
+        lv_prop_block.assertEqual(lv_block_path)
 
         # Add one more device to the VG
         new_dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[-1]))

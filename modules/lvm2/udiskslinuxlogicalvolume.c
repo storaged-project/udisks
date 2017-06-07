@@ -161,6 +161,15 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
   udisks_logical_volume_set_active (iface, active);
   udisks_logical_volume_set_size (iface, size);
 
+  /* LV is not active --> no block device
+     XXX: Object path for active LVs is not set here because this runs before
+          block device update, so it is possible that the block device is not
+          added yet. BlockDevice property for active LVs is set when updating
+          the block device.
+   */
+  if (!active)
+    udisks_logical_volume_set_block_device (iface, "/");
+
   udisks_logical_volume_set_data_allocated_ratio (iface, lv_info->data_percent / 100.0);
   udisks_logical_volume_set_metadata_allocated_ratio (iface, lv_info->metadata_percent / 100.0);
 
