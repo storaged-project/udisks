@@ -1,0 +1,4 @@
+      <xi:include href="../doc/xml/UDisksManagerMultipath.xml"/>
+      <xi:include href="../doc/xml/UDisksMultipathPath.xml"/>
+      <xi:include href="../doc/xml/UDisksDriveMultipath.xml"/>
+      <xi:include href="../doc/xml/UDisksBlockMultipath.xml"/>

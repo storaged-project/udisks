@@ -1,0 +1,5 @@
+<xi:include href="../modules/multipath/doc_generated-org.freedesktop.UDisks2.Block.Multipath.xml"/>
+<xi:include href="../modules/multipath/doc_generated-org.freedesktop.UDisks2.Multipath.Path.xml"/>
+<xi:include href="../modules/multipath/doc_generated-org.freedesktop.UDisks2.Drive.Multipath.xml"/>
+<xi:include href="../modules/multipath/doc_generated-org.freedesktop.UDisks2.Manager.Multipath.xml"/>
+<xi:include href="../modules/multipath/doc_generated-org.freedesktop.UDisks2.Multipath.xml"/>

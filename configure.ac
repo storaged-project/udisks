@@ -724,6 +724,10 @@ doc/udisks2-docs.xml.bcache.dbus
 doc/udisks2-docs.xml.bcache.generated
 doc/udisks2-sections.txt.bcache.sections
 doc/udisks2.types.bcache
+doc/udisks2-docs.xml.multipath.dbus
+doc/udisks2-docs.xml.multipath.generated
+doc/udisks2-sections.txt.multipath.sections
+doc/udisks2.types.multipath
 po/Makefile.in
 ])
 

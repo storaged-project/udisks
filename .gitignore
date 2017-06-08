@@ -59,6 +59,10 @@ doc/udisks2.hierarchy
 doc/udisks2.interfaces
 doc/udisks2.prerequisites
 doc/*.signals
+!doc/udisks2.types.multipath.in
+!doc/udisks2-sections.txt.multipath.sed
+!doc/udisks2.types.multipath.sed
+!doc/udisks2-sections.txt.multipath.sections.in
 gtk-doc.make
 intltool-*
 libtool

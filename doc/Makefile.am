@@ -130,6 +130,22 @@ else
 	$(AM_V_at) $(SED) -i "/\# BCACHE_TYPES/d" $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_BCACHE
 
+if HAVE_MULTIPATH
+	$(AM_V_at) $(SED) -i -f \
+		$(DOC_DIR)/$(DOC_MAIN_SGML_FILE).multipath.sed \
+		$(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f \
+		$(DOC_DIR)/$(UDISKS_SECTIONS).multipath.sed \
+		$(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -i -f \
+		$(DOC_DIR)/$(UDISKS_TYPES).multipath.sed \
+		$(builddir)/$(UDISKS_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- MULTIPATH_GENERATED_SECTIONS -->/d" \
+		$(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# MULTIPATH_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+endif # HAVE_MULTIPATH
+
 # GTKDOC for LVM2
 if HAVE_LVM2
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lvm2
@@ -184,6 +200,15 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/bcache
 GTKDOC_LIBS += $(top_builddir)/modules/bcache/libudisks2_bcache.la
 endif # HAVE_BCACHE
 
+# GTKDOC for MULTIPATH
+if HAVE_MULTIPATH
+DOC_SOURCE_DIR += $(top_srcdir)/modules/multipath
+HFILE_GLOB += $(top_srcdir)/modules/multipath/*.h
+CFILE_GLOB += $(top_srcdir)/modules/multipath/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/multipath
+GTKDOC_LIBS += $(top_builddir)/modules/multipath/libudisks2_multipath.la
+endif # HAVE_MULTIPATH
+
 # ------------------------------------------------------------------------------
 
 include $(top_srcdir)/gtk-doc.make
@@ -210,6 +235,9 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).zram.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).zram.block_devices.in                            \
 	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
+	$(DOC_MAIN_SGML_FILE).multipath.dbus.in                                \
+	$(DOC_MAIN_SGML_FILE).multipath.generated.in                           \
+	$(DOC_MAIN_SGML_FILE).multipath.sed                                    \
 	$(UDISKS_TYPES).in.in                                                  \
 	$(UDISKS_TYPES).in                                                     \
         $(UDISKS_TYPES).bcache.in                                              \
@@ -224,6 +252,8 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_TYPES).lvm2.sed                                               \
 	$(UDISKS_TYPES).zram.in                                                \
 	$(UDISKS_TYPES).zram.sed                                               \
+	$(UDISKS_TYPES).multipath.in                                           \
+	$(UDISKS_TYPES).multipath.sed                                          \
 	$(UDISKS_SECTIONS).in.in                                               \
 	$(UDISKS_SECTIONS).in                                                  \
         $(UDISKS_SECTIONS).bcache.sections.in                                  \
@@ -239,6 +269,8 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_SECTIONS).zram.sections.in                                    \
 	$(UDISKS_SECTIONS).zram.sed                                            \
 	$(UDISKS_SECTIONS).lsm.sections.in                                     \
+	$(UDISKS_SECTIONS).multipath.sections.in                               \
+	$(UDISKS_SECTIONS).multipath.sed                                       \
 	version.xml.in                                                         \
 	TODO-ISCSI
 
