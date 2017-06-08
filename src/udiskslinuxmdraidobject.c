@@ -678,8 +678,11 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
             {
               if (device != object->raid_device)
                 {
+                  /* device changed -- remove and re-add the file watchers */
+                  raid_device_removed (object, object->raid_device);
                   g_clear_object (&object->raid_device);
                   object->raid_device = g_object_ref (device);
+                  raid_device_added (object, object->raid_device);
                 }
             }
         }
@@ -804,5 +807,3 @@ udisks_linux_mdraid_object_get_uuid (UDisksLinuxMDRaidObject *object)
   g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
   return object->uuid;
 }
-
-
