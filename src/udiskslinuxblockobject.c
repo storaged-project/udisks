@@ -220,7 +220,7 @@ static void
 udisks_linux_block_object_constructed (GObject *_object)
 {
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
-  GString *str;
+  const gchar *ud_lx_blk_obj_path = NULL;
 
   object->mount_monitor = udisks_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -236,10 +236,12 @@ udisks_linux_block_object_constructed (GObject *_object)
   udisks_linux_block_object_uevent (object, "add", NULL);
 
   /* compute the object path */
-  str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
-  udisks_safe_append_to_object_path (str, g_udev_device_get_name (object->device->udev_device));
-  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), str->str);
-  g_string_free (str, TRUE);
+  ud_lx_blk_obj_path = udisks_linux_block_object_path_gen
+    (g_udev_device_get_name (object->device->udev_device));
+
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object),
+                                          ud_lx_blk_obj_path);
+  g_free ((gchar *) ud_lx_blk_obj_path);
 
   if (G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed (_object);
@@ -954,4 +956,43 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
         }
       close (fd);
     }
+}
+
+const gchar *
+udisks_linux_block_object_path_gen (const char *blk_name)
+{
+  GString *blk_obj_path = NULL;
+  const gchar *rc_str = NULL;
+
+  blk_obj_path = g_string_new("/org/freedesktop/UDisks2/block_devices/");
+  udisks_safe_append_to_object_path (blk_obj_path, blk_name);
+
+  rc_str = g_strdup (blk_obj_path->str);
+
+  g_string_free (blk_obj_path, TRUE);
+  return rc_str;
+}
+
+
+UDisksLinuxBlockObject *
+udisks_linux_block_object_get (GDBusObjectManager *dbus_mgr,
+                               const char *blk_name)
+{
+  const gchar *blk_obj_path = NULL;
+  GDBusObject *dbus_obj = NULL;
+  UDisksLinuxBlockObject *ud_lx_blk_obj = NULL;
+
+  blk_obj_path = udisks_linux_block_object_path_gen (blk_name);
+
+  dbus_obj = g_dbus_object_manager_get_object (dbus_mgr, blk_obj_path);
+
+  if (dbus_obj == NULL)
+    goto out;
+
+  ud_lx_blk_obj =
+    UDISKS_LINUX_BLOCK_OBJECT (G_DBUS_OBJECT_SKELETON (dbus_obj));
+
+out:
+  g_free ((gchar *) blk_obj_path);
+  return ud_lx_blk_obj;
 }

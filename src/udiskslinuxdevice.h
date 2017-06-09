@@ -56,6 +56,14 @@ gboolean           udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
                                                      GCancellable       *cancellable,
                                                      GError            **error);
 
+/*
+ * Return multipath name if provided device is multipath or multipath slave.
+ * Returned memory should be freed via g_free().
+ * Return NULL if not multipath or multipath slave.
+ */
+const gchar *
+udisks_linux_device_multipath_name (UDisksLinuxDevice *ud_lx_dev);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_DEVICE_H__ */

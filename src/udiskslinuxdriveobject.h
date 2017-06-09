@@ -58,6 +58,8 @@ gboolean                udisks_linux_drive_object_should_include_device (GUdevCl
                                                                          UDisksLinuxDevice  *device,
                                                                          gchar             **out_vpd);
 
+UDisksLinuxDevice *
+udisks_linux_drive_object_get_mp_device (UDisksLinuxDriveObject *object);
 
 G_END_DECLS
 

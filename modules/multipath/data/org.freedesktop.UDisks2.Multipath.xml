@@ -1,0 +1,135 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2015 Gris Ge <fge@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ******************************************************************* -->
+
+  <!--
+    org.freedesktop.UDisks2.Drive.Multipath:
+    @short_description: Multipath interface exported on disk objects
+  -->
+  <interface name="org.freedesktop.UDisks2.Drive.Multipath">
+    <!-- Multipath:
+        If the disk drive is multipath device, this is set to the
+        org.freedesktop.UDisks2.Multipath object that it corresponds to. It is
+        '/' otherwise.
+    -->
+    <property name="Multipath" type="o" access="read"/>
+  </interface>
+  <!--
+    org.freedesktop.UDisks2.Block.Multipath:
+    @short_description: Multipath interface exported on block objects
+  -->
+  <interface name="org.freedesktop.UDisks2.Block.Multipath">
+    <!-- Path:
+        If the block is a multipath device slave, this is set to the
+        org.freedesktop.UDisks2.Multipath.Path object that it
+        corresponds to. It is '/' otherwise.
+    -->
+    <property name="Path" type="o" access="read"/>
+    <!-- Multipath:
+        If block is(or part of) multipath device, this is set to the
+        org.freedesktop.UDisks2.Multipath object that it corresponds to. It is
+        '/' otherwise.
+    -->
+    <property name="Multipath" type="o" access="read"/>
+  </interface>
+  <!--
+    org.freedesktop.UDisks2.Multipath:
+    @short_description: A multipath device.
+  -->
+  <interface name="org.freedesktop.UDisks2.Multipath">
+    <!-- WWID:
+        The WWID of certain multipath device(mpath).
+        It depends on "getuid_callout" configuration of multipathd.
+        Normally, it's SCSI VPD page 0x83 device ID or SCSI VPD page
+        0x80(rare) device ID of the disk device.
+    -->
+    <property name="WWID" type="s" access="read"/>
+    <!-- Name:
+        The alias of certain multipath device. For example: "mpatha".
+    -->
+    <property name="Name" type="s" access="read"/>
+    <!-- Block:
+        This is set to the org.freedesktop.UDisks2.Block object of
+        the /dev/dm-XX block
+    -->
+    <property name="Block" type="o" access="read"/>
+    <!-- Drive:
+        This is set to the org.freedesktop.UDisks2.Drive object.
+    -->
+    <property name="Drive" type="o" access="read"/>
+    <!-- Paths:
+        Array of org.freedesktop.UDisks2.Multipath.Path object paths.
+    -->
+    <property name="Paths" type="ao" access="read"/>
+  </interface>
+  <!--
+    org.freedesktop.UDisks2.Multipath.Path:
+    @short_description: A path of multipath path group device.
+  -->
+  <interface name="org.freedesktop.UDisks2.Multipath.Path">
+    <!-- Block:
+        This is set to the org.freedesktop.UDisks2.Block object.
+    -->
+    <property name="Block" type="o" access="read"/>
+    <!-- Status:
+        The status of this path provide by path checker. Should be one of
+        these values:
+            "UNKNOWN"
+            "UNCHECKED"
+            "DOWN"
+            "UP"
+            "SHAKY"
+            "GHOST"
+            "PENDING"
+            "TIMEOUT"
+            "REMOVED"
+            "DELAYED"
+        TODO: Explain here.
+    -->
+    <property name="Status" type="s" access="read"/>
+    <!-- Name:
+        The block name of this mpath path. Example: 'sdb' or 'nvme0n1'
+    -->
+    <property name="Name" type="s" access="read"/>
+    <!-- Multipath:
+        This is set to the org.freedesktop.UDisks2.Multipath object which
+        current path is belong to.
+    -->
+    <property name="Multipath" type="o" access="read"/>
+  </interface>
+  <!--
+    org.freedesktop.UDisks2.Manager.Multipath:
+    @short_description: Multipath add-on to the manager singleton
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager.Multipath">
+    <!-- GetAllMultipaths:
+         Return an array of org.freedesktop.UDisks2.Multipath object paths
+         found on current system.
+    -->
+    <method name="GetAllMultipaths">
+        <arg name="result" direction="out" type="ao"/>
+    </method>
+  </interface>
+</node>

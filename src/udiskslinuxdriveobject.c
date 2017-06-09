@@ -432,6 +432,37 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject *object,
   return ret;
 }
 
+/*
+ * udisks_linux_drive_object_get_mp_device:
+ * @object: A #UDisksLinuxDriveObject.
+ *
+ * Gets the multipath #UDisksLinuxDevice object associated with @object.
+ *
+ * Returns: A #UDisksLinuxDevice or %NULL. The returned object must be freed
+ * with g_object_unref().
+ */
+UDisksLinuxDevice *
+udisks_linux_drive_object_get_mp_device (UDisksLinuxDriveObject *object)
+{
+  UDisksLinuxDevice *ret = NULL;
+  GList *gl = NULL;
+
+  if ((object == NULL) ||
+      (object->devices == NULL) || (object->devices->data == NULL))
+    return NULL;
+
+  for (gl = object->devices; gl != NULL; gl = gl->next)
+    {
+      ret = gl->data;
+      if (udisks_linux_device_is_multipath (ret) == TRUE)
+        {
+          g_object_ref (ret);
+          return ret;
+        }
+    }
+  return NULL;
+}
+
 /**
  * udisks_linux_drive_object_get_block:
  * @object: A #UDisksLinuxDriveObject.
