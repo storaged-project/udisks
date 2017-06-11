@@ -97,7 +97,7 @@ sata_protocol (guint8 cdb[], UDisksAtaCommandProtocol protocol)
  *
  * Sends a command to an ATA device. Blocks the calling thread while the command is pending.
  *
- * Returns: %TRUE if the command succeded, %FALSE if @error is set.
+ * Returns: %TRUE if the command succeeded, %FALSE if @error is set.
  */
 gboolean
 udisks_ata_send_command_sync (gint                       fd,
