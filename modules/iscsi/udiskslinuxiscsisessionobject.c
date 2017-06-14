@@ -400,7 +400,7 @@ udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_obj
   const gchar *sysfs_path;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (module_object), FALSE);
-  g_return_val_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device), FALSE);
+  g_return_val_if_fail (device != NULL && UDISKS_IS_LINUX_DEVICE (device), FALSE);
 
   session_object = UDISKS_LINUX_ISCSI_SESSION_OBJECT (module_object);
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
