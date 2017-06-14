@@ -1,4 +1,3 @@
-import datetime
 import os
 import time
 import threading
@@ -58,7 +57,7 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
         disk_name = os.path.basename(self.vdevs[0])
         obj_path = self.path_prefix + '/block_devices/' + disk_name
 
-        start_time = datetime.datetime.now().timestamp()
+        start_time = time.time()
 
         watch_thread = threading.Thread(target=self._wait_for_job_thread, args=('format-erase', obj_path))
         watch_thread.start()

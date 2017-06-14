@@ -1,5 +1,6 @@
 import dbus
 import os
+import six
 import time
 
 import udiskstestcase
@@ -42,7 +43,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         # first try to create partition with name -> should fail because mbr
         # doesn't support partition names
         msg = 'MBR partition table does not support names'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, 'name',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
@@ -344,7 +345,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid guid
         msg = 'org.freedesktop.UDisks2.Error.Failed: .* is not a valid UUID'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetType('aaaa', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -378,7 +379,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # try to set part type to an extended partition type -- should fail
         msg = 'Refusing to change partition type to that of an extended partition'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetType('0x05', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -412,7 +413,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid name (longer than 36 characters)
         msg = 'Max partition name length is 36 characters'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetName('a' * 37, self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 

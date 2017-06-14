@@ -79,6 +79,12 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
     def test_open(self):
 
+        # O_ACCMODE is node defined in Python 2 version of 'os' module
+        try:
+            from os import O_ACCMODE
+        except ImportError:
+            O_ACCMODE = 3
+
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
@@ -90,7 +96,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(dbus_fd)
 
         fd = dbus_fd.take()
-        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE
+        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & O_ACCMODE
         self.assertEqual(mode, os.O_RDONLY)
         os.close(fd)
 
@@ -99,7 +105,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(dbus_fd)
 
         fd = dbus_fd.take()
-        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE
+        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & O_ACCMODE
         self.assertEqual(mode, os.O_WRONLY)
         os.close(fd)
 

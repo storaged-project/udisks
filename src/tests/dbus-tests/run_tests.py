@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -11,7 +13,8 @@ import glob
 import shutil
 import tempfile
 import re
-import importlib
+import imp
+import atexit
 
 def find_daemon(projdir, system):
     if not system:
@@ -62,7 +65,7 @@ def _copy_files(source_files, target_dir, tmpdir):
     for f in source_files:
         tgt = os.path.join(target_dir, os.path.basename(f))
         if os.path.exists(tgt):
-            shutil.move(tgt, tmpdir.name)
+            shutil.move(tgt, tmpdir)
             restore_list.append((tgt, False))
         else:
             restore_list.append((tgt, True))
@@ -126,7 +129,7 @@ def restore_files(restore_list, tmpdir):
             # this common code integrated with them as well.
             pass
         else:
-            shutil.move(os.path.join(tmpdir.name, os.path.basename(f)), f)
+            shutil.move(os.path.join(tmpdir, os.path.basename(f)), f)
 
 
 def udev_shake():
@@ -143,7 +146,12 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
-    skip_clean = not importlib.find_loader('blivet')
+    try:
+        imp.find_module('blivet')
+    except ImportError:
+        skip_clean = True
+    else:
+        skip_clean = False
     if skip_clean:
         print('Blivet not installed: Skipping force clean')
     else:
@@ -175,7 +183,8 @@ if __name__ == '__main__':
         cleaner.record_state()
 
     if not args.system:
-        tmpdir = tempfile.TemporaryDirectory(prefix='udisks-tst-')
+        tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
+        atexit.register(shutil.rmtree, tmpdir)
         files_to_restore.extend(install_new_policy(projdir, tmpdir))
         files_to_restore.extend(install_new_dbus_conf(projdir, tmpdir))
         files_to_restore.extend(install_new_udev_rules(projdir, tmpdir))
@@ -214,7 +223,6 @@ if __name__ == '__main__':
             daemon_log.close()
 
         restore_files(files_to_restore, tmpdir)
-        tmpdir.cleanup()
 
         udev_shake()
 

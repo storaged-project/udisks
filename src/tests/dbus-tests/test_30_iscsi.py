@@ -4,6 +4,7 @@ import dbus
 import glob
 import os
 import re
+import six
 import time
 import unittest
 
@@ -105,7 +106,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         # wrong password
         msg = 'Login failed: initiator reported error'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
