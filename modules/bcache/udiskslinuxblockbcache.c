@@ -286,7 +286,7 @@ handle_set_mode (UDisksBlockBcache      *block_,
   UDisksLinuxBlockObject *object = NULL;
   gchar *devname = NULL;
   BDKBDBcacheMode mode;
-  gchar *modestr;
+  gchar *modestr = NULL;
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (! object)
