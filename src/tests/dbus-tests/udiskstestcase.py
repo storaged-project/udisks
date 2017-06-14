@@ -15,6 +15,37 @@ def get_call_long(call):
     return call_long
 
 
+def skip_on(skip_on_distros, skip_on_version="", reason=""):
+    """A function returning a decorator to skip some test on a given distribution-version combination
+
+    :param skip_on_distros: distro(s) to skip the test on
+    :type skip_on_distros: str or tuple of str
+    :param str skip_on_version: version of distro(s) to skip the tests on (only
+                                checked on distribution match)
+
+    """
+    if isinstance(skip_on_distros, str):
+        skip_on_distros = (skip_on_distros,)
+
+    bus = dbus.SystemBus()
+
+    # get information about the distribution from systemd (hostname1)
+    sys_info = bus.get_object("org.freedesktop.hostname1", "/org/freedesktop/hostname1")
+    cpe = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemCPEName", dbus_interface=dbus.PROPERTIES_IFACE))
+
+    # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
+    project, distro, version = tuple(cpe.split(":")[2:5])
+
+    def decorator(func):
+        if distro in skip_on_distros and (not skip_on_version or skip_on_version == version):
+            msg = "not supported on this distribution in this version" + (": %s" % reason if reason else "")
+            return unittest.skip(msg)(func)
+        else:
+            return func
+
+    return decorator
+
+
 class DBusProperty(object):
 
     TIMEOUT = 5
