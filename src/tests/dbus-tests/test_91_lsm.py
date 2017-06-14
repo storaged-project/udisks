@@ -31,7 +31,7 @@ class UdisksLsmLocalTestCase(udiskstestcase.UdisksTestCase):
                 method_name,
                 dbus_interface=self.iface_prefix + ".Drive.LsmLocal")
             try:
-                method({})
+                method(self.no_options)
                 self.fail("LED control should failed as NotSupported on "
                           "LIO disks")
             except dbus.exceptions.DBusException as dbus_err:
