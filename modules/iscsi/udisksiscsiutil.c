@@ -136,18 +136,18 @@ iscsi_make_auth_info (struct libiscsi_auth_info *auth_info,
   if (username && *username)
     {
       auth_info->method = libiscsi_auth_chap;
-      strncpy (auth_info->chap.username, username, LIBISCSI_VALUE_MAXLEN);
+      strncpy (auth_info->chap.username, username, LIBISCSI_VALUE_MAXLEN - 1);
       if (password && *password)
-        strncpy (auth_info->chap.password, password, LIBISCSI_VALUE_MAXLEN);
+        strncpy (auth_info->chap.password, password, LIBISCSI_VALUE_MAXLEN - 1);
     }
 
   /* CHAP reverse username + reverse password */
   if (reverse_username && *reverse_username)
     {
       auth_info->method = libiscsi_auth_chap;
-      strncpy (auth_info->chap.reverse_username, reverse_username, LIBISCSI_VALUE_MAXLEN);
+      strncpy (auth_info->chap.reverse_username, reverse_username, LIBISCSI_VALUE_MAXLEN - 1);
       if (reverse_password && *reverse_password)
-        strncpy (auth_info->chap.reverse_password, reverse_password, LIBISCSI_VALUE_MAXLEN);
+        strncpy (auth_info->chap.reverse_password, reverse_password, LIBISCSI_VALUE_MAXLEN - 1);
     }
 }
 
@@ -164,9 +164,9 @@ iscsi_make_node (struct libiscsi_node *node,
   memset (node, 0, sizeof (struct libiscsi_node));
 
   /* Fill libiscsi parameters. */
-  strncpy (node->name, name, LIBISCSI_VALUE_MAXLEN);
-  strncpy (node->address, address, NI_MAXHOST);
-  strncpy (node->iface, iface, LIBISCSI_VALUE_MAXLEN);
+  strncpy (node->name, name, LIBISCSI_VALUE_MAXLEN - 1);
+  strncpy (node->address, address, NI_MAXHOST - 1);
+  strncpy (node->iface, iface, LIBISCSI_VALUE_MAXLEN - 1);
   node->tpgt = tpgt;
   node->port = port;
 }
