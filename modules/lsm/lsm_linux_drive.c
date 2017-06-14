@@ -273,8 +273,6 @@ remove_out:
       g_object_unref (std_lx_drv_lsm);
     }
 
-  if (new_lsm_data != NULL)
-    std_lsm_vol_data_free (new_lsm_data);
   return FALSE;
 }
 
