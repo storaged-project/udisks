@@ -1,5 +1,7 @@
 import os
 import dbus
+import unittest
+
 import udiskstestcase
 
 
@@ -9,6 +11,12 @@ class UdisksLsmLocalTestCase(udiskstestcase.UdisksTestCase):
     """
     _LED_CONTROL_METHOD_NAMES = ["TurnFaultLEDOn", "TurnFaultLEDOff",
                                  "TurnIdentLEDOn", "TurnIdentLEDOff"]
+
+    @classmethod
+    def setUpClass(cls):
+        udiskstestcase.UdisksTestCase.setUpClass()
+        if not cls.check_module_loaded('LSM'):
+            raise unittest.SkipTest('Udisks module for LSM tests not loaded, skipping.')
 
     def _get_dbus_drv_obj(self, dbus_blk_obj):
         obj_path = self.get_property_raw(dbus_blk_obj, '.Block', 'Drive')
