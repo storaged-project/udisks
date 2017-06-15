@@ -433,6 +433,7 @@ AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 
 # LSM module
 have_lsm=no
+have_libconfig=no
 AC_ARG_ENABLE(
     lsm, AS_HELP_STRING([--enable-lsm], [enable LibStorageMgmt support]))
 if test "x$enable_lsm" = "xyes" \
@@ -447,10 +448,13 @@ if test "x$enable_lsm" = "xyes" \
 
     PKG_CHECK_MODULES(
         [LIBCONFIG], [libconfig >= 1.3.2],
-        [AC_DEFINE(HAVE_LSM, 1, [Define if libconfig is available])
-            have_lsm=yes],
+        [have_libconfig=yes],
         [AC_MSG_WARN([libconfig 1.3.2 or newer not found.])
-            have_lsm=no])
+            have_libconfig=no])
+
+  if test "x$have_libconfig" = "xno"; then
+      have_lsm=no
+  fi
 
   if test "x$have_lsm" = "xno"; then
       if test "x$enable_lsm" = "xyes" -o "x$enable_modules" = "xyes"; then
