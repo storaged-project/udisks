@@ -75,7 +75,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(disk)
 
         # create filesystem with label
-        label = 'test'
+        label = 'TEST' if self._fs_name == 'vfat' else 'test'  # XXX mkfs.vfat changes labels to uppercase
         d = dbus.Dictionary(signature='sv')
         d['label'] = label
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
