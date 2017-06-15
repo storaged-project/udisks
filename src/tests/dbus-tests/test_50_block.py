@@ -74,7 +74,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         dbus_type.assertIn(['0x42', '0x82'])
 
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertIn(sys_type, ['0x42', '0x82'])
 
     def test_open(self):
