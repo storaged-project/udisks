@@ -830,7 +830,7 @@ check_for_vpd (GUdevDevice *device)
 
   g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
 
-  /* order of preference: WWN_serial, WWN, serial, path */
+  /* order of preference: WWN_serial, WWN, path */
   serial = g_udev_device_get_property (device, "ID_SERIAL");
   wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
   path = g_udev_device_get_property (device, "ID_PATH");
@@ -840,10 +840,6 @@ check_for_vpd (GUdevDevice *device)
         ret = g_strdup_printf ("%s_%s", wwn, serial);
       else
         ret = g_strdup (wwn);
-    }
-  else if (serial != NULL && strlen (serial) > 0)
-    {
-      ret = g_strdup (serial);
     }
   else if (path != NULL && strlen (path) > 0)
     {
