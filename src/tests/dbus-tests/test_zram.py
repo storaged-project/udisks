@@ -110,6 +110,48 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         zrams = self._get_zrams()
         self.assertEqual(len(zrams), 0)
 
+    def _test_zram_properties_fedora(self, zram_obj, zram_name):
+        # test some properties
+        sys_stat = self.read_file('/sys/block/%s/stat' % zram_name).strip().split()
+        self.assertEqual(len(sys_stat), 11)
+        sys_reads = sys_stat[0]
+        sys_writes = sys_stat[4]
+
+        dbus_reads = self.get_property(zram_obj, '.Block.ZRAM', 'NumReads')
+        dbus_reads.assertEqual(int(sys_reads))
+
+        dbus_writes = self.get_property(zram_obj, '.Block.ZRAM', 'NumWrites')
+        dbus_writes.assertEqual(int(sys_writes))
+
+        sys_mmstat = self.read_file('/sys/block/%s/mm_stat' % zram_name).strip().split()
+        self.assertEqual(len(sys_mmstat), 7)
+        sys_compr = sys_mmstat[1]
+        sys_orig = sys_mmstat[0]
+
+        dbus_compr = self.get_property(zram_obj, '.Block.ZRAM', 'ComprDataSize')
+        dbus_compr.assertEqual(int(sys_compr))
+
+        dbus_orig = self.get_property(zram_obj, '.Block.ZRAM', 'OrigDataSize')
+        dbus_orig.assertEqual(int(sys_orig))
+
+    def _test_zram_properties_centos(self, zram_obj, zram_name):
+        # test some properties
+        sys_reads = int(self.read_file("/sys/block/zram0/num_reads").strip())
+        dbus_reads = self.get_property(zram_obj, '.Block.ZRAM', 'NumReads')
+        dbus_reads.assertEqual(sys_reads)
+
+        sys_writes = int(self.read_file("/sys/block/zram0/num_writes").strip())
+        dbus_writes = self.get_property(zram_obj, '.Block.ZRAM', 'NumWrites')
+        dbus_writes.assertEqual(int(sys_writes))
+
+        sys_compr = int(self.read_file("/sys/block/zram0/compr_data_size").strip())
+        dbus_compr = self.get_property(zram_obj, '.Block.ZRAM', 'ComprDataSize')
+        dbus_compr.assertEqual(sys_compr)
+
+        sys_orig = int(self.read_file("/sys/block/zram0/orig_data_size").strip())
+        dbus_orig = self.get_property(zram_obj, '.Block.ZRAM', 'OrigDataSize')
+        dbus_orig.assertEqual(sys_orig)
+
     def test_activate_deactivate(self):
         manager = self.get_object('/Manager')
         zrams = manager.CreateDevices([10 * 1024**2], [1], self.no_options,
@@ -137,27 +179,11 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         self.assertIn('/dev/%s' % zram_name, swaps)
 
         # test some properties
-        sys_stat = self.read_file('/sys/block/%s/stat' % zram_name).strip().split()
-        self.assertEqual(len(sys_stat), 11)
-        sys_reads = sys_stat[0]
-        sys_writes = sys_stat[4]
-
-        dbus_reads = self.get_property(zram, '.Block.ZRAM', 'NumReads')
-        dbus_reads.assertEqual(int(sys_reads))
-
-        dbus_writes = self.get_property(zram, '.Block.ZRAM', 'NumWrites')
-        dbus_writes.assertEqual(int(sys_writes))
-
-        sys_mmstat = self.read_file('/sys/block/%s/mm_stat' % zram_name).strip().split()
-        self.assertEqual(len(sys_mmstat), 7)
-        sys_compr = sys_mmstat[1]
-        sys_orig = sys_mmstat[0]
-
-        dbus_compr = self.get_property(zram, '.Block.ZRAM', 'ComprDataSize')
-        dbus_compr.assertEqual(int(sys_compr))
-
-        dbus_orig = self.get_property(zram, '.Block.ZRAM', 'OrigDataSize')
-        dbus_orig.assertEqual(int(sys_orig))
+        # we need to read system values from different files on Fedora and CentOS
+        if self.distro[1] == "fedora":
+            self._test_zram_properties_fedora(zram, zram_name)
+        elif self.distro[1] in ('centos', 'enterprise_linux'):
+            self._test_zram_properties_centos(zram, zram_name)
 
         # deactivate the ZRAM device
         zram.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.Block.ZRAM')
