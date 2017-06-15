@@ -195,6 +195,12 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
     def test_session(self):
         manager = self.get_object('/Manager')
+
+        # first check if session objects are supported
+        supported = self.get_property_raw(manager, '.Manager.ISCSI.Initiator', 'SessionsSupported')
+        if not supported:
+            self.skipTest("ISCSI.Session objects not supported.")
+
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
 
