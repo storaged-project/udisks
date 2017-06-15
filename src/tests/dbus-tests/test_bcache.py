@@ -16,6 +16,7 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('Bcache'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for bcache tests not loaded, skipping.')
 
     def setUp(self):

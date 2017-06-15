@@ -51,6 +51,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('ZRAM'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for zram tests not loaded, skipping.')
 
         cls._save_conf_files()

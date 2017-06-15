@@ -16,6 +16,7 @@ class UdisksLsmLocalTestCase(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('LSM'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for LSM tests not loaded, skipping.')
 
     def _get_dbus_drv_obj(self, dbus_blk_obj):

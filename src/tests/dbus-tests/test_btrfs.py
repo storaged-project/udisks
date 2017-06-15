@@ -22,6 +22,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('BTRFS'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for btrfs tests not loaded, skipping.')
 
     @contextmanager

@@ -199,6 +199,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # first check if session objects are supported
         supported = self.get_property_raw(manager, '.Manager.ISCSI.Initiator', 'SessionsSupported')
         if not supported:
+            udiskstestcase.UdisksTestCase.tearDownClass()
             self.skipTest("ISCSI.Session objects not supported.")
 
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
