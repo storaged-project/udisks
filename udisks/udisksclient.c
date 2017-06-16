@@ -1566,14 +1566,15 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
   UDisksClient *client = UDISKS_CLIENT (user_data);
   UDisksClientClass *client_class = UDISKS_CLIENT_GET_CLASS (client);
 
-  GVariantIter *iter = NULL;
-  const gchar *property_name = NULL;
+  GVariantIter iter;
+  gchar *property_name = NULL;
 
   /* never emit the change signal for Job objects */
-  if (g_strcmp0 (g_dbus_proxy_get_interface_name (interface_proxy), "org.freedesktop.UDisks2.Drive.Job"))
+  if (g_strcmp0 (g_dbus_proxy_get_interface_name (interface_proxy), "org.freedesktop.UDisks2.Drive.Job") == 0)
     return;
 
-  while (g_variant_iter_next (iter, "{&sv}", &property_name, NULL))
+  g_variant_iter_init (&iter, changed_properties);
+  while (g_variant_iter_next (&iter, "{&sv}", &property_name, NULL))
     {
       if (! g_hash_table_contains (client_class->changed_blacklist, property_name))
         {
