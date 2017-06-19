@@ -259,7 +259,7 @@ if test "x$enable_lvm2" = "xyes" \
   SAVE_CFLAGS=$CFLAGS
   SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+  CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-lvm presence])
   AC_TRY_COMPILE([#include <blockdev/lvm.h>], [],
@@ -525,10 +525,10 @@ LDFLAGS=$SAVE_LDFLAGS
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
 
-CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
 AC_MSG_CHECKING([libblockdev-loop presence])
-AC_TRY_COMPILE([#include <loop.h>], [],
+AC_TRY_COMPILE([#include <blockdev/loop.h>], [],
                [AC_MSG_RESULT([yes])
                have_loop=yes],
                [AC_MSG_RESULT([no])
@@ -545,10 +545,10 @@ fi
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
 
-CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
 AC_MSG_CHECKING([libblockdev-swap presence])
-AC_TRY_COMPILE([#include <swap.h>], [],
+AC_TRY_COMPILE([#include <blockdev/swap.h>], [],
                [AC_MSG_RESULT([yes])
                have_swap=yes],
                [AC_MSG_RESULT([no])
@@ -565,7 +565,7 @@ fi
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
 
-CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
 AC_MSG_CHECKING([libblockdev-mdraid presence])
 AC_TRY_COMPILE([#include <blockdev/mdraid.h>], [],
@@ -585,7 +585,7 @@ fi
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
 
-CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
 AC_MSG_CHECKING([libblockdev-fs presence])
 AC_TRY_COMPILE([#include <blockdev/fs.h>], [],
