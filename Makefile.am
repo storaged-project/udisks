@@ -3,6 +3,8 @@
 SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 
+PYTHON ?= python3
+
 NULL =
 
 SUBDIRS = data udisks src tools modules po doc
@@ -36,7 +38,7 @@ clean-local:
 
 dbus-tests:
 	$(MAKE) all &>/dev/null
-	sudo src/tests/dbus-tests/run_tests.py -l dbus_tests.log |& tee dbus_tests_output.log \
+	sudo $(PYTHON) src/tests/dbus-tests/run_tests.py -l dbus_tests.log |& tee dbus_tests_output.log \
        && echo "dbus-tests: SUCCESS" >> RESULTS || echo "dbus-tests: FAILED" >> RESULTS
 	@tail -1 RESULTS | grep -q "dbus-tests: SUCCESS"
 
@@ -48,7 +50,7 @@ unittests:
 
 integration-tests:
 	$(MAKE) all &>/dev/null
-	cd src/tests && sudo ./integration-test | tee -a ../../integration_tests_output.log \
+	cd src/tests && sudo $(PYTHON) ./integration-test | tee -a ../../integration_tests_output.log \
        && echo "integration-tests: SUCCESS" >> ../../RESULTS || echo "integration-tests: FAILED" >> ../../RESULTS
 	@tail -1 RESULTS | grep -q "integration-tests: SUCCESS"
 
