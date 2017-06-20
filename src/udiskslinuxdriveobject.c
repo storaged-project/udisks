@@ -827,19 +827,28 @@ check_for_vpd (GUdevDevice *device)
   const gchar *serial;
   const gchar *wwn;
   const gchar *path;
+  const gchar *model;
 
   g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
 
-  /* order of preference: WWN_serial, WWN, path */
+  /* order of preference: WWN_serial, WWN, Model_serial, serial, path */
   serial = g_udev_device_get_property (device, "ID_SERIAL");
   wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
   path = g_udev_device_get_property (device, "ID_PATH");
+  model = g_udev_device_get_property (device, "ID_MODEL");
   if (wwn != NULL && strlen (wwn) > 0 && !is_wwn_black_listed (wwn))
     {
       if (serial != NULL && strlen (serial) > 0)
         ret = g_strdup_printf ("%s_%s", wwn, serial);
       else
         ret = g_strdup (wwn);
+    }
+  else if (serial != NULL && strlen (serial) > 0)
+    {
+      if (model != NULL && strlen (model) > 0)
+        ret = g_strdup_printf ("%s_%s", model, serial);
+      else
+        ret = g_strdup (serial);
     }
   else if (path != NULL && strlen (path) > 0)
     {
