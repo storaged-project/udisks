@@ -74,10 +74,16 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         dbus_type.assertIn(['0x42', '0x82'])
 
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertIn(sys_type, ['0x42', '0x82'])
 
     def test_open(self):
+
+        # O_ACCMODE is node defined in Python 2 version of 'os' module
+        try:
+            from os import O_ACCMODE
+        except ImportError:
+            O_ACCMODE = 3
 
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -90,7 +96,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(dbus_fd)
 
         fd = dbus_fd.take()
-        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE
+        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & O_ACCMODE
         self.assertEqual(mode, os.O_RDONLY)
         os.close(fd)
 
@@ -99,7 +105,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(dbus_fd)
 
         fd = dbus_fd.take()
-        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE
+        mode = fcntl.fcntl(fd, fcntl.F_GETFL) & O_ACCMODE
         self.assertEqual(mode, os.O_WRONLY)
         os.close(fd)
 

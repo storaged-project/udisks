@@ -1,5 +1,6 @@
 import dbus
 import os
+import six
 import time
 
 import udiskstestcase
@@ -42,7 +43,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         # first try to create partition with name -> should fail because mbr
         # doesn't support partition names
         msg = 'MBR partition table does not support names'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, 'name',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
@@ -78,7 +79,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         sys_start = int(self.read_file('%s/start' % part_syspath))
         self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        # format the partition so blkid is able to display info about it
+        # (yes, it is stupid, but this is how blkid works on CentOS/RHEL 7)
+        _ret, _out = self.run_command('mkfs.ext2 /dev/%s' % part_name)
+
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, part_type)
 
         # check uuid and part number
@@ -119,7 +124,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         # check system type
         part_name = str(ext_part.object_path).split('/')[-1]
-        _ret, sys_pttype = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_pttype = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
@@ -194,7 +199,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, gpt_name)
 
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        # format the partition so blkid is able to display info about it
+        # (yes, it is stupid, but this is how blkid works on CentOS/RHEL 7)
+        _ret, _out = self.run_command('mkfs.ext2 /dev/%s' % part_name)
+
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, gpt_type)
 
     def test_create_with_format(self):
@@ -326,7 +335,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_flags = self.run_command('lsblk -d -no PARTFLAGS /dev/%s' % part_name)
+        _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
         self.assertEqual(sys_flags, '0x80')
 
     def test_gpt_type(self):
@@ -344,7 +353,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid guid
         msg = 'org.freedesktop.UDisks2.Error.Failed: .* is not a valid UUID'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetType('aaaa', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -360,7 +369,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, home_guid)
 
     def test_dos_type(self):
@@ -378,7 +387,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # try to set part type to an extended partition type -- should fail
         msg = 'Refusing to change partition type to that of an extended partition'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetType('0x05', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -394,7 +403,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # test flags value from sysytem
         part_name = str(part.object_path).split('/')[-1]
-        _ret, sys_type = self.run_command('lsblk -d -no PARTTYPE /dev/%s' % part_name)
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, part_type)
 
     def test_name(self):
@@ -412,7 +421,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid name (longer than 36 characters)
         msg = 'Max partition name length is 36 characters'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             part.SetName('a' * 37, self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 

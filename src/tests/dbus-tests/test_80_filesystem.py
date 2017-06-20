@@ -1,5 +1,7 @@
 import dbus
 import os
+import six
+import shutil
 import tempfile
 import unittest
 
@@ -73,7 +75,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(disk)
 
         # create filesystem with label
-        label = 'test'
+        label = 'TEST' if self._fs_name == 'vfat' else 'test'  # XXX mkfs.vfat changes labels to uppercase
         d = dbus.Dictionary(signature='sv')
         d['label'] = label
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
@@ -162,11 +164,11 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._clean_format, disk)
 
         # create a tempdir
-        tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(tmp.cleanup)
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
 
         # configuration items as arrays of dbus.Byte
-        mnt = self.str_to_ay(tmp.name)
+        mnt = self.str_to_ay(tmp)
         fstype = self.str_to_ay(self._fs_name)
         opts = self.str_to_ay('ro')
 
@@ -184,13 +186,13 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
-        self.assertEqual(dbus_mnt, tmp.name)
+        self.assertEqual(dbus_mnt, tmp)
 
         # system mountpoint
-        self.assertTrue(os.path.ismount(tmp.name))
+        self.assertTrue(os.path.ismount(tmp))
 
         _ret, out = self.run_command('mount | grep %s' % self.vdevs[0])
-        self.assertIn(tmp.name, out)
+        self.assertIn(tmp, out)
         self.assertIn('ro', out)
 
 
@@ -236,7 +238,7 @@ class XFSTestCase(UdisksFSTestCase):
     def _invalid_label(self, disk):
         label = 'a a'  # space not allowed
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
@@ -251,7 +253,7 @@ class VFATTestCase(UdisksFSTestCase):
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def _add_user(self):
@@ -276,11 +278,11 @@ class VFATTestCase(UdisksFSTestCase):
 
     def _set_user_mountable(self, disk):
         # create a tempdir
-        tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(tmp.cleanup)
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
 
         # configuration items as arrays of dbus.Byte
-        mnt = self.str_to_ay(tmp.name)
+        mnt = self.str_to_ay(tmp)
         fstype = self.str_to_ay(self._fs_name)
         opts = self.str_to_ay('users,x-udisks-auth')
 
@@ -565,7 +567,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         # try to create some nonexisting filesystem
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: Creation of file system '\
               'type definitely-nonexisting-fs is not supported'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Format('definitely-nonexisting-fs', self.no_options,
                         dbus_interface=self.iface_prefix + '.Block')
 
@@ -587,7 +589,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: File system '\
               'type %s does not support labels' % fs._fs_name
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Format(fs._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
 
         # create minix filesystem without label and try to set it later
@@ -596,7 +598,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: Don\'t know how to '\
               'change label on device of type filesystem:%s' % fs._fs_name
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel('test', self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def test_mount_auto(self):
@@ -619,7 +621,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         d['fstype'] = 'xfs'
 
         msg = '[Ww]rong fs type'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)
 
@@ -630,14 +632,14 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         msg = 'org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option '\
               '`definitely-nonexisting-option\' is not allowed'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)
 
         # should not be mounted -- so lets try to unmount it
         msg = 'org.freedesktop.UDisks2.Error.NotMounted: Device `%s\' is not '\
               'mounted' % self.vdevs[0]
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def test_mount_fstab(self):

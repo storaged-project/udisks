@@ -350,6 +350,8 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
           goto out;
         }
     }
+  else
+    g_clear_error (&error);
 
   part_spec = bd_part_create_part (device_name, part_type, offset,
                                    size, BD_PART_ALIGN_OPTIMAL, &error);

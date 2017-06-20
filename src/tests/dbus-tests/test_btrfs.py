@@ -1,4 +1,6 @@
 import dbus
+import six
+import shutil
 import re
 import tempfile
 import unittest
@@ -20,18 +22,19 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('BTRFS'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for btrfs tests not loaded, skipping.')
 
     @contextmanager
     def _temp_mount(self, device):
-        tmp = tempfile.TemporaryDirectory()
-        self.run_command('mount %s %s' % (device, tmp.name))
+        tmp = tempfile.mkdtemp()
+        self.run_command('mount %s %s' % (device, tmp))
 
         try:
-            yield tmp.name
+            yield tmp
         finally:
-            self.run_command('umount %s' % tmp.name)
-            tmp.cleanup()
+            self.run_command('umount %s' % tmp)
+            shutil.rmtree(tmp)
 
     def _clean_format(self, device):
         d = dbus.Dictionary(signature='sv')
@@ -104,7 +107,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         # invalid raid level
         msg = '[uU]nknown profile raidN'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             manager.CreateVolume([dev.obj_path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',
                                  self.no_options,
@@ -159,7 +162,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         # not mounted, should fail
         msg = 'org.freedesktop.UDisks2.Error.NotMounted: Volume not mounted'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             dev.obj.CreateSubvolume('test_sub1', self.no_options,
                                     dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 
@@ -207,7 +210,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         # shouldn't be possible to remove only device
         with self._temp_mount(dev1.path):
             msg = 'unable to remove the only writeable device'
-            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 dev1.obj.RemoveDevice(dev1.obj_path, self.no_options,
                                       dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 

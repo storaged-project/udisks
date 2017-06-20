@@ -1,5 +1,6 @@
 import dbus
 import os
+import six
 
 import udiskstestcase
 
@@ -108,13 +109,13 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # no password
         msg = 'org.freedesktop.UDisks2.Error.Failed: No key available.*'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Unlock("", self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 
         # wrong password
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error unlocking %s *' % self.vdevs[0]
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Unlock('shbdkjaf', self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -144,7 +145,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # should not be possible to close mounted luks
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error locking'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
         # now unmount it and try to close it again
@@ -166,7 +167,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # old password, should fail
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error unlocking %s *' % self.vdevs[0]
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Unlock('test', self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 

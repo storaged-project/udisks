@@ -13,6 +13,7 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('LVM2'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for LVM tests not loaded, skipping.')
 
     def _create_vg(self, vgname, devices):

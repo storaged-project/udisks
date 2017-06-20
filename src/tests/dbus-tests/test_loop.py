@@ -1,6 +1,7 @@
 import time
 import dbus
 import os
+import shutil
 import tempfile
 import udiskstestcase
 
@@ -48,10 +49,10 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
         # to be able to check that property value is set we need to mount the
         # device first
         flag_file_name = '/sys/class/block/%s/loop/autoclear' % os.path.basename(self.dev_name)
-        tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(tmp.cleanup)
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
         self.run_command('mkfs -t ext4 %s' % self.dev_name)
-        self.run_command('mount %s %s' % (self.dev_name, tmp.name))
+        self.run_command('mount %s %s' % (self.dev_name, tmp))
         self.iface.SetAutoclear(True, self.no_options)
         self.udev_settle()
         autoclear_flag = self.get_property(self.device, '.Loop', 'Autoclear')

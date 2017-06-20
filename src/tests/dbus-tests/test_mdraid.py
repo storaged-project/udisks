@@ -123,7 +123,7 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
 
         # name of the array reported by 'mdadm' should look like 'nodename':'array_name'
         # if it's smaller than 31 characters
-        nodename = os.uname().nodename
+        nodename = os.uname()[1]
         if len(nodename + array_name) < 31:
             dbus_name.assertEqual("%s:%s" % (nodename, array_name))
         else:
@@ -209,7 +209,7 @@ class RAID0TestCase(RAIDLevel):
         # name of the array reported by 'mdadm' should look like 'nodename':'array_name'
         # if it's smaller than 31 characters
         # because we didn't specify name of the array, it should be just the number part from 'md12X'
-        nodename = os.uname().nodename
+        nodename = os.uname()[1]
         if len(nodename + md_name[2:]) < 31:
             dbus_name.assertEqual("%s:%s" % (nodename, md_name[2:]))
         else:

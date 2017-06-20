@@ -6,8 +6,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -27,8 +25,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk4",
       "name": "udisks_test_disk4",
@@ -42,8 +39,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -63,8 +58,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk3",
       "name": "udisks_test_disk3",
@@ -78,8 +72,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -99,8 +91,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk2",
       "name": "udisks_test_disk2",
@@ -114,8 +105,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -135,8 +124,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk1",
       "name": "udisks_test_disk1",
@@ -150,8 +138,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -171,8 +157,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk_iscsi1",
       "name": "udisks_test_iscsi1",
@@ -186,8 +171,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -207,8 +190,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk_iscsi2",
       "name": "udisks_test_iscsi2",
@@ -222,8 +204,6 @@
         "block_size": 512,
         "emulate_3pc": 1,
         "emulate_caw": 1,
-        "emulate_dpo": 1,
-        "emulate_fua_read": 1,
         "emulate_fua_write": 1,
         "emulate_model_alias": 1,
         "emulate_rest_reord": 0,
@@ -243,8 +223,7 @@
         "pi_prot_type": 0,
         "queue_depth": 128,
         "unmap_granularity": 1,
-        "unmap_granularity_alignment": 0,
-        "unmap_zeroes_data": 0
+        "unmap_granularity_alignment": 0
       },
       "dev": "/var/tmp/udisks_test_disk_iscsi3",
       "name": "udisks_test_iscsi3",
@@ -260,7 +239,6 @@
       "tpgs": [
         {
           "attributes": {
-            "fabric_prot_type": 0
           },
           "enable": true,
           "luns": [
@@ -282,7 +260,6 @@
       "tpgs": [
         {
           "attributes": {
-            "fabric_prot_type": 0
           },
           "enable": true,
           "luns": [
@@ -304,7 +281,6 @@
       "tpgs": [
         {
           "attributes": {
-            "fabric_prot_type": 0
           },
           "enable": true,
           "luns": [
@@ -326,7 +302,6 @@
       "tpgs": [
         {
           "attributes": {
-            "fabric_prot_type": 0
           },
           "enable": true,
           "luns": [
@@ -354,7 +329,6 @@
             "default_erl": 0,
             "demo_mode_discovery": 1,
             "demo_mode_write_protect": 0,
-            "fabric_prot_type": 0,
             "generate_node_acls": 1,
             "login_timeout": 15,
             "netif_timeout": 2,
@@ -417,7 +391,6 @@
             "default_erl": 0,
             "demo_mode_discovery": 1,
             "demo_mode_write_protect": 1,
-            "fabric_prot_type": 0,
             "generate_node_acls": 0,
             "login_timeout": 15,
             "netif_timeout": 2,
@@ -504,7 +477,6 @@
             "default_erl": 0,
             "demo_mode_discovery": 1,
             "demo_mode_write_protect": 1,
-            "fabric_prot_type": 0,
             "generate_node_acls": 0,
             "login_timeout": 15,
             "netif_timeout": 2,

@@ -4,6 +4,7 @@ import dbus
 import glob
 import os
 import re
+import six
 import time
 import unittest
 
@@ -105,7 +106,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         # wrong password
         msg = 'Login failed: initiator reported error'
-        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
@@ -194,6 +195,13 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
     def test_session(self):
         manager = self.get_object('/Manager')
+
+        # first check if session objects are supported
+        supported = self.get_property_raw(manager, '.Manager.ISCSI.Initiator', 'SessionsSupported')
+        if not supported:
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            self.skipTest("ISCSI.Session objects not supported.")
+
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
 

@@ -3,6 +3,8 @@ import subprocess
 import glob
 import syslog
 
+from distutils.version import LooseVersion
+
 
 class ForceClean(object):
     """Class for force cleaning after tests have finished. The reason for this
@@ -51,22 +53,25 @@ class ForceClean(object):
                           " tests and will be removed by force: %s" % str(diff)[1:-1])
 
         import blivet
-        blvt = blivet.Blivet()
-        blvt.reset()
-        for device in diff:
-            # kill all processes that are using the device
-            # get list of mountpoints from blivet mountpoint dictionary
-            mountpoints = [mpoint for mpoint, dev in
-                           blivet.mounts.mounts_cache.mountpoints.items()
-                           if dev == device]
 
-            for mountpoint in mountpoints:
-                self._run_command("fuser -km %s" % mountpoint)
+        # we need at least blivet 2.0 to do this cleanup
+        if LooseVersion(blivet.__version__) >= LooseVersion("2.0.0"):
+            blvt = blivet.Blivet()
+            blvt.reset()
+            for device in diff:
+                # kill all processes that are using the device
+                # get list of mountpoints from blivet mountpoint dictionary
+                mountpoints = [mpoint for mpoint, dev in
+                               blivet.mounts.mounts_cache.mountpoints.items()
+                               if dev == device]
 
-        # just try to remove everything
-        blvt.config.exclusive_disks = diff
-        blvt.reset()
-        blvt.devicetree.teardown_all()
+                for mountpoint in mountpoints:
+                    self._run_command("fuser -km %s" % mountpoint)
+
+            # just try to remove everything
+            blvt.config.exclusive_disks = diff
+            blvt.reset()
+            blvt.devicetree.teardown_all()
 
         self._run_command("modprobe -r scsi_debug")
         self._run_command("targetcli clearconfig confirm=True")
