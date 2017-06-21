@@ -741,9 +741,9 @@ poll_vg_update (GObject      *source_obj,
 
       if (lv_info->metadata_lv && *(lv_info->metadata_lv) != '\0')
         /* this is not cheap to do, but not many LVs have a metadata LV */
-        for (BDLVMLVdata **lvs_p=lvs; !meta_lv_info && *lvs_p; lvs_p++)
-          if (cmp_int_lv_name ((*lvs_p)->lv_name, lv_info->metadata_lv))
-            meta_lv_info = *lvs_p;
+        for (BDLVMLVdata **lvs_np=lvs; !meta_lv_info && *lvs_np; lvs_np++)
+          if (cmp_int_lv_name ((*lvs_np)->lv_name, lv_info->metadata_lv))
+            meta_lv_info = *lvs_np;
 
       update_operations (daemon, lv_name, lv_info, &needs_polling);
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);

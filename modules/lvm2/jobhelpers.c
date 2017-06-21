@@ -280,11 +280,11 @@ void vgs_task_func (GTask        *task,
   VGsPVsData *ret = g_new0 (VGsPVsData, 1);
 
   ret->vgs = bd_lvm_vgs (&error);
-  if (!ret)
+  if (!ret->vgs)
     g_task_return_error (task, error);
 
   ret->pvs = bd_lvm_pvs (&error);
-  if (!ret)
+  if (!ret->pvs)
     g_task_return_error (task, error);
   else
     g_task_return_pointer (task, ret, (GDestroyNotify) vgs_pvs_data_free);

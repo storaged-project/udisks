@@ -235,6 +235,15 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                      N_("Authentication is required to create a volume group"),
                                      invocation);
 
+  if (arg_blocks == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "List of block devices is NULL!");
+      goto out;
+    }
+
   /* Collect and validate block objects
    *
    * Also, check we can open the block devices at the same time - this
