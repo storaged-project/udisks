@@ -105,7 +105,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._remove_format, disk)
 
         # create extended partition
-        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '0x05', '',
+        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(150 * 1024**2), '0x05', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -128,7 +128,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertIn(sys_pttype, ['0x5', '0xf', '0x85'])  # lsblk prints 0xf instead of 0x0f
 
         # create logical partition
-        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+        log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
@@ -142,9 +142,18 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         dbus_cont.assertTrue()
 
         # create one more logical partition
-        log_path = disk.CreatePartition(dbus.UInt64(101 * 1024**2), dbus.UInt64(100 * 1024**2), '', '',
-                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        log_path2 = disk.CreatePartition(dbus.UInt64(51 * 1024**2), dbus.UInt64(50 * 1024**2), '', '',
+                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
+
+        log_part2 = self.bus.get_object(self.iface_prefix, log_path2)
+        self.assertIsNotNone(log_part2)
+
+        self.addCleanup(self._remove_partition, log_part)
+
+        # check if its a 'contained'
+        dbus_cont = self.get_property(log_part2, '.Partition', 'IsContained')
+        dbus_cont.assertTrue()
 
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
