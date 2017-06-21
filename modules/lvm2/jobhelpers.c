@@ -96,14 +96,17 @@ gboolean lvresize_job_func (UDisksThreadedJob  *job,
                             GError            **error)
 {
     LVJobData *data = user_data;
-    BDExtraArg *extra[3] = {NULL, NULL, NULL};
+    BDExtraArg *extra[4] = {NULL, NULL, NULL, NULL};
     gint extra_top = -1;
     gboolean ret = FALSE;
 
     if (data->force)
         extra[++extra_top] = bd_extra_arg_new ("-f", "");
     if (data->resize_fs)
+      {
         extra[++extra_top] = bd_extra_arg_new ("-r", "");
+        extra[++extra_top] = bd_extra_arg_new ("--yes", "");
+      }
 
     ret = bd_lvm_lvresize (data->vg_name, data->lv_name, data->new_lv_size, (const BDExtraArg**) extra, error);
     for (; extra_top >= 0; extra_top--)
