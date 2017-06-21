@@ -110,7 +110,7 @@ udisks_simple_job_complete (UDisksSimpleJob     *job,
                             const gchar         *message)
 {
   g_return_if_fail (UDISKS_IS_SIMPLE_JOB (job));
-  udisks_job_emit_completed (UDISKS_JOB (job), success, message);
+  udisks_job_emit_completed (UDISKS_JOB (job), success, (message) ? message : "");
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
