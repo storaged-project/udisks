@@ -450,8 +450,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
     }
 
-  /* this is sometimes needed because parted(8) does not generate the uevent itself */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_object));
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
