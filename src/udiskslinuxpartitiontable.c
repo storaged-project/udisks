@@ -399,7 +399,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     }
 
   wait_data->ignore_container = (part_spec->type == BD_PART_TYPE_LOGICAL);
-  wait_data->pos_to_wait_for = (part_spec->start + part_spec->size) / 2L;
+  wait_data->pos_to_wait_for = part_spec->start + (part_spec->size / 2L);
 
   /* sit and wait for the partition to show up */
   g_warn_if_fail (wait_data->pos_to_wait_for > 0);
