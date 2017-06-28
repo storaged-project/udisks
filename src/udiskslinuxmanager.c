@@ -867,6 +867,134 @@ handle_enable_modules (UDisksManager *object,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+static gboolean
+handle_can_format (UDisksManager         *object,
+                   GDBusMethodInvocation *invocation,
+                   const gchar           *type)
+{
+  gchar *required_utility = NULL;
+  gchar *binary_path = NULL;
+
+  if (g_strcmp0 (type, "swap") == 0)
+    required_utility = g_strdup ("mkswap");
+  else if (g_strcmp0 (type, "empty") == 0)
+    required_utility = g_strdup ("wipefs");
+  else
+    {
+      const gchar **supported_fs = get_supported_filesystems ();
+      for (gsize i = 0; supported_fs[i] != NULL; i++)
+        {
+          if (g_strcmp0 (type, supported_fs[i]) == 0)
+            {
+            required_utility = g_strconcat ("mkfs.", type, NULL);
+            break;
+            }
+        }
+    }
+
+  if (required_utility == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Creation of filesystem type %s is not supported",
+                                             type);
+      return TRUE;
+    }
+
+  binary_path = g_find_program_in_path (required_utility);
+  udisks_manager_complete_can_format (object,
+                                      invocation,
+                                      g_variant_new ("(bs)", binary_path != NULL,
+                                                     binary_path != NULL ? "" : required_utility));
+  g_free (binary_path);
+  g_free (required_utility);
+
+  return TRUE;
+}
+
+static gboolean
+handle_can_resize (UDisksManager         *object,
+                   GDBusMethodInvocation *invocation,
+                   const gchar           *type)
+{
+  GError *error = NULL;
+  gchar *required_utility = NULL;
+  BDFsResizeFlags mode;
+  gboolean ret;
+
+  ret = bd_fs_can_resize (type, &mode, &required_utility, &error);
+
+  if (error != NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  udisks_manager_complete_can_resize (object,
+                                      invocation,
+                                      g_variant_new ("(bts)", ret, (guint64) mode,
+                                                     ret ? "" : required_utility));
+
+  g_free (required_utility);
+
+  return TRUE;
+}
+
+static gboolean
+handle_can_check (UDisksManager         *object,
+                  GDBusMethodInvocation *invocation,
+                  const gchar           *type)
+{
+  GError *error = NULL;
+  gchar *required_utility = NULL;
+  gboolean ret;
+
+  ret = bd_fs_can_check (type, &required_utility, &error);
+
+  if (error != NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  udisks_manager_complete_can_check (object,
+                                     invocation,
+                                     g_variant_new ("(bs)", ret,
+                                                    ret ? "" : required_utility));
+
+  g_free (required_utility);
+
+  return TRUE;
+}
+
+static gboolean
+handle_can_repair (UDisksManager         *object,
+                   GDBusMethodInvocation *invocation,
+                   const gchar           *type)
+{
+  GError *error = NULL;
+  gchar *required_utility = NULL;
+  gboolean ret;
+
+  ret = bd_fs_can_repair (type, &required_utility, &error);
+
+  if (error != NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  udisks_manager_complete_can_repair (object,
+                                      invocation,
+                                      g_variant_new ("(bs)", ret,
+                                                     ret ? "" : required_utility));
+
+  g_free (required_utility);
+
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -875,4 +1003,8 @@ manager_iface_init (UDisksManagerIface *iface)
   iface->handle_loop_setup = handle_loop_setup;
   iface->handle_mdraid_create = handle_mdraid_create;
   iface->handle_enable_modules = handle_enable_modules;
+  iface->handle_can_format = handle_can_format;
+  iface->handle_can_resize = handle_can_resize;
+  iface->handle_can_check = handle_can_check;
+  iface->handle_can_repair = handle_can_repair;
 }

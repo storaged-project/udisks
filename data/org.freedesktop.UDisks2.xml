@@ -40,6 +40,65 @@
     <property name="SupportedFilesystems" type="as" access="read"/>
 
     <!--
+        CanFormat:
+        @type: The filesystem type to be tested for formatting availability.
+        @available: Formatting availability and the required binary name if missing (i.e. no error and returns FALSE).
+
+        Tests for availability to create the given filesystem.
+        See the #org.freedesktop.UDisks2.Manager:SupportedFilesystems property
+        for a list of known types. Unknown or unsupported filesystems result in an error.
+    -->
+    <method name="CanFormat">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="available" direction="out" type="(bs)"/>
+    </method>
+
+    <!--
+        CanResize:
+        @type: The filesystem type to be tested for resize availability.
+        @available: Resizing availability, flags for allowed resizing (i.e. growing/shrinking support for online/offline) and the required binary name if missing (i.e. no error and returns FALSE).
+
+        Tests for availability to resize the given filesystem.
+        The mode flags indicate if growing and/or shriking resize is available if mounted/unmounted.
+        The mode corresponds to bitwise-OR combined BDFsResizeFlags of the libblockdev FS plugin:
+        BD_FS_OFFLINE_SHRINK = 2, shrinking resize allowed when unmounted
+        BD_FS_OFFLINE_GROW = 4, growing resize allowed when unmounted
+        BD_FS_ONLINE_SHRINK = 8, shrinking resize allowed when mounted
+        BD_FS_ONLINE_GROW = 16, growing resize allowed when mounted
+        Unknown filesystems or filesystems which do not support resizing result in errors.
+    -->
+    <method name="CanResize">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="available" direction="out" type="(bts)"/>
+    </method>
+
+    <!--
+        CanCheck:
+        @type: The filesystem type to be tested for consistency check availability.
+        @available: Checking availability and the required binary name if missing (i.e. no error and returns FALSE).
+
+        Tests for availability to check the given filesystem.
+        Unsupported filesystems or filesystems which do not support checking result in errors.
+    -->
+    <method name="CanCheck">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="available" direction="out" type="(bs)"/>
+    </method>
+
+    <!--
+        CanRepair:
+        @type: The filesystem type to be tested for repair availability.
+        @available: Repair availability and the required binary name if missing (i.e. no error and returns FALSE).
+
+        Tests for availability repair the given filesystem.
+        Unsupported filesystems or filesystems which do not support repairing result in errors.
+    -->
+    <method name="CanRepair">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="available" direction="out" type="(bs)"/>
+    </method>
+
+    <!--
         LoopSetup:
         @fd: An index for the file descriptor to use.
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>offset</parameter> (of type 't'), <parameter>size</parameter> (of type 't'), <parameter>read-only</parameter> (of type 'b') and <parameter>no-part-scan</parameter> (of type 'b').
