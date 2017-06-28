@@ -95,6 +95,26 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         sys_num = int(self.read_file('%s/partition' % part_syspath))
         dbus_num.assertEqual(sys_num)
 
+        # create another partition
+        path = disk.CreatePartition(dbus.UInt64(1024**2 + (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
+                                    part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        self.addCleanup(self._remove_partition, part)
+
+        # create yet another partition
+        path = disk.CreatePartition(dbus.UInt64(1024**2 + 2 * (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
+                                    part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.udev_settle()
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        self.addCleanup(self._remove_partition, part)
+
     def test_create_extended_partition(self):
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
