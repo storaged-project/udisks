@@ -754,6 +754,82 @@ handle_set_type (UDisksPartition       *partition,
 
 /* runs in thread dedicated to handling @invocation */
 static gboolean
+handle_resize (UDisksPartition       *partition,
+               GDBusMethodInvocation *invocation,
+               guint64                size,
+               GVariant              *options)
+{
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksObject *partition_table_object = NULL;
+  UDisksBlock *partition_table_block = NULL;
+  uid_t caller_uid;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
+
+  if (!check_authorization (partition, invocation, options, &caller_uid))
+    {
+      goto out;
+    }
+
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_get_block (object);
+  partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+  partition_table_block = udisks_object_get_block (partition_table_object);
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-modify",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (! bd_part_resize_part (udisks_block_get_device (partition_table_block),
+                             udisks_block_get_device (block),
+                             size, BD_PART_ALIGN_OPTIMAL, &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error resizing partition %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_partition_complete_resize (partition, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_error (&error);
+  g_clear_object (&object);
+  g_clear_object (&block);
+  g_clear_object (&partition_table_object);
+  g_clear_object (&partition_table_block);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* runs in thread dedicated to handling @invocation */
+static gboolean
 handle_delete (UDisksPartition       *partition,
                GDBusMethodInvocation *invocation,
                GVariant              *options)
@@ -855,5 +931,6 @@ partition_iface_init (UDisksPartitionIface *iface)
   iface->handle_set_flags = handle_set_flags;
   iface->handle_set_name  = handle_set_name;
   iface->handle_set_type  = handle_set_type;
+  iface->handle_resize    = handle_resize;
   iface->handle_delete    = handle_delete;
 }
