@@ -399,7 +399,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     }
 
   wait_data->ignore_container = (part_spec->type == BD_PART_TYPE_LOGICAL);
-  wait_data->pos_to_wait_for = (part_spec->start + part_spec->size) / 2L;
+  wait_data->pos_to_wait_for = part_spec->start + (part_spec->size / 2L);
 
   /* sit and wait for the partition to show up */
   g_warn_if_fail (wait_data->pos_to_wait_for > 0);
@@ -450,19 +450,18 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
     }
 
-  /* this is sometimes needed because parted(8) does not generate the uevent itself */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_object));
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
   g_free (wait_data);
-  g_free (part_spec);
   g_free (overlapping_part);
   g_clear_error (&error);
   g_clear_object (&partition_block);
   g_free (device_name);
   g_clear_object (&object);
   g_clear_object (&block);
+  if (part_spec)
+    bd_part_spec_free (part_spec);
   return partition_object;
 }
 
