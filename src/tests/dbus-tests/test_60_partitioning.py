@@ -115,7 +115,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._remove_partition, part)
 
-    def test_create_extended_partition(self):
+    def create_extended_partition(self, ext_options, log_options, part_type=''):
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -125,8 +125,8 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._remove_format, disk)
 
         # create extended partition
-        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(150 * 1024**2), '0x05', '',
-                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        ext_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(150 * 1024**2), part_type, '',
+                                        ext_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
         ext_part = self.bus.get_object(self.iface_prefix, ext_path)
@@ -149,7 +149,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         # create logical partition
         log_path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(50 * 1024**2), '', '',
-                                        self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+                                        log_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
         log_part = self.bus.get_object(self.iface_prefix, log_path)
@@ -163,17 +163,42 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         # create one more logical partition
         log_path2 = disk.CreatePartition(dbus.UInt64(51 * 1024**2), dbus.UInt64(50 * 1024**2), '', '',
-                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+                                         log_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
         log_part2 = self.bus.get_object(self.iface_prefix, log_path2)
         self.assertIsNotNone(log_part2)
 
-        self.addCleanup(self._remove_partition, log_part)
+        self.addCleanup(self._remove_partition, log_part2)
 
-        # check if its a 'contained'
-        dbus_cont = self.get_property(log_part2, '.Partition', 'IsContained')
-        dbus_cont.assertTrue()
+    def test_create_extended_partition(self):
+        self.create_extended_partition(self.no_options, self.no_options, '0x05')
+
+    def test_create_explicit_extended_partition(self):
+        ext_options = dbus.Dictionary({'partition-type': 'extended'}, signature='sv')
+        log_options = dbus.Dictionary({'partition-type': 'logical'}, signature='sv')
+        self.create_extended_partition(ext_options, log_options)
+
+    def test_fill_with_primary_partitions(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create msdos partition table
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        options = dbus.Dictionary({'partition-type': 'primary'}, signature='sv')
+        offset = 1024**2
+        size = 10 * 1024**2
+        for i in range(4):
+            # create primary partition
+            path = disk.CreatePartition(dbus.UInt64(offset + i * (offset + size)), dbus.UInt64(size), '', '',
+                                            options, dbus_interface=self.iface_prefix + '.PartitionTable')
+            self.udev_settle()
+
+            part = self.bus.get_object(self.iface_prefix, path)
+            self.assertIsNotNone(part)
+            self.addCleanup(self._remove_partition, part)
 
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))

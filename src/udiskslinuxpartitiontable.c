@@ -206,6 +206,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   gid_t caller_gid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
+  gchar *partition_type = NULL;
 
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
@@ -215,6 +216,9 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  g_variant_lookup (options, "partition-type", "s", &partition_type);
+
   block = udisks_object_get_block (object);
   if (block == NULL)
     {
@@ -281,10 +285,33 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
           goto out;
         }
 
-      /* Determine whether we are creating a primary, extended or logical partition */
       type_as_int = strtol (type, &endp, 0);
-      if (type[0] != '\0' && *endp == '\0' &&
-          (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
+
+      /* Determine whether we are creating a primary, extended or logical partition */
+      if (partition_type != NULL)
+        {
+          if (g_strcmp0 (partition_type, "primary") == 0)
+            {
+              part_type = BD_PART_TYPE_REQ_NORMAL;
+            }
+          else if (g_strcmp0 (partition_type, "extended") == 0)
+            {
+              part_type = BD_PART_TYPE_REQ_EXTENDED;
+            }
+          else if (g_strcmp0 (partition_type, "logical") == 0)
+            {
+              part_type = BD_PART_TYPE_REQ_LOGICAL;
+            }
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Don't know how to create partition of type `%s'",
+                                                     partition_type);
+              goto out;
+            }
+        }
+      else if (type[0] != '\0' && *endp == '\0' &&
+               (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
           part_type = BD_PART_TYPE_REQ_EXTENDED;
         }
