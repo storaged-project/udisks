@@ -346,6 +346,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Mon Jul 03 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.1-1
+- Version 2.7.1
+
 * Fri Jun 02 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.0-1
 - Version 2.7.0
 

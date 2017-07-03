@@ -1,19 +1,77 @@
 ---------------------------
-udisks 2.7.1 (unreleased)
+udisks 2.7.1
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.0:
-(TODO: make shortlog)
+
+Felix Yan (2):
+      Don't always fail on missing LibStorageMgmt support
+      Fix a typo: succeded -> succeeded
+
+Kai Lüke (2):
+      Fix broken partition authorization code
+      Document behavior of PartitionTable.CreatePartition
+
+Sunjin Yang (1):
+      Don't use serial as unique ID for drive objects
+
+Tony Asleson (8):
+      udiskslinuxblockbcache.c: Fix uninitialized variable
+      udisksiscsiutil.c: Correct strncpy lengths
+      udiskslinuxiscsisessionobject.c: Correct precondition check
+      lsm_linux_drive.c: Remove std_lsm_vol_data_free error case
+      jobhelpers.c: Check the value of the assigned
+      udiskslinuxmanagerlvm2.c: Ensure arg_blocks != NULL
+      udiskslinuxvolumegroupobject.c: Remove variable shadow lvs_p
+      udiskssimplejob.c: Allow NULL for message
+
+Tristan Van Berkom (1):
+      configure.ac: Fix references to /usr prefix
+
+Vojtech Trefny (25):
+      Post-release version bump to 2.7.1
+      Spec file update
+      HACKING: Update release process steps
+      Add a 'BlockDevice' property for 'org.freedesktop.UDisks2.LogicalVolume'
+      Re-create sysfs watchers for changed mdraid devices
+      UDisksClient: Do not try remove changed_blacklist hash table in finalize
+      DBus tests: Remove some unusupported targetcli properties
+      DBus tests: Use dbus dictionary instead of Python dict for options
+      DBus tests: Make the tests Python 2 compatible
+      DBus tests: Skip Drive tests on CentOS/RHEL 7
+      DBus tests: Use blkid instead of lsblk to get part type
+      DBus tests: Skip ISCSI session test if session objects are not supported
+      DBus tests: Skip LSM tests if LSM module is not loaded
+      DBus tests: Fix checking for zRAM stats on CentOS/RHEL 7
+      DBus tests: Fix vfat label test on CentOS/RHEL 7
+      Clear GError after calling "bd_part_get_part_by_pos"
+      DBus tests: Manually run "tearDownClass" for skipped classes
+      Fix check for LSM module dependencies in configure.ac
+      integration-test: Make the test suite Python 2 compatible
+      integration-test: Skip tests on CentOS/RHEL 7
+      Allow running tests with different versions of Python
+      DBus tests: Skip blivet part of cleanup if its version is too old
+      DBus tests: Fix extended partition test case
+      Use "model_serial" as unique ID for drive objects
+      Add "--yes" arg when resizing filesystem with "lvresize"
+
+Vratislav Podzimek (5):
+      Fix how UDisksClient filters property changes
+      Fix the position to wait for a partition to appear at
+      Do not trigger extra uevents for newly created partitions
+      Free the partition spec libblockdev gives us
+      Try to create multiple primary partitions in the tests
+
+squimrel (1):
+      Allow the user to specify the partition type
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date)
-
----------------------------
+2017-07-03
 
 ---------------------------
 udisks 2.7.0
