@@ -1403,7 +1403,7 @@
     <!--
         CreatePartition:
         @offset: The desired offset where the partition should be created, in bytes.
-        @size: The desired size of the partition, in bytes.
+        @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
@@ -1412,12 +1412,12 @@
         Creates a new partition.
 
         Note that the created partition won't necessarily be created
-        at the exact @offset due to disk geometry and other alignment
-        constraints (e.g. 1MiB alignment).
+        at the exact @offset but slightly behind due to disk geometry
+        and other alignment constraints (e.g. 1MiB alignment).
 
         The newly created partition may also end up being slightly
-        larger or smaller than the requested @size bytes for the same
-        reasons.
+        larger than the requested @size bytes for the same reasons.
+        The maximal size can be automatically set by using 0 as size.
 
         For <literal>dos</literal> partition tables, the partition type can be
         set with the @partition-type option. Possible values are: "primary",
@@ -1440,7 +1440,7 @@
     <!--
         CreatePartitionAndFormat:
         @offset: The desired offset where the partition should be created, in bytes.
-        @size: The desired size of the partition, in bytes.
+        @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
