@@ -114,7 +114,7 @@ check_authorization (UDisksPartition       *partition,
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   GError *error = NULL;
-  gboolean rc = TRUE;
+  gboolean rc = FALSE;
 
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
