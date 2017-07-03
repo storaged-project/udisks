@@ -1345,7 +1345,7 @@
         used for benchmarking the device (transfer rate, access time
         etc.). Note that the file descriptor may be opened with the
         <literal>O_DIRECT</literal> and <literal>O_SYNC</literal>
-        flags so care must be taken to only perform page-aligned I/O.
+        flags so care must be taken to only perform block-aligned I/O.
 
         If the <parameter>writable</parameter> in @options is %TRUE
         then the returned file descriptor will be writable. This only
