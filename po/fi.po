@@ -1521,7 +1521,7 @@ msgid "ZFS"
 msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1951
-#, fuzzy, c-format
+#, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
