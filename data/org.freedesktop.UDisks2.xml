@@ -1707,6 +1707,47 @@
     <method name="Unmount">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        Resize:
+        @size: The target size in bytes, 0 for maximum.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Resizes the filesystem.
+
+        Shrinking operations need to move data which causes this action to be
+        slow. The filesystem-resize job for the object might expose progress.
+    -->
+    <method name="Resize">
+      <arg name="size" direction="in" type="t"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- Check:
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+         @consistent: Whether the filesystem is undamaged.
+
+         Checks the filesystem for consistency.
+
+         Unsupported filesystems result in an error.
+    -->
+    <method name="Check">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="consistent" direction="out" type="b"/>
+    </method>
+
+    <!-- Repair:
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+         @repaired: Whether the filesystem could be successfully repaired.
+
+         Tries to repair the filesystem.
+
+         Unsupported filesystems result in an error.
+    -->
+    <method name="Repair">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="repaired" direction="out" type="b"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
@@ -2230,6 +2271,8 @@
              <listitem><para>Unmounting a filesystem.</para></listitem></varlistentry>
            <varlistentry><term>filesystem-modify</term>
              <listitem><para>Modifying a filesystem.</para></listitem></varlistentry>
+           <varlistentry><term>filesystem-resize</term>
+             <listitem><para>Resizing a filesystem.</para></listitem></varlistentry>
            <varlistentry><term>format-erase</term>
              <listitem><para>Erasing a device.</para></listitem></varlistentry>
            <varlistentry><term>format-mkfs</term>
