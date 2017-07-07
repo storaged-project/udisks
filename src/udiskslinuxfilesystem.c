@@ -1983,10 +1983,500 @@ handle_set_label (UDisksFilesystem      *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_resize (UDisksFilesystem      *filesystem,
+               GDBusMethodInvocation *invocation,
+               guint64                size,
+               GVariant              *options)
+{
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  const gchar *probed_fs_usage = NULL;
+  const gchar *probed_fs_type = NULL;
+  BDFsResizeFlags mode = 0;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
+  gchar *required_utility = NULL;
+  const gchar * const *existing_mount_points = NULL;
+
+  g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_peek_block (object);
+
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                &caller_gid,
+                                                NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot resize %s filesystem on %s",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  probed_fs_type = udisks_block_get_id_type (block);
+  if (! bd_fs_can_resize (probed_fs_type, &mode, &required_utility, &error))
+  {
+    if (error != NULL)
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot resize %s filesystem on %s: %s",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             error->message);
+    else
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot resize %s filesystem on %s: executable %s not found",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             required_utility);
+    goto out;
+  }
+
+  /* it can't be known if it's shrinking or growing but check at least the mount state */
+  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+    {
+      if (! (mode & BD_FS_ONLINE_SHRINK) && ! (mode & BD_FS_ONLINE_GROW))
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_NOT_SUPPORTED,
+                                               "Cannot resize %s filesystem on %s if mounted",
+                                               probed_fs_usage,
+                                               udisks_block_get_device (block));
+    }
+  else if (! (mode & BD_FS_OFFLINE_SHRINK) && ! (mode & BD_FS_OFFLINE_GROW))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot resize %s filesystem on %s if unmounted",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests resizing the filesystem.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to resize the filesystem on $(drive)");
+  if (! udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (! udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to resize the filesystem. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-resize",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  if (! bd_fs_resize (udisks_block_get_device (block), size, &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error resizing filesystem on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_filesystem_complete_resize (filesystem, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&object);
+  g_free (required_utility);
+  g_clear_error (&error);
+  g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_repair (UDisksFilesystem      *filesystem,
+               GDBusMethodInvocation *invocation,
+               GVariant              *options)
+{
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  const gchar *probed_fs_usage = NULL;
+  const gchar *probed_fs_type = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GError *error = NULL;
+  gboolean ret = FALSE;
+  UDisksBaseJob *job = NULL;
+  gchar *required_utility = NULL;
+  const gchar * const *existing_mount_points = NULL;
+
+  g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_peek_block (object);
+
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                &caller_gid,
+                                                NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot repair %s filesystem on %s",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  probed_fs_type = udisks_block_get_id_type (block);
+  if (! bd_fs_can_repair (probed_fs_type, &required_utility, &error))
+  {
+    if (error != NULL)
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot repair %s filesystem on %s: %s",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             error->message);
+    else
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot repair %s filesystem on %s: executable %s not found",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             required_utility);
+    goto out;
+  }
+
+  /* check the mount state */
+  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot repair %s filesystem on %s if mounted",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests resizing the filesystem.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to repair the filesystem on $(drive)");
+  if (! udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (! udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to repair the filesystem. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                     object,
+                                                     action_id,
+                                                     options,
+                                                     message,
+                                                     invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-repair",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  ret = bd_fs_repair (udisks_block_get_device (block), &error);
+  if (error)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error reparing filesystem on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_filesystem_complete_repair (filesystem, invocation, ret);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&object);
+  g_free (required_utility);
+  g_clear_error (&error);
+  g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_check (UDisksFilesystem      *filesystem,
+              GDBusMethodInvocation *invocation,
+              GVariant              *options)
+{
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  const gchar *probed_fs_usage = NULL;
+  const gchar *probed_fs_type = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GError *error = NULL;
+  gboolean ret = FALSE;
+  UDisksBaseJob *job = NULL;
+  gchar *required_utility = NULL;
+  const gchar * const *existing_mount_points = NULL;
+
+  g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_peek_block (object);
+
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                &caller_gid,
+                                                NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot check %s filesystem on %s",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  probed_fs_type = udisks_block_get_id_type (block);
+  if (! bd_fs_can_check (probed_fs_type, &required_utility, &error))
+  {
+    if (error != NULL)
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot check %s filesystem on %s: %s",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             error->message);
+    else
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot check %s filesystem on %s: executable %s not found",
+                                             probed_fs_type,
+                                             udisks_block_get_device (block),
+                                             required_utility);
+    goto out;
+  }
+
+  /* check the mount state */
+  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot check %s filesystem on %s if mounted",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests resizing the filesystem.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to check the filesystem on $(drive)");
+  if (! udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (! udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to check the filesystem. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                     object,
+                                                     action_id,
+                                                     options,
+                                                     message,
+                                                     invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-check",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  ret = bd_fs_check (udisks_block_get_device (block), &error);
+  if (error)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error checking filesystem on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_filesystem_complete_check (filesystem, invocation, ret);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&object);
+  g_free (required_utility);
+  g_clear_error (&error);
+  g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 filesystem_iface_init (UDisksFilesystemIface *iface)
 {
   iface->handle_mount     = handle_mount;
   iface->handle_unmount   = handle_unmount;
   iface->handle_set_label = handle_set_label;
+  iface->handle_resize    = handle_resize;
+  iface->handle_repair    = handle_repair;
+  iface->handle_check     = handle_check;
 }

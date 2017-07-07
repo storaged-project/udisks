@@ -104,6 +104,40 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # test invalid label behaviour
         self._invalid_label(disk)
 
+    def test_repair_resize_check(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        manager = self.get_interface(self.get_object('/Manager'), '.Manager')
+        try:
+          rep, mode, _ = manager.CanResize(self._fs_name)
+          chk, _ = manager.CanCheck(self._fs_name)
+          rpr, _ = manager.CanRepair(self._fs_name)
+        except:
+          rpr = chk = rep = False
+        if not (rpr and chk and rep) or mode & (1 << 1) == 0:
+            self.skipTest('Cannot check, offline-shrink and repair %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+
+        # not mounted
+        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts.assertLen(0)
+
+        # repair before resizing to half size, then check
+        self.assertTrue(disk.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
+        size = self.get_property(disk, '.Block', 'Size').value
+        disk.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertTrue(disk.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
+
     def test_mount_auto(self):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
