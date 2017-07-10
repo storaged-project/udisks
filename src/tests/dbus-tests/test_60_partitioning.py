@@ -460,6 +460,65 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, part_type)
 
+    def test_resize(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        disk_size = self.get_property(disk, '.Block', 'Size')
+
+        # span almost whole drive (minus ~8 MiB)
+        part = self._create_partition(disk, size=disk_size.value - 8 * 1024**2, fmt=None)
+        self.addCleanup(self._remove_partition, part)
+
+        part_size = self.get_property(part, '.Partition', 'Size')
+        part_offset = self.get_property(part, '.Partition', 'Offset')
+        initial_offset = part_offset.value
+        initial_size = part_size.value
+
+        # adding 30 MiB should be too big
+        with self.assertRaises(dbus.exceptions.DBusException):
+            part.Resize(disk_size.value + 30 * 1024**2, self.no_options,
+                        dbus_interface=self.iface_prefix + '.Partition')
+
+        # no harm should happen for failures
+        part_size.assertEqual(initial_size)
+        part_offset.assertEqual(initial_offset)
+
+        # resize to maximum
+        part.Resize(0, self.no_options,
+                    dbus_interface=self.iface_prefix + '.Partition')
+
+        self.udev_settle()
+
+        part_offset.assertEqual(initial_offset)
+        max_size = part_size.value
+        part_size.assertGreater(initial_size)
+        part_size.assertLess(disk_size.value)
+
+        new_size = 13 * 1000**2  # MB (not MiB) as non-multiple of the block size
+        part.Resize(new_size, self.no_options,
+                    dbus_interface=self.iface_prefix + '.Partition')
+
+        self.udev_settle()
+
+        part_offset.assertEqual(initial_offset)
+        # resize should guarantee at least the requested size
+        part_size.assertGreater(new_size - 1)
+        part_size.assertLess(new_size + 1 * 1024**2)  # assuming 1 MiB alignment
+
+        # resize to maximum explicitly
+        part.Resize(max_size, self.no_options,
+                    dbus_interface=self.iface_prefix + '.Partition')
+
+        self.udev_settle()
+
+        part_offset.assertEqual(initial_offset)
+        part_size.assertGreater(max_size - 1)
+        part_size.assertLess(disk_size.value)
+
     def test_name(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
