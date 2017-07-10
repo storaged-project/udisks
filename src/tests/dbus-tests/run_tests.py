@@ -37,7 +37,9 @@ def setup_vdevs():
 
     # create fake SCSI hard drives
     assert subprocess.call(["targetcli", "restoreconfig src/tests/dbus-tests/targetcli_config.json"]) == 0
-    time.sleep(0.1)
+
+    # wait until udev fully processes all the newly created devices
+    assert subprocess.call(['udevadm', 'settle']) == 0
 
     devs = {dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev)}
 
