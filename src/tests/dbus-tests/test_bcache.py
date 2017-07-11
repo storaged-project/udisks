@@ -108,7 +108,6 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
 
         # destroy the cache
         bcache.BcacheDestroy(self.no_options, dbus_interface=self.iface_prefix + '.Block.Bcache')
-        time.sleep(1)
 
         # make sure the bcache device is not on dbus
         udisks = self.get_object('')

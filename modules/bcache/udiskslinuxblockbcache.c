@@ -235,6 +235,19 @@ out:
   return rval;
 }
 
+static UDisksObject *
+wait_for_bcache (UDisksDaemon *daemon,
+                 gpointer      user_data)
+{
+  UDisksObject *ret = udisks_daemon_find_object (daemon, (gchar*) user_data);
+  /* find_object() increments the ref count, we need to decrement it back
+     otherwise the ref count potentially grows in a cycle (when waiting for the
+     object to disappear) */
+  if (ret)
+    g_object_unref (ret);
+  return ret;
+}
+
 static gboolean
 handle_bcache_destroy (UDisksBlockBcache      *block_,
                        GDBusMethodInvocation  *invocation,
@@ -243,7 +256,10 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
   GError *error = NULL;
   UDisksLinuxBlockBcache *block = UDISKS_LINUX_BLOCK_BCACHE (block_);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *u_daemon = NULL;
   gchar *devname = NULL;
+  gboolean bcache_object_disappeared = FALSE;
+  gchar *object_path = NULL;
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (! object)
@@ -268,9 +284,25 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
       goto out;
     }
 
-    udisks_block_bcache_complete_bcache_destroy (block_, invocation);
+  u_daemon = udisks_linux_block_bcache_get_daemon (block);
+  object_path = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  bcache_object_disappeared = udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
+                                                                               wait_for_bcache,
+                                                                               object_path,
+                                                                               NULL,
+                                                                               10,
+                                                                               &error);
+  if (!bcache_object_disappeared)
+    {
+      g_prefix_error (&error, "Error waiting for bcache to disappear: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_block_bcache_complete_bcache_destroy (block_, invocation);
 out:
   g_free (devname);
+  g_free (object_path);
   g_clear_object (&object);
   return TRUE;
 }
