@@ -68,8 +68,8 @@ class DBusProperty(object):
 
     def _check(self, timeout, check_fn):
         for _ in range(int(timeout / 0.5)):
-            self._update_value()
             try:
+                self._update_value()
                 if check_fn(self.value):
                     return True
             except Exception:
