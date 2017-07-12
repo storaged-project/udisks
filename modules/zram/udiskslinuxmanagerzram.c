@@ -30,6 +30,7 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
+#include <src/udiskslinuxblockobject.h>
 #include "udisks-zram-generated.h"
 #include "udiskslinuxblockzram.h"
 #include "udiskslinuxmanagerzram.h"
@@ -323,7 +324,7 @@ wait_for_zram_objects (UDisksDaemon *daemon,
   gchar **zram_paths = (gchar **) user_data;
 
   num_zrams = g_strv_length ((gchar **) user_data);
-  objects = g_new0 (UDisksObject *, num_zrams);
+  objects = g_new0 (UDisksObject *, num_zrams + 1);
 
   for (zram_p = zram_paths; *zram_p != NULL; zram_p++, next_obj++)
     {
@@ -410,7 +411,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
   for (gsize i = 0; i < sizes_len; i++)
     zram_paths[i] = g_strdup_printf ("/dev/zram%" G_GSIZE_FORMAT, i);
 
-  /* sit and wait for the bcache object to show up */
+  /* sit and wait for the zram objects to show up */
   zram_objects = udisks_daemon_wait_for_objects_sync (manager->daemon,
                                                       wait_for_zram_objects,
                                                       zram_paths,
@@ -426,10 +427,16 @@ handle_create_devices (UDisksManagerZRAM     *object,
       goto out;
     }
 
+  for (UDisksObject **object_p = zram_objects; *object_p; object_p++) {
+    UDisksLinuxBlockObject *lb_object = UDISKS_LINUX_BLOCK_OBJECT (*object_p);
+    udisks_linux_block_object_trigger_uevent (lb_object);
+  }
 
   zram_object_paths = g_new0 (const gchar *, sizes_len);
-  for (gsize i = 0; i < sizes_len; i++)
+  for (gsize i = 0; i < sizes_len; i++) {
     zram_object_paths[i] = g_dbus_object_get_object_path (G_DBUS_OBJECT (zram_objects[i]));
+    g_object_unref (zram_objects[i]);
+  }
 
   udisks_manager_zram_complete_create_devices (object,
                                                invocation,
@@ -444,6 +451,20 @@ out:
   return TRUE;
 }
 
+static UDisksObject *
+wait_for_any_zram_object (UDisksDaemon *daemon,
+                          gpointer      user_data) {
+  GList *objects, *l;
+  UDisksObject *ret = NULL;
+
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; !ret && l != NULL; l = l->next)
+    if (g_dbus_object_get_interface (G_DBUS_OBJECT (l->data), "org.freedesktop.UDisks2.Block.ZRAM"))
+      ret = l->data;
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
 static gboolean
 handle_destroy_devices (UDisksManagerZRAM     *object,
                         GDBusMethodInvocation *invocation,
@@ -452,6 +473,7 @@ handle_destroy_devices (UDisksManagerZRAM     *object,
 
   GError *error = NULL;
   UDisksLinuxManagerZRAM *manager = UDISKS_LINUX_MANAGER_ZRAM (object);
+  UDisksDaemon *u_daemon = udisks_linux_manager_zram_get_daemon (manager);
 
   /* Policy check */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_zram_get_daemon (manager),
@@ -469,6 +491,18 @@ handle_destroy_devices (UDisksManagerZRAM     *object,
 
   if (! delete_conf_files (&error))
     {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
+                                                         wait_for_any_zram_object,
+                                                         NULL,
+                                                         NULL,
+                                                         10,
+                                                         &error))
+    {
+      g_prefix_error (&error, "Error waiting for zram objects to disappear: ");
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
