@@ -601,33 +601,6 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
   return (char **) g_ptr_array_free (options, FALSE);
 }
 
-static gchar *
-subst_str (const gchar *str,
-           const gchar *from,
-           const gchar *to)
-{
-    gchar **parts;
-    gchar *result;
-
-    parts = g_strsplit (str, from, 0);
-    result = g_strjoinv (to, parts);
-    g_strfreev (parts);
-    return result;
-}
-
-static gchar *
-subst_str_and_escape (const gchar *str,
-                      const gchar *from,
-                      const gchar *to)
-{
-  gchar *quoted_and_escaped;
-  gchar *ret;
-  quoted_and_escaped = udisks_daemon_util_escape_and_quote (to);
-  ret = subst_str (str, from, quoted_and_escaped);
-  g_free (quoted_and_escaped);
-  return ret;
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 /*
@@ -1936,12 +1909,12 @@ handle_set_label (UDisksFilesystem      *filesystem,
 
   if (fs_info->command_clear_label != NULL && strlen (label) == 0)
     {
-      command = subst_str_and_escape (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
+      command = udisks_daemon_util_subst_str_and_escape (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
     }
   else
     {
-      tmp = subst_str_and_escape (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
-      command = subst_str_and_escape (tmp, "$LABEL", label);
+      tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
+      command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label);
       g_free (tmp);
     }
 

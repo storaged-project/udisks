@@ -96,6 +96,10 @@ gchar *udisks_daemon_util_escape_and_quote (const gchar *str);
 gchar *udisks_daemon_util_hexdump (gconstpointer data, gsize len);
 void udisks_daemon_util_hexdump_debug (gconstpointer data, gsize len);
 
+gchar *udisks_daemon_util_subst_str (const gchar *str, const gchar *from, const gchar *to);
+gchar *udisks_daemon_util_subst_str_and_escape (const gchar *str, const gchar *from, const gchar *to);
+
+
 gboolean udisks_daemon_util_file_set_contents (const gchar  *filename,
                                                const gchar  *contents,
                                                gssize        contents_len,

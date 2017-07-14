@@ -82,6 +82,32 @@ GString* udisks_string_concat (GString *a,
   return result;
 }
 
+gchar *
+udisks_daemon_util_subst_str (const gchar *str,
+           const gchar *from,
+           const gchar *to)
+{
+    gchar **parts;
+    gchar *result;
+
+    parts = g_strsplit (str, from, 0);
+    result = g_strjoinv (to, parts);
+    g_strfreev (parts);
+    return result;
+}
+
+gchar *
+udisks_daemon_util_subst_str_and_escape (const gchar *str,
+                      const gchar *from,
+                      const gchar *to)
+{
+  gchar *quoted_and_escaped;
+  gchar *ret;
+  quoted_and_escaped = udisks_daemon_util_escape_and_quote (to);
+  ret = udisks_daemon_util_subst_str (str, from, quoted_and_escaped);
+  g_free (quoted_and_escaped);
+  return ret;
+}
 
 /**
  * udisks_string_wipe_and_free:

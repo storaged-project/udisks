@@ -1328,142 +1328,10 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_pm_standby (UDisksDriveAta        *_drive,
-                   GDBusMethodInvocation *invocation,
-                   GVariant              *options)
-{
-  UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
-  UDisksLinuxDriveObject *object = NULL;
-  UDisksLinuxBlockObject *block_object = NULL;
-  UDisksBlock *block = NULL;
-  UDisksDaemon *daemon;
-  UDisksLinuxDevice *device = NULL;
-  gint fd = -1;
-  GError *error = NULL;
-  const gchar *message;
-  const gchar *action_id;
-  uid_t caller_uid;
-
-  object = udisks_daemon_util_dup_object (drive, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  block_object = udisks_linux_drive_object_get_block (object, FALSE);
-  if (block_object == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Unable to find block device for drive");
-      goto out;
-    }
-  block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
-
-  daemon = udisks_linux_drive_object_get_daemon (object);
-
-  if (!udisks_drive_ata_get_pm_supported (UDISKS_DRIVE_ATA (drive)) ||
-      !udisks_drive_ata_get_pm_enabled (UDISKS_DRIVE_ATA (drive)))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "PM is not supported or enabled");
-      goto out;
-    }
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 NULL,
-                                                 NULL,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Translators: Shown in authentication dialog when the user
-   * tries to put a drive into standby mode.
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to put $(drive) in standby mode");
-  action_id = "org.freedesktop.udisks2.ata-standby";
-  if (udisks_block_get_hint_system (block))
-    {
-      action_id = "org.freedesktop.udisks2.ata-standby-system";
-    }
-  else if (!udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
-    {
-      action_id = "org.freedesktop.udisks2.ata-standby-other-seat";
-    }
-
-  /* Check that the user is authorized */
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    UDISKS_OBJECT (object),
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
-
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  if (device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No udev device");
-      goto out;
-    }
-
-  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
-  if (fd == -1)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening device file %s: %m",
-                                             g_udev_device_get_device_file (device->udev_device));
-      goto out;
-    }
-
-  {
-    /* ATA8: 7.55 STANDBY IMMEDIATE - E0h, Non-Data */
-    UDisksAtaCommandInput input = {.command = 0xe0};
-    UDisksAtaCommandOutput output = {0};
-    if (!udisks_ata_send_command_sync (fd,
-                                       -1,
-                                       UDISKS_ATA_COMMAND_PROTOCOL_NONE,
-                                       &input,
-                                       &output,
-                                       &error))
-      {
-        g_prefix_error (&error, "Error sending ATA command STANDBY IMMEDIATE: ");
-        g_dbus_method_invocation_take_error (invocation, error);
-        goto out;
-      }
-    udisks_drive_ata_complete_pm_standby (_drive, invocation);
-  }
-
- out:
-  if (fd != -1)
-    close (fd);
-  g_clear_object (&device);
-  g_clear_object (&block_object);
-  g_clear_object (&object);
-  return TRUE; /* returning TRUE means that we handled the method invocation */
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-static gboolean
-handle_pm_wakeup (UDisksDriveAta        *_drive,
-                  GDBusMethodInvocation *invocation,
-                  GVariant              *options)
+handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
+                          GDBusMethodInvocation *invocation,
+                          GVariant              *options,
+                          gboolean              do_wakeup)
 {
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject *object = NULL;
@@ -1477,6 +1345,7 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
   const gchar *action_id;
   uid_t caller_uid;
   guchar buf[4096];
+  int open_flags = (do_wakeup) ? (O_RDONLY) : (O_RDONLY|O_NONBLOCK);
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -1523,12 +1392,14 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
     }
 
   /* Translators: Shown in authentication dialog when the user
-   * tries to wake up a drive from standby mode.
+   * tries to wake up a drive from standby mode or tries to put a drive into
+   * standby mode.
    *
    * Do not translate $(drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to wake up $(drive) from standby mode");
+  message = (do_wakeup) ? N_("Authentication is required to wake up $(drive) from standby mode") :
+                          N_("Authentication is required to put $(drive) in standby mode");
   action_id = "org.freedesktop.udisks2.ata-standby";
   if (udisks_block_get_hint_system (block))
     {
@@ -1556,7 +1427,7 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY);
+  fd = open (g_udev_device_get_device_file (device->udev_device), open_flags);
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -1565,16 +1436,36 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  if (read (fd, buf, sizeof (buf)) != sizeof (buf))
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error reading %d bytes from %s: %m",
-                                             (gint) sizeof (buf),
-                                             g_udev_device_get_device_file (device->udev_device));
-      goto out;
-    }
-
-  udisks_drive_ata_complete_pm_wakeup (_drive, invocation);
+  if (do_wakeup)
+   {
+      if (read (fd, buf, sizeof (buf)) != sizeof (buf))
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Error reading %d bytes from %s: %m",
+                                                 (gint) sizeof (buf),
+                                                 g_udev_device_get_device_file (device->udev_device));
+          goto out;
+        }
+      udisks_drive_ata_complete_pm_wakeup (_drive, invocation);
+   }
+  else
+   {
+     /* ATA8: 7.55 STANDBY IMMEDIATE - E0h, Non-Data */
+     UDisksAtaCommandInput input = {.command = 0xe0};
+     UDisksAtaCommandOutput output = {0};
+     if (!udisks_ata_send_command_sync (fd,
+                                        -1,
+                                        UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                        &input,
+                                        &output,
+                                        &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command STANDBY IMMEDIATE: ");
+        g_dbus_method_invocation_take_error (invocation, error);
+        goto out;
+      }
+     udisks_drive_ata_complete_pm_standby (_drive, invocation);
+   }
 
  out:
   if (fd != -1)
@@ -1583,6 +1474,25 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
   g_clear_object (&block_object);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+
+static gboolean
+handle_pm_standby (UDisksDriveAta        *_drive,
+                   GDBusMethodInvocation *invocation,
+                   GVariant              *options)
+{
+ return handle_pm_standby_wakeup (_drive, invocation, options, FALSE);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_pm_wakeup (UDisksDriveAta        *_drive,
+                  GDBusMethodInvocation *invocation,
+                  GVariant              *options)
+{
+  return handle_pm_standby_wakeup (_drive, invocation, options, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
