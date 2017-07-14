@@ -159,12 +159,11 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         disk.UpdateConfigurationItem((old_conf.value[0][0], old_conf.value[0][1]), (new_conf[0][0], new_conf[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
         # get the configuration after the update
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertTrue()
-        self.assertEqual(upd_conf.value[0][1]['opts'], new_opts)
+        upd_conf.assertEqual(new_opts, getter=lambda c: c[0][1]['opts'])
 
         # remove the configuration
         disk.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),
@@ -213,12 +212,11 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         disk.UpdateConfigurationItem((sec_conf[0][0], sec_conf[0][1]), (new_conf[0][0], new_conf[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        time.sleep(5)
 
         # get the configuration after the update
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertTrue()
-        self.assertEqual(upd_conf.value[0][1]['options'], new_opts)
+        upd_conf.assertEqual(new_opts, getter=lambda c: c[0][1]['options'])
 
         # remove the configuration
         disk.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),

@@ -78,6 +78,13 @@ UDisksObject             **udisks_daemon_wait_for_objects_sync  (UDisksDaemon   
                                                                  guint                        timeout_seconds,
                                                                  GError                       **error);
 
+gboolean             udisks_daemon_wait_for_object_to_disappear_sync (UDisksDaemon               *daemon,
+                                                                      UDisksDaemonWaitFuncObject  wait_func,
+                                                                      gpointer                    user_data,
+                                                                      GDestroyNotify              user_data_free_func,
+                                                                      guint                       timeout_seconds,
+                                                                      GError                      **error);
+
 GList                    *udisks_daemon_get_objects           (UDisksDaemon         *daemon);
 
 UDisksObject             *udisks_daemon_find_block            (UDisksDaemon         *daemon,

@@ -1181,25 +1181,6 @@ udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/**
- * udisks_daemon_wait_for_object_sync:
- * @daemon: A #UDisksDaemon.
- * @wait_func: Function to check for desired object.
- * @user_data: User data to pass to @wait_func.
- * @user_data_free_func: (allow-none): Function to free @user_data or %NULL.
- * @timeout_seconds: Maximum time to wait for the object (in seconds) or 0 to never wait.
- * @error: (allow-none): Return location for error or %NULL.
- *
- * Blocks the calling thread until an object picked by @wait_func is
- * available or until @timeout_seconds has passed (in which case the
- * function fails with %UDISKS_ERROR_TIMED_OUT).
- *
- * Note that @wait_func will be called from time to time - for example
- * if there is a device event.
- *
- * Returns: (transfer full): The object picked by @wait_func or %NULL if @error is set.
- */
-
 typedef struct {
   GMainContext *context;
   GMainLoop *loop;
@@ -1228,6 +1209,7 @@ static gpointer wait_for_objects (UDisksDaemon                *daemon,
                                   gpointer                     user_data,
                                   GDestroyNotify               user_data_free_func,
                                   guint                        timeout_seconds,
+                                  gboolean                     to_disappear,
                                   GError                     **error)
 {
   gpointer ret;
@@ -1249,7 +1231,8 @@ static gpointer wait_for_objects (UDisksDaemon                *daemon,
  again:
   ret = wait_func (daemon, user_data);
 
-  if (ret == NULL && timeout_seconds > 0)
+  if ((!to_disappear && ret == NULL && timeout_seconds > 0) ||
+      (to_disappear && ret != NULL && timeout_seconds > 0))
     {
       GSource *source;
 
@@ -1281,9 +1264,14 @@ static gpointer wait_for_objects (UDisksDaemon                *daemon,
 
       if (data.timed_out)
         {
-          g_set_error (error,
-                       UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Timed out waiting for object");
+          if (to_disappear)
+            g_set_error (error,
+                         UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                         "Timed out waiting");
+          else
+            g_set_error (error,
+                         UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                         "Timed out waiting for object");
         }
       else
         {
@@ -1304,6 +1292,25 @@ static gpointer wait_for_objects (UDisksDaemon                *daemon,
   return ret;
 }
 
+
+/**
+ * udisks_daemon_wait_for_object_sync:
+ * @daemon: A #UDisksDaemon.
+ * @wait_func: Function to check for desired object.
+ * @user_data: User data to pass to @wait_func.
+ * @user_data_free_func: (allow-none): Function to free @user_data or %NULL.
+ * @timeout_seconds: Maximum time to wait for the object (in seconds) or 0 to never wait.
+ * @error: (allow-none): Return location for error or %NULL.
+ *
+ * Blocks the calling thread until an object picked by @wait_func is
+ * available or until @timeout_seconds has passed (in which case the
+ * function fails with %UDISKS_ERROR_TIMED_OUT).
+ *
+ * Note that @wait_func will be called from time to time - for example
+ * if there is a device event.
+ *
+ * Returns: (transfer full): The object picked by @wait_func or %NULL if @error is set.
+ */
 UDisksObject *
 udisks_daemon_wait_for_object_sync (UDisksDaemon               *daemon,
                                     UDisksDaemonWaitFuncObject  wait_func,
@@ -1317,9 +1324,28 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon               *daemon,
                                             user_data,
                                             user_data_free_func,
                                             timeout_seconds,
+                                            FALSE, /* to_disappear */
                                             error);
 }
 
+/**
+ * udisks_daemon_wait_for_objects_sync:
+ * @daemon: A #UDisksDaemon.
+ * @wait_func: Function to check for desired object.
+ * @user_data: User data to pass to @wait_func.
+ * @user_data_free_func: (allow-none): Function to free @user_data or %NULL.
+ * @timeout_seconds: Maximum time to wait for the object (in seconds) or 0 to never wait.
+ * @error: (allow-none): Return location for error or %NULL.
+ *
+ * Blocks the calling thread until one or more objects picked by @wait_func
+ * is/are available or until @timeout_seconds has passed (in which case the
+ * function fails with %UDISKS_ERROR_TIMED_OUT).
+ *
+ * Note that @wait_func will be called from time to time - for example
+ * if there is a device event.
+ *
+ * Returns: (transfer full): The objects picked by @wait_func or %NULL if @error is set.
+ */
 UDisksObject **
 udisks_daemon_wait_for_objects_sync (UDisksDaemon                 *daemon,
                                      UDisksDaemonWaitFuncObjects   wait_func,
@@ -1333,8 +1359,46 @@ udisks_daemon_wait_for_objects_sync (UDisksDaemon                 *daemon,
                                              user_data,
                                              user_data_free_func,
                                              timeout_seconds,
+                                             FALSE, /* to_disappear */
                                              error);
 }
+
+
+/**
+ * udisks_daemon_wait_for_object_to_disappear_sync:
+ * @daemon: A #UDisksDaemon.
+ * @wait_func: Function to check for desired object.
+ * @user_data: User data to pass to @wait_func.
+ * @user_data_free_func: (allow-none): Function to free @user_data or %NULL.
+ * @timeout_seconds: Maximum time to wait for the object to disappear (in seconds) or 0 to never wait.
+ * @error: (allow-none): Return location for error or %NULL.
+ *
+ * Blocks the calling thread until an object picked by @wait_func disappears or
+ * until @timeout_seconds has passed (in which case the function fails with
+ * %UDISKS_ERROR_TIMED_OUT).
+ *
+ * Note that @wait_func will be called from time to time - for example
+ * if there is a device event.
+ *
+ * Returns: (transfer full): Whether the object picked by @wait_func disappeared or not (@error is set).
+ */
+gboolean
+udisks_daemon_wait_for_object_to_disappear_sync (UDisksDaemon               *daemon,
+                                                 UDisksDaemonWaitFuncObject  wait_func,
+                                                 gpointer                    user_data,
+                                                 GDestroyNotify              user_data_free_func,
+                                                 guint                       timeout_seconds,
+                                                 GError                      **error)
+{
+  return NULL == wait_for_objects (daemon,
+                                   (UDisksDaemonWaitFuncGeneric) wait_func,
+                                   user_data,
+                                   user_data_free_func,
+                                   timeout_seconds,
+                                   TRUE, /* to_disappear */
+                                   error);
+}
+
 
 /* ---------------------------------------------------------------------------------------------------- */
 

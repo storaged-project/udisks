@@ -1,6 +1,5 @@
 import dbus
 import os
-import time
 import unittest
 
 import udiskstestcase
@@ -17,14 +16,14 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
             raise unittest.SkipTest('Udisks module for LVM tests not loaded, skipping.')
 
     def _create_vg(self, vgname, devices):
-        self.udev_settle()  # Since the devices might not be ready yet
         manager = self.get_object('/Manager')
         vg_path = manager.VolumeGroupCreate(vgname, devices, self.no_options,
                                             dbus_interface=self.iface_prefix + '.Manager.LVM2')
-        self.udev_settle()
-        time.sleep(0.5)
         vg = self.bus.get_object(self.iface_prefix, vg_path)
         self.assertIsNotNone(vg)
+        # this makes sure the object is fully setup (e.g. has the Properties iface)
+        vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
+        vgsize.assertGreater(0)
         ret, _out = self.run_command('vgs %s' % vgname)
         self.assertEqual(ret, 0)
         return vg
@@ -32,7 +31,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
     def _remove_vg(self, vg):
         vgname = self.get_property_raw(vg, '.VolumeGroup', 'Name')
         vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         ret, _out = self.run_command('vgs %s' % vgname)
         self.assertNotEqual(ret, 0)
 
@@ -57,7 +55,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         lvname = 'udisks_test_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize.value), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         self.assertIsNotNone(lv_path)
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
@@ -75,14 +72,12 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         # Shrink the LV
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
 
         # check that the 'BlockDevice' property is unset after Deactivate
         lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
         lv_prop_block.assertEqual('/')
 
         lv.Resize(dbus.UInt64(lvsize.value/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
         lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
 
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
@@ -103,7 +98,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         # Resize the LV to the whole VG
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
         lv.Resize(dbus.UInt64(new_vgsize.value), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertEqual(new_vgsize.value)
@@ -111,8 +105,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         # rename the LV
         lvname = 'udisks_test_lv2'
         new_lvpath = lv.Rename(lvname, self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
-        time.sleep(1)
 
         # get the new (renamed) lv object
         lv = self.bus.get_object(self.iface_prefix, new_lvpath)
@@ -127,7 +119,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         # lvremove
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         lv.Delete(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
         self.assertNotEqual(ret, 0)
@@ -151,7 +142,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         tpname = 'udisks_test_tp'
         tp_path = vg.CreateThinPoolVolume(tpname, dbus.UInt64(vgsize), self.no_options,
                                           dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         self.assertIsNotNone(tp_path)
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, tpname))
@@ -164,7 +154,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         tvname = 'udisks_test_tv'
         tv_path = vg.CreateThinVolume(tvname, dbus.UInt64(tpsize * 2), tp, self.no_options,
                                       dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         tv = self.bus.get_object(self.iface_prefix, tv_path)
         self.assertIsNotNone(tv)
 
@@ -173,7 +162,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         # Check the block device of the thin volume
         lv_block_path = tv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
         self.assertIsNotNone(lv_block)
         blocksize = self.get_property(lv_block, '.Block', 'Size')
@@ -198,21 +186,17 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         lvname = 'udisks_test_origin_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
         self.assertEqual(ret, 0)
 
-        time.sleep(1)
-
         # Create the LV's snapshot
         snapname = 'udisks_test_snap_lv'
         vg_freesize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         snap_path = lv.CreateSnapshot(snapname, vg_freesize, self.no_options,
                                       dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
         snap = self.bus.get_object(self.iface_prefix, snap_path)
         self.assertIsNotNone(snap)
 
@@ -235,35 +219,28 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         orig_lvname = 'udisks_test_origin_lv'
         lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, orig_lvname))
         self.assertEqual(ret, 0)
-        time.sleep(1)
 
         # Create the caching LV
         cache_lvname = 'udisks_test_cache_lv'
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64(vgsize / 2), self.no_options,
                                              dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         cache_lv = self.bus.get_object(self.iface_prefix, lv_cache_path)
         self.assertIsNotNone(cache_lv)
 
         # Add the cache to the origin
         lv.CacheAttach('udisks_test_cache_lv', self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
-        time.sleep(1)
 
         _ret, out = self.run_command('lvs %s/%s --noheadings -o segtype' % (vgname, orig_lvname))
         self.assertEqual(out, 'cache')
 
         # Split the cache
         lv.CacheSplit(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        self.udev_settle()
-        time.sleep(1)
 
         _ret, out = self.run_command('lvs %s/%s --noheadings -o lv_layout' % (vgname, orig_lvname))
         self.assertEqual(out, 'linear')
@@ -287,8 +264,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         vgname = 'udisks_test_rename_vg2'
         new_vgpath = vg.Rename(vgname, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
-        time.sleep(1)
 
         # get the new (renamed) lv object
         vg = self.bus.get_object(self.iface_prefix, new_vgpath)
@@ -317,21 +292,18 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         lvname = 'udisks_test_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(4 * 1024**2), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
 
         # add a new pv to the vg
         new_pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[1]))
         vg.AddDevice(new_pv, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
 
         _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[1])
         self.assertEqual(out, vgname)
 
         # empty the old pv
         vg.EmptyDevice(old_pv, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup', timeout=120 * 100)
-        self.udev_settle()
 
         _ret, pv_size = self.run_command('pvs --noheadings --units=B --nosuffix -o pv_size %s' % self.vdevs[0])
         _ret, pv_free = self.run_command('pvs --noheadings --units=B --nosuffix -o pv_free %s' % self.vdevs[0])
@@ -339,8 +311,6 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         # remove the old pv from the vg
         vg.RemoveDevice(old_pv, False, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        self.udev_settle()
-        time.sleep(1)
 
         _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[0])
         self.assertEqual(out, '')

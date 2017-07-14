@@ -65,7 +65,6 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         cls.run_command('modprobe -r zram')
 
     def _get_zrams(self):
-        time.sleep(0.5)
         udisks = self.get_object('')
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
 
