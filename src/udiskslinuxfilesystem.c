@@ -820,6 +820,7 @@ ensure_utf8 (const gchar *s)
 static gboolean
 add_acl (const gchar  *path,
          uid_t         uid,
+         acl_perm_t    perm,
          GError      **error)
 {
   gboolean ret = FALSE;
@@ -833,7 +834,7 @@ add_acl (const gchar  *path,
       acl_set_tag_type (entry, ACL_USER) == -1 ||
       acl_set_qualifier (entry, &uid) == -1 ||
       acl_get_permset (entry, &permset) == -1 ||
-      acl_add_perm (permset, ACL_READ|ACL_EXECUTE) == -1 ||
+      acl_add_perm (permset, perm) == -1 ||
       acl_calc_mask (&acl) == -1 ||
       acl_set_file (path, ACL_TYPE_ACCESS, acl) == -1)
     {
@@ -942,7 +943,7 @@ calculate_mount_point (UDisksDaemon  *daemon,
             }
           /* Finally, add the read+execute ACL for $USER */
 #ifdef HAVE_ACL
-          if (!add_acl (mount_dir, uid, error))
+          if (!add_acl (mount_dir, uid, ACL_READ|ACL_EXECUTE, error))
             {
 #else
           if (chown (mount_dir, -1, gid) == -1)
@@ -1511,7 +1512,20 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
   else
-    udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+    {
+#ifdef HAVE_ACL
+      if (!add_acl (mount_point_to_use, caller_uid, ACL_READ|ACL_WRITE|ACL_EXECUTE, &error))
+        {
+          udisks_warning ("Failed to set ACLs on %s for %d: %s", mount_point_to_use, caller_uid, error->message);
+          g_clear_error (&error);
+        }
+#else
+      if (chown (mount_dir, -1, caller_uid) == -1)
+          udisks_warning ("Failed to set chown %s to %d", mount_point_to_use, caller_uid);
+#endif
+
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+    }
 
   /* update the mounted-fs file */
   udisks_state_add_mounted_fs (state,
