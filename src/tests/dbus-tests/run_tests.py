@@ -15,6 +15,7 @@ import tempfile
 import re
 import imp
 import atexit
+from datetime import datetime
 
 def find_daemon(projdir, system):
     if not system:
@@ -148,6 +149,9 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
+    # store time when tests started (needed for journal cropping)
+    start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         imp.find_module('blivet')
     except ImportError:
@@ -235,6 +239,10 @@ if __name__ == '__main__':
         subprocess.call(['targetcli', 'clearconfig confirm=True'])
         for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
             os.unlink(disk_file)
+
+    # dump cropped journal to log file
+    with open('journaldump.log', "w") as outfile:
+        subprocess.call(['journalctl', '-S', start_time], stdout=outfile)
 
     if result.wasSuccessful():
         sys.exit(0)
