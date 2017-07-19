@@ -2489,9 +2489,11 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_hash_table_insert (hash, (gpointer) "encrypted-modify",     (gpointer) C_("job", "Modifying Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
+      g_hash_table_insert (hash, (gpointer) "filesystem-check",     (gpointer) C_("job", "Checking Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-mount",     (gpointer) C_("job", "Mounting Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-unmount",   (gpointer) C_("job", "Unmounting Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-modify",    (gpointer) C_("job", "Modifying Filesystem"));
+      g_hash_table_insert (hash, (gpointer) "filesystem-repair",    (gpointer) C_("job", "Reparing Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-resize",    (gpointer) C_("job", "Resizing Filesystem"));
       g_hash_table_insert (hash, (gpointer) "format-erase",         (gpointer) C_("job", "Erasing Device"));
       g_hash_table_insert (hash, (gpointer) "format-mkfs",          (gpointer) C_("job", "Creating Filesystem"));
