@@ -70,6 +70,19 @@
   </action>
 
   <!-- ###################################################################### -->
+  <!-- Taking ownership of filesystems -->
+
+  <action id="org.freedesktop.udisks2.filesystem-take-ownership">
+    <_description>Take ownership of a filesystem</_description>
+    <_message>Authentication is required to take ownership of a filesystem.</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
   <!-- Unlocking encrypted devices -->
 
   <action id="org.freedesktop.udisks2.encrypted-unlock">

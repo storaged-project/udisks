@@ -21,6 +21,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     _can_label = False
     _can_mount = False
 
+    username = 'udisks_test_user'
+
     def _clean_format(self, disk):
         d = dbus.Dictionary(signature='sv')
         d['erase'] = True
@@ -28,6 +30,26 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     def _unmount(self, disk_path):
         self.run_command('umount %s' % disk_path)
+
+    def _add_user(self, username):
+        ret, out = self.run_command('useradd -M -p "" %s' % username)
+        if ret != 0:
+            self.fail('Failed to create user %s: %s' % (username, out))
+
+        ret, uid = self.run_command('id -u %s' % username)
+        if ret != 0:
+            self.fail('Failed to get UID for user %s' % username)
+
+        ret, gid = self.run_command('id -g %s' % username)
+        if ret != 0:
+            self.fail('Failed to get GID for user %s.' % username)
+
+        return (uid, gid)
+
+    def _remove_user(self, username):
+        ret, out = self.run_command('userdel %s' % username)
+        if ret != 0:
+            self.fail('Failed to remove user user %s: %s' % (username, out))
 
     @classmethod
     def command_exists(cls, command):
@@ -262,6 +284,66 @@ class Ext4TestCase(Ext2TestCase):
     def _invalid_label(self, disk):
         pass
 
+    def test_take_ownership(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
+
+        # create user for our test
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
+
+        # mount the device
+        mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # change owner of the mountpoint to our user
+        os.chown(mnt_path, int(uid), int(gid))
+
+        # now take ownership of the filesystem -- owner should now be root
+        disk.TakeOwnership(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+        sys_stat = os.stat(mnt_path)
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
+        # change the owner back and create some files and directories there
+        os.chown(mnt_path, int(uid), int(gid))
+
+        dirname = 'udisks_test_dir'
+        fname = 'file.txt'
+
+        os.mknod(os.path.join(mnt_path, fname))
+        os.mkdir(os.path.join(mnt_path, dirname))
+        os.mknod(os.path.join(mnt_path, dirname, fname))
+
+        # now take ownership of the filesystem with recursive option -- owner
+        # of everything should now be root
+        d = dbus.Dictionary(signature='sv')
+        d['recursive'] = True
+        disk.TakeOwnership(d, dbus_interface=self.iface_prefix + '.Filesystem')
+
+        sys_stat = os.stat(mnt_path)
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
+        sys_stat = os.stat(os.path.join(mnt_path, dirname))
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
+        sys_stat = os.stat(os.path.join(mnt_path, dirname, fname))
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
 
 class XFSTestCase(UdisksFSTestCase):
     _fs_name = 'xfs'
@@ -282,33 +364,11 @@ class VFATTestCase(UdisksFSTestCase):
     _can_label = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
 
-    username = 'udisks_mount_test'
-
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-
-    def _add_user(self):
-        ret, out = self.run_command('useradd -M -p "" %s' % self.username)
-        if ret != 0:
-            self.fail('Failed to create user %s: %s' % (self.username, out))
-
-        ret, uid = self.run_command('id -u %s' % self.username)
-        if ret != 0:
-            self.fail('Failed to get UID for user %s' % self.username)
-
-        ret, gid = self.run_command('id -g %s' % self.username)
-        if ret != 0:
-            self.fail('Failed to get GID for user %s.' % self.username)
-
-        return (uid, gid)
-
-    def _remove_user(self):
-        ret, out = self.run_command('userdel %s' % self.username)
-        if ret != 0:
-            self.fail('Failed to remove user user %s: %s' % (self.username, out))
 
     def _set_user_mountable(self, disk):
         # create a tempdir
@@ -472,8 +532,8 @@ class VFATTestCase(UdisksFSTestCase):
         self.addCleanup(self._clean_format, disk)
 
         # create user for our test
-        self.addCleanup(self._remove_user)
-        uid, gid = self._add_user()
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
 
         # add the disk to fstab
         self._set_user_mountable(disk)
@@ -510,8 +570,8 @@ class VFATTestCase(UdisksFSTestCase):
         self.addCleanup(self._clean_format, disk)
 
         # create user for our test
-        self.addCleanup(self._remove_user)
-        uid, gid = self._add_user()
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
 
         # add unmount cleanup now in case something wrong happens in the other process
         self.addCleanup(self._unmount, self.vdevs[0])
