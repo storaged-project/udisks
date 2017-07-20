@@ -72,7 +72,7 @@ def _copy_files(source_files, target_dir, tmpdir):
         else:
             restore_list.append((tgt, True))
 
-        print("Coping file: %s to %s directory!" % (f, target_dir))
+        print("Copying file: %s to %s directory!" % (f, target_dir))
         shutil.copy(f, target_dir)
 
     return restore_list
