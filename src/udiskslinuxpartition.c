@@ -752,6 +752,37 @@ handle_set_type (UDisksPartition       *partition,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+
+typedef struct
+{
+  guint64      original_size;
+  const gchar *object_path;
+} WaitForPartitionResizeData;
+
+static UDisksObject *
+wait_for_partition_resize (UDisksDaemon *daemon,
+                           gpointer      user_data)
+{
+  WaitForPartitionResizeData *data = user_data;
+  UDisksObject *object = NULL;
+  UDisksPartition *partition = NULL;
+
+  object = udisks_daemon_find_object (daemon, data->object_path);
+
+  if (object != NULL)
+    {
+      partition = udisks_object_get_partition (object);
+      if (partition != NULL && udisks_partition_get_size (partition) == data->original_size)
+        {
+          g_clear_object (&object);
+        }
+
+      g_clear_object (&partition);
+    }
+
+  return object;
+}
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_resize (UDisksPartition       *partition,
@@ -767,6 +798,8 @@ handle_resize (UDisksPartition       *partition,
   uid_t caller_uid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
+  UDisksObject *partition_object = NULL;
+  WaitForPartitionResizeData wait_data;
 
   if (!check_authorization (partition, invocation, options, &caller_uid))
     {
@@ -780,6 +813,8 @@ handle_resize (UDisksPartition       *partition,
       goto out;
     }
 
+  wait_data.original_size = udisks_partition_get_size (partition);
+  wait_data.object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
   partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
@@ -812,6 +847,21 @@ handle_resize (UDisksPartition       *partition,
       goto out;
     }
 
+  /* Wait for partition to reappear before returning, so that clients
+   * cat at least issue udisks_client_settle() afterwards to wait for
+   * the other interfaces to be present. If the resizing/fitting results
+   * in the same partition size this waiter will hit its timeout
+   * because there is no way to distinguish the reappeared partition
+   * from the original one.
+   */
+
+  partition_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                         wait_for_partition_resize,
+                                                         &wait_data,
+                                                         NULL,
+                                                         10,
+                                                         NULL);
+
   udisks_partition_complete_resize (partition, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
@@ -819,6 +869,7 @@ handle_resize (UDisksPartition       *partition,
   g_clear_error (&error);
   g_clear_object (&object);
   g_clear_object (&block);
+  g_clear_object (&partition_object);
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table_block);
 
