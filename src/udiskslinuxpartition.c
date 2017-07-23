@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/sysmacros.h>
+#include <sys/ioctl.h>
+#include <linux/fs.h>
 #include <glib-unix.h>
 
 #include <glib/gstdio.h>
@@ -752,6 +754,36 @@ handle_set_type (UDisksPartition       *partition,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+
+typedef struct
+{
+  const gchar *object_path;
+  guint64      new_size;
+} WaitForPartitionResizeData;
+
+static UDisksObject *
+wait_for_partition_resize (UDisksDaemon *daemon,
+                           gpointer      user_data)
+{
+  WaitForPartitionResizeData *data = user_data;
+  UDisksObject *object = NULL;
+  UDisksPartition *partition = NULL;
+
+  object = udisks_daemon_find_object (daemon, data->object_path);
+
+  if (object != NULL)
+    {
+      partition = udisks_object_peek_partition (object);
+      if (udisks_object_peek_block (object) == NULL ||
+          partition == NULL || udisks_partition_get_size (partition) != data->new_size)
+        {
+          g_clear_object (&object);
+        }
+    }
+
+  return object;
+}
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_resize (UDisksPartition       *partition,
@@ -767,6 +799,10 @@ handle_resize (UDisksPartition       *partition,
   uid_t caller_uid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
+  UDisksObject *partition_object = NULL;
+  WaitForPartitionResizeData wait_data;
+  gint fd = 0;
+  const gchar *part = NULL;
 
   if (!check_authorization (partition, invocation, options, &caller_uid))
     {
@@ -780,8 +816,11 @@ handle_resize (UDisksPartition       *partition,
       goto out;
     }
 
+  wait_data.object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  wait_data.new_size = 0; /* hit timeout in case of error */
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
+  part = udisks_block_get_device (block);
   partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
   partition_table_block = udisks_object_get_block (partition_table_object);
 
@@ -812,6 +851,32 @@ handle_resize (UDisksPartition       *partition,
       goto out;
     }
 
+  /* Wait for partition property to be updated so that the partition interface
+   * will not disappear shortly after this method returns.
+   * Clients could either explicitly wait for an interface or try
+   * udisks_client_settle() to wait for interfaces to be present.
+   * If the partition size wasn't changed then there won't be any reappearing
+   * of the partition node or the interfaces.
+   */
+
+  fd = open (part, O_RDONLY);
+  if (fd != -1) {
+    if (ioctl (fd, BLKGETSIZE64, &wait_data.new_size) == -1) {
+        udisks_warning ("Could not query new partition size for %s", part);
+    }
+
+    close (fd);
+  } else {
+    udisks_warning ("Could not open %s to query new partition size", part);
+  }
+
+  partition_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                         wait_for_partition_resize,
+                                                         &wait_data,
+                                                         NULL,
+                                                         10,
+                                                         NULL);
+
   udisks_partition_complete_resize (partition, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
@@ -819,6 +884,7 @@ handle_resize (UDisksPartition       *partition,
   g_clear_error (&error);
   g_clear_object (&object);
   g_clear_object (&block);
+  g_clear_object (&partition_object);
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table_block);
 
