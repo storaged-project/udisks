@@ -107,6 +107,10 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
         ro.assertFalse()
 
+        # should be set up by root (uid 0)
+        uid = self.get_property(loop_dev_obj, '.Loop', 'SetupByUID')
+        uid.assertEqual(0)
+
     def test_20_create_with_offset(self):
         opts = dbus.Dictionary({"offset": dbus.UInt64(4096)}, signature=dbus.Signature('sv'))
         with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
