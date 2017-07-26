@@ -118,15 +118,81 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
                                      UDisksLinuxBlockObject     *object)
 {
   const gchar *type = NULL;
-  UDisksLinuxDevice *device = NULL;;
+  UDisksLinuxDevice *device = NULL;
+  UDisksDaemon *daemon = NULL;
+  guint num_parts = 0;
+  const gchar **partition_object_paths = NULL;
+  GList *partition_objects = NULL;
+  GList *object_p = NULL;
+  guint i = 0;
 
+  /* update partition table type */
   device = udisks_linux_block_object_get_device (object);
   if (device != NULL)
     type = g_udev_device_get_property (device->udev_device, "ID_PART_TABLE_TYPE");
 
   udisks_partition_table_set_type_ (UDISKS_PARTITION_TABLE (table), type);
 
+  /* update list of partitions */
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  partition_objects = udisks_linux_partition_table_get_partitions (daemon, UDISKS_PARTITION_TABLE (table), &num_parts);
+
+  partition_object_paths = g_new0 (const gchar *, num_parts + 1);
+  for (i = 0, object_p = partition_objects; object_p != NULL; object_p = object_p->next, i++)
+    {
+      partition_object_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (object_p->data)));
+    }
+
+  udisks_partition_table_set_partitions (UDISKS_PARTITION_TABLE (table),
+                                         partition_object_paths);
+
+
   g_clear_object (&device);
+  g_list_free_full (partition_objects, g_object_unref);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+GList *
+udisks_linux_partition_table_get_partitions (UDisksDaemon         *daemon,
+                                             UDisksPartitionTable *table,
+                                             guint                *num_partitions)
+{
+  GList *ret = NULL;
+  GDBusObject *table_object;
+  const gchar *table_object_path;
+  GList *l, *object_proxies = NULL;
+  *num_partitions = 0;
+
+  table_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (table));
+  if (table_object == NULL)
+    goto out;
+  table_object_path = g_dbus_object_get_object_path (table_object);
+
+  object_proxies = udisks_daemon_get_objects (daemon);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksPartition *partition;
+
+      partition = udisks_object_get_partition (object);
+      if (partition == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_partition_get_table (partition), table_object_path) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (partition));
+          (*num_partitions)++;
+        }
+
+      g_object_unref (partition);
+    }
+  ret = g_list_reverse (ret);
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

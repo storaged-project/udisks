@@ -1452,6 +1452,12 @@
   <interface name="org.freedesktop.UDisks2.PartitionTable">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
 
+    <!-- Partitions: List of object paths of the #org.freedesktop.UDisks2.Partition
+         objects that belongs to this partition table.
+         @since: 2.7.2
+    -->
+    <property name="Partitions" type="ao" access="read"/>
+
     <!-- Type: The type of partition table detected.
          Known values include:
          <variablelist>

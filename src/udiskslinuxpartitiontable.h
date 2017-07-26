@@ -33,6 +33,9 @@ GType                 udisks_linux_partition_table_get_type (void) G_GNUC_CONST;
 UDisksPartitionTable *udisks_linux_partition_table_new      (void);
 void                  udisks_linux_partition_table_update   (UDisksLinuxPartitionTable *table,
                                                              UDisksLinuxBlockObject    *object);
+GList                *udisks_linux_partition_table_get_partitions (UDisksDaemon         *daemon,
+                                                                   UDisksPartitionTable *table,
+                                                                   guint                *num_partitions);
 
 G_END_DECLS
 

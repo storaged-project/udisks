@@ -48,11 +48,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
         # create partition
-        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, '',
-                                    self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        path1 = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, '',
+                                     self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
-        part = self.bus.get_object(self.iface_prefix, path)
+        part = self.bus.get_object(self.iface_prefix, path1)
         self.assertIsNotNone(part)
 
         self.addCleanup(self._remove_partition, part)
@@ -68,7 +68,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         dbus_type.assertEqual(part_type)
 
         # check system values
-        part_name = path.split('/')[-1]
+        part_name = path1.split('/')[-1]
         disk_name = os.path.basename(self.vdevs[0])
         part_syspath = '/sys/block/%s/%s' % (disk_name, part_name)
         self.assertTrue(os.path.isdir(part_syspath))
@@ -96,24 +96,32 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         dbus_num.assertEqual(sys_num)
 
         # create another partition
-        path = disk.CreatePartition(dbus.UInt64(1024**2 + (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
-                                    part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        path2 = disk.CreatePartition(dbus.UInt64(1024**2 + (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
+                                     part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
-        part = self.bus.get_object(self.iface_prefix, path)
+        part = self.bus.get_object(self.iface_prefix, path2)
         self.assertIsNotNone(part)
 
         self.addCleanup(self._remove_partition, part)
 
         # create yet another partition
-        path = disk.CreatePartition(dbus.UInt64(1024**2 + 2 * (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
-                                    part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        path3 = disk.CreatePartition(dbus.UInt64(1024**2 + 2 * (1024**2 + 100 * 1024**2)), dbus.UInt64(100 * 1024**2),
+                                     part_type, '', self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
-        part = self.bus.get_object(self.iface_prefix, path)
+        part = self.bus.get_object(self.iface_prefix, path3)
         self.assertIsNotNone(part)
 
         self.addCleanup(self._remove_partition, part)
+
+        # there should now be 3 partitions on the disk
+        dbus_parts = self.get_property(disk, '.PartitionTable', 'Partitions')
+        dbus_parts.assertLen(3)
+
+        self.assertIn(path1, dbus_parts.value)
+        self.assertIn(path2, dbus_parts.value)
+        self.assertIn(path3, dbus_parts.value)
 
     def create_extended_partition(self, ext_options, log_options, part_type=''):
 
