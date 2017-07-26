@@ -543,6 +543,12 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
     }
 
+  /* Trigger uevent on the disk -- we sometimes get add-remove-add uevents for
+     the new partition without getting change event for the disks after the
+     last add event and this breaks the "Partitions" property on the
+     "PartitionTable" interface. */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
