@@ -62,6 +62,7 @@
 #include "udiskslinuxpartition.h"
 #include "udiskslinuxencrypted.h"
 #include "udiskslinuxencryptedhelpers.h"
+#include "udiskslinuxpartitiontable.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -2398,42 +2399,6 @@ peek_partition_table (UDisksDaemon    *daemon,
   return object? udisks_object_peek_partition_table (object) : NULL;
 }
 
-static GList *
-get_partitions (UDisksDaemon         *daemon,
-                UDisksPartitionTable *table)
-{
-  GList *ret = NULL;
-  GDBusObject *table_object;
-  const gchar *table_object_path;
-  GList *l, *object_proxies = NULL;
-
-  table_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (table));
-  if (table_object == NULL)
-    goto out;
-  table_object_path = g_dbus_object_get_object_path (table_object);
-
-  object_proxies = udisks_daemon_get_objects (daemon);
-  for (l = object_proxies; l != NULL; l = l->next)
-    {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksPartition *partition;
-
-      partition = udisks_object_get_partition (object);
-      if (partition == NULL)
-        continue;
-
-      if (g_strcmp0 (udisks_partition_get_table (partition), table_object_path) == 0)
-        ret = g_list_prepend (ret, g_object_ref (partition));
-
-      g_object_unref (partition);
-    }
-  ret = g_list_reverse (ret);
- out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
-  return ret;
-}
-
 static UDisksBlock *
 get_cleartext_block (UDisksDaemon  *daemon,
                      UDisksBlock   *block)
@@ -2482,6 +2447,7 @@ walk_block (UDisksDaemon  *daemon,
   UDisksObject *object;
   UDisksBlock *cleartext;
   gboolean is_leaf = TRUE;
+  guint num_parts = 0;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
   if (object != NULL)
@@ -2508,7 +2474,7 @@ walk_block (UDisksDaemon  *daemon,
       if (table)
         {
           GList *ps, *l;
-          ps = get_partitions (daemon, table);
+          ps = udisks_linux_partition_table_get_partitions (daemon, table, &num_parts);
           for (l = ps; l != NULL; l = l->next)
             {
               UDisksPartition *p = UDISKS_PARTITION (l->data);
