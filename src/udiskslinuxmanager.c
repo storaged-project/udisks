@@ -317,6 +317,8 @@ handle_loop_setup (UDisksManager          *object,
   guint64 option_offset = 0;
   guint64 option_size = 0;
   uid_t caller_uid;
+  struct stat fd_statbuf;
+  gboolean fd_statbuf_valid = FALSE;
   WaitForLoopData wait_data;
 
   /* we need the uid of the caller for the loop file */
@@ -377,6 +379,12 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "size", "t", &option_size);
   g_variant_lookup (options, "no-part-scan", "b", &option_no_part_scan);
 
+  /* it's not a problem if fstat fails... for example, this can happen if the user
+   * passes a fd to a file on the GVfs fuse mount
+   */
+  if (fstat (fd, &fd_statbuf) == 0)
+    fd_statbuf_valid = TRUE;
+
   error = NULL;
   if (!bd_loop_setup_from_fd (fd,
                               option_offset,
@@ -415,6 +423,16 @@ handle_loop_setup (UDisksManager          *object,
   udisks_notice ("Set up loop device %s (backed by %s)",
                  loop_device,
                  path);
+
+  /* Update the udisks loop state file (/run/udisks2/loop) with information
+     about the new loop device created by us. We need to manually trigger
+     uevent for the device after this to update Loop interface properties. */
+  udisks_state_add_loop (udisks_daemon_get_state (manager->daemon),
+                        loop_device,
+                        path,
+                        fd_statbuf_valid ? fd_statbuf.st_dev : 0,
+                        caller_uid);
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (loop_object));
 
   udisks_manager_complete_loop_setup (object,
                                       invocation,
