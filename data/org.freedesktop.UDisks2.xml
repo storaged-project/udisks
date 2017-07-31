@@ -1836,6 +1836,19 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="repaired" direction="out" type="b"/>
     </method>
+
+    <!-- TakeOwnership:
+         @options: Options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>recursive</parameter> (of type 'b').
+         @since: 2.7.2
+
+         Changes ownership of the filesystem to the UID and GID of the calling
+         user.
+
+         Filesystems that don't support ownership result in an error.
+    -->
+    <method name="TakeOwnership">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

@@ -57,6 +57,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udiskslinuxpartition.h         udiskslinuxpartition.c                  \
 	udiskslinuxpartitiontable.h    udiskslinuxpartitiontable.c             \
 	udiskslinuxfilesystem.h        udiskslinuxfilesystem.c                 \
+	udiskslinuxfilesystemhelpers.h udiskslinuxfilesystemhelpers.c          \
 	udiskslinuxencrypted.h         udiskslinuxencrypted.c                  \
 	udiskslinuxencryptedhelpers.h udiskslinuxencryptedhelpers.c            \
 	udiskslinuxswapspace.h         udiskslinuxswapspace.c                  \

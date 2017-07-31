@@ -41,6 +41,7 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
+#include "udiskslinuxfilesystemhelpers.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
@@ -2441,6 +2442,133 @@ handle_check (UDisksFilesystem      *filesystem,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+static gboolean
+handle_take_ownership (UDisksFilesystem      *filesystem,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *options)
+{
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  const gchar *probed_fs_usage = NULL;
+  const gchar *probed_fs_type = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  const FSInfo *fs_info = NULL;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+  gboolean recursive = FALSE;
+  uid_t caller_uid;
+  gid_t caller_gid;
+
+  g_variant_lookup (options, "recursive", "b", &recursive);
+
+  /* only allow a single call at a time */
+  g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  block = udisks_object_peek_block (object);
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                &caller_gid,
+                                                NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot take ownership of %s filesystem on %s",
+                                             probed_fs_usage,
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  probed_fs_type = udisks_block_get_id_type (block);
+  fs_info = get_fs_info (probed_fs_type);
+  if (fs_info == NULL || !fs_info->supports_owners)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Filesystem %s doesn't support ownership",
+                                             probed_fs_usage);
+      goto out;
+    }
+
+  action_id = "org.freedesktop.udisks2.filesystem-take-ownership";
+  /* Translators: Shown in authentication dialog when the user
+   * requests taking ownership of the filesystem.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to change ownership of the filesystem on $(drive)");
+
+  /* Check that the user is actually authorized to check the filesystem. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                     object,
+                                                     action_id,
+                                                     options,
+                                                     message,
+                                                     invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-modify",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (! take_filesystem_ownership (udisks_block_get_device (block),
+                                   probed_fs_type,
+                                   caller_uid, caller_gid,
+                                   recursive,
+                                   &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error taking ownership of filesystem on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+
+  udisks_filesystem_complete_take_ownership (filesystem, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+  out:
+   g_clear_object (&object);
+   g_clear_error (&error);
+   g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
+   return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -2452,4 +2580,5 @@ filesystem_iface_init (UDisksFilesystemIface *iface)
   iface->handle_resize    = handle_resize;
   iface->handle_repair    = handle_repair;
   iface->handle_check     = handle_check;
+  iface->handle_take_ownership = handle_take_ownership;
 }

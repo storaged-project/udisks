@@ -63,6 +63,7 @@
 #include "udiskslinuxencrypted.h"
 #include "udiskslinuxencryptedhelpers.h"
 #include "udiskslinuxpartitiontable.h"
+#include "udiskslinuxfilesystemhelpers.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -3086,70 +3087,12 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   /* Change overship, if requested and supported */
   if (take_ownership && fs_info->supports_owners)
     {
-      gchar tos_dir[256] = PACKAGE_LOCALSTATE_DIR "/run/udisks2/block-format-tos-XXXXXX";
-
-      if (mkdtemp (tos_dir) == NULL)
+      if (!take_filesystem_ownership (udisks_block_get_device (block_to_mkfs),
+                                      type, caller_uid, caller_gid, FALSE, &error))
         {
-            handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                   "Cannot create directory %s: %m", tos_dir));
-          goto out;
-        }
-      if (mount (udisks_block_get_device (block_to_mkfs), tos_dir, type, 0, NULL) != 0)
-        {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Cannot mount %s at %s: %m", udisks_block_get_device (block_to_mkfs), tos_dir));
-          if (rmdir (tos_dir) != 0)
-            {
-              udisks_warning ("Error removing directory %s: %m", tos_dir);
-            }
-          goto out;
-        }
-      if (chown (tos_dir, caller_uid, caller_gid) != 0)
-        {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Cannot chown %s to uid=%u and gid=%u: %m", tos_dir, caller_uid, caller_gid));
-          if (umount (tos_dir) != 0)
-            {
-              udisks_warning ("Error unmounting directory %s: %m", tos_dir);
-              goto out;
-            }
-          if (rmdir (tos_dir) != 0)
-            {
-              udisks_warning ("Error removing directory %s: %m", tos_dir);
-            }
-          goto out;
-        }
-      if (chmod (tos_dir, 0700) != 0)
-        {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Cannot chmod %s to mode 0700: %m", tos_dir));
-          if (umount (tos_dir) != 0)
-            {
-              udisks_warning ("Error unmounting directory %s: %m", tos_dir);
-              goto out;
-            }
-          if (rmdir (tos_dir) != 0)
-            {
-              udisks_warning ("Error removing directory %s: %m", tos_dir);
-            }
-          goto out;
-        }
-
-      if (umount (tos_dir) != 0)
-        {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Cannot unmount %s: %m", tos_dir));
-          if (rmdir (tos_dir) != 0)
-            {
-              udisks_warning ("Error removing directory %s: %m", tos_dir);
-            }
-          goto out;
-        }
-
-      if (rmdir (tos_dir) != 0)
-        {
-          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                 "Cannot remove directory %s: %m", tos_dir));
+          g_prefix_error (&error,
+                          "Failed to take ownership of newly created filesystem: ");
+          handle_format_failure (invocation, error);
           goto out;
         }
     }
