@@ -650,6 +650,11 @@ class F2FSTestCase(UdisksFSTestCase):
     _can_label = False
     _can_mount = True and UdisksFSTestCase.module_loaded('f2fs')
 
+class UDFTestCase(UdisksFSTestCase):
+    _fs_name = 'udf'
+    _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
+    _can_label = False
+    _can_mount = True and UdisksFSTestCase.module_loaded('udf')
 
 class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'

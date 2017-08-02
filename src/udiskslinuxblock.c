@@ -2618,6 +2618,43 @@ handle_format_failure (GDBusMethodInvocation *invocation,
     g_clear_error (&error);
 }
 
+static gboolean
+add_blocksize (gchar        **command,
+               const gchar   *device,
+               GError       **error)
+{
+  gint fd = -1;
+  gchar *new_cmd = NULL;
+  gint blksize = 0;
+  gchar *size_str = NULL;
+
+  fd = open (device, O_RDONLY);
+  if (fd < 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Failed to open the device '%s' to get its block size", device);
+      return FALSE;
+    }
+
+  if (ioctl(fd, BLKSSZGET, &blksize) < 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Failed to get block size of the device '%s'", device);
+      close (fd);
+      return FALSE;
+    }
+  close (fd);
+
+  size_str = g_strdup_printf ("%d", blksize);
+  new_cmd = udisks_daemon_util_subst_str_and_escape (*command, "$BLOCKSIZE", size_str);
+  g_free (size_str);
+  g_free (*command);
+  *command = new_cmd;
+
+  return TRUE;
+}
+
+
 void
 udisks_linux_block_handle_format (UDisksBlock             *block,
                                   GDBusMethodInvocation   *invocation,
@@ -2852,10 +2889,16 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   */
   if (dry_run_first && fs_info->command_validate_create_fs)
     {
+      const gchar *device = udisks_block_get_device (block);
       tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_validate_create_fs, "$DEVICE",
-                                                     udisks_block_get_device (block));
+                                                     device);
       command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
       g_free (tmp);
+      if (strstr (command, "$BLOCKSIZE") && ! add_blocksize (&command, device, &error))
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
 
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                     object,
@@ -3035,9 +3078,16 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     if (part_table_type == BD_PART_TABLE_UNDEF)
       {
         /* Build and run mkfs shell command */
-        tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
+        const gchar *device = udisks_block_get_device (block_to_mkfs);
+        tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", device);
         command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
         g_free (tmp);
+        if (strstr (command, "$BLOCKSIZE") && ! add_blocksize (&command, device, &error))
+          {
+            handle_format_failure (invocation, error);
+            goto out;
+          }
+
         if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                       object_to_mkfs,
                                                       "format-mkfs", caller_uid,
