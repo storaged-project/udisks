@@ -161,6 +161,19 @@
     <method name="EnableModules">
       <arg name="enable" direction="in" type="b"/>
     </method>
+
+    <!--
+        GetBlockDevices:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.7.2
+
+        Get list of all block devices (object paths of objects implementing the #org.freedesktop.UDisks2.Block interface) known to UDisks.
+
+    -->
+    <method name="GetBlockDevices">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="block_objects" direction="out" type="ao"/>
+    </method>
   </interface>
 
   <!--

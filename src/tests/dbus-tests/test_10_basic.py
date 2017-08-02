@@ -148,6 +148,21 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         self.assertTrue(avail)  # libparted, no executable
         self.assertEqual(util, '')
 
+    def test_50_get_block_devices(self):
+        # get all objects and filter block devices
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        block_paths = [p for p in list(objects.keys()) if "/block_devices/" in p]
+
+        # get block devices using the 'GetBlockDevices' function
+        manager = self.get_interface(self.manager_obj, '.Manager')
+        dbus_blocks = manager.GetBlockDevices(self.no_options)
+
+        # and make sure both lists are equal
+        self.assertEqual(len(block_paths), len(dbus_blocks))
+        for path in block_paths:
+            self.assertIn(path, dbus_blocks)
+
     def test_80_device_presence(self):
         '''Test the debug devices are present on the bus'''
         for d in self.vdevs:
