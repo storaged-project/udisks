@@ -510,6 +510,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
   gboolean ret;
   LuksJobData data;
   GError *loc_error = NULL;
+  gchar *cleartext_path = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, error);
   if (object == NULL)
@@ -631,6 +632,24 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
       goto out;
     }
 
+  cleartext_path = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
+                                                         wait_for_cleartext_object,
+                                                         cleartext_path,
+                                                         NULL,
+                                                         10,
+                                                         &loc_error))
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error waiting for cleartext object to disappear after locking the LUKS device: %s",
+                   loc_error->message);
+      g_clear_error (&loc_error);
+      ret = FALSE;
+      goto out;
+    }
+
   udisks_notice ("Locked LUKS device %s (was unlocked as %s)",
                  udisks_block_get_device (block),
                  udisks_block_get_device (cleartext_block));
@@ -642,6 +661,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
   if (cleartext_object != NULL)
     g_object_unref (cleartext_object);
   g_clear_object (&object);
+  g_free (cleartext_path);
 
   return ret;
 }
