@@ -169,7 +169,7 @@ const FSInfo _fs_info[] =
       NULL,
       FALSE, /* supports_online_label_rename */
       FALSE, /* supports_owners */
-      "mkudffs --vid $LABEL $DEVICE",
+      "mkudffs --utf8 --media-type=hd --udfrev=0x201 --blocksize=$BLOCKSIZE --vid $LABEL --lvid $LABEL $DEVICE",
       NULL,
     },
     {
