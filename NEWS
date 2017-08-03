@@ -6,12 +6,53 @@ The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.1:
-(TODO: make shortlog)
+Jan Pokorny (1):
+      Added journal dumping into dbus tests
+
+Kai Lüke (4):
+      Resize method for Partition interface
+      Add Filesystem Resize, Check and Repair
+      Query methods for available utility binaries
+      Include Job Descriptions for FS Check/Repair
+
+Tony Asleson (2):
+      block & filesystem: Remove duplicate code
+      udiskslinuxdriveata.c: Use common standby/wake func.
+
+Vojtech Trefny (10):
+      Post-release version bump to 2.7.2
+      Fix detection of drives created using isohybrid images (#1437791)
+      Integration test: Fix error message for mounting RO devices
+      Add version info to docstrings of the new filesystem functions
+      DBus tests: Fix typo in "run_tests.py"
+      Add a new "Partitions" property to "PartitionTable" interface
+      Trigger change uevent on disk after adding partitions to it
+      Fix setting "SetupByUID" property when adding a new loop device
+      Add a function to "take ownership" of a filesystem
+      Add a function to list all block devices
+
+Vratislav Podzimek (13):
+      Wait for udev to fully process newly created devices in tests
+      Remove all the udev settling and sleeping from LVM tests
+      Also catch errors when trying to get object properties in tests
+      Mark sleeps in iSCSI tests as subjects for fixing
+      Add a way to only compare some attribute of a property in tests
+      Use the assert with multiple tries for Block.Configuration
+      Add a function to wait for an object to disappear
+      Wait for the bcache object to disappear after BcacheDestroy
+      Do not wait for partitions to appear after LoopSetup
+      Wait for zram objects to disappear on DestroyDevices()
+      Try harder to ignore WD SmartWare virtual CDs
+      Disable ZRAM tests on Rawhide
+      Fix how we create UDF file systems
+
+squimrel (1):
+      Correct alignment specified in the docs
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date)
+2017-08-03
 
 ---------------------------
 udisks 2.7.1
