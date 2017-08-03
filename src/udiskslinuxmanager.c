@@ -1013,6 +1013,62 @@ handle_can_repair (UDisksManager         *object,
   return TRUE;
 }
 
+
+static GSList*
+get_block_objects (UDisksManager *manager,
+                   guint         *num_blocks)
+{
+  UDisksLinuxManager *linux_manager = UDISKS_LINUX_MANAGER (manager);
+  GDBusObjectManagerServer *object_manager = NULL;
+  GList *objects, *objects_p = NULL;
+  GSList *ret = NULL;
+
+  object_manager = udisks_daemon_get_object_manager (linux_manager->daemon);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+
+  for (objects_p = objects; objects_p != NULL; objects_p = objects_p->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (objects_p->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block != NULL)
+        {
+          ret = g_slist_prepend (ret, block);
+          (*num_blocks)++;
+        }
+    }
+
+  g_list_free_full (objects, g_object_unref);
+  ret = g_slist_reverse (ret);
+  return ret;
+}
+
+static gboolean
+handle_get_block_devices (UDisksManager         *object,
+                          GDBusMethodInvocation *invocation,
+                          GVariant              *arg_options)
+{
+  GSList *blocks, *blocks_p = NULL;
+  const gchar **block_paths = NULL;
+  guint num_blocks = 0;
+  guint i = 0;
+
+  blocks = get_block_objects (object, &num_blocks);
+  block_paths = g_new0 (const gchar *, num_blocks + 1);
+
+  for (i = 0,blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next, i++)
+      block_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (blocks_p->data)));
+
+  udisks_manager_complete_get_block_devices  (object,
+                                              invocation,
+                                              block_paths);
+
+  g_slist_free_full (blocks, g_object_unref);
+
+  return TRUE;  /* returning TRUE means that we handled the method invocation */
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1025,4 +1081,5 @@ manager_iface_init (UDisksManagerIface *iface)
   iface->handle_can_resize = handle_can_resize;
   iface->handle_can_check = handle_can_check;
   iface->handle_can_repair = handle_can_repair;
+  iface->handle_get_block_devices = handle_get_block_devices;
 }
