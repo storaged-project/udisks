@@ -18,7 +18,8 @@ import udiskstestcase
 class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     _fs_name = None
     _can_create = False
-    _can_label = False
+    _can_label = False  # it is possible to set label when *creating* filesystem
+    _can_relabel = False  # it is possible to set label for *existing* filesystem
     _can_mount = False
 
     username = 'udisks_test_user'
@@ -91,7 +92,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
 
         if not self._can_label:
-            self.skipTest('Cannot set label on %s filesystem' % self._fs_name)
+            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_name)
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -110,6 +111,20 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # test system values
         _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
         self.assertEqual(sys_label, label)
+
+    def test_relabel(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_relabel:
+            self.skipTest('Cannot set label on an existing %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem with label
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, disk)
 
         # change the label
         label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX udisks changes vfat labels to uppercase
@@ -255,7 +270,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 class Ext2TestCase(UdisksFSTestCase):
     _fs_name = 'ext2'
     _can_create = True and UdisksFSTestCase.command_exists('mke2fs')
-    _can_label = True and UdisksFSTestCase.command_exists('tune2fs')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('tune2fs')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -348,7 +364,8 @@ class Ext4TestCase(Ext2TestCase):
 class XFSTestCase(UdisksFSTestCase):
     _fs_name = 'xfs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.xfs')
-    _can_label = True and UdisksFSTestCase.command_exists('xfs_admin')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('xfs_admin')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -361,7 +378,8 @@ class XFSTestCase(UdisksFSTestCase):
 class VFATTestCase(UdisksFSTestCase):
     _fs_name = 'vfat'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.vfat')
-    _can_label = True and UdisksFSTestCase.command_exists('fatlabel')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
 
     def _invalid_label(self, disk):
@@ -612,21 +630,24 @@ class VFATTestCase(UdisksFSTestCase):
 class NTFSTestCase(UdisksFSTestCase):
     _fs_name = 'ntfs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.ntfs')
-    _can_label = True and UdisksFSTestCase.command_exists('ntfslabel')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
 
 
 class BTRFSTestCase(UdisksFSTestCase):
     _fs_name = 'btrfs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.btrfs')
-    _can_label = True and UdisksFSTestCase.command_exists('btrfs')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('btrfs')
     _can_mount = True
 
 
 class ReiserFSTestCase(UdisksFSTestCase):
     _fs_name = 'reiserfs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.reiserfs')
-    _can_label = True and UdisksFSTestCase.command_exists('reiserfstune')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('reiserfstune')
     _can_mount = True
 
 
@@ -634,13 +655,15 @@ class MinixTestCase(UdisksFSTestCase):
     _fs_name = 'minix'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.minix')
     _can_label = False
+    _can_relabel = False
     _can_mount = True and UdisksFSTestCase.module_loaded('minix')
 
 
 class NILFS2TestCase(UdisksFSTestCase):
     _fs_name = 'nilfs2'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
-    _can_label = True and UdisksFSTestCase.command_exists('nilfs-tune')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
     _can_mount = True and UdisksFSTestCase.module_loaded('nilfs2')
 
 
@@ -648,12 +671,14 @@ class F2FSTestCase(UdisksFSTestCase):
     _fs_name = 'f2fs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
     _can_label = False
+    _can_relabel = False
     _can_mount = True and UdisksFSTestCase.module_loaded('f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_name = 'udf'
     _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
-    _can_label = False
+    _can_label = True
+    _can_relabel = False
     _can_mount = True and UdisksFSTestCase.module_loaded('udf')
 
 class FailsystemTestCase(UdisksFSTestCase):
@@ -691,7 +716,18 @@ class FailsystemTestCase(UdisksFSTestCase):
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Format(fs._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
 
-        # create minix filesystem without label and try to set it later
+    def test_relabel(self):
+        # we need some filesystem that doesn't support setting label after creating it
+        fs = UDFTestCase
+
+        if not fs._can_create:
+            self.skipTest('Cannot create %s filesystem to test not supported '
+                          'labelling.' % fs._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create udf filesystem without label and try to set it later
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self._clean_format, disk)
 
