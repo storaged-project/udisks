@@ -1020,7 +1020,8 @@ get_block_objects (UDisksManager *manager,
 {
   UDisksLinuxManager *linux_manager = UDISKS_LINUX_MANAGER (manager);
   GDBusObjectManagerServer *object_manager = NULL;
-  GList *objects, *objects_p = NULL;
+  GList *objects = NULL;
+  GList *objects_p = NULL;
   GSList *ret = NULL;
 
   object_manager = udisks_daemon_get_object_manager (linux_manager->daemon);
@@ -1049,7 +1050,8 @@ handle_get_block_devices (UDisksManager         *object,
                           GDBusMethodInvocation *invocation,
                           GVariant              *arg_options)
 {
-  GSList *blocks, *blocks_p = NULL;
+  GSList *blocks = NULL;
+  GSList *blocks_p = NULL;
   const gchar **block_paths = NULL;
   guint num_blocks = 0;
   guint i = 0;
