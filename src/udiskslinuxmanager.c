@@ -1069,6 +1069,90 @@ handle_get_block_devices (UDisksManager         *object,
   return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
 
+static gboolean
+compare_paths (UDisksManager         *object,
+               UDisksBlock           *block,
+               gchar                 *path)
+{
+  const gchar *const *symlinks = NULL;
+
+  if (g_strcmp0 (udisks_block_get_device (block), path) == 0)
+    return TRUE;
+
+  symlinks = udisks_block_get_symlinks (block);
+  if (symlinks != NULL)
+    {
+      for (guint i = 0; symlinks[i] != NULL; i++)
+        if (g_strcmp0 (symlinks[i], path) == 0)
+          return TRUE;
+    }
+
+  return FALSE;
+}
+
+static gboolean
+handle_resolve_device (UDisksManager         *object,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *arg_devspec,
+                       GVariant              *arg_options)
+{
+
+  gchar *devpath = NULL;
+  gchar *devuuid = NULL;
+  gchar *devlabel = NULL;
+
+  GSList *blocks = NULL;
+  GSList *blocks_p = NULL;
+  guint num_blocks = 0;
+
+  GSList *ret = NULL;
+  GSList *ret_p = NULL;
+  guint num_found = 0;
+  const gchar **ret_paths = NULL;
+
+  gboolean found = FALSE;
+  guint i = 0;
+
+  g_variant_lookup (arg_devspec, "path", "s", &devpath);
+  g_variant_lookup (arg_devspec, "uuid", "s", &devuuid);
+  g_variant_lookup (arg_devspec, "label", "s", &devlabel);
+
+  blocks = get_block_objects (object, &num_blocks);
+
+  for (blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next)
+    {
+      if (devpath != NULL)
+          found = compare_paths (object, blocks_p->data, devpath);
+
+      if (devuuid != NULL)
+          found = g_strcmp0 (udisks_block_get_id_uuid (blocks_p->data), devuuid) == 0;
+      if (devlabel != NULL)
+          found = g_strcmp0 (udisks_block_get_id_label (blocks_p->data), devlabel) == 0;
+
+      if (found)
+        {
+          ret = g_slist_prepend (ret, g_object_ref (blocks_p->data));
+          num_found++;
+        }
+    }
+
+    ret_paths = g_new0 (const gchar *, num_found + 1);
+    for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
+      {
+        ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
+      }
+
+    udisks_manager_complete_resolve_device (object,
+                                            invocation,
+                                            ret_paths);
+
+    g_slist_free_full (blocks, g_object_unref);
+    g_slist_free_full (ret, g_object_unref);
+
+    return TRUE;  /* returning TRUE means that we handled the method invocation */
+
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1082,4 +1166,5 @@ manager_iface_init (UDisksManagerIface *iface)
   iface->handle_can_check = handle_can_check;
   iface->handle_can_repair = handle_can_repair;
   iface->handle_get_block_devices = handle_get_block_devices;
+  iface->handle_resolve_device = handle_resolve_device;
 }
