@@ -20,8 +20,7 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
             raise unittest.SkipTest('Udisks module for bcache tests not loaded, skipping.')
 
     def setUp(self):
-        if os.uname().machine == "i686":
-            self.skipTest("Skipping bcache tests on 32bit architecture")
+        self.skipTest("bcache setup fails randomly due to some issue in kernel or udev")
         super().setUp()
 
     def _force_remove(self, bcache_name, backing_dev, cache_dev):
