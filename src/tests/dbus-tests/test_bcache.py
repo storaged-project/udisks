@@ -21,7 +21,19 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
 
     def setUp(self):
         self.skipTest("bcache setup fails randomly due to some issue in kernel or udev")
+        self.bcaches = self._get_bcaches()
         super().setUp()
+
+    def _get_bcaches(self):
+        return {name for name in os.listdir('/dev') if re.match(r'^bcache[0-9]+$', name)}
+
+    def _handle_create_fail(self, backing_dev, cache_dev):
+        # BcacheCreate sometimes fail after the bcache device is created, we
+        # need to delete it, because it breaks other tests
+        time.sleep(5)
+        bcache = self._get_bcaches() - self.bcaches
+        if len(bcache) == 1:
+            self._force_remove(bcache.pop(), backing_dev, cache_dev)
 
     def _force_remove(self, bcache_name, backing_dev, cache_dev):
         _ret, out = self.run_command('bcache-super-show %s | grep cset.uuid ' % cache_dev)
@@ -57,9 +69,14 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
         '''Test creating a new bcache and its properties'''
 
         manager = self.get_object('/Manager')
-        bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
-                                           self._obj_path_from_path(self.vdevs[1]), self.no_options,
-                                           dbus_interface=self.iface_prefix + '.Manager.Bcache')
+        try:
+            bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
+                                               self._obj_path_from_path(self.vdevs[1]), self.no_options,
+                                               dbus_interface=self.iface_prefix + '.Manager.Bcache')
+        except Exception as e:
+            self._handle_create_fail(self.vdevs[0], self.vdevs[1])
+            raise e
+
         self.assertIsNotNone(bcache_path)
         bcache_name = bcache_path.split('/')[-1]
         self.addCleanup(self._force_remove, bcache_name, self.vdevs[0], self.vdevs[1])
@@ -119,9 +136,14 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
         '''Test if it's possible to change cache mode on existing bcache'''
 
         manager = self.get_object('/Manager')
-        bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
-                                           self._obj_path_from_path(self.vdevs[1]), self.no_options,
-                                           dbus_interface=self.iface_prefix + '.Manager.Bcache')
+        try:
+            bcache_path = manager.BcacheCreate(self._obj_path_from_path(self.vdevs[0]),
+                                               self._obj_path_from_path(self.vdevs[1]), self.no_options,
+                                               dbus_interface=self.iface_prefix + '.Manager.Bcache')
+        except Exception as e:
+            self._handle_create_fail(self.vdevs[0], self.vdevs[1])
+            raise e
+
         self.assertIsNotNone(bcache_path)
         bcache_name = bcache_path.split('/')[-1]
         self.addCleanup(self._force_remove, bcache_name, self.vdevs[0], self.vdevs[1])
