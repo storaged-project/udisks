@@ -174,6 +174,47 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="block_objects" direction="out" type="ao"/>
     </method>
+
+    <!--
+        ResolveDevice:
+        @devspec: Dictionary with specification of a device.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @devices: List of object paths of all devices matching @devspec.
+        @since: 2.7.3
+
+        Get device(s) matching specification given in @devspec.
+
+        Currently supported keys for @devspec include:
+        <variablelist>
+          <varlistentry>
+            <term>path (type <literal>'s'</literal>)</term>
+            <listitem><para>
+              Device path (e.g. <quote>/dev/sda</quote>). This also includes symlinks in <quote>/dev</quote>
+              (both #org.freedesktop.UDisks2.Block:Device and #org.freedesktop.UDisks2.Block:Symlinks are used).
+            </para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>label (type <literal>'s'</literal>)</term>
+            <listitem><para>
+              Filesystem label. #org.freedesktop.UDisks2.Block:IdLabel is used.
+            </para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>uuid (type <literal>'s'</literal>)</term>
+            <listitem><para>
+              Filesystem UUID. #org.freedesktop.UDisks2.Block:IdUUID is used.
+            </para></listitem>
+          </varlistentry>
+        </variablelist>
+
+        It is possbile to specify multiple keys. In this case, only devices matching all values will be returned.
+
+    -->
+    <method name="ResolveDevice">
+      <arg name="devspec" direction="in" type="a{sv}"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="devices" direction="out" type="ao"/>
+    </method>
   </interface>
 
   <!--

@@ -163,6 +163,99 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         for path in block_paths:
             self.assertIn(path, dbus_blocks)
 
+    def _wipe(self, device, retry=True):
+        ret, out = self.run_command('wipefs -a %s' % device)
+        if ret != 0:
+            if retry:
+                self._wipe(device, False)
+            else:
+                self.fail('Failed to wipe device %s: %s' % (device, out))
+
+    def test_60_resolve_device(self):
+        manager = self.get_interface(self.manager_obj, '.Manager')
+
+        # try some non-existing device first
+        spec = dbus.Dictionary({'path': '/dev/i-dont-exist'}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        self.assertEqual(len(devices), 0)
+
+        # get our first virtual disk by path
+        spec = dbus.Dictionary({'path': self.vdevs[0]}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        object_path = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[0]))
+
+        self.assertEqual(len(devices), 1)
+        self.assertIn(object_path, devices)
+
+        # try to get it with some symlink path
+        ldir = '/dev/disk/by-id'
+        link = next(os.path.join(ldir, l) for l in os.listdir(ldir)
+                    if os.path.realpath(os.path.join(ldir, l)) == self.vdevs[0])
+
+        spec = dbus.Dictionary({'path': link}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        object_path = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[0]))
+
+        self.assertEqual(len(devices), 1)
+        self.assertIn(object_path, devices)
+
+        # try to get the disk by specifying both path and label (it has no label
+        # so this should return an empty list)
+        spec = dbus.Dictionary({'path': self.vdevs[0], 'label': 'test'}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+
+        self.assertEqual(len(devices), 0)
+
+        # format the disk to ext4 with label
+        label = 'test'
+        ret, out = self.run_command('mkfs.ext4 -F -L %s %s' % (label, self.vdevs[0]))
+        if ret != 0:
+            self.fail('Failed to create ext4 filesystem on %s: %s' % (self.vdevs[0], out))
+        self.addCleanup(self._wipe, self.vdevs[0])
+
+        # we run mkfs manually, now just wait for the property to update
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        dbus_label = self.get_property(disk, '.Block', 'IdLabel')
+        dbus_label.assertEqual(label)
+
+        # now it should return the disk
+        spec = dbus.Dictionary({'path': self.vdevs[0], 'label': label}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        object_path = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[0]))
+
+        self.assertEqual(len(devices), 1)
+        self.assertIn(object_path, devices)
+
+        # format another disk to ext4 with the same label, ResolveDevice should
+        # now return both devices
+        ret, _out = self.run_command('mkfs.ext4 -F -L %s %s' % (label, self.vdevs[1]))
+        if ret != 0:
+            self.fail('Failed to create ext4 filesystem on %s: %s' % (self.vdevs[1], out))
+        self.addCleanup(self._wipe, self.vdevs[1])
+
+        # we run mkfs manually, now just wait for the property to update
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[1]))
+        dbus_label = self.get_property(disk, '.Block', 'IdLabel')
+        dbus_label.assertEqual(label)
+
+        spec = dbus.Dictionary({'label': label}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        object_path1 = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[0]))
+        object_path2 = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[1]))
+
+        self.assertEqual(len(devices), 2)
+        self.assertIn(object_path1, devices)
+        self.assertIn(object_path2, devices)
+
+        # and now just check that simple resolving using uuid works
+        uuid = self.get_property_raw(disk, '.Block', 'IdUUID')
+        spec = dbus.Dictionary({'uuid': uuid}, signature='sv')
+        devices = manager.ResolveDevice(spec, self.no_options)
+        object_path = '%s/block_devices/%s' % (self.path_prefix, os.path.basename(self.vdevs[1]))
+
+        self.assertEqual(len(devices), 1)
+        self.assertIn(object_path, devices)
+
     def test_80_device_presence(self):
         '''Test the debug devices are present on the bus'''
         for d in self.vdevs:
