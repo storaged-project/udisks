@@ -152,12 +152,18 @@ if __name__ == '__main__':
     # store time when tests started (needed for journal cropping)
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    try:
-        imp.find_module('blivet')
-    except ImportError:
-        skip_clean = True
-    else:
-        skip_clean = False
+    # XXX: Disable cleaning using blivet for now, it's causing issues because
+    # importing blivet in the cleanup code makes the system udisks daemon
+    # autostart while the cleanup removes devices wildly which causes the daemon
+    # to segfault.
+    skip_clean = True
+    # try:
+    #     imp.find_module('blivet')
+    # except ImportError:
+    #     skip_clean = True
+    # else:
+    #     skip_clean = False
+
     if skip_clean:
         print('Blivet not installed: Skipping force clean')
     else:
