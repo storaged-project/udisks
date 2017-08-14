@@ -2349,6 +2349,7 @@ static const struct
   {"dos", "xfs",          "0x83"},
   {"dos", "btrfs",        "0x83"},
   {"dos", "crypto_LUKS",  "0x83"}, /* TODO: perhaps default to LUKS-specific type */
+  {"dos", "udf",          "0x07"},
 
   {"gpt", "vfat",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"}, /* Microsoft Basic Data */
   {"gpt", "ntfs",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
@@ -2360,6 +2361,7 @@ static const struct
   {"gpt", "xfs",          "0fc63daf-8483-4772-8e79-3d69d8477de4"},
   {"gpt", "btrfs",        "0fc63daf-8483-4772-8e79-3d69d8477de4"},
   {"gpt", "crypto_LUKS",  "0fc63daf-8483-4772-8e79-3d69d8477de4"}, /* TODO: perhaps default to LUKS-specific type */
+  {"gpt", "udf",          "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
 };
 
 
