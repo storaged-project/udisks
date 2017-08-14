@@ -332,7 +332,7 @@ static const gchar *hfsplus_allow_gid_self[] = { "gid=", NULL };
 /* ------------------------------------------------ */
 /* TODO: support context= */
 
-static const gchar *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", NULL };
+static const gchar *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", "noload", NULL };
 
 static const FSMountOptions fs_mount_options[] =
   {
