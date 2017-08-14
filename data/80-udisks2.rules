@@ -145,6 +145,9 @@ ENV{ID_VENDOR}=="Sony", ENV{ID_MODEL}=="PRS*Launcher", ENV{UDISKS_IGNORE}="1"
 # non-Linux software
 KERNEL=="sr*", ENV{ID_VENDOR}=="SanDisk", ENV{ID_MODEL}=="Cruzer", ENV{ID_FS_LABEL}=="U3_System", ENV{UDISKS_IGNORE}="1"
 
+# Virtual Windows tools installation on Asus Zendisk (0b05:17b4)
+KERNEL=="sr*", ENV{ID_VENDOR}=="ASMT",ENV{ID_MODEL}=="VirtualCDROM", ENV{ID_FS_LABEL}=="ASUS_+Speed_ZENDISK*", ENV{UDISKS_IGNORE}="1"
+
 # Content created using isohybrid (typically used on CDs and USB
 # sticks for bootable media) is a bit special insofar that the
 # interesting content is on a DOS partition with type 0x00* ... which
