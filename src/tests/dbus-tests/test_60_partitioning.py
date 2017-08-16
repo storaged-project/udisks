@@ -316,6 +316,80 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE /dev/%s' % part_name)
         self.assertEqual(sys_fstype, 'xfs')
 
+    def _have_udftools(self):
+        ret, _out = self.run_command('type mkudffs')
+        return ret == 0
+
+    def test_create_with_format_auto_type_mbr(self):
+        if not self._have_udftools():
+            self.skipTest('Udftools needed to check automatic partition type update.')
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create msdos partition table
+        self._create_format(disk, 'dos')
+
+        self.addCleanup(self._remove_format, disk)
+
+        # create partition with udf format and automatically set partition type
+        # it should be 0x07
+        d = dbus.Dictionary(signature='sv')
+        d['update-partition-type'] = True
+        path = disk.CreatePartitionAndFormat(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                             self.no_options, 'udf', d,
+                                             dbus_interface=self.iface_prefix + '.PartitionTable')
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        self.addCleanup(self._remove_partition, part)
+        self.addCleanup(self._remove_format, part)
+
+        # check dbus properties
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        dbus_type.assertEqual('0x07')
+
+        # check system values
+        part_name = path.split('/')[-1]
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
+        self.assertEqual(sys_type, '0x7')
+
+    def test_create_with_format_auto_type_gpt(self):
+        if not self._have_udftools():
+            self.skipTest('Udftools needed to check automatic partition type update.')
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create msdos partition table
+        self._create_format(disk, 'gpt')
+
+        self.addCleanup(self._remove_format, disk)
+
+        # create partition with udf format and automatically set partition type
+        # it should be ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+        d = dbus.Dictionary(signature='sv')
+        d['update-partition-type'] = True
+        path = disk.CreatePartitionAndFormat(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                             self.no_options, 'udf', d,
+                                             dbus_interface=self.iface_prefix + '.PartitionTable')
+
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        self.addCleanup(self._remove_partition, part)
+        self.addCleanup(self._remove_format, part)
+
+        # check dbus properties
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        dbus_type.assertEqual('ebd0a0a2-b9e5-4433-87c0-68b6b72699c7')
+
+        # check system values
+        part_name = path.split('/')[-1]
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
+        self.assertEqual(sys_type, 'ebd0a0a2-b9e5-4433-87c0-68b6b72699c7')
+
 
 class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
     '''This is a basic partition test suite'''
