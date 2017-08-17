@@ -225,6 +225,11 @@ if __name__ == '__main__':
     else:
         for test_cases in unittest.defaultTestLoader.discover(testdir):
             suite.addTest(test_cases)
+
+    # truncate the flight record file and make sure it exists
+    with open(udiskstestcase.FLIGHT_RECORD_FILE, "w"):
+        pass
+
     result = unittest.TextTestRunner(verbosity=2).run(suite)
 
     if not args.system:

@@ -3,8 +3,23 @@ import dbus
 import subprocess
 import os
 import time
+from datetime import datetime
+from systemd import journal
+from monotonic import monotonic
 
 test_devs = None
+FLIGHT_RECORD_FILE = "flight_record.log"
+
+def run_command(command):
+    res = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+
+    out, err = res.communicate()
+    if res.returncode != 0:
+        output = out.decode().strip() + "\n\n" + err.decode().strip()
+    else:
+        output = out.decode().strip()
+    return (res.returncode, output)
 
 def get_call_long(call):
     def call_long(*args, **kwargs):
@@ -198,6 +213,22 @@ class UdisksTestCase(unittest.TestCase):
         self.bus.call_blocking = self._orig_call_blocking
 
 
+    def run(self, *args):
+        record = []
+        now = datetime.now()
+        now_mono = monotonic()
+        with open(FLIGHT_RECORD_FILE, "a") as record_f:
+            record_f.write("================%s[%0.8f] %s.%s.%s================\n" % (now.strftime('%Y-%m-%d %H:%M:%S'),
+                                                                                     now_mono,
+                                                                                     self.__class__.__module__,
+                                                                                     self.__class__.__name__,
+                                                                                     self._testMethodName))
+            with JournalRecorder("journal", record):
+                with CmdFlightRecorder("udisksctl monitor", ["udisksctl", "monitor"], record):
+                    with CmdFlightRecorder("udevadm monitor", ["udevadm", "monitor"], record):
+                        super(UdisksTestCase, self).run(*args)
+            record_f.write("".join(record))
+
     @classmethod
     def get_object(self, path_suffix):
         # if given full path, just use it, otherwise prepend the prefix
@@ -283,15 +314,7 @@ class UdisksTestCase(unittest.TestCase):
 
     @classmethod
     def run_command(self, command):
-        res = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-
-        out, err = res.communicate()
-        if res.returncode != 0:
-            output = out.decode().strip() + "\n\n" + err.decode().strip()
-        else:
-            output = out.decode().strip()
-        return (res.returncode, output)
+        return run_command(command)
 
     @classmethod
     def check_module_loaded(self, module):
@@ -323,3 +346,108 @@ class UdisksTestCase(unittest.TestCase):
 
         return dbus.Array([dbus.Byte(ord(c)) for c in string],
                           signature=dbus.Signature('y'), variant_level=1)
+
+class FlightRecorder(object):
+    """Context manager for recording data/logs
+
+    This is the abstract implementation that does nothing. Subclasses are
+    expected to override the methods below to actually do something useful.
+
+    """
+
+    def __init__(self, desc):
+        """
+        :param str desc: description of the recorder
+
+        """
+        self._desc = desc
+
+    def _start(self):
+        """Start recording"""
+
+    def _stop(self):
+        """Stop recording"""
+        pass
+
+    def _save(self):
+        """Save the record"""
+        pass
+
+    def __enter__(self):
+        self._start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._stop()
+        self._save()
+
+        # Returning False means that the exception we have potentially been
+        # given as arguments was not handled
+        return False
+
+class CmdFlightRecorder(FlightRecorder):
+    """Flight recorder running a command and gathering its standard and error output"""
+
+    def __init__(self, desc, argv, store):
+        """
+        :param str desc: description of the recorder
+        :param argv: command and arguments to run
+        :type argv: list of str
+        :param store: a list-like object to append the data/logs to
+
+        """
+        super(CmdFlightRecorder, self).__init__(desc)
+        self._argv = argv
+        self._store = store
+        self._proc = None
+
+    def _start(self):
+        self._proc = subprocess.Popen(self._argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    def _stop(self):
+        self._proc.terminate()
+
+    def _save(self):
+        # err is in out (see above)
+        out, _err = self._proc.communicate()
+        rec = '<<<<< ' + self._desc + ' >>>>>' + '\n' + out.decode() + '\n\n'
+        self._store.append(rec)
+
+class JournalRecorder(FlightRecorder):
+    """Flight recorder for gathering logs (journal)"""
+
+    def __init__(self, desc, store):
+        """
+        :param str desc: description of the recorder
+        :param store: a list-like object to append the data/logs to
+
+        """
+        super(JournalRecorder, self).__init__(desc)
+        self._store = store
+        self._started = None
+        self._stopped = None
+
+    def _start(self):
+        self._started = monotonic()
+
+    def _stop(self):
+        self._stopped = monotonic()
+
+    def _save(self):
+        j = journal.Reader()
+        j.this_boot()
+        j.seek_monotonic(self._started)
+        journal_data = ""
+
+        entry = j.get_next()
+        # entry["__MONOTONIC_TIMESTAMP"] is a tuple of (datetime.timedelta, boot_id)
+        while entry and entry["__MONOTONIC_TIMESTAMP"][0].seconds <= int(self._stopped):
+            if "_COMM" in entry and "_PID" in entry:
+                source = "%s[%d]" % (entry["_COMM"], entry["_PID"])
+            else:
+                source = "kernel"
+            journal_data += "%s[%0.8f] %s: %s\n" % (entry["__REALTIME_TIMESTAMP"].strftime("%H:%M:%S"),
+                                                    entry["__MONOTONIC_TIMESTAMP"][0].total_seconds(),
+                                                    source, entry["MESSAGE"])
+            entry = j.get_next()
+        rec = '<<<<< ' + self._desc + ' >>>>>' + '\n' + journal_data + '\n\n\n'
+        self._store.append(rec)
