@@ -2341,7 +2341,7 @@ static const struct
 } partition_types_by_id[] = {
   {"dos", "vfat",         "0x0c"},
   {"dos", "ntfs",         "0x07"},
-  {"dos", "exfat",        "0x0c"},
+  {"dos", "exfat",        "0x07"},
   {"dos", "swap",         "0x82"},
   {"dos", "ext2",         "0x83"},
   {"dos", "ext3",         "0x83"},
