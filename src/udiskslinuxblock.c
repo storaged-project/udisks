@@ -2341,14 +2341,14 @@ static const struct
 } partition_types_by_id[] = {
   {"dos", "vfat",         "0x0c"},
   {"dos", "ntfs",         "0x07"},
-  {"dos", "exfat",        "0x0c"},
+  {"dos", "exfat",        "0x07"},
   {"dos", "swap",         "0x82"},
   {"dos", "ext2",         "0x83"},
   {"dos", "ext3",         "0x83"},
   {"dos", "ext4",         "0x83"},
   {"dos", "xfs",          "0x83"},
   {"dos", "btrfs",        "0x83"},
-  {"dos", "crypto_LUKS",  "0x83"}, /* TODO: perhaps default to LUKS-specific type */
+  {"dos", "crypto_LUKS",  "0xe8"},
   {"dos", "udf",          "0x07"},
 
   {"gpt", "vfat",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"}, /* Microsoft Basic Data */
@@ -2360,7 +2360,7 @@ static const struct
   {"gpt", "ext4",         "0fc63daf-8483-4772-8e79-3d69d8477de4"},
   {"gpt", "xfs",          "0fc63daf-8483-4772-8e79-3d69d8477de4"},
   {"gpt", "btrfs",        "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-  {"gpt", "crypto_LUKS",  "0fc63daf-8483-4772-8e79-3d69d8477de4"}, /* TODO: perhaps default to LUKS-specific type */
+  {"gpt", "crypto_LUKS",  "ca7d7ccb-63ed-4c53-861c-1742536059cc"},
   {"gpt", "udf",          "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
 };
 
