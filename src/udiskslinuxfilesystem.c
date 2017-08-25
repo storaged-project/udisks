@@ -1619,7 +1619,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
           BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
           const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
 
-          success = bd_fs_unmount (mount_point, FALSE, opt_force, extra_args, &error);
+          success = bd_fs_unmount (mount_point, opt_force, FALSE, extra_args, &error);
 
           g_free (uid_arg.opt);
           g_free (uid_arg.val);
@@ -1627,7 +1627,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
           g_free (gid_arg.val);
         }
       else
-          success = bd_fs_unmount (mount_point, FALSE, opt_force, NULL, &error);
+          success = bd_fs_unmount (mount_point, opt_force, FALSE, NULL, &error);
 
       if (!success)
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
@@ -1718,7 +1718,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                          NULL);
 
   if (!bd_fs_unmount (mount_point ? mount_point : udisks_block_get_device (block),
-                      FALSE, opt_force, NULL, &error))
+                      opt_force, FALSE, NULL, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
