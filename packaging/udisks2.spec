@@ -281,6 +281,7 @@ udevadm trigger
 
 %dir %{_libdir}/udisks2
 %dir %{_libdir}/udisks2/modules
+%dir %{_libexecdir}/udisks2
 %{_libexecdir}/udisks2/udisksd
 
 %{_bindir}/udisksctl
