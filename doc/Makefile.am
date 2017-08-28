@@ -73,10 +73,14 @@ extra_files =                                                                  \
 
 # ------------------------------------------------------------------------------
 
-all-local: $(DOC_MAIN_SGML_FILE)
+all-local: generate-main-sgml-file
+
+# New gtk-doc 2.16 for some reason automatically creates a no-op
+# "$(DOC_MAIN_SGML_FILE)" make target that overrides our target
+$(DOC_MAIN_SGML_FILE): generate-main-sgml-file
 
 # udisks2-docs.xml, udisks2-sections.txt udisks2.types
-$(DOC_MAIN_SGML_FILE): $(DOC_MAIN_SGML_FILE).in $(UDISKS_SECTIONS).in $(UDISKS_TYPES).in
+generate-main-sgml-file: $(DOC_MAIN_SGML_FILE).in $(UDISKS_SECTIONS).in $(UDISKS_TYPES).in
 	$(AM_V_at) rm -f $(DOC_MAIN_SGML_FILE) $(UDISKS_SECTIONS) $(UDISKS_TYPES) && \
 	cp $(DOC_MAIN_SGML_FILE).in $(builddir)/$(DOC_MAIN_SGML_FILE) && \
 	cp $(UDISKS_SECTIONS).in $(builddir)/$(UDISKS_SECTIONS) && \
@@ -261,3 +265,5 @@ CLEANFILES +=                                                                  \
 	*.stamp                                                                \
 	-rf xml html tmpl                                                      \
 	$(NULL)
+
+.PHONY: generate-main-sgml-file
