@@ -626,14 +626,16 @@ handle_command_mount_unmount (gint        *argc,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -1133,14 +1135,16 @@ handle_command_unlock_lock (gint        *argc,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                            g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                            g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -1520,21 +1524,24 @@ handle_command_loop (gint        *argc,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_files = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--file") == 0 || g_strcmp0 (completion_prev, "-f") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--file") == 0 || g_strcmp0 (completion_prev, "-f") == 0 ||
+                             g_strcmp0 (completion_cur, "--file") == 0 || g_strcmp0 (completion_cur, "-f") == 0))
     {
       complete_files = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -1865,21 +1872,24 @@ handle_command_smart_simulate (gint        *argc,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_files = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--file") == 0 || g_strcmp0 (completion_prev, "-f") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--file") == 0 || g_strcmp0 (completion_prev, "-f") == 0 ||
+                             g_strcmp0 (completion_cur, "--file") == 0 || g_strcmp0 (completion_cur, "-f") == 0))
     {
       complete_files = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -2135,14 +2145,16 @@ handle_command_power_off (gint        *argc,
                                      NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -2337,21 +2349,24 @@ handle_command_info (gint        *argc,
   g_option_context_add_main_entries (o, command_info_entries, NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_devices = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
     {
       complete_devices = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
   complete_drives = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--drive") == 0 || g_strcmp0 (completion_prev, "-d") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--drive") == 0 || g_strcmp0 (completion_prev, "-d") == 0 ||
+                             g_strcmp0 (completion_cur, "--drive") == 0 || g_strcmp0 (completion_cur, "-d") == 0))
     {
       complete_drives = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
