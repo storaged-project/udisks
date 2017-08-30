@@ -59,9 +59,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._force_lougout, self.noauth_iqn)
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Login() should wait for the glob below to match something to
-        # make sure the device is really setup when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -77,9 +74,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
                        dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Logout() should wait for the glob below to match nothing to
-        # make sure the device is really removed when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -120,9 +114,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._force_lougout, self.chap_iqn)
         manager.Login(iqn, tpg, host, port, iface, options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Login() should wait for the glob below to match something to
-        # make sure the device is really setup when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -138,9 +129,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
                        dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Logout() should wait for the glob below to match nothing to
-        # make sure the device is really removed when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -174,9 +162,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._force_lougout, self.mutual_iqn)
         manager.Login(iqn, tpg, host, port, iface, options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Login() should wait for the glob below to match something to
-        # make sure the device is really setup when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -192,9 +177,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
                        dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Logout() should wait for the glob below to match nothing to
-        # make sure the device is really removed when it returns
-        time.sleep(1)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -224,8 +206,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._force_lougout, self.noauth_iqn)
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
-        # FIXME: Login() should wait for the session to be created (if supported/enabled)
-        time.sleep(1)
 
         # /org/freedesktop/UDisks2/iscsi/sessionX should be created
         udisks = self.get_object('')
@@ -249,8 +229,6 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # logout using session
         session.Logout(self.no_options,
                        dbus_interface=self.iface_prefix + '.ISCSI.Session')
-        # FIXME: Logout() should wait for the session to be removed (if supported/enabled)
-        time.sleep(1)
 
         # make sure the session object is no longer on dbus
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')

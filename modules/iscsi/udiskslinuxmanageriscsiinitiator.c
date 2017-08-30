@@ -36,6 +36,7 @@
 #include "udisksiscsistate.h"
 #include "udisksiscsiutil.h"
 #include "udiskslinuxmanageriscsiinitiator.h"
+#include "udisksiscsidbusutil.h"
 
 /**
  * SECTION:udiskslinuxmanageriscsiinitiator
@@ -607,6 +608,71 @@ out:
   return TRUE;
 }
 
+static UDisksObject *
+wait_for_iscsi_object (UDisksDaemon *daemon,
+                       gpointer      user_data)
+{
+  const gchar *device_iqn = user_data;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
+  const gchar *const *symlinks = NULL;
+
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_peek_block (object);
+      if (block != NULL)
+        {
+          symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+          if (symlinks != NULL)
+            for (guint n = 0; symlinks[n] != NULL; n++)
+              if (g_str_has_prefix (symlinks[n], "/dev/disk/by-path/") &&
+                  strstr (symlinks[n], device_iqn) != NULL)
+                {
+                  ret = g_object_ref (object);
+                  goto out;
+                }
+            }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
+static UDisksObject *
+wait_for_iscsi_session_object (UDisksDaemon *daemon,
+                               gpointer      user_data)
+{
+  const gchar *device_iqn = user_data;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
+
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksISCSISession *session;
+
+      session = udisks_object_peek_iscsi_session (object);
+      if (session != NULL)
+        {
+          if (g_strcmp0 (udisks_iscsi_session_get_target_name (session), device_iqn) == 0)
+            {
+              ret = g_object_ref (object);
+              goto out;
+            }
+        }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
 static gboolean
 handle_login (UDisksManagerISCSIInitiator *object,
               GDBusMethodInvocation       *invocation,
@@ -621,6 +687,7 @@ handle_login (UDisksManagerISCSIInitiator *object,
   UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
   gint err = 0;
   gchar *errorstr = NULL;
+  GError *error = NULL;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
@@ -657,6 +724,34 @@ handle_login (UDisksManagerISCSIInitiator *object,
       goto out;
     }
 
+  /* sit and wait until the device appears on dbus */
+  if (udisks_daemon_wait_for_object_sync (manager->daemon,
+                                          wait_for_iscsi_object,
+                                          g_strdup (arg_name),
+                                          g_free,
+                                          15, /* timeout_seconds */
+                                          &error) == NULL)
+    {
+      g_prefix_error (&error, "Error waiting for iSCSI device to appear: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (udisks_manager_iscsi_initiator_get_sessions_supported (UDISKS_MANAGER_ISCSI_INITIATOR (manager)))
+    {
+      if (udisks_daemon_wait_for_object_sync (manager->daemon,
+                                              wait_for_iscsi_session_object,
+                                              g_strdup (arg_name),
+                                              g_free,
+                                              15, /* timeout_seconds */
+                                              &error) == NULL)
+        {
+          g_prefix_error (&error, "Error waiting for iSCSI session object to appear: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
+
   /* Complete DBus call. */
   udisks_manager_iscsi_initiator_complete_login (object,
                                                  invocation);
@@ -682,6 +777,7 @@ handle_logout(UDisksManagerISCSIInitiator *object,
   UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
   gint err = 0;
   gchar *errorstr = NULL;
+  GError *error = NULL;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
@@ -716,6 +812,34 @@ handle_logout(UDisksManagerISCSIInitiator *object,
                                              N_("Logout failed: %s"),
                                              errorstr);
       goto out;
+    }
+
+  /* now sit and wait until the device and session disappear on dbus */
+  if (!udisks_daemon_wait_for_object_to_disappear_sync (manager->daemon,
+                                                        wait_for_iscsi_object,
+                                                        g_strdup (arg_name),
+                                                        g_free,
+                                                        15, /* timeout_seconds */
+                                                        &error))
+    {
+      g_prefix_error (&error, "Error waiting for iSCSI device to disappear: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (udisks_manager_iscsi_initiator_get_sessions_supported (UDISKS_MANAGER_ISCSI_INITIATOR (manager)))
+    {
+      if (!udisks_daemon_wait_for_object_to_disappear_sync (manager->daemon,
+                                                            wait_for_iscsi_session_object,
+                                                            g_strdup (arg_name),
+                                                            g_free,
+                                                            15, /* timeout_seconds */
+                                                            &error))
+        {
+          g_prefix_error (&error, "Error waiting for iSCSI session object to disappear: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
     }
 
   /* Complete DBus call. */
