@@ -260,15 +260,30 @@ udisks_daemon_constructed (GObject *object)
      plugins are loaded themselves. */
   BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
                              &fs_plugin, &crypto_plugin, NULL};
+  BDPluginSpec **plugin_p = NULL;
   error = NULL;
 
-  ret = bd_ensure_init (plugins, NULL, &error);
+  ret = bd_try_init (plugins, NULL, NULL, &error);
   if (!ret)
+  {
+    if (error)
     {
       udisks_error ("Error initializing libblockdev library: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
-      g_error_free (error);
+      g_clear_error (&error);
     }
+    else
+    {
+      /* a missing plugin is okay, calling functions from it will fail, but
+         until that happens, life will just be great */
+      for (plugin_p=plugins; *plugin_p; plugin_p++)
+        if (!bd_is_plugin_available ((*plugin_p)->name))
+          /* TODO: log plugin names when the function below is available */
+          /* udisks_warning ("Failed to load the '%s' libblockdev plugin", */
+          /*                 bd_get_plugin_name ((*plugin_p)->name)); */
+          udisks_warning ("Failed to load a libblockdev plugin");
+    }
+  }
 
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
