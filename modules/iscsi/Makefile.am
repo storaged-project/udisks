@@ -68,6 +68,8 @@ libudisks2_iscsi_la_SOURCES =                                                  \
 	udisksiscsimoduleiface.c                                               \
 	udisksiscsiutil.h                                                      \
 	udisksiscsiutil.c                                                      \
+	udisksiscsidbusutil.h                                                  \
+	udisksiscsidbusutil.c                                                  \
 	$(NULL)
 
 if BUILD_ISCSI_SESSION_OBJECT
