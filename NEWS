@@ -1,18 +1,50 @@
-udisks 2.7.3 (unreleased)
+---------------------------
+udisks 2.7.3
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.2:
-(TODO: make shortlog)
+Kai Lüke (1):
+      Process partition resize update before return
+
+Ville Skyttä (1):
+      Own the %{_libexecdir}/udisks2 dir
+
+Vojtech Trefny (21):
+      Post-release version bump to 2.7.3
+      Wait for cleartext device object to disappear on Lock()
+      FS tests: Split label test into two
+      udisksclient.c: Fix a typo
+      Add version info to docstrings of the partition Resize function
+      Add new ResolveDevice function
+      Fix wrong GSList pointer declaration in "handle_get_block_devices"
+      Bcache tests: Cleanup when BcacheCreate() fails
+      Allow using "noload" mount option
+      Ignore Asus Zendisk virtual CDROM
+      Ignore ZFS member partitions
+      Set corrent part type/id and GUID for UDF formatted partitions
+      Fix "supports_owners" flag for UDF
+      Use LUKS specific partition ID and GUID
+      Fix exFAT partition type
+      Fix bash completion for udisksctl
+      Add some missing functions to doc/udisks2-sections.txt.in.in
+      Fix force unmounting
+      Fix building documentation with new gtk-doc
+      Add a new OpenDevice function
+      Make iSCSI Login and Logout wait for DBus objects update
+
+Vratislav Podzimek (4):
+      Skip bcache tests everywhere
+      Disable cleaning using blivet for now
+      Gather records of udev and udisksctl monitors for tests
+      Start even if a libblockdev plugin fails to load
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date)
-
----------------------------
+2017-08-31
 
 ---------------------------
 udisks 2.7.2
