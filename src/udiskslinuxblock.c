@@ -3248,6 +3248,48 @@ handle_format (UDisksBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gint
+open_device (const gchar      *device,
+             const gchar      *mode,
+             gint              flags,
+             GError          **error)
+{
+  gint fd = -1;
+
+  if (flags & O_RDWR || flags & O_RDONLY || flags & O_WRONLY)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Using 'O_RDWR', 'O_RDONLY' and 'O_WRONLY' flags is not permitted.\
+                    Use 'mode' argument instead.");
+      goto out;
+    }
+
+  if (g_strcmp0 (mode, "r") == 0)
+    flags |= O_RDONLY;
+  else if (g_strcmp0 (mode, "w") == 0)
+    flags |= O_WRONLY;
+  else if (g_strcmp0 (mode, "rw") == 0)
+    flags |= O_RDWR;
+  else
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Unknown mode '%s'", mode);
+      goto out;
+    }
+
+  fd = open (device, flags);
+  if (fd == -1)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening %s: %m", device);
+      goto out;
+    }
+
+ out:
+  return fd;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 static gboolean
 handle_open_for_backup (UDisksBlock           *block,
                         GDBusMethodInvocation *invocation,
@@ -3259,10 +3301,9 @@ handle_open_for_backup (UDisksBlock           *block,
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
-  GError *error;
-  gint fd;
+  GError *error = NULL;
+  gint fd = -1;
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
   if (object == NULL)
     {
@@ -3290,14 +3331,12 @@ handle_open_for_backup (UDisksBlock           *block,
                                                     invocation))
     goto out;
 
-
   device = udisks_block_get_device (UDISKS_BLOCK (block));
 
-  fd = open (device, O_RDONLY | O_CLOEXEC | O_EXCL);
+  fd = open_device (device, "r", O_CLOEXEC | O_EXCL, &error);
   if (fd == -1)
     {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening %s: %m", device);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -3357,11 +3396,10 @@ handle_open_for_restore (UDisksBlock           *block,
 
   device = udisks_block_get_device (UDISKS_BLOCK (block));
 
-  fd = open (device, O_WRONLY | O_SYNC | O_CLOEXEC | O_EXCL);
+  fd = open_device (device, "w", O_SYNC | O_CLOEXEC | O_EXCL, &error);
   if (fd == -1)
     {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening %s: %m", device);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -3388,11 +3426,11 @@ handle_open_for_benchmark (UDisksBlock           *block,
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
   gboolean opt_writable = FALSE;
-  GError *error;
-  gint fd;
+  GError *error = NULL;
+  gint fd = -1;
+  const gchar *open_mode = NULL;
   gint open_flags;
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
   if (object == NULL)
     {
@@ -3422,25 +3460,91 @@ handle_open_for_benchmark (UDisksBlock           *block,
 
   g_variant_lookup (options, "writable", "b", &opt_writable);
 
+  open_flags = O_DIRECT | O_SYNC | O_CLOEXEC;
   if (opt_writable)
-    open_flags = O_RDWR  | O_EXCL;
+    {
+      open_flags |= O_EXCL;
+      open_mode = "rw";
+    }
   else
-    open_flags = O_RDONLY;
-
-  open_flags |= O_DIRECT | O_SYNC | O_CLOEXEC;
+    open_mode = "r";
 
   device = udisks_block_get_device (UDISKS_BLOCK (block));
 
-  fd = open (device, open_flags);
+  fd = open_device (device, open_mode, open_flags, &error);
   if (fd == -1)
     {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening %s: %m", device);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
   out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
   udisks_block_complete_open_for_benchmark (block, invocation, out_fd_list, g_variant_new_handle (0));
+
+ out:
+  g_clear_object (&out_fd_list);
+  g_clear_object (&object);
+  return TRUE; /* returning true means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_open_device (UDisksBlock           *block,
+                    GDBusMethodInvocation *invocation,
+                    GUnixFDList           *fd_list,
+                    const gchar           *mode,
+                    GVariant              *options)
+{
+  UDisksObject *object;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  const gchar *device;
+  GUnixFDList *out_fd_list = NULL;
+  GError *error = NULL;
+  gint fd = -1;
+  gint flags = 0;
+
+  object = udisks_daemon_util_dup_object (block, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  action_id = "org.freedesktop.udisks2.open-device";
+  if (udisks_block_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.open-device-system";
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    /* Translators: Shown in authentication dialog when an application
+                                                     * wants to benchmark a device.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to open $(drive)."),
+                                                    invocation))
+    goto out;
+
+  device = udisks_block_get_device (UDISKS_BLOCK (block));
+
+  g_variant_lookup (options, "flags", "i", &flags);
+
+  fd = open_device (device, mode, flags, &error);
+  if (fd == -1)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
+  udisks_block_complete_open_device (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
   g_clear_object (&out_fd_list);
@@ -3515,5 +3619,6 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_open_for_backup           = handle_open_for_backup;
   iface->handle_open_for_restore          = handle_open_for_restore;
   iface->handle_open_for_benchmark        = handle_open_for_benchmark;
+  iface->handle_open_device               = handle_open_device;
   iface->handle_rescan                    = handle_rescan;
 }

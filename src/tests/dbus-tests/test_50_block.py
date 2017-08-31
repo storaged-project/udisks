@@ -119,6 +119,27 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertTrue(bool(mode & os.O_SYNC))
         os.close(fd)
 
+        # OpenDevice
+        with self.assertRaises(dbus.exceptions.DBusException):  # invalid mode
+            disk.OpenDevice('abc', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        d = dbus.Dictionary(signature='sv')
+        d['flags'] = os.O_RDWR
+        with self.assertRaises(dbus.exceptions.DBusException):  # read-only mode with O_RDWR flag
+            disk.OpenDevice('r', d, dbus_interface=self.iface_prefix + '.Block')
+
+        d = dbus.Dictionary(signature='sv')
+        d['flags'] = os.O_ASYNC | os.O_DIRECT
+        dbus_fd = disk.OpenDevice('w', d, dbus_interface=self.iface_prefix + '.Block')
+        self.assertIsNotNone(dbus_fd)
+
+        fd = dbus_fd.take()
+        mode = fcntl.fcntl(fd, fcntl.F_GETFL)
+        self.assertTrue(bool(mode & os.O_WRONLY))
+        self.assertTrue(bool(mode & os.O_DIRECT))
+        self.assertTrue(bool(mode & os.O_ASYNC))
+        os.close(fd)
+
     def test_configuration_fstab(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes

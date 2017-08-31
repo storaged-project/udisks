@@ -1431,6 +1431,10 @@
         Gets a read-only file descriptor for the device intended for a
         byte-by-byte imaging of the device. This can only be done if
         the device is not already in use.
+
+        <emphasis>This method is deprecated since 2.7.3.</emphasis>
+        Use org.freedesktop.UDisks2.Block.OpenDevice() with <literal>O_EXCL</literal>
+        and <literal>O_CLOEXEC</literal> flags instead.
     -->
     <method name="OpenForBackup">
       <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
@@ -1446,6 +1450,11 @@
         Gets a writable file descriptor for the device intended for a
         byte-by-byte restore of a disk image onto the device. This can
         only be done if the device is not already in use.
+
+        <emphasis>This method is deprecated since 2.7.3.</emphasis>
+        Use org.freedesktop.UDisks2.Block.OpenDevice() with <literal>O_EXCL</literal>,
+        <literal>O_SYNC</literal> and <literal>O_CLOEXEC</literal> flags instead.
+
     -->
     <method name="OpenForRestore">
       <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
@@ -1467,9 +1476,34 @@
         If the <parameter>writable</parameter> in @options is %TRUE
         then the returned file descriptor will be writable. This only
         works if the device is not already in use.
+
+        <emphasis>This method is deprecated since 2.7.3.</emphasis>
+        Use org.freedesktop.UDisks2.Block.OpenDevice() with <literal>O_DIRECT</literal>,
+        <literal>O_SYNC</literal> and <literal>O_CLOEXEC</literal> flags instead.
     -->
     <method name="OpenForBenchmark">
       <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="fd" direction="out" type="h"/>
+    </method>
+
+    <!--
+        OpenDevice:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>flags</parameter> (of type 'i')
+        @mode: Mode: "r" for read-only, "w" for write-only or "rw" for read-write
+        @fd: An index for the returned file descriptor.
+        @since: 2.7.3
+
+        Option <parameter>flags</parameter> can be used to specify additional flags.
+        See <literal>man 2 open</literal> for list of supported flags.
+        <literal>O_RDONLY</literal>, <literal>O_WRONLY</literal> and
+        <literal>O_RDWR</literal> are not allowed, use @mode instead.
+
+        Gets a file descriptor for the device.
+    -->
+    <method name="OpenDevice">
+      <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="mode" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="fd" direction="out" type="h"/>
     </method>
