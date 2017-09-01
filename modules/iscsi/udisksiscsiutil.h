@@ -67,4 +67,9 @@ void      iscsi_libiscsi_nodes_free        (const struct libiscsi_node  *nodes);
 
 UDisksError iscsi_error_to_udisks_error (const gint err);
 
+UDisksObject *wait_for_iscsi_object (UDisksDaemon *daemon,
+                                     gpointer      user_data);
+UDisksObject *wait_for_iscsi_session_object (UDisksDaemon *daemon,
+                                             gpointer      user_data);
+
 #endif /* __UDISKS_ISCSI_UTIL_H__ */

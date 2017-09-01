@@ -170,6 +170,32 @@ handle_logout_interface (UDisksISCSISession    *session,
                                              errorstr);
       goto out;
     }
+
+  /* now sit and wait until the device and session disappear on dbus */
+  if (!udisks_daemon_wait_for_object_to_disappear_sync (daemon,
+                                                        wait_for_iscsi_object,
+                                                        g_strdup (name),
+                                                        g_free,
+                                                        15, /* timeout_seconds */
+                                                        &error))
+    {
+      g_prefix_error (&error, "Error waiting for iSCSI device to disappear: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_wait_for_object_to_disappear_sync (daemon,
+                                                        wait_for_iscsi_session_object,
+                                                        g_strdup (name),
+                                                        g_free,
+                                                        15, /* timeout_seconds */
+                                                        &error))
+    {
+      g_prefix_error (&error, "Error waiting for iSCSI session object to disappear: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Complete DBus call. */
   udisks_iscsi_session_complete_logout (session,
                                         invocation);
