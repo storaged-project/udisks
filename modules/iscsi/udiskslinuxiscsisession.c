@@ -70,6 +70,8 @@ udisks_linux_iscsi_session_class_init (UDisksLinuxISCSISessionClass *klass)
 static void
 udisks_linux_iscsi_session_init (UDisksLinuxISCSISession *self)
 {
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**
