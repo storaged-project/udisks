@@ -122,7 +122,7 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
   UDisksState *state;
   UDisksLinuxDevice *device;
   uid_t setup_by_uid;
-  gchar *backing_file;
+  gchar *backing_file = NULL;
   GError *error = NULL;
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
