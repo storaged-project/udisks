@@ -2723,6 +2723,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "dry-run-first", "b", &dry_run_first);
   g_variant_lookup (options, "config-items", "@a(sa{sv})", &config_items);
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
+  g_variant_lookup (options, "label", "&s", &label);
 
   partition = udisks_object_get_partition (object);
   if (partition != NULL)
@@ -3062,7 +3063,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* Set label, if needed */
-  if (g_variant_lookup (options, "label", "&s", &label))
+  if (label != NULL)
     {
       /* TODO: return an error if label is too long */
       if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
