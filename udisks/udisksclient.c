@@ -2489,6 +2489,7 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_hash_table_insert (hash, (gpointer) "encrypted-modify",     (gpointer) C_("job", "Modifying Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
+      g_hash_table_insert (hash, (gpointer) "swapspace-modify",     (gpointer) C_("job", "Modifying Swap Device"));
       g_hash_table_insert (hash, (gpointer) "filesystem-check",     (gpointer) C_("job", "Checking Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-mount",     (gpointer) C_("job", "Mounting Filesystem"));
       g_hash_table_insert (hash, (gpointer) "filesystem-unmount",   (gpointer) C_("job", "Unmounting Filesystem"));

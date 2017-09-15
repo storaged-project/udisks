@@ -1974,6 +1974,18 @@
     <method name="Stop">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        SetLabel:
+        @label: The label to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Set label for the swap device.
+    -->
+    <method name="SetLabel">
+      <arg name="label" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
@@ -2455,6 +2467,8 @@
              <listitem><para>Starting swapspace.</para></listitem></varlistentry>
            <varlistentry><term>swapspace-stop</term>
              <listitem><para>Stopping swapspace.</para></listitem></varlistentry>
+           <varlistentry><term>swapspace-modify</term>
+             <listitem><para>Modifying swapspace.</para></listitem></varlistentry>
            <varlistentry><term>filesystem-mount</term>
              <listitem><para>Mounting a filesystem.</para></listitem></varlistentry>
            <varlistentry><term>filesystem-unmount</term>
