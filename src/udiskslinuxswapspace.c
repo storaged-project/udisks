@@ -38,6 +38,7 @@
 #include "udisksmountmonitor.h"
 #include "udiskslinuxdevice.h"
 #include "udisksthreadedjob.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxswapspace
@@ -351,11 +352,93 @@ handle_stop (UDisksSwapspace        *swapspace,
   return TRUE;
 }
 
+static gboolean
+handle_set_label (UDisksSwapspace        *swapspace,
+                  GDBusMethodInvocation  *invocation,
+                  const gchar            *label,
+                  GVariant               *options)
+{
+  UDisksObject *object;
+  UDisksDaemon *daemon;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+  UDisksBlock *block = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
+
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_peek_block (object);
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Now, check that the user is actually authorized to stop the swap space. */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    "org.freedesktop.udisks2.manage-swapspace",
+                                                    options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests setting label of a swap device.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to set swapspace label on $(drive)"),
+                                                    invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "swapspace-modify",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (!bd_swap_set_label (udisks_block_get_device (block),
+                          label,
+                          &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error taking setting label on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_swapspace_complete_set_label (swapspace, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&object);
+  g_clear_error (&error);
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
 swapspace_iface_init (UDisksSwapspaceIface *iface)
 {
-  iface->handle_start  = handle_start;
-  iface->handle_stop   = handle_stop;
+  iface->handle_start     = handle_start;
+  iface->handle_stop      = handle_stop;
+  iface->handle_set_label = handle_set_label;
 }

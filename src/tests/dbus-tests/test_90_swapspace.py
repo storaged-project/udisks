@@ -59,3 +59,17 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
         self.device.Stop(self.no_options, dbus_interface=self.iface_prefix + '.Swapspace')
         active = self.get_property(self.device, '.Swapspace', 'Active')
         active.assertFalse()  # swap shouldn't be active
+
+    def test_30_set_label(self):
+        self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        fstype = self.get_property(self.device, '.Block', 'IdType')
+        fstype.assertEqual('swap')
+
+        # set label for the swap device
+        self.device.SetLabel('udisks_swap', self.no_options, dbus_interface=self.iface_prefix + '.Swapspace')
+        label = self.get_property(self.device, '.Block', 'IdLabel')
+        label.assertEqual('udisks_swap')
+
+        _ret, out = self.run_command('lsblk -noLABEL %s' % self.dev)
+        self.assertEqual('udisks_swap', out.strip())
