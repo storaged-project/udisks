@@ -56,6 +56,12 @@ gboolean     udisks_linux_block_teardown (UDisksBlock            *block,
                                           GVariant               *options,
                                           GError                **error);
 
+gboolean     udisks_linux_block_is_luks (UDisksBlock *block);
+
+gboolean     udisks_linux_block_is_tcrypt (UDisksBlock *block);
+
+gboolean     udisks_linux_block_is_unknown_crypto (UDisksBlock *block);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_H__ */

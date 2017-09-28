@@ -519,9 +519,9 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
     {
       UDisksBlock *crypto_block;
       crypto_block = udisks_object_peek_block (crypto_object);
-      if (udisks_state_find_unlocked_luks (state,
-                                           udisks_block_get_device_number (crypto_block),
-                                           &setup_by_user))
+      if (udisks_state_find_unlocked_crypto_dev (state,
+                                                 udisks_block_get_device_number (crypto_block),
+                                                 &setup_by_user))
         {
           if (setup_by_user == user)
             {

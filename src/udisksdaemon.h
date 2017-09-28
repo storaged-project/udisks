@@ -34,7 +34,8 @@ GType                     udisks_daemon_get_type             (void) G_GNUC_CONST
 UDisksDaemon             *udisks_daemon_new                  (GDBusConnection *connection,
                                                               gboolean         disable_modules,
                                                               gboolean         force_load_modules,
-                                                              gboolean         uninstalled);
+                                                              gboolean         uninstalled,
+                                                              gboolean         enable_tcrypt);
 GDBusConnection          *udisks_daemon_get_connection        (UDisksDaemon    *daemon);
 GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
 UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
@@ -51,6 +52,7 @@ UDisksConfigManager      *udisks_daemon_get_config_manager    (UDisksDaemon    *
 gboolean                  udisks_daemon_get_disable_modules   (UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_force_load_modules(UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_uninstalled       (UDisksDaemon    *daemon);
+gboolean                  udisks_daemon_get_enable_tcrypt     (UDisksDaemon    *daemon);
 
 /**
  * UDisksDaemonWaitFunc:

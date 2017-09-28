@@ -31,7 +31,7 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
                       gpointer            user_data,
                       GError            **error)
 {
-  LuksJobData *data = (LuksJobData*) user_data;
+  CryptoJobData *data = (CryptoJobData*) user_data;
 
   /* device, cipher, key_size, passphrase, key_file, min_entropy, error */
   return bd_crypto_luks_format_blob (data->device, NULL, 0,
@@ -44,7 +44,7 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
                     gpointer            user_data,
                     GError            **error)
 {
-  LuksJobData *data = (LuksJobData*) user_data;
+  CryptoJobData *data = (CryptoJobData*) user_data;
 
   /* device, name, passphrase, key_file, read_only, error */
   return bd_crypto_luks_open_blob (data->device, data->map_name,
@@ -57,7 +57,7 @@ gboolean luks_close_job_func (UDisksThreadedJob  *job,
                     gpointer            user_data,
                     GError            **error)
 {
-  LuksJobData *data = (LuksJobData*) user_data;
+  CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_luks_close (data->map_name, error);
 }
 
@@ -66,9 +66,35 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
                           gpointer            user_data,
                           GError            **error)
 {
-  LuksJobData *data = (LuksJobData*) user_data;
+  CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_luks_change_key_blob (data->device,
                                          (const guint8*) data->passphrase->str, data->passphrase->len,
                                          (const guint8*) data->new_passphrase->str, data->new_passphrase->len,
                                          error);
+}
+
+gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
+                               GCancellable       *cancellable,
+                               gpointer            user_data,
+                               GError            **error)
+{
+  CryptoJobData *data = (CryptoJobData*) user_data;
+
+  // We always use the veracrypt option, because it can
+  // unlock both VeraCrypt and legacy TrueCrypt volumes
+  gboolean  veracrypt = TRUE;
+
+  return bd_crypto_tc_open_full (data->device, data->map_name,
+                                 (const guint8*) data->passphrase->str, data->passphrase->len,
+                                 data->keyfiles, data->hidden, data->system, veracrypt, data->pim,
+                                 data->read_only, error);
+}
+
+gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
+                                GCancellable       *cancellable,
+                                gpointer            user_data,
+                                GError            **error)
+{
+  CryptoJobData *data = (CryptoJobData*) user_data;
+  return bd_crypto_tc_close (data->map_name, error);
 }

@@ -706,15 +706,11 @@ swapspace_update (UDisksObject   *object,
 static gboolean
 encrypted_check (UDisksObject *object)
 {
-  UDisksLinuxBlockObject *block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
-  gboolean ret;
+  UDisksBlock *block = udisks_object_peek_block (object);
 
-  ret = FALSE;
-  if (g_strcmp0 (udisks_block_get_id_usage (block_object->iface_block_device), "crypto") == 0 &&
-      g_strcmp0 (udisks_block_get_id_type (block_object->iface_block_device), "crypto_LUKS") == 0)
-    ret = TRUE;
-
-  return ret;
+  return udisks_linux_block_is_luks (block) ||
+         udisks_linux_block_is_tcrypt (block) ||
+         udisks_linux_block_is_unknown_crypto (block);
 }
 
 static void
