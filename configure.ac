@@ -486,12 +486,6 @@ if test "x$enable_bcache" = "xyes" \
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
 
-    # also check that libblockdev was compiled with the bcache support
-    pkg-config --cflags blockdev|grep -q WITH_BD_BCACHE
-    if test $? == 1; then
-       have_bcache=no
-    fi
-
     if test "x$have_bcache" = "xno"; then
         if test "x$enable_bcache" = "xyes" -o "x$enable_modules" = "xyes"; then
             AC_MSG_ERROR([Bcache support requested but header or library not found])
