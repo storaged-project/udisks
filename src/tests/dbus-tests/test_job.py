@@ -71,7 +71,9 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
         watch_thread.join()
 
         # unexpected exception occured in erase thread -- raise it
-        if self.exception is not None:
+        # timeout reached is actually ok -- zeroing the device may take a long
+        # time, but we just want to check the job object
+        if self.exception is not None and not str(self.exception).endswith('Timeout was reached'):
             raise self.exception
 
         # we should have the job dict now
@@ -90,6 +92,18 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
         self.assertLessEqual(abs(properties['StartTime'] - start_time * 10**6), 0.5 * 10**6)
 
         self.assertTrue(properties['Cancelable'])
+
+        # job still exists -- erase call timed out -- try to cancel it
+        if safe_dbus.check_object_available(self.iface_prefix, self.job[0],
+                                            self.iface_prefix + '.Job'):
+            try:
+                safe_dbus.call_sync(self.iface_prefix,
+                                    self.job[0],
+                                    self.iface_prefix + '.Job',
+                                    'Cancel',
+                                    GLib.Variant('(a{sv})', ({},)))
+            except safe_dbus.DBusCallError:
+                pass
 
     def test_cancel(self):
         '''Test if it's possible to cancel the Job'''
