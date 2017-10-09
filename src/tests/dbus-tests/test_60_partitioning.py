@@ -474,6 +474,30 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
         self.assertEqual(sys_flags, '0x80')
 
+    def test_gpt_flags(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk, fmt=False)
+        self.addCleanup(self._remove_partition, part)
+
+        # set legacy BIOS bootable flag (100(2), 4(10), 0x4(16))
+        part.SetFlags(dbus.UInt64(4), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_flags = self.get_property(part, '.Partition', 'Flags')
+        dbus_flags.assertEqual(4)
+
+        # test flags value from system
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
+        self.assertEqual(sys_flags, '0x4')
+
     def test_gpt_type(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
