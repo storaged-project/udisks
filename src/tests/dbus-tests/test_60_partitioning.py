@@ -461,7 +461,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self.addCleanup(self._remove_format, part)
 
         # set boot flag (10000000(2), 128(10), 0x80(16))
-        part.SetFlags(dbus.UInt64(10000000), self.no_options,
+        part.SetFlags(dbus.UInt64(128), self.no_options,
                       dbus_interface=self.iface_prefix + '.Partition')
         self.udev_settle()
 
