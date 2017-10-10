@@ -401,6 +401,15 @@ handle_loop_setup (UDisksManager          *object,
 
   loop_device = g_strdup_printf ("/dev/%s", loop_name);
 
+  /* Update the udisks loop state file (/run/udisks2/loop) with information
+   * about the new loop device created by us.
+   */
+  udisks_state_add_loop (udisks_daemon_get_state (manager->daemon),
+                        loop_device,
+                        path,
+                        fd_statbuf_valid ? fd_statbuf.st_dev : 0,
+                        caller_uid);
+
   /* Determine the resulting object */
   error = NULL;
   wait_data.loop_device = loop_device;
@@ -423,16 +432,6 @@ handle_loop_setup (UDisksManager          *object,
   udisks_notice ("Set up loop device %s (backed by %s)",
                  loop_device,
                  path);
-
-  /* Update the udisks loop state file (/run/udisks2/loop) with information
-     about the new loop device created by us. We need to manually trigger
-     uevent for the device after this to update Loop interface properties. */
-  udisks_state_add_loop (udisks_daemon_get_state (manager->daemon),
-                        loop_device,
-                        path,
-                        fd_statbuf_valid ? fd_statbuf.st_dev : 0,
-                        caller_uid);
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (loop_object));
 
   udisks_manager_complete_loop_setup (object,
                                       invocation,
