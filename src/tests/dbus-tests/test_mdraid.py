@@ -158,7 +158,7 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
         # check size of the array based on given disks, there will be some
         # difference because of metadata, but this should be less than 0.5 %
         dbus_size = self.get_property(array, '.MDRaid', 'Size')
-        self.assertLessEqual(self.size - dbus_size.value, 0.005 * self.size)
+        dbus_size.assertAlmostEqual(self.size, delta=0.005 * self.size)
 
         _ret, out = self.run_command('lsblk -d -b -no SIZE /dev/md/%s' % array_name)
         self.assertEqual(dbus_size.value, int(out))
