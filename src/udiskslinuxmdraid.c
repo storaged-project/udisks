@@ -246,6 +246,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
   UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+  BDMDExamineData *raid_data = NULL;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
 
@@ -303,7 +305,15 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     }
   else
     {
-      /* TODO: need MD_ARRAY_SIZE, see https://bugs.freedesktop.org/show_bug.cgi?id=53239#c5 */
+      raid_data = bd_md_examine (g_udev_device_get_device_file (device->udev_device),
+                                 &error);
+      if (raid_data == NULL)
+        {
+          udisks_debug ("Failed to read array size: %s", error->message);
+          g_clear_error (&error);
+        }
+      else
+          size = raid_data->size;
     }
 
   udisks_mdraid_set_uuid (iface, uuid);
@@ -523,11 +533,14 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                                                                                 uuid));
 
  out:
+  if (raid_data)
+      bd_md_examine_data_free (raid_data);
   g_free (sync_completed);
   g_free (sync_action);
   g_free (bitmap_location);
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
+  g_clear_error (&error);
   return ret;
 }
 
