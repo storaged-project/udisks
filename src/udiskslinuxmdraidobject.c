@@ -30,6 +30,7 @@
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxmdraidobject.h"
+#include "udiskslinuxmdraidhelpers.h"
 #include "udiskslinuxmdraid.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
@@ -552,8 +553,17 @@ static void
 raid_device_added (UDisksLinuxMDRaidObject *object,
                    UDisksLinuxDevice       *device)
 {
+  gchar *level = NULL;
+
   g_assert (object->sync_action_source == NULL);
   g_assert (object->degraded_source == NULL);
+
+  if (!UDISKS_IS_LINUX_DEVICE (device))
+    goto out;
+
+  level = read_sysfs_attr (device->udev_device, "md/level");
+  if (level == NULL || !mdraid_has_redundancy (level))
+    goto out;
 
   /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
   object->sync_action_source = watch_attr (device,
@@ -564,6 +574,9 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
                                         "md/degraded",
                                         (GSourceFunc) attr_changed,
                                         object);
+
+ out:
+  g_free (level);
 }
 
 static void
@@ -682,6 +695,12 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                   raid_device_removed (object, object->raid_device);
                   g_clear_object (&object->raid_device);
                   object->raid_device = g_object_ref (device);
+                  raid_device_added (object, object->raid_device);
+                }
+              else if (object->sync_action_source == NULL && object->degraded_source == NULL)
+                {
+                  /* we don't have file watchers, adding them may failed because
+                     we were unable to get raid level, let's try again */
                   raid_device_added (object, object->raid_device);
                 }
             }
