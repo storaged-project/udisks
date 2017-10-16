@@ -66,6 +66,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udiskslinuxdrive.h             udiskslinuxdrive.c                      \
 	udiskslinuxdriveata.h          udiskslinuxdriveata.c                   \
 	udiskslinuxmdraidobject.h      udiskslinuxmdraidobject.c               \
+	udiskslinuxmdraidhelpers.h     udiskslinuxmdraidhelpers.c              \
 	udiskslinuxmdraid.h            udiskslinuxmdraid.c                     \
 	udiskslinuxmanager.h           udiskslinuxmanager.c                    \
 	udiskslinuxfsinfo.h            udiskslinuxfsinfo.c                     \

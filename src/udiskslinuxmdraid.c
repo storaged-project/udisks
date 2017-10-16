@@ -38,6 +38,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmdraid.h"
+#include "udiskslinuxmdraidhelpers.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
@@ -124,68 +125,6 @@ udisks_linux_mdraid_new (void)
 {
   return UDISKS_MDRAID (g_object_new (UDISKS_TYPE_LINUX_MDRAID,
                                           NULL));
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-static gchar *
-read_sysfs_attr (GUdevDevice *device,
-                 const gchar *attr)
-{
-  gchar *ret = NULL;
-  gchar *path = NULL;
-  GError *error = NULL;
-
-  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
-
-  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device), attr);
-  if (!g_file_get_contents (path, &ret, NULL /* size */, &error))
-    {
-      udisks_warning ("Error reading sysfs attr `%s': %s (%s, %d)",
-                      path, error->message, g_quark_to_string (error->domain), error->code);
-      g_clear_error (&error);
-      goto out;
-    }
-
- out:
-  g_free (path);
-  return ret;
-}
-
-static gint
-read_sysfs_attr_as_int (GUdevDevice *device,
-                        const gchar *attr)
-{
-  gint ret = 0;
-  gchar *str = NULL;
-
-  str = read_sysfs_attr (device, attr);
-  if (str == NULL)
-    goto out;
-
-  ret = atoi (str);
-  g_free (str);
-
- out:
-  return ret;
-}
-
-static guint64
-read_sysfs_attr_as_uint64 (GUdevDevice *device,
-                           const gchar *attr)
-{
-  guint64 ret = 0;
-  gchar *str = NULL;
-
-  str = read_sysfs_attr (device, attr);
-  if (str == NULL)
-    goto out;
-
-  ret = atoll (str);
-  g_free (str);
-
- out:
-  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -306,8 +245,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   guint64 sync_remaining_time = 0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
-  gboolean has_redundancy = FALSE;
-  gboolean has_stripes = FALSE;
   UDisksBaseJob *job = NULL;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
@@ -377,23 +314,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
   udisks_mdraid_set_running (iface, raid_device != NULL);
 
-  if (g_strcmp0 (level, "raid1") == 0 ||
-      g_strcmp0 (level, "raid4") == 0 ||
-      g_strcmp0 (level, "raid5") == 0 ||
-      g_strcmp0 (level, "raid6") == 0 ||
-      g_strcmp0 (level, "raid10") == 0)
-    has_redundancy = TRUE;
-
-  if (g_strcmp0 (level, "raid0") == 0 ||
-      g_strcmp0 (level, "raid4") == 0 ||
-      g_strcmp0 (level, "raid5") == 0 ||
-      g_strcmp0 (level, "raid6") == 0 ||
-      g_strcmp0 (level, "raid10") == 0)
-    has_stripes = TRUE;
-
   if (raid_device != NULL)
     {
-      if (has_redundancy)
+      if (mdraid_has_redundancy (level))
         {
           /* Can't use GUdevDevice methods as they cache the result and these variables vary */
           degraded = read_sysfs_attr_as_int (raid_device->udev_device, "md/degraded");
@@ -408,7 +331,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
             g_strstrip (bitmap_location);
         }
 
-      if (has_stripes)
+      if (mdraid_has_stripes (level))
         {
           chunk_size = read_sysfs_attr_as_uint64 (raid_device->udev_device, "md/chunk_size");
         }
