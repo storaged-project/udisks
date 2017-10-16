@@ -321,14 +321,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           /* Can't use GUdevDevice methods as they cache the result and these variables vary */
           degraded = read_sysfs_attr_as_int (raid_device->udev_device, "md/degraded");
           sync_action = read_sysfs_attr (raid_device->udev_device, "md/sync_action");
-          if (sync_action != NULL)
-            g_strstrip (sync_action);
           sync_completed = read_sysfs_attr (raid_device->udev_device, "md/sync_completed");
-          if (sync_completed != NULL)
-            g_strstrip (sync_completed);
           bitmap_location = read_sysfs_attr (raid_device->udev_device, "md/bitmap/location");
-          if (bitmap_location != NULL)
-            g_strstrip (bitmap_location);
         }
 
       if (mdraid_has_stripes (level))
@@ -472,7 +466,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               member_state = read_sysfs_attr (raid_device->udev_device, buf);
               if (member_state != NULL)
                 {
-                  g_strstrip (member_state);
                   member_state_elements = g_strsplit (member_state, ",", 0);
                 }
               else
@@ -486,7 +479,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               member_slot = read_sysfs_attr (raid_device->udev_device, buf);
               if (member_slot != NULL)
                 {
-                  g_strstrip (member_slot);
                   if (g_strcmp0 (member_slot, "none") != 0)
                     member_slot_as_int = atoi (member_slot);
                 }
