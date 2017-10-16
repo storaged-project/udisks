@@ -8,6 +8,7 @@ import unittest
 from bytesize import bytesize
 from collections import namedtuple
 from contextlib import contextmanager
+from distutils.version import LooseVersion
 
 import udiskstestcase
 
@@ -57,6 +58,13 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
             devices.append(dev)
 
         return devices
+
+    def _get_btrfs_version(self):
+        _ret, out = self.run_command('btrfs --version')
+        m = re.search(r'[Bb]trfs.* v([\d\.]+)', out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError('Failed to determine btrfs version from: %s' % out)
+        return LooseVersion(m.groups()[0])
 
     def test_create(self):
         dev = self._get_devices(1)[0]
@@ -147,6 +155,11 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                 self.assertIn('Metadata, RAID1:', out)
 
     def test_subvolumes(self):
+
+        btrfs_version = self._get_btrfs_version()
+        if btrfs_version == LooseVersion('4.13.2'):
+            self.skipTest('subvolumes list is broken with btrfs-progs v4.13.2')
+
         dev = self._get_devices(1)[0]
         self.addCleanup(self._clean_format, dev.obj)
 
