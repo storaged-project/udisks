@@ -62,6 +62,10 @@ read_sysfs_attr (GUdevDevice *device,
       goto out;
     }
 
+  /* remove newline from the attribute */
+  if (ret != NULL)
+    g_strstrip (ret);
+
  out:
   g_free (path);
   return ret;
