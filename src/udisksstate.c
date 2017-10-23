@@ -680,7 +680,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     {
       if (!device_exists)
         {
-          udisks_notice ("Cleaning up mount point %s (device %u:%u no longer exist)",
+          udisks_notice ("Cleaning up mount point %s (device %u:%u no longer exists)",
                          mount_point, major (block_device), minor (block_device));
         }
       else if (device_to_be_cleaned)
@@ -1146,7 +1146,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
           LuksJobData data;
           GError *error = NULL;
 
-          udisks_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exist)",
+          udisks_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exists)",
                          device_file_cleartext,
                          major (crypto_device), minor (crypto_device));
 
