@@ -2926,27 +2926,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       g_free (command);
     }
 
-  /* complete early, if requested */
-  if (no_block)
-    {
-      complete (complete_user_data);
-      invocation = NULL;
-    }
-
-  /* Erase the device, if requested
-   *
-   * (but not if using encryption, we want to erase the cleartext device, see below)
-   */
-  if (erase_type != NULL && encrypt_passphrase == NULL)
-    {
-      if (!erase_device (block, object, daemon, caller_uid, erase_type, &error))
-        {
-          g_prefix_error (&error, "Error erasing device: ");
-          handle_format_failure (invocation, error);
-          goto out;
-        }
-    }
-
   /* And now create the desired filesystem */
   wait_data->type = type;
 
@@ -3051,12 +3030,20 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       block_to_mkfs = block;
     }
 
-  /* If using encryption, now erase the cleartext device (if requested) */
-  if (encrypt_passphrase != NULL && erase_type != NULL)
+  /* complete early, if requested */
+  if (no_block)
+    {
+      complete (complete_user_data);
+      invocation = NULL;
+    }
+
+  /* Erase the device, if requested
+   */
+  if (erase_type != NULL)
     {
       if (!erase_device (block_to_mkfs, object_to_mkfs, daemon, caller_uid, erase_type, &error))
         {
-          g_prefix_error (&error, "Error erasing cleartext device: ");
+          g_prefix_error (&error, "Error erasing device: ");
           handle_format_failure (invocation, error);
           goto out;
         }
