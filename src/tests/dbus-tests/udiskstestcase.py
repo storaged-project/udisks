@@ -108,6 +108,22 @@ class DBusProperty(object):
             else:
                 raise AssertionError('%s != %s' % (self._value, value))
 
+    def assertAlmostEqual(self, value, delta, timeout=TIMEOUT, getter=None):
+        if getter is not None:
+            check_fn = lambda x: abs(getter(x) - value) <= delta
+        else:
+            check_fn = lambda x: abs(x - value) <= delta
+        ret = self._check(timeout, check_fn)
+
+        if not ret:
+            if getter is not None:
+                raise AssertionError('%s is not almost equal to %s (delta = %s)' % (getter(self._value),
+                                                                                    value, delta))
+            else:
+                raise AssertionError('%s is not almost equal to %s (delta = %s)' % (self._value,
+                                                                                    value, delta))
+
+
     def assertGreater(self, value, timeout=TIMEOUT):
         check_fn = lambda x: x > value
         ret = self._check(timeout, check_fn)
