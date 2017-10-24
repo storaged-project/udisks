@@ -15,14 +15,14 @@ dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
 $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 	cp $< $@
 
-systemdservice_in_files = udisks2.service.in
+systemdservice_in_files = udisks2.service.in clean-mount-point@.service
 
 if HAVE_SYSTEMD
 systemdservicedir       = $(systemdsystemunitdir)
 systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
 
-$(systemdservice_DATA): $(systemdservice_in_files) Makefile
-	@sed -e "s|\@udisksdprivdir\@|$(libexecdir)/udisks2|" $< > $@
+$(systemdservice_DATA): udisks2.service.in Makefile
+	@sed -e "s|\@udisksdprivdir\@|$(libexecdir)/udisks2|" udisks2.service.in > udisks2.service
 endif
 
 udevrulesdir = $(udevdir)/rules.d

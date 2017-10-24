@@ -114,7 +114,8 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
 	$(GUDEV_LIBS)                                                          \
-	$(BLOCKDEV_LIBS)                                                          \
+	$(BLOCKDEV_LIBS)                                                       \
+	-lbd_utils                                                             \
 	$(LIBATASMART_LIBS)                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \

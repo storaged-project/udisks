@@ -238,14 +238,17 @@ chrpath --delete %{buildroot}/%{_libexecdir}/udisks2/udisksd
 
 %post -n %{name}
 %systemd_post udisks2.service
+%systemd_post clean-mount-point@.service
 udevadm control --reload
 udevadm trigger
 
 %preun -n %{name}
 %systemd_preun udisks2.service
+%systemd_preun clean-mount-point@.service
 
 %postun -n %{name}
 %systemd_postun_with_restart udisks2.service
+%systemd_postun clean-mount-point@.service
 
 %post -n lib%{name} -p /sbin/ldconfig
 
@@ -275,6 +278,7 @@ udevadm trigger
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
 %{_unitdir}/udisks2.service
+%{_unitdir}/clean-mount-point@.service
 %{_udevrulesdir}/80-udisks2.rules
 %{_sbindir}/umount.udisks2
 
