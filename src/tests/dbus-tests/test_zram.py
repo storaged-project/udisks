@@ -4,6 +4,7 @@ import time
 import unittest
 
 import udiskstestcase
+from udiskstestcase import unstable_test
 
 
 MODPROBECONF = '/usr/lib/modprobe.d/zram.conf'
@@ -80,6 +81,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     def _swapoff(self, swap):
         self.run_command('swapoff %s' % swap)
 
+    @unstable_test
     def test_create_destroy(self):
         manager = self.get_object('/Manager')
         zrams = manager.CreateDevices([10 * 1024**2, 10 * 1024**2], [1, 2], self.no_options,
@@ -154,6 +156,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         dbus_orig = self.get_property(zram_obj, '.Block.ZRAM', 'OrigDataSize')
         dbus_orig.assertEqual(sys_orig)
 
+    @unstable_test
     def test_activate_deactivate(self):
         manager = self.get_object('/Manager')
         zrams = manager.CreateDevices([10 * 1024**2], [1], self.no_options,

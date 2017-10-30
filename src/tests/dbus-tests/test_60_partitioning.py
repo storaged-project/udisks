@@ -4,7 +4,7 @@ import six
 import time
 
 import udiskstestcase
-
+from udiskstestcase import unstable_test
 
 BLOCK_SIZE = 512
 
@@ -566,6 +566,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, part_type)
 
+    @unstable_test
     def test_resize(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)

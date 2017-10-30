@@ -13,6 +13,7 @@ from gi.repository import GLib
 
 import safe_dbus
 import udiskstestcase
+from udiskstestcase import unstable_test
 
 
 class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
@@ -626,6 +627,9 @@ class VFATTestCase(UdisksFSTestCase):
         self.assertTrue(os.path.ismount(mnt_path))
         self._unmount(mnt_path)
 
+    @unstable_test
+    def test_repair_resize_check(self):
+        super(VFATTestCase, self).test_repair_resize_check()
 
 class NTFSTestCase(UdisksFSTestCase):
     _fs_name = 'ntfs'
@@ -634,6 +638,9 @@ class NTFSTestCase(UdisksFSTestCase):
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
 
+    @unstable_test
+    def test_repair_resize_check(self):
+        super(NTFSTestCase, self).test_repair_resize_check()
 
 class BTRFSTestCase(UdisksFSTestCase):
     _fs_name = 'btrfs'
