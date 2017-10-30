@@ -10,6 +10,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 
 import udiskstestcase
+from udiskstestcase import unstable_test
 
 
 Device = namedtuple('Device', ['obj', 'obj_path', 'path', 'name', 'size'])
@@ -97,6 +98,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
             sys_size = bytesize.Size(m.group(1))
             self.assertEqual(sys_size.convert_to(bytesize.B), dev.size)
 
+    @unstable_test
     def test_create_raid(self):
         devs = self._get_devices(2)
 
