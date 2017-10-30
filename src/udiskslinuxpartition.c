@@ -347,6 +347,8 @@ handle_set_flags (UDisksPartition       *partition,
     {
       if (flags & 1) /* 1 << 0 */
           bd_flags |= BD_PART_FLAG_GPT_SYSTEM_PART;
+      if (flags & 4) /* 1 << 2 */
+          bd_flags |= BD_PART_FLAG_LEGACY_BOOT;
       if (flags & 0x1000000000000000) /* 1 << 60 */
           bd_flags |= BD_PART_FLAG_GPT_READ_ONLY;
       if (flags & 0x4000000000000000) /* 1 << 62 */

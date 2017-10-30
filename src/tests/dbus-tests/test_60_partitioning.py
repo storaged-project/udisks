@@ -447,7 +447,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         # make sure partition is not in the system
         self.assertFalse(os.path.isdir(part_syspath))
 
-    def test_flags(self):
+    def test_dos_flags(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
@@ -469,10 +469,34 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         dbus_flags = self.get_property(part, '.Partition', 'Flags')
         dbus_flags.assertEqual(128)
 
-        # test flags value from sysytem
+        # test flags value from system
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
         self.assertEqual(sys_flags, '0x80')
+
+    def test_gpt_flags(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk, fmt=False)
+        self.addCleanup(self._remove_partition, part)
+
+        # set legacy BIOS bootable flag (100(2), 4(10), 0x4(16))
+        part.SetFlags(dbus.UInt64(4), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test flags value on types
+        dbus_flags = self.get_property(part, '.Partition', 'Flags')
+        dbus_flags.assertEqual(4)
+
+        # test flags value from system
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
+        self.assertEqual(sys_flags, '0x4')
 
     def test_gpt_type(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -503,7 +527,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         dbus_type = self.get_property(part, '.Partition', 'Type')
         dbus_type.assertEqual(home_guid)
 
-        # test flags value from sysytem
+        # test flags value from system
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, home_guid)
@@ -537,7 +561,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         dbus_type = self.get_property(part, '.Partition', 'Type')
         dbus_type.assertEqual(part_type)
 
-        # test flags value from sysytem
+        # test flags value from system
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
         self.assertEqual(sys_type, part_type)
@@ -630,7 +654,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         dbus_name = self.get_property(part, '.Partition', 'Name')
         dbus_name.assertEqual('test')
 
-        # test flags value from sysytem
+        # test flags value from system
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, 'test')
