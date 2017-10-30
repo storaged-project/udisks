@@ -6,14 +6,26 @@ import time
 
 from udiskstestcase import UdisksTestCase
 
-# disks with (don't) support S.M.A.R.T.
+SMART_CMDLINE_FAIL      = 1 << 0
+SMART_OPEN_READ_FAIL    = 1 << 1
+SMART_ATA_CHECKSUM_FAIL = 1 << 2
+
+# disks which (don't) support S.M.A.R.T.
 smart_unsupported = set()
 smart_supported = set()
 
 sata_disks = (dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev))
 for disk in sata_disks:
     ret, out = UdisksTestCase.run_command("smartctl -a /dev/%s" % disk)
-    if ret == 0 and "device has SMART capability" in out:
+
+    # Only the following bits in the exit status mean the device failed to
+    # provide valid SMART data, others may be set for different reasons (see
+    # man:smartctl(8) for details).
+    #
+    # NOTE: There seems to be a bug in smartctl because its exit status is 1 in
+    # case of "/dev/sdb: Unknown USB bridge [0x46f4:0x0001 (0x000)]" which
+    # doesn't really look like a "Command line did not parse."
+    if (ret & (SMART_CMDLINE_FAIL | SMART_OPEN_READ_FAIL | SMART_ATA_CHECKSUM_FAIL)) == 0:
         smart_supported.add(disk)
     else:
         smart_unsupported.add(disk)
