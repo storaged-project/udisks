@@ -25,10 +25,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     username = 'udisks_test_user'
 
-    def _clean_format(self, disk):
-        d = dbus.Dictionary(signature='sv')
-        d['erase'] = True
-        disk.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+    def _clean_format(self, disk_path):
+        self.run_command('wipefs -a %s' % disk_path)
 
     def _unmount(self, disk_path):
         self.run_command('umount %s' % disk_path)
@@ -72,7 +70,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # test dbus properties
         usage = self.get_property(disk, '.Block', 'IdUsage')
@@ -103,7 +101,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d = dbus.Dictionary(signature='sv')
         d['label'] = label
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # test dbus properties
         dbus_label = self.get_property(disk, '.Block', 'IdLabel')
@@ -125,7 +123,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem with label
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # change the label
         label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX udisks changes vfat labels to uppercase
@@ -164,7 +162,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -188,7 +186,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -233,7 +231,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # create a tempdir
         tmp = tempfile.mkdtemp()
@@ -313,7 +311,7 @@ class Ext4TestCase(Ext2TestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # create user for our test
         self.addCleanup(self._remove_user, self.username)
@@ -548,7 +546,7 @@ class VFATTestCase(UdisksFSTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # create user for our test
         self.addCleanup(self._remove_user, self.username)
@@ -586,7 +584,7 @@ class VFATTestCase(UdisksFSTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # create user for our test
         self.addCleanup(self._remove_user, self.username)
@@ -736,7 +734,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         # create udf filesystem without label and try to set it later
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
 
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: Don\'t know how to '\
               'change label on device of type filesystem:%s' % fs._fs_name
@@ -755,7 +753,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         self.assertIsNotNone(disk)
 
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, disk)
+        self.addCleanup(self._clean_format, self.vdevs[0])
         self.addCleanup(self._unmount, self.vdevs[0])  # paranoid cleanup
 
         # wrong fstype
