@@ -199,17 +199,17 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self._unmount, self.vdevs[0])
 
-        # dbus mountpoint
-        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
-        dbus_mounts.assertLen(1)  # just one mountpoint
-        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
-        self.assertEqual(dbus_mnt, mnt_path)
-
         # system mountpoint
         self.assertTrue(os.path.ismount(mnt_path))
         _ret, out = self.run_command('mount | grep %s' % self.vdevs[0])
         self.assertIn(mnt_path, out)
         self.assertIn('ro', out)
+
+        # dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
+        self.assertEqual(dbus_mnt, mnt_path)
 
         # umount
         disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
