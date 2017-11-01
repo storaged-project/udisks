@@ -51,7 +51,7 @@ EXTRA_DIST =                                                                   \
 
 clean-local:
 	rm -f *~                                                               \
+	udisks2.service                                                        \
 	$(dbusservice_DATA)                                                    \
 	$(dbusconf_DATA)                                                       \
-	$(systemdservice_DATA)                                                 \
 	$(polkit_DATA)
