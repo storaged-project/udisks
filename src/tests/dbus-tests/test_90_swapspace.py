@@ -3,7 +3,7 @@
 import os
 import dbus
 import udiskstestcase
-
+from udiskstestcase import unstable_test
 
 class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
     """This is SwapSpace related functions unit test"""
@@ -60,6 +60,7 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
         active = self.get_property(self.device, '.Swapspace', 'Active')
         active.assertFalse()  # swap shouldn't be active
 
+    @unstable_test
     def test_30_set_label(self):
         self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
