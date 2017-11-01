@@ -1,17 +1,57 @@
 ---------------------------
-udisks 2.7.4 (unreleased)
+udisks 2.7.4
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.3:
-(TODO: make shortlog)
+Iago López Galeiras (1):
+      Fix grammar
+
+Marius Vollmer (1):
+      Run cryptsetup before returning from non-blocking Format
+
+Vojtech Trefny (19):
+      Post-release version bump to 2.7.4
+      Handle iscsi session invocations in threads
+      Make iSCSI Session logout wait for DBus objects update
+      Move label option lookup at the start of handle_format
+      Fix uninitalized value in "udisks_linux_loop_update"
+      Add new function to set label on swap devices
+      Do not check if libblockdev has been build with bcache support
+      Use new libblockdev functionality to disable checks during init
+      Bump required version of libblockdev
+      Ignore timeout in job tests
+      Fix loop device automounting in GNOME
+      Fix SetFlags call in partitioning test
+      Skip btrfs subvolume tests with btrfs-progs 4.13.2
+      Move some useful mdraid functions to a helper file
+      Remove leading/trailing white space in 'read_sysfs_attr'
+      Do not try to create file watchers for RAIDs without redundancy
+      Wait for size property change in mdraid dbus tests
+      Try to use libblockdev to get RAID array size
+      Bump required version of libblockdev
+
+Vratislav Podzimek (7):
+      Add and use a service for cleaning up mount point directories
+      Fix how we check the exit status of 'smartctl' in tests
+      Add a decorator for unstable tests
+      Mark tests that are known to fail randomly as unstable
+      Use 'wipefs' for format/FS cleanup in tests
+      Create a FS on partition before checking its flags with blkid
+      First verify mount system info before DBus objects' properties
+
+intrigeri (4):
+      Re-add support the legacy BIOS bootable GPT flag
+      Fix typos in D-Bus integration tests
+      Rename test_flags D-Bus integration test to test_dos_flags
+      Add a test_gpt_flags D-Bus integration test
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date)
+2017-11-01
 
 ---------------------------
 udisks 2.7.3

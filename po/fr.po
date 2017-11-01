@@ -8,14 +8,15 @@
 # Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2016. #zanata
 # José Fournier <jaaf64@zoraldia.com>, 2016. #zanata
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
+# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-08-03 11:14+0200\n"
-"PO-Revision-Date: 2017-03-15 10:42-0400\n"
-"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"PO-Revision-Date: 2017-10-05 08:58-0400\n"
+"Last-Translator: Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>\n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -67,11 +68,13 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:9
 msgid "Take ownership of a filesystem"
-msgstr ""
+msgstr "Prendre possession d’un système de fichier"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr ""
+"Une authentification est nécessaire pour prendre possession d’un système de "
+"fichiers."
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted device"
@@ -619,11 +622,11 @@ msgstr ""
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:1
 msgid "Manage disk drive LED"
-msgstr ""
+msgstr "Gérer les LED du disque dur"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:2
 msgid "Authentication is required to manage disk drive LED"
-msgstr ""
+msgstr "Une authentification est nécessaire pour gérer les LED du disque dur"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
 msgid "Manage zRAM"
@@ -1022,6 +1025,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2069
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
+"Une authentification est nécessaire pour redimensionner le système de "
+"fichiers sur $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1032,6 +1037,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2227
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
+"Une authentification est nécessaire pour réparer le système de fichiers sur "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1042,6 +1049,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2386
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
+"Une authentification est nécessaire pour vérifier le système de fichiers sur"
+" $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -1053,6 +1062,8 @@ msgstr ""
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
+"Une authentification est nécessaire pour changer le propriétaire du système "
+"de fichiers sur $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -2389,7 +2400,7 @@ msgstr "Arrêt du périphérique d'échange"
 #: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Vérification du système de fichiers"
 
 #: ../udisks/udisksclient.c:2493
 msgctxt "job"
@@ -2409,12 +2420,12 @@ msgstr "Modification du système de fichier"
 #: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Reparing Filesystem"
-msgstr ""
+msgstr "Réparation du système de fichiers"
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Redimensionnement du système de fichiers"
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "job"

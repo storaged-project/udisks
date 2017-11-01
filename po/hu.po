@@ -5,16 +5,14 @@
 # Translators:
 # Balázs Úr <urbalazs@gmail.com>, 2014
 # Gabor Kelemen <kelemeng at gnome dot hu>, 2012-2013
-# Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Meskó Balázs <meskobalazs@gmail.com>, 2017. #zanata
-# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-08-03 11:14+0200\n"
-"PO-Revision-Date: 2017-03-15 10:43-0400\n"
-"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"PO-Revision-Date: 2017-09-17 07:02-0400\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Hungarian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -65,11 +63,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:9
 msgid "Take ownership of a filesystem"
-msgstr ""
+msgstr "A fájlrendszer tulajdonjogának átvétele"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to take ownership of a filesystem."
-msgstr ""
+msgstr "Hitelesítés szükséges a fájlrendszer tulajdonjogának átvételéhez."
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted device"
@@ -77,7 +75,7 @@ msgstr "Titkosított eszköz feloldása"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:12
 msgid "Authentication is required to unlock an encrypted device"
-msgstr "Hitelesítés szükséges egy titkosított eszköz feloldásához"
+msgstr "Hitelesítés szükséges a titkosított eszköz feloldásához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:13
 msgid "Unlock an encrypted system device"
@@ -173,7 +171,7 @@ msgstr "Meghajtó kikapcsolása"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:31
 msgid "Authentication is required to power off a drive"
-msgstr "Hitelesítés szükséges egy meghajtó kikapcsolásához"
+msgstr "Hitelesítés szükséges a meghajtó kikapcsolásához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:32
 msgid "Power off a system drive"
@@ -211,8 +209,8 @@ msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr ""
-"Hitelesítés szükséges az adathordozó kiadásához egy másik munkaállomáshoz "
-"csatlakoztatott meghajtóból"
+"Hitelesítés szükséges az adathordozó egy másik munkaállomáshoz "
+"csatlakoztatott meghajtóból kiadásához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:40
 msgid "Modify a device"
@@ -220,7 +218,7 @@ msgstr "Eszköz módosítása"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
 msgid "Authentication is required to modify a device"
-msgstr "Hitelesítés szükséges egy eszköz módosításához"
+msgstr "Hitelesítés szükséges az eszköz módosításához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:42
 msgid "Modify a system device"
@@ -239,7 +237,7 @@ msgstr "Eszköz ismételt vizsgálata"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:45
 msgid "Authentication is required to rescan a device"
-msgstr "Hitelesítés szükséges egy eszköz ismételt vizsgálatához"
+msgstr "Hitelesítés szükséges az eszköz ismételt vizsgálatához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:46
 msgid "Open a device"
@@ -247,7 +245,7 @@ msgstr "Eszköz megnyitása"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:47
 msgid "Authentication is required to open a device"
-msgstr "Hitelesítés szükséges egy eszköz megnyitásához"
+msgstr "Hitelesítés szükséges az eszköz megnyitásához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:48
 msgid "Open a system device"
@@ -266,7 +264,7 @@ msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
 msgstr ""
-"Hitelesítés szükséges titkos információk lekéréséhez a rendszerszintű "
+"Hitelesítés szükséges a titkos információk lekéréséhez a rendszerszintű "
 "beállításokból"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:52
@@ -275,7 +273,7 @@ msgstr "Meghajtóbeállítások módosítása"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:53
 msgid "Authentication is required to modify drive settings"
-msgstr "Hitelesítés szükséges egy meghajtó beállításainak módosításához"
+msgstr "Hitelesítés szükséges a meghajtó beállításainak módosításához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:54
 msgid "Update SMART data"
@@ -291,7 +289,8 @@ msgstr "SMART adatok beállítása adatcsomagból"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:57
 msgid "Authentication is required to set SMART data from blob"
-msgstr "Hitelesítés szükséges a SMART adatok beállításához adatcsomagból"
+msgstr ""
+"Hitelesítés szükséges a SMART adatok adatcsomagból történő beállításához"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:58
 msgid "Run SMART self-test"
@@ -323,11 +322,11 @@ msgstr "Készenlét parancs küldése"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:65
 msgid "Authentication is required to put a drive into standby mode"
-msgstr "Hitelesítés szükséges egy meghajtó készenléti állapotba helyezéséhez"
+msgstr "Hitelesítés szükséges a meghajtó készenléti állapotba helyezéséhez"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:66
 msgid "Send standby command to a system drive"
-msgstr "Készenlét parancs küldése rendszermeghajtónak"
+msgstr "Készenlét parancs küldése a rendszermeghajtónak"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:67
 msgid "Send standby command to drive on other seat"
@@ -573,11 +572,11 @@ msgstr "Hitelesítés szükséges egy vékony pool kötet létrehozásához"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:1
 msgid "Manage disk drive LED"
-msgstr ""
+msgstr "Lemezmeghajtó LED kezelése"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:2
 msgid "Authentication is required to manage disk drive LED"
-msgstr ""
+msgstr "Hitelesítés szükséges a lemezmeghajtó LED kezeléséhez"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
 msgid "Manage zRAM"
@@ -609,24 +608,23 @@ msgstr "Hitelesítés szükséges egy zRAM eszköz letiltásához"
 #. 
 #: ../src/udiskslinuxblock.c:1168
 msgid "Authentication is required to read system-level secrets"
-msgstr "Hitelesítés szükséges rendszerszintű titkos információk olvasásához"
+msgstr "Hitelesítés szükséges a rendszerszintű titkos információk olvasásához"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1838
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/fstab fájlhoz adásához"
+msgstr "Hitelesítés szükséges a bejegyzés /etc/fstab fájlhoz adásához"
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1856
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/crypttab fájlhoz adásához"
+msgstr "Hitelesítés szükséges a bejegyzés /etc/crypttab fájlhoz adásához"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1915
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr ""
-"Hitelesítés szükséges egy bejegyzés /etc/fstab fájlból való eltávolításához"
+msgstr "Hitelesítés szükséges a bejegyzés /etc/fstab fájlból eltávolításához"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
@@ -634,8 +632,7 @@ msgstr ""
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
-"Hitelesítés szükséges egy bejegyzés /etc/crypttab fájlból való "
-"eltávolításához"
+"Hitelesítés szükséges a bejegyzés /etc/crypttab fájlból eltávolításához"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:2005
@@ -692,7 +689,7 @@ msgstr "Eszköz formázása"
 #. 
 #: ../src/udiskslinuxblock.c:3287
 msgid "Authentication is required to open $(drive) for reading"
-msgstr "Hitelesítés szükséges a(z) $(drive) olvasásra való megnyitásához"
+msgstr "Hitelesítés szükséges a(z) $(drive) olvasásra megnyitásához"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -702,7 +699,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) olvasásra való megnyitásához
 #. 
 #: ../src/udiskslinuxblock.c:3351
 msgid "Authentication is required to open $(drive) for writing"
-msgstr "Hitelesítés szükséges a(z) $(drive) írásra való megnyitásához"
+msgstr "Hitelesítés szükséges a(z) $(drive) írásra megnyitásához"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -713,8 +710,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) írásra való megnyitásához"
 #: ../src/udiskslinuxblock.c:3417
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
-"Hitelesítés szükséges a(z) $(drive) teljesítményteszteléshez való "
-"megnyitásához"
+"Hitelesítés szükséges a(z) $(drive) teljesítményteszteléshez megnyitásához"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -754,7 +750,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) beállításainak megadásához"
 #. 
 #: ../src/udiskslinuxdrive.c:1420
 msgid "Authentication is required to power off $(drive)"
-msgstr "Hitelesítés szükséges a következő kikapcsolásához: $(drive)"
+msgstr "Hitelesítés szükséges a(z) $(drive) kikapcsolásához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -775,8 +771,8 @@ msgstr "Hitelesítés szükséges a SMART adatok frissítéséhez erről: $(driv
 #: ../src/udiskslinuxdriveata.c:824
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
-"Hitelesítés szükséges a SMART adatok beállításához adatcsomagból ezen: "
-"$(drive)"
+"Hitelesítés szükséges a SMART adatok adatcsomagból történő beállításához "
+"ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -818,7 +814,7 @@ msgstr "Hitelesítés szükséges a bekapcsoltság ellenőrzéséhez ezen: $(dri
 #: ../src/udiskslinuxdriveata.c:1401
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
-"Hitelesítés szükséges a(z) $(drive) felébresztéséhez készenléti állapotból"
+"Hitelesítés szükséges a(z) $(drive) készenléti állapotból felébresztéséhez"
 
 #: ../src/udiskslinuxdriveata.c:1402
 msgid "Authentication is required to put $(drive) in standby mode"
@@ -937,7 +933,7 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:1887
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
-"Hitelesítés szükséges a fájlrendszercímke módosításához ezen: $(drive)"
+"Hitelesítés szükséges a fájlrendszer címke módosításához ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -947,7 +943,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:2069
 msgid "Authentication is required to resize the filesystem on $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a fájlrendszer átméretezéséhez ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -957,7 +953,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:2227
 msgid "Authentication is required to repair the filesystem on $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a fájlrendszer javításához ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -967,7 +963,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:2386
 msgid "Authentication is required to check the filesystem on $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a fájlrendszer ellenőrzéséhez ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -979,6 +975,8 @@ msgstr ""
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
+"Hitelesítés szükséges a fájlrendszer tulajdonjogának módosításához ezen: "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1008,7 +1006,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz módosításához"
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:539
 msgid "Authentication is required to create a RAID array"
-msgstr "Hitelesítés szükséges egy RAID-tömb létrehozásához"
+msgstr "Hitelesítés szükséges a RAID-tömb létrehozásához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -1016,7 +1014,7 @@ msgstr "Hitelesítés szükséges egy RAID-tömb létrehozásához"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:725
 msgid "Authentication is required to start a RAID array"
-msgstr "Hitelesítés szükséges egy RAID-tömb elindításához"
+msgstr "Hitelesítés szükséges a RAID-tömb elindításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -1024,7 +1022,7 @@ msgstr "Hitelesítés szükséges egy RAID-tömb elindításához"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:894
 msgid "Authentication is required to stop a RAID array"
-msgstr "Hitelesítés szükséges egy RAID-tömb leállításához"
+msgstr "Hitelesítés szükséges a RAID-tömb leállításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -1032,7 +1030,7 @@ msgstr "Hitelesítés szükséges egy RAID-tömb leállításához"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1120
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr "Hitelesítés szükséges egy eszköz eltávolításához a RAID-tömbből"
+msgstr "Hitelesítés szükséges az eszköz RAID-tömbből történő eltávolításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -1040,7 +1038,7 @@ msgstr "Hitelesítés szükséges egy eszköz eltávolításához a RAID-tömbb�
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1274
 msgid "Authentication is required to add a device to a RAID array"
-msgstr "Hitelesítés szükséges egy eszköz hozzáadásához a RAID-tömbhöz"
+msgstr "Hitelesítés szükséges az eszköz RAID-tömbhöz történő hozzáadásához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -1062,8 +1060,8 @@ msgstr ""
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
-"Hitelesítés szükséges egy RAID-tömb adatellenőrzésének "
-"elindításához/leállításához."
+"Hitelesítés szükséges a RAID-tömb adatellenőrzésének "
+"elindításához/leállításához"
 
 #: ../src/udiskslinuxmdraid.c:1606
 msgid "Authentication is required to delete a RAID array"
@@ -1088,7 +1086,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxpartitiontable.c:317
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr "Hitelesítés szükséges egy partíció létrehozásához ezen: $(drive)"
+msgstr "Hitelesítés szükséges a partíció létrehozásához ezen: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -1422,7 +1420,7 @@ msgstr "Ext4"
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
-msgstr "Napló Ext-hez (%s verzió)"
+msgstr "Ext napló (%s verzió)"
 
 #: ../udisks/udisksclient.c:1917 ../udisks/udisksclient.c:1918
 msgctxt "fs-type"
@@ -1432,7 +1430,7 @@ msgstr "JDB"
 #: ../udisks/udisksclient.c:1918
 msgctxt "fs-type"
 msgid "Journal for Ext"
-msgstr "Napló Ext-hez"
+msgstr "Ext napló"
 
 #: ../udisks/udisksclient.c:1919
 #, c-format
@@ -2014,12 +2012,12 @@ msgstr "ChromeOS kernel"
 #: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
-msgstr "ChromeOS gyökérfájlrendszer"
+msgstr "ChromeOS gyökér fájlrendszer"
 
 #: ../udisks/udisksclient.c:2280
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
-msgstr "ChromeOS foglalt"
+msgstr "ChromeOS fenntartott"
 
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
@@ -2163,7 +2161,7 @@ msgstr "W95 FAT16 (LBA)"
 #: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
-msgstr "W95 kiterj. (LBA)"
+msgstr "W95 kiterjesztett (LBA)"
 
 #: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
@@ -2299,7 +2297,7 @@ msgstr "Cserehely leállítása"
 #: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Fájlrendszer ellenőrzése"
 
 #: ../udisks/udisksclient.c:2493
 msgctxt "job"
@@ -2319,12 +2317,12 @@ msgstr "Fájlrendszer módosítása"
 #: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Reparing Filesystem"
-msgstr ""
+msgstr "Fájlrendszer javítása"
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Fájlrendszer átméretezése"
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "job"
@@ -2417,7 +2415,7 @@ msgstr "Ismeretlen (%s)"
 #: ../udisks/udisksobjectinfo.c:162
 msgctxt "media-type"
 msgid "Thumb"
-msgstr "Pen drive"
+msgstr "Pendrive"
 
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
@@ -2654,7 +2652,7 @@ msgstr "%u. partíció ezen: %s"
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr "%s — %s (%s)"
+msgstr "%s – %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
@@ -2721,7 +2719,7 @@ msgstr "%u. partíció ezen: %s"
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr "%s — %s (%s)"
+msgstr "%s – %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2732,7 +2730,7 @@ msgstr "%s — %s (%s)"
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr "%s — %s"
+msgstr "%s – %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2744,7 +2742,7 @@ msgstr "%s — %s"
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr "%s — %s"
+msgstr "%s – %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2911,7 +2909,7 @@ msgstr "%u. partíció ezen: %s"
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr "%s — %s [%s] (%s)"
+msgstr "%s – %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2925,4 +2923,4 @@ msgstr "%s — %s [%s] (%s)"
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr "%s — %s (%s)"
+msgstr "%s – %s (%s)"

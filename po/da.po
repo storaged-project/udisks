@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-08-03 11:14+0200\n"
-"PO-Revision-Date: 2017-04-26 07:06-0400\n"
+"PO-Revision-Date: 2017-10-04 05:51-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Danish\n"
 "MIME-Version: 1.0\n"
@@ -30,7 +30,7 @@ msgstr "Monter et filsystem"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr "Godkendelse er krævet for at montere filsystemet"
+msgstr "Der kræves godkendelse for at montere filsystemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
@@ -50,7 +50,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr "Godkendelse er krævet for at montere/afmontere filsystemet"
+msgstr "Der kræves godkendelse for at montere/afmontere filsystemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
@@ -60,16 +60,16 @@ msgstr "Afmonter en enhed monteret af en anden bruger"
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
-"Godkendelse er krævet for at afmontere et filsystem monteret af en anden "
+"Der kræves godkendelse for at afmontere et filsystem monteret af en anden "
 "bruger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:9
 msgid "Take ownership of a filesystem"
-msgstr ""
+msgstr "Tag ejerskab af et filsystem"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to take ownership of a filesystem."
-msgstr ""
+msgstr "Der kræves godkendelse for at tage ejerskab af et filsystem."
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted device"
@@ -77,7 +77,7 @@ msgstr "Lås en krypteret enhed op"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:12
 msgid "Authentication is required to unlock an encrypted device"
-msgstr "Godkendelse er krævet for at låse en krypteret enhed op"
+msgstr "Der kræves godkendelse for at låse en krypteret enhed op"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:13
 msgid "Unlock an encrypted system device"
@@ -104,7 +104,7 @@ msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
 msgstr ""
-"Godkendelse er krævet for at låse en krypteret enhed låst op af en anden "
+"Der kræves godkendelse for at låse en krypteret enhed låst op af en anden "
 "bruger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:18
@@ -115,7 +115,7 @@ msgstr "Skift adgangskode for en krypteret enhed"
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr ""
-"Godkendelse er krævet for at skifte adgangskoden for en krypteret enhed"
+"Der kræves godkendelse for at skifte adgangskoden for en krypteret enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:20
 msgid "Manage loop devices"
@@ -127,7 +127,7 @@ msgstr "Håndter loop-enheder"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:21
 #: ../src/udiskslinuxmanager.c:341
 msgid "Authentication is required to set up a loop device"
-msgstr "Godkendelse er krævet for at opsætte en loop-enhed"
+msgstr "Der kræves godkendelse for at opsætte en loop-enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:22
 msgid "Delete loop devices"
@@ -137,7 +137,7 @@ msgstr "Slet loop-enheder"
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
-"Godkendelse er krævet for at slette en loop-enhed opsat af en anden bruger"
+"Der kræves godkendelse for at slette en loop-enhed opsat af en anden bruger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:24
 msgid "Modify loop devices"
@@ -147,7 +147,7 @@ msgstr "Rediger loop-enheder"
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
-"Godkendelse er krævet for at ændre en loop-enhed opsat af en anden bruger"
+"Der kræves godkendelse for at ændre en loop-enhed opsat af en anden bruger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:26
 msgid "Manage swapspace"
@@ -155,7 +155,7 @@ msgstr "Håndter swapplads"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:27
 msgid "Authentication is required to manage swapspace"
-msgstr "Godkendelse er krævet for at håndtere swapplads"
+msgstr "Der kræves godkendelse for at håndtere swapplads"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:28
 msgid "Manage RAID arrays"
@@ -163,7 +163,7 @@ msgstr "Håndter RAID-arrayer"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:29
 msgid "Authentication is required to manage RAID arrays"
-msgstr "Godkendelse er krævet for at håndtere RAID-arrayer"
+msgstr "Der kræves godkendelse for at håndtere RAID-arrayer"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:30
 msgid "Power off drive"
@@ -171,7 +171,7 @@ msgstr "Sluk for drev"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:31
 msgid "Authentication is required to power off a drive"
-msgstr "Godkendelse er krævet for at slukke et drev"
+msgstr "Der kræves godkendelse for at slukke et drev"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:32
 msgid "Power off a system drive"
@@ -184,7 +184,7 @@ msgstr "Sluk et drev tilsluttet et andet sæde"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:34
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr "Godkendelse er krævet for at slukke et drev tilsluttet et andet sæde"
+msgstr "Der kræves godkendelse for at slukke et drev tilsluttet et andet sæde"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:35
 msgid "Eject media"
@@ -192,7 +192,7 @@ msgstr "Skub medie ud"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:36
 msgid "Authentication is required to eject media"
-msgstr "Godkendelse er krævet for at skubbe medie ud"
+msgstr "Der kræves godkendelse for at skubbe medie ud"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:37
 msgid "Eject media from a system drive"
@@ -207,8 +207,8 @@ msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr ""
-"Godkendelse er krævet for at skubbe medie ud fra et drev tilsluttet et andet"
-" sæde"
+"Der kræves godkendelse for at skubbe medie ud fra et drev tilsluttet et "
+"andet sæde"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:40
 msgid "Modify a device"
@@ -216,7 +216,7 @@ msgstr "Rediger en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:41
 msgid "Authentication is required to modify a device"
-msgstr "Godkendelse er krævet for at ændre en enhed"
+msgstr "Der kræves godkendelse for at ændre en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:42
 msgid "Modify a system device"
@@ -225,7 +225,7 @@ msgstr "Rediger en systemenhed"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:43
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
-msgstr "Godkendelse er krævet for at ændre en enhed tilsluttet et andet sæde"
+msgstr "Der kræves godkendelse for at ændre en enhed tilsluttet et andet sæde"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:44
 msgid "Rescan a device"
@@ -233,7 +233,7 @@ msgstr "Skan en enhed igen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:45
 msgid "Authentication is required to rescan a device"
-msgstr "Godkendelse er krævet for at skanne en enhed igen"
+msgstr "Der kræves godkendelse for at skanne en enhed igen"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:46
 msgid "Open a device"
@@ -241,7 +241,7 @@ msgstr "Åbn en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:47
 msgid "Authentication is required to open a device"
-msgstr "Godkendelse er krævet for at åbne en enhed"
+msgstr "Der kræves godkendelse for at åbne en enhed"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:48
 msgid "Open a system device"
@@ -253,14 +253,15 @@ msgstr "Rediger konfiguration på tværs af systemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:50
 msgid "Authentication is required to modify system-wide configuration"
-msgstr "Godkendelse er krævet for at ændre konfiguration på tværs af systemet"
+msgstr ""
+"Der kræves godkendelse for at ændre konfiguration på tværs af systemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:51
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
 msgstr ""
-"Godkendelse er krævet for at indhente hemmeligheder fra konfiguration på "
+"Der kræves godkendelse for at indhente hemmeligheder fra konfiguration på "
 "tværs af systemet"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:52
@@ -269,7 +270,7 @@ msgstr "Rediger drevindstillinger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:53
 msgid "Authentication is required to modify drive settings"
-msgstr "Godkendelse er krævet for at ændre drevindstillinger"
+msgstr "Der kræves godkendelse for at ændre drevindstillinger"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:54
 msgid "Update SMART data"
@@ -277,7 +278,7 @@ msgstr "Opdater SMART-data"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:55
 msgid "Authentication is required to update SMART data"
-msgstr "Godkendelse er krævet for at opdatere SMART-data"
+msgstr "Der kræves godkendelse for at opdatere SMART-data"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:56
 msgid "Set SMART data from blob"
@@ -285,7 +286,7 @@ msgstr "Sæt SMART-data fra blob"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:57
 msgid "Authentication is required to set SMART data from blob"
-msgstr "Godkendelse er krævet for at sætte SMART-data fra blob"
+msgstr "Der kræves godkendelse for at sætte SMART-data fra blob"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:58
 msgid "Run SMART self-test"
@@ -293,7 +294,7 @@ msgstr "Kør SMART-egentest"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:59
 msgid "Authentication is required to run a SMART self-test"
-msgstr "Godkendelse er krævet for at køre en SMART-egentest"
+msgstr "Der kræves godkendelse for at køre en SMART-egentest"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:60
 msgid "Enable/Disable SMART"
@@ -301,7 +302,7 @@ msgstr "Aktiver/deaktiver SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:61
 msgid "Authentication is required to enable/disable SMART"
-msgstr "Godkendelse er krævet for at aktivere/deaktivere SMART"
+msgstr "Der kræves godkendelse for at aktivere/deaktivere SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:62
 msgid "Check power state"
@@ -309,7 +310,7 @@ msgstr "Tjek strømtilstand"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:63
 msgid "Authentication is required to check the power state"
-msgstr "Godkendelse er krævet for at tjekke strømtilstanden"
+msgstr "Der kræves godkendelse for at tjekke strømtilstanden"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:64
 msgid "Send standby command"
@@ -317,7 +318,7 @@ msgstr "Send standby-kommando"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:65
 msgid "Authentication is required to put a drive into standby mode"
-msgstr "Godkendelse er krævet for at placere et drev i standby-tilstand"
+msgstr "Der kræves godkendelse for at placere et drev i standby-tilstand"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:66
 msgid "Send standby command to a system drive"
@@ -333,7 +334,7 @@ msgstr "Slet en harddisk på sikker vis"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:69
 msgid "Authentication is required to securely erase a hard disk"
-msgstr "Godkendelse er krævet for at slette en harddisk på sikker vis"
+msgstr "Der kræves godkendelse for at slette en harddisk på sikker vis"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:70
 msgid "Cancel job"
@@ -343,7 +344,7 @@ msgstr "Afbryd job"
 #. 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:71 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
-msgstr "Godkendelse er krævet for at afbryde et job"
+msgstr "Der kræves godkendelse for at afbryde et job"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:72
 msgid "Cancel job started by another user"
@@ -352,7 +353,7 @@ msgstr "Afbryd job startet af en anden bruger"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:73
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
-"Godkendelse er krævet for at afbryde et job startet af en anden bruger"
+"Der kræves godkendelse for at afbryde et job startet af en anden bruger"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
 msgid "Manage Bcache"
@@ -360,19 +361,19 @@ msgstr "Håndter Bcache"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
 msgid "Authentication is required to manage Bcache"
-msgstr "Godkendelse er krævet for at håndtere Bcache"
+msgstr "Der kræves godkendelse for at håndtere Bcache"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:276
 msgid "Authentication is required to destroy bcache device."
-msgstr "Godkendelse er krævet for at ødelægge bcache-enhed."
+msgstr "Der kræves godkendelse for at ødelægge bcache-enhed."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:335
 msgid "Authentication is required to set mode of bcache device."
-msgstr "Godkendelse er krævet for at sætte tilstand af bcache-enhed."
+msgstr "Der kræves godkendelse for at sætte tilstand af bcache-enhed."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:247
 msgid "Authentication is required to create bcache device."
-msgstr "Godkendelse er krævet for at oprette bcache-enhed."
+msgstr "Der kræves godkendelse for at oprette bcache-enhed."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
@@ -380,32 +381,32 @@ msgstr "Håndter BTRFS"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
 msgid "Authentication is required to manage BTRFS"
-msgstr "Godkendelse er krævet for at håndtere BTRFS"
+msgstr "Der kræves godkendelse for at håndtere BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:616
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "Godkendelse er krævet for at skifte etiket for BTRFS-diskenhed"
+msgstr "Der kræves godkendelse for at skifte etiket for BTRFS-diskenhed"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:473
 msgid "Authentication is required to add the device to the volume"
-msgstr "Godkendelse er krævet for at tilføje enheden til diskenheden"
+msgstr "Der kræves godkendelse for at tilføje enheden til diskenheden"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:684
 msgid "Authentication is required to create a new snapshot"
-msgstr "Godkendelse er krævet for at oprette et nyt øjebliksbillede"
+msgstr "Der kræves godkendelse for at oprette et nyt øjebliksbillede"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:743
 msgid "Authentication is required to check and repair the volume"
-msgstr "Godkendelse er krævet for at tjekke og reparere diskenheden"
+msgstr "Der kræves godkendelse for at tjekke og reparere diskenheden"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:796
 msgid "Authentication is required to resize the volume"
-msgstr "Godkendelse er krævet for at ændre størrelse på en diskenhed"
+msgstr "Der kræves godkendelse for at ændre størrelse på en diskenhed"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:210
 msgid "Authentication is required to create a new volume"
-msgstr "Godkendelse er krævet for at oprette en ny diskenhed"
+msgstr "Der kræves godkendelse for at oprette en ny diskenhed"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
@@ -413,12 +414,12 @@ msgstr "Håndter iSCSI"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr "Godkendelse er krævet for at håndtere iSCSI"
+msgstr "Der kræves godkendelse for at håndtere iSCSI"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:134
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "Godkendelse er krævet for at udføre iSCSI-udlogning"
+msgstr "Der kræves godkendelse for at udføre iSCSI-udlogning"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:167
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
@@ -439,7 +440,7 @@ msgstr "Fejl ved læsning af %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "Godkendelse er krævet for at skifte iSCSI-indledernavn"
+msgstr "Der kræves godkendelse for at skifte iSCSI-indledernavn"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
 msgid "Empty initiator name"
@@ -452,7 +453,7 @@ msgstr "Fejl ved skrivning til %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
 msgid "Authentication is required to discover targets"
-msgstr "Godkendelse er krævet for at opdage mål"
+msgstr "Der kræves godkendelse for at opdage mål"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
@@ -462,11 +463,11 @@ msgstr "Opdagelse mislykkedes: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
 msgid "Authentication is required to discover firmware targets"
-msgstr "Godkendelse er krævet for at opdage firmwaremål"
+msgstr "Der kræves godkendelse for at opdage firmwaremål"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
 msgid "Authentication is required to perform iSCSI login"
-msgstr "Godkendelse er krævet for at udføre iSCSI-indlogning"
+msgstr "Der kræves godkendelse for at udføre iSCSI-indlogning"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
 #, c-format
@@ -479,32 +480,32 @@ msgstr "Håndter LVM"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr "Godkendelse er krævet for at håndtere LVM"
+msgstr "Der kræves godkendelse for at håndtere LVM"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:416
 msgid "Authentication is required to delete a logical volume"
-msgstr "Godkendelse er krævet for at slette en logisk diskenhed"
+msgstr "Der kræves godkendelse for at slette en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:516
 msgid "Authentication is required to rename a logical volume"
-msgstr "Godkendelse er krævet for at omdøbe en logisk diskenhed"
+msgstr "Der kræves godkendelse for at omdøbe en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:577
 msgid "Authentication is required to resize a logical volume"
-msgstr "Godkendelse er krævet for at ændre størrelse på en logisk diskenhed"
+msgstr "Der kræves godkendelse for at ændre størrelse på en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:670
 msgid "Authentication is required to activate a logical volume"
-msgstr "Godkendelse er krævet for at aktivere en logisk diskenhed"
+msgstr "Der kræves godkendelse for at aktivere en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:737
 msgid "Authentication is required to deactivate a logical volume"
-msgstr "Godkendelse er krævet for at deaktivere en logisk diskenhed"
+msgstr "Der kræves godkendelse for at deaktivere en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:789
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
-"Godkendelse er krævet for at oprette et øjebliksbillede af en logisk "
+"Der kræves godkendelse for at oprette et øjebliksbillede af en logisk "
 "diskenhed"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:846
@@ -515,7 +516,7 @@ msgstr "LVMCache ikke aktiveret ved kompileringstid."
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:860
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
-"Godkendelse er krævet for at konvertere logisk diskenhed til mellemlager"
+"Der kræves godkendelse for at konvertere logisk diskenhed til mellemlager"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:882
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:944
@@ -526,52 +527,53 @@ msgstr "Fejl ved konvertering af diskenhed: %s"
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:922
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
-"Godkendelse er krævet for at opdele mellemlager-pool-LV væk fra en "
+"Der kræves godkendelse for at opdele mellemlager-pool-LV væk fra en "
 "mellemlager-LV"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr "Godkendelse er krævet for at oprette en diskenhedsgruppe"
+msgstr "Der kræves godkendelse for at oprette en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:303
 msgid "Authentication is required to delete a volume group"
-msgstr "Godkendelse er krævet for at slette en diskenhedsgruppe"
+msgstr "Der kræves godkendelse for at slette en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:405
 msgid "Authentication is required to rename a volume group"
-msgstr "Godkendelse er krævet for at omdøbe en diskenhedsgruppe"
+msgstr "Der kræves godkendelse for at omdøbe en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:516
 msgid "Authentication is required to add a device to a volume group"
-msgstr "Godkendelse er krævet for at tilføje en enhed til en diskenhedsgruppe"
+msgstr ""
+"Der kræves godkendelse for at tilføje en enhed til en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:613
 msgid "Authentication is required to remove a device from a volume group"
-msgstr "Godkendelse er krævet for at fjerne en enhed fra en diskenhedsgruppe"
+msgstr "Der kræves godkendelse for at fjerne en enhed fra en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:622
 msgid "Authentication is required to empty a device in a volume group"
-msgstr "Godkendelse er krævet for at tømme en enhed i en diskenhedsgruppe"
+msgstr "Der kræves godkendelse for at tømme en enhed i en diskenhedsgruppe"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:825
 msgid "Authentication is required to create a logical volume"
-msgstr "Godkendelse er krævet for at oprette en logisk diskenhed"
+msgstr "Der kræves godkendelse for at oprette en logisk diskenhed"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:831
 msgid "Authentication is required to create a thin volume"
-msgstr "Godkendelse er krævet for at oprette en thin diskenhed"
+msgstr "Der kræves godkendelse for at oprette en thin diskenhed"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:837
 msgid "Authentication is required to create a thin pool volume"
-msgstr "Godkendelse er krævet for at oprette en thin pool diskenhed"
+msgstr "Der kræves godkendelse for at oprette en thin pool diskenhed"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:1
 msgid "Manage disk drive LED"
-msgstr ""
+msgstr "Håndter diskdrevets LED"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:2
 msgid "Authentication is required to manage disk drive LED"
-msgstr ""
+msgstr "Der kræves godkendelse for at håndtere diskdrevets LED"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
 msgid "Manage zRAM"
@@ -579,23 +581,23 @@ msgstr "Håndter zRAM"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
 msgid "Authentication is required to manage zRAM"
-msgstr "Godkendelse er krævet for at håndtere zRAM"
+msgstr "Der kræves godkendelse for at håndtere zRAM"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:387
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "Godkendelse er krævet for at tilføje zRAM-kernemodul"
+msgstr "Der kræves godkendelse for at tilføje zRAM-kernemodul"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:483
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Godkendelse er krævet for at fjerne zRAM-kernemodul"
+msgstr "Der kræves godkendelse for at fjerne zRAM-kernemodul"
 
 #: ../modules/zram/udiskslinuxblockzram.c:281
 msgid "Authentication is required to enable zRAM device"
-msgstr "Godkendelse er krævet for at aktivere zRAM-enhed"
+msgstr "Der kræves godkendelse for at aktivere zRAM-enhed"
 
 #: ../modules/zram/udiskslinuxblockzram.c:382
 msgid "Authentication is required to disable zRAM device"
-msgstr "Godkendelse er krævet for at deaktivere zRAM-enhed"
+msgstr "Der kræves godkendelse for at deaktivere zRAM-enhed"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -603,41 +605,42 @@ msgstr "Godkendelse er krævet for at deaktivere zRAM-enhed"
 #. 
 #: ../src/udiskslinuxblock.c:1168
 msgid "Authentication is required to read system-level secrets"
-msgstr "Godkendelse er krævet for at læse hemmeligheder på systemniveau"
+msgstr "Der kræves godkendelse for at læse hemmeligheder på systemniveau"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1838
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr "Godkendelse er krævet for at tilføje en linje til /etc/fstab-filen"
+msgstr "Der kræves godkendelse for at tilføje en linje til /etc/fstab-filen"
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1856
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
-msgstr "Godkendelse er krævet for at tilføje en linje til /etc/crypttab-filen"
+msgstr ""
+"Der kræves godkendelse for at tilføje en linje til /etc/crypttab-filen"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1915
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr "Godkendelse er krævet for at fjerne en linje fra /etc/fstab-filen"
+msgstr "Der kræves godkendelse for at fjerne en linje fra /etc/fstab-filen"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1933
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
-msgstr "Godkendelse er krævet for at fjerne en linje fra /etc/crypttab-filen"
+msgstr "Der kræves godkendelse for at fjerne en linje fra /etc/crypttab-filen"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:2005
 msgid "Authentication is required to modify the /etc/fstab file"
-msgstr "Godkendelse er krævet for at ændre /etc/fstab-filen"
+msgstr "Der kræves godkendelse for at ændre /etc/fstab-filen"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:2023
 msgid "Authentication is required to modify the /etc/crypttab file"
-msgstr "Godkendelse er krævet for at ændre /etc/crypttab-filen"
+msgstr "Der kræves godkendelse for at ændre /etc/crypttab-filen"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
@@ -654,7 +657,7 @@ msgstr "Godkendelse er krævet for at ændre /etc/crypttab-filen"
 #. 
 #: ../src/udiskslinuxblock.c:2778 ../src/udiskslinuxdriveata.c:2241
 msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "Godkendelse er krævet for at udføre en sikker sletning af $(drive)"
+msgstr "Der kræves godkendelse for at udføre en sikker sletning af $(drive)"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -665,11 +668,12 @@ msgstr "Godkendelse er krævet for at udføre en sikker sletning af $(drive)"
 #. 
 #: ../src/udiskslinuxblock.c:2790
 msgid "Authentication is required to format $(drive)"
-msgstr "Godkendelse er krævet for at formatere $(drive)"
+msgstr "Der kræves godkendelse for at formatere $(drive)"
 
 #: ../src/udiskslinuxblock.c:2832 ../src/udiskslinuxmdraid.c:1625
 msgid "Authentication is required to modify the system configuration"
-msgstr "Godkendelse er krævet for at ændre konfiguration på tværs af systemet"
+msgstr ""
+"Der kræves godkendelse for at ændre konfiguration på tværs af systemet"
 
 #: ../src/udiskslinuxblock.c:2836 ../src/udiskslinuxdriveata.c:2253
 msgid "Formatting Device"
@@ -683,7 +687,7 @@ msgstr "Formaterer enhed"
 #. 
 #: ../src/udiskslinuxblock.c:3287
 msgid "Authentication is required to open $(drive) for reading"
-msgstr "Godkendelse er krævet for at åbne $(drive) for læsning"
+msgstr "Der kræves godkendelse for at åbne $(drive) for læsning"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -693,7 +697,7 @@ msgstr "Godkendelse er krævet for at åbne $(drive) for læsning"
 #. 
 #: ../src/udiskslinuxblock.c:3351
 msgid "Authentication is required to open $(drive) for writing"
-msgstr "Godkendelse er krævet for at åbne $(drive) for skrivning"
+msgstr "Der kræves godkendelse for at åbne $(drive) for skrivning"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -703,7 +707,7 @@ msgstr "Godkendelse er krævet for at åbne $(drive) for skrivning"
 #. 
 #: ../src/udiskslinuxblock.c:3417
 msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr "Godkendelse er krævet for at åbne $(drive) for at benchmarke"
+msgstr "Der kræves godkendelse for at åbne $(drive) for at benchmarke"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -713,7 +717,7 @@ msgstr "Godkendelse er krævet for at åbne $(drive) for at benchmarke"
 #. 
 #: ../src/udiskslinuxblock.c:3478
 msgid "Authentication is required to rescan $(drive)"
-msgstr "Godkendelse er krævet for at skanne $(drive) igen"
+msgstr "Der kræves godkendelse for at skanne $(drive) igen"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -723,7 +727,7 @@ msgstr "Godkendelse er krævet for at skanne $(drive) igen"
 #. 
 #: ../src/udiskslinuxdrive.c:1016
 msgid "Authentication is required to eject $(drive)"
-msgstr "Godkendelse er krævet for at skubbe $(drive) ud"
+msgstr "Der kræves godkendelse for at skubbe $(drive) ud"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
@@ -733,7 +737,7 @@ msgstr "Godkendelse er krævet for at skubbe $(drive) ud"
 #. 
 #: ../src/udiskslinuxdrive.c:1104
 msgid "Authentication is required to configure settings for $(drive)"
-msgstr "Godkendelse er krævet for at konfigurere indstillinger for $(drive)"
+msgstr "Der kræves godkendelse for at konfigurere indstillinger for $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -743,7 +747,7 @@ msgstr "Godkendelse er krævet for at konfigurere indstillinger for $(drive)"
 #. 
 #: ../src/udiskslinuxdrive.c:1420
 msgid "Authentication is required to power off $(drive)"
-msgstr "Godkendelse er krævet for at slukke $(drive)"
+msgstr "Der kræves godkendelse for at slukke $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -753,7 +757,7 @@ msgstr "Godkendelse er krævet for at slukke $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:813
 msgid "Authentication is required to update SMART data from $(drive)"
-msgstr "Godkendelse er krævet for at opdatere SMART-data fra $(drive)"
+msgstr "Der kræves godkendelse for at opdatere SMART-data fra $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
@@ -763,7 +767,8 @@ msgstr "Godkendelse er krævet for at opdatere SMART-data fra $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:824
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr "Godkendelse er krævet for at sætte SMART-data fra en blob på $(drive)"
+msgstr ""
+"Der kræves godkendelse for at sætte SMART-data fra en blob på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -773,7 +778,7 @@ msgstr "Godkendelse er krævet for at sætte SMART-data fra en blob på $(drive)
 #. 
 #: ../src/udiskslinuxdriveata.c:958
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr "Godkendelse er krævet for at afbryde en SMART-egentest på $(drive)"
+msgstr "Der kræves godkendelse for at afbryde en SMART-egentest på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
@@ -783,7 +788,7 @@ msgstr "Godkendelse er krævet for at afbryde en SMART-egentest på $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:1208
 msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "Godkendelse er krævet for at starte en SMART-egentest på $(drive)"
+msgstr "Der kræves godkendelse for at starte en SMART-egentest på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
@@ -793,7 +798,7 @@ msgstr "Godkendelse er krævet for at starte en SMART-egentest på $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:1296
 msgid "Authentication is required to check power state for $(drive)"
-msgstr "Godkendelse er krævet for at tjekke strømtilstand for $(drive)"
+msgstr "Der kræves godkendelse for at tjekke strømtilstand for $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode or tries to put a drive into
@@ -804,11 +809,11 @@ msgstr "Godkendelse er krævet for at tjekke strømtilstand for $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:1401
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "Godkendelse er krævet for at vække $(drive) fra standby-tilstand"
+msgstr "Der kræves godkendelse for at vække $(drive) fra standby-tilstand"
 
 #: ../src/udiskslinuxdriveata.c:1402
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr "Godkendelse er krævet for at placere $(drive) i standby-tilstand"
+msgstr "Der kræves godkendelse for at placere $(drive) i standby-tilstand"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -818,7 +823,7 @@ msgstr "Godkendelse er krævet for at placere $(drive) i standby-tilstand"
 #. 
 #: ../src/udiskslinuxdriveata.c:2334
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr "Godkendelse er krævet for at aktivere SMART på $(drive)"
+msgstr "Der kræves godkendelse for at aktivere SMART på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -828,7 +833,7 @@ msgstr "Godkendelse er krævet for at aktivere SMART på $(drive)"
 #. 
 #: ../src/udiskslinuxdriveata.c:2344
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr "Godkendelse er krævet for at deaktivere SMART på $(drive)"
+msgstr "Der kræves godkendelse for at deaktivere SMART på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -838,7 +843,7 @@ msgstr "Godkendelse er krævet for at deaktivere SMART på $(drive)"
 #. 
 #: ../src/udiskslinuxencrypted.c:382 ../src/udiskslinuxencrypted.c:737
 msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "Godkendelse er krævet for at låse den krypterede enhed $(drive) op"
+msgstr "Der kræves godkendelse for at låse den krypterede enhed $(drive) op"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -852,7 +857,7 @@ msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
 msgstr ""
-"Godkendelse er krævet for at låse den krypterede enhed $(drive) låst op af "
+"Der kræves godkendelse for at låse den krypterede enhed $(drive) låst op af "
 "en anden bruger"
 
 #. Translators: Shown in authentication dialog when the user
@@ -863,7 +868,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1239 ../src/udiskslinuxfilesystem.c:1417
 msgid "Authentication is required to mount $(drive)"
-msgstr "Godkendelse er krævet for at montere $(drive)"
+msgstr "Der kræves godkendelse for at montere $(drive)"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -880,7 +885,7 @@ msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
 msgstr ""
-"Godkendelse er krævet for at montere $(drive) refereret i filen /etc/fstab"
+"Der kræves godkendelse for at montere $(drive) refereret i filen /etc/fstab"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -897,7 +902,8 @@ msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
 msgstr ""
-"Godkendelse er krævet for at afmontere $(drive) refereret i filen /etc/fstab"
+"Der kræves godkendelse for at afmontere $(drive) refereret i filen "
+"/etc/fstab"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -909,7 +915,7 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:1703
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
-"Godkendelse er krævet for at afmontere $(drive) monteret af en anden bruger"
+"Der kræves godkendelse for at afmontere $(drive) monteret af en anden bruger"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
@@ -919,7 +925,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1887
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr "Godkendelse er krævet for at skifte filsystemetiketten på $(drive)"
+msgstr "Der kræves godkendelse for at skifte filsystemetiketten på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -930,6 +936,7 @@ msgstr "Godkendelse er krævet for at skifte filsystemetiketten på $(drive)"
 #: ../src/udiskslinuxfilesystem.c:2069
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
+"Der kræves godkendelse for at ændre størrelse på filsystemet på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -939,7 +946,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:2227
 msgid "Authentication is required to repair the filesystem on $(drive)"
-msgstr ""
+msgstr "Der kræves godkendelse for at reparer filsystemet på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -949,7 +956,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:2386
 msgid "Authentication is required to check the filesystem on $(drive)"
-msgstr ""
+msgstr "Der kræves godkendelse for at tjekke filsystemet på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -961,6 +968,7 @@ msgstr ""
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
+"Der kræves godkendelse for at ændre ejerskab af filsystemet på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -971,7 +979,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxloop.c:250
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "Godkendelse er krævet for at slette loop-enheden $(drive)"
+msgstr "Der kræves godkendelse for at slette loop-enheden $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -982,7 +990,7 @@ msgstr "Godkendelse er krævet for at slette loop-enheden $(drive)"
 #. 
 #: ../src/udiskslinuxloop.c:339
 msgid "Authentication is required to modify the loop device $(drive)"
-msgstr "Godkendelse er krævet for at ændre loop-enheden $(drive)"
+msgstr "Der kræves godkendelse for at ændre loop-enheden $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -990,7 +998,7 @@ msgstr "Godkendelse er krævet for at ændre loop-enheden $(drive)"
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:539
 msgid "Authentication is required to create a RAID array"
-msgstr "Godkendelse er krævet for at oprette en RAID-array"
+msgstr "Der kræves godkendelse for at oprette en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -998,7 +1006,7 @@ msgstr "Godkendelse er krævet for at oprette en RAID-array"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:725
 msgid "Authentication is required to start a RAID array"
-msgstr "Godkendelse er krævet for at starte en RAID-array"
+msgstr "Der kræves godkendelse for at starte en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -1006,7 +1014,7 @@ msgstr "Godkendelse er krævet for at starte en RAID-array"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:894
 msgid "Authentication is required to stop a RAID array"
-msgstr "Godkendelse er krævet for at stoppe en RAID-array"
+msgstr "Der kræves godkendelse for at stoppe en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -1014,7 +1022,7 @@ msgstr "Godkendelse er krævet for at stoppe en RAID-array"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1120
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr "Godkendelse er krævet for at fjerne en enhed fra en RAID-array"
+msgstr "Der kræves godkendelse for at fjerne en enhed fra en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -1022,7 +1030,7 @@ msgstr "Godkendelse er krævet for at fjerne en enhed fra en RAID-array"
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1274
 msgid "Authentication is required to add a device to a RAID array"
-msgstr "Godkendelse er krævet for at tilføje en enhed til en RAID-array"
+msgstr "Der kræves godkendelse for at tilføje en enhed til en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -1033,7 +1041,7 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
-"Godkendelse er krævet for at konfigurere write-intent bitmap'en på en RAID-"
+"Der kræves godkendelse for at konfigurere write-intent bitmap'en på en RAID-"
 "array"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1044,11 +1052,11 @@ msgstr ""
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
-"Godkendelse er krævet for at starte/stoppe datascrubbing på en RAID-array"
+"Der kræves godkendelse for at starte/stoppe datascrubbing på en RAID-array"
 
 #: ../src/udiskslinuxmdraid.c:1606
 msgid "Authentication is required to delete a RAID array"
-msgstr "Godkendelse er krævet for at oprette en RAID-array"
+msgstr "Der kræves godkendelse for at oprette en RAID-array"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1058,7 +1066,7 @@ msgstr "Godkendelse er krævet for at oprette en RAID-array"
 #. 
 #: ../src/udiskslinuxpartition.c:149
 msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "Godkendelse er krævet for at ændre partitionen på enhed $(drive)"
+msgstr "Der kræves godkendelse for at ændre partitionen på enhed $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
@@ -1068,7 +1076,7 @@ msgstr "Godkendelse er krævet for at ændre partitionen på enhed $(drive)"
 #. 
 #: ../src/udiskslinuxpartitiontable.c:317
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr "Godkendelse er krævet for at oprette en partition på $(drive)"
+msgstr "Der kræves godkendelse for at oprette en partition på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -1078,7 +1086,7 @@ msgstr "Godkendelse er krævet for at oprette en partition på $(drive)"
 #. 
 #: ../src/udiskslinuxswapspace.c:221
 msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr "Godkendelse er krævet for at aktivere swapplads på $(drive)"
+msgstr "Der kræves godkendelse for at aktivere swapplads på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
@@ -1088,7 +1096,7 @@ msgstr "Godkendelse er krævet for at aktivere swapplads på $(drive)"
 #. 
 #: ../src/udiskslinuxswapspace.c:331
 msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr "Godkendelse er krævet for at deaktivere swapplads på $(drive)"
+msgstr "Der kræves godkendelse for at deaktivere swapplads på $(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -2279,7 +2287,7 @@ msgstr "Stopper swapenhed"
 #: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Tjekker filsystem"
 
 #: ../udisks/udisksclient.c:2493
 msgctxt "job"
@@ -2299,12 +2307,12 @@ msgstr "Redigerer filsystem"
 #: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Reparing Filesystem"
-msgstr ""
+msgstr "Reparerer filsystem"
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Ændre størrelse på filsystem"
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "job"

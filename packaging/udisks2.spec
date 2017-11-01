@@ -5,7 +5,7 @@
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             2.13
+%global libblockdev_version             2.14
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
@@ -351,6 +351,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Nov 01 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.4-1
+- Version 2.7.4
+
 * Thu Aug 31 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.3-1
 - Version 2.7.3
 
