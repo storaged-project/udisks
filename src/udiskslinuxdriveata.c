@@ -485,13 +485,19 @@ static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *
     }
   else
     {
-      fscanf (statf, "%lu %*u %*u %*u %lu", &drive_read, &drive_write);
+      if (fscanf (statf, "%lu %*u %*u %*u %lu", &drive_read, &drive_write) != 2)
+        {
+          udisks_warning ("Failed to read %s\n", statpath);
+        }
+      else
+        {
+          noio = drive_read == drive->drive_read && drive_write == drive->drive_write;
+          udisks_debug ("drive_read=%lu, drive_write=%lu, old_drive_read=%lu, old_drive_write=%lu\n",
+                        drive_read, drive_write, drive->drive_read, drive->drive_write);
+          drive->drive_read = drive_read;
+          drive->drive_write = drive_write;
+        }
       fclose (statf);
-      noio = drive_read == drive->drive_read && drive_write == drive->drive_write;
-      udisks_debug ("drive_read=%lu, drive_write=%lu, old_drive_read=%lu, old_drive_write=%lu\n",
-                    drive_read, drive_write, drive->drive_read, drive->drive_write);
-      drive->drive_read = drive_read;
-      drive->drive_write = drive_write;
     }
   return noio;
 }
