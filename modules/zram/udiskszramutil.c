@@ -49,9 +49,15 @@ set_conf_property (char *filename,
 
   tmpfname = g_strdup_printf ("%sXXXXXX", filename);
   mkstemp (tmpfname);
-  chmod (tmpfname, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  tmp = fopen (tmpfname, "w");
+  if (chmod (tmpfname, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0)
+    {
+      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
+      fclose (f);
+      g_free (tmpfname);
+      return FALSE;
+    }
 
+  tmp = fopen (tmpfname, "w");
   if (tmp == NULL)
     {
       g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),"%m");
