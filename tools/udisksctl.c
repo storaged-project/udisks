@@ -894,14 +894,14 @@ read_passphrase (void)
   if (tty_name == NULL)
     {
       g_warning ("Cannot determine pathname for current controlling terminal for the process: %m");
-      goto out;
+      return NULL;
     }
 
   tty = fopen (tty_name, "r+");
   if (tty == NULL)
     {
       g_warning ("Error opening current controlling terminal %s: %m", tty_name);
-      goto out;
+      return NULL;
     }
 
   fprintf (tty, "Passphrase: ");
@@ -942,9 +942,6 @@ read_passphrase (void)
   ret = g_string_free (str, FALSE);
   str = NULL;
 
- out:
-  if (str != NULL)
-    g_string_free (str, TRUE);
   return ret;
 }
 
