@@ -235,12 +235,12 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                      N_("Authentication is required to create a volume group"),
                                      invocation);
 
-  if (arg_blocks == NULL)
+  if (arg_blocks == NULL || *arg_blocks == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "List of block devices is NULL!");
+                                             "List of block devices is empty.");
       goto out;
     }
 
