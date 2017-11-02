@@ -1663,7 +1663,7 @@ apply_configuration_thread_func (gpointer user_data)
        */
       UDisksAtaCommandInput input = {.command = 0xef, .feature = 0x42, .count = data->ata_aam_level};
       UDisksAtaCommandOutput output = {0};
-      if (data->ata_apm_level == 0xff)
+      if (data->ata_aam_level == 0xff)
         {
           input.feature = 0xc2;
           input.count = 0x00;
