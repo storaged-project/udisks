@@ -3134,6 +3134,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
   g_option_context_set_help_enabled (o, FALSE);
   g_option_context_add_main_entries (o, entries, NULL);
   /* Ignore parsing result */
+  /* coverity[check_return] */
   g_option_context_parse (o, argc, argv, NULL);
   program_name = g_path_get_basename ((*argv)[0]);
   description = g_strdup_printf ("Commands:\n"
