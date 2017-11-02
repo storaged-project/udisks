@@ -699,7 +699,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   const gchar *action_id;
   GError *error = NULL;
   gchar *device = NULL;
-  LuksJobData data;
+  LuksJobData data = { NULL, NULL, NULL, NULL, FALSE };
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
