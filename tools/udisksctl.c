@@ -885,13 +885,10 @@ static gchar *
 read_passphrase (void)
 {
   struct termios ts, ots;
-  GString *str;
-  const gchar *tty_name;
-  FILE *tty;
-  gchar *ret;
-
-  ret = NULL;
-  str = NULL;
+  GString *str = NULL;
+  const gchar *tty_name = NULL;
+  FILE *tty = NULL;
+  gchar *ret = NULL;
 
   tty_name = ctermid (NULL);
   if (tty_name == NULL)
