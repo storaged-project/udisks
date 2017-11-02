@@ -62,6 +62,7 @@ main (int argc, char *argv[])
       g_print ("OK, deliberately causing a segfault\n");
       {
         const gchar **p = NULL;
+        /* coverity[var_deref_op] */
         *p = "fail";
       }
       g_assert_not_reached ();
