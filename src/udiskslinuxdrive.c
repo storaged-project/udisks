@@ -292,7 +292,7 @@ update_configuration (UDisksLinuxDrive       *drive,
       if (!g_key_file_has_key (key_file, mapping->group, mapping->key, NULL))
         continue;
 
-      if (mapping->type == G_VARIANT_TYPE_INT32)
+      if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_INT32))
         {
           gint32 int_value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
@@ -307,7 +307,7 @@ update_configuration (UDisksLinuxDrive       *drive,
               g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (int_value));
             }
         }
-      else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+      else if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_BOOLEAN))
         {
           gboolean bool_value = g_key_file_get_boolean (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
@@ -1153,11 +1153,11 @@ handle_set_configuration (UDisksDrive           *_drive,
         }
       else
         {
-          if (mapping->type == G_VARIANT_TYPE_INT32)
+          if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_INT32))
             {
               g_key_file_set_integer (key_file, mapping->group, mapping->key, g_variant_get_int32 (value));
             }
-          else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+          else if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_BOOLEAN))
             {
               g_key_file_set_boolean (key_file, mapping->group, mapping->key, g_variant_get_boolean (value));
             }
