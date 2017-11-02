@@ -1462,6 +1462,7 @@ handle_power_off (UDisksDrive           *_drive,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error syncing  %s: %m",
                                                  device_file);
+          close (device_fd);
           goto out;
         }
       if (close (device_fd) != 0)
