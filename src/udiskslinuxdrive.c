@@ -701,7 +701,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 {
   gboolean ret = FALSE;
   UDisksDrive *iface = UDISKS_DRIVE (drive);
-  UDisksLinuxDevice *device;
+  UDisksLinuxDevice *device = NULL;
   const gchar *serial = NULL;
   guint64 size;
   gboolean media_available;
@@ -713,16 +713,16 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   gboolean coldplug = FALSE;
   const gchar *seat;
 
+  if (object == NULL)
+      goto out;
+
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
 
-  if (object != NULL)
-    {
-      daemon = udisks_linux_drive_object_get_daemon (object);
-      provider = udisks_daemon_get_linux_provider (daemon);
-      coldplug = udisks_linux_provider_get_coldplug (provider);
-    }
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  provider = udisks_daemon_get_linux_provider (daemon);
+  coldplug = udisks_linux_provider_get_coldplug (provider);
 
   if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_DRIVE_FLOPPY") ||
       g_str_has_prefix (g_udev_device_get_name (device->udev_device), "fd"))
@@ -941,7 +941,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   ret = update_configuration (drive, object);
 
  out:
-  g_clear_object (&device);
+  if (device != NULL)
+    g_clear_object (&device);
 
   return ret;
 }
