@@ -30,6 +30,9 @@
 #include <sys/ioctl.h>
 #include <linux/loop.h>
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksmount.h"
@@ -528,7 +531,8 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
                                      GVariant     *value,
                                      GArray       *devs_to_clean)
 {
-  const gchar *mount_point;
+  const gchar *mount_point_str;
+  gchar mount_point[PATH_MAX] = { '\0', };
   GVariant *details;
   GVariant *block_device_value;
   dev_t block_device = 0;
@@ -563,8 +567,13 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
 
   g_variant_get (value,
                  "{&s@a{sv}}",
-                 &mount_point,
+                 &mount_point_str,
                  &details);
+
+  if (realpath (mount_point_str, mount_point) == NULL)
+    {
+      udisks_critical ("mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
+    }
 
   block_device_value = lookup_asv (details, "block-device");
   if (block_device_value == NULL)
