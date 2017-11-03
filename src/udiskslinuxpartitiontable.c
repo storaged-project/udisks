@@ -337,7 +337,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 
   device_name = g_strdup (udisks_block_get_device (block));
 
-  table_type = udisks_partition_table_get_type_ (table);
+  table_type = udisks_partition_table_dup_type_ (table);
   wait_data = g_new0 (WaitForPartitionData, 1);
   if (g_strcmp0 (table_type, "dos") == 0)
     {
@@ -552,6 +552,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
+  g_free (table_type);
   g_free (wait_data);
   g_free (overlapping_part);
   g_clear_error (&error);
