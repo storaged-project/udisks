@@ -1,4 +1,7 @@
-[![build status](https://phatina.fedorapeople.org/jenkins/storaged/build.svg)](https://phatina.fedorapeople.org/jenkins/storaged/build.log)
+CI status
+=========
+
+<img alt="CI status" src="https://fedorapeople.org/groups/storage_apis/statuses/udisks-master.svg" width="100%" height="300ex" />
 
 
 OVERVIEW
