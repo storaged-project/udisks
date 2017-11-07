@@ -62,10 +62,10 @@ libudisks2_zraminclude_HEADERS =                                               \
 
 libudisks2_zram_la_SOURCES =                                                   \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	../udisksmoduleiface.h                                                 \
+	../udisksmoduleifacetypes.h                                            \
+	../udisksmoduleobject.h                                                \
+	../udisksmoduleobject.c                                                \
 	udiskslinuxblockzram.c                                                 \
 	udiskslinuxblockzram.h                                                 \
 	udiskslinuxmanagerzram.h                                               \

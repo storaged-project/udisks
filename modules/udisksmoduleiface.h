@@ -40,15 +40,15 @@ G_MODULE_EXPORT gpointer udisks_module_init (UDisksDaemon *daemon);
 /* Corresponds with the UDisksModuleTeardownFunc type */
 G_MODULE_EXPORT void udisks_module_teardown (UDisksDaemon *daemon);
 
-/**
- * UDisks module setup entry functions:
- *   Functions below are module entry functions that return an array of setup
- *   functions (or structures containing group of setup functions). See
- *   udisksmoduleifacetypes.h for detailed description.
- *
- *   Setup functions are queried by UDisksModuleManager only once (typically on
- *   startup or on demand). Modules are never unloaded for safety reasons.
- */
+/*
+ UDisks2 module setup entry functions
+ Functions below are module entry functions that return an array of setup
+ functions (or structures containing group of setup functions). See
+ udisksmoduleifacetypes.h for detailed description.
+
+ Setup functions are queried by UDisksModuleManager only once (typically on
+ startup or on demand). Modules are never unloaded for safety reasons.
+*/
 
 /* Corresponds with the UDisksModuleIfaceSetupFunc type */
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_block_object_iface_setup_entries (void);

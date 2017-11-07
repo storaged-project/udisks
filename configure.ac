@@ -21,7 +21,7 @@ AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([1.11 foreign silent-rules dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([1.11 foreign silent-rules dist-bzip2 no-dist-gzip subdir-objects])
 AM_MAINTAINER_MODE
 AM_SILENT_RULES([yes])
 
@@ -646,6 +646,8 @@ fi
 AC_OUTPUT([
 Makefile
 data/Makefile
+gi/Makefile
+generated/Makefile
 udisks/Makefile
 udisks/udisks2.conf
 udisks/udisks2.pc

@@ -151,9 +151,20 @@ UDisksLogicalVolume *
 udisks_object_get_logical_volume (UDisksObject *object)
 {
   GDBusInterface *ret;
+  g_warning ("MYDEBUG: Get logical volume called");
   ret = g_dbus_object_get_interface (G_DBUS_OBJECT (object), "org.freedesktop.UDisks2.LogicalVolume");
   if (ret == NULL)
     return NULL;
+
+  if (UDISKS_IS_LOGICAL_VOLUME(ret))
+  {
+    g_warning ("MYDEBUG: checked");
+  } 
+  else 
+  {
+    g_warning ("MYDEBUG: check failed");
+  }
+
   return UDISKS_LOGICAL_VOLUME (ret);
 }
 

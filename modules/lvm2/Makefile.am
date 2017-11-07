@@ -8,7 +8,7 @@ MODULE_SO = libudisks2_lvm2.so
 
 NULL =
 
-CPPFLAGS =                                                                     \
+CPPFLAGS =                                                                 \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\"                              \
@@ -28,19 +28,11 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.freedesktop.UDisks2.lvm2.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.freedesktop.UDisks2.                    \
-	        --c-namespace UDisks                                           \
-	        --generate-c-code udisks-lvm2-generated                        \
-	        --generate-docbook udisks-generated-doc                        \
-	        $<
-
-dbus_built_sources =                                                           \
+dbus_built_sources =                                                       \
 	udisks-lvm2-generated.h    udisks-lvm2-generated.c                     \
 	$(NULL)
 
-BUILT_SOURCES =                                                                \
+BUILT_SOURCES =                                                            \
 	$(dbus_built_sources)                                                  \
 	$(NULL)
 
@@ -49,18 +41,17 @@ libudisks2_lvm2_LTLIBRARIES=libudisks2_lvm2.la
 
 libudisks2_lvm2includedir=$(includedir)/udisks2/udisks
 
-libudisks2_lvm2include_HEADERS =                                               \
+libudisks2_lvm2include_HEADERS =                                           \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
 	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
-libudisks2_lvm2_la_SOURCES =                                                   \
+libudisks2_lvm2_la_SOURCES =                                               \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	../udisksmoduleiface.h                                                 \
+	../udisksmoduleifacetypes.h                                            \
+	../udisksmoduleobject.h                                                \
 	udiskslvm2types.h                                                      \
 	udiskslvm2moduleiface.c                                                \
 	udiskslinuxlogicalvolume.h          udiskslinuxlogicalvolume.c         \
@@ -78,19 +69,19 @@ libudisks2_lvm2_la_SOURCES =                                                   \
 	jobhelpers.h                        jobhelpers.c                       \
 	$(NULL)
 
-libudisks2_lvm2_la_CPPFLAGS =                                                  \
+libudisks2_lvm2_la_CPPFLAGS =                                              \
 	$(CPPFLAGS)                                                            \
 	-DG_LOG_DOMAIN=\"libudisks2-lvm2\"                                     \
 	$(NULL)
 
-libudisks2_lvm2_la_CFLAGS =                                                    \
+libudisks2_lvm2_la_CFLAGS =                                                \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(NULL)
 
-libudisks2_lvm2_la_LDFLAGS =                                                   \
+libudisks2_lvm2_la_LDFLAGS =                                               \
 	-export_dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
@@ -99,18 +90,19 @@ libudisks2_lvm2_la_LDFLAGS =                                                   \
 	 '^udisks_.*|g_io_module_load|g_io_module_unload|g_io_module_query'    \
 	$(NULL)
 
-libudisks2_lvm2_la_LIBADD =                                                    \
+libudisks2_lvm2_la_LIBADD =                                                \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
+	../../src/libudisks-daemon.la                 \
 	$(NULL)
 
 # ------------------------------------------------------------------------------
 
 CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
 
-EXTRA_DIST =                                                                   \
+EXTRA_DIST =                                                               \
 	$(NULL)
 
 include ../Makefile.uninstalled
