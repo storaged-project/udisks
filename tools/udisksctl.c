@@ -885,26 +885,23 @@ static gchar *
 read_passphrase (void)
 {
   struct termios ts, ots;
-  GString *str;
-  const gchar *tty_name;
-  FILE *tty;
-  gchar *ret;
-
-  ret = NULL;
-  str = NULL;
+  GString *str = NULL;
+  const gchar *tty_name = NULL;
+  FILE *tty = NULL;
+  gchar *ret = NULL;
 
   tty_name = ctermid (NULL);
   if (tty_name == NULL)
     {
       g_warning ("Cannot determine pathname for current controlling terminal for the process: %m");
-      goto out;
+      return NULL;
     }
 
   tty = fopen (tty_name, "r+");
   if (tty == NULL)
     {
       g_warning ("Error opening current controlling terminal %s: %m", tty_name);
-      goto out;
+      return NULL;
     }
 
   fprintf (tty, "Passphrase: ");
@@ -945,9 +942,6 @@ read_passphrase (void)
   ret = g_string_free (str, FALSE);
   str = NULL;
 
- out:
-  if (str != NULL)
-    g_string_free (str, TRUE);
   return ret;
 }
 
@@ -3140,6 +3134,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
   g_option_context_set_help_enabled (o, FALSE);
   g_option_context_add_main_entries (o, entries, NULL);
   /* Ignore parsing result */
+  /* coverity[check_return] */
   g_option_context_parse (o, argc, argv, NULL);
   program_name = g_path_get_basename ((*argv)[0]);
   description = g_strdup_printf ("Commands:\n"

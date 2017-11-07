@@ -614,9 +614,13 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
   if (is_member)
     {
       GList *link = NULL;
+      const gchar *device_sysfs_path = NULL;
       link = NULL;
       if (device != NULL)
-        link = find_link_for_sysfs_path_for_member (object, g_udev_device_get_sysfs_path (device->udev_device));
+        {
+          link = find_link_for_sysfs_path_for_member (object, g_udev_device_get_sysfs_path (device->udev_device));
+          device_sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+        }
 
       if (g_strcmp0 (action, "remove") == 0)
         {
@@ -629,7 +633,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
             {
               udisks_warning ("MDRaid with UUID %s doesn't have member device with sysfs path %s on remove event",
                               object->uuid,
-                              g_udev_device_get_sysfs_path (device->udev_device));
+                              device_sysfs_path ? device_sysfs_path : "'unknown'");
             }
         }
       else

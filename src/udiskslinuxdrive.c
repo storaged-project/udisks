@@ -292,7 +292,7 @@ update_configuration (UDisksLinuxDrive       *drive,
       if (!g_key_file_has_key (key_file, mapping->group, mapping->key, NULL))
         continue;
 
-      if (mapping->type == G_VARIANT_TYPE_INT32)
+      if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_INT32))
         {
           gint32 int_value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
@@ -307,7 +307,7 @@ update_configuration (UDisksLinuxDrive       *drive,
               g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (int_value));
             }
         }
-      else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+      else if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_BOOLEAN))
         {
           gboolean bool_value = g_key_file_get_boolean (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
@@ -701,7 +701,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 {
   gboolean ret = FALSE;
   UDisksDrive *iface = UDISKS_DRIVE (drive);
-  UDisksLinuxDevice *device;
+  UDisksLinuxDevice *device = NULL;
   const gchar *serial = NULL;
   guint64 size;
   gboolean media_available;
@@ -713,16 +713,16 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   gboolean coldplug = FALSE;
   const gchar *seat;
 
+  if (object == NULL)
+      goto out;
+
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
 
-  if (object != NULL)
-    {
-      daemon = udisks_linux_drive_object_get_daemon (object);
-      provider = udisks_daemon_get_linux_provider (daemon);
-      coldplug = udisks_linux_provider_get_coldplug (provider);
-    }
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  provider = udisks_daemon_get_linux_provider (daemon);
+  coldplug = udisks_linux_provider_get_coldplug (provider);
 
   if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_DRIVE_FLOPPY") ||
       g_str_has_prefix (g_udev_device_get_name (device->udev_device), "fd"))
@@ -941,7 +941,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   ret = update_configuration (drive, object);
 
  out:
-  g_clear_object (&device);
+  if (device != NULL)
+    g_clear_object (&device);
 
   return ret;
 }
@@ -1153,11 +1154,11 @@ handle_set_configuration (UDisksDrive           *_drive,
         }
       else
         {
-          if (mapping->type == G_VARIANT_TYPE_INT32)
+          if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_INT32))
             {
               g_key_file_set_integer (key_file, mapping->group, mapping->key, g_variant_get_int32 (value));
             }
-          else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+          else if (g_variant_type_equal (mapping->type, G_VARIANT_TYPE_BOOLEAN))
             {
               g_key_file_set_boolean (key_file, mapping->group, mapping->key, g_variant_get_boolean (value));
             }
@@ -1461,6 +1462,7 @@ handle_power_off (UDisksDrive           *_drive,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error syncing  %s: %m",
                                                  device_file);
+          close (device_fd);
           goto out;
         }
       if (close (device_fd) != 0)
