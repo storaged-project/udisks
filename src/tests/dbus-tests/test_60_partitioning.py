@@ -24,7 +24,8 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         try:
             part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
         except dbus.exceptions.DBusException:
-            time.sleep(1)
+            self.udev_settle()
+            time.sleep(5)
             part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
     def test_create_mbr_partition(self):
