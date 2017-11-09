@@ -403,8 +403,13 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
     def _create_format(self, device, ftype):
         device.Format(ftype, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
-    def _remove_partition(self, device):
-        device.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+    def _remove_partition(self, part):
+        try:
+            part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+        except dbus.exceptions.DBusException:
+            self.udev_settle()
+            time.sleep(5)
+            part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
     def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='xfs'):
         if fmt:
