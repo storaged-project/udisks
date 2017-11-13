@@ -7,6 +7,7 @@ NULL =
 EXTRA_DIST =                                                                   \
 	test_polkitd.py                                                        \
 	integration-test                                                       \
+	dbus-tests                                                             \
 	$(NULL)
 
 AM_CPPFLAGS = \
