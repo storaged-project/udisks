@@ -209,6 +209,12 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
             self.assertIsNotNone(part)
             self.addCleanup(self._remove_partition, part)
 
+            dbus_cont = self.get_property(part, '.Partition', 'IsContainer')
+            dbus_cont.assertFalse()
+
+            dbus_cont = self.get_property(part, '.Partition', 'IsContained')
+            dbus_cont.assertFalse()
+
     def test_create_gpt_partition(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
