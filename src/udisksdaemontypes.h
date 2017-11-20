@@ -20,6 +20,8 @@
 #ifndef __UDISKS_DAEMON_TYPES_H__
 #define __UDISKS_DAEMON_TYPES_H__
 
+#include "config.h"
+
 #include <gio/gio.h>
 #include <polkit/polkit.h>
 #include <udisks/udisks.h>
@@ -101,6 +103,14 @@ typedef struct _UDisksCrypttabMonitor UDisksCrypttabMonitor;
 
 struct _UDisksCrypttabEntry;
 typedef struct _UDisksCrypttabEntry UDisksCrypttabEntry;
+
+#ifdef HAVE_LIBMOUNT
+struct _UDisksUtabMonitor;
+typedef struct _UDisksUtabMonitor UDisksUtabMonitor;
+
+struct _UDisksUtabEntry;
+typedef struct _UDisksUtabEntry UDisksUtabEntry;
+#endif
 
 struct _UDisksLinuxPartition;
 typedef struct _UDisksLinuxPartition UDisksLinuxPartition;

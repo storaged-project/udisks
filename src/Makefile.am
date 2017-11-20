@@ -93,6 +93,12 @@ libudisks_daemon_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
 	$(NULL)
 
+if HAVE_LIBMOUNT
+libudisks_daemon_la_SOURCES +=                                           \
+	udisksutabentry.h              udisksutabentry.c                       \
+	udisksutabmonitor.h            udisksutabmonitor.c
+endif # HAVE_LIBMOUNT
+
 libudisks_daemon_la_CFLAGS =                                                   \
 	-I$(top_srcdir)                                                        \
 	-DG_LOG_DOMAIN=\"udisks\"                                              \
