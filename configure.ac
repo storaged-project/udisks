@@ -170,6 +170,17 @@ PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
+PKG_CHECK_MODULES(LIBMOUNT, [mount >= 2.30],
+                  [have_libmount=yes],
+                  [have_libmount=no])
+AM_CONDITIONAL(HAVE_LIBMOUNT, test x$have_libmount = xyes)
+if test "x$have_libmount" = "xyes"; then
+  AC_DEFINE([HAVE_LIBMOUNT], 1, [Define to 1 if libmount >= 2.30 is available])
+fi
+AC_SUBST(HAVE_LIBMOUNT)
+AC_SUBST(LIBMOUNT_CFLAGS)
+AC_SUBST(LIBMOUNT_LIBS)
+
 PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd >= 209], [have_libsystemd_login=yes],
                   [PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd-login >= 44 libsystemd-daemon],
                   [have_libsystemd_login=yes],
@@ -731,6 +742,7 @@ echo "
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
         libblockdev_part support:   ${have_libblockdev_part}
+        using libmount:             ${have_libmount}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

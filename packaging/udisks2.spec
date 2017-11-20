@@ -44,6 +44,7 @@ BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
+BuildRequires: libmount-devel
 
 Requires: libblockdev        >= %{libblockdev_version}
 Requires: libblockdev-part   >= %{libblockdev_version}
@@ -74,6 +75,8 @@ Requires: dosfstools
 Requires: gdisk
 # For ejecting removable disks
 Requires: eject
+# For utab monitor
+Requires: libmount
 
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 

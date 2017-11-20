@@ -101,6 +101,7 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(GMODULE_CFLAGS)                                                      \
 	$(GUDEV_CFLAGS)                                                        \
 	$(LIBATASMART_CFLAGS)                                                  \
+	$(LIBMOUNT_CFLAGS)                                                     \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(ACL_CFLAGS)                                                          \
 	$(LIBSYSTEMD_LOGIN_CFLAGS)                                             \
@@ -117,6 +118,7 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(BLOCKDEV_LIBS)                                                       \
 	-lbd_utils                                                             \
 	$(LIBATASMART_LIBS)                                                    \
+	$(LIBMOUNT_LIBS)                                                       \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(ACL_LIBS)                                                            \
 	$(LIBSYSTEMD_LOGIN_LIBS)                                               \
