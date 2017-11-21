@@ -2311,7 +2311,7 @@ static const struct
   {"dos", "microsoft", "0x01",  NC_("part-type", "FAT12"), 0},
   {"dos", "microsoft", "0x04",  NC_("part-type", "FAT16 <32M"), 0},
   {"dos", "microsoft", "0x06",  NC_("part-type", "FAT16"), 0},
-  {"dos", "microsoft", "0x07",  NC_("part-type", "HPFS/NTFS"), 0},
+  {"dos", "microsoft", "0x07",  NC_("part-type", "NTFS/exFAT/HPFS"), 0},
   {"dos", "microsoft", "0x0b",  NC_("part-type", "W95 FAT32"), 0},
   {"dos", "microsoft", "0x0c",  NC_("part-type", "W95 FAT32 (LBA)"), 0},
   {"dos", "microsoft", "0x0e",  NC_("part-type", "W95 FAT16 (LBA)"), 0},
