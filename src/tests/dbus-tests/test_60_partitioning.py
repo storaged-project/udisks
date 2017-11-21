@@ -15,7 +15,12 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
     def _remove_format(self, device):
         d = dbus.Dictionary(signature='sv')
         d['erase'] = True
-        device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+        try:
+            device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+        except dbus.exceptions.DBusException:
+            self.udev_settle()
+            time.sleep(5)
+            device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
 
     def _create_format(self, device, ftype):
         device.Format(ftype, self.no_options, dbus_interface=self.iface_prefix + '.Block')
@@ -404,7 +409,12 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
     def _remove_format(self, device):
         d = dbus.Dictionary(signature='sv')
         d['erase'] = True
-        device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+        try:
+            device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+        except dbus.exceptions.DBusException:
+            self.udev_settle()
+            time.sleep(5)
+            device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
 
     def _create_format(self, device, ftype):
         device.Format(ftype, self.no_options, dbus_interface=self.iface_prefix + '.Block')
