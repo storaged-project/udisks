@@ -1965,9 +1965,13 @@ udisks_client_get_id_for_display (UDisksClient *client,
                                   gboolean      long_string)
 {
   guint n;
-  gchar *ret;
+  gchar *ret = NULL;
 
-  ret = NULL;
+  if (usage == NULL || type == NULL || version == NULL)
+    {
+      g_critical ("Invalid device ID specification. Usage, type and version must not be NULL");
+      goto out;
+    }
 
   for (n = 0; id_type[n].usage != NULL; n++)
     {
