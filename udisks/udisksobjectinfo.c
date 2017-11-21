@@ -279,6 +279,8 @@ udisks_client_get_object_info_for_block (UDisksClient     *client,
   info->sort_key = g_strdup_printf ("02_block_%s_%u",
                                     last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
                                     partition != NULL ? udisks_partition_get_number (partition) : 0);
+
+  g_free (size_str);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -335,6 +337,8 @@ udisks_client_get_object_info_for_loop (UDisksClient     *client,
   info->sort_key = g_strdup_printf ("03_loop_%s_%u",
                                     last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
                                     partition != NULL ? udisks_partition_get_number (partition) : 0);
+
+  g_free (size_str);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -471,6 +475,8 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
 
   info->sort_key = g_strdup_printf ("01_mdraid_%s_%u", udisks_mdraid_get_uuid (mdraid),
                                     partition != NULL ? udisks_partition_get_number (partition) : 0);
+
+  g_free (size_str);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
