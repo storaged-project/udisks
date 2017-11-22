@@ -35,6 +35,7 @@ from __future__ import print_function
 import sys
 import os
 import contextlib
+import signal
 from os.path import dirname
 
 srcdir = dirname(dirname(dirname(os.path.realpath(__file__))))
@@ -1587,6 +1588,17 @@ class Luks(UDisksTestCase):
 
 # ----------------------------------------------------------------------------
 
+class TimeoutException(Exception):
+    pass
+
+
+def handler(signum, frame):
+    raise TimeoutException
+
+
+signal.signal(signal.SIGALRM, handler)
+
+
 class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
     """Check operation with polkit."""
 
@@ -1606,12 +1618,22 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
 
     def test_internal_fs_allowed(self):
         """Create FS on internal drive (allowed)"""
-
         self.start_polkitd(['org.freedesktop.udisks2.modify-device-system',
                             'org.freedesktop.udisks2.modify-device'])
 
         options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkityes')})
-        self.fs_create(None, 'ext4', options)
+
+        # it definitely shouldn't take more than 5 minutes to make an ext4
+        # filesystem -- if this happens than something is really wrong -- polkit
+        # is probably waiting for password (and no one will ever type it)
+        signal.alarm(300)
+        try:
+            self.fs_create(None, 'ext4', options)
+        except TimeoutException:
+            self.fail('Timeout while trying to create filesystem with Polkit.')
+        else:
+            signal.alarm(0)
+
         block = self.udisks_block()
         self.assertProperty(block, 'id-usage', 'filesystem')
         self.assertEqual(block.get_property('id-type'), 'ext4')
@@ -1631,12 +1653,19 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         self.sync()
         self.sync()
 
-        fs = self.udisks_filesystem(cd=True)
-        self.assertNotEqual(fs, None)
-        mount_path = fs.call_mount_sync(no_options, None)
-        self.assertIn('/media/', mount_path)
+        signal.alarm(300)
+        try:
+            fs = self.udisks_filesystem(cd=True)
+            self.assertNotEqual(fs, None)
+            mount_path = fs.call_mount_sync(no_options, None)
+            self.assertIn('/media/', mount_path)
 
-        self.retry_busy(fs.call_unmount_sync, no_options, None)
+            self.retry_busy(fs.call_unmount_sync, no_options, None)
+        except TimeoutException:
+            self.fail('Timeout while trying to mount and unmount filesystem with Polkit.')
+        else:
+            signal.alarm(0)
+
         self.client.settle()
 
 # ----------------------------------------------------------------------------
