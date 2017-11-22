@@ -65,6 +65,11 @@
 #include "udiskslinuxpartitiontable.h"
 #include "udiskslinuxfilesystemhelpers.h"
 
+#ifdef HAVE_LIBMOUNT
+#include "udisksutabmonitor.h"
+#include "udisksutabentry.h"
+#endif
+
 /**
  * SECTION:udiskslinuxblock
  * @title: UDisksLinuxBlock
@@ -606,6 +611,34 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
   return ret;
 }
 
+#ifdef HAVE_LIBMOUNT
+static GList *
+find_utab_entries_for_device (UDisksLinuxBlock *block,
+                              UDisksDaemon     *daemon)
+{
+  GSList *entries, *l;
+  GList *ret;
+
+  ret = NULL;
+
+  /* if this is too slow, we could add lookup methods to UDisksUtabMonitor... */
+  entries = udisks_utab_monitor_get_entries (udisks_daemon_get_utab_monitor (daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksUtabEntry *entry = UDISKS_UTAB_ENTRY (l->data);
+      const gchar *source = udisks_utab_entry_get_source (entry);
+
+      if (!g_str_has_prefix (source, "/dev"))
+        continue;
+
+      process_device_symlinks (source, block, entry, &ret);
+    }
+
+  g_slist_free_full (entries, g_object_unref);
+  return ret;
+}
+#endif
+
 static void
 add_fstab_entry (GVariantBuilder  *builder,
                  UDisksFstabEntry *entry)
@@ -737,6 +770,31 @@ calculate_configuration (UDisksLinuxBlock  *block,
   return ret;
 }
 
+#ifdef HAVE_LIBMOUNT
+static gchar **
+calculate_userspace_mount_options (UDisksLinuxBlock *block,
+                                   UDisksDaemon     *daemon)
+{
+  GList *entries, *l;
+  GPtrArray *ret;
+
+  ret = g_ptr_array_new ();
+
+  /* Get the /run/mounts/utab entries */
+  entries = find_utab_entries_for_device (block, daemon);
+  for (l = entries; l != NULL; l = l->next) {
+    UDisksUtabEntry *entry = UDISKS_UTAB_ENTRY (l->data);
+    const gchar * const *opts = udisks_utab_entry_get_opts (entry);
+    for (gint i = 0; opts[i] != NULL; ++i)
+      g_ptr_array_add (ret, g_strdup (opts[i]));
+  }
+  g_ptr_array_add (ret, NULL);
+  g_list_free_full (entries, g_object_unref);
+
+  return (gchar **) g_ptr_array_free (ret, FALSE);
+}
+#endif
+
 static void
 update_configuration (UDisksLinuxBlock  *block,
                       UDisksDaemon      *daemon)
@@ -755,6 +813,20 @@ update_configuration (UDisksLinuxBlock  *block,
     }
   udisks_block_set_configuration (UDISKS_BLOCK (block), configuration);
 }
+
+#ifdef HAVE_LIBMOUNT
+static void
+update_userspace_mount_options (UDisksLinuxBlock *block,
+                                UDisksDaemon     *daemon)
+{
+  gchar **opts;
+
+  opts = calculate_userspace_mount_options (block, daemon);
+  udisks_block_set_userspace_mount_options (UDISKS_BLOCK (block), (const gchar * const*) opts);
+
+  g_strfreev (opts);
+}
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -1117,6 +1189,9 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
 
   update_hints (block, device, drive);
   update_configuration (block, daemon);
+#ifdef HAVE_LIBMOUNT
+  update_userspace_mount_options (block, daemon);
+#endif
   update_mdraid (block, device, drive, object_manager);
 
  out:

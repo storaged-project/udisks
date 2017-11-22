@@ -29,9 +29,9 @@ G_BEGIN_DECLS
 #define UDISKS_UTAB_ENTRY(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_UTAB_ENTRY, UDisksUtabEntry))
 #define UDISKS_IS_UTAB_ENTRY(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_UTAB_ENTRY))
 
-GType        udisks_utab_entry_get_type   (void) G_GNUC_CONST;
-const gchar *udisks_utab_entry_get_source (UDisksUtabEntry *entry);
-const gchar *udisks_utab_entry_get_opts   (UDisksUtabEntry *entry);
+GType                udisks_utab_entry_get_type   (void) G_GNUC_CONST;
+const gchar         *udisks_utab_entry_get_source (UDisksUtabEntry *entry);
+const gchar * const *udisks_utab_entry_get_opts   (UDisksUtabEntry *entry);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(UDisksUtabEntry, g_object_unref)
 

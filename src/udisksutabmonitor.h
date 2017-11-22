@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 GType              udisks_utab_monitor_get_type    (void) G_GNUC_CONST;
 UDisksUtabMonitor *udisks_utab_monitor_new         (void);
-GList             *udisks_utab_monitor_get_entries (UDisksUtabMonitor *monitor);
+GSList            *udisks_utab_monitor_get_entries (UDisksUtabMonitor *monitor);
 
 G_END_DECLS
 

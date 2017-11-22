@@ -584,6 +584,23 @@ udisks_daemon_get_crypttab_monitor (UDisksDaemon *daemon)
   return daemon->crypttab_monitor;
 }
 
+#ifdef HAVE_LIBMOUNT
+/**
+ * udisks_daemon_get_utab_monitor:
+ * @daemon: A #UDisksDaemon
+ *
+ * Gets the utab monitor used by @daemon.
+ *
+ * Returns: A #UDisksUtabMonitor. Do not free, the object is owned by @daemon.
+ */
+UDisksUtabMonitor *
+udisks_daemon_get_utab_monitor (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->utab_monitor;
+}
+#endif
+
 /**
  * udisks_daemon_get_linux_provider:
  * @daemon: A #UDisksDaemon.

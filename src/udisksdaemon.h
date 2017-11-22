@@ -21,6 +21,7 @@
 #ifndef __UDISKS_DAEMON_H__
 #define __UDISKS_DAEMON_H__
 
+#include "config.h"
 #include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
@@ -39,6 +40,9 @@ GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *
 UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
 UDisksFstabMonitor       *udisks_daemon_get_fstab_monitor     (UDisksDaemon    *daemon);
 UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *daemon);
+#ifdef HAVE_LIBMOUNT
+UDisksUtabMonitor        *udisks_daemon_get_utab_monitor      (UDisksDaemon    *daemon);
+#endif
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
 UDisksState              *udisks_daemon_get_state             (UDisksDaemon    *daemon);

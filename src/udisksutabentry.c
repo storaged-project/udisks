@@ -34,8 +34,8 @@ struct _UDisksUtabEntry
 {
   GObject parent_instance;
 
-  gchar *source;
-  gchar *opts;
+  gchar  *source;
+  gchar **opts;
 };
 
 typedef struct _UDisksUtabEntryClass UDisksUtabEntryClass;
@@ -60,7 +60,7 @@ udisks_utab_entry_finalize (GObject *object)
   UDisksUtabEntry *entry = UDISKS_UTAB_ENTRY (object);
 
   g_free (entry->source);
-  g_free (entry->opts);
+  g_strfreev (entry->opts);
 
   if (G_OBJECT_CLASS (udisks_utab_entry_parent_class)->finalize)
     G_OBJECT_CLASS (udisks_utab_entry_parent_class)->finalize (object);
@@ -84,7 +84,7 @@ _udisks_utab_entry_new (struct libmnt_fs *fs)
   entry = UDISKS_UTAB_ENTRY (g_object_new (UDISKS_TYPE_UTAB_ENTRY, NULL));
 
   entry->source = g_strdup (mnt_fs_get_source (fs));
-  entry->opts = g_strdup (mnt_fs_get_user_options (fs));
+  entry->opts = g_strsplit (mnt_fs_get_user_options (fs), ",", -1);
 
   return entry;
 }
@@ -112,9 +112,9 @@ udisks_utab_entry_get_source (UDisksUtabEntry *entry)
  *
  * Returns: The opts field.
  */
-const gchar *
+const gchar * const *
 udisks_utab_entry_get_opts (UDisksUtabEntry *entry)
 {
   g_return_val_if_fail (UDISKS_IS_UTAB_ENTRY (entry), NULL);
-  return entry->opts;
+  return (const gchar * const *) entry->opts;
 }
