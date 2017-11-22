@@ -1,6 +1,8 @@
 import dbus
 import os
 import six
+import time
+import unittest
 
 import udiskstestcase
 
@@ -124,6 +126,52 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
                            dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks)
         self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_open_crypttab(self):
+        # this test will change /etc/crypttab, we might want to revert the changes when it finishes
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+
+        passwd = 'test'
+        luks_name = 'myshinylittleluks'
+
+        disk_name = os.path.basename(self.vdevs[0])
+        disk = self.get_object('/block_devices/' + disk_name)
+
+        self._create_luks(disk, passwd)
+        self.addCleanup(self._remove_luks, disk)
+        self.udev_settle()
+
+        _ret, disk_uuid = self.run_command('lsblk -d -no UUID %s' % self.vdevs[0])
+
+        # lock the device
+        disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # add new entry to the crypttab
+        new_crypttab = crypttab + '%s UUID=%s none\n' % (luks_name, disk_uuid)
+        self.write_file('/etc/crypttab', new_crypttab)
+
+        # give udisks time to react to change of the file
+        time.sleep(5)
+        dbus_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.assertIsNotNone(dbus_conf)
+        self.assertEqual(self.ay_to_str(dbus_conf[0][1]['name']), luks_name)
+
+        # unlock the device
+        luks = disk.Unlock(passwd, self.no_options,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks)
+
+        # unlock should use name from crypttab for the /dev/mapper device
+        dm_path = '/dev/mapper/%s' % luks_name
+        self.assertTrue(os.path.exists(dm_path))
+
+        # preferred 'device' should be /dev/mapper/name too
+        luks_obj = self.get_object(luks)
+        self.assertIsNotNone(luks_obj)
+        luks_path = self.get_property(luks_obj, '.Block', 'PreferredDevice')
+        luks_path.assertEqual(self.str_to_ay(dm_path))
 
     def test_mount(self):
         disk_name = os.path.basename(self.vdevs[0])
