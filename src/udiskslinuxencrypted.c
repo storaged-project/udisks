@@ -333,6 +333,20 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
+  /* check if in crypttab file */
+  error = NULL;
+  if (!check_crypttab (block,
+                       TRUE,
+                       &is_in_crypttab,
+                       &crypttab_name,
+                       &crypttab_passphrase,
+                       &crypttab_options,
+                       &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* fallback mechanism: keyfile_contents -> passphrase -> crypttab_passphrase -> error (no key) */
   if (!udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase)) {
     if (passphrase && (strlen (passphrase) > 0))
@@ -341,19 +355,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
       }
     else
       {
-        /* check if in crypttab file */
-        error = NULL;
-        if (!check_crypttab (block,
-                             TRUE,
-                             &is_in_crypttab,
-                             &crypttab_name,
-                             &crypttab_passphrase,
-                             &crypttab_options,
-                             &error))
-          {
-            g_dbus_method_invocation_take_error (invocation, error);
-            goto out;
-          }
         if (is_in_crypttab && crypttab_passphrase != NULL && strlen (crypttab_passphrase) > 0)
           {
             effective_passphrase = g_string_new (crypttab_passphrase);
