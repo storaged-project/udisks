@@ -2656,6 +2656,27 @@ add_blocksize (gchar        **command,
   return TRUE;
 }
 
+static gchar *
+build_command (const gchar *template,
+               const gchar *device,
+               const gchar *label,
+               const gchar *options,
+               GError     **error)
+{
+  gchar *tmp, *tmp2, *command;
+  tmp = udisks_daemon_util_subst_str_and_escape (template, "$DEVICE", device);
+  tmp2 = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
+  command = udisks_daemon_util_subst_str (tmp2, "$OPTIONS", options != NULL ? options : "");
+  g_free (tmp);
+  g_free (tmp2);
+  if (strstr (command, "$BLOCKSIZE") && ! add_blocksize (&command, device, error))
+    {
+      g_free (command);
+      return NULL;
+    }
+
+  return command;
+}
 
 void
 udisks_linux_block_handle_format (UDisksBlock             *block,
@@ -2679,8 +2700,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *action_id;
   const gchar *message;
   const FSInfo *fs_info;
+  const gchar *command_options = NULL;
   gchar *command = NULL;
-  gchar *tmp;
   gchar *error_message;
   GError *error;
   int status;
@@ -2700,6 +2721,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
+  gboolean no_discard_flag = FALSE;
   BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
 
   error = NULL;
@@ -2723,6 +2745,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "dry-run-first", "b", &dry_run_first);
   g_variant_lookup (options, "config-items", "@a(sa{sv})", &config_items);
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
+  g_variant_lookup (options, "no-discard", "b", &no_discard_flag);
   g_variant_lookup (options, "label", "&s", &label);
 
   partition = udisks_object_get_partition (object);
@@ -2887,21 +2910,20 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       goto out;
     }
 
+  if (no_discard_flag && fs_info->option_no_discard)
+    command_options = fs_info->option_no_discard;
+
   /* If requested, check whether the ultimate filesystem creation
      will succeed before actually getting to work.
   */
   if (dry_run_first && fs_info->command_validate_create_fs)
     {
       const gchar *device = udisks_block_get_device (block);
-      tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_validate_create_fs, "$DEVICE",
-                                                     device);
-      command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
-      g_free (tmp);
-      if (strstr (command, "$BLOCKSIZE") && ! add_blocksize (&command, device, &error))
-        {
-          handle_format_failure (invocation, error);
-          goto out;
-        }
+      command = build_command (fs_info->command_validate_create_fs, device, label, command_options, &error);
+      if (command == NULL) {
+            handle_format_failure (invocation, error);
+            goto out;
+      }
 
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                     object,
@@ -3069,10 +3091,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       {
         /* Build and run mkfs shell command */
         const gchar *device = udisks_block_get_device (block_to_mkfs);
-        tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", device);
-        command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
-        g_free (tmp);
-        if (strstr (command, "$BLOCKSIZE") && ! add_blocksize (&command, device, &error))
+        command = build_command (fs_info->command_create_fs, device, label, command_options, &error);
+        if (command == NULL)
           {
             handle_format_failure (invocation, error);
             goto out;

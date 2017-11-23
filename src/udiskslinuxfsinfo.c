@@ -70,8 +70,9 @@ const FSInfo _fs_info[] =
       NULL,
       TRUE,  /* supports_online_label_rename */
       TRUE,  /* supports_owners */
-      "mkfs.ext2 -F -L $LABEL $DEVICE",
-      "mkfs.ext2 -n -F -L $LABEL $DEVICE",
+      "mkfs.ext2 -F -L $LABEL $OPTIONS $DEVICE",
+      "mkfs.ext2 -n -F -L $LABEL $OPTIONS $DEVICE",
+      "-E nodiscard", /* option_no_discard */
     },
     {
       FS_EXT3,
@@ -79,8 +80,9 @@ const FSInfo _fs_info[] =
       NULL,
       TRUE,  /* supports_online_label_rename */
       TRUE,  /* supports_owners */
-      "mkfs.ext3 -F -L $LABEL $DEVICE",
-      "mkfs.ext3 -n -F -L $LABEL $DEVICE",
+      "mkfs.ext3 -F -L $LABEL $OPTIONS $DEVICE",
+      "mkfs.ext3 -n -F -L $LABEL $OPTIONS $DEVICE",
+      "-E nodiscard", /* option_no_discard */
     },
     {
       FS_EXT4,
@@ -88,8 +90,9 @@ const FSInfo _fs_info[] =
       NULL,
       TRUE,  /* supports_online_label_rename */
       TRUE,  /* supports_owners */
-      "mkfs.ext4 -F -L $LABEL $DEVICE",
-      "mkfs.ext4 -n -F -L $LABEL $DEVICE",
+      "mkfs.ext4 -F -L $LABEL $OPTIONS $DEVICE",
+      "mkfs.ext4 -n -F -L $LABEL $OPTIONS $DEVICE",
+      "-E nodiscard", /* option_no_discard */
     },
     {
       FS_VFAT,
@@ -99,6 +102,7 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_owners */
       "mkfs.vfat -I -n $LABEL $DEVICE",
       NULL,
+      NULL, /* option_no_discard */
     },
     {
       FS_NTFS,
@@ -108,6 +112,7 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_owners */
       "mkntfs -f -F -L $LABEL $DEVICE",
       "mkntfs -n -f -F -L $LABEL $DEVICE",
+      NULL, /* option_no_discard */
     },
     {
       FS_EXFAT,
@@ -117,6 +122,7 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_owners */
       "mkexfatfs -n $LABEL $DEVICE",
       NULL,
+      NULL, /* option_no_discard */
     },
     {
       FS_XFS,
@@ -124,8 +130,9 @@ const FSInfo _fs_info[] =
       "xfs_admin -L -- $DEVICE",
       FALSE, /* supports_online_label_rename */
       TRUE,  /* supports_owners */
-      "mkfs.xfs -f -L $LABEL $DEVICE",
-      "mkfs.xfs -N -f -L $LABEL $DEVICE"
+      "mkfs.xfs -f -L $LABEL $OPTIONS $DEVICE",
+      "mkfs.xfs -N -f -L $LABEL $OPTIONS $DEVICE",
+      "-K" /* option_no_discard */
     },
     {
       FS_REISERFS,
@@ -135,6 +142,7 @@ const FSInfo _fs_info[] =
       TRUE,  /* supports_owners */
       "mkfs.reiserfs -q -l $LABEL $DEVICE",
       NULL,
+      NULL, /* option_no_discard */
     },
     {
       FS_NILFS2,
@@ -144,6 +152,7 @@ const FSInfo _fs_info[] =
       TRUE,  /* supports_owners */
       "mkfs.nilfs2 -L $LABEL $DEVICE",
       NULL,
+      NULL, /* option_no_discard */
     },
     {
       FS_BTRFS,
@@ -151,8 +160,9 @@ const FSInfo _fs_info[] =
       NULL,
       FALSE, /* supports_online_label_rename */
       TRUE,  /* supports_owners */
-      "mkfs.btrfs -L $LABEL $DEVICE",
+      "mkfs.btrfs -L $LABEL $OPTIONS $DEVICE",
       NULL,
+      "-K", /* option_no_discard */
     },
     {
       FS_MINIX,
@@ -161,6 +171,7 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_online_label_rename */
       FALSE, /* supports_owners */
       "mkfs.minix $DEVICE",
+      NULL,
       NULL,
     },
     {
@@ -171,6 +182,7 @@ const FSInfo _fs_info[] =
       TRUE,  /* supports_owners */
       "mkudffs --utf8 --media-type=hd --udfrev=0x201 --blocksize=$BLOCKSIZE --vid $LABEL --lvid $LABEL $DEVICE",
       NULL,
+      NULL,
     },
     {
       FS_F2FS,
@@ -179,6 +191,7 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_online_label_rename */
       TRUE,  /* supports_owners */
       "mkfs.f2fs -l $LABEL $DEVICE",
+      NULL,
       NULL,
     },
     /* swap space */
