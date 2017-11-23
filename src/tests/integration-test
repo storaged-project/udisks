@@ -1370,7 +1370,7 @@ class Luks(UDisksTestCase):
             self.retry_busy(fs.call_unmount_sync, no_options, None)
             self.client.settle()
             self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
-            self.assertEqual(fs.get_property('mount-points'), [])
+            self.assertProperty(fs, 'mount-points', [])
 
             # lock
             encrypted.call_lock_sync(no_options, None)
@@ -1421,7 +1421,7 @@ class Luks(UDisksTestCase):
             self.retry_busy(fs.call_unmount_sync, no_options, None)
             self.client.settle()
             self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
-            self.assertEqual(fs.get_property('mount-points'), [])
+            self.assertProperty(fs, 'mount-points', [])
         finally:
             # lock
             crypt_obj.get_property('encrypted').call_lock_sync(
