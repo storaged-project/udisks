@@ -1744,17 +1744,6 @@ class MDRaid(UDisksTestCase):
 # ----------------------------------------------------------------------------
 
 
-def get_distro_version():
-    # 3rd to 6th fields from e.g. "CPE OS Name: cpe:/o:fedoraproject:fedora:27" or "CPE OS Name: cpe:/o:centos:centos:7"
-    out = subprocess.check_output('hostnamectl status | grep "CPE OS Name"', shell=True).decode().strip()
-    try:
-        _project, distro, version = tuple(out.split(":")[3:6])
-    except ValueError:
-        print('Failed to get distribution and version from "%s". Aborting.' % out)
-        sys.exit(1)
-
-    return (distro, version)
-
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='udisks2 integration test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -1762,12 +1751,6 @@ if __name__ == '__main__':
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     cli_args = argparser.parse_args()
-
-    distro, version = get_distro_version()
-    if distro in ('centos', 'enterprise_linux'):
-        print('Skipping integration tests on "%s %s".'\
-              'SCSI debug devices causing kernel panic.' % (distro, version))
-        sys.exit(0)
 
     UDisksTestCase.init(logfile=cli_args.logfile)
     if cli_args.testname:
