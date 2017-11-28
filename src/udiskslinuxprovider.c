@@ -229,6 +229,8 @@ probe_request_thread_func (gpointer user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
   ProbeRequest *request;
+  gboolean dev_initialized = FALSE;
+  guint n_tries = 0;
 
   do
     {
@@ -239,6 +241,23 @@ probe_request_thread_func (gpointer user_data)
        */
       if (request == (gpointer) 0xdeadbeef)
         goto out;
+
+      /* Try to wait for the device to become initialized(*) before we start
+       * gathering data for it.
+       *
+       * (*) "Check if udev has already handled the device and has set up device
+       *      node permissions and context, or has renamed a network device.
+       *      This is only implemented for devices with a device node or network
+       *      interfaces. All other devices return 1 here."
+       *        -- UDEV docs
+       *
+       * */
+      dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
+      for (n_tries=5; !dev_initialized && (n_tries > 0); n_tries--)
+      {
+        g_usleep (100000);      /* microseconds */
+        dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
+      }
 
       /* probe the device - this may take a while */
       request->udisks_device = udisks_linux_device_new_sync (request->udev_device);
