@@ -360,12 +360,10 @@ find_mount_options_for_fs (const gchar *fstype)
     {
       fsmo = fs_mount_options + n;
       if (g_strcmp0 (fsmo->fstype, fstype) == 0)
-        goto out;
+        return fsmo;
     }
 
-  fsmo = NULL;
- out:
-  return fsmo;
+  return NULL;
 }
 
 static gid_t
