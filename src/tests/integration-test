@@ -826,6 +826,8 @@ class FS(UDisksTestCase):
             self._do_udisks_check(fs_type, 'test%stst' % fs_type)
             # also test fs_create with an empty label
             self._do_udisks_check(fs_type, '')
+            # also test fs_create with the no-discard option
+            self._do_udisks_check(fs_type, '', True)
 
     def _do_cli_check(self, fs_type, label=None):
         """udisks correctly picks up file system changes from command line tools"""
@@ -891,15 +893,17 @@ class FS(UDisksTestCase):
         subprocess.call(['umount', mount_a])
         self.assertProperty(fs, 'mount-points', [])
 
-    def _do_udisks_check(self, fs_type, label=None):
+    def _do_udisks_check(self, fs_type, label=None, no_discard=None):
         """udisks API correctly changes file system"""
 
+
         # create fs
+        options = { }
         if label is not None:
-            options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', label)})
-        else:
-            options = no_options
-        self.fs_create(None, fs_type, options)
+            options['label'] = GLib.Variant('s', label);
+        if no_discard is not None:
+            options['no-discard'] = GLib.Variant('b', no_discard);
+        self.fs_create(None, fs_type, GLib.Variant('a{sv}', options))
 
         # properties
         b_id = self.blkid()
