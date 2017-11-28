@@ -514,7 +514,8 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 static GHashTable *
 prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t                 caller_uid,
-                               GVariant             *given_options)
+                               GVariant             *given_options,
+                               gboolean              shared_fs)
 {
   GHashTable *options;
   gint n;
@@ -550,6 +551,28 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                       s = g_strdup_printf ("%u", gid);
                       g_hash_table_insert (options, g_strdup ("gid"), s);
                     }
+                }
+              else if (shared_fs && strncmp (option, "mode", opt_len) == 0)
+                {
+                  /* set different 'mode' and 'dmode' options for file systems mounted at shared
+                     location (otherwise they cannot be used by anybody else so mounting them at
+                     a shared location doesn't make much sense */
+                  gchar *shared_mode = g_strdup (value);
+
+                  /* give group and others the same permissions as to the owner
+                     without the 'write' permission, but at least 'read'
+                     (HINT: keep in mind that chars are ints in C and that
+                     digits are ordered naturally in the ASCII table) */
+                  shared_mode[2] = MAX(shared_mode[1] - 2, '4');
+                  shared_mode[3] = MAX(shared_mode[1] - 2, '4');
+                  g_hash_table_insert (options, g_strdup("mode"), shared_mode);
+                }
+              else if (shared_fs && strncmp (option, "dmode", opt_len) == 0)
+                {
+                  /* see right above */
+                  /* Does any other dmode than 0555 make sense for a FS mounted
+                     at a shared location?  */
+                  g_hash_table_insert (options, g_strdup("dmode"), g_strdup ("0555"));
                 }
               else
                 {
@@ -692,6 +715,9 @@ calculate_mount_options (UDisksDaemon  *daemon,
   const FSMountOptions *fsmo;
   GHashTable *options_to_use = NULL;
   GHashTableIter iter;
+  UDisksLinuxBlockObject *object = NULL;
+  UDisksLinuxDevice *device = NULL;
+  gboolean shared_fs = FALSE;
   gchar *options_to_use_str;
   gchar *key, *value;
   GString *str;
@@ -700,10 +726,19 @@ calculate_mount_options (UDisksDaemon  *daemon,
 
   fsmo = find_mount_options_for_fs (fs_type);
 
+  object = udisks_daemon_util_dup_object (block, NULL);
+  device = udisks_linux_block_object_get_device (object);
+  if (device != NULL && device->udev_device != NULL &&
+      g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
+    shared_fs = TRUE;
+
+  g_clear_object (&device);
+  g_clear_object (&object);
+
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
    */
-  options_to_use = prepend_default_mount_options (fsmo, caller_uid, options);
+  options_to_use = prepend_default_mount_options (fsmo, caller_uid, options, shared_fs);
 
   /* validate mount options */
   str = g_string_new ("uhelper=udisks2,nodev,nosuid");
