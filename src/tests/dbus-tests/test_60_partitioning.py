@@ -427,13 +427,13 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
             time.sleep(5)
             part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
-    def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='xfs'):
+    def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='xfs', type=''):
         if fmt:
-            path = disk.CreatePartitionAndFormat(dbus.UInt64(start), dbus.UInt64(size), '', '',
+            path = disk.CreatePartitionAndFormat(dbus.UInt64(start), dbus.UInt64(size), type, '',
                                                  self.no_options, fmt, self.no_options,
                                                  dbus_interface=self.iface_prefix + '.PartitionTable')
         else:
-            path = disk.CreatePartition(dbus.UInt64(start), dbus.UInt64(size), '', '',
+            path = disk.CreatePartition(dbus.UInt64(start), dbus.UInt64(size), type, '',
                                         self.no_options,
                                         dbus_interface=self.iface_prefix + '.PartitionTable')
 
@@ -497,14 +497,30 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_flags, '0x80')
 
     def test_gpt_flags(self):
+        esp_guid = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
+
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         self._create_format(disk, 'gpt')
         self.addCleanup(self._remove_format, disk)
 
-        part = self._create_partition(disk, fmt=False)
+        part = self._create_partition(disk, fmt=False, type=esp_guid)
         self.addCleanup(self._remove_partition, part)
+
+        # test partition type
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        dbus_type.assertEqual(esp_guid)
+
+        # test partition type from system
+        part_name = str(part.object_path).split('/')[-1]
+
+        # format the partition so blkid is able to display info about it
+        # (yes, it is stupid, but this is how blkid works on CentOS/RHEL 7)
+        _ret, _out = self.run_command('mkfs.ext2 /dev/%s' % part_name)
+
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
+        self.assertEqual(sys_type, esp_guid)
 
         # set legacy BIOS bootable flag (100(2), 4(10), 0x4(16))
         part.SetFlags(dbus.UInt64(4), self.no_options,
@@ -515,15 +531,17 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         dbus_flags = self.get_property(part, '.Partition', 'Flags')
         dbus_flags.assertEqual(4)
 
-        # test flags value from system
-        part_name = str(part.object_path).split('/')[-1]
-
-        # format the partition so blkid is able to display info about it
-        # (yes, it is stupid, but this is how blkid works on CentOS/RHEL 7)
-        _ret, _out = self.run_command('mkfs.ext2 /dev/%s' % part_name)
-
         _ret, sys_flags = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_FLAGS' % part_name)
         self.assertEqual(sys_flags, '0x4')
+
+        # test partition type
+        dbus_type = self.get_property(part, '.Partition', 'Type')
+        dbus_type.assertEqual(esp_guid)
+
+        # test partition type from system
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_type = self.run_command('blkid /dev/%s -p -o value -s PART_ENTRY_TYPE' % part_name)
+        self.assertEqual(sys_type, esp_guid)
 
     def test_gpt_type(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
