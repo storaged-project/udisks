@@ -44,6 +44,10 @@
 #include "udisksmodulemanager.h"
 #include "udisksconfigmanager.h"
 
+#ifdef HAVE_LIBMOUNT
+#include "udisksutabmonitor.h"
+#endif
+
 /**
  * SECTION:udisksdaemon
  * @title: UDisksDaemon
@@ -78,6 +82,10 @@ struct _UDisksDaemon
   UDisksFstabMonitor *fstab_monitor;
 
   UDisksCrypttabMonitor *crypttab_monitor;
+
+#ifdef HAVE_LIBMOUNT
+  UDisksUtabMonitor *utab_monitor;
+#endif
 
   UDisksModuleManager *module_manager;
 
@@ -128,6 +136,9 @@ udisks_daemon_finalize (GObject *object)
   g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->fstab_monitor);
   g_object_unref (daemon->crypttab_monitor);
+#ifdef HAVE_LIBMOUNT
+  g_object_unref (daemon->utab_monitor);
+#endif
 
   g_clear_object (&daemon->module_manager);
 
@@ -343,6 +354,9 @@ udisks_daemon_constructed (GObject *object)
 
   daemon->fstab_monitor = udisks_fstab_monitor_new ();
   daemon->crypttab_monitor = udisks_crypttab_monitor_new ();
+#ifdef HAVE_LIBMOUNT
+  daemon->utab_monitor = udisks_utab_monitor_new ();
+#endif
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
