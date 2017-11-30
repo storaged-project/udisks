@@ -413,6 +413,19 @@ class UdisksTestCase(unittest.TestCase):
         os.unlink("/run/udev/rules.d/99-udisks_test.rules")
         self.run_command("udevadm control --reload")
 
+    @classmethod
+    def assertHasIface(self, obj, iface):
+        obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
+        intro_data = obj_intro.Introspect()
+
+        for _ in range(20):
+            if ('interface name="%s"' % iface) in intro_data:
+                return
+            time.sleep(0.5)
+
+        raise AssertionError("Object '%s' has no interface '%s'" % (obj.object_path, iface))
+
+
 class FlightRecorder(object):
     """Context manager for recording data/logs
 
