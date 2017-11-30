@@ -4,6 +4,8 @@ import six
 import shutil
 import tempfile
 import unittest
+import time
+from distutils.spawn import find_executable
 
 from multiprocessing import Process, Pipe
 
@@ -785,5 +787,171 @@ class FailsystemTestCase(UdisksFSTestCase):
     def test_mount_fstab(self):
         pass
 
+class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
+    def _unmount(self, disk_path):
+        self.run_command('umount %s' % disk_path)
+
+    def _create_iso9660_on_dev(self, dev):
+        if not find_executable("genisoimage"):
+            self.skipTest("Cannot create an iso9660 file system")
+
+        tmp = tempfile.mkdtemp()
+        try:
+            with open(os.path.join(tmp, "test_file"), "w") as f:
+                f.write("TEST\n")
+            ret, _out = self.run_command("genisoimage -V TEST_iso9660 -o %s %s" % (dev, tmp))
+            self.assertEqual(ret, 0)
+            self.udev_settle()
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_mount_auto(self):
+        dev = self.vdevs[0]
+
+        # create an iso9660 FS on the device
+        self._create_iso9660_on_dev(dev)
+        self.addCleanup(self.wipe_fs, dev)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(dev))
+        self.assertIsNotNone(disk)
+
+        self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
+
+        # mount
+        disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, dev)
+
+        # check dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        mnt = self.ay_to_str(dbus_mounts.value[0])
+        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertTrue(os.path.ismount(mnt))
+
+        # default modes should be used
+        _ret, out = self.run_command('mount | grep %s' % dev)
+        self.assertIn(mnt, out)
+        if "mode=0" in out:
+            # old way mode and dmode are reported
+            self.assertIn("mode=0400", out)
+            self.assertIn("dmode=0500", out)
+        else:
+            self.assertIn("fmode=400", out)
+            self.assertIn("dmode=500", out)
+
+    def test_mount_user_opts(self):
+        dev = self.vdevs[0]
+
+        # create an iso9660 FS on the device
+        self._create_iso9660_on_dev(dev)
+        self.addCleanup(self.wipe_fs, dev)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(dev))
+        self.assertIsNotNone(disk)
+
+        # mount with specific mode/dmode
+        extra = dbus.Dictionary(signature='sv')
+        extra['options'] = 'mode=0640,dmode=0550'
+
+        self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
+
+        # mount
+        disk.Mount(extra, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, dev)
+
+        # check dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        mnt = self.ay_to_str(dbus_mounts.value[0])
+        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertTrue(os.path.ismount(mnt))
+
+        # specified modes should be used
+        _ret, out = self.run_command('mount | grep %s' % dev)
+        self.assertIn(mnt, out)
+        if "mode=0" in out:
+            # old way mode and dmode are reported
+            self.assertIn("mode=0640", out)
+            self.assertIn("dmode=0550", out)
+        else:
+            self.assertIn("fmode=640", out)
+            self.assertIn("dmode=550", out)
+
+    def test_mount_shared(self):
+        dev = self.vdevs[0]
+
+        # create an iso9660 FS on the device
+        self._create_iso9660_on_dev(dev)
+        self.addCleanup(self.wipe_fs, dev)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(dev))
+        self.assertIsNotNone(disk)
+
+        self.set_udev_property(dev, "UDISKS_FILESYSTEM_SHARED", "1")
+        self.addCleanup(self.set_udev_property, dev, "UDISKS_FILESYSTEM_SHARED", "0")
+
+        self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
+
+        # mount
+        disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, dev)
+
+        # check dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        mnt = self.ay_to_str(dbus_mounts.value[0])
+        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertTrue(os.path.ismount(mnt))
+
+        # modes for shared mounts should be used
+        _ret, out = self.run_command('mount | grep %s' % dev)
+        self.assertIn(mnt, out)
+        if "mode=0" in out:
+            # old way mode and dmode are reported
+            self.assertIn("mode=0444", out)
+            self.assertIn("dmode=0555", out)
+        else:
+            self.assertIn("fmode=444", out)
+            self.assertIn("dmode=555", out)
+
+    def test_mount_shared_custom(self):
+        dev = self.vdevs[0]
+
+        # create an iso9660 FS on the device
+        self._create_iso9660_on_dev(dev)
+        self.addCleanup(self.wipe_fs, dev)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(dev))
+        self.assertIsNotNone(disk)
+
+        self.set_udev_property(dev, "UDISKS_FILESYSTEM_SHARED", "1")
+        self.addCleanup(self.set_udev_property, dev, "UDISKS_FILESYSTEM_SHARED", "0")
+
+        # mount with specific mode/dmode
+        extra = dbus.Dictionary(signature='sv')
+        extra['options'] = 'mode=0600,dmode=0500'
+
+        self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
+
+        disk.Mount(extra, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, dev)
+
+        # check dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        mnt = self.ay_to_str(dbus_mounts.value[0])
+        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertTrue(os.path.ismount(mnt))
+
+        # the specified modes should be used even for a shared mount
+        _ret, out = self.run_command('mount | grep %s' % dev)
+        self.assertIn(mnt, out)
+        if "mode=0" in out:
+            # old way mode and dmode are reported
+            self.assertIn("mode=0600", out)
+            self.assertIn("dmode=0500", out)
+        else:
+            self.assertIn("fmode=600", out)
+            self.assertIn("dmode=500", out)
 
 del UdisksFSTestCase  # skip UdisksFSTestCase
