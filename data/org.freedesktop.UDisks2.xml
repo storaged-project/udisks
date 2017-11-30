@@ -1404,6 +1404,10 @@
         this allows a deeper check of the parameters even when
         <parameter>no-block</parameter> is %TRUE.
 
+        If the option <parameter>no-discard</parameter> is set to
+        %TRUE then Udisks tells the formatting utility not to issue
+        BLKDISCARD ioctls.
+
         If the option <parameter>config-items</parameter> is set, it
         should be an array of configuration items suitable for
         org.freedesktop.UDisks2.Block.AddConfigurationItem.  They will
