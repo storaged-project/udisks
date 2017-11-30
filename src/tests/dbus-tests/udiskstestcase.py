@@ -10,6 +10,10 @@ from datetime import datetime
 from systemd import journal
 from monotonic import monotonic
 
+import gi
+gi.require_version('GUdev', '1.0')
+from gi.repository import GUdev
+
 test_devs = None
 FLIGHT_RECORD_FILE = "flight_record.log"
 
@@ -387,6 +391,27 @@ class UdisksTestCase(unittest.TestCase):
 
         return dbus.Array([dbus.Byte(ord(c)) for c in string],
                           signature=dbus.Signature('y'), variant_level=1)
+
+    @classmethod
+    def set_udev_property(self, device, prop, value):
+        udev = GUdev.Client()
+        dev = udev.query_by_device_file(device)
+        serial = dev.get_property("ID_SERIAL")
+
+        try:
+            os.makedirs("/run/udev/rules.d/")
+        except OSError:
+            # already exists
+            pass
+
+        self.write_file("/run/udev/rules.d/99-udisks_test.rules",
+                        'ENV{ID_SERIAL}=="%s", ENV{%s}="%s"\n' % (serial, prop, value))
+        self.run_command("udevadm control --reload")
+        uevent_path = os.path.join(dev.get_sysfs_path(), "uevent")
+        self.write_file(uevent_path, "change\n")
+        self.udev_settle()
+        os.unlink("/run/udev/rules.d/99-udisks_test.rules")
+        self.run_command("udevadm control --reload")
 
 class FlightRecorder(object):
     """Context manager for recording data/logs
