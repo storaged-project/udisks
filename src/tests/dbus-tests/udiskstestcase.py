@@ -273,6 +273,7 @@ class UdisksTestCase(unittest.TestCase):
                     with CmdFlightRecorder("udevadm monitor", ["udevadm", "monitor"], record):
                         super(UdisksTestCase, self).run(*args)
             record_f.write("".join(record))
+        self.udev_settle()
 
     @classmethod
     def get_object(self, path_suffix):
