@@ -10,6 +10,7 @@ class UdisksDaemon {
     UdisksMountMonitor     *udisks_daemon_get_mount_monitor()
     UdisksFstabMonitor     *udisks_daemon_get_fstab_monitor()
     UdisksCrypttabMonitor  *udisks_daemon_get_crypttab_monitor()
+    UdisksUtabMonitor      *udisks_daemon_get_utab_monitor()
     UdisksLinuxProvider    *udisks_daemon_get_linux_provider()
     PolkitAuthority          *udisks_daemon_get_authority()
     UdisksState            *udisks_daemon_get_state()
