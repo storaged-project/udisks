@@ -1,17 +1,70 @@
 ---------------------------
-udisks 2.7.5 (unreleased)
+udisks 2.7.5
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.4:
-(TODO: make shortlog)
+
+Marius Vollmer (1):
+      Add 'no-discard' option to formatting methods
+
+Ondrej Holy (1):
+      UDisksObjectInfo: Fix size_str memory leaks
+
+Sjoerd Simons (1):
+      Resolve mountpoint to the real path
+
+Vojtech Trefny (23):
+      Post-release version bump to 2.7.5
+      Return error when calling 'volume_group_create' without devices
+      udiskszramutil.c: Check return value of chmod
+      tests/helper.c: Ignore NULL pointer dereference
+      udiskslinuxdrive.c: Use 'g_variant_type_equal' to compare variants
+      udiskslinuxdrive.c: Fix possible NULL pointer dereference
+      udiskslinuxdrive.c: Fix resource leak
+      udiskslinuxdriveata.c: Chec return value of fscanf
+      udiskslinuxdriveata.c: Fix copy-paste error in apply_configuration_thread_func
+      udiskslinuxencrypted.c: Fix uninitialized variable
+      udiskslinuxmdraidobject.c: Fix potential NULL pointer dereference
+      udisksctl.c: Fix uninitialized variables
+      Fix checking for distribution and version in integration tests
+      udisksctl.c: Fix "deadcode" warning
+      udisksctl.c: Ignore "check return" warning
+      Add dbus tests into the source archive
+      Actually check if we created primary partitions in tests
+      Include exFAT as a possible partition type for ID 0x07
+      Fix potentian NULL pointer dereference in udisksclient.c
+      Always try to read configuration from crypttab in handle_unlock
+      Add test for opening luks device with crypttab entry
+      integration-test: Do not wait forever in polkit tests
+      integration-test: Fix checking for mountpoints after removing luks
+
+Vratislav Podzimek (15):
+      Do not clean all .service files
+      Make sure the table_type is consistent in handle_create_partition
+      Display the CI status on the main GH page
+      Try to wait a bit longer before retrying to remove a partition
+      Use the same trick when removing partition in both TestCases
+      Try harder when removing format as cleanup in tests
+      Do not skip integration tests on CentOS/RHEL
+      Wait for device to become initialized before probing it
+      Get rid of an unnecessary 'goto' in find_mount_options_for_fs()
+      Make sure the same mount option is not specified multiple times
+      Use different mode/dmode for shared file systems
+      Add a method for setting udev property for a device in tests
+      Add an assertion method for checking a objects interfaces
+      Add tests for mounting iso9660 with its specialties
+      Do 'udevadm settle' after every test
+
+intrigeri (1):
+      Add test to check GUID/type after GPT partition flags change.
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date --rfc-3339='date')
+2017-12-04
 
 ---------------------------
 udisks 2.7.4
