@@ -46,6 +46,8 @@ struct _UDisksUtabMonitor
 {
   GObject parent_instance;
 
+  GRWLock lock;
+
   GIOChannel *utab_channel;
   GSource *utab_watch_source;
 
@@ -83,6 +85,7 @@ static void udisks_utab_monitor_constructed (GObject *object);
 static void
 udisks_utab_monitor_init (UDisksUtabMonitor *monitor)
 {
+  g_rw_lock_init (&monitor->lock);
   monitor->utab_channel = NULL;
   monitor->utab_watch_source = NULL;
   monitor->mn = NULL;
@@ -94,6 +97,7 @@ udisks_utab_monitor_finalize (GObject *object)
 {
   UDisksUtabMonitor *monitor = UDISKS_UTAB_MONITOR (object);
 
+  g_rw_lock_clear (&monitor->lock);
   if (monitor->utab_channel != NULL)
     g_io_channel_unref (monitor->utab_channel);
   if (monitor->utab_watch_source != NULL)
@@ -182,16 +186,21 @@ reload_utab_entries (UDisksUtabMonitor *monitor)
   struct libmnt_fs *old, *new;
   int rc = -1, change;
 
+  g_rw_lock_writer_lock (&monitor->lock);
   udisks_utab_monitor_ensure (monitor);
-
   old_tb = monitor->current_tb;
   mnt_ref_table (old_tb);
+  g_rw_lock_writer_unlock (&monitor->lock);
 
+  g_rw_lock_writer_lock (&monitor->lock);
   udisks_utab_monitor_invalidate (monitor);
   udisks_utab_monitor_ensure (monitor);
+  g_rw_lock_writer_unlock (&monitor->lock);
 
-  diff = mnt_new_tabdiff();
-  itr = mnt_new_iter(MNT_ITER_FORWARD);
+  g_rw_lock_reader_lock (&monitor->lock);
+  diff = mnt_new_tabdiff ();
+  itr = mnt_new_iter (MNT_ITER_FORWARD);
+  g_rw_lock_reader_unlock (&monitor->lock);
 
   if (!old_tb || !monitor->current_tb || !diff || !itr)
     goto out;
@@ -327,7 +336,11 @@ udisks_utab_monitor_get_entries (UDisksUtabMonitor  *monitor)
 
   g_return_val_if_fail (UDISKS_IS_UTAB_MONITOR (monitor), NULL);
 
+  g_rw_lock_writer_lock (&monitor->lock);
   udisks_utab_monitor_ensure (monitor);
+  g_rw_lock_writer_unlock (&monitor->lock);
+
+  g_rw_lock_reader_lock (&monitor->lock);
 
   ret = NULL;
   itr = mnt_new_iter (MNT_ITER_FORWARD);
@@ -338,6 +351,8 @@ udisks_utab_monitor_get_entries (UDisksUtabMonitor  *monitor)
       ret = g_slist_prepend (ret, entry);
     }
   mnt_free_iter (itr);
+
+  g_rw_lock_reader_unlock (&monitor->lock);
 
   return ret;
 }
@@ -355,9 +370,9 @@ udisks_utab_monitor_ensure (UDisksUtabMonitor *monitor)
 static void
 udisks_utab_monitor_invalidate (UDisksUtabMonitor *monitor)
 {
-  if (monitor->current_tb)
-    {
-      mnt_unref_table (monitor->current_tb);
-      monitor->current_tb = NULL;
-    }
+  if (!monitor->current_tb)
+    return;
+
+  mnt_unref_table (monitor->current_tb);
+  monitor->current_tb = NULL;
 }
