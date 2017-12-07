@@ -176,9 +176,20 @@ if test "x$enable_daemon" = "xyes"; then
   fi
   AC_SUBST(HAVE_LIBBLOCKDEV3)
 
-  PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
-  AC_SUBST(LIBATASMART_CFLAGS)
-  AC_SUBST(LIBATASMART_LIBS)
+  AC_ARG_ENABLE(libata, AS_HELP_STRING([--enable-libatasmart], [enable libatasmart support]))
+  AS_IF([test "x$enable_libatasmart" != "xno"],
+      [PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17],
+      [
+        AC_SUBST(LIBATASMART_CFLAGS)
+        AC_SUBST(LIBATASMART_LIBS)
+        AC_DEFINE([HAVE_ATA_SMART], 1, [Define to 1 if libatasmart is enabled])
+        have_libatasmart=yes
+      ],
+      [AS_IF([test "x$enable_libata" = "xyes"],
+             [AC_MSG_ERROR([libatasmart requested but not found])
+      ])
+      ])])
+
 
   PKG_CHECK_MODULES(LIBBLKID, [blkid])
   AC_SUBST(LIBBLKID_CFLAGS)
@@ -801,6 +812,7 @@ echo "
         using libsystemd-login:     ${have_libsystemd_login}
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
+        libatasmart:                ${have_libatasmart:-no}
         acl support:                ${have_acl}
         using libmount/utab:        ${have_libmount_utab}
         using libblockdev-3.0:      ${have_libblockdev3}

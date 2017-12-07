@@ -36,7 +36,9 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
+#ifdef HAVE_ATA_SMART
 #include <atasmart.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
@@ -356,6 +358,7 @@ typedef struct
   gint num_attributes_failed_in_the_past;
 } ParseData;
 
+#ifdef HAVE_ATA_SMART
 static void
 parse_attr_cb (SkDisk                           *d,
                const SkSmartAttributeParsedData *a,
@@ -436,6 +439,7 @@ selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
     }
   return ret;
 }
+#endif
 
 static gboolean
 get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
@@ -474,6 +478,7 @@ get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
   return rc;
 }
 
+#ifdef HAVE_ATA_SMART
 static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *device)
 {
   const gchar *drivepath = g_udev_device_get_sysfs_path (device->udev_device);
@@ -505,6 +510,7 @@ static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *
     }
   return noio;
 }
+#endif
 
 /**
  * udisks_linux_drive_ata_refresh_smart_sync:
@@ -535,6 +541,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                                            GCancellable         *cancellable,
                                            GError              **error)
 {
+#ifdef HAVE_ATA_SMART
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device = NULL;
   gboolean ret = FALSE;
@@ -693,6 +700,9 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     sk_disk_free (d);
   g_clear_object (&object);
   return ret;
+#else
+  return FALSE;
+#endif
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -719,6 +729,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
                                             GCancellable         *cancellable,
                                             GError              **error)
 {
+#ifdef HAVE_ATA_SMART
   UDisksLinuxDriveObject  *object;
   UDisksLinuxDevice *device = NULL;
   SkDisk *d = NULL;
@@ -775,6 +786,9 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
     sk_disk_free (d);
   g_clear_object (&object);
   return ret;
+#else
+  return FALSE;
+#endif
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
