@@ -426,6 +426,10 @@ class UdisksTestCase(unittest.TestCase):
 
         raise AssertionError("Object '%s' has no interface '%s'" % (obj.object_path, iface))
 
+    def assertStartswith(self, val, prefix):
+        if not val.startswith(prefix):
+            raise AssertionError("'%s' does not start with '%s'" % (val, prefix))
+
 
 class FlightRecorder(object):
     """Context manager for recording data/logs
