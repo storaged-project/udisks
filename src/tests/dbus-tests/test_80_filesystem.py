@@ -825,7 +825,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         mnt = self.ay_to_str(dbus_mounts.value[0])
-        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertStartswith(mnt.split("/")[-1], "TEST_iso9660")
         self.assertTrue(os.path.ismount(mnt))
 
         # default modes should be used
@@ -863,7 +863,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         mnt = self.ay_to_str(dbus_mounts.value[0])
-        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertStartswith(mnt.split("/")[-1], "TEST_iso9660")
         self.assertTrue(os.path.ismount(mnt))
 
         # specified modes should be used
@@ -900,7 +900,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         mnt = self.ay_to_str(dbus_mounts.value[0])
-        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertStartswith(mnt.split("/")[-1], "TEST_iso9660")
         self.assertTrue(os.path.ismount(mnt))
 
         # modes for shared mounts should be used
@@ -940,7 +940,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         mnt = self.ay_to_str(dbus_mounts.value[0])
-        self.assertEqual(mnt.split("/")[-1], "TEST_iso9660")
+        self.assertStartswith(mnt.split("/")[-1], "TEST_iso9660")
         self.assertTrue(os.path.ismount(mnt))
 
         # the specified modes should be used even for a shared mount
