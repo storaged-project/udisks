@@ -1,11 +1,13 @@
 import dbus
 import os
+import re
 import six
 import shutil
 import tempfile
 import unittest
 import time
 from distutils.spawn import find_executable
+from distutils.version import LooseVersion
 
 from multiprocessing import Process, Pipe
 
@@ -52,6 +54,13 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         ret, out = self.run_command('userdel %s' % username)
         if ret != 0:
             self.fail('Failed to remove user user %s: %s' % (username, out))
+
+    def _get_libmount_version(self):
+        _ret, out = self.run_command('mount --version')
+        m = re.search(r'libmount ([\d\.]+)', out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError('Failed to determine libmount version from: %s' % out)
+        return LooseVersion(m.groups()[0])
 
     @classmethod
     def command_exists(cls, command):
@@ -266,6 +275,46 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         _ret, out = self.run_command('mount | grep %s' % self.vdevs[0])
         self.assertIn(tmp, out)
         self.assertIn('ro', out)
+
+    def test_userspace_mount_options(self):
+        libmount_version = self._get_libmount_version()
+        if libmount_version < LooseVersion('2.30'):
+            self.skipTest('userspace mount options are not supported with libmount < 2.30')
+
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, self.vdevs[0])
+
+        # not mounted
+        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts.assertLen(0)
+
+        # mount
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = self._fs_name
+        d['options'] = 'ro,x-test.op1'
+        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # check utab
+        utab_opts = self.get_property(disk, '.Block', 'UserspaceMountOptions')
+        self.assertEqual({str(o) for o in utab_opts.value},
+                         {'uhelper=udisks2', 'x-test.op1'})
+
+        # umount
+        disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertFalse(os.path.ismount(mnt_path))
+        
+
 
 
 class Ext2TestCase(UdisksFSTestCase):
@@ -642,6 +691,10 @@ class NTFSTestCase(UdisksFSTestCase):
     def test_repair_resize_check(self):
         super(NTFSTestCase, self).test_repair_resize_check()
 
+    @unstable_test
+    def test_userspace_mount_options(self):
+        super(NTFSTestCase, self).test_userspace_mount_options()
+
 class BTRFSTestCase(UdisksFSTestCase):
     _fs_name = 'btrfs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.btrfs')
@@ -672,6 +725,10 @@ class NILFS2TestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
     _can_mount = True and UdisksFSTestCase.module_loaded('nilfs2')
+
+    @unstable_test
+    def test_userspace_mount_options(self):
+        super(NILFS2TestCase, self).test_userspace_mount_options()
 
 
 class F2FSTestCase(UdisksFSTestCase):
