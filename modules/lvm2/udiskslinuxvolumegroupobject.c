@@ -530,7 +530,7 @@ cmp_int_lv_name (const gchar *int_lv_name, const gchar *lv_name)
 
   if (*c == ']')
     c++;
-  if (*c == '\0')
+  if (*c == '\0' && lv_name[c - int_lv_name] == '\0')
     return TRUE;
 
   return FALSE;
