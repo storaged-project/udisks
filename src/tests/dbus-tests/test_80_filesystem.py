@@ -24,6 +24,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     _can_label = False  # it is possible to set label when *creating* filesystem
     _can_relabel = False  # it is possible to set label for *existing* filesystem
     _can_mount = False
+    _can_query_size = False
 
     username = 'udisks_test_user'
 
@@ -173,8 +174,38 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # repair before resizing to half size, then check
         self.assertTrue(disk.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         size = self.get_property(disk, '.Block', 'Size').value
+        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size)
         disk.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertTrue(disk.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
+        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size // 2)
+
+    def test_size(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        if not self._can_query_size:
+            self.skipTest('Cannot determine size of %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, self.vdevs[0])
+
+        # mount
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = self._fs_name
+        d['options'] = 'ro'
+        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # check reported size
+        size = self.get_property(disk, '.Block', 'Size').value
+        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size)
 
     def test_mount_auto(self):
         if not self._can_create:
@@ -274,6 +305,7 @@ class Ext2TestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('tune2fs')
     _can_mount = True
+    _can_query_size = True
 
     def _invalid_label(self, disk):
         label = 'a' * 17  # at most 16 characters, longer should be truncated
@@ -368,6 +400,7 @@ class XFSTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('xfs_admin')
     _can_mount = True
+    _can_query_size = True
 
     def _invalid_label(self, disk):
         label = 'a a'  # space not allowed
@@ -785,6 +818,9 @@ class FailsystemTestCase(UdisksFSTestCase):
             disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def test_mount_fstab(self):
+        pass
+
+    def test_size(self):
         pass
 
 class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):

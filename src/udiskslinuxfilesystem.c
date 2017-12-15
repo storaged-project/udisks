@@ -155,6 +155,10 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   GPtrArray *p;
   GList *mounts;
   GList *l;
+  gchar *dev;
+  const gchar *type;
+  guint64 size;
+  GError *error = NULL;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -176,7 +180,44 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_free (p, TRUE);
   g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
   g_list_free (mounts);
+
+  dev = udisks_linux_block_object_get_device_file (object);
+  type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
+  size = 0;
+  if (g_strcmp0 (type, "ext2") == 0) {
+      BDFSExt2Info *info = bd_fs_ext2_get_info (dev, &error);
+      if (info)
+        {
+          size = info->block_size * info->block_count;
+          bd_fs_ext2_info_free (info);
+        }
+  } else if (g_strcmp0 (type, "ext3") == 0) {
+      BDFSExt3Info *info = bd_fs_ext3_get_info (dev, &error);
+      if (info)
+        {
+          size = info->block_size * info->block_count;
+          bd_fs_ext3_info_free (info);
+        }
+  } else if (g_strcmp0 (type, "ext4") == 0) {
+      BDFSExt4Info *info = bd_fs_ext4_get_info (dev, &error);
+      if (info)
+        {
+          size = info->block_size * info->block_count;
+          bd_fs_ext4_info_free (info);
+        }
+  } else if (g_strcmp0 (type, "xfs") == 0) {
+      BDFSXfsInfo *info = bd_fs_xfs_get_info (dev, &error);
+      if (info)
+        {
+          size = info->block_size * info->block_count;
+          bd_fs_xfs_info_free (info);
+        }
+  }
+  udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), size);
+
+  g_free (dev);
   g_object_unref (device);
+  g_clear_error (&error);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
