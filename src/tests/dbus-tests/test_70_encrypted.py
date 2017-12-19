@@ -48,6 +48,9 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         device = self.get_property(disk, '.Block', 'Device')
         device.assertEqual(self.str_to_ay(self.vdevs[0]))  # device is an array of byte
 
+        metadata_size = self.get_property(disk, '.Encrypted', 'MetadataSize')
+        metadata_size.assertEqual(2*1024*1024)
+
         # check system values
         _ret, sys_type = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_type, 'crypto_LUKS')

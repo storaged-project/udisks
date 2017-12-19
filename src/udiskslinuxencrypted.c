@@ -129,6 +129,11 @@ void
 udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
                                UDisksLinuxBlockObject *object)
 {
+  // XXX - Right now, all objects with the Encrypted interface are
+  // LUKS, but when this changes, this code needs to be updated
+  // accordingly.
+  udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), BD_CRYPTO_LUKS_METADATA_SIZE);
+
   update_child_configuration (encrypted, object);
 }
 

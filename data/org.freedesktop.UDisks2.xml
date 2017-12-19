@@ -2014,6 +2014,13 @@
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
+    <!-- MetadataSize: The amount of space needed by the encryption header.
+         The size of the cleartext device will ususally be org.freedesktop.UDisks2.Block.Size -
+         org.freedesktop.UDisks2.Encrypted.MetadataSize, unless either the block device or the
+         cleartext device have been resized.
+    -->
+    <property name="MetadataSize" type="t" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.
