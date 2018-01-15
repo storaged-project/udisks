@@ -1,8 +1,11 @@
 import dbus
 import os
+import re
 import six
 import time
 import unittest
+
+from distutils.version import LooseVersion
 
 import udiskstestcase
 
@@ -10,9 +13,15 @@ import udiskstestcase
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     '''This is an encrypted device test suite'''
 
+    def _get_cryptsetup_version(self):
+        _ret, out = self.run_command('cryptsetup --version')
+        m = re.search(r'cryptsetup ([\d\.]+)', out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError('Failed to determine cryptsetup version from: %s' % out)
+        return LooseVersion(m.groups()[0])
+
     def _create_luks(self, device, passphrase):
-        device.Format('xfs', {'encrypt.passphrase': passphrase},
-                      dbus_interface=self.iface_prefix + '.Block')
+        raise NotImplementedError()
 
     def _remove_luks(self, device, close=True):
         if close:
@@ -223,3 +232,47 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks = disk.Unlock('password', self.no_options,
                            dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks)
+
+
+class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
+    '''This is a LUKS1 encrypted device test suite'''
+
+    def _create_luks(self, device, passphrase):
+        device.Format('xfs', {'encrypt.passphrase': passphrase},
+                      dbus_interface=self.iface_prefix + '.Block')
+
+
+class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
+    '''This is a LUKS2 encrypted device test suite'''
+
+    def _create_luks(self, device, passphrase):
+        # we currently don't support creating luks2 format using udisks
+        device_path = '/dev/' + device.object_path.split('/')[-1]
+        ret, out = self.run_command('echo -n "%s" | cryptsetup luksFormat '\
+                                    '--type=luks2 %s -' % (passphrase, device_path))
+        if ret != 0:
+            raise RuntimeError('Failed to create luks2 format on %s:\n%s' % (device_path, out))
+
+        # udisks opens the device after creating it so we have to do the same
+        ret, out = self.run_command('echo -n "%s" | cryptsetup luksOpen '\
+                                    '%s luks-`cryptsetup luksUUID %s` -' % (passphrase, device_path, device_path))
+        if ret != 0:
+            raise RuntimeError('Failed to open luks2 device %s:\n%s' % (device_path, out))
+
+        # and create xfs filesystem on it too
+        ret, out = self.run_command('mkfs.xfs /dev/mapper/luks-`cryptsetup luksUUID %s`' % device_path)
+        if ret != 0:
+            raise RuntimeError('Failed to create xfs filesystem on device %s:\n%s' % (device_path, out))
+
+    def setUp(self):
+        cryptsetup_version = self._get_cryptsetup_version()
+        if cryptsetup_version < LooseVersion('2.0.0'):
+            self.skipTest('LUKS2 not supported')
+
+        super(UdisksEncryptedTestLUKS2, self).setUp()
+
+    def test_create(self):
+        self.skipTest('Creating of LUKS2 is not supported yet.')
+
+
+del UdisksEncryptedTest  # skip UdisksEncryptedTest
