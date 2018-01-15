@@ -945,7 +945,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
     {
       gchar *dm_uuid;
       dm_uuid = get_sysfs_attr (device->udev_device, "dm/uuid");
-      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "CRYPT-LUKS1"))
+      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "CRYPT-LUKS"))
         {
           gchar **slaves;
           slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device),
