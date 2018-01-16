@@ -148,11 +148,16 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(ret, 0)
 
         tp = self.bus.get_object(self.iface_prefix, tp_path)
-        tpsize = int(self.get_property_raw(tp, '.LogicalVolume', 'Size'))
+        tpsize = self.get_property(tp, '.LogicalVolume', 'Size')
+
+        # check that we report same size as lvs (udisks includes metadata so we need to add it too)
+        _ret, dsize = self.run_command('lvs -olv_size --noheadings --units=b --nosuffix %s' % os.path.join(vgname, tpname))
+        _ret, msize = self.run_command('lvs -olv_metadata_size --noheadings --units=b --nosuffix %s' % os.path.join(vgname, tpname))
+        tpsize.assertEqual(int(dsize.strip()) + int(msize.strip()))
 
         # Create thin volume in the pool with virtual size twice the backing pool
         tvname = 'udisks_test_tv'
-        tv_path = vg.CreateThinVolume(tvname, dbus.UInt64(tpsize * 2), tp, self.no_options,
+        tv_path = vg.CreateThinVolume(tvname, dbus.UInt64(int(tpsize.value) * 2), tp, self.no_options,
                                       dbus_interface=self.iface_prefix + '.VolumeGroup')
         tv = self.bus.get_object(self.iface_prefix, tv_path)
         self.assertIsNotNone(tv)
