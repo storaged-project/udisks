@@ -223,3 +223,30 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks = disk.Unlock('password', self.no_options,
                            dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks)
+
+    def get_block_size(self, name):
+        _ret, size_string = self.run_command('lsblk -n -b -o SIZE /dev/%s' % name)
+        self.assertEqual(_ret, 0)
+        return int(size_string)
+
+    def test_resize(self):
+        device = self.get_device(self.vdevs[0])
+        self._create_luks(device, 'test')
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        _ret, clear_dev = self.run_command('ls /sys/block/%s/holders/' % os.path.basename(self.vdevs[0]))
+        self.assertEqual(_ret, 0)
+        clear_size = self.get_block_size(clear_dev)
+
+        device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size2 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size2, 100*1024*1024)
+
+        device.Resize(dbus.UInt64(clear_size), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size3 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size3, clear_size)

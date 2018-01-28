@@ -2084,6 +2084,20 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        Resize:
+        @size: The target cleartext size in bytes, 0 for maximum.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.7.6
+
+        Resizes the encrypted device.  The device must be unlocked.
+        The given size is the target size for the cleartext device.
+    -->
+    <method name="Resize">
+      <arg name="size" direction="in" type="t"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -2476,6 +2490,8 @@
              <listitem><para>Locking encrypted device.</para></listitem></varlistentry>
            <varlistentry><term>encrypted-modify</term>
              <listitem><para>Modifying encrypted device.</para></listitem></varlistentry>
+           <varlistentry><term>encrypted-resize</term>
+             <listitem><para>Resizing encrypted device.</para></listitem></varlistentry>
            <varlistentry><term>swapspace-start</term>
              <listitem><para>Starting swapspace.</para></listitem></varlistentry>
            <varlistentry><term>swapspace-stop</term>
