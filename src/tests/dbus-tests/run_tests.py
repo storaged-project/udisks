@@ -253,7 +253,10 @@ if __name__ == '__main__':
 
     # dump cropped journal to log file
     with open('journaldump.log', "w") as outfile:
-        subprocess.call(['journalctl', '-S', start_time], stdout=outfile)
+        try:
+            subprocess.call(['journalctl', '-S', start_time], stdout=outfile)
+        except Exception as e:
+            print('Failed to save journal: %s' % str(e), file=outfile)
 
     if result.wasSuccessful():
         sys.exit(0)
