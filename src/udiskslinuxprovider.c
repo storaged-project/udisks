@@ -124,6 +124,16 @@ static void crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
                                                UDisksCrypttabEntry   *entry,
                                                gpointer               user_data);
 
+#ifdef HAVE_LIBMOUNT
+static void utab_monitor_on_entry_added (UDisksUtabMonitor *monitor,
+                                         UDisksUtabEntry   *entry,
+                                         gpointer           user_data);
+
+static void utab_monitor_on_entry_removed (UDisksUtabMonitor *monitor,
+                                           UDisksUtabEntry   *entry,
+                                           gpointer           user_data);
+#endif
+
 static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
                                                 GFile            *file,
                                                 GFile            *other_file,
@@ -704,6 +714,16 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                     "entry-removed",
                     G_CALLBACK (crypttab_monitor_on_entry_removed),
                     provider);
+#ifdef HAVE_LIBMOUNT
+  g_signal_connect (udisks_daemon_get_utab_monitor (daemon),
+                    "entry-added",
+                    G_CALLBACK (utab_monitor_on_entry_added),
+                    provider);
+  g_signal_connect (udisks_daemon_get_utab_monitor (daemon),
+                    "entry-removed",
+                    G_CALLBACK (utab_monitor_on_entry_removed),
+                    provider);
+#endif
 
   /* The drive configurations need to be re-applied when system wakes up from suspend/hibernate */
   dbus_conn = udisks_daemon_get_connection (daemon);
@@ -1500,3 +1520,23 @@ crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
   update_all_block_objects (provider);
 }
+
+#ifdef HAVE_LIBMOUNT
+static void
+utab_monitor_on_entry_added (UDisksUtabMonitor *monitor,
+                             UDisksUtabEntry   *entry,
+                             gpointer           user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_objects (provider);
+}
+
+static void
+utab_monitor_on_entry_removed (UDisksUtabMonitor *monitor,
+                               UDisksUtabEntry   *entry,
+                               gpointer           user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_objects (provider);
+}
+#endif

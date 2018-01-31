@@ -431,6 +431,7 @@
       <xi:include href="xml/udisksmountmonitor.xml"/>
       <xi:include href="xml/udisksfstabmonitor.xml"/>
       <xi:include href="xml/udiskscrypttabmonitor.xml"/>
+      <xi:include href="xml/udisksutabmonitor.xml"/>
     </chapter>
     <chapter id="ref-daemon-jobs">
       <title>Jobs</title>

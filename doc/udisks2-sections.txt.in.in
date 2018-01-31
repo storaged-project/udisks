@@ -1434,6 +1434,27 @@ udisks_crypttab_monitor_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udisksutabmonitor</FILE>
+<TITLE>UDisksUtabMonitor</TITLE>
+UDisksUtabEntry
+udisks_utab_entry_get_source
+udisks_utab_entry_get_opts
+UDisksUtabMonitor
+udisks_utab_monitor_new
+udisks_utab_monitor_get_entries
+<SUBSECTION Standard>
+UDISKS_TYPE_UTAB_ENTRY
+UDISKS_UTAB_ENTRY
+UDISKS_IS_UTAB_ENTRY
+UDISKS_TYPE_UTAB_MONITOR
+UDISKS_UTAB_MONITOR
+UDISKS_IS_UTAB_MONITOR
+<SUBSECTION Private>
+udisks_utab_entry_get_type
+udisks_utab_monitor_get_type
+</SECTION>
+
+<SECTION>
 <FILE>UDisksPartition</FILE>
 UDisksPartition
 UDisksPartitionIface

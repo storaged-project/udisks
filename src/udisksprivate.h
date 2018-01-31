@@ -21,8 +21,13 @@
 #ifndef __UDISKS_PRIVATE_H__
 #define __UDISKS_PRIVATE_H__
 
+#include "config.h"
 #include "udisksdaemontypes.h"
 #include <mntent.h>
+
+#ifdef HAVE_LIBMOUNT
+#include <libmount/libmount.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -36,6 +41,10 @@ UDisksCrypttabEntry *_udisks_crypttab_entry_new (const gchar *name,
                                                  const gchar *device,
                                                  const gchar *passphrase,
                                                  const gchar *options);
+
+#ifdef HAVE_LIBMOUNT
+UDisksUtabEntry * _udisks_utab_entry_new (struct libmnt_fs *fs);
+#endif
 
 G_END_DECLS
 

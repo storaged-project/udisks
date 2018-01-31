@@ -549,6 +549,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
         }
     }
 
+  if (g_str_has_prefix (option, "x-"))
+    {
+      return TRUE;
+    }
+
   return FALSE;
 }
 

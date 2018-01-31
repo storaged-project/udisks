@@ -205,7 +205,7 @@ run_task_job (GTask            *task,
                                        &job->job_error);
     }
 
-  g_main_context_invoke (g_main_context_get_thread_default (), job_complete, job);
+  g_main_context_invoke (g_task_get_context (task), job_complete, job);
 }
 
 static void

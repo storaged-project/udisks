@@ -1250,6 +1250,9 @@
     -->
     <property name="HintSymbolicIconName" type="s" access="read"/>
 
+    <!-- UserspaceMountOptions: List of userspace mount options. -->
+    <property name="UserspaceMountOptions" type="as" access="read"/>
+
     <!--
         AddConfigurationItem:
         @item: The configuration item to add.
