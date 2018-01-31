@@ -113,8 +113,10 @@ udisks_linux_logical_volume_new (void)
 /**
  * udisks_linux_logical_volume_update:
  * @logical_volume: A #UDisksLinuxLogicalVolume.
- * @vg: LVM volume group
- * @lv: LVM logical volume
+ * @group_object: *UDisksLinuxVolumeGroupObject
+ * @lv_info: *BDLVMLVdata
+ * @meta_lv_info: *BDLVMLVdata
+ * @needs_polling_ret: bool
  *
  * Updates the interface.
  */

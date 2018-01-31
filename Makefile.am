@@ -7,7 +7,7 @@ PYTHON ?= python3
 
 NULL =
 
-SUBDIRS = data udisks src tools modules po doc
+SUBDIRS = data generated udisks src tools modules po doc gi
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 

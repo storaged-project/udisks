@@ -129,8 +129,8 @@ udisks_linux_volume_group_new (void)
 
 /**
  * udisks_linux_volume_group_update:
- * @volume_group: A #UDisksLinuxVolumeGroup.
- * @object: The enclosing #UDisksLinuxVolumeGroupObject instance.
+ * @vg_info: *BDLVMVGdata.
+ * @needs_polling_ret: *gboolean.
  *
  * Updates the interface.
  */

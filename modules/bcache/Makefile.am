@@ -57,10 +57,10 @@ libudisks2_bcacheinclude_HEADERS =                                            \
 
 libudisks2_bcache_la_SOURCES =                                                \
 	$(BUILT_SOURCES)                                                      \
-	$(top_srcdir)/modules/udisksmoduleiface.h                             \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
-	$(top_srcdir)/modules/udisksmoduleobject.h                            \
-	$(top_srcdir)/modules/udisksmoduleobject.c                            \
+	../udisksmoduleiface.h                                                \
+	../udisksmoduleifacetypes.h                                           \
+	../udisksmoduleobject.h                                               \
+	../udisksmoduleobject.c                                               \
 	udiskslinuxblockbcache.c                                              \
 	udiskslinuxblockbcache.h                                              \
 	udiskslinuxmanagerbcache.h                                            \
