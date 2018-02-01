@@ -415,6 +415,12 @@ class UdisksTestCase(unittest.TestCase):
         self.run_command("udevadm control --reload")
 
     @classmethod
+    def get_udev_property(self, device, prop):
+        udev = GUdev.Client()
+        dev = udev.query_by_device_file(device)
+        return dev.get_property(prop)
+
+    @classmethod
     def assertHasIface(self, obj, iface):
         obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
         intro_data = obj_intro.Introspect()

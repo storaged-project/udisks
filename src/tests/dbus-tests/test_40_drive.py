@@ -91,7 +91,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         def read_sys_file(value):
             return self.read_file(os.path.join(sys_dir, value)).strip()
 
-        serial = read_sys_file('wwid').rsplit(None, 1)[-1]  # get the last word in the file
+        serial = self.get_udev_property(self.cd_dev, 'ID_SCSI_SERIAL')
         ret_code, wwn = self.run_command('lsblk -d -no WWN %s' % self.cd_dev)
         self.assertEqual(ret_code, 0)
 
