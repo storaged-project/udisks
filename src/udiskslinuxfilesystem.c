@@ -1144,10 +1144,11 @@ is_system_managed (UDisksBlock  *block,
 
 static void trigger_mpoint_cleanup (const gchar *mount_point)
 {
-  const gchar *argv[] = {"systemctl", "start", NULL, NULL};
+  const gchar *service_argv[] = {"systemctl", "start", NULL, NULL};
+  const gchar *escape_argv[] = {"systemd-escape", NULL, NULL};
   GError *error = NULL;
   gchar *escaped_mpoint = NULL;
-  gsize len = 0;
+  size_t len = 0;
 
   if (g_str_has_prefix (mount_point, "/"))
     mount_point++;
@@ -1155,14 +1156,27 @@ static void trigger_mpoint_cleanup (const gchar *mount_point)
     udisks_warning ("Invalid mount point given to trigger_mpoint_cleanup(): %s",
                     mount_point);
 
-  /* start with the mount point without the leading '/' */
-  escaped_mpoint = g_strdup (mount_point);
+  /* use 'systemd-escape' to escape the mountpoint */
+  escape_argv[1] = g_strdup (mount_point);
 
-  /* and replace all '/'s with '-'s */
-  for (gchar *letter = escaped_mpoint; *letter != '\0'; letter++, len++)
+  if (!bd_utils_exec_and_capture_output (escape_argv, NULL, &escaped_mpoint, &error) && (error != NULL))
     {
-      if (*letter == '/')
-        *letter = '-';
+      /* this is a best-effort mechanism, if it fails, just log warning and move
+         on */
+      udisks_warning ("Failed to setup systemd-based mount point cleanup: %s",
+                      error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* remove leading/trailing whitespace */
+  g_strstrip (escaped_mpoint);
+
+  len = strlen (escaped_mpoint);
+  if (len <= 0)
+    {
+      udisks_warning ("Failed to setup systemd-based mount point cleanup");
+      goto out;
     }
 
   /* remove the potential trailing '-' (would happen if the given mount_point
@@ -1170,9 +1184,9 @@ static void trigger_mpoint_cleanup (const gchar *mount_point)
   if (escaped_mpoint[len - 1] == '-')
     escaped_mpoint[len - 1] = '\0';
 
-  argv[2] = g_strdup_printf ("clean-mount-point@%s", escaped_mpoint);
+  service_argv[2] = g_strdup_printf ("clean-mount-point@%s", escaped_mpoint);
 
-  if (!bd_utils_exec_and_report_error (argv, NULL, &error) && (error != NULL))
+  if (!bd_utils_exec_and_report_error (service_argv, NULL, &error) && (error != NULL))
     {
       /* this is a best-effort mechanism, if it fails, just log warning and move
          on */
@@ -1181,8 +1195,10 @@ static void trigger_mpoint_cleanup (const gchar *mount_point)
       g_clear_error (&error);
     }
 
+out:
   g_free (escaped_mpoint);
-  g_free ((gchar *) argv[2]);
+  g_free ((gchar *) service_argv[2]);
+  g_free ((gchar *) escape_argv[1]);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
