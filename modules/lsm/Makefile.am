@@ -29,6 +29,7 @@ $(dbus_built_sources): data/org.freedesktop.UDisks2.lsm.xml Makefile.am
 	$(AM_V_GEN) gdbus-codegen \
 		--interface-prefix org.freedesktop.UDisks2. \
 		--c-namespace UDisks \
+		--c-generate-autocleanup all \
 		--generate-c-code lsm_generated \
 		--generate-docbook doc_generated \
 		$<
