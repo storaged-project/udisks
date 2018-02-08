@@ -1032,6 +1032,7 @@ class FS(UDisksTestCase):
             subprocess.call(['udevadm', 'trigger', '--action=change',
                              '--sysname-match=' + os.path.basename(self.cd_device)])
             self.sync()
+            time.sleep(5)
             self.sync()
             cd_fs = self.udisks_filesystem(cd=True)
 
