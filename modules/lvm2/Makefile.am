@@ -32,6 +32,7 @@ $(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.freedesktop.UDisks2.lvm2.xml 
 	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.freedesktop.UDisks2.                    \
 	        --c-namespace UDisks                                           \
+	        --c-generate-autocleanup all                                   \
 	        --generate-c-code udisks-lvm2-generated                        \
 	        --generate-docbook udisks-generated-doc                        \
 	        $<

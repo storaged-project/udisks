@@ -32,6 +32,7 @@ $(dbus_built_sources): $(BTRFS_MODULE_DIR)/data/org.freedesktop.UDisks2.btrfs.xm
 	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.freedesktop.UDisks2.                    \
 	        --c-namespace UDisks                                           \
+	        --c-generate-autocleanup all                                   \
 	        --generate-c-code udisks-btrfs-generated                       \
 	        --generate-docbook udisks-generated-doc                        \
 	        $<

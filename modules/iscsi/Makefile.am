@@ -31,6 +31,7 @@ $(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.freedesktop.UDisks2.iscsi.xm
 	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.freedesktop.UDisks2.                    \
 	        --c-namespace UDisks                                           \
+	        --c-generate-autocleanup all                                   \
 	        --generate-c-code udisks-iscsi-generated                       \
 	        --generate-docbook udisks-generated-doc                        \
 	        $<

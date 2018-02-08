@@ -37,6 +37,7 @@ $(dbus_built_sources): $(ZRAM_MODULE_DIR)/data/org.freedesktop.UDisks2.zram.xml 
 	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.freedesktop.UDisks2.                    \
 	        --c-namespace UDisks                                           \
+	        --c-generate-autocleanup all                                   \
 	        --generate-c-code udisks-zram-generated                        \
 	        --generate-docbook udisks-generated-doc                        \
 	        $<

@@ -32,6 +32,7 @@ $(dbus_built_sources): $(BCACHE_MODULE_DIR)/data/org.freedesktop.UDisks2.bcache.
 	$(AM_V_GEN) gdbus-codegen                                             \
 	        --interface-prefix org.freedesktop.UDisks2.                   \
 	        --c-namespace UDisks                                          \
+	        --c-generate-autocleanup all                                  \
 	        --generate-c-code udisks-bcache-generated                     \
 	        --generate-docbook udisks-generated-doc                       \
 	        $<
