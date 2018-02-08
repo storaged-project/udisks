@@ -253,9 +253,7 @@ udevadm trigger
 %systemd_postun_with_restart udisks2.service
 %systemd_postun clean-mount-point@.service
 
-%post -n lib%{name} -p /sbin/ldconfig
-
-%postun -n lib%{name} -p /sbin/ldconfig
+%ldconfig_scriptlets -n lib%{name}
 
 %if %{is_fedora}
 %post -n %{name}-zram
@@ -354,6 +352,15 @@ udevadm trigger
 %endif
 
 %changelog
+* Thu Feb 08 2018 Vojtech Trefny <vtrefny@redhat.com> - 2.7.6-1
+- Version 2.7.6
+
+* Fri Feb 02 2018 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 2.7.5-2
+- Switch to %%ldconfig_scriptlets
+
+* Mon Dec 04 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.5-1
+- Version 2.7.5
+
 * Wed Nov 01 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.4-1
 - Version 2.7.4
 
@@ -363,8 +370,20 @@ udevadm trigger
 * Thu Aug 03 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.2-1
 - Version 2.7.2
 
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Mon Jul 03 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.1-1
 - Version 2.7.1
+
+* Tue Jun 20 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.0-3
+- Do not try to remove changed_blacklist hash table in finalize
+
+* Mon Jun 19 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.0-2
+- Fix how UDisksClient filters property changes
 
 * Fri Jun 02 2017 Vojtech Trefny <vtrefny@redhat.com> - 2.7.0-1
 - Version 2.7.0
