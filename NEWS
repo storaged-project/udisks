@@ -1,17 +1,45 @@
 ---------------------------
-udisks 2.7.6 (unreleased)
+udisks 2.7.6
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.5:
-(TODO: make shortlog)
+
+Andrea Azzarone (8):
+      Build with libmount >= 2.30
+      Add UdisksUtabEntry
+      First implementation of udisksutabmonitor
+      Export utab entries
+      Add read-write lock
+      update documentation
+      Add tests.
+      Invoke job_complete in the proper context in order to avoid deadlocks
+
+Marius Vollmer (2):
+      lvm2: Don't match prefixes in cmp_int_lv_name
+      core: Add o.fd.U.Filesystem.Size property
+
+Vojtech Trefny (6):
+      Post-release version bump to 2.7.6
+      Check for all LUKS devices when looking for CryptoBackingDevice
+      Run encrypted tests with LUKS2 format too.
+      Check size of created thinpool in tests
+      Fix escaping mountpoint for the cleanup service
+      Ignore errors when saving journal output in tests
+
+Vratislav Podzimek (2):
+      Only check mount point prefix in the iso9660 tests
+      Skip PolicyKit integration tests on Fedora 26
+
+Will Thompson (1):
+      Generate autocleanup functions for interfaces
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date --rfc-3339='date')
+2018-02-08
 
 ---------------------------
 udisks 2.7.5

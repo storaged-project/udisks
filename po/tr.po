@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-03 11:14+0200\n"
+"POT-Creation-Date: 2017-12-05 12:26+0100\n"
 "PO-Revision-Date: 2017-11-06 03:49-0500\n"
 "Last-Translator: Muhammet Kara <muhammet.k@gmail.com>\n"
 "Language-Team: Turkish\n"
@@ -435,65 +435,65 @@ msgstr ""
 msgid "Authentication is required to manage iSCSI"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxiscsisession.c:134
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:691
+#: ../modules/iscsi/udiskslinuxiscsisession.c:136
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:722
 #, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "$(drive) sürücüsünü biçimlendirmek için kimlik doğrulaması gerekli"
 
-#: ../modules/iscsi/udiskslinuxiscsisession.c:167
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:716
+#: ../modules/iscsi/udiskslinuxiscsisession.c:169
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:747
 #, c-format
 msgid "Logout failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:306
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:412
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
 #, c-format
 msgid "Error opening %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:326
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:384
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 #, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "RAID dizilerini yönetmek için kimlik doğrulaması gerekli"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:392
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:393
 msgid "Empty initiator name"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:429
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:520
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 #, fuzzy
 msgid "Authentication is required to discover targets"
 msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:544
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:593
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:545
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:594
 #, c-format
 msgid "Discovery failed: %s"
 msgstr ""
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:578
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:579
 #, fuzzy
 msgid "Authentication is required to discover firmware targets"
 msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:630
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:632
 #, fuzzy
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
 
-#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:655
+#: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:657
 #, c-format
 msgid "Login failed: %s"
 msgstr ""
@@ -685,7 +685,7 @@ msgstr "/etc/crypttab dosyasını değiştirmek için kimlik doğrulaması gerek
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:2778 ../src/udiskslinuxdriveata.c:2241
+#: ../src/udiskslinuxblock.c:2804 ../src/udiskslinuxdriveata.c:2247
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "$(drive) sürücüsünü güvenli bir şekilde silmek için kimlik doğrulaması "
@@ -698,15 +698,15 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:2790
+#: ../src/udiskslinuxblock.c:2816
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive) sürücüsünü biçimlendirmek için kimlik doğrulaması gerekli"
 
-#: ../src/udiskslinuxblock.c:2832 ../src/udiskslinuxmdraid.c:1625
+#: ../src/udiskslinuxblock.c:2858 ../src/udiskslinuxmdraid.c:1553
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
 
-#: ../src/udiskslinuxblock.c:2836 ../src/udiskslinuxdriveata.c:2253
+#: ../src/udiskslinuxblock.c:2862 ../src/udiskslinuxdriveata.c:2259
 msgid "Formatting Device"
 msgstr "Aygıt Biçimlendiriliyor"
 
@@ -716,7 +716,7 @@ msgstr "Aygıt Biçimlendiriliyor"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3287
+#: ../src/udiskslinuxblock.c:3338
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
 "$(drive) sürücüsünü okuma amaçlı açmak için kimlik doğrulaması gerekli"
@@ -727,7 +727,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3351
+#: ../src/udiskslinuxblock.c:3400
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
 "$(drive) sürücüsünü yazma amaçlı açmak için kimlik doğrulaması gerekli"
@@ -738,10 +738,20 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3417
+#: ../src/udiskslinuxblock.c:3465
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "$(drive) sürücüsünü kıyaslama amaçlı açmak için kimlik doğrulaması gerekli"
+
+#. Translators: Shown in authentication dialog when an application
+#. * wants to benchmark a device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:3539
+msgid "Authentication is required to open $(drive)."
+msgstr ""
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -749,7 +759,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3478
+#: ../src/udiskslinuxblock.c:3592
 msgid "Authentication is required to rescan $(drive)"
 msgstr "$(drive) sürücünü yeniden taramak için kimlik doğrulaması gerekli"
 
@@ -759,7 +769,7 @@ msgstr "$(drive) sürücünü yeniden taramak için kimlik doğrulaması gerekli
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdrive.c:1016
+#: ../src/udiskslinuxdrive.c:1017
 msgid "Authentication is required to eject $(drive)"
 msgstr "$(drive) sürücüsünü çıkarmak için kimlik doğrulaması gerekli"
 
@@ -769,7 +779,7 @@ msgstr "$(drive) sürücüsünü çıkarmak için kimlik doğrulaması gerekli"
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdrive.c:1104
+#: ../src/udiskslinuxdrive.c:1105
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "$(drive) sürücüsünü yapılandırmak için kimlik doğrulaması gerekli"
 
@@ -779,7 +789,7 @@ msgstr "$(drive) sürücüsünü yapılandırmak için kimlik doğrulaması gere
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdrive.c:1420
+#: ../src/udiskslinuxdrive.c:1421
 msgid "Authentication is required to power off $(drive)"
 msgstr "$(drive) sürücüsünün gücünü kapatmak için kimlik doğrulaması gerekli"
 
@@ -789,7 +799,7 @@ msgstr "$(drive) sürücüsünün gücünü kapatmak için kimlik doğrulaması 
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:813
+#: ../src/udiskslinuxdriveata.c:819
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr ""
 "SMART verisini $(drive) sürücüsünden güncellemek için kimlik doğrulaması "
@@ -801,7 +811,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:824
+#: ../src/udiskslinuxdriveata.c:830
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
 "SMART verisini $(drive) üzerindeki bir ikili veri ile değiştirmek için "
@@ -813,7 +823,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:958
+#: ../src/udiskslinuxdriveata.c:964
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
 "$(drive) üzerindeki SMART öz sınamasıni durdurmak için kimlik doğrulaması "
@@ -825,7 +835,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:1208
+#: ../src/udiskslinuxdriveata.c:1214
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
 "$(drive) üzerinde SMART öz sınaması başlatmak için kimlik doğrulaması "
@@ -837,7 +847,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:1296
+#: ../src/udiskslinuxdriveata.c:1302
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
 "$(drive) sürücüsünün güç durumunu denetlemek için kimlik doğrulaması gerekli"
@@ -849,13 +859,13 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:1401
+#: ../src/udiskslinuxdriveata.c:1407
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 "$(drive) sürücüsünü bekleme kipinden uyandırmak için kimlik doğrulaması "
 "gerekli"
 
-#: ../src/udiskslinuxdriveata.c:1402
+#: ../src/udiskslinuxdriveata.c:1408
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr ""
 "$(drive) sürücüsünü bekleme kipine sokmak için kimlik doğrulaması gerekli"
@@ -866,7 +876,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:2334
+#: ../src/udiskslinuxdriveata.c:2340
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr ""
 "$(drive) üzerinde SMART'ı etkinleştirmek için kimlik doğrulaması gerekli"
@@ -877,7 +887,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxdriveata.c:2344
+#: ../src/udiskslinuxdriveata.c:2350
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "$(drive) üzerinde SMART'ı kapatmak için kimlik doğrulaması gerekli"
 
@@ -887,7 +897,7 @@ msgstr "$(drive) üzerinde SMART'ı kapatmak için kimlik doğrulaması gerekli"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxencrypted.c:382 ../src/udiskslinuxencrypted.c:737
+#: ../src/udiskslinuxencrypted.c:383 ../src/udiskslinuxencrypted.c:758
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Şifreli $(drive) aygıtının kilidini açmak için kimlik doğrulaması gerekli"
@@ -899,7 +909,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxencrypted.c:600
+#: ../src/udiskslinuxencrypted.c:602
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
@@ -913,7 +923,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1239 ../src/udiskslinuxfilesystem.c:1417
+#: ../src/udiskslinuxfilesystem.c:1322 ../src/udiskslinuxfilesystem.c:1500
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive) sürücüsünü bağlamak için kimlik doğrulaması gerekli"
 
@@ -927,7 +937,7 @@ msgstr "$(drive) sürücüsünü bağlamak için kimlik doğrulaması gerekli"
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/udiskslinuxfilesystem.c:1324
+#: ../src/udiskslinuxfilesystem.c:1407
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -945,7 +955,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/udiskslinuxfilesystem.c:1655
+#: ../src/udiskslinuxfilesystem.c:1742
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -960,7 +970,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1703
+#: ../src/udiskslinuxfilesystem.c:1790
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Başka bir kullanıcı tarafından bağlanan $(drive) sürücüsünü ayırmak için "
@@ -972,7 +982,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1887
+#: ../src/udiskslinuxfilesystem.c:1974
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "$(drive) üzerindeki dosya sistemi etiketini değiştirmek için kimlik "
@@ -984,7 +994,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2069
+#: ../src/udiskslinuxfilesystem.c:2156
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 
@@ -994,7 +1004,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2227
+#: ../src/udiskslinuxfilesystem.c:2314
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 
@@ -1004,7 +1014,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2386
+#: ../src/udiskslinuxfilesystem.c:2473
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 
@@ -1014,7 +1024,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2522
+#: ../src/udiskslinuxfilesystem.c:2609
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1045,7 +1055,7 @@ msgstr "$(drive) döngü aygıtını değiştirmek için kimlik doğrulaması ge
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmanager.c:539
+#: ../src/udiskslinuxmanager.c:538
 msgid "Authentication is required to create a RAID array"
 msgstr "RAID dizisi oluşturmak için kimlik doğrulaması gerekli"
 
@@ -1053,7 +1063,7 @@ msgstr "RAID dizisi oluşturmak için kimlik doğrulaması gerekli"
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:725
+#: ../src/udiskslinuxmdraid.c:653
 msgid "Authentication is required to start a RAID array"
 msgstr "RAID dizisi başlatmak için kimlik doğrulaması gerekli"
 
@@ -1061,7 +1071,7 @@ msgstr "RAID dizisi başlatmak için kimlik doğrulaması gerekli"
 #. * attempts to stop a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:894
+#: ../src/udiskslinuxmdraid.c:822
 msgid "Authentication is required to stop a RAID array"
 msgstr "RAID dizisi durdurmak için kimlik doğrulaması gerekli"
 
@@ -1069,7 +1079,7 @@ msgstr "RAID dizisi durdurmak için kimlik doğrulaması gerekli"
 #. * attempts to remove a device from a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1120
+#: ../src/udiskslinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "RAID dizisinden bir aygıtı kaldırmak için kimlik doğrulaması gerekli"
 
@@ -1077,7 +1087,7 @@ msgstr "RAID dizisinden bir aygıtı kaldırmak için kimlik doğrulaması gerek
 #. * attempts to add a device to a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1274
+#: ../src/udiskslinuxmdraid.c:1202
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "RAID dizisine aygıt eklemek için kimlik doğrulaması gerekli"
 
@@ -1085,7 +1095,7 @@ msgstr "RAID dizisine aygıt eklemek için kimlik doğrulaması gerekli"
 #. * attempts to change whether it has a write-intent bitmap
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1396
+#: ../src/udiskslinuxmdraid.c:1324
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1097,14 +1107,14 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1518
+#: ../src/udiskslinuxmdraid.c:1446
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Bir RAID dizisinde veri ovalamayı başlatmak/durdurmak için kimlik doğrulama "
 "gereklidir"
 
-#: ../src/udiskslinuxmdraid.c:1606
+#: ../src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
 
@@ -1114,7 +1124,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxpartition.c:149
+#: ../src/udiskslinuxpartition.c:151
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
 "$(drive) aygıtı üzerindeki bölümü değiştirmek için kimlik doğrulaması "
@@ -1136,7 +1146,7 @@ msgstr "$(drive) üzerinde bölüm oluşturmak için kimlik doğrulaması gerekl
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxswapspace.c:221
+#: ../src/udiskslinuxswapspace.c:222
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
 "$(drive) üzerindeki takas alanını etkinleştirmek için kimlik doğrulaması "
@@ -1148,11 +1158,21 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxswapspace.c:331
+#: ../src/udiskslinuxswapspace.c:332
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
 "$(drive) üzerindeki takas alanını etkisiz hale getirmek için kimlik "
 "doğrulaması gerekli"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting label of a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxswapspace.c:397
+msgid "Authentication is required to set swapspace label on $(drive)"
+msgstr ""
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -1674,7 +1694,7 @@ msgstr "VMFS Üyesi"
 #. * First %s is the raw filesystem type obtained from udev, second %s is
 #. version.
 #. 
-#: ../udisks/udisksclient.c:2016
+#: ../udisks/udisksclient.c:2020
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
@@ -1683,7 +1703,7 @@ msgstr "Bilinmeyen (%s %s)"
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
 #. 
-#: ../udisks/udisksclient.c:2025
+#: ../udisks/udisksclient.c:2029
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
@@ -1691,376 +1711,376 @@ msgstr "Bilinmeyen (%s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. 
-#: ../udisks/udisksclient.c:2031 ../udisks/udisksclient.c:2045
+#: ../udisks/udisksclient.c:2035 ../udisks/udisksclient.c:2049
 msgctxt "fs-type"
 msgid "Unknown"
 msgstr "Bilinmeyen"
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2062
+#: ../udisks/udisksclient.c:2066
 msgid "Master Boot Record"
 msgstr "Ana Önyükleme Kaydı"
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2064
+#: ../udisks/udisksclient.c:2068
 msgid "GUID Partition Table"
 msgstr "GUID Bölüm Tablosu"
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2066
+#: ../udisks/udisksclient.c:2070
 msgid "Apple Partition Map"
 msgstr "Apple Bölüm Haritası"
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2109 ../udisks/udisksclient.c:2114
+#: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
 msgctxt "partition-subtype"
 msgid "Generic"
 msgstr "Genel"
 
-#: ../udisks/udisksclient.c:2110 ../udisks/udisksclient.c:2115
+#: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2119
 msgctxt "partition-subtype"
 msgid "Linux"
 msgstr "Linux"
 
-#: ../udisks/udisksclient.c:2111 ../udisks/udisksclient.c:2116
-#: ../udisks/udisksclient.c:2121
+#: ../udisks/udisksclient.c:2115 ../udisks/udisksclient.c:2120
+#: ../udisks/udisksclient.c:2125
 msgctxt "partition-subtype"
 msgid "Windows"
 msgstr "Windows"
 
-#: ../udisks/udisksclient.c:2112 ../udisks/udisksclient.c:2118
+#: ../udisks/udisksclient.c:2116 ../udisks/udisksclient.c:2122
 msgctxt "partition-subtype"
 msgid "Other"
 msgstr "Diğer"
 
-#: ../udisks/udisksclient.c:2117 ../udisks/udisksclient.c:2120
+#: ../udisks/udisksclient.c:2121 ../udisks/udisksclient.c:2124
 msgctxt "partition-subtype"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
-#: ../udisks/udisksclient.c:2208
+#: ../udisks/udisksclient.c:2212
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
 msgstr "MBR Bölüm Şeması"
 
-#: ../udisks/udisksclient.c:2209
+#: ../udisks/udisksclient.c:2213
 msgctxt "part-type"
 msgid "EFI System"
 msgstr "EFI Sistem"
 
-#: ../udisks/udisksclient.c:2210
+#: ../udisks/udisksclient.c:2214
 msgctxt "part-type"
 msgid "BIOS Boot"
 msgstr "BIOS Önyükleme"
 
 #. This is also defined in the Apple and Solaris section
-#: ../udisks/udisksclient.c:2212
+#: ../udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "ZFS"
 msgstr "ZFS"
 
 #. Extended Boot Partition, see
 #. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
-#: ../udisks/udisksclient.c:2214
+#: ../udisks/udisksclient.c:2218
 msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr "Genişletilmiş Ön Yükleme Bölümü"
 
 #. Discoverable Linux Partitions, see
 #. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
-#: ../udisks/udisksclient.c:2216
+#: ../udisks/udisksclient.c:2220
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr "Linux Kök Bölümü (x86)"
 
-#: ../udisks/udisksclient.c:2217
+#: ../udisks/udisksclient.c:2221
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
 msgstr "Linux Kök Bölümü (x86_64)"
 
-#: ../udisks/udisksclient.c:2218
+#: ../udisks/udisksclient.c:2222
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr "Linux Ev Bölümü"
 
-#: ../udisks/udisksclient.c:2219
+#: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr "Linux Sunucu Verisi Bölümü"
 
 #. Linux
-#: ../udisks/udisksclient.c:2221
+#: ../udisks/udisksclient.c:2225
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Linux Takas Alanı"
 
-#: ../udisks/udisksclient.c:2222
+#: ../udisks/udisksclient.c:2226
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr "Linux Dosya Sistemi"
 
-#: ../udisks/udisksclient.c:2223
+#: ../udisks/udisksclient.c:2227
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr "Linux RAID"
 
-#: ../udisks/udisksclient.c:2224 ../udisks/udisksclient.c:2309
+#: ../udisks/udisksclient.c:2228 ../udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux LVM"
 
-#: ../udisks/udisksclient.c:2225
+#: ../udisks/udisksclient.c:2229
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Linux Ayrılmış Alan"
 
 #. Microsoft
-#: ../udisks/udisksclient.c:2227
+#: ../udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "Temel Veri"
 
-#: ../udisks/udisksclient.c:2228
+#: ../udisks/udisksclient.c:2232
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Microsoft Ayrılmış Alan"
 
-#: ../udisks/udisksclient.c:2229
+#: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft LDM metaveri"
 
-#: ../udisks/udisksclient.c:2230
+#: ../udisks/udisksclient.c:2234
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft LDM verisi"
 
-#: ../udisks/udisksclient.c:2231
+#: ../udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Microsoft Windows Kurtarma Ortamı"
 
 #. Apple OS X
-#: ../udisks/udisksclient.c:2233
+#: ../udisks/udisksclient.c:2237
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple HFS/HFS+"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: ../udisks/udisksclient.c:2234 ../udisks/udisksclient.c:2288
+#: ../udisks/udisksclient.c:2238 ../udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple UFS"
 
-#: ../udisks/udisksclient.c:2235
+#: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple ZFS"
 
 #. same as ZFS
-#: ../udisks/udisksclient.c:2236
+#: ../udisks/udisksclient.c:2240
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple RAID"
 
-#: ../udisks/udisksclient.c:2237
+#: ../udisks/udisksclient.c:2241
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple RAID (offline)"
 
-#: ../udisks/udisksclient.c:2238
+#: ../udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Apple Boot"
 
-#: ../udisks/udisksclient.c:2239
+#: ../udisks/udisksclient.c:2243
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple Label"
 
-#: ../udisks/udisksclient.c:2240
+#: ../udisks/udisksclient.c:2244
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV Recovery"
 
-#: ../udisks/udisksclient.c:2241
+#: ../udisks/udisksclient.c:2245
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Apple Çekirdek Bellek"
 
 #. HP-UX
-#: ../udisks/udisksclient.c:2243
+#: ../udisks/udisksclient.c:2247
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX Data"
 
-#: ../udisks/udisksclient.c:2244
+#: ../udisks/udisksclient.c:2248
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX Service"
 
 #. FreeBSD
-#: ../udisks/udisksclient.c:2246
+#: ../udisks/udisksclient.c:2250
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "FreeBSD Boot"
 
-#: ../udisks/udisksclient.c:2247
+#: ../udisks/udisksclient.c:2251
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD Data"
 
-#: ../udisks/udisksclient.c:2248
+#: ../udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "FreeBSD Takas Alanı"
 
-#: ../udisks/udisksclient.c:2249
+#: ../udisks/udisksclient.c:2253
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD UFS"
 
-#: ../udisks/udisksclient.c:2250
+#: ../udisks/udisksclient.c:2254
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD Vinum"
 
-#: ../udisks/udisksclient.c:2251
+#: ../udisks/udisksclient.c:2255
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD ZFS"
 
 #. Solaris
-#: ../udisks/udisksclient.c:2253
+#: ../udisks/udisksclient.c:2257
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Solaris Boot"
 
-#: ../udisks/udisksclient.c:2254
+#: ../udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris Root"
 
-#: ../udisks/udisksclient.c:2255
+#: ../udisks/udisksclient.c:2259
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Solaris Takas Alanı"
 
-#: ../udisks/udisksclient.c:2256
+#: ../udisks/udisksclient.c:2260
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris Yedek"
 
-#: ../udisks/udisksclient.c:2257
+#: ../udisks/udisksclient.c:2261
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris /usr"
 
 #. same as ZFS
-#: ../udisks/udisksclient.c:2258
+#: ../udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris /var"
 
-#: ../udisks/udisksclient.c:2259
+#: ../udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris /home"
 
-#: ../udisks/udisksclient.c:2260
+#: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris Alternate Sector"
 
-#: ../udisks/udisksclient.c:2261
+#: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Solaris Reserved"
 
-#: ../udisks/udisksclient.c:2262
+#: ../udisks/udisksclient.c:2266
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Solaris Reserved (2)"
 
-#: ../udisks/udisksclient.c:2263
+#: ../udisks/udisksclient.c:2267
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Solaris Reserved (3)"
 
-#: ../udisks/udisksclient.c:2264
+#: ../udisks/udisksclient.c:2268
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Solaris Reserved (4)"
 
-#: ../udisks/udisksclient.c:2265
+#: ../udisks/udisksclient.c:2269
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Solaris Reserved (5)"
 
 #. NetBSD
-#: ../udisks/udisksclient.c:2267
+#: ../udisks/udisksclient.c:2271
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "NetBSD Takas Alanı"
 
-#: ../udisks/udisksclient.c:2268
+#: ../udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD FFS"
 
-#: ../udisks/udisksclient.c:2269
+#: ../udisks/udisksclient.c:2273
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD LFS"
 
-#: ../udisks/udisksclient.c:2270
+#: ../udisks/udisksclient.c:2274
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD RAID"
 
-#: ../udisks/udisksclient.c:2271
+#: ../udisks/udisksclient.c:2275
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "NetBSD Bitiştirilmiş"
 
-#: ../udisks/udisksclient.c:2272
+#: ../udisks/udisksclient.c:2276
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD Şifrelenmiş"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
-#: ../udisks/udisksclient.c:2274
+#: ../udisks/udisksclient.c:2278
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: ../udisks/udisksclient.c:2275
+#: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
 #. /disk-format
-#: ../udisks/udisksclient.c:2277
+#: ../udisks/udisksclient.c:2281
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr "ChromeOS Ürün Yazılımı"
 
-#: ../udisks/udisksclient.c:2278
+#: ../udisks/udisksclient.c:2282
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr "ChromeOS Çekirdeği"
 
-#: ../udisks/udisksclient.c:2279
+#: ../udisks/udisksclient.c:2283
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr "ChromeOS Kök Dosya Sistemi"
 
-#: ../udisks/udisksclient.c:2280
+#: ../udisks/udisksclient.c:2284
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr "ChromeOS için Ayrılmış"
@@ -2068,389 +2088,394 @@ msgstr "ChromeOS için Ayrılmış"
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: ../udisks/udisksclient.c:2284
+#: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2289
+#: ../udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple HFS/HFS"
 
-#: ../udisks/udisksclient.c:2290
+#: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Apple Partition Map"
 
-#: ../udisks/udisksclient.c:2291
+#: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "Unused"
 msgstr "Kullanılmayan"
 
-#: ../udisks/udisksclient.c:2292
+#: ../udisks/udisksclient.c:2296
 msgctxt "part-type"
 msgid "Empty"
 msgstr "Boş"
 
-#: ../udisks/udisksclient.c:2293
+#: ../udisks/udisksclient.c:2297
 msgctxt "part-type"
 msgid "Driver"
 msgstr "Sürücü"
 
-#: ../udisks/udisksclient.c:2294
+#: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Sürücü 4.3"
 
-#: ../udisks/udisksclient.c:2295
+#: ../udisks/udisksclient.c:2299
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "ProDOS dosya sistemi"
 
-#: ../udisks/udisksclient.c:2296
+#: ../udisks/udisksclient.c:2300
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: ../udisks/udisksclient.c:2297
+#: ../udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: ../udisks/udisksclient.c:2298
+#: ../udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: ../udisks/udisksclient.c:2299
+#: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: ../udisks/udisksclient.c:2300
+#: ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: ../udisks/udisksclient.c:2303
+#: ../udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "Extended"
 msgstr "Uzatılmış"
 
-#: ../udisks/udisksclient.c:2304
+#: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI GPT"
 
-#: ../udisks/udisksclient.c:2305
+#: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: ../udisks/udisksclient.c:2306
+#: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Linux takas alanı"
 
-#: ../udisks/udisksclient.c:2307
+#: ../udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: ../udisks/udisksclient.c:2308
+#: ../udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Linux Uzatılmış"
 
-#: ../udisks/udisksclient.c:2310
+#: ../udisks/udisksclient.c:2314
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Linux RAID otomatik"
 
-#: ../udisks/udisksclient.c:2311
+#: ../udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: ../udisks/udisksclient.c:2312
+#: ../udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32M"
 
-#: ../udisks/udisksclient.c:2313
+#: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: ../udisks/udisksclient.c:2314
+#: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
-msgid "HPFS/NTFS"
-msgstr "HPFS/NTFS"
+msgid "NTFS/exFAT/HPFS"
+msgstr ""
 
-#: ../udisks/udisksclient.c:2315
+#: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95 FAT32"
 
-#: ../udisks/udisksclient.c:2316
+#: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95 FAT32 (LBA)"
 
-#: ../udisks/udisksclient.c:2317
+#: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95 FAT16 (LBA)"
 
-#: ../udisks/udisksclient.c:2318
+#: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95 Ext d (LBA)"
 
-#: ../udisks/udisksclient.c:2319
+#: ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "Gizli FAT12"
 
-#: ../udisks/udisksclient.c:2320
+#: ../udisks/udisksclient.c:2324
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "Gizli FAT16 <32M"
 
-#: ../udisks/udisksclient.c:2321
+#: ../udisks/udisksclient.c:2325
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "Gizli FAT16"
 
-#: ../udisks/udisksclient.c:2322
+#: ../udisks/udisksclient.c:2326
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "Gizli HPFS/NTFS"
 
-#: ../udisks/udisksclient.c:2323
+#: ../udisks/udisksclient.c:2327
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "Gizli W95 FAT32"
 
-#: ../udisks/udisksclient.c:2324
+#: ../udisks/udisksclient.c:2328
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "Gizli W95 FAT32 (LBA)"
 
-#: ../udisks/udisksclient.c:2325
+#: ../udisks/udisksclient.c:2329
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "Gizli W95 FAT16 (LBA)"
 
-#: ../udisks/udisksclient.c:2326
+#: ../udisks/udisksclient.c:2330
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: ../udisks/udisksclient.c:2327
+#: ../udisks/udisksclient.c:2331
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Compaq tanılama"
 
-#: ../udisks/udisksclient.c:2328
+#: ../udisks/udisksclient.c:2332
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: ../udisks/udisksclient.c:2329
+#: ../udisks/udisksclient.c:2333
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: ../udisks/udisksclient.c:2330 ../udisks/udisksclient.c:2331
+#: ../udisks/udisksclient.c:2334 ../udisks/udisksclient.c:2335
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "Hazırda bekletme alanı"
 
-#: ../udisks/udisksclient.c:2332
+#: ../udisks/udisksclient.c:2336
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: ../udisks/udisksclient.c:2333
+#: ../udisks/udisksclient.c:2337
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: ../udisks/udisksclient.c:2334 ../udisks/udisksclient.c:2335
+#: ../udisks/udisksclient.c:2338 ../udisks/udisksclient.c:2339
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: ../udisks/udisksclient.c:2336
+#: ../udisks/udisksclient.c:2340
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Solaris önyükleme"
 
-#: ../udisks/udisksclient.c:2337
+#: ../udisks/udisksclient.c:2341
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: ../udisks/udisksclient.c:2338
+#: ../udisks/udisksclient.c:2342
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS BFS"
 
-#: ../udisks/udisksclient.c:2339
+#: ../udisks/udisksclient.c:2343
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS SkyFS"
 
-#: ../udisks/udisksclient.c:2485
+#: ../udisks/udisksclient.c:2489
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "SMART öz sınama"
 
-#: ../udisks/udisksclient.c:2486
+#: ../udisks/udisksclient.c:2490
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "Ortam Çıkarılıyor"
 
-#: ../udisks/udisksclient.c:2487
+#: ../udisks/udisksclient.c:2491
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "Aygıt Kilidi Açılıyor"
 
-#: ../udisks/udisksclient.c:2488
+#: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Locking Device"
 msgstr "Aygıt Kilitleniyor"
 
-#: ../udisks/udisksclient.c:2489
+#: ../udisks/udisksclient.c:2493
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "Şifreli Aygıt Değiştiriliyor"
 
-#: ../udisks/udisksclient.c:2490
+#: ../udisks/udisksclient.c:2494
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Takas Aygıtı Başlatılıyor"
 
-#: ../udisks/udisksclient.c:2491
+#: ../udisks/udisksclient.c:2495
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Takas Aygıtı Durduruluyor"
 
-#: ../udisks/udisksclient.c:2492
-msgctxt "job"
-msgid "Checking Filesystem"
-msgstr ""
-
-#: ../udisks/udisksclient.c:2493
-msgctxt "job"
-msgid "Mounting Filesystem"
-msgstr "Dosya Sistemi Bağlanıyor"
-
-#: ../udisks/udisksclient.c:2494
-msgctxt "job"
-msgid "Unmounting Filesystem"
-msgstr "Dosya Sistemi Ayrılıyor"
-
-#: ../udisks/udisksclient.c:2495
-msgctxt "job"
-msgid "Modifying Filesystem"
-msgstr "Dosya Sistemi Değiştiriliyor"
-
 #: ../udisks/udisksclient.c:2496
 msgctxt "job"
-msgid "Reparing Filesystem"
+msgid "Modifying Swap Device"
 msgstr ""
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
-msgid "Resizing Filesystem"
+msgid "Checking Filesystem"
 msgstr ""
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "job"
+msgid "Mounting Filesystem"
+msgstr "Dosya Sistemi Bağlanıyor"
+
+#: ../udisks/udisksclient.c:2499
+msgctxt "job"
+msgid "Unmounting Filesystem"
+msgstr "Dosya Sistemi Ayrılıyor"
+
+#: ../udisks/udisksclient.c:2500
+msgctxt "job"
+msgid "Modifying Filesystem"
+msgstr "Dosya Sistemi Değiştiriliyor"
+
+#: ../udisks/udisksclient.c:2501
+msgctxt "job"
+msgid "Repairing Filesystem"
+msgstr ""
+
+#: ../udisks/udisksclient.c:2502
+msgctxt "job"
+msgid "Resizing Filesystem"
+msgstr ""
+
+#: ../udisks/udisksclient.c:2503
+msgctxt "job"
 msgid "Erasing Device"
 msgstr "Aygıt Siliniyor"
 
-#: ../udisks/udisksclient.c:2499
+#: ../udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Dosya Sistemi Oluşturuluyor"
 
-#: ../udisks/udisksclient.c:2500
+#: ../udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Döngü Aygıtı Kuruluyor"
 
-#: ../udisks/udisksclient.c:2501
+#: ../udisks/udisksclient.c:2506
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Bölüm Değiştiriliyor"
 
-#: ../udisks/udisksclient.c:2502
+#: ../udisks/udisksclient.c:2507
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Bölüm Siliniyor"
 
-#: ../udisks/udisksclient.c:2503
+#: ../udisks/udisksclient.c:2508
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Bölüm Oluşturuluyor"
 
-#: ../udisks/udisksclient.c:2504
+#: ../udisks/udisksclient.c:2509
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Temizleniyor"
 
-#: ../udisks/udisksclient.c:2505
+#: ../udisks/udisksclient.c:2510
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "ATA Güvenli Silme"
 
-#: ../udisks/udisksclient.c:2506
+#: ../udisks/udisksclient.c:2511
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "ATA Geliştirilmiş Güvenli Silme"
 
-#: ../udisks/udisksclient.c:2507
+#: ../udisks/udisksclient.c:2512
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "RAID Dizisi Durduruluyor"
 
-#: ../udisks/udisksclient.c:2508
+#: ../udisks/udisksclient.c:2513
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "RAID Dizisi Başlatılıyor"
 
-#: ../udisks/udisksclient.c:2509
+#: ../udisks/udisksclient.c:2514
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "Aygıt Bozuk Olarak İşaretleniyor"
 
-#: ../udisks/udisksclient.c:2510
+#: ../udisks/udisksclient.c:2515
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "Aygıt Diziden Kaldırılıyor"
 
-#: ../udisks/udisksclient.c:2511
+#: ../udisks/udisksclient.c:2516
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "Diziye Aygıt Ekleniyor"
 
-#: ../udisks/udisksclient.c:2512
+#: ../udisks/udisksclient.c:2517
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "Yazma Hedefli Bit Eşlem Ayarlanıyor"
 
-#: ../udisks/udisksclient.c:2513
+#: ../udisks/udisksclient.c:2518
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "RAID Dizisi Oluşturuluyor"
 
-#: ../udisks/udisksclient.c:2521
+#: ../udisks/udisksclient.c:2526
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
@@ -2667,12 +2692,12 @@ msgctxt "one-liner-block"
 msgid "%s (%s)"
 msgstr "%s (%s)"
 
-#: ../udisks/udisksobjectinfo.c:306
+#: ../udisks/udisksobjectinfo.c:308
 #, c-format
 msgid "%s Loop Device"
 msgstr "%s Döngü Aygıtı"
 
-#: ../udisks/udisksobjectinfo.c:310
+#: ../udisks/udisksobjectinfo.c:312
 msgid "Loop Device"
 msgstr "Döngü Aygıtı"
 
@@ -2681,7 +2706,7 @@ msgstr "Döngü Aygıtı"
 #. *              The %s is the description for the loop device (e.g. "5 GB
 #. Loop Device").
 #. 
-#: ../udisks/udisksobjectinfo.c:319
+#: ../udisks/udisksobjectinfo.c:321
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
@@ -2694,43 +2719,43 @@ msgstr "Bölüm %u Aygıt %s"
 #. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
 #. 
-#: ../udisks/udisksobjectinfo.c:330
+#: ../udisks/udisksobjectinfo.c:332
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
 msgstr "%s — %s (%s)"
 
-#: ../udisks/udisksobjectinfo.c:348
+#: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
 msgstr "RAID-0 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:350
+#: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
 msgstr "RAID-1 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:352
+#: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
 msgstr "RAID-4 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:354
+#: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
 msgstr "RAID-5 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:356
+#: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
 msgstr "RAID-6 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:358
+#: ../udisks/udisksobjectinfo.c:362
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
 msgstr "RAID-10 Dizisi"
 
-#: ../udisks/udisksobjectinfo.c:360
+#: ../udisks/udisksobjectinfo.c:364
 msgctxt "mdraid-desc"
 msgid "RAID Array"
 msgstr "RAID Dizisi"
@@ -2739,7 +2764,7 @@ msgstr "RAID Dizisi"
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
 #. 
-#: ../udisks/udisksobjectinfo.c:400
+#: ../udisks/udisksobjectinfo.c:404
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
@@ -2750,7 +2775,7 @@ msgstr "%s %s"
 #. *              The %s is the description for the drive (e.g. "2 TB
 #. RAID-5").
 #. 
-#: ../udisks/udisksobjectinfo.c:415
+#: ../udisks/udisksobjectinfo.c:419
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
@@ -2761,7 +2786,7 @@ msgstr "Bölüm %u Dizi %s"
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #. 
-#: ../udisks/udisksobjectinfo.c:430
+#: ../udisks/udisksobjectinfo.c:434
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
@@ -2772,7 +2797,7 @@ msgstr "%s — %s (%s)"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. 
-#: ../udisks/udisksobjectinfo.c:441
+#: ../udisks/udisksobjectinfo.c:445
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
@@ -2784,7 +2809,7 @@ msgstr "%s — %s"
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #. 
-#: ../udisks/udisksobjectinfo.c:455
+#: ../udisks/udisksobjectinfo.c:459
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
@@ -2795,7 +2820,7 @@ msgstr "%s — %s"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. 
-#: ../udisks/udisksobjectinfo.c:465
+#: ../udisks/udisksobjectinfo.c:469
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
@@ -2803,7 +2828,7 @@ msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
-#: ../udisks/udisksobjectinfo.c:591
+#: ../udisks/udisksobjectinfo.c:597
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
@@ -2811,7 +2836,7 @@ msgstr "%s Sürücü"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
 #. or 'Floppy'
-#: ../udisks/udisksobjectinfo.c:595
+#: ../udisks/udisksobjectinfo.c:601
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
@@ -2819,7 +2844,7 @@ msgstr "%s Disk"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
 #. 'CompactFlash'
-#: ../udisks/udisksobjectinfo.c:599
+#: ../udisks/udisksobjectinfo.c:605
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
@@ -2827,14 +2852,14 @@ msgstr "%s Kart"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g.
 #. 'CD-R' or 'DVD-ROM'
-#: ../udisks/udisksobjectinfo.c:603
+#: ../udisks/udisksobjectinfo.c:609
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
 msgstr "%s Disk"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
-#: ../udisks/udisksobjectinfo.c:623
+#: ../udisks/udisksobjectinfo.c:629
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
@@ -2842,7 +2867,7 @@ msgstr "%s Sürücü"
 
 #. Translators: Used to describe a drive we know very little about (removable
 #. media or size not known)
-#: ../udisks/udisksobjectinfo.c:628
+#: ../udisks/udisksobjectinfo.c:634
 msgctxt "generic-drive"
 msgid "Drive"
 msgstr "Sürücü"
@@ -2850,7 +2875,7 @@ msgstr "Sürücü"
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
 #. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
-#: ../udisks/udisksobjectinfo.c:639
+#: ../udisks/udisksobjectinfo.c:645
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
@@ -2861,14 +2886,14 @@ msgstr "%s Disk"
 #. * or it's a solid-state drive). The drive is either using removable media
 #. or its
 #. * size not known.
-#: ../udisks/udisksobjectinfo.c:646
+#: ../udisks/udisksobjectinfo.c:652
 msgctxt "disk-non-rotational"
 msgid "Disk"
 msgstr "Disk"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
 #. e.g. '20 GB'.
-#: ../udisks/udisksobjectinfo.c:654
+#: ../udisks/udisksobjectinfo.c:660
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
@@ -2876,14 +2901,14 @@ msgstr "%s Sabit Disk"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or
 #. size not known)
-#: ../udisks/udisksobjectinfo.c:659
+#: ../udisks/udisksobjectinfo.c:665
 msgctxt "disk-hdd"
 msgid "Hard Disk"
 msgstr "Sabit Disk"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g.
 #. 'CompactFlash'.
-#: ../udisks/udisksobjectinfo.c:667
+#: ../udisks/udisksobjectinfo.c:673
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
@@ -2893,7 +2918,7 @@ msgstr "%s Kart Okuyucu"
 #. and the
 #. * second %s is the drive type e.g. 'Thumb'.
 #. 
-#: ../udisks/udisksobjectinfo.c:678
+#: ../udisks/udisksobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
@@ -2902,7 +2927,7 @@ msgstr "%s %s Sürücü"
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
 #. 
-#: ../udisks/udisksobjectinfo.c:684
+#: ../udisks/udisksobjectinfo.c:690
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
@@ -2910,7 +2935,7 @@ msgstr "%s Sürücü"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g.
 #. "CD-RW Disc"
-#: ../udisks/udisksobjectinfo.c:763
+#: ../udisks/udisksobjectinfo.c:769
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
@@ -2918,7 +2943,7 @@ msgstr "Boş %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
-#: ../udisks/udisksobjectinfo.c:771
+#: ../udisks/udisksobjectinfo.c:777
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
@@ -2926,7 +2951,7 @@ msgstr "Karışık %s"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
-#: ../udisks/udisksobjectinfo.c:779
+#: ../udisks/udisksobjectinfo.c:785
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
@@ -2937,7 +2962,7 @@ msgstr "Ses %s"
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb
 #. Drive").
 #. 
-#: ../udisks/udisksobjectinfo.c:832
+#: ../udisks/udisksobjectinfo.c:838
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
@@ -2951,7 +2976,7 @@ msgstr "Bölüm %u Sürücü %s"
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
 #. 
-#: ../udisks/udisksobjectinfo.c:850
+#: ../udisks/udisksobjectinfo.c:856
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
@@ -2965,7 +2990,7 @@ msgstr "%s — %s [%s] (%s)"
 #. SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #. 
-#: ../udisks/udisksobjectinfo.c:863
+#: ../udisks/udisksobjectinfo.c:869
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
