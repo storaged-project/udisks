@@ -1264,6 +1264,10 @@ class Smart(UDisksTestCase):
 
 # ----------------------------------------------------------------------------
 
+def _bytes_to_ay(bytes):
+    return [i for i in bytes]
+
+
 class Luks(UDisksTestCase):
     """Check LUKS."""
 
@@ -1450,7 +1454,7 @@ class Luks(UDisksTestCase):
     @staticmethod
     def keyfile_options(keyfile_contents):
         return GLib.Variant('a{sv}', {
-            'keyfile_contents': GLib.Variant('ay', keyfile_contents)
+            'keyfile_contents': GLib.Variant('ay', _bytes_to_ay(keyfile_contents))
         })
 
     def test_keyfile_equivalent(self):
@@ -1469,7 +1473,7 @@ class Luks(UDisksTestCase):
         """Setup a device using a plaintext keyfile."""
         # Using a plaintext keyfile should be equivalent to passphrase
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', b's3kr1t'),
+            'encrypt.passphrase': GLib.Variant('ay', _bytes_to_ay(b's3kr1t')),
             'label': GLib.Variant('s', 'treasure')}))
 
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
@@ -1497,7 +1501,7 @@ class Luks(UDisksTestCase):
         key_file = b's\0me \bina\ry \xda\ta\0\0\1\1\xff\xff'
 
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', key_file),
+            'encrypt.passphrase': GLib.Variant('ay', _bytes_to_ay(key_file)),
             'label': GLib.Variant('s', 'treasure')}))
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
         encrypted = crypt_obj.get_property('encrypted')
@@ -1523,7 +1527,7 @@ class Luks(UDisksTestCase):
 
         # setup crypto device
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', key_file),
+            'encrypt.passphrase': GLib.Variant('ay', _bytes_to_ay(key_file)),
             'label': GLib.Variant('s', 'treasure')}))
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
         encrypted = crypt_obj.get_property('encrypted')
@@ -1566,7 +1570,7 @@ class Luks(UDisksTestCase):
         # change: passphrase -> keyfile
         encrypted.call_change_passphrase_sync(
             'passphrase', '', GLib.Variant('a{sv}', {
-                'new_keyfile_contents': GLib.Variant('ay', key_file_0),
+                'new_keyfile_contents': GLib.Variant('ay', _bytes_to_ay(key_file_0)),
             }),
             None)
 
@@ -1579,8 +1583,8 @@ class Luks(UDisksTestCase):
         # change: keyfile -> keyfile
         encrypted.call_change_passphrase_sync(
             '', '', GLib.Variant('a{sv}', {
-                'old_keyfile_contents': GLib.Variant('ay', key_file_0),
-                'new_keyfile_contents': GLib.Variant('ay', key_file_1),
+                'old_keyfile_contents': GLib.Variant('ay', _bytes_to_ay(key_file_0)),
+                'new_keyfile_contents': GLib.Variant('ay', _bytes_to_ay(key_file_1)),
             }),
             None)
 
@@ -1593,7 +1597,7 @@ class Luks(UDisksTestCase):
         # change: keyfile -> passphrase
         encrypted.call_change_passphrase_sync(
             '', 's3kr1t', GLib.Variant('a{sv}', {
-                'old_keyfile_contents': GLib.Variant('ay', key_file_1),
+                'old_keyfile_contents': GLib.Variant('ay', _bytes_to_ay(key_file_1)),
             }),
             None)
 
