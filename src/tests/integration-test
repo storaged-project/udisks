@@ -83,13 +83,17 @@ BROKEN_PERMISSIONS_FS = ['ntfs', 'exfat']
 no_options = GLib.Variant('a{sv}', {})
 
 def get_distro_version():
-    # 3rd to 6th fields from e.g. "CPE OS Name: cpe:/o:fedoraproject:fedora:27" or "CPE OS Name: cpe:/o:centos:centos:7"
-    out = subprocess.check_output('hostnamectl status | grep "CPE OS Name"', shell=True).decode().strip()
     try:
-        _project, distro, version = tuple(out.split(":")[3:6])
-    except ValueError:
-        print('Failed to get distribution and version from "%s". Aborting.' % out)
-        sys.exit(1)
+        out = subprocess.check_output('hostnamectl status | grep "CPE OS Name"', shell=True).decode().strip()
+        try:
+            # 3rd to 6th fields from e.g. "CPE OS Name: cpe:/o:fedoraproject:fedora:27" or "CPE OS Name: cpe:/o:centos:centos:7"
+            _project, distro, version = tuple(out.split(":")[3:6])
+        except ValueError:
+            # Returns a default value that is not likely something used to filter real systems
+            return ("Linux", "0")
+    except subprocess.CalledProcessError:
+        # Returns a default value that is not likely something used to filter real systems
+        return ("Linux", "0")
 
     return (distro, version)
 
