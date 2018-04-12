@@ -93,7 +93,7 @@ on_sigint (gpointer user_data)
 {
   udisks_info ("Caught SIGINT. Initiating shutdown");
   g_main_loop_quit (loop);
-  return FALSE;
+  return G_SOURCE_CONTINUE; /* We will manually remove the source using g_source_remove */
 }
 
 int
@@ -104,12 +104,13 @@ main (int    argc,
   GOptionContext *opt_context;
   gint ret;
   guint name_owner_id;
-  GSource *sigint_source = NULL;
+  guint sigint_id;
 
   ret = 1;
   loop = NULL;
   opt_context = NULL;
   name_owner_id = 0;
+  sigint_id = 0;
 
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
@@ -148,13 +149,11 @@ main (int    argc,
 
   if (!opt_no_sigint)
     {
-      guint sigint_id = g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+      sigint_id = g_unix_signal_add_full (G_PRIORITY_DEFAULT,
                                           SIGINT,
                                           on_sigint,
                                           NULL,  /* user_data */
                                           NULL); /* GDestroyNotify */
-      if (sigint_id)
-        sigint_source = g_main_context_find_source_by_id (NULL, sigint_id);
     }
 
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
@@ -175,13 +174,8 @@ main (int    argc,
   ret = 0;
 
  out:
-  if (sigint_source)
-    {
-      if(! g_source_is_destroyed(sigint_source))
-        {
-          g_source_destroy (sigint_source);
-        }
-    }
+  if (sigint_id > 0)
+    g_source_remove (sigint_id);
   if (the_daemon != NULL)
     g_object_unref (the_daemon);
   if (name_owner_id != 0)
