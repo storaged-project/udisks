@@ -650,13 +650,28 @@ udisks_daemon_get_state (UDisksDaemon *daemon)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  UDisksDaemon *daemon;
+  UDisksInhibitCookie *inhibit_cookie;
+} JobData;
+
+static void
+free_job_data (JobData *job_data)
+{
+  if (job_data->daemon != NULL)
+    g_object_unref (job_data->daemon);
+  g_free (job_data);
+}
+
 static void
 on_job_completed (UDisksJob    *job,
                   gboolean      success,
                   const gchar  *message,
                   gpointer      user_data)
 {
-  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  JobData *job_data = (JobData *) user_data;
+  UDisksDaemon *daemon = UDISKS_DAEMON (job_data->daemon);
   UDisksObjectSkeleton *object;
 
   object = UDISKS_OBJECT_SKELETON (g_dbus_interface_get_object (G_DBUS_INTERFACE (job)));
@@ -670,11 +685,13 @@ on_job_completed (UDisksJob    *job,
   /* free the allocated job object */
   g_object_unref (job);
 
+  /* unregister inhibitor from systemd logind */
+  udisks_daemon_util_uninhibit_system_sync (job_data->inhibit_cookie);
   /* returns the reference we took when connecting to the
    * UDisksJob::completed signal in udisks_daemon_launch_{spawned,threaded}_job()
    * below
    */
-  g_object_unref (daemon);
+  free_job_data (job_data);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -692,6 +709,15 @@ common_job (UDisksDaemon    *daemon,
 {
   gchar *job_object_path;
   UDisksObjectSkeleton *job_object;
+  JobData *job_data;
+  gchar *operation_description;
+
+  job_data = g_new0 (JobData, 1);
+  job_data->daemon = g_object_ref (daemon);
+  /* register inhibitor to systemd logind while job is running */
+  operation_description = udisks_client_get_job_description_from_operation (job_operation);
+  job_data->inhibit_cookie = udisks_daemon_util_inhibit_system_sync (operation_description);
+  g_free (operation_description);
 
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
@@ -709,7 +735,7 @@ common_job (UDisksDaemon    *daemon,
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
-                          g_object_ref (daemon));
+                          job_data);
 
   return UDISKS_BASE_JOB (job);
 }
