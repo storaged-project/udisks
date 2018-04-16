@@ -1760,6 +1760,7 @@ _udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
             {
               *out_uid = g_variant_get_uint32 (lookup_value);
               g_variant_unref (lookup_value);
+              ret = TRUE;
             }
         }
     }
