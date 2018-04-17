@@ -2789,7 +2789,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   const gchar *label = NULL;
   gchar *device_name = NULL;
   gboolean was_partitioned = FALSE;
-  UDisksInhibitCookie *inhibit_cookie = NULL;
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
   gboolean dry_run_first = FALSE;
@@ -2933,8 +2932,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                     N_("Authentication is required to modify the system configuration"),
                                                     invocation))
     goto out;
-
-  inhibit_cookie = udisks_daemon_util_inhibit_system_sync (N_("Formatting Device"));
 
   was_partitioned = (udisks_object_peek_partition_table (object) != NULL);
 
@@ -3285,7 +3282,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     complete (complete_user_data);
 
  out:
-  udisks_daemon_util_uninhibit_system_sync (inhibit_cookie);
   g_free (device_name);
   g_free (mapped_name);
   g_free (command);

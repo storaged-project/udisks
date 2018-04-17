@@ -2459,29 +2459,24 @@ udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
- * udisks_client_get_job_description:
- * @client: A #UDisksClient.
- * @job: A #UDisksJob.
+ * udisks_client_get_job_description_from_operation:
+ * @operation: A job operation name.
  *
- * Gets a human-readable and localized text string describing the
- * operation of @job.
+ * Gets a human-readable and localized text string describing a
+ * a job @operation.
  *
- * For known job types, see the documentation for the
+ * For known job operation types, see the documentation for the
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
  * D-Bus property.
  *
  * Returns: A string that should be freed with g_free().
  */
 gchar *
-udisks_client_get_job_description (UDisksClient   *client,
-                                   UDisksJob      *job)
+udisks_client_get_job_description_from_operation (const gchar *operation)
 {
   static gsize once = 0;
   static GHashTable *hash = NULL;
-  const gchar *operation = NULL;
   gchar *ret = NULL;
-
-  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
 
   if (g_once_init_enter (&once))
     {
@@ -2519,13 +2514,35 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_once_init_leave (&once, (gsize) 1);
     }
 
-  operation = udisks_job_get_operation (job);
   if (operation != NULL)
     ret = g_strdup (g_hash_table_lookup (hash, operation));
   if (ret == NULL)
-    ret = g_strdup_printf (C_("unknown-job", "Unknown (%s)"), udisks_job_get_operation (job));
+    ret = g_strdup_printf (C_("unknown-job", "Unknown (%s)"), operation == NULL ? "(null)" : operation);
 
   return ret;
+}
+
+/**
+ * udisks_client_get_job_description:
+ * @client: A #UDisksClient.
+ * @job: A #UDisksJob.
+ *
+ * Gets a human-readable and localized text string describing the
+ * operation of @job.
+ *
+ * For known job types, see the documentation for the
+ * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
+ * D-Bus property.
+ *
+ * Returns: A string that should be freed with g_free().
+ */
+gchar *
+udisks_client_get_job_description (UDisksClient   *client,
+                                   UDisksJob      *job)
+{
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+
+  return udisks_client_get_job_description_from_operation (udisks_job_get_operation (job));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
