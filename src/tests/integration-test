@@ -1710,9 +1710,12 @@ def setup_lio():
                  re.match(r'sd[a-z]+$', dev)}
 
     # create fake SCSI hard drives
+    our_path = os.path.abspath(__file__)
+    our_dir = os.path.dirname(our_path)
+    json_path = os.path.join(our_dir, 'dbus-tests', 'targetcli_config.json')
     assert subprocess.call(
         ["targetcli",
-         "restoreconfig dbus-tests/targetcli_config.json"]) == 0
+         "restoreconfig %s" % json_path]) == 0
     time.sleep(0.1)
 
     devs = {dev for dev in os.listdir("/dev") if
