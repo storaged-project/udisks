@@ -2026,10 +2026,6 @@
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
-    <!-- MetadataSize: Size of the metadata on LUKS device in bytes
-    -->
-    <property name="MetadataSize" type="t" access="read"/>
-
     <!--
         Unlock:
         @passphrase: The passphrase to use.
