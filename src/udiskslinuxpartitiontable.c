@@ -267,7 +267,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   BDPartSpec *part_spec = NULL;
   BDPartSpec *overlapping_part = NULL;
   BDPartTypeReq part_type = 0;
-  const gchar *table_type;
+  gchar *table_type = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
   GError *error = NULL;
