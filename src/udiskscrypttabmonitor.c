@@ -98,8 +98,7 @@ udisks_crypttab_monitor_finalize (GObject *object)
 
   g_object_unref (monitor->file_monitor);
 
-  g_list_foreach (monitor->crypttab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->crypttab_entries);
+  g_list_free_full (monitor->crypttab_entries, g_object_unref);
 
   if (G_OBJECT_CLASS (udisks_crypttab_monitor_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_crypttab_monitor_parent_class)->finalize (object);
@@ -242,8 +241,7 @@ reload_crypttab_entries (UDisksCrypttabMonitor *monitor)
       g_signal_emit (monitor, signals[ENTRY_ADDED_SIGNAL], 0, entry);
     }
 
-  g_list_foreach (old_crypttab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (old_crypttab_entries);
+  g_list_free_full (old_crypttab_entries, g_object_unref);
   g_list_free (cur_crypttab_entries);
   g_list_free (removed);
   g_list_free (added);
@@ -320,8 +318,7 @@ udisks_crypttab_monitor_invalidate (UDisksCrypttabMonitor *monitor)
 {
   monitor->have_data = FALSE;
 
-  g_list_foreach (monitor->crypttab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->crypttab_entries);
+  g_list_free_full (monitor->crypttab_entries, g_object_unref);
   monitor->crypttab_entries = NULL;
 }
 
@@ -445,4 +442,3 @@ udisks_crypttab_monitor_get_entries (UDisksCrypttabMonitor  *monitor)
   g_list_foreach (ret, (GFunc) g_object_ref, NULL);
   return ret;
 }
-

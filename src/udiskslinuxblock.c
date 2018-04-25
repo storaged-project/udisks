@@ -184,8 +184,7 @@ find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 
@@ -232,18 +231,15 @@ find_drive (GDBusObjectManagerServer  *object_manager,
               if (out_drive != NULL)
                 *out_drive = udisks_object_get_drive (UDISKS_OBJECT (object));
               ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-              g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
-              g_list_free (drive_devices);
+              g_list_free_full (drive_devices, g_object_unref);
               goto out;
             }
         }
-      g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
-      g_list_free (drive_devices);
+      g_list_free_full (drive_devices, g_object_unref);
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   g_object_unref (whole_disk_block_device);
   return ret;
 }
@@ -278,8 +274,7 @@ find_mdraid (GDBusObjectManagerServer  *object_manager,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 
@@ -545,8 +540,7 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
       ;
     }
 
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
   return ret;
 }
 
@@ -606,8 +600,7 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
       ;
     }
 
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
   return ret;
 }
 
@@ -746,8 +739,7 @@ calculate_configuration (UDisksLinuxBlock  *block,
   entries = find_fstab_entries_for_device (block, daemon);
   for (l = entries; l != NULL; l = l->next)
     add_fstab_entry (&builder, UDISKS_FSTAB_ENTRY (l->data));
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
 
   /* Then the /etc/crypttab entries (currently only supported for LUKS) */
   if (udisks_linux_block_is_luks (UDISKS_BLOCK (block)))
@@ -758,13 +750,11 @@ calculate_configuration (UDisksLinuxBlock  *block,
           if (!add_crypttab_entry (&builder, UDISKS_CRYPTTAB_ENTRY (l->data), include_secrets, error))
             {
               g_variant_builder_clear (&builder);
-              g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-              g_list_free (entries);
+              g_list_free_full (entries, g_object_unref);
               goto out;
             }
         }
-      g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-      g_list_free (entries);
+      g_list_free_full (entries, g_object_unref);
     }
 
   ret = g_variant_builder_end (&builder);
@@ -854,8 +844,7 @@ find_fstab_entries_for_needle (const gchar  *needle,
         ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
   return ret;
 }
 
@@ -880,8 +869,7 @@ find_crypttab_entries_for_needle (gchar        *needle,
         ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
   return ret;
 }
 
@@ -908,8 +896,7 @@ find_configurations (gchar         *needle,
   entries = find_fstab_entries_for_needle (needle, daemon);
   for (l = entries; l != NULL; l = l->next)
     add_fstab_entry (&builder, UDISKS_FSTAB_ENTRY (l->data));
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
 
   /* Then the /etc/crypttab entries */
   entries = find_crypttab_entries_for_needle (needle, daemon);
@@ -918,13 +905,11 @@ find_configurations (gchar         *needle,
       if (!add_crypttab_entry (&builder, UDISKS_CRYPTTAB_ENTRY (l->data), include_secrets, error))
         {
           g_variant_builder_clear (&builder);
-          g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-          g_list_free (entries);
+          g_list_free_full (entries, g_object_unref);
           goto out;
         }
     }
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
+  g_list_free_full (entries, g_object_unref);
 
   ret = g_variant_builder_end (&builder);
 
@@ -2537,8 +2522,7 @@ get_cleartext_block (UDisksDaemon  *daemon,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 

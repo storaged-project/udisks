@@ -98,8 +98,7 @@ udisks_linux_drive_object_finalize (GObject *_object)
   UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (_object);
 
   /* note: we don't hold a ref to drive_object->daemon or drive_object->mount_monitor */
-  g_list_foreach (object->devices, (GFunc) g_object_unref, NULL);
-  g_list_free (object->devices);
+  g_list_free_full (object->devices, g_object_unref);
 
   if (object->iface_drive != NULL)
     g_object_unref (object->iface_drive);
@@ -490,8 +489,7 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject *object,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 
@@ -1209,8 +1207,7 @@ udisks_linux_drive_object_get_siblings (UDisksLinuxDriveObject *object)
 
  out:
   ret = g_list_reverse (ret);
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   g_free (sibling_id);
   return ret;
 }

@@ -190,8 +190,7 @@ udisks_linux_partition_table_get_partitions (UDisksDaemon         *daemon,
     }
   ret = g_list_reverse (ret);
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 

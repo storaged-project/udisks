@@ -203,9 +203,9 @@ G_DEFINE_TYPE (UDisksModuleManager, udisks_module_manager, G_TYPE_OBJECT)
 static void udisks_module_manager_free_modules (UDisksModuleManager *manager);
 
 static void
-free_module_data (ModuleData *data)
+free_module_data (gpointer data)
 {
-  if (! g_module_close (data->handle))
+  if (! g_module_close ( ((ModuleData*) data)->handle))
     udisks_critical ("Unloading failed: %s", g_module_error ());
   g_free (data);
 }
@@ -241,15 +241,13 @@ udisks_module_manager_free_modules (UDisksModuleManager *manager)
 
   if (manager->block_object_interface_infos != NULL)
     {
-      g_list_foreach (manager->block_object_interface_infos, (GFunc) g_free, NULL);
-      g_list_free (manager->block_object_interface_infos);
+      g_list_free_full (manager->block_object_interface_infos, g_free);
       manager->block_object_interface_infos = NULL;
     }
 
   if (manager->drive_object_interface_infos != NULL)
     {
-      g_list_foreach (manager->drive_object_interface_infos, (GFunc) g_free, NULL);
-      g_list_free (manager->drive_object_interface_infos);
+      g_list_free_full (manager->drive_object_interface_infos, g_free);
       manager->drive_object_interface_infos = NULL;
     }
 
@@ -284,8 +282,8 @@ udisks_module_manager_free_modules (UDisksModuleManager *manager)
 
   if (manager->modules != NULL)
     {
-      g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
-      g_list_free (manager->modules);
+      g_list_free_full (manager->modules, free_module_data);
+
       manager->modules = NULL;
     }
 }

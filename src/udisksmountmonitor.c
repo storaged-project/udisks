@@ -119,8 +119,7 @@ udisks_mount_monitor_finalize (GObject *object)
   if (monitor->swaps_watch_source != NULL)
     g_source_destroy (monitor->swaps_watch_source);
 
-  g_list_foreach (monitor->mounts, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->mounts);
+  g_list_free_full (monitor->mounts, g_object_unref);
 
   if (G_OBJECT_CLASS (udisks_mount_monitor_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_mount_monitor_parent_class)->finalize (object);
@@ -263,8 +262,7 @@ reload_mounts (UDisksMountMonitor *monitor)
       g_signal_emit (monitor, signals[MOUNT_ADDED_SIGNAL], 0, mount);
     }
 
-  g_list_foreach (old_mounts, (GFunc) g_object_unref, NULL);
-  g_list_free (old_mounts);
+  g_list_free_full (old_mounts, g_object_unref);
   g_list_free (cur_mounts);
   g_list_free (removed);
   g_list_free (added);
@@ -362,8 +360,7 @@ udisks_mount_monitor_invalidate (UDisksMountMonitor *monitor)
 {
   monitor->have_data = FALSE;
 
-  g_list_foreach (monitor->mounts, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->mounts);
+  g_list_free_full (monitor->mounts, g_object_unref);
   monitor->mounts = NULL;
 }
 

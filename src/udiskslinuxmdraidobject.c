@@ -123,8 +123,7 @@ udisks_linux_mdraid_object_finalize (GObject *_object)
 
   g_clear_object (&object->raid_device);
 
-  g_list_foreach (object->member_devices, (GFunc) g_object_unref, NULL);
-  g_list_free (object->member_devices);
+  g_list_free_full (object->member_devices, g_object_unref);
 
   g_free (object->uuid);
 

@@ -1011,8 +1011,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                                                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_warn_if_fail (g_hash_table_remove (provider->vpd_to_drive, existing_vpd));
             }
-          g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-          g_list_free (devices);
+          g_list_free_full (devices, g_object_unref);
         }
     }
   else
@@ -1362,8 +1361,7 @@ housekeeping_all_drives (UDisksLinuxProvider *provider,
         }
     }
 
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 }
 
 /* Runs in housekeeping thread - called without lock held */
@@ -1405,8 +1403,7 @@ housekeeping_all_modules (UDisksLinuxProvider *provider,
         }
     }
 
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1481,8 +1478,7 @@ update_all_block_objects (UDisksLinuxProvider *provider)
       udisks_linux_block_object_uevent (object, "change", NULL);
     }
 
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 }
 
 static void

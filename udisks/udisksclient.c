@@ -397,11 +397,9 @@ initable_init (GInitable     *initable,
         {
           init_interface_proxy (client, G_DBUS_PROXY (ll->data));
         }
-      g_list_foreach (interfaces, (GFunc) g_object_unref, NULL);
-      g_list_free (interfaces);
+      g_list_free_full (interfaces, g_object_unref);
     }
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 
   g_signal_connect (client->object_manager,
                     "object-added",
@@ -603,8 +601,7 @@ udisks_client_get_block_for_label (UDisksClient        *client,
         g_object_unref (block);
     }
 
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   ret = g_list_reverse (ret);
   return ret;
 }
@@ -648,8 +645,7 @@ udisks_client_get_block_for_uuid (UDisksClient        *client,
         g_object_unref (block);
     }
 
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   ret = g_list_reverse (ret);
   return ret;
 }
@@ -696,8 +692,7 @@ udisks_client_get_block_for_dev (UDisksClient *client,
     }
 
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -734,8 +729,7 @@ get_top_level_blocks_for_drive (UDisksClient *client,
         }
       g_object_unref (block);
     }
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -789,8 +783,7 @@ udisks_client_get_block_for_drive (UDisksClient        *client,
     }
 
  out:
-  g_list_foreach (blocks, (GFunc) g_object_unref, NULL);
-  g_list_free (blocks);
+  g_list_free_full (blocks, g_object_unref);
   return ret;
 }
 
@@ -909,8 +902,7 @@ _udisks_client_get_block_or_blocks_for_mdraid (UDisksClient *client,
     }
 
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -1179,8 +1171,7 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 
@@ -1234,8 +1225,7 @@ udisks_client_get_drive_siblings  (UDisksClient  *client,
     }
   ret = g_list_reverse (ret);
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -1286,8 +1276,7 @@ udisks_client_get_partitions (UDisksClient         *client,
     }
   ret = g_list_reverse (ret);
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -1427,8 +1416,7 @@ udisks_client_get_jobs_for_object (UDisksClient  *client,
     }
   ret = g_list_reverse (ret);
 
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
 
@@ -1502,8 +1490,7 @@ on_object_added (GDBusObjectManager  *manager,
     {
       init_interface_proxy (client, G_DBUS_PROXY (l->data));
     }
-  g_list_foreach (interfaces, (GFunc) g_object_unref, NULL);
-  g_list_free (interfaces);
+  g_list_free_full (interfaces, g_object_unref);
 
   udisks_client_queue_changed (client);
 }
