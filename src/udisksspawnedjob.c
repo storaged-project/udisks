@@ -794,10 +794,21 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
        * GSource so we can nuke it once handled.
        */
       source = g_child_watch_source_new (job->child_pid);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
       g_source_set_callback (source,
                              (GSourceFunc) child_watch_from_release_cb,
                              source,
                              (GDestroyNotify) g_source_destroy);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
       g_source_attach (source, job->main_context);
       g_source_unref (source);
 
@@ -977,7 +988,18 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
     }
 
   job->child_watch_source = g_child_watch_source_new (job->child_pid);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   g_source_set_callback (job->child_watch_source, (GSourceFunc) child_watch_cb, job, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
   g_source_attach (job->child_watch_source, job->main_context);
   g_source_unref (job->child_watch_source);
 
@@ -991,7 +1013,18 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
       g_io_channel_set_encoding (job->child_stdin_channel, NULL, NULL);
       g_io_channel_set_flags (job->child_stdin_channel, G_IO_FLAG_NONBLOCK, NULL);
       job->child_stdin_source = g_io_create_watch (job->child_stdin_channel, G_IO_OUT);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
       g_source_set_callback (job->child_stdin_source, (GSourceFunc) write_child_stdin, job, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
       g_source_attach (job->child_stdin_source, job->main_context);
       g_source_unref (job->child_stdin_source);
     }
@@ -999,14 +1032,36 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
   job->child_stdout_channel = g_io_channel_unix_new (job->child_stdout_fd);
   g_io_channel_set_flags (job->child_stdout_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stdout_source = g_io_create_watch (job->child_stdout_channel, G_IO_IN);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   g_source_set_callback (job->child_stdout_source, (GSourceFunc) read_child_stdout, job, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
   g_source_attach (job->child_stdout_source, job->main_context);
   g_source_unref (job->child_stdout_source);
 
   job->child_stderr_channel = g_io_channel_unix_new (job->child_stderr_fd);
   g_io_channel_set_flags (job->child_stderr_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stderr_source = g_io_create_watch (job->child_stderr_channel, G_IO_IN);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   g_source_set_callback (job->child_stderr_source, (GSourceFunc) read_child_stderr, job, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
   g_source_attach (job->child_stderr_source, job->main_context);
   g_source_unref (job->child_stderr_source);
 

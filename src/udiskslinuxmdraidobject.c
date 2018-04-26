@@ -565,6 +565,15 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
     goto out;
 
   /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
+
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   object->sync_action_source = watch_attr (device,
                                            "md/sync_action",
                                            (GSourceFunc) attr_changed,
@@ -573,6 +582,9 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
                                         "md/degraded",
                                         (GSourceFunc) attr_changed,
                                         object);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
  out:
   g_free (level);

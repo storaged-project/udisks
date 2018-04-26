@@ -305,7 +305,18 @@ udisks_mount_monitor_constructed (GObject *object)
   if (monitor->mounts_channel != NULL)
     {
       monitor->mounts_watch_source = g_io_create_watch (monitor->mounts_channel, G_IO_ERR);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
       g_source_set_callback (monitor->mounts_watch_source, (GSourceFunc) mounts_changed_event, monitor, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
       g_source_attach (monitor->mounts_watch_source, g_main_context_get_thread_default ());
       g_source_unref (monitor->mounts_watch_source);
     }
@@ -320,7 +331,18 @@ udisks_mount_monitor_constructed (GObject *object)
   if (monitor->swaps_channel != NULL)
     {
       monitor->swaps_watch_source = g_io_create_watch (monitor->swaps_channel, G_IO_ERR);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
       g_source_set_callback (monitor->swaps_watch_source, (GSourceFunc) swaps_changed_event, monitor, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
       g_source_attach (monitor->swaps_watch_source, g_main_context_get_thread_default ());
       g_source_unref (monitor->swaps_watch_source);
     }
