@@ -34,6 +34,7 @@
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
+#include "udisksdaemonutil.h"
 
 #include <modules/udisksmoduleifacetypes.h>
 #include <modules/udisksmoduleobject.h>
@@ -1340,7 +1341,7 @@ housekeeping_all_drives (UDisksLinuxProvider *provider,
 
   G_LOCK (provider_lock);
   objects = g_hash_table_get_values (provider->vpd_to_drive);
-  g_list_foreach (objects, (GFunc) g_object_ref, NULL);
+  g_list_foreach (objects, (GFunc) udisks_g_object_ref_foreach, NULL);
   G_UNLOCK (provider_lock);
 
   for (l = objects; l != NULL; l = l->next)
@@ -1469,7 +1470,7 @@ update_all_block_objects (UDisksLinuxProvider *provider)
 
   G_LOCK (provider_lock);
   objects = g_hash_table_get_values (provider->sysfs_to_block);
-  g_list_foreach (objects, (GFunc) g_object_ref, NULL);
+  g_list_foreach (objects, (GFunc) udisks_g_object_ref_foreach, NULL);
   G_UNLOCK (provider_lock);
 
   for (l = objects; l != NULL; l = l->next)

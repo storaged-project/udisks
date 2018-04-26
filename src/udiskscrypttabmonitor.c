@@ -36,6 +36,7 @@
 #include "udiskscrypttabentry.h"
 #include "udisksprivate.h"
 #include "udiskslogging.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udiskscrypttabmonitor
@@ -217,8 +218,7 @@ reload_crypttab_entries (UDisksCrypttabMonitor *monitor)
 
   udisks_crypttab_monitor_ensure (monitor);
 
-  old_crypttab_entries = g_list_copy (monitor->crypttab_entries);
-  g_list_foreach (old_crypttab_entries, (GFunc) g_object_ref, NULL);
+  old_crypttab_entries = g_list_copy_deep (monitor->crypttab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   udisks_crypttab_monitor_invalidate (monitor);
   udisks_crypttab_monitor_ensure (monitor);
@@ -438,7 +438,6 @@ udisks_crypttab_monitor_get_entries (UDisksCrypttabMonitor  *monitor)
 
   udisks_crypttab_monitor_ensure (monitor);
 
-  ret = g_list_copy (monitor->crypttab_entries);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (monitor->crypttab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   return ret;
 }

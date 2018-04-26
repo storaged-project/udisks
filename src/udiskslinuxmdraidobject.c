@@ -319,8 +319,7 @@ udisks_linux_mdraid_object_get_members (UDisksLinuxMDRaidObject *object)
 
   g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
 
-  ret = g_list_copy (object->member_devices);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (object->member_devices, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   return ret;
 }

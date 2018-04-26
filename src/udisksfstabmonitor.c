@@ -37,6 +37,7 @@
 #include "udisksfstabentry.h"
 #include "udisksprivate.h"
 #include "udiskslogging.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udisksfstabmonitor
@@ -218,8 +219,7 @@ reload_fstab_entries (UDisksFstabMonitor *monitor)
 
   udisks_fstab_monitor_ensure (monitor);
 
-  old_fstab_entries = g_list_copy (monitor->fstab_entries);
-  g_list_foreach (old_fstab_entries, (GFunc) g_object_ref, NULL);
+  old_fstab_entries = g_list_copy_deep (monitor->fstab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   udisks_fstab_monitor_invalidate (monitor);
   udisks_fstab_monitor_ensure (monitor);
@@ -408,7 +408,6 @@ udisks_fstab_monitor_get_entries (UDisksFstabMonitor  *monitor)
 
   udisks_fstab_monitor_ensure (monitor);
 
-  ret = g_list_copy (monitor->fstab_entries);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (monitor->fstab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   return ret;
 }

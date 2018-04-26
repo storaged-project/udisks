@@ -398,8 +398,7 @@ udisks_linux_drive_object_get_devices (UDisksLinuxDriveObject *object)
 {
   GList *ret;
   g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object), NULL);
-  ret = g_list_copy (object->devices);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (object->devices, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   return ret;
 }
 

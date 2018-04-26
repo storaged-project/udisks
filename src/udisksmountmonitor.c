@@ -38,6 +38,7 @@
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
 #include "udisksprivate.h"
+#include "udisksdaemonutil.h"
 
 /* build a %Ns format string macro with N == PATH_MAX */
 #define xstr(s) str(s)
@@ -238,8 +239,7 @@ reload_mounts (UDisksMountMonitor *monitor)
 
   udisks_mount_monitor_ensure (monitor);
 
-  old_mounts = g_list_copy (monitor->mounts);
-  g_list_foreach (old_mounts, (GFunc) g_object_ref, NULL);
+  old_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   udisks_mount_monitor_invalidate (monitor);
   udisks_mount_monitor_ensure (monitor);
