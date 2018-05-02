@@ -264,7 +264,7 @@ find_mdraid (GDBusObjectManagerServer  *object_manager,
             {
               if (g_strcmp0 (udisks_mdraid_get_uuid (mdraid), md_uuid) == 0)
                 {
-                  ret = g_object_ref (object);
+                  ret = UDISKS_LINUX_MDRAID_OBJECT (g_object_ref (object));
                   g_object_unref (mdraid);
                   goto out;
                 }
