@@ -482,7 +482,7 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject *object,
       if (g_strcmp0 (udisks_block_get_drive (block),
                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object))) == 0)
         {
-          ret = g_object_ref (iter_object);
+          ret = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (iter_object));
           goto out;
         }
     }
