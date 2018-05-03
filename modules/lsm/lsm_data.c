@@ -437,6 +437,13 @@ _fill_supported_system_id_hash (lsm_connect *lsm_conn)
   return rc;
 }
 
+static void
+_free_lsm_volume_record (gpointer data)
+{
+  lsm_volume_record_free ((lsm_volume *) data);
+  return;
+}
+
 /*
  * Return an array of lsm_volume which system_id is in supported_sys_id_hash.
  */
@@ -461,7 +468,7 @@ _get_supported_lsm_volumes (lsm_connect *lsm_conn)
     }
 
   lsm_vol_array =
-    g_ptr_array_new_full (0, (GDestroyNotify) lsm_volume_record_free);
+    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_volume_record);
 
   for (i = 0; i < lsm_vol_count; ++i)
     {
@@ -500,6 +507,13 @@ _get_supported_lsm_volumes (lsm_connect *lsm_conn)
   return lsm_vol_array;
 }
 
+static void
+_free_lsm_pool_record (gpointer data)
+{
+  lsm_pool_record_free ((lsm_pool *) data);
+  return;
+}
+
 /*
  * Return an array of lsm_pool which system_id is in supported_sys_id_hash.
  */
@@ -524,7 +538,7 @@ _get_supported_lsm_pls (lsm_connect *lsm_conn)
     }
 
   lsm_pl_array =
-    g_ptr_array_new_full (0, (GDestroyNotify) lsm_pool_record_free);
+    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_pool_record);
 
   for (i = 0; i < lsm_pl_count; ++i)
     {
