@@ -136,18 +136,27 @@ static gchar *
 get_sysfs_attr (GUdevDevice *device,
                 const gchar *attr)
 {
-  gchar *filename;
-  gchar *value;
+  gchar *filename = NULL;
+  gchar *value = NULL;
+  gboolean ret = FALSE;
+  GError *error = NULL;
+
   filename = g_strconcat (g_udev_device_get_sysfs_path (device),
                           "/",
                           attr,
                           NULL);
-  value = NULL;
-  /* don't care about errors */
-  g_file_get_contents (filename,
-                       &value,
-                       NULL,
-                       NULL);
+
+
+  ret = g_file_get_contents (filename,
+                             &value,
+                             NULL,
+                             &error);
+  if (!ret)
+    {
+      udisks_debug ("Failed to read sysfs attribute %s: %s", attr, error->message);
+      g_clear_error (&error);
+    }
+
   g_free (filename);
   return value;
 }
