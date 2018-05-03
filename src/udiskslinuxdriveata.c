@@ -2158,7 +2158,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
     {
       udisks_notice ("Error securely erasing %s (%s): %s (%s, %d)",
                      device_file,
-                     udisks_drive_get_id (_drive),
+                     _drive ? udisks_drive_get_id (_drive) : "",
                      local_error->message, g_quark_to_string (local_error->domain), local_error->code);
     }
 
