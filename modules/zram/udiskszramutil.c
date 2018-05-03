@@ -26,6 +26,8 @@
 
 #include "udiskszramutil.h"
 
+#define BUFLEN 256
+
 const gchar *zram_policy_action_id = "org.freedesktop.udisks2.zram.manage-zram";
 
 gboolean
@@ -36,7 +38,7 @@ set_conf_property (char *filename,
 {
   FILE *f = NULL;
   FILE  *tmp = NULL;
-  char buff[256];
+  char buff[BUFLEN];
   gchar* tmpfname;
   gboolean newprop = TRUE;
   gint fd;
@@ -76,11 +78,11 @@ set_conf_property (char *filename,
       return FALSE;
     }
 
-  while (fgets (buff, 255, f))
+  while (fgets (buff, BUFLEN, f))
     {
       if (! strncmp(key, buff, strlen(key)))
         {
-          strncpy (buff+strlen (key)+1, value, 255-strlen (key));
+          strncpy (buff+strlen (key)+1, value, BUFLEN-strlen (key)-1);
           buff[strlen (buff)] = '\n';
           newprop = FALSE;
         }
