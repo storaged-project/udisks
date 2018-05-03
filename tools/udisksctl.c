@@ -937,6 +937,7 @@ read_passphrase (void)
   ret = g_string_free (str, FALSE);
   str = NULL;
 
+  fclose (tty);
   return ret;
 }
 
