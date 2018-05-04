@@ -31,6 +31,7 @@
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GMainLoop *loop = NULL;
+static gboolean enable_tcrypt = FALSE;
 static gboolean opt_replace = FALSE;
 static gboolean opt_no_debug = FALSE;
 static gboolean opt_debug = FALSE;
@@ -60,7 +61,8 @@ on_bus_acquired (GDBusConnection *connection,
   the_daemon = udisks_daemon_new (connection,
                                   opt_disable_modules,
                                   opt_force_load_modules,
-                                  opt_uninstalled);
+                                  opt_uninstalled,
+                                  enable_tcrypt);
   udisks_debug ("Connected to the system bus");
 }
 
@@ -155,6 +157,8 @@ main (int    argc,
                                           NULL,  /* user_data */
                                           NULL); /* GDestroyNotify */
     }
+
+  enable_tcrypt = g_file_test ("/etc/udisks2/tcrypt.conf", G_FILE_TEST_IS_REGULAR);
 
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
                                   "org.freedesktop.UDisks2",

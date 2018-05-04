@@ -80,7 +80,7 @@
  *         </entry>
  *       </row>
  *       <row>
- *         <entry><filename>/run/udisks2/unlocked-luks</filename></entry>
+ *         <entry><filename>/run/udisks2/unlocked-crypto-dev</filename></entry>
  *         <entry>
  *           A serialized 'a{ta{sv}}' #GVariant mapping from the
  *           #dev_t of the clear-text device (e.g. <filename>/dev/dm-0</filename>) into a set of details.
@@ -178,9 +178,9 @@ enum
 static void      udisks_state_check_in_thread     (UDisksState          *state);
 static void      udisks_state_check_mounted_fs    (UDisksState          *state,
                                                    GArray               *devs_to_clean);
-static void      udisks_state_check_unlocked_luks (UDisksState          *state,
-                                                   gboolean              check_only,
-                                                   GArray               *devs_to_clean);
+static void      udisks_state_check_unlocked_crypto_dev (UDisksState          *state,
+                                                         gboolean              check_only,
+                                                         GArray               *devs_to_clean);
 static void      udisks_state_check_loop          (UDisksState          *state,
                                                    gboolean              check_only,
                                                    GArray               *devs_to_clean);
@@ -426,9 +426,9 @@ udisks_state_check_in_thread (UDisksState *state)
    * but only check + record devices marked for cleaning
    */
   devs_to_clean = g_array_new (FALSE, FALSE, sizeof (dev_t));
-  udisks_state_check_unlocked_luks (state,
-                                    TRUE, /* check_only */
-                                    devs_to_clean);
+  udisks_state_check_unlocked_crypto_dev (state,
+                                          TRUE, /* check_only */
+                                          devs_to_clean);
   udisks_state_check_loop (state,
                            TRUE, /* check_only */
                            devs_to_clean);
@@ -445,9 +445,9 @@ udisks_state_check_in_thread (UDisksState *state)
   /* Then go through all block devices and clear them up
    * ... for real this time
    */
-  udisks_state_check_unlocked_luks (state,
-                                    FALSE, /* check_only */
-                                    NULL);
+  udisks_state_check_unlocked_crypto_dev (state,
+                                          FALSE, /* check_only */
+                                          NULL);
   udisks_state_check_loop (state,
                            FALSE, /* check_only */
                            NULL);
@@ -1037,10 +1037,10 @@ udisks_state_find_mounted_fs (UDisksState   *state,
 
 /* returns TRUE if the entry should be kept */
 static gboolean
-udisks_state_check_unlocked_luks_entry (UDisksState  *state,
-                                        GVariant     *value,
-                                        gboolean      check_only,
-                                        GArray       *devs_to_clean)
+udisks_state_check_unlocked_crypto_dev_entry (UDisksState  *state,
+                                              GVariant     *value,
+                                              gboolean      check_only,
+                                              GArray       *devs_to_clean)
 {
   guint64 cleartext_device;
   GVariant *details;
@@ -1078,7 +1078,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
   if (crypto_device_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_critical ("unlocked-luks entry %s is invalid: no crypto-device key/value pair", s);
+      udisks_critical ("unlocked-crypto-dev entry %s is invalid: no crypto-device key/value pair", s);
       g_free (s);
       attempt_no_cleanup = TRUE;
       goto out;
@@ -1089,7 +1089,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
   if (dm_uuid_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_critical ("unlocked-luks entry %s is invalid: no dm-uuid key/value pair", s);
+      udisks_critical ("unlocked-crypto-dev entry %s is invalid: no dm-uuid key/value pair", s);
       g_free (s);
       attempt_no_cleanup = TRUE;
       goto out;
@@ -1112,7 +1112,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
       if (g_strcmp0 (current_dm_uuid, dm_uuid) != 0)
         {
           s = g_variant_print (value, TRUE);
-          udisks_warning ("Removing unlocked-luks entry %s because %s now has another dm-uuid %s",
+          udisks_warning ("Removing unlocked-crypto-dev entry %s because %s now has another dm-uuid %s",
                           s, device_file_cleartext,
                           current_dm_uuid != NULL ? current_dm_uuid : "(NULL)");
           g_free (s);
@@ -1152,7 +1152,7 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
     {
       if (is_unlocked)
         {
-          LuksJobData data;
+          CryptoJobData data;
           GError *error = NULL;
 
           udisks_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exists)",
@@ -1198,9 +1198,9 @@ udisks_state_check_unlocked_luks_entry (UDisksState  *state,
 
 /* called with mutex->lock held */
 static void
-udisks_state_check_unlocked_luks (UDisksState *state,
-                                  gboolean     check_only,
-                                  GArray      *devs_to_clean)
+udisks_state_check_unlocked_crypto_dev (UDisksState *state,
+                                        gboolean     check_only,
+                                        GArray      *devs_to_clean)
 {
   gboolean changed;
   GVariant *value;
@@ -1213,7 +1213,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-luks",
+                            "unlocked-crypto-dev",
                             G_VARIANT_TYPE ("a{ta{sv}}"), &ok);
   if (!ok)
     goto out;
@@ -1227,7 +1227,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
       g_variant_iter_init (&iter, value);
       while ((child = g_variant_iter_next_value (&iter)) != NULL)
         {
-          if (udisks_state_check_unlocked_luks_entry (state, child, check_only, devs_to_clean))
+          if (udisks_state_check_unlocked_crypto_dev_entry (state, child, check_only, devs_to_clean))
             g_variant_builder_add_value (&builder, child);
           else
             changed = TRUE;
@@ -1242,7 +1242,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
   if (changed)
     {
       udisks_state_set (state,
-                        "unlocked-luks",
+                        "unlocked-crypto-dev",
                         G_VARIANT_TYPE ("a{ta{sv}}"),
                         new_value /* consumes new_value */);
     }
@@ -1258,7 +1258,7 @@ udisks_state_check_unlocked_luks (UDisksState *state,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
- * udisks_state_add_unlocked_luks:
+ * udisks_state_add_unlocked_crypto_dev:
  * @state: A #UDisksState.
  * @cleartext_device: The clear-text device.
  * @crypto_device: The crypto device.
@@ -1266,14 +1266,14 @@ udisks_state_check_unlocked_luks (UDisksState *state,
  * @uid: The user id of the process requesting the device to be unlocked.
  *
  * Adds a new entry to the
- * <filename>/run/udisks2/unlocked-luks</filename> file.
+ * <filename>/run/udisks2/unlocked-crypto-dev</filename> file.
  */
 void
-udisks_state_add_unlocked_luks (UDisksState  *state,
-                                dev_t         cleartext_device,
-                                dev_t         crypto_device,
-                                const gchar  *dm_uuid,
-                                uid_t         uid)
+udisks_state_add_unlocked_crypto_dev (UDisksState  *state,
+                                      dev_t         cleartext_device,
+                                      dev_t         crypto_device,
+                                      const gchar  *dm_uuid,
+                                      uid_t         uid)
 {
   GVariant *value;
   GVariant *new_value;
@@ -1290,7 +1290,7 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-luks",
+                            "unlocked-crypto-dev",
                             G_VARIANT_TYPE ("a{ta{sv}}"), &ok);
   if (!ok)
     goto out;
@@ -1309,7 +1309,7 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
           /* Skip/remove stale entries */
           if ((dev_t) entry_cleartext_device == cleartext_device)
             {
-              udisks_warning ("Removing stale entry for cleartext device %d:%d in /run/udisks2/unlocked-luks file",
+              udisks_warning ("Removing stale entry for cleartext device %d:%d in /run/udisks2/unlocked-crypto-dev file",
                               (gint) major (entry_cleartext_device),
                               (gint) minor (entry_cleartext_device));
             }
@@ -1347,7 +1347,7 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
 
   /* save new entries */
   udisks_state_set (state,
-                         "unlocked-luks",
+                         "unlocked-crypto-dev",
                          G_VARIANT_TYPE ("a{ta{sv}}"),
                          new_value /* consumes new_value */);
  out:
@@ -1355,20 +1355,20 @@ udisks_state_add_unlocked_luks (UDisksState  *state,
 }
 
 /**
- * udisks_state_find_unlocked_luks:
+ * udisks_state_find_unlocked_crypto_dev:
  * @state: A #UDisksState.
  * @crypto_device: The block device.
  * @out_uid: Return location for the user id who mounted the device or %NULL.
  *
  * Gets the clear-text device for @crypto_device, if it exists in the
- * <filename>/run/udisks2/unlocked-luks</filename> file.
+ * <filename>/run/udisks2/unlocked-crypto-dev</filename> file.
  *
  * Returns: The cleartext device for @crypto_device or 0 if not found.
  */
 dev_t
-udisks_state_find_unlocked_luks (UDisksState   *state,
-                                 dev_t          crypto_device,
-                                 uid_t         *out_uid)
+udisks_state_find_unlocked_crypto_dev (UDisksState   *state,
+                                       dev_t          crypto_device,
+                                       uid_t         *out_uid)
 {
   dev_t ret;
   GVariant *value;
@@ -1383,7 +1383,7 @@ udisks_state_find_unlocked_luks (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-luks",
+                            "unlocked-crypto-dev",
                             G_VARIANT_TYPE ("a{ta{sv}}"), &ok);
   if (!ok)
     goto out;

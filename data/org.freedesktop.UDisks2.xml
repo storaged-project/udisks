@@ -2026,6 +2026,16 @@
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
+    <!-- HintEncryptionType:
+         If not blank, the type of the encryption used to encrypt this device.
+
+         This is set during successful unlocking of an encrypted device.
+         It is required for encryption types which can only be determined
+         by decrypting the device (for example TCRYPT), but is used for all
+         encryption types for consistency reasons.
+    -->
+    <property name="HintEncryptionType" type="s" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.

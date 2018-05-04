@@ -45,15 +45,15 @@ gchar         *udisks_state_find_mounted_fs      (UDisksState   *state,
                                                   dev_t          block_device,
                                                   uid_t         *out_uid,
                                                   gboolean      *out_fstab_mount);
-/* unlocked-luks */
-void           udisks_state_add_unlocked_luks    (UDisksState   *state,
-                                                  dev_t          cleartext_device,
-                                                  dev_t          crypto_device,
-                                                  const gchar   *dm_uuid,
-                                                  uid_t          uid);
-dev_t            udisks_state_find_unlocked_luks (UDisksState   *state,
-                                                  dev_t          crypto_device,
-                                                  uid_t         *out_uid);
+/* unlocked-crypto-dev */
+void           udisks_state_add_unlocked_crypto_dev    (UDisksState   *state,
+                                                        dev_t          cleartext_device,
+                                                        dev_t          crypto_device,
+                                                        const gchar   *dm_uuid,
+                                                        uid_t          uid);
+dev_t            udisks_state_find_unlocked_crypto_dev (UDisksState   *state,
+                                                        dev_t          crypto_device,
+                                                        uid_t         *out_uid);
 /* loop */
 void             udisks_state_add_loop           (UDisksState   *state,
                                                   const gchar   *device_file,

@@ -35,9 +35,13 @@ typedef struct {
   const gchar *map_name;
   GString *passphrase;
   GString *new_passphrase;
+  const gchar **keyfiles;
+  gsize keyfiles_count;
+  guint32 pim;
+  gboolean hidden;
+  gboolean system;
   gboolean read_only;
-} LuksJobData;
-
+} CryptoJobData;
 
 gboolean luks_format_job_func (UDisksThreadedJob  *job,
                                GCancellable       *cancellable,
@@ -58,6 +62,16 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
                                    GCancellable       *cancellable,
                                    gpointer            user_data,
                                    GError            **error);
+
+gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
+                               GCancellable       *cancellable,
+                               gpointer            user_data,
+                               GError            **error);
+
+gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
+                                GCancellable       *cancellable,
+                                gpointer            user_data,
+                                GError            **error);
 
 G_END_DECLS
 

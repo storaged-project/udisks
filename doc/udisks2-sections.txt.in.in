@@ -336,8 +336,8 @@ udisks_state_get_daemon
 udisks_state_add_mounted_fs
 udisks_state_find_mounted_fs
 <SUBSECTION>
-udisks_state_add_unlocked_luks
-udisks_state_find_unlocked_luks
+udisks_state_add_unlocked_crypto_dev
+udisks_state_find_unlocked_crypto_dev
 <SUBSECTION>
 udisks_state_add_loop
 udisks_state_has_loop

@@ -749,20 +749,23 @@ calculate_configuration (UDisksLinuxBlock  *block,
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
   g_list_free (entries);
 
-  /* Then the /etc/crypttab entries */
-  entries = find_crypttab_entries_for_device (block, daemon);
-  for (l = entries; l != NULL; l = l->next)
+  /* Then the /etc/crypttab entries (currently only supported for LUKS) */
+  if (udisks_linux_block_is_luks (UDISKS_BLOCK (block)))
     {
-      if (!add_crypttab_entry (&builder, UDISKS_CRYPTTAB_ENTRY (l->data), include_secrets, error))
+      entries = find_crypttab_entries_for_device (block, daemon);
+      for (l = entries; l != NULL; l = l->next)
         {
-          g_variant_builder_clear (&builder);
-          g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-          g_list_free (entries);
-          goto out;
+          if (!add_crypttab_entry (&builder, UDISKS_CRYPTTAB_ENTRY (l->data), include_secrets, error))
+            {
+              g_variant_builder_clear (&builder);
+              g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+              g_list_free (entries);
+              goto out;
+            }
         }
+      g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+      g_list_free (entries);
     }
-  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-  g_list_free (entries);
 
   ret = g_variant_builder_end (&builder);
 
@@ -977,7 +980,9 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
   gboolean media_available;
   gboolean media_change_detected;
   gboolean read_only;
+  gboolean seems_encrypted = FALSE;
   guint n;
+  GError *error = NULL;
 
   drive = NULL;
 
@@ -1017,7 +1022,8 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
     {
       gchar *dm_uuid;
       dm_uuid = get_sysfs_attr (device->udev_device, "dm/uuid");
-      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "CRYPT-LUKS"))
+      if (dm_uuid != NULL &&
+           (g_str_has_prefix (dm_uuid, "CRYPT-LUKS") || g_str_has_prefix (dm_uuid, "CRYPT-TCRYPT")))
         {
           gchar **slaves;
           slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device),
@@ -1175,8 +1181,28 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
       udisks_block_set_id (iface, NULL);
     }
 
-  udisks_block_set_id_usage (iface, g_udev_device_get_property (device->udev_device, "ID_FS_USAGE"));
-  udisks_block_set_id_type (iface, g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
+  if (udisks_daemon_get_enable_tcrypt (daemon))
+    {
+      seems_encrypted = bd_crypto_device_seems_encrypted (device_file, &error);
+      if (error != NULL)
+        {
+          udisks_warning ("Error determining whether device '%s' seems to be encrypted: %s (%s, %d)",
+                          device_file, error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+        }
+    }
+
+  if (seems_encrypted)
+    {
+      udisks_block_set_id_usage (iface, "crypto");
+      udisks_block_set_id_type (iface, "crypto_unknown");
+    }
+  else
+    {
+      udisks_block_set_id_usage (iface, g_udev_device_get_property (device->udev_device, "ID_FS_USAGE"));
+      udisks_block_set_id_type (iface, g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
+    }
+
   s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_VERSION"));
   udisks_block_set_id_version (iface, s);
   g_free (s);
@@ -2153,7 +2179,8 @@ wait_for_filesystem (UDisksDaemon *daemon,
 
   if (g_strcmp0 (data->type, "empty") == 0)
     {
-      if ((id_type == NULL || g_strcmp0 (id_type, "") == 0) && partition_table == NULL)
+      if ((id_type == NULL || g_strcmp0 (id_type, "") == 0 ||
+           g_strcmp0 (id_type, "crypto_unknown") == 0) && partition_table == NULL)
         {
           ret = g_object_ref (data->object);
           goto out;
@@ -2684,6 +2711,29 @@ udisks_linux_block_teardown (UDisksBlock               *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+gboolean
+udisks_linux_block_is_luks (UDisksBlock *block)
+{
+  return g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+         g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0;
+}
+
+gboolean
+udisks_linux_block_is_tcrypt (UDisksBlock *block)
+{
+  return g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+         g_strcmp0 (udisks_block_get_id_type (block), "crypto_TCRYPT") == 0;
+}
+
+gboolean
+udisks_linux_block_is_unknown_crypto (UDisksBlock *block)
+{
+  return g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+         g_strcmp0 (udisks_block_get_id_type (block), "crypto_unknown") == 0;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 handle_format_failure (GDBusMethodInvocation *invocation,
                        GError *error)
@@ -3025,7 +3075,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   if (encrypt_passphrase != NULL)
     {
-      LuksJobData data;
+      CryptoJobData data;
       data.device = device_name;
       data.passphrase = encrypt_passphrase;
 
@@ -3107,13 +3157,13 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           goto out;
         }
 
-      /* update the unlocked-luks file */
+      /* update the unlocked-crypto-dev file */
       udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
-      udisks_state_add_unlocked_luks (state,
-                                      udisks_block_get_device_number (cleartext_block),
-                                      udisks_block_get_device_number (block),
-                                      g_udev_device_get_sysfs_attr (udev_cleartext_device->udev_device, "dm/uuid"),
-                                      caller_uid);
+      udisks_state_add_unlocked_crypto_dev (state,
+                                            udisks_block_get_device_number (cleartext_block),
+                                            udisks_block_get_device_number (block),
+                                            g_udev_device_get_sysfs_attr (udev_cleartext_device->udev_device, "dm/uuid"),
+                                            caller_uid);
 
       object_to_mkfs = cleartext_object;
       block_to_mkfs = cleartext_block;
