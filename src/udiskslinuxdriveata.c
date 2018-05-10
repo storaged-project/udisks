@@ -1902,6 +1902,12 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
   if (object == NULL)
     goto out;
   _drive = udisks_object_peek_drive (UDISKS_OBJECT (object));
+  if (_drive == NULL)
+    {
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Failed to get Drive interface for object");
+      goto out;
+    }
 
   block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
@@ -2152,7 +2158,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
     {
       udisks_notice ("Error securely erasing %s (%s): %s (%s, %d)",
                      device_file,
-                     udisks_drive_get_id (_drive),
+                     _drive ? udisks_drive_get_id (_drive) : "",
                      local_error->message, g_quark_to_string (local_error->domain), local_error->code);
     }
 

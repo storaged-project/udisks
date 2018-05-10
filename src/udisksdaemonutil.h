@@ -40,6 +40,12 @@ gchar *udisks_decode_udev_string (const gchar *str);
 void udisks_safe_append_to_object_path (GString      *str,
                                         const gchar  *s);
 
+void udisks_g_object_ref_foreach (gpointer object,
+                                  gpointer      unused);
+
+void *udisks_g_object_ref_copy (gconstpointer object,
+                                gpointer      unused);
+
 guint64 udisks_daemon_util_block_get_size (GUdevDevice *device,
                                            gboolean    *out_media_available,
                                            gboolean    *out_media_change_detected);

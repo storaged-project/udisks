@@ -611,8 +611,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
           break;
         }
     }
-  g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
-  g_list_free (mounts);
+  g_list_free_full (mounts, g_object_unref);
 
   /* Figure out if block device still exists */
   udev_device = g_udev_client_query_by_device_number (udev_client,
@@ -1807,7 +1806,7 @@ udisks_state_has_loop (UDisksState   *state,
                           (gpointer) device_file, (gpointer) out_uid);
       g_variant_unref (value);
    }
-    
+
   g_mutex_unlock (&state->lock);
   return ret;
 }

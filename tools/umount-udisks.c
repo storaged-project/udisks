@@ -59,8 +59,7 @@ lookup_object_for_block (UDisksClient  *client,
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 
   return ret;
 }

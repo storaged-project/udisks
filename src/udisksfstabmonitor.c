@@ -37,6 +37,7 @@
 #include "udisksfstabentry.h"
 #include "udisksprivate.h"
 #include "udiskslogging.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udisksfstabmonitor
@@ -99,8 +100,7 @@ udisks_fstab_monitor_finalize (GObject *object)
 
   g_object_unref (monitor->file_monitor);
 
-  g_list_foreach (monitor->fstab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->fstab_entries);
+  g_list_free_full (monitor->fstab_entries, g_object_unref);
 
   if (G_OBJECT_CLASS (udisks_fstab_monitor_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_fstab_monitor_parent_class)->finalize (object);
@@ -219,8 +219,7 @@ reload_fstab_entries (UDisksFstabMonitor *monitor)
 
   udisks_fstab_monitor_ensure (monitor);
 
-  old_fstab_entries = g_list_copy (monitor->fstab_entries);
-  g_list_foreach (old_fstab_entries, (GFunc) g_object_ref, NULL);
+  old_fstab_entries = g_list_copy_deep (monitor->fstab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   udisks_fstab_monitor_invalidate (monitor);
   udisks_fstab_monitor_ensure (monitor);
@@ -243,8 +242,7 @@ reload_fstab_entries (UDisksFstabMonitor *monitor)
       g_signal_emit (monitor, signals[ENTRY_ADDED_SIGNAL], 0, entry);
     }
 
-  g_list_foreach (old_fstab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (old_fstab_entries);
+  g_list_free_full (old_fstab_entries, g_object_unref);
   g_list_free (cur_fstab_entries);
   g_list_free (removed);
   g_list_free (added);
@@ -321,8 +319,7 @@ udisks_fstab_monitor_invalidate (UDisksFstabMonitor *monitor)
 {
   monitor->have_data = FALSE;
 
-  g_list_foreach (monitor->fstab_entries, (GFunc) g_object_unref, NULL);
-  g_list_free (monitor->fstab_entries);
+  g_list_free_full (monitor->fstab_entries, g_object_unref);
   monitor->fstab_entries = NULL;
 }
 
@@ -411,8 +408,6 @@ udisks_fstab_monitor_get_entries (UDisksFstabMonitor  *monitor)
 
   udisks_fstab_monitor_ensure (monitor);
 
-  ret = g_list_copy (monitor->fstab_entries);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (monitor->fstab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   return ret;
 }
-

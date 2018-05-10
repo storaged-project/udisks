@@ -287,8 +287,10 @@ void vgs_task_func (GTask        *task,
     g_task_return_error (task, error);
 
   ret->pvs = bd_lvm_pvs (&error);
-  if (!ret->pvs)
+  if (!ret->pvs) {
+    vgs_pvs_data_free (ret);
     g_task_return_error (task, error);
+  }
   else
     g_task_return_pointer (task, ret, (GDestroyNotify) vgs_pvs_data_free);
 }

@@ -123,8 +123,7 @@ udisks_linux_mdraid_object_finalize (GObject *_object)
 
   g_clear_object (&object->raid_device);
 
-  g_list_foreach (object->member_devices, (GFunc) g_object_unref, NULL);
-  g_list_free (object->member_devices);
+  g_list_free_full (object->member_devices, g_object_unref);
 
   g_free (object->uuid);
 
@@ -320,8 +319,7 @@ udisks_linux_mdraid_object_get_members (UDisksLinuxMDRaidObject *object)
 
   g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
 
-  ret = g_list_copy (object->member_devices);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  ret = g_list_copy_deep (object->member_devices, (GCopyFunc) udisks_g_object_ref_copy, NULL);
 
   return ret;
 }
@@ -566,6 +564,15 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
     goto out;
 
   /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
+
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   object->sync_action_source = watch_attr (device,
                                            "md/sync_action",
                                            (GSourceFunc) attr_changed,
@@ -574,6 +581,9 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
                                         "md/degraded",
                                         (GSourceFunc) attr_changed,
                                         object);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
  out:
   g_free (level);

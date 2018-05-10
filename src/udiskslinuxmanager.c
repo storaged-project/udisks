@@ -838,6 +838,7 @@ handle_mdraid_create (UDisksManager         *_object,
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), success, NULL);
     }
 
+  g_strfreev ((gchar **) disks);
   g_free (raid_device_file);
   g_free (raid_node);
   g_free (array_name);

@@ -367,8 +367,7 @@ print_object (UDisksObject *object,
                _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA), g_dbus_proxy_get_interface_name (iproxy), _color_get (_COLOR_RESET));
       print_interface_properties (iproxy, indent + 2);
     }
-  g_list_foreach (interface_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (interface_proxies);
+  g_list_free_full (interface_proxies, g_object_unref);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -429,8 +428,7 @@ lookup_object_by_device (const gchar *device)
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 
   return ret;
 }
@@ -465,8 +463,7 @@ lookup_object_by_drive (const gchar *drive)
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   g_free (full_drive_object_path);
 
   return ret;
@@ -687,8 +684,7 @@ handle_command_mount_unmount (gint        *argc,
               g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -723,8 +719,7 @@ handle_command_mount_unmount (gint        *argc,
                 }
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -942,6 +937,7 @@ read_passphrase (void)
   ret = g_string_free (str, FALSE);
   str = NULL;
 
+  fclose (tty);
   return ret;
 }
 
@@ -975,8 +971,7 @@ encrypted_is_unlocked (UDisksObject *encrypted_object)
     }
 
  out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 
@@ -1187,8 +1182,7 @@ handle_command_unlock_lock (gint        *argc,
               g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -1216,8 +1210,7 @@ handle_command_unlock_lock (gint        *argc,
                 }
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -1588,8 +1581,7 @@ handle_command_loop (gint        *argc,
                       g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
                     }
                 }
-              g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-              g_list_free (objects);
+              g_list_free_full (objects, g_object_unref);
               goto out;
             }
           if (complete_devices)
@@ -1608,8 +1600,7 @@ handle_command_loop (gint        *argc,
                         g_print ("%s \n", symlinks[n]);
                     }
                 }
-              g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-              g_list_free (objects);
+              g_list_free_full (objects, g_object_unref);
               goto out;
             }
         }
@@ -1935,8 +1926,7 @@ handle_command_smart_simulate (gint        *argc,
                   g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
                 }
             }
-          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-          g_list_free (objects);
+          g_list_free_full (objects, g_object_unref);
         }
 
       if (complete_devices)
@@ -1957,8 +1947,7 @@ handle_command_smart_simulate (gint        *argc,
                     g_print ("%s \n", symlinks[n]);
                 }
             }
-          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-          g_list_free (objects);
+          g_list_free_full (objects, g_object_unref);
         }
       goto out;
     }
@@ -2189,8 +2178,7 @@ handle_command_power_off (gint        *argc,
                   g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
                 }
             }
-          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-          g_list_free (objects);
+          g_list_free_full (objects, g_object_unref);
         }
 
       if (complete_devices)
@@ -2211,8 +2199,7 @@ handle_command_power_off (gint        *argc,
                     g_print ("%s \n", symlinks[n]);
                 }
             }
-          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-          g_list_free (objects);
+          g_list_free_full (objects, g_object_unref);
         }
       goto out;
     }
@@ -2400,8 +2387,7 @@ handle_command_info (gint        *argc,
           g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
           g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -2421,8 +2407,7 @@ handle_command_info (gint        *argc,
                 g_print ("%s \n", symlinks[n]);
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -2440,8 +2425,7 @@ handle_command_info (gint        *argc,
               g_print ("%s \n", base);
             }
         }
-      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-      g_list_free (objects);
+      g_list_free_full (objects, g_object_unref);
       goto out;
     }
 
@@ -2584,8 +2568,7 @@ handle_command_dump (gint        *argc,
                _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), _color_get (_COLOR_RESET));
       print_object (object, 2);
     }
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 
   ret = 0;
 
@@ -3078,8 +3061,7 @@ handle_command_status (gint        *argc,
       if (str->len == 0)
         g_string_append (str, "-");
       block = g_string_free (str, FALSE);
-      g_list_foreach (blocks, (GFunc) g_object_unref, NULL);
-      g_list_free (blocks);
+      g_list_free_full (blocks, g_object_unref);
 
       vendor = udisks_drive_get_vendor (drive);
       model = udisks_drive_get_model (drive);
@@ -3109,8 +3091,7 @@ handle_command_status (gint        *argc,
     }
 
 
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
+  g_list_free_full (objects, g_object_unref);
 
   ret = 0;
 

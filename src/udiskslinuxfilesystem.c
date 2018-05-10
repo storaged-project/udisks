@@ -178,8 +178,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
                                       (const gchar *const *) p->pdata);
   g_ptr_array_free (p, TRUE);
-  g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
-  g_list_free (mounts);
+  g_list_free_full (mounts, g_object_unref);
 
   dev = udisks_linux_block_object_get_device_file (object);
   type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");

@@ -294,6 +294,41 @@ udisks_safe_append_to_object_path (GString      *str,
 }
 
 /**
+ * udisks_g_object_ref_foreach:
+ * @object: A #GObject to ref.
+ * @unused: Unused parameter.
+ *
+ * This is a helper function for g_list_foreach. It expects a function
+ * that takes two parameters but the standard g_object_ref takes just one
+ * and using it makes gcc sad. So this function just calls g_object_ref
+ * and throws away the second parameter.
+ */
+void
+udisks_g_object_ref_foreach (gpointer object, gpointer unused)
+{
+  g_return_if_fail (G_IS_OBJECT (object));
+  g_object_ref (G_OBJECT (object));
+  return;
+}
+
+/**
+ * udisks_g_object_ref_copy:
+ * @object: A #GObject to ref.
+ * @unused: Unused parameter.
+ *
+ * This is a helper function for g_list_copy_deep. It expects copy function
+ * that takes two parameters but the standard g_object_ref takes just one
+ * and using it makes gcc sad. So this function just calls g_object_ref
+ * and throws away the second parameter.
+ */
+void *
+udisks_g_object_ref_copy (gconstpointer object, gpointer unused)
+{
+  g_return_val_if_fail (G_IS_OBJECT (object), NULL);
+  return g_object_ref (G_OBJECT (object));
+}
+
+/**
  * udisks_daemon_util_block_get_size:
  * @device: A #GUdevDevice for a top-level block device.
  * @out_media_available: (out): Return location for whether media is available or %NULL.

@@ -294,7 +294,18 @@ udisks_utab_monitor_constructed (GObject *object)
 
   monitor->utab_channel = g_io_channel_unix_new (mnt_monitor_get_fd (monitor->mn));
   monitor->utab_watch_source = g_io_create_watch (monitor->utab_channel, G_IO_IN);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+/* parameters of the callback depend on the source and can be different
+ * from the required "generic" GSourceFunc, see:
+ * https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#g-source-set-callback
+ */
   g_source_set_callback (monitor->utab_watch_source, (GSourceFunc) utab_changed_event, monitor, NULL);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
   g_source_attach (monitor->utab_watch_source, g_main_context_get_thread_default ());
   g_source_unref (monitor->utab_watch_source);
 
