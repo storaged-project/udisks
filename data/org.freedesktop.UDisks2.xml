@@ -2036,6 +2036,10 @@
     -->
     <property name="HintEncryptionType" type="s" access="read"/>
 
+    <!-- MetadataSize: Size of the metadata on the encrypted device in bytes
+    -->
+    <property name="MetadataSize" type="t" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.
