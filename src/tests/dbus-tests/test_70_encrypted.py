@@ -57,6 +57,13 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         device = self.get_property(disk, '.Block', 'Device')
         device.assertEqual(self.str_to_ay(self.vdevs[0]))  # device is an array of byte
 
+        # check the size of the LUKS metadata
+        metadata_size = self.get_property(disk, '.Encrypted', 'MetadataSize')
+
+        dumped_metadata_size = self._get_metadata_size_from_dump(self.vdevs[0])
+        self.assertEqual(int(metadata_size.value), dumped_metadata_size,
+                         "LUKS metadata size differs (DBus value != cryptsetup luksDump)")
+
         # check system values
         _ret, sys_type = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_type, 'crypto_LUKS')
@@ -241,6 +248,16 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
         device.Format('xfs', {'encrypt.passphrase': passphrase},
                       dbus_interface=self.iface_prefix + '.Block')
 
+    def _get_metadata_size_from_dump(self, disk):
+        ret, out = self.run_command("cryptsetup luksDump %s" % disk)
+        if ret != 0:
+            self.fail("Failed to get LUKS information from %s:\n%s" % (disk, out))
+
+        m = re.search(r"Payload offset:\s*([0-9]+)", out)
+        if m is None:
+            self.fail("Failed to get LUKS 2 offset information using 'cryptsetup luksDump %s'" % disk)
+        # offset value is in 512B blocks; we need to multiply to get the real metadata size
+        return  int(m.group(1)) * 512
 
 class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     '''This is a LUKS2 encrypted device test suite'''
@@ -263,6 +280,16 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         ret, out = self.run_command('mkfs.xfs /dev/mapper/luks-`cryptsetup luksUUID %s`' % device_path)
         if ret != 0:
             raise RuntimeError('Failed to create xfs filesystem on device %s:\n%s' % (device_path, out))
+
+    def _get_metadata_size_from_dump(self, disk):
+        ret, out = self.run_command("cryptsetup luksDump %s" % disk)
+        if ret != 0:
+            self.fail("Failed to get LUKS 2 information from '%s':\n%s" % (disk, out))
+
+        m = re.search(r"offset:\s*([0-9]+)\s*\[bytes\]", out)
+        if m is None:
+            self.fail("Failed to get LUKS 2 offset information using 'cryptsetup luksDump %s'" % disk)
+        return int(m.group(1))
 
     def setUp(self):
         cryptsetup_version = self._get_cryptsetup_version()
