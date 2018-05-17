@@ -2248,7 +2248,7 @@ handle_resize (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
   if (! bd_fs_resize (udisks_block_get_device (block), size, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -2265,6 +2265,7 @@ handle_resize (UDisksFilesystem      *filesystem,
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
+  udisks_bd_thread_disable_progress ();
   g_clear_object (&object);
   g_free (required_utility);
   g_clear_error (&error);
@@ -2406,7 +2407,7 @@ handle_repair (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
   ret = bd_fs_repair (udisks_block_get_device (block), &error);
   if (error)
     {
@@ -2424,6 +2425,7 @@ handle_repair (UDisksFilesystem      *filesystem,
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
+  udisks_bd_thread_disable_progress ();
   g_clear_object (&object);
   g_free (required_utility);
   g_clear_error (&error);
@@ -2565,7 +2567,7 @@ handle_check (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
   ret = bd_fs_check (udisks_block_get_device (block), &error);
   if (error)
     {
@@ -2583,6 +2585,7 @@ handle_check (UDisksFilesystem      *filesystem,
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
+  udisks_bd_thread_disable_progress ();
   g_clear_object (&object);
   g_free (required_utility);
   g_clear_error (&error);

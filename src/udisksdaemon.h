@@ -173,6 +173,9 @@ gboolean                 udisks_daemon_launch_threaded_job_sync (UDisksDaemon   
                                                                  GCancellable          *cancellable,
                                                                  GError               **error);
 
+void                     udisks_bd_thread_set_progress_for_job  (UDisksJob             *job);
+void                     udisks_bd_thread_disable_progress      (void);
+
 /* Return value and *uuid_ret must be freed with g_free.  If return
    value is NULL, *uuid has not been changed.
  */
