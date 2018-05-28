@@ -2235,6 +2235,7 @@ static const struct
   {"gpt", "microsoft", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", NC_("part-type", "Microsoft Windows Recovery Environment"), 0},
   /* Apple OS X */
   {"gpt", "apple",     "48465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple HFS/HFS+"), 0},
+  {"gpt", "apple",     "7c3457ef-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple APFS"), 0},
   {"gpt", "apple",     "55465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple UFS"), 0},
   {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Apple ZFS"), 0}, /* same as ZFS */
   {"gpt", "apple",     "52414944-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple RAID"), F_RAID},
