@@ -540,10 +540,11 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
-#if 0
   if (! bd_vdo_grow_physical (dm_name, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
+      /* Perform refresh anyway, without error checking */
+      do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
     }
   /* Perform refresh */
@@ -553,12 +554,6 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
       return TRUE;
     }
   udisks_block_vdo_complete_grow_physical (block_vdo, invocation);
-#endif
-  /* TODO: implement in libblockdev */
-  g_dbus_method_invocation_return_error (invocation,
-                                         UDISKS_ERROR,
-                                         UDISKS_ERROR_NOT_SUPPORTED,
-                                         "Not implemented yet");
 
   /* Indicate that we handled the method invocation */
   return TRUE;
