@@ -77,3 +77,5 @@ udisks_object_manager_client_get_type
 # ZRAM_TYPES
 
 # BCACHE_TYPES
+
+# VDO_TYPES

@@ -1,0 +1,300 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2018 Tomas Bzatek <tbzatek@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Manager.VDO:
+      @short_description: VDO add-on to the manager singleton
+      @since: 2.7.7
+
+      Additional interface with VDO specifics for top-level manager
+      singleton object located at the object path
+      <literal>/org/freedesktop/UDisks2/Manager</literal>.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager.VDO">
+    <!-- prereq: org.freedesktop.UDisks2.Manager -->
+
+    <!--
+        CreateVolume:
+        @name: The VDO volume name.
+        @device: Object path to an object implementing the #org.freedesktop.UDisks2.Block interface, used as an underlying storage device.
+        @logical_size: Logical VDO volume size in bytes or 0 for default (size of @device)
+        @index_memory: Amount of index memory in bytes or 0 for default. Note that only some sizes are valid here (0.25, 0.5 and 0.75 GB and integer multiples of 1 GB). Invalid sizes will be rounded DOWN to nearest GB (or one of the allowed decimal values).
+        @compression: Enables or disables compression when creating a VDO volume.
+        @deduplication: Enables or disables deduplication when creating a VDO volume.
+        @write_policy: Specifies the write policy.
+        @options: Additional options.
+        @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
+        @since: 2.7.7
+
+        Creates a VDO volume from @device and its associated index and makes it available.
+
+        Known @write_policy include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="CreateVolume">
+      <arg name="name" type="s" direction="in" />
+      <arg name="device" type="o" direction="in" />
+      <arg name="logical_size" type="t" direction="in" />
+      <arg name="index_memory" type="t" direction="in" />
+      <arg name="compression" type="b" direction="in" />
+      <arg name="deduplication" type="b" direction="in" />
+      <arg name="write_policy" type="s" direction="in" />
+      <arg name="options" type="a{sv}" direction="in" />
+      <arg name="vdo" direction="out" type="o" />
+    </method>
+
+    <!--
+        StartVolume:
+        @name: The VDO volume name.
+        @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
+        @options: Additional options.
+        @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
+        @since: 2.7.7
+
+        Starts a stopped, activated VDO volume and associated services.
+
+        No additional options are currently defined.
+    -->
+    <method name="StartVolume">
+      <arg name="name" type="s" direction="in" />
+      <arg name="force_rebuild" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+      <arg name="vdo" direction="out" type="o" />
+    </method>
+
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Block.VDO:
+      @short_description: VDO volume interface exported on block objects
+      @since: 2.7.7
+
+      This interface is used for #org.freedesktop.UDisks2.Block devices that
+      has been filtered through VDO plugin.
+  -->
+  <interface name="org.freedesktop.UDisks2.Block.VDO">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+
+    <!-- Name:
+         The name of the VDO device.
+         @since: 2.7.7
+    -->
+    <property name="Name" type="s" access="read" />
+
+    <!-- Active:
+         Indicates whether the device is active.
+         @since: 2.7.7
+    -->
+    <property name="Active" type="b" access="read" />
+
+    <!-- Compression:
+         Indicates whether compression is enabled.
+         @since: 2.7.7
+    -->
+    <property name="Compression" type="b" access="read" />
+
+    <!-- Deduplication:
+         Indicates whether deduplication is enabled.
+         @since: 2.7.7
+    -->
+    <property name="Deduplication" type="b" access="read" />
+
+    <!-- LogicalSize:
+         The logical size of the VDO volume.
+         @since: 2.7.7
+    -->
+    <property name="LogicalSize" type="t" access="read" />
+
+    <!-- PhysicalSize:
+         The physical size of the VDO volume.
+         @since: 2.7.7
+    -->
+    <property name="PhysicalSize" type="t" access="read" />
+
+    <!-- IndexMemory:
+         The index memory size of the VDO volume.
+         @since: 2.7.7
+    -->
+    <property name="IndexMemory" type="t" access="read" />
+
+    <!-- WritePolicy:
+         The current write policy of the VDO volume.
+         @since: 2.7.7
+
+        Known values include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <property name="WritePolicy" type="s" access="read" />
+
+
+    <!--
+        Activate:
+        @options: Additional options.
+        @since: 2.7.7
+
+        Activates the VDO volume.
+
+        No additional options are currently defined.
+    -->
+    <method name="Activate">
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        Deactivate:
+        @options: Additional options.
+        @since: 2.7.7
+
+        Deactivates the VDO volume. Deactivating a currently running volume does not stop it.
+
+        No additional options are currently defined.
+    -->
+    <method name="Deactivate">
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        EnableCompression:
+        @enable: A boolean value indicating whether compression should be enabled.
+        @options: Additional options.
+        @since: 2.7.7
+
+        Enables or disables compression on the VDO volume. If the VDO volume is running, takes effect immediately.      
+
+        No additional options are currently defined.
+    -->
+    <method name="EnableCompression">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        EnableDeduplication:
+        @enable: A boolean value indicating whether deduplication should be enabled.
+        @options: Additional options.
+        @since: 2.7.7
+
+        Enables or disables deduplication on the VDO volume. If the VDO volume is running, takes effect immediately.
+
+        No additional options are currently defined.
+    -->
+    <method name="EnableDeduplication">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        ChangeWritePolicy:
+        @write_policy: The desired write policy. 
+        @options: Additional options.
+        @since: 2.7.7
+
+        Modifies the write policy of the running VDO volume. Known @write_policy values include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+
+        No additional options are currently defined.
+    -->
+    <method name="ChangeWritePolicy">
+      <arg name="write_policy" direction="in" type="s" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        Remove:
+        @force: A boolean value indicating whether an unmount attempt should be performed first. 
+        @options: Additional options.
+        @since: 2.7.7
+
+        Removes the VDO volume and associated indexes.
+
+        No additional options are currently defined.
+    -->
+    <method name="Remove">
+      <arg name="force" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        Stop:
+        @force: A boolean value indicating whether an unmount attempt should be performed first. 
+        @options: Additional options.
+        @since: 2.7.7
+
+        Stops a running VDO volume and associated services.
+
+        No additional options are currently defined.
+    -->
+    <method name="Stop">
+      <arg name="force" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        GrowLogical:
+        @size: The logical VDO volume size in bytes. The maximum size supported is 4P.
+        @options: Additional options.
+        @since: 2.7.7
+
+        Grows the logical size of a VDO volume. The volume must be running.
+
+        No additional options are currently defined.
+    -->
+    <method name="GrowLogical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        GrowPhysical:
+        @options: Additional options.
+        @since: 2.7.7
+
+        Grows the physical size of a VDO volume. The volume must be running.
+
+        No additional options are currently defined.
+    -->
+    <method name="GrowPhysical">
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+  </interface>
+</node>

@@ -1,0 +1,6 @@
+udisks_manager_vdo_get_type
+udisks_manager_vdo_proxy_get_type
+udisks_manager_vdo_skeleton_get_type
+udisks_block_vdo_get_type
+udisks_block_vdo_proxy_get_type
+udisks_block_vdo_skeleton_get_type

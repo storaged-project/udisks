@@ -1387,6 +1387,8 @@ udisks_loop_skeleton_get_type
 
 <!-- BCACHE_GENERATED_SECTIONS -->
 
+<!-- VDO_GENERATED_SECTIONS -->
+
 <SECTION>
 <FILE>udisksfstabmonitor</FILE>
 <TITLE>UDisksFstabMonitor</TITLE>
