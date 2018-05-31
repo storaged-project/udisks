@@ -28,6 +28,9 @@
 #include <stdlib.h>
 
 #include <glib/gstdio.h>
+#include <libcryptsetup.h>
+#include <luksmeta.h>
+#include <json-glib/json-glib.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxencrypted.h"
@@ -120,6 +123,120 @@ update_child_configuration (UDisksLinuxEncrypted   *encrypted,
                                             udisks_block_get_id_uuid (block)));
 }
 
+static luksmeta_uuid_t luksmeta_clevis_uuid = { 0xcb, 0x6e, 0x89, 0x04, 0x81, 0xff, 0x40, 0xda,
+                                                0xa8, 0x4a, 0x07, 0xab, 0x9a, 0xb5, 0x71, 0x5e };
+
+static void
+update_slots (UDisksLinuxEncrypted *encrypted,
+              UDisksLinuxBlockObject *object)
+{
+  UDisksBlock *block = udisks_object_peek_block (UDISKS_OBJECT (object));
+  struct crypt_device *cd = NULL;
+  gint ret_num;
+  GVariantBuilder slots;
+
+  ret_num = crypt_init (&cd, udisks_block_get_device (block));
+  if (ret_num != 0)
+    return;
+
+  ret_num = crypt_load (cd, CRYPT_LUKS1, NULL);
+  if (ret_num != 0)
+    {
+      crypt_free (cd);
+      return;
+    }
+
+  g_variant_builder_init (&slots, G_VARIANT_TYPE_ARRAY);
+
+  for (int i = 0; i < crypt_keyslot_max(CRYPT_LUKS1); i++)
+    {
+      gboolean active;
+      gchar *clevis_config = NULL;
+
+      luksmeta_uuid_t uuid = { };
+      int len;
+      gchar *buf = NULL, *pos;
+      gsize header_len;
+      JsonNode *header, *clevis;
+      JsonObject *header_object, *clevis_object;
+
+      active = (crypt_keyslot_status(cd, i) == CRYPT_SLOT_ACTIVE
+                || crypt_keyslot_status(cd, i) == CRYPT_SLOT_ACTIVE_LAST);
+
+      len = luksmeta_load (cd, i, uuid, NULL, 0);
+      if (len >= 0  && memcmp (luksmeta_clevis_uuid, uuid, sizeof(luksmeta_uuid_t)) == 0) {
+        buf = g_new0(gchar, len+1);
+        if (luksmeta_load (cd, i, uuid, buf, len) < 0)
+          {
+            g_free (buf);
+            continue;
+          }
+
+        pos = memchr (buf, '.', len);
+        if (pos)
+          *pos = '\0';
+        g_base64_decode_inplace (buf, &header_len);
+        buf[header_len] = '\0';
+
+        header = json_from_string (buf, NULL);
+        g_free (buf);
+        if (header == NULL)
+          continue;
+
+        header_object = json_node_get_object (header);
+        if (header_object == NULL)
+          {
+            json_node_free (header);
+            continue;
+          }
+
+        clevis = json_object_get_member (header_object, "clevis");
+        if (clevis == NULL)
+          {
+            json_node_free (header);
+            continue;
+          }
+
+        clevis_object = json_node_get_object (clevis);
+        if (clevis_object == NULL)
+          {
+            json_node_free (header);
+            continue;
+          }
+
+        /* We only expose "tang" configs here since we know that they
+           don't contain sensitive information and they are all our
+           clients are interested in right now.  Other pins might need
+           more careful cleansing.
+        */
+
+        if (g_strcmp0 (json_object_get_string_member (clevis_object, "pin"), "tang") != 0)
+          {
+            json_node_free (header);
+            continue;
+          }
+
+        clevis_config = json_to_string (clevis, FALSE);
+        json_node_free (header);
+      }
+
+      if (active || clevis_config) {
+        GVariantBuilder slot;
+        g_variant_builder_init (&slot, G_VARIANT_TYPE_ARRAY);
+        g_variant_builder_add (&slot, "{sv}", "Index", g_variant_new_int32 (i));
+        g_variant_builder_add (&slot, "{sv}", "Active", g_variant_new_boolean (active));
+        if (clevis_config) {
+          g_variant_builder_add (&slot, "{sv}", "ClevisConfig", g_variant_new_string (clevis_config));
+          g_free (clevis_config);
+        }
+        g_variant_builder_add_value (&slots, g_variant_builder_end (&slot));
+      }
+    }
+
+  udisks_encrypted_set_slots (UDISKS_ENCRYPTED (encrypted), g_variant_builder_end (&slots));
+  crypt_free (cd);
+}
+
 /**
  * udisks_linux_encrypted_update:
  * @encrypted: A #UDisksLinuxEncrypted.
@@ -134,6 +251,7 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
   UDisksBlock *block = udisks_object_peek_block (UDISKS_OBJECT (object));
 
   update_child_configuration (encrypted, object);
+  update_slots (encrypted, object);
 
   /* set block type according to hint_encryption_type */
   if (udisks_linux_block_is_unknown_crypto (block))

@@ -24,6 +24,7 @@ CPPFLAGS =                                                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
+	$(JSONGLIB_CFLAGS)                                                     \
 	$(BLOCKDEV_CFLAGS)													   \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
@@ -105,6 +106,7 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
+	$(JSONGLIB_CFLAGS)                                                     \
 	$(GUDEV_CFLAGS)                                                        \
 	$(LIBATASMART_CFLAGS)                                                  \
 	$(LIBMOUNT_CFLAGS)                                                     \
@@ -112,6 +114,8 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(ACL_CFLAGS)                                                          \
 	$(LIBSYSTEMD_LOGIN_CFLAGS)                                             \
 	$(LIBELOGIND_CFLAGS)                                                   \
+	$(LUKSMETA_CFLAGS)                                                     \
+	$(CRYPTSETUP_CFLAGS)                                                   \
 	$(PART_CFLAGS)                                                         \
 	$(SWAP_CFLAGS)                                                         \
 	$(NULL)
@@ -120,6 +124,7 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GMODULE_LIBS)                                                        \
+	$(JSONGLIB_LIBS)                                                       \
 	$(GUDEV_LIBS)                                                          \
 	$(BLOCKDEV_LIBS)                                                       \
 	-lbd_utils                                                             \
@@ -129,6 +134,8 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(ACL_LIBS)                                                            \
 	$(LIBSYSTEMD_LOGIN_LIBS)                                               \
 	$(LIBELOGIND_LIBS)                                                     \
+	$(LUKSMETA_LIBS)                                                       \
+	$(CRYPTSETUP_LIBS)                                                     \
 	$(PART_LDFLAGS)                                                        \
 	$(SWAP_LIBS)                                                        \
 	$(top_builddir)/udisks/libudisks2.la                                   \

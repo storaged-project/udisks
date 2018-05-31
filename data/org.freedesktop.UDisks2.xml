@@ -2036,6 +2036,21 @@
     -->
     <property name="HintEncryptionType" type="s" access="read"/>
 
+    <!-- Slots:
+         Information about the key slots of this device.
+
+         This is an array of dictionaries, one for each interesting
+         slot.  An entry contains an integer "Index" field with the
+         slot number, and a boolean "Active" member that is true when
+         the slot can be used to unlock the disk.
+
+         An entry can also contain additional fields:
+
+         - "ClevisConfig": a JSON string with the Clevis configuration
+           for this slot.
+    -->
+    <property name="Slots" type="aa{sv}" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.
