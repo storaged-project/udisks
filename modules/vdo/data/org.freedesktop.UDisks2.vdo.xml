@@ -51,7 +51,7 @@
 
         Creates a VDO volume from @device and its associated index and makes it available.
 
-        Known @write_policy include:
+        Known @write_policy values include:
         <variablelist>
           <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
           <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
