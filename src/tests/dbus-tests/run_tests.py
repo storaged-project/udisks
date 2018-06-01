@@ -191,6 +191,11 @@ if __name__ == '__main__':
     # find which binary we're about to test: this also affects the D-Bus interface and object paths
     daemon_bin = find_daemon(projdir, args.system)
 
+    # use in-tree udisks tools
+    if not args.system:
+        if os.path.exists(os.path.join(projdir, 'tools', 'udisksctl')):
+            os.environ["PATH"] = ':'.join([os.path.join(projdir, 'tools'), os.environ["PATH"]])
+
     if not skip_clean:
         cleaner.record_state()
 
