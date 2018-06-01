@@ -153,6 +153,9 @@ KERNEL=="sr*", ENV{ID_VENDOR}=="SanDisk", ENV{ID_MODEL}=="Cruzer", ENV{ID_FS_LAB
 # Virtual Windows tools installation on Asus Zendisk (0b05:17b4)
 KERNEL=="sr*", ENV{ID_VENDOR}=="ASMT",ENV{ID_MODEL}=="VirtualCDROM", ENV{ID_FS_LABEL}=="ASUS_+Speed_ZENDISK*", ENV{UDISKS_IGNORE}="1"
 
+# Virtual Windows tools installation CD on Nokia 7 Plus (2e04:c025)
+KERNEL=="sr*", ENV{ID_VENDOR}=="Linux", ENV{ID_MODEL}=="File-CD_Gadget*", ENV{ID_FS_LABEL}=="CDROM*", ATTRS{manufacturer}=="HMD Global", ENV{UDISKS_IGNORE}="1"
+
 # Content created using isohybrid (typically used on CDs and USB
 # sticks for bootable media) is a bit special insofar that the
 # interesting content is on a DOS partition with type 0x00* ... which
