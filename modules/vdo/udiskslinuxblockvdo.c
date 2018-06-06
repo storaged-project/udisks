@@ -312,38 +312,6 @@ check_pk_auth (UDisksBlockVDO        *block_vdo,
 }
 
 static gboolean
-handle_activate (UDisksBlockVDO        *block_vdo,
-                 GDBusMethodInvocation *invocation,
-                 GVariant              *arg_options)
-{
-  const gchar *dm_name;
-  GError *error = NULL;
-
-  if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to activate the VDO volume")))
-    return TRUE;
-
-  dm_name = udisks_block_vdo_get_name (block_vdo);
-  if (! bd_vdo_activate (dm_name, NULL, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      /* Perform refresh anyway, without error checking */
-      do_refresh (block_vdo, dm_name, NULL);
-      return TRUE;
-    }
-  /* Perform refresh */
-  if (! do_refresh (block_vdo, dm_name, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      return TRUE;
-    }
-  udisks_block_vdo_complete_activate (block_vdo, invocation);
-
-  /* Indicate that we handled the method invocation */
-  return TRUE;
-}
-
-static gboolean
 handle_change_write_policy (UDisksBlockVDO        *block_vdo,
                             GDBusMethodInvocation *invocation,
                             const gchar           *arg_write_policy,
@@ -614,7 +582,6 @@ handle_stop (UDisksBlockVDO        *block_vdo,
 static void
 udisks_linux_block_vdo_iface_init (UDisksBlockVDOIface *iface)
 {
-  iface->handle_activate = handle_activate;
   iface->handle_change_write_policy = handle_change_write_policy;
   iface->handle_deactivate = handle_deactivate;
   iface->handle_enable_compression = handle_enable_compression;

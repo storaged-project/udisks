@@ -311,6 +311,37 @@ handle_create_volume (UDisksManagerVDO      *manager,
 }
 
 static gboolean
+handle_activate_volume (UDisksManagerVDO      *manager,
+                        GDBusMethodInvocation *invocation,
+                        const gchar           *arg_name,
+                        GVariant              *arg_options)
+{
+  UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
+  GError *error = NULL;
+
+  /* Policy check. */
+  if (! udisks_daemon_util_check_authorization_sync (udisks_linux_manager_vdo_get_daemon (l_manager),
+                                                     NULL,
+                                                     "org.freedesktop.udisks2.vdo.manage-vdo",
+                                                     arg_options,
+                                                     N_("Authentication is required to activate existing VDO volume"),
+                                                     invocation))
+    return TRUE;
+
+  if (! bd_vdo_activate (arg_name, NULL, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  /* Complete the DBus call */
+  udisks_manager_vdo_complete_activate_volume (manager, invocation);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
 handle_start_volume (UDisksManagerVDO      *manager,
                      GDBusMethodInvocation *invocation,
                      const gchar           *arg_name,
@@ -365,5 +396,6 @@ static void
 udisks_linux_manager_vdo_iface_init (UDisksManagerVDOIface *iface)
 {
   iface->handle_create_volume = handle_create_volume;
+  iface->handle_activate_volume = handle_activate_volume;
   iface->handle_start_volume = handle_start_volume;
 }

@@ -71,6 +71,21 @@
     </method>
 
     <!--
+        ActivateVolume:
+        @name: Name of an existing VDO volume to activate.
+        @options: Additional options.
+        @since: 2.7.7
+
+        Activates a VDO volume. Activated volume can be started using the org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
+
+        No additional options are currently defined.
+    -->
+    <method name="ActivateVolume">
+      <arg name="name" type="s" direction="in" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
         StartVolume:
         @name: The VDO volume name.
         @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
@@ -78,7 +93,7 @@
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
         @since: 2.7.7
 
-        Starts a stopped, activated VDO volume and associated services.
+        Starts a stopped, activated VDO volume and associated services. Deactivated volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call prior to starting.
 
         No additional options are currently defined.
     -->
@@ -161,19 +176,6 @@
     -->
     <property name="WritePolicy" type="s" access="read" />
 
-
-    <!--
-        Activate:
-        @options: Additional options.
-        @since: 2.7.7
-
-        Activates the VDO volume.
-
-        No additional options are currently defined.
-    -->
-    <method name="Activate">
-      <arg name="options" direction="in" type="a{sv}" />
-    </method>
 
     <!--
         Deactivate:
