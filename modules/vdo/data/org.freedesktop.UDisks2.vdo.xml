@@ -47,7 +47,6 @@
         @write_policy: Specifies the write policy.
         @options: Additional options.
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
-        @since: 2.7.7
 
         Creates a VDO volume from @device and its associated index and makes it available.
 
@@ -74,7 +73,6 @@
         ActivateVolume:
         @name: Name of an existing VDO volume to activate.
         @options: Additional options.
-        @since: 2.7.7
 
         Activates a VDO volume. Activated volume can be started using the org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
 
@@ -91,7 +89,6 @@
         @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
         @options: Additional options.
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
-        @since: 2.7.7
 
         Starts a stopped, activated VDO volume and associated services. Deactivated volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call prior to starting.
 
@@ -123,49 +120,41 @@
 
     <!-- Name:
          The name of the VDO device.
-         @since: 2.7.7
     -->
     <property name="Name" type="s" access="read" />
 
     <!-- Active:
          Indicates whether the device is active.
-         @since: 2.7.7
     -->
     <property name="Active" type="b" access="read" />
 
     <!-- Compression:
          Indicates whether compression is enabled.
-         @since: 2.7.7
     -->
     <property name="Compression" type="b" access="read" />
 
     <!-- Deduplication:
          Indicates whether deduplication is enabled.
-         @since: 2.7.7
     -->
     <property name="Deduplication" type="b" access="read" />
 
     <!-- LogicalSize:
          The logical size of the VDO volume.
-         @since: 2.7.7
     -->
     <property name="LogicalSize" type="t" access="read" />
 
     <!-- PhysicalSize:
          The physical size of the VDO volume.
-         @since: 2.7.7
     -->
     <property name="PhysicalSize" type="t" access="read" />
 
     <!-- IndexMemory:
          The index memory size of the VDO volume.
-         @since: 2.7.7
     -->
     <property name="IndexMemory" type="t" access="read" />
 
     <!-- WritePolicy:
          The current write policy of the VDO volume.
-         @since: 2.7.7
 
         Known values include:
         <variablelist>
@@ -180,7 +169,6 @@
     <!--
         Deactivate:
         @options: Additional options.
-        @since: 2.7.7
 
         Deactivates the VDO volume. Deactivating a currently running volume does not stop it.
 
@@ -194,7 +182,6 @@
         EnableCompression:
         @enable: A boolean value indicating whether compression should be enabled.
         @options: Additional options.
-        @since: 2.7.7
 
         Enables or disables compression on the VDO volume. If the VDO volume is running, takes effect immediately.      
 
@@ -209,7 +196,6 @@
         EnableDeduplication:
         @enable: A boolean value indicating whether deduplication should be enabled.
         @options: Additional options.
-        @since: 2.7.7
 
         Enables or disables deduplication on the VDO volume. If the VDO volume is running, takes effect immediately.
 
@@ -224,7 +210,6 @@
         ChangeWritePolicy:
         @write_policy: The desired write policy. 
         @options: Additional options.
-        @since: 2.7.7
 
         Modifies the write policy of the running VDO volume. Known @write_policy values include:
         <variablelist>
@@ -244,7 +229,6 @@
         Remove:
         @force: A boolean value indicating whether an unmount attempt should be performed first. 
         @options: Additional options.
-        @since: 2.7.7
 
         Removes the VDO volume and associated indexes.
 
@@ -259,7 +243,6 @@
         Stop:
         @force: A boolean value indicating whether an unmount attempt should be performed first. 
         @options: Additional options.
-        @since: 2.7.7
 
         Stops a running VDO volume and associated services.
 
@@ -274,7 +257,6 @@
         GrowLogical:
         @size: The logical VDO volume size in bytes. The maximum size supported is 4P.
         @options: Additional options.
-        @since: 2.7.7
 
         Grows the logical size of a VDO volume. The volume must be running.
 
@@ -288,7 +270,6 @@
     <!--
         GrowPhysical:
         @options: Additional options.
-        @since: 2.7.7
 
         Grows the physical size of a VDO volume. The volume must be running.
 
