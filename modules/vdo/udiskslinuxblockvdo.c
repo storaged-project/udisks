@@ -26,6 +26,7 @@
 #include <src/udiskslinuxblockobject.h>
 #include <src/udiskslinuxdevice.h>
 #include <src/udiskslogging.h>
+#include <src/udiskssimplejob.h>
 #include <blockdev/vdo.h>
 
 #include "udiskslinuxblockvdo.h"
@@ -285,12 +286,28 @@ static gboolean
 check_pk_auth (UDisksBlockVDO        *block_vdo,
                GDBusMethodInvocation *invocation,
                GVariant              *arg_options,
-               const gchar           *polkit_message)
+               const gchar           *polkit_message,
+               const gchar           *job_operation,
+               UDisksBaseJob        **job)
 {
   UDisksLinuxBlockVDO *l_block_vdo = UDISKS_LINUX_BLOCK_VDO (block_vdo);
   UDisksLinuxBlockObject *object;
+  UDisksDaemon *daemon;
   GError *error = NULL;
-  gboolean ret;
+  uid_t caller_uid;
+
+  daemon = udisks_linux_block_vdo_get_daemon (l_block_vdo);
+
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                NULL, NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return FALSE;
+    }
 
   object = udisks_daemon_util_dup_object (l_block_vdo, &error);
   if (object == NULL)
@@ -300,15 +317,33 @@ check_pk_auth (UDisksBlockVDO        *block_vdo,
     }
 
   /* Policy check */
-  ret = udisks_daemon_util_check_authorization_sync (udisks_linux_block_vdo_get_daemon (l_block_vdo),
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
                                                      UDISKS_OBJECT (object),
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
                                                      polkit_message,
-                                                     invocation);
+                                                     invocation))
+    {
+      g_object_unref (object);
+      return FALSE;
+    }
+
+  /* want to create a job */
+  if (job && job_operation)
+    {
+      *job = udisks_daemon_launch_simple_job (daemon,
+                                              UDISKS_OBJECT (object),
+                                              job_operation,
+                                              caller_uid,
+                                              NULL /* cancellable */);
+      g_warn_if_fail (UDISKS_IS_SIMPLE_JOB (*job));
+      if (*job != NULL)
+        /* tie the "object" lifecycle to the job and unref it when the job is finished */
+        g_object_set_data_full (G_OBJECT (*job), job_operation, g_object_ref (object), g_object_unref);
+    }
   g_object_unref (object);
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
@@ -322,7 +357,8 @@ handle_change_write_policy (UDisksBlockVDO        *block_vdo,
   BDVDOWritePolicy write_policy;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to change the write policy of the VDO volume")))
+                       N_("Authentication is required to change the write policy of the VDO volume"),
+                       NULL, NULL))
     return TRUE;
 
   write_policy = bd_vdo_get_write_policy_from_str (arg_write_policy, &error);
@@ -358,15 +394,18 @@ handle_deactivate (UDisksBlockVDO        *block_vdo,
                    GVariant              *arg_options)
 {
   const gchar *dm_name;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to deactivate the VDO volume")))
+                       N_("Authentication is required to deactivate the VDO volume"),
+                       "vdo-deactivate", &job))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_deactivate (dm_name, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
@@ -375,9 +414,11 @@ handle_deactivate (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_block_vdo_complete_deactivate (block_vdo, invocation);
 
   /* Indicate that we handled the method invocation */
@@ -397,7 +438,8 @@ handle_enable_compression (UDisksBlockVDO        *block_vdo,
   if (! check_pk_auth (block_vdo, invocation, arg_options,
                        arg_enable ?
                            N_("Authentication is required to enable compression on the VDO volume") :
-                           N_("Authentication is required to disable compression on the VDO volume")))
+                           N_("Authentication is required to disable compression on the VDO volume"),
+                       NULL, NULL))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
@@ -436,7 +478,8 @@ handle_enable_deduplication (UDisksBlockVDO        *block_vdo,
   if (! check_pk_auth (block_vdo, invocation, arg_options,
                        arg_enable ?
                            N_("Authentication is required to enable deduplication on the VDO volume") :
-                           N_("Authentication is required to disable deduplication on the VDO volume")))
+                           N_("Authentication is required to disable deduplication on the VDO volume"),
+                       NULL, NULL))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
@@ -469,15 +512,18 @@ handle_grow_logical (UDisksBlockVDO        *block_vdo,
                      GVariant              *arg_options)
 {
   const gchar *dm_name;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to grow the logical VDO volume size")))
+                       N_("Authentication is required to grow the logical VDO volume size"),
+                       "vdo-grow-logical", &job))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_grow_logical (dm_name, arg_size, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
@@ -486,9 +532,11 @@ handle_grow_logical (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_block_vdo_complete_grow_logical (block_vdo, invocation);
 
   /* Indicate that we handled the method invocation */
@@ -501,15 +549,18 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
                       GVariant              *arg_options)
 {
   const gchar *dm_name;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to grow the physical VDO volume size")))
+                       N_("Authentication is required to grow the physical VDO volume size"),
+                       "vdo-grow-physical", &job))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_grow_physical (dm_name, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
@@ -518,9 +569,11 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_block_vdo_complete_grow_physical (block_vdo, invocation);
 
   /* Indicate that we handled the method invocation */
@@ -534,18 +587,22 @@ handle_remove (UDisksBlockVDO        *block_vdo,
                GVariant              *arg_options)
 {
   const gchar *dm_name;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to remove the VDO volume")))
+                       N_("Authentication is required to remove the VDO volume"),
+                       "vdo-remove", &job))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_remove (dm_name, arg_force, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   /* Assuming uevent generated that would trigger object refresh */
   udisks_block_vdo_complete_remove (block_vdo, invocation);
 
@@ -560,18 +617,22 @@ handle_stop (UDisksBlockVDO        *block_vdo,
              GVariant              *arg_options)
 {
   const gchar *dm_name;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   if (! check_pk_auth (block_vdo, invocation, arg_options,
-                       N_("Authentication is required to stop the VDO volume")))
+                       N_("Authentication is required to stop the VDO volume"),
+                       "vdo-stop", &job))
     return TRUE;
 
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_stop (dm_name, arg_force, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   /* Assuming uevent generated that would trigger object refresh */
   udisks_block_vdo_complete_stop (block_vdo, invocation);
 

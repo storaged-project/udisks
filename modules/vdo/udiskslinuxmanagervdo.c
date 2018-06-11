@@ -25,6 +25,7 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
+#include <src/udiskssimplejob.h>
 
 #include "udiskslinuxmanagervdo.h"
 #include "udisks-vdo-generated.h"
@@ -229,14 +230,17 @@ handle_create_volume (UDisksManagerVDO      *manager,
                       GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
-  UDisksObject *object;
+  UDisksObject *block_object;
+  UDisksObject *vdo_object;
   UDisksBlock *block;
+  UDisksBaseJob *job;
   BDVDOWritePolicy write_policy;
   GError *error = NULL;
   gchar *dev;
+  uid_t caller_uid;
 
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (udisks_linux_manager_vdo_get_daemon (l_manager),
+  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
@@ -251,8 +255,19 @@ handle_create_volume (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  object = udisks_daemon_find_object (l_manager->daemon, arg_device);
-  if (object == NULL)
+  if (! udisks_daemon_util_get_caller_uid_sync (l_manager->daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                NULL, NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  block_object = udisks_daemon_find_object (l_manager->daemon, arg_device);
+  if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -262,8 +277,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  block = udisks_object_get_block (object);
-  g_object_unref (object);
+  block = udisks_object_get_block (block_object);
   if (block == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -271,40 +285,53 @@ handle_create_volume (UDisksManagerVDO      *manager,
                                              UDISKS_ERROR_FAILED,
                                              "Object path %s is not a block device",
                                              arg_device);
+      g_object_unref (block_object);
       return TRUE;
     }
 
+  job = udisks_daemon_launch_simple_job (l_manager->daemon,
+                                         UDISKS_OBJECT (block_object),
+                                         "vdo-create-volume",
+                                         caller_uid,
+                                         NULL /* cancellable */);
+  g_warn_if_fail (job != NULL);
+
   dev = udisks_block_dup_device (block);
   g_object_unref (block);
-
   if (! bd_vdo_create (arg_name, dev, arg_logical_size, arg_index_memory, arg_compression, arg_deduplication, write_policy, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
+      g_object_unref (block_object);
       g_free (dev);
       return TRUE;
     }
   g_free (dev);
 
   /* Sit and wait for the VDO object to show up */
-  object = udisks_daemon_wait_for_object_sync (l_manager->daemon,
-                                               wait_for_vdo_object,
-                                               (gpointer) arg_name,
-                                               NULL,
-                                               10, /* timeout_seconds */
-                                               &error);
-  if (object == NULL)
+  vdo_object = udisks_daemon_wait_for_object_sync (l_manager->daemon,
+                                                   wait_for_vdo_object,
+                                                   (gpointer) arg_name,
+                                                   NULL,
+                                                   10, /* timeout_seconds */
+                                                   &error);
+  if (vdo_object == NULL)
     {
       g_prefix_error (&error,
                       "Error waiting for VDO object after creating %s: ",
                       arg_name);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
+      g_object_unref (block_object);
       return TRUE;
     }
 
   /* Complete the DBus call */
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_manager_vdo_complete_create_volume (manager, invocation,
-                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-  g_object_unref (object);
+                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (vdo_object)));
+  g_object_unref (vdo_object);
+  g_object_unref (block_object);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
@@ -320,7 +347,7 @@ handle_activate_volume (UDisksManagerVDO      *manager,
   GError *error = NULL;
 
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (udisks_linux_manager_vdo_get_daemon (l_manager),
+  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
@@ -350,16 +377,36 @@ handle_start_volume (UDisksManagerVDO      *manager,
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
   UDisksObject *object;
+  UDisksBaseJob *job;
   GError *error = NULL;
+  uid_t caller_uid;
 
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (udisks_linux_manager_vdo_get_daemon (l_manager),
+  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
                                                      N_("Authentication is required to start VDO volume"),
                                                      invocation))
     return TRUE;
+
+  if (! udisks_daemon_util_get_caller_uid_sync (l_manager->daemon,
+                                                invocation,
+                                                NULL /* GCancellable */,
+                                                &caller_uid,
+                                                NULL, NULL,
+                                                &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+
+  job = udisks_daemon_launch_simple_job (l_manager->daemon,
+                                         NULL,
+                                         "vdo-start-volume",
+                                         caller_uid,
+                                         NULL /* cancellable */);
+  g_warn_if_fail (job != NULL);
 
   if (! bd_vdo_start (arg_name, arg_force_rebuild, NULL, &error))
     {
@@ -379,11 +426,13 @@ handle_start_volume (UDisksManagerVDO      *manager,
       g_prefix_error (&error,
                       "Error waiting for VDO object after starting %s: ",
                       arg_name);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       return TRUE;
     }
 
   /* Complete the DBus call */
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_manager_vdo_complete_start_volume (manager, invocation,
                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
   g_object_unref (object);

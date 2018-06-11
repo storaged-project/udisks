@@ -90,7 +90,7 @@
         @options: Additional options.
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
 
-        Starts a stopped, activated VDO volume and associated services. Deactivated volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call prior to starting.
+        Starts a stopped, activated VDO volume and associated services. Deactivated volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call prior to starting. Since a volume index rebuild may be required a job object will be exposed for this operation.
 
         No additional options are currently defined.
     -->
