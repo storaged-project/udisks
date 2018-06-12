@@ -29,12 +29,21 @@
       @short_description: VDO volume management
       @since: 2.7.7
 
-      This interface provides a way to create new and activate or start existing VDO volumes. Once a volume has been started an additional #org.freedesktop.UDisks2.Block.VDO interface will be exported on the related block object.
+      This interface provides a way to create new and activate or start existing
+      VDO volumes. Once a volume has been started an additional #org.freedesktop.UDisks2.Block.VDO
+      interface will be exported on the related block object.
 
-      There are several limitations introduced by the backing <literal>vdo</literal> tool that are reflected in the #org.freedesktop.UDisks2.Manager.VDO interface. The <literal>vdo</literal> tool operates on VDO names and can't take block device path as an identifier.
-      Volumes that are in stopped state don't expose any <literal>udev</literal> attribute containing VDO name or any other information that can be used for identification. That means that some of the #org.freedesktop.UDisks2.Block.VDO interface methods take VDO volume name as an argument instead of an object path to the backing block device.
+      There are several limitations introduced by the backing <literal>vdo</literal>
+      tool that are reflected in the #org.freedesktop.UDisks2.Manager.VDO interface.
+      The <literal>vdo</literal> tool operates on VDO names and can't take block
+      device path as an identifier. Volumes that are in stopped state don't expose
+      any <literal>udev</literal> attribute containing VDO name or any other information
+      that can be used for identification. That means that some of the
+      #org.freedesktop.UDisks2.Block.VDO interface methods take VDO volume name
+      as an argument instead of an object path to the backing block device.
 
-      For the moment the VDO configuration file is not used to retrieve any extra information.
+      For the moment the VDO configuration file is not used to retrieve any extra
+      information.
   -->
   <interface name="org.freedesktop.UDisks2.Manager.VDO">
     <!-- prereq: org.freedesktop.UDisks2.Manager -->
@@ -77,7 +86,8 @@
         @name: Name of an existing VDO volume to activate.
         @options: Additional options.
 
-        Activates existing VDO volume. Activated volume can be started using the org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
+        Activates existing VDO volume. Activated volume can be started using the
+        org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
 
         No additional options are currently defined.
     -->
@@ -93,7 +103,10 @@
         @options: Additional options.
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
 
-        Starts a stopped, activated VDO volume and associated services. Deactivated volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call prior to starting. Since a volume index rebuild may be required a job object will be exposed for this operation.
+        Starts a stopped, activated VDO volume and associated services. Deactivated
+        volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume()
+        method call prior to starting. Since a volume index rebuild may be required
+        a job object will be exposed for this operation.
 
         No additional options are currently defined.
     -->
@@ -116,7 +129,10 @@
 
       This interface is exposed for block objects that represent existing and running VDO volumes.
 
-      Due to the VDO design not every change trigerred outside of udisks gets propagated via <literal>udev</literal> and may go unnoticed. It's guaranteed that changes made via udisks are properly reflected in the object properties though.
+      Due to the VDO design not every change trigerred outside of udisks gets
+      propagated via <literal>udev</literal> and may go unnoticed. It's guaranteed
+      that changes made via udisks are properly reflected in the object properties
+      though.
   -->
   <interface name="org.freedesktop.UDisks2.Block.VDO">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
@@ -174,7 +190,10 @@
         Deactivate:
         @options: Additional options.
 
-        Deactivates the VDO volume. Deactivating a currently running volume does not stop it.  Once a volume is deactivated it needs to be activated again using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call on the manager object.
+        Deactivates the VDO volume. Deactivating a currently running volume does
+        not stop it.  Once a volume is deactivated it needs to be activated again
+        using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call
+        on the manager object.
 
         No additional options are currently defined.
     -->
@@ -187,7 +206,8 @@
         @enable: A boolean value indicating whether compression should be enabled.
         @options: Additional options.
 
-        Enables or disables compression on the VDO volume. If the VDO volume is running, takes effect immediately.      
+        Enables or disables compression on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
 
         No additional options are currently defined.
     -->
@@ -201,7 +221,8 @@
         @enable: A boolean value indicating whether deduplication should be enabled.
         @options: Additional options.
 
-        Enables or disables deduplication on the VDO volume. If the VDO volume is running, takes effect immediately.
+        Enables or disables deduplication on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
 
         No additional options are currently defined.
     -->
@@ -215,7 +236,8 @@
         @write_policy: The desired write policy. 
         @options: Additional options.
 
-        Modifies the write policy of the running VDO volume. Known @write_policy values include:
+        Modifies the write policy of the running VDO volume. Known @write_policy
+        values include:
         <variablelist>
           <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
           <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
@@ -248,7 +270,9 @@
         @force: A boolean value indicating whether an unmount attempt should be performed first. 
         @options: Additional options.
 
-        Stops a running VDO volume and associated services. Once a volume is stopped it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call on the manager object.
+        Stops a running VDO volume and associated services. Once a volume is stopped
+        it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolume()
+        method call on the manager object.
 
         No additional options are currently defined.
     -->
