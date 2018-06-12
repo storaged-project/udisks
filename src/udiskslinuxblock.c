@@ -57,7 +57,9 @@
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
+#ifdef HAVE_MDRAID
 #include "udiskslinuxmdraidobject.h"
+#endif
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxpartition.h"
 #include "udiskslinuxencrypted.h"
@@ -255,6 +257,8 @@ find_drive (GDBusObjectManagerServer  *object_manager,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_MDRAID
+
 static UDisksLinuxMDRaidObject *
 find_mdraid (GDBusObjectManagerServer  *object_manager,
              const gchar               *md_uuid)
@@ -326,6 +330,8 @@ update_mdraid (UDisksLinuxBlock         *block,
   udisks_block_set_mdraid (iface, objpath_mdraid);
   udisks_block_set_mdraid_member (iface, objpath_mdraid_member);
 }
+
+#endif /* HAVE_MDRAID */
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -1212,7 +1218,9 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
 #ifdef HAVE_LIBMOUNT
   update_userspace_mount_options (block, daemon);
 #endif
+#ifdef HAVE_MDRAID
   update_mdraid (block, device, drive, object_manager);
+#endif /* HAVE_MDRAID */
 
  out:
   if (device != NULL)

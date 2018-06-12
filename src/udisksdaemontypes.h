@@ -50,11 +50,13 @@ typedef struct _UDisksLinuxDrive UDisksLinuxDrive;
 struct _UDisksLinuxDriveAta;
 typedef struct _UDisksLinuxDriveAta UDisksLinuxDriveAta;
 
+#ifdef HAVE_MDRAID
 struct _UDisksLinuxMDRaidObject;
 typedef struct _UDisksLinuxMDRaidObject UDisksLinuxMDRaidObject;
 
 struct _UDisksLinuxMDRaid;
 typedef struct _UDisksLinuxMDRaid UDisksLinuxMDRaid;
+#endif
 
 struct _UDisksBaseJob;
 typedef struct _UDisksBaseJob UDisksBaseJob;

@@ -29,8 +29,10 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
+#ifdef HAVE_MDRAID
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmdraidprovider.h"
+#endif
 #include "udiskslinuxmanager.h"
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
@@ -75,7 +77,9 @@ struct _UDisksLinuxProvider
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
 
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaidProvider mdraid;
+#endif
 
   /* maps from UDisksModuleObjectNewFuncs to nested hashtables containing object
    * skeleton instances as keys and GLists of consumed sysfs path as values */
@@ -168,7 +172,9 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
   g_hash_table_unref (provider->sysfs_path_to_drive);
+#ifdef HAVE_MDRAID
   udisks_linux_mdraid_provider_finalize (&provider->mdraid);
+#endif
   g_hash_table_unref (provider->module_funcs_to_instances);
   g_object_unref (provider->gudev_client);
 
@@ -641,7 +647,9 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                          g_str_equal,
                                                          g_free,
                                                          NULL);
+#ifdef HAVE_MDRAID
   udisks_linux_mdraid_provider_start(&provider->mdraid);
+#endif
   provider->module_funcs_to_instances = g_hash_table_new_full (g_direct_hash,
                                                                g_direct_equal,
                                                                NULL,
@@ -1113,7 +1121,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
+#ifdef HAVE_MDRAID
       handle_block_uevent_for_mdraid (daemon, &provider->mdraid, action, device);
+#endif /* HAVE_MDRAID */
       handle_block_uevent_for_modules (provider, action, device);
     }
   else
@@ -1132,7 +1142,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       else
         {
           handle_block_uevent_for_modules (provider, action, device);
+#ifdef HAVE_MDRAID
           handle_block_uevent_for_mdraid (daemon, &provider->mdraid, action, device);
+#endif /* HAVE_MDRAID */
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
         }

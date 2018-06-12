@@ -35,7 +35,9 @@
 
 #include <blockdev/loop.h>
 #include <blockdev/fs.h>
+#ifdef HAVE_MDRAID
 #include <blockdev/mdraid.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxmanager.h"
@@ -450,6 +452,8 @@ handle_loop_setup (UDisksManager          *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_MDRAID
+
 typedef struct
 {
   gint md_num;
@@ -848,6 +852,8 @@ handle_mdraid_create (UDisksManager         *_object,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+#endif /* HAVE_MDRAID */
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1161,7 +1167,9 @@ static void
 manager_iface_init (UDisksManagerIface *iface)
 {
   iface->handle_loop_setup = handle_loop_setup;
+#ifdef HAVE_MDRAID
   iface->handle_mdraid_create = handle_mdraid_create;
+#endif /* HAVE_MDRAID */
   iface->handle_enable_modules = handle_enable_modules;
   iface->handle_can_format = handle_can_format;
   iface->handle_can_resize = handle_can_resize;

@@ -65,10 +65,6 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udiskslinuxdriveobject.h       udiskslinuxdriveobject.c                \
 	udiskslinuxdrive.h             udiskslinuxdrive.c                      \
 	udiskslinuxdriveata.h          udiskslinuxdriveata.c                   \
-	udiskslinuxmdraidobject.h      udiskslinuxmdraidobject.c               \
-	udiskslinuxmdraidhelpers.h     udiskslinuxmdraidhelpers.c              \
-	udiskslinuxmdraidprovider.h    udiskslinuxmdraidprovider.c             \
-	udiskslinuxmdraid.h            udiskslinuxmdraid.c                     \
 	udiskslinuxmanager.h           udiskslinuxmanager.c                    \
 	udiskslinuxfsinfo.h            udiskslinuxfsinfo.c                     \
 	udisksbasejob.h                udisksbasejob.c                         \
@@ -93,6 +89,14 @@ libudisks_daemon_la_SOURCES =                                                  \
 	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	$(BUILT_SOURCES)                                                       \
 	$(NULL)
+
+if HAVE_MDRAID
+libudisks_daemon_la_SOURCES += \
+	udiskslinuxmdraidobject.h      udiskslinuxmdraidobject.c               \
+	udiskslinuxmdraidhelpers.h     udiskslinuxmdraidhelpers.c              \
+	udiskslinuxmdraidprovider.h    udiskslinuxmdraidprovider.c             \
+	udiskslinuxmdraid.h            udiskslinuxmdraid.c
+endif
 
 if HAVE_LIBMOUNT
 libudisks_daemon_la_SOURCES +=                                           \
