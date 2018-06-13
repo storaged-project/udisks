@@ -6,7 +6,7 @@ from distutils.spawn import find_executable
 class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
-    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM'])
+    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM', 'VDO'])
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
