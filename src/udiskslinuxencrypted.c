@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <blockdev/crypto.h>
+
 #include <glib/gstdio.h>
 
 #include "udiskslogging.h"
@@ -120,6 +122,32 @@ update_child_configuration (UDisksLinuxEncrypted   *encrypted,
                                             udisks_block_get_id_uuid (block)));
 }
 
+static void
+update_metadata_size (UDisksLinuxEncrypted   *encrypted,
+                      UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  guint64 metadata_size;
+  GError *error = NULL;
+
+  device = udisks_linux_block_object_get_device (object);
+
+  metadata_size = bd_crypto_luks_get_metadata_size (g_udev_device_get_device_file (device->udev_device),
+                                                    &error);
+
+  if (error != NULL)
+  {
+    udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
+                    g_udev_device_get_device_file (device->udev_device),
+                    error->message,
+                    g_quark_to_string (error->domain),
+                    error->code);
+    g_clear_error (&error);
+  }
+
+  udisks_encrypted_set_metadata_size(UDISKS_ENCRYPTED (encrypted), metadata_size);
+}
+
 /**
  * udisks_linux_encrypted_update:
  * @encrypted: A #UDisksLinuxEncrypted.
@@ -141,6 +169,8 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
     if (g_strcmp0(udisks_encrypted_get_hint_encryption_type(UDISKS_ENCRYPTED(encrypted)), "TCRYPT") == 0)
       udisks_block_set_id_type (block, "crypto_TCRYPT");
   }
+
+  update_metadata_size (encrypted, object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
