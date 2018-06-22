@@ -154,7 +154,7 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 AC_SUBST(GMODULE_CFLAGS)
 AC_SUBST(GMODULE_LIBS)
 
-PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.14])
+PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.18])
 AC_SUBST(BLOCKDEV_CFLAGS)
 AC_SUBST(BLOCKDEV_LIBS)
 
@@ -505,30 +505,25 @@ if test "x$enable_bcache" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
-have_libblockdev_part=no
-have_libblockdev_part_spec=0
+# libblockdev part
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
+
 CFLAGS="$GLIB_CFLAGS"
 LDFLAGS="$GLIB_LIBS"
-AC_CHECK_HEADERS(
-        [blockdev/part.h],
-        [
-          AC_CHECK_LIB(
-              [bd_part],
-              [bd_part_create_part],
-              [AC_DEFINE(HAVE_LIBBLOCKDEV_PART, 1,
-                         [Define if libbd_part is available])
-               have_libblockdev_part=yes
-               have_libblockdev_part_spec=1],
-              have_libblockdev_part=no
-              have_libblockdev_part_spec=0)
-        ],
-        have_libblockdev_part=no)
-AM_CONDITIONAL(HAVE_LIBBLOCKDEV_PART, [test "x$have_libblockdev_part" = "xyes"])
-AC_SUBST([have_libblockdev_part_spec])
+AC_MSG_CHECKING([libblockdev-part presence])
+AC_TRY_COMPILE([#include <blockdev/part.h>], [],
+               [AC_MSG_RESULT([yes])
+               have_part=yes],
+               [AC_MSG_RESULT([no])
+               have_part=no])
+
 CFLAGS=$SAVE_CFLAGS
 LDFLAGS=$SAVE_LDFLAGS
+
+if test "x$have_part" = "xno"; then
+  AC_MSG_ERROR([BlockDev part support requested but header or library not found])
+fi
 
 # libblockdev loop
 SAVE_CFLAGS=$CFLAGS
@@ -741,7 +736,6 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
-        libblockdev_part support:   ${have_libblockdev_part}
         using libmount:             ${have_libmount}
 
         compiler:                   ${CC}
