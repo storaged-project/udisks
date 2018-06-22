@@ -1186,6 +1186,41 @@ udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static __thread UDisksJob *thread_job = NULL;
+
+static void
+bd_thread_progress_callback (guint64            task_id,
+                             BDUtilsProgStatus  status,
+                             guint8             completion,
+                             gchar             *msg)
+{
+  if (thread_job != NULL && msg == NULL)
+    {
+      if (!udisks_job_get_progress_valid (UDISKS_JOB (thread_job)))
+        {
+          udisks_job_set_progress_valid (UDISKS_JOB (thread_job), TRUE);
+        }
+
+      udisks_job_set_progress (UDISKS_JOB (thread_job), completion / 100.0);
+    }
+}
+
+void
+udisks_bd_thread_set_progress_for_job (UDisksJob *job)
+{
+  thread_job = job;
+  bd_utils_init_prog_reporting_thread (bd_thread_progress_callback, NULL);
+}
+
+void
+udisks_bd_thread_disable_progress (void)
+{
+  thread_job = NULL;
+  bd_utils_init_prog_reporting_thread (NULL, NULL);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 typedef struct
 {
   GMainContext *context;
