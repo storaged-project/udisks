@@ -283,8 +283,11 @@ void vgs_task_func (GTask        *task,
   VGsPVsData *ret = g_new0 (VGsPVsData, 1);
 
   ret->vgs = bd_lvm_vgs (&error);
-  if (!ret->vgs)
+  if (!ret->vgs) {
+    vgs_pvs_data_free (ret);
     g_task_return_error (task, error);
+    return;
+  }
 
   ret->pvs = bd_lvm_pvs (&error);
   if (!ret->pvs) {
