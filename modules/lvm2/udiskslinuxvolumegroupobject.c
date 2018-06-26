@@ -568,6 +568,7 @@ update_vg (GObject      *source_obj,
           udisks_warning ("Failed to update LVM volume group %s: %s",
                           udisks_linux_volume_group_object_get_name (object),
                           error->message);
+          g_clear_error (&error);
         }
       else
         {
@@ -715,9 +716,12 @@ poll_vg_update (GObject      *source_obj,
   if (!lvs)
     {
       if (error)
-        udisks_warning ("Failed to poll LVM volume group %s: %s",
-                        udisks_linux_volume_group_object_get_name (object),
-                        error->message);
+        {
+          udisks_warning ("Failed to poll LVM volume group %s: %s",
+                          udisks_linux_volume_group_object_get_name (object),
+                          error->message);
+          g_clear_error (&error);
+        }
       else
         /* this should never happen */
         udisks_warning ("Failed to poll LVM volume group %s: no error reported",

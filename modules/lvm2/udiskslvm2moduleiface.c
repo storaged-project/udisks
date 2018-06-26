@@ -150,7 +150,10 @@ lvm_update_vgs (GObject      *source_obj,
   if (!data)
     {
       if (error)
-        udisks_warning ("LVM2 plugin: %s", error->message);
+        {
+          udisks_warning ("LVM2 plugin: %s", error->message);
+          g_clear_error (&error);
+        }
       else
         /* this should never happen */
         udisks_warning ("LVM2 plugin: failure but no error when getting VGs!");
