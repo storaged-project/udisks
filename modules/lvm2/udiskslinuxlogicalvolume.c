@@ -73,7 +73,13 @@ struct _UDisksLinuxLogicalVolumeClass
   UDisksLogicalVolumeSkeletonClass parent_class;
 };
 
+struct WaitData {
+  UDisksLinuxVolumeGroupObject *group_object;
+  const gchar *name;
+};
+
 static void logical_volume_iface_init (UDisksLogicalVolumeIface *iface);
+static UDisksObject * wait_for_logical_volume_object (UDisksDaemon *daemon, gpointer user_data);
 
 G_DEFINE_TYPE_WITH_CODE (UDisksLinuxLogicalVolume, udisks_linux_logical_volume,
                          UDISKS_TYPE_LOGICAL_VOLUME_SKELETON,
@@ -409,6 +415,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
   gboolean teardown_flag = FALSE;
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
+  struct WaitData wait_data;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
@@ -450,6 +457,23 @@ handle_delete (UDisksLogicalVolume   *_volume,
       goto out;
     }
 
+  wait_data.group_object = group_object;
+  wait_data.name = data.lv_name;
+
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
+                                                         wait_for_logical_volume_object,
+                                                         &wait_data,
+                                                         NULL,
+                                                         10, /* timeout_seconds */
+                                                         &error))
+    {
+      g_prefix_error (&error,
+                      "Error waiting for block object to disappear after deleting %s",
+                      udisks_logical_volume_get_name (_volume));
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   udisks_logical_volume_complete_delete (_volume, invocation);
 
  out:
@@ -458,11 +482,6 @@ handle_delete (UDisksLogicalVolume   *_volume,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-struct WaitData {
-  UDisksLinuxVolumeGroupObject *group_object;
-  const gchar *name;
-};
 
 static UDisksObject *
 wait_for_logical_volume_object (UDisksDaemon *daemon,
@@ -757,6 +776,20 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error deactivating logical volume: %s",
                                              error->message);
+      goto out;
+    }
+
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
+                                                         wait_for_logical_volume_block_object,
+                                                         object,
+                                                         NULL,
+                                                         10, /* timeout_seconds */
+                                                         &error))
+    {
+      g_prefix_error (&error,
+                      "Error waiting for block object to disappear after deactivating %s",
+                      udisks_logical_volume_get_name (_volume));
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
