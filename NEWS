@@ -1,17 +1,78 @@
 ---------------------------
-udisks 2.7.7 (unreleased)
+udisks 2.7.7
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.6:
-(TODO: make shortlog)
+
+Andrea Azzarone (1):
+      main.c: Properly remove sigint source
+
+Andreas Müller (1):
+      data: fix out of tree build
+
+Harry Mallon (1):
+      Add Apple APFS gpt partition type
+
+Iain Lane (1):
+      tests: Pass absolute path to targetcli_config.json
+
+Jan Pokorny (1):
+      New property for LUKS metadata size
+
+Jindřich Makovička (1):
+      Ignore Nokia 7 Plus virtual CD
+
+Kai Lüke (2):
+      Register system inhibitor for all jobs
+      Set Job Progress property for FS check, repair, resize
+
+Piotr Drąg (1):
+      Update LINGUAS
+
+Vojtech Trefny (25):
+      integration-test: Wait longer after the scsi debug CD format
+      Post-release version bump to 2.7.7
+      Sync the spec file with downstream
+      Fix creating GVariant byte array in integration tests
+      Fix directory we use for temporary mounts
+      Fix how we check return value for call_sync in safe_dbus
+      lvm2/jobhelpers.c: Fix potential memory leak
+      udiskslinuxmanager.c: Fix potential memory leak
+      udiskslinuxpartitiontable.c: Fix uninitialized value
+      Use g_list_free_full when freeing lists instead of g_list_foreach
+      udiskslinuxdriveata.c: Fix potential forward NULL
+      Ignore cast warning for "g_source_set_callback" functions
+      Add a custom "g_object_ref" that takes two parameters
+      udiskslinuxblock.c: Fix incompatible pointer type
+      udiskslinuxdriveobject.c: Fix incompatible pointer type
+      udiskslinuxdriveata.c: Fix potential forward NULL
+      udisksctl.c: Fix resource leak
+      lsm_data.c: Use custom free functions for g_ptr_array_new_full
+      Check return value when reading sysfs files in get_sysfs_attr
+      udiskszramutil.c: Check return code of mkstemp
+      udiskszramutil.c: Use constant for buffer length in set_conf_property
+      Always fail when libblockdev-part is not available.
+      Bump required version of libblockdev to 2.18
+      Return from 'vg_task_func' if 'bd_lvm_vgs' failed
+      Clear errors from LVM tasks
+
+Vratislav Podzimek (2):
+      Fix _udisks_state_has_loop_list_visitor()
+      Revert "New property for LUKS metadata size"
+
+seb128 (1):
+      integration-test: don't error out on an unknown distro
+
+segfault (1):
+      Support TCRYPT devices
 
 Thanks to all our contributors.
 
 Vojtech Trefny
-(TODO: date --rfc-3339='date')
+2018-07-02
 
 ---------------------------
 udisks 2.7.6

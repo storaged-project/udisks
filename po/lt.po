@@ -6,21 +6,21 @@
 # aurisc4 <aurisc4@gmail.com>, 2013
 # aurisc4 <aurisc4@gmail.com>, 2013
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
-# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Moo <hazap@hotmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-05 12:26+0100\n"
-"PO-Revision-Date: 2017-03-15 11:04-0400\n"
-"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"PO-Revision-Date: 2018-04-26 04:22+0000\n"
+"Last-Translator: Moo <hazap@hotmail.com>\n"
 "Language-Team: Lithuanian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: lt\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.4.5\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -385,9 +385,8 @@ msgid "Manage BTRFS"
 msgstr ""
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
+msgstr "Norint tvarkyti BTRFS, reikia patvirtinti tapatybę"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:616
@@ -422,7 +421,7 @@ msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Tvarkyti iSCSI"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
@@ -438,18 +437,18 @@ msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:747
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Atsijungimas nepavyko: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "Klaida atveriant %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Klaida skaitant %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 #, fuzzy
@@ -463,7 +462,7 @@ msgstr ""
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "Klaida rašant į %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 #, fuzzy
@@ -474,7 +473,7 @@ msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:594
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "Atradimas nepavyko: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:579
 #, fuzzy
@@ -489,56 +488,55 @@ msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:657
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "Prisijungimas nepavyko: %s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Tvarkyti LVM"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "Norint tvarkyti LVM, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:416
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Norint ištrinti loginį tomą, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:516
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Norint pervadinti loginį tomą, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:577
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
+msgstr "Norint pakeisti loginio tomo dydį, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:670
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Norint aktyvuoti loginį tomą, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:737
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Norint pasyvinti loginį tomą, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:789
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
+"Norint sukurti loginio tomo momentinę kopiją, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:846
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:908
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "LVMCache kompiliavimo metu neįjungta."
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:860
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+msgstr "Norint konvertuoti loginį tomą į podėlį, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:882
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:944
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "Klaida konvertuojant tomą: %s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:922
 #, fuzzy
@@ -547,23 +545,23 @@ msgstr "Diskui išjungti reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Norint sukurti tomų grupę, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:303
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Norint ištrinti tomų grupę, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:405
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Norint pervadinti tomų grupę, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:516
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "Norint pridėti įrenginį į tomų grupę, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:613
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "Norint pašalinti įrenginį iš tomų grupės, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:622
 msgid "Authentication is required to empty a device in a volume group"
@@ -571,7 +569,7 @@ msgstr ""
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:825
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "Norint sukurti loginį tomą, reikia patvirtinti tapatybę"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:831
 #, fuzzy
@@ -592,34 +590,28 @@ msgid "Authentication is required to manage disk drive LED"
 msgstr ""
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "Tvarkyti RAID masyvus"
+msgstr "Tvarkyti zRAM"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
+msgstr "Norint tvarkyti zRAM, reikia patvirtinti tapatybę"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:387
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "Darbo atsisakymui reikia patvirtinti tapatybę"
+msgstr "Norint pridėti zRAM branduolio modulį, reikia patvirtinti tapatybę"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:483
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+msgstr "Norint pašalinti zRAM branduolio modulį, reikia patvirtinti tapatybę"
 
 #: ../modules/zram/udiskslinuxblockzram.c:281
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+msgstr "Norint įjungti zRAM įrenginį, reikia patvirtinti tapatybę"
 
 #: ../modules/zram/udiskslinuxblockzram.c:382
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "Įrenginiui keisti reikia patvirtinti tapatybę"
+msgstr "Norint išjungti zRAM įrenginį, reikia patvirtinti tapatybę"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -693,7 +685,7 @@ msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
 
 #: ../src/udiskslinuxblock.c:2858 ../src/udiskslinuxmdraid.c:1553
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Norint keisti sistemos konfigūraciją, reikia patvirtinti tapatybę"
 
 #: ../src/udiskslinuxblock.c:2862 ../src/udiskslinuxdriveata.c:2259
 msgid "Formatting Device"
@@ -737,7 +729,7 @@ msgstr "$(drive) atvėrimui matavimams reikia patvirtinti tapatybę"
 #. 
 #: ../src/udiskslinuxblock.c:3539
 msgid "Authentication is required to open $(drive)."
-msgstr ""
+msgstr "Norint atverti $(drive), reikia patvirtinti tapatybę."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -967,6 +959,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2156
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
+"Norint keisti failų sistemos, esančios $(drive), dydį, reikia patvirtinti "
+"tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -977,6 +971,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2314
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
+"Norint pataisyti failų sistemą, esančią $(drive), reikia patvirtinti "
+"tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -987,6 +983,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2473
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
+"Norint patikrinti failų sistemą, esančią $(drive), reikia patvirtinti "
+"tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -1084,7 +1082,7 @@ msgstr ""
 
 #: ../src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "Norint ištrinti RAID masyvą, reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1094,7 +1092,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxpartition.c:151
 msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "Skirsnio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
+msgstr "Skaidinio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
@@ -1104,7 +1102,7 @@ msgstr "Skirsnio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
 #. 
 #: ../src/udiskslinuxpartitiontable.c:317
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
+msgstr "Skaidinio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -1203,56 +1201,56 @@ msgstr "Nežinoma"
 #: ../udisks/udisksclient.c:1605
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1611
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1617
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1623
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1648
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1654
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1660
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1666
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1595,7 +1593,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1938
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Intel RSTe RAID narys"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
@@ -1686,12 +1684,12 @@ msgstr "Pirminis įkėlimo įrašas"
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2068
 msgid "GUID Partition Table"
-msgstr "GUID skirsnių lentelė"
+msgstr "GUID skaidinių lentelė"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2070
 msgid "Apple Partition Map"
-msgstr "Apple skirsnių žemėlapis"
+msgstr "Apple skaidinių žemėlapis"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
@@ -1725,7 +1723,7 @@ msgstr "Mac OS X"
 #: ../udisks/udisksclient.c:2212
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
-msgstr "MBR skirsnių schema"
+msgstr "MBR skaidinių schema"
 
 #: ../udisks/udisksclient.c:2213
 msgctxt "part-type"
@@ -1741,36 +1739,36 @@ msgstr "BIOS įkėlimas"
 #: ../udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #. Extended Boot Partition, see
 #. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
 #: ../udisks/udisksclient.c:2218
 msgctxt "part-type"
 msgid "Extended Boot Partition"
-msgstr ""
+msgstr "Išplėstas paleidimo skaidinys"
 
 #. Discoverable Linux Partitions, see
 #. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
 #: ../udisks/udisksclient.c:2220
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
-msgstr ""
+msgstr "Linux šaknies skaidinys (x86)"
 
 #: ../udisks/udisksclient.c:2221
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
-msgstr ""
+msgstr "Linux šaknies skaidinys (x86_64)"
 
 #: ../udisks/udisksclient.c:2222
 msgctxt "part-type"
 msgid "Linux Home Partition"
-msgstr ""
+msgstr "Linux namų skaidinys"
 
 #: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
-msgstr ""
+msgstr "Linux serverio duomenų skaidinys"
 
 #. Linux
 #: ../udisks/udisksclient.c:2225
@@ -2030,22 +2028,22 @@ msgstr "VMWare vmkcore"
 #: ../udisks/udisksclient.c:2281
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
-msgstr ""
+msgstr "ChromeOS programinė aparatinė įranga"
 
 #: ../udisks/udisksclient.c:2282
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
-msgstr ""
+msgstr "ChromeOS branduolys"
 
 #: ../udisks/udisksclient.c:2283
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
-msgstr ""
+msgstr "ChromeOS šaknies failų sistema"
 
 #: ../udisks/udisksclient.c:2284
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
-msgstr ""
+msgstr "ChromeOS rezervuota"
 
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
@@ -2053,7 +2051,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Intel FFS rezervuota"
 
 #: ../udisks/udisksclient.c:2293
 msgctxt "part-type"
@@ -2063,7 +2061,7 @@ msgstr "Apple HFS/HFS"
 #: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "Apple Partition Map"
-msgstr "Apple skirsnių žemėlapis"
+msgstr "Apple skaidinių žemėlapis"
 
 #: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
@@ -2169,7 +2167,7 @@ msgstr "FAT16"
 #: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
-msgstr ""
+msgstr "NTFS/exFAT/HPFS"
 
 #: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
@@ -2330,7 +2328,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Tikrinama failų sistema"
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "job"
@@ -2350,12 +2348,12 @@ msgstr "Keičiama failų sistema"
 #: ../udisks/udisksclient.c:2501
 msgctxt "job"
 msgid "Repairing Filesystem"
-msgstr ""
+msgstr "Taisoma failų sistema"
 
 #: ../udisks/udisksclient.c:2502
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Keičiamas failų sistemos dydis"
 
 #: ../udisks/udisksclient.c:2503
 msgctxt "job"
@@ -2375,17 +2373,17 @@ msgstr "Nustatomas ciklinis įrenginys"
 #: ../udisks/udisksclient.c:2506
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr "Keičiamas skirsnis"
+msgstr "Keičiamas skaidinys"
 
 #: ../udisks/udisksclient.c:2507
 msgctxt "job"
 msgid "Deleting Partition"
-msgstr "Trinamas skirsnis"
+msgstr "Ištrinamas skaidinys"
 
 #: ../udisks/udisksclient.c:2508
 msgctxt "job"
 msgid "Creating Partition"
-msgstr "Kuriamas skirsnis"
+msgstr "Kuriamas skaidinys"
 
 #: ../udisks/udisksclient.c:2509
 msgctxt "job"
@@ -2641,7 +2639,7 @@ msgstr "Blokinis įrenginys"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %u iš %s"
+msgstr "Skaidinys %u iš %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2672,7 +2670,7 @@ msgstr "Ciklinis įrenginys"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %u iš %s"
+msgstr "Skaidinys %u iš %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2741,7 +2739,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %u iš %s"
+msgstr "Skaidinys %u iš %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2928,7 +2926,7 @@ msgstr "Garso %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Skirsnis %u iš %s"
+msgstr "Skaidinys %u iš %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB

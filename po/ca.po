@@ -1,12 +1,13 @@
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2016. #zanata
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017. #zanata
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-05 12:26+0100\n"
-"PO-Revision-Date: 2017-12-17 03:05-0500\n"
+"PO-Revision-Date: 2018-02-27 04:43+0000\n"
 "Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
 "Language-Team: Catalan\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ca\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.4.5\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -64,7 +65,7 @@ msgstr "Agafa la propietat d'un sistema de fitxers"
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr ""
-"Es requereix autenticació per agafar la propietat d'un sistema de fitxers"
+"Es requereix autenticació per agafar la propietat d'un sistema de fitxers."
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted device"
@@ -165,7 +166,7 @@ msgstr "Es requereix autenticació per gestionar les matrius RAID"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:30
 msgid "Power off drive"
-msgstr "Apaga l'unitat"
+msgstr "Apaga la unitat"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:31
 msgid "Authentication is required to power off a drive"
@@ -390,7 +391,7 @@ msgstr "Es requereix autenticació per gestionar el BTRFS"
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:616
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "Es requereix autenticació per canviar l'etiquena per al volum BTRFS"
+msgstr "Es requereix autenticació per canviar l'etiqueta per al volum BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:473
 msgid "Authentication is required to add the device to the volume"
@@ -511,7 +512,7 @@ msgstr "Es requereix autenticació per desactivar un volum lògic"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:789
 msgid "Authentication is required to create a snapshot of a logical volume"
-msgstr "Es requereix autenticació per crear una instantànea d'un volum lògic"
+msgstr "Es requereix autenticació per crear una instantània d'un volum lògic"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:846
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:908
@@ -592,13 +593,11 @@ msgstr "Es requereix autenticació per gestionar zRAM"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:387
 msgid "Authentication is required to add zRAM kernel module"
-msgstr ""
-"Es requereix autenticació per afegir el mòdul del nucli del sistema zRAM"
+msgstr "Es requereix autenticació per afegir el mòdul del kernel zRAM"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:483
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr ""
-"Es requereix autenticació per treure el mòdul del nucli del sistema zRAM"
+msgstr "Es requereix autenticació per treure el mòdul del kernel zRAM"
 
 #: ../modules/zram/udiskslinuxblockzram.c:281
 msgid "Authentication is required to enable zRAM device"
@@ -1173,7 +1172,7 @@ msgstr "Sistema"
 #: ../udisks/udisksclient.c:1083
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
-msgstr "Llegat de la BIOS d'arrencada"
+msgstr "Llegat del BIOS d'arrencada"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -2051,7 +2050,7 @@ msgstr "Microprogramari de ChromeOS"
 #: ../udisks/udisksclient.c:2282
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
-msgstr "Nucli del sistema de ChromeOS"
+msgstr "Kernel de ChromeOS"
 
 #: ../udisks/udisksclient.c:2283
 msgctxt "part-type"

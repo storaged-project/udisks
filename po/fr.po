@@ -10,12 +10,13 @@
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-05 12:26+0100\n"
-"PO-Revision-Date: 2017-10-05 08:58-0400\n"
+"PO-Revision-Date: 2018-03-04 09:05+0000\n"
 "Last-Translator: Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>\n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -23,7 +24,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.4.5\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -47,7 +48,7 @@ msgid ""
 "option"
 msgstr ""
 "Monter ou démonter les systèmes de fichiers définis dans le fichier fstab "
-"avec l'option x-udisks-auth"
+"avec l’option x-udisks-auth"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
@@ -100,7 +101,7 @@ msgid ""
 "auth option"
 msgstr ""
 "Déverrouiller un périphérique chiffré renseigné dans le fichier crypttab "
-"avec l'option x-udisks-auth"
+"avec l’option x-udisks-auth"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:16
 msgid "Lock an encrypted device unlocked by another user"
@@ -164,12 +165,12 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:26
 msgid "Manage swapspace"
-msgstr "Gérer l'espace d'échange (swap)"
+msgstr "Gérer l’espace d’échange (swap)"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:27
 msgid "Authentication is required to manage swapspace"
 msgstr ""
-"Une authentification est nécessaire pour gérer l'espace d'échange (swap)"
+"Une authentification est nécessaire pour gérer l’espace d’échange (swap)"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:28
 msgid "Manage RAID arrays"
@@ -214,18 +215,18 @@ msgstr "Une authentification est nécessaire pour éjecter un média"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:37
 msgid "Eject media from a system drive"
-msgstr "Éjecter un média d'un lecteur de disque système"
+msgstr "Éjecter un média d’un lecteur de disque système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:38
 msgid "Eject media from a drive attached to another seat"
-msgstr "Éjecter un média d'un lecteur de disque raccordé à une autre machine"
+msgstr "Éjecter un média d’un lecteur de disque raccordé à une autre machine"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:39
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr ""
-"Une authentification est nécessaire pour éjecter un média d'un lecteur de "
+"Une authentification est nécessaire pour éjecter un média d’un lecteur de "
 "disque raccordé à une autre machine"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:40
@@ -269,13 +270,13 @@ msgstr "Ouvrir un périphérique système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:49
 msgid "Modify system-wide configuration"
-msgstr "Modifier la configuration à l'échelle du système"
+msgstr "Modifier la configuration à l’échelle du système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:50
 msgid "Authentication is required to modify system-wide configuration"
 msgstr ""
 "Une authentification est nécessaire pour modifier la configuration à "
-"l'échelle du système"
+"l’échelle du système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:51
 msgid ""
@@ -283,16 +284,16 @@ msgid ""
 "configuration"
 msgstr ""
 "Une authentification est nécessaire pour retrouver des secrets dans la "
-"configuration à l'échelle du système"
+"configuration à l’échelle du système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:52
 msgid "Modify drive settings"
-msgstr "Modifier la configuration d'un lecteur de disque"
+msgstr "Modifier la configuration d’un lecteur de disque"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:53
 msgid "Authentication is required to modify drive settings"
 msgstr ""
-"Une authentification est nécessaire pour modifier la configuration d'un "
+"Une authentification est nécessaire pour modifier la configuration d’un "
 "lecteur de disque"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:54
@@ -305,21 +306,21 @@ msgstr "Une authentification est nécessaire pour actualiser les données SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:56
 msgid "Set SMART data from blob"
-msgstr "Définir les données SMART à partir d'un blob"
+msgstr "Définir les données SMART à partir d’un blob"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:57
 msgid "Authentication is required to set SMART data from blob"
 msgstr ""
 "Une authentification est nécessaire pour définir les données SMART à partir "
-"d'un blob"
+"d’un blob"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:58
 msgid "Run SMART self-test"
-msgstr "Exécuter l'auto-test SMART"
+msgstr "Exécuter l’auto-test SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:59
 msgid "Authentication is required to run a SMART self-test"
-msgstr "Une authentification est nécessaire pour exécuter l'auto-test SMART"
+msgstr "Une authentification est nécessaire pour exécuter l’auto-test SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:60
 msgid "Enable/Disable SMART"
@@ -331,17 +332,17 @@ msgstr "Une authentification est nécessaire pour activer/désactiver SMART"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:62
 msgid "Check power state"
-msgstr "Vérifier l'état de l'alimentation en énergie"
+msgstr "Vérifier l’état de l’alimentation en énergie"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:63
 msgid "Authentication is required to check the power state"
 msgstr ""
-"Une authentification est nécessaire pour vérifier l'état de l'alimentation "
+"Une authentification est nécessaire pour vérifier l’état de l’alimentation "
 "en énergie"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:64
 msgid "Send standby command"
-msgstr "Envoyer une commande d'attente"
+msgstr "Envoyer une commande d’attente"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:65
 msgid "Authentication is required to put a drive into standby mode"
@@ -351,12 +352,12 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:66
 msgid "Send standby command to a system drive"
-msgstr "Envoyer une commande d'attente à un lecteur de disque système"
+msgstr "Envoyer une commande d’attente à un lecteur de disque système"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:67
 msgid "Send standby command to drive on other seat"
 msgstr ""
-"Envoyer une commande d'attente à un lecteur de disque sur une autre machine"
+"Envoyer une commande d’attente à un lecteur de disque sur une autre machine"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:68
 msgid "Securely erase a hard disk"
@@ -402,7 +403,7 @@ msgstr ""
 #: ../modules/bcache/udiskslinuxblockbcache.c:335
 msgid "Authentication is required to set mode of bcache device."
 msgstr ""
-"Une authentification est nécessaire pour configurer le mode d'un "
+"Une authentification est nécessaire pour configurer le mode d’un "
 "périphérique Bcache"
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:247
@@ -421,7 +422,7 @@ msgstr "Une authentification est nécessaire pour gérer un BTRFS"
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:616
 msgid "Authentication is required to change label for BTRFS volume"
 msgstr ""
-"Une authentification est nécessaire pour modifier l'étiquette d'un volume "
+"Une authentification est nécessaire pour modifier l’étiquette d’un volume "
 "BTRFS"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:473
@@ -469,7 +470,7 @@ msgstr "La déconnexion a échoué : %s"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
 #, c-format
 msgid "Error opening %s: %s"
-msgstr "Erreur à l'ouverture de %s: %s"
+msgstr "Erreur à l’ouverture de %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
@@ -479,17 +480,17 @@ msgstr "Erreur durant la lecture de %s: %s"
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 msgid "Authentication is required change iSCSI initiator name"
 msgstr ""
-"Une authentification est nécessaire pour modifier le nom de l'initiateur "
+"Une authentification est nécessaire pour modifier le nom de l’initiateur "
 "iSCSI"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:393
 msgid "Empty initiator name"
-msgstr "Nom d'initiateur vide"
+msgstr "Nom d’initiateur vide"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr "Erreur d'écriture sur %s: %s"
+msgstr "Erreur d’écriture sur %s: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 msgid "Authentication is required to discover targets"
@@ -548,13 +549,13 @@ msgstr "Une authentification est nécessaire pour désactiver un volume logique"
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:789
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
-"Une authentification est nécessaire pour créer un instantané d'un volume "
+"Une authentification est nécessaire pour créer un instantané d’un volume "
 "logique"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:846
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:908
 msgid "LVMCache not enabled at compile time."
-msgstr "Le cache LVM n'était pas activé au moment de la compilation"
+msgstr "Le cache LVM n’était pas activé au moment de la compilation"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:860
 msgid "Authentication is required to convert logical volume to cache"
@@ -572,7 +573,7 @@ msgstr "Erreur lors de la conversion du volume : %s"
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Une authentification est nécessaire pour séparer un volume logique cache "
-"d'un pool de volumes logiques caches "
+"d’un pool de volumes logiques caches "
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
@@ -596,7 +597,7 @@ msgstr ""
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:613
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
-"Une authentification est nécessaire pour retirer un périphérique d'un groupe"
+"Une authentification est nécessaire pour retirer un périphérique d’un groupe"
 " de volumes"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:622
@@ -788,7 +789,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:3539
 msgid "Authentication is required to open $(drive)."
-msgstr ""
+msgstr "Une authentification est nécessaire pour ouvrir $(drive)."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -852,7 +853,7 @@ msgstr ""
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
 "Une authentification est nécessaire pour définir les données SMART à partir "
-"d'un blob sur $(drive)"
+"d’un blob sur $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -863,7 +864,7 @@ msgstr ""
 #: ../src/udiskslinuxdriveata.c:964
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
-"Une authentification est nécessaire pour interrompre l'auto-test SMART sur "
+"Une authentification est nécessaire pour interrompre l’auto-test SMART sur "
 "$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -887,7 +888,7 @@ msgstr ""
 #: ../src/udiskslinuxdriveata.c:1302
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
-"Une authentification est nécessaire pour vérifier l'état d'alimentation en "
+"Une authentification est nécessaire pour vérifier l’état d’alimentation en "
 "énergie pour $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1023,7 +1024,7 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:1974
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
-"Une authentification est nécessaire pour changer l'étiquette du système de "
+"Une authentification est nécessaire pour changer l’étiquette du système de "
 "fichiers sur $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1132,7 +1133,7 @@ msgstr "Une authentification est nécessaire pour arrêter une matrice RAID"
 #: ../src/udiskslinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
-"Une authentification est nécessaire pour retirer un périphérique d'une "
+"Une authentification est nécessaire pour retirer un périphérique d’une "
 "matrice RAID"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1154,8 +1155,8 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
-"Une authentification est nécessaire pour configurer la matrice d'intention "
-"d'écriture (write-intent) sur une matrice RAID"
+"Une authentification est nécessaire pour configurer la matrice d’intention "
+"d’écriture (write-intent) sur une matrice RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
@@ -1166,7 +1167,7 @@ msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Une authentification est nécessaire pour démarrer/arrêter la scrutation "
-"d'une matrice RAID"
+"d’une matrice RAID"
 
 #: ../src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to delete a RAID array"
@@ -1204,7 +1205,7 @@ msgstr ""
 #: ../src/udiskslinuxswapspace.c:222
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
-"Une authentification est nécessaire pour activer l'espace d'échange sur "
+"Une authentification est nécessaire pour activer l’espace d’échange sur "
 "$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1216,7 +1217,7 @@ msgstr ""
 #: ../src/udiskslinuxswapspace.c:332
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
-"Une authentification est nécessaire pour désactiver l'espace d'échange sur "
+"Une authentification est nécessaire pour désactiver l’espace d’échange sur "
 "$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1228,6 +1229,8 @@ msgstr ""
 #: ../src/udiskslinuxswapspace.c:397
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
+"Une authentification est nécessaire pour activer l’espace d’échange sur "
+"$(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -1843,7 +1846,7 @@ msgstr "ZFS"
 #: ../udisks/udisksclient.c:2218
 msgctxt "part-type"
 msgid "Extended Boot Partition"
-msgstr "Partition d'amorçage étendue"
+msgstr "Partition d’amorçage étendue"
 
 #. Discoverable Linux Partitions, see
 #. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
@@ -2264,7 +2267,7 @@ msgstr "FAT16"
 #: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
-msgstr ""
+msgstr "NTFS/exFAT/HPFS"
 
 #: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
@@ -2410,17 +2413,17 @@ msgstr "Modifier le périphérique chiffré"
 #: ../udisks/udisksclient.c:2494
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr "Démarrage du périphérique d'échange"
+msgstr "Démarrage du périphérique d’échange"
 
 #: ../udisks/udisksclient.c:2495
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr "Arrêt du périphérique d'échange"
+msgstr "Arrêt du périphérique d’échange"
 
 #: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Modifying Swap Device"
-msgstr ""
+msgstr "Modification du périphérique d’échange"
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "job"
@@ -2445,7 +2448,7 @@ msgstr "Modification du système de fichier"
 #: ../udisks/udisksclient.c:2501
 msgctxt "job"
 msgid "Repairing Filesystem"
-msgstr ""
+msgstr "Réparation du système de fichier"
 
 #: ../udisks/udisksclient.c:2502
 msgctxt "job"
@@ -2525,7 +2528,7 @@ msgstr "Ajouter le périphérique à la matrice"
 #: ../udisks/udisksclient.c:2517
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr "Mise en place de la matrice d'intention d'écriture (write-intent)"
+msgstr "Mise en place de la matrice d’intention d’écriture (write-intent)"
 
 #: ../udisks/udisksclient.c:2518
 msgctxt "job"
