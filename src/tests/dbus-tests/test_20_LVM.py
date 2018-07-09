@@ -48,9 +48,18 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         vg = self._create_vg(vgname, devs)
         self.addCleanup(self._remove_vg, vg)
 
+        dbus_vgname = self.get_property(vg, '.VolumeGroup', 'Name')
+        dbus_vgname.assertEqual(vgname)
+
         # Create linear LV on the VG
+        _ret, sys_vgsize = self.run_command('vgs -o size --noheadings --units=b --nosuffix %s' % vgname)
         vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
+        vgsize.assertEqual(int(sys_vgsize))
+
+        _ret, sys_vgfree = self.run_command('vgs -o vg_free --noheadings --units=b --nosuffix %s' % vgname)
         vg_freesize = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_freesize.assertEqual(int(sys_vgfree))
+
         vg_freesize.assertEqual(vgsize.value)
         lvname = 'udisks_test_lv'
         lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize.value), self.no_options,
@@ -66,6 +75,23 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         lvsize.assertEqual(vgsize.value)
 
+        # check some dbus properties
+        dbus_vg = self.get_property(lv, '.LogicalVolume', 'VolumeGroup')
+        dbus_vg.assertEqual(str(vg.object_path))
+
+        dbus_name = self.get_property(lv, '.LogicalVolume', 'Name')
+        dbus_name.assertEqual(lvname)
+
+        dbus_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_active.assertTrue()
+
+        dbus_type = self.get_property(lv, '.LogicalVolume', 'Type')
+        dbus_type.assertEqual('block')  # type is only 'block' or 'pool'
+
+        _ret, sys_uuid = self.run_command('lvs -o uuid --no-heading %s' % os.path.join(vgname, lvname))
+        dbus_uuid = self.get_property(lv, '.LogicalVolume', 'UUID')
+        dbus_uuid.assertEqual(sys_uuid)
+
         # check that the 'BlockDevice' property is set after Activate
         lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
         lv_prop_block.assertEqual(lv_block_path)
@@ -73,9 +99,16 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         # Shrink the LV
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
 
-        # check that the 'BlockDevice' property is unset after Deactivate
+        # check that the object is not on dbus and the 'BlockDevice' property is unset after Deactivate
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        self.assertNotIn(lv_prop_block, objects.keys())
+
         lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
         lv_prop_block.assertEqual('/')
+
+        dbus_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_active.assertFalse()
 
         lv.Resize(dbus.UInt64(lvsize.value/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
@@ -123,6 +156,11 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
         self.assertNotEqual(ret, 0)
 
+        # make sure the lv is not on dbus
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        self.assertNotIn(new_lvpath, objects.keys())
+
     def test_20_thin(self):
         '''Test thin volumes functionality'''
 
@@ -154,6 +192,9 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         _ret, dsize = self.run_command('lvs -olv_size --noheadings --units=b --nosuffix %s' % os.path.join(vgname, tpname))
         _ret, msize = self.run_command('lvs -olv_metadata_size --noheadings --units=b --nosuffix %s' % os.path.join(vgname, tpname))
         tpsize.assertEqual(int(dsize.strip()) + int(msize.strip()))
+
+        dbus_type = self.get_property(tp, '.LogicalVolume', 'Type')
+        dbus_type.assertEqual("pool")
 
         # Create thin volume in the pool with virtual size twice the backing pool
         tvname = 'udisks_test_tv'
@@ -204,6 +245,16 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
                                       dbus_interface=self.iface_prefix + '.LogicalVolume')
         snap = self.bus.get_object(self.iface_prefix, snap_path)
         self.assertIsNotNone(snap)
+
+        # check dbus properties
+        dbus_origin = self.get_property(snap, '.LogicalVolume', 'Origin')
+        dbus_origin.assertEqual(lv_path)
+
+        dbus_name = self.get_property(snap, '.LogicalVolume', 'Name')
+        dbus_name.assertEqual(snapname)
+
+        ret, _out = self.run_command('lvs %s' % os.path.join(vgname, snapname))
+        self.assertEqual(ret, 0)
 
     def test_40_cache(self):
         '''Basic LVM cache test'''
