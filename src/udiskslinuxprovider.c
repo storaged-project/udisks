@@ -1065,6 +1065,45 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* Things that need to be done when receiving 'remove' uevent before removing
+   the dbus object.
+   Currently used only to properly unset the 'CleartextDevice' property after
+   removing cleartext device (e.g. when closing/locking a LUKS device)
+ */
+static void
+block_pre_remove (UDisksLinuxProvider *provider,
+                  UDisksLinuxBlockObject *object)
+{
+  UDisksDaemon *daemon = NULL;
+  UDisksBlock *block = NULL;
+  UDisksObject *backing_object = NULL;
+  UDisksEncrypted *encrypted = NULL;
+  gchar *backing_path = NULL;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  block = udisks_object_peek_block (UDISKS_OBJECT (object));
+  if (block == NULL)
+    goto out;
+
+  backing_path = udisks_block_dup_crypto_backing_device (block);
+  if (!backing_path || g_strcmp0 (backing_path, "/") == 0)
+    goto out;
+
+  backing_object = udisks_daemon_find_object (daemon, backing_path);
+  if (backing_object == NULL)
+    goto out;
+
+  encrypted = udisks_object_peek_encrypted (UDISKS_OBJECT (backing_object));
+  if (encrypted == NULL)
+    goto out;
+
+  udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
+
+out:
+  g_clear_object (&backing_object);
+  g_free (backing_path);
+}
+
 /* called with lock held */
 static void
 handle_block_uevent_for_block (UDisksLinuxProvider *provider,
@@ -1083,6 +1122,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
       object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (object != NULL)
         {
+          block_pre_remove (provider, object);
           g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));

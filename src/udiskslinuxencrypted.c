@@ -107,6 +107,41 @@ udisks_linux_encrypted_new (void)
   return UDISKS_ENCRYPTED (g_object_new (UDISKS_TYPE_LINUX_ENCRYPTED,
                                          NULL));
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static UDisksObject *
+wait_for_cleartext_object (UDisksDaemon *daemon,
+                           gpointer      user_data)
+{
+  const gchar *crypto_object_path = user_data;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
+
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
+            {
+              g_object_unref (block);
+              ret = g_object_ref (object);
+              goto out;
+            }
+          g_object_unref (block);
+        }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -148,6 +183,27 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
   udisks_encrypted_set_metadata_size(UDISKS_ENCRYPTED (encrypted), metadata_size);
 }
 
+static void
+update_cleartext_device (UDisksLinuxEncrypted   *encrypted,
+                         UDisksLinuxBlockObject *object)
+{
+  UDisksObject *cleartext_object = NULL;
+  UDisksDaemon *daemon = udisks_linux_block_object_get_daemon (object);
+  const gchar *encrypted_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+
+  /* wait_for_cleartext is used primarly in unlock but does exactly what we
+     want -- returns a cleartext object for an encrypted object */
+  cleartext_object = wait_for_cleartext_object (daemon, (gpointer) encrypted_path);
+
+  if (cleartext_object) {
+      udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted),
+                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
+  }
+  else {
+    udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
+  }
+}
+
 /**
  * udisks_linux_encrypted_update:
  * @encrypted: A #UDisksLinuxEncrypted.
@@ -164,6 +220,7 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
   udisks_linux_block_encrypted_lock (block);
 
   update_child_configuration (encrypted, object);
+  update_cleartext_device (encrypted, object);
 
   /* set block type according to hint_encryption_type */
   if (udisks_linux_block_is_unknown_crypto (block))
@@ -175,40 +232,6 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
   update_metadata_size (encrypted, object);
 
   udisks_linux_block_encrypted_unlock (block);
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-static UDisksObject *
-wait_for_cleartext_object (UDisksDaemon *daemon,
-                           gpointer      user_data)
-{
-  const gchar *crypto_object_path = user_data;
-  UDisksObject *ret = NULL;
-  GList *objects, *l;
-
-  objects = udisks_daemon_get_objects (daemon);
-  for (l = objects; l != NULL; l = l->next)
-    {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlock *block;
-
-      block = udisks_object_get_block (object);
-      if (block != NULL)
-        {
-          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
-            {
-              g_object_unref (block);
-              ret = g_object_ref (object);
-              goto out;
-            }
-          g_object_unref (block);
-        }
-    }
-
- out:
-  g_list_free_full (objects, g_object_unref);
-  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

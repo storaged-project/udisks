@@ -221,6 +221,7 @@ udisks_linux_block_object_constructed (GObject *_object)
 {
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
   GString *str;
+  UDisksBlock *block = NULL;
 
   object->mount_monitor = udisks_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -240,6 +241,10 @@ udisks_linux_block_object_constructed (GObject *_object)
   udisks_safe_append_to_object_path (str, g_udev_device_get_name (object->device->udev_device));
   g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), str->str);
   g_string_free (str, TRUE);
+
+  block = udisks_object_peek_block (UDISKS_OBJECT (object));
+  if (block && g_strcmp0 (udisks_block_get_crypto_backing_device (block), "/") != 0)
+    udisks_linux_block_object_uevent (object, "change", NULL);
 
   if (G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed (_object);

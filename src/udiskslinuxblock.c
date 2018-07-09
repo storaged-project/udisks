@@ -182,11 +182,11 @@ get_sysfs_attr (GUdevDevice *device,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *
+static UDisksLinuxBlockObject *
 find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
                                  const gchar              *sysfs_path)
 {
-  gchar *ret;
+  UDisksLinuxBlockObject *ret;
   GList *objects;
   GList *l;
 
@@ -204,7 +204,7 @@ find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
       device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
       if (g_strcmp0 (sysfs_path, g_udev_device_get_sysfs_path (device->udev_device)) == 0)
         {
-          ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+          ret = g_object_ref (UDISKS_LINUX_BLOCK_OBJECT (object));
           g_object_unref (device);
           goto out;
         }
@@ -1043,13 +1043,25 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
                                                      "slaves");
           if (g_strv_length (slaves) == 1)
             {
-              gchar *slave_object_path;
-              slave_object_path = find_block_device_by_sysfs_path (object_manager, slaves[0]);
-              if (slave_object_path != NULL)
+              UDisksLinuxBlockObject *slave_object;
+              slave_object = find_block_device_by_sysfs_path (object_manager, slaves[0]);
+              if (slave_object != NULL)
                 {
-                  udisks_block_set_crypto_backing_device (iface, slave_object_path);
+                  UDisksEncrypted *enc;
+
+                  udisks_block_set_crypto_backing_device (iface,
+                                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (slave_object)));
+
+                  /* also set the CleartextDevice property for the parent device */
+                  enc = udisks_object_peek_encrypted (UDISKS_OBJECT (slave_object));
+                  if (enc != NULL)
+                    {
+                      udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (enc),
+                                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+                    }
+
+                  g_object_unref (slave_object);
                 }
-              g_free (slave_object_path);
             }
           g_strfreev (slaves);
         }
