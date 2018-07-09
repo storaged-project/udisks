@@ -1908,6 +1908,7 @@ static const struct
   {"filesystem", "ntfs",              NULL,    NC_("fs-type", "NTFS"),                              NC_("fs-type", "NTFS")},
   {"filesystem", "hfs",               NULL,    NC_("fs-type", "HFS"),                               NC_("fs-type", "HFS")},
   {"filesystem", "hfsplus",           NULL,    NC_("fs-type", "HFS+"),                              NC_("fs-type", "HFS+")},
+  {"filesystem", "apfs",              NULL,    NC_("fs-type", "APFS"),                              NC_("fs-type", "APFS")},
   {"filesystem", "ext2",              "*",     NC_("fs-type", "Ext2 (version %s)"),                 NC_("fs-type", "Ext2")},
   {"filesystem", "ext2",              NULL,    NC_("fs-type", "Ext2"),                              NC_("fs-type", "Ext2")},
   {"filesystem", "ext3",              "*",     NC_("fs-type", "Ext3 (version %s)"),                 NC_("fs-type", "Ext3")},
