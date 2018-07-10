@@ -41,6 +41,7 @@ typedef struct {
   gboolean hidden;
   gboolean system;
   gboolean read_only;
+  const gchar *type;
 } CryptoJobData;
 
 gboolean luks_format_job_func (UDisksThreadedJob  *job,

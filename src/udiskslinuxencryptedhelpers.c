@@ -31,12 +31,27 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
                       gpointer            user_data,
                       GError            **error)
 {
+  BDCryptoLUKSVersion luks_version;
   CryptoJobData *data = (CryptoJobData*) user_data;
 
-  /* device, cipher, key_size, passphrase, key_file, min_entropy, error */
-  return bd_crypto_luks_format_blob (data->device, NULL, 0,
-                                     (const guint8*) data->passphrase->str, data->passphrase->len, 0,
-                                     error);
+  if (g_strcmp0 (data->type, "luks1") == 0)
+    luks_version = BD_CRYPTO_LUKS_VERSION_LUKS1;
+  else if ((g_strcmp0 (data->type, "luks2") == 0))
+    luks_version = BD_CRYPTO_LUKS_VERSION_LUKS2;
+  else
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Unknown or unsupported encryption type specified: '%s'",
+                   data->type);
+      return FALSE;
+    }
+
+  /* device, cipher, key_size, passphrase, key_file, min_entropy, luks_version, extra, error */
+  return bd_crypto_luks_format_luks2_blob (data->device, NULL, 0,
+                                           (const guint8*) data->passphrase->str, data->passphrase->len, 0,
+                                           luks_version, NULL, error);
 }
 
 gboolean luks_open_job_func (UDisksThreadedJob  *job,

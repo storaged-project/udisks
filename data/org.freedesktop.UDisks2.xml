@@ -1346,7 +1346,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>erase</parameter> (of type 's'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -1377,6 +1377,9 @@
         unlocked device will be left open. This parameter can be used
         to supply the binary contents of an arbitrary keyfile by passing
         a value of type <quote>ay</quote>.
+        Option <parameter>encrypt.type</parameter> can be used to
+        specify encryption "technology" that will be used. Currently
+        only <quote>luks1</quote> and <quote>luks2</quote> are supported.
 
         If the option <parameter>erase</parameter> is used then the
         underlying device will be erased. Valid values include

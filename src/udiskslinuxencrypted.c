@@ -829,7 +829,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   const gchar *action_id;
   GError *error = NULL;
   gchar *device = NULL;
-  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, FALSE, FALSE };
+  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, NULL };
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
