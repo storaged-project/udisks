@@ -45,6 +45,10 @@ typedef enum
  UDISKS_MODULE_LOAD_ONSTARTUP
 } UDisksModuleLoadPreference;
 
+#define UDISKS_ENCRYPTION_LUKS1 "luks1"
+#define UDISKS_ENCRYPTION_LUKS2 "luks2"
+#define UDISKS_ENCRYPTION_DEFAULT UDISKS_ENCRYPTION_LUKS1
+
 GType                 udisks_config_manager_get_type        (void) G_GNUC_CONST;
 UDisksConfigManager  *udisks_config_manager_new             (void);
 UDisksConfigManager  *udisks_config_manager_new_uninstalled (void);
@@ -55,6 +59,7 @@ const GList          *udisks_config_manager_get_modules     (UDisksConfigManager
 gboolean              udisks_config_manager_get_modules_all (UDisksConfigManager *manager);
 UDisksModuleLoadPreference
                       udisks_config_manager_get_load_preference (UDisksConfigManager *manager);
+const gchar          *udisks_config_manager_get_encryption (UDisksConfigManager *manager);
 
 G_END_DECLS
 
