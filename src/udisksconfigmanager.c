@@ -188,7 +188,9 @@ udisks_config_manager_constructed (GObject *object)
                                     udisks_config_manager_get_uninstalled (manager) ?
                                       BUILD_DIR :
                                       PACKAGE_SYSCONF_DIR,
-                                    PROJECT_SYSCONF_DIR,
+                                    udisks_config_manager_get_uninstalled (manager) ?
+                                      "udisks" :
+                                      PROJECT_SYSCONF_DIR,
                                     PACKAGE_NAME_UDISKS2 ".conf",
                                     NULL);
 
