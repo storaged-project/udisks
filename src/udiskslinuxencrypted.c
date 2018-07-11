@@ -953,6 +953,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   const gchar *message = NULL;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
+  GString *effective_passphrase = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -1043,8 +1044,19 @@ handle_resize (UDisksEncrypted       *encrypted,
       goto out;
     }
 
+  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
+    ;
+  else if (udisks_variant_lookup_binary (options, "passphrase", &effective_passphrase))
+    ;
+  else
+    effective_passphrase = NULL;
+
   /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
-  if (! bd_crypto_luks_resize (udisks_block_get_device (cleartext_block), size / 512, &error))
+  if (! bd_crypto_luks_resize_luks2_blob (udisks_block_get_device (cleartext_block),
+                                          size / 512,
+                                          effective_passphrase ? (const guint8*) effective_passphrase->str : NULL,
+                                          effective_passphrase ? effective_passphrase->len : 0,
+                                          &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1063,6 +1075,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   g_clear_object (&cleartext_object);
   g_clear_object (&object);
   g_clear_error (&error);
+  udisks_string_wipe_and_free (effective_passphrase);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 

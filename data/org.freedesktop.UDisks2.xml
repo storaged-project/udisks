@@ -2107,11 +2107,14 @@
     <!--
         Resize:
         @size: The target cleartext size in bytes, 0 for maximum.
-        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
-        @since: 2.7.6
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>passphrase</parameter> (of type 's') and <parameter>keyfile_contents</parameter> (of type 'ay') which is preferred over @passphrase if specified.
+        @since: 2.8.0
 
         Resizes the encrypted device.  The device must be unlocked.
         The given size is the target size for the cleartext device.
+
+        You need to specify either @passphrase or @keyfile_contents for LUKS 2
+        devices that don't have verified key loaded in kernel keyring.
     -->
     <method name="Resize">
       <arg name="size" direction="in" type="t"/>
