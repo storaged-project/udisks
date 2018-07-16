@@ -27,7 +27,7 @@
   <!--
       org.freedesktop.UDisks2.Manager.VDO:
       @short_description: VDO volume management
-      @since: 2.7.7
+      @since: 2.8.0
 
       This interface provides a way to create new and activate or start existing
       VDO volumes. Once a volume has been started an additional #org.freedesktop.UDisks2.Block.VDO
@@ -57,7 +57,7 @@
         @compression: Enables or disables compression when creating a VDO volume.
         @deduplication: Enables or disables deduplication when creating a VDO volume.
         @write_policy: Specifies the write policy.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
 
         Creates a VDO volume from @device and its associated index and makes it available.
@@ -84,12 +84,10 @@
     <!--
         ActivateVolume:
         @name: Name of an existing VDO volume to activate.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Activates existing VDO volume. Activated volume can be started using the
         org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
-
-        No additional options are currently defined.
     -->
     <method name="ActivateVolume">
       <arg name="name" type="s" direction="in" />
@@ -100,15 +98,13 @@
         StartVolume:
         @name: The VDO volume name.
         @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
 
         Starts a stopped, activated VDO volume and associated services. Deactivated
         volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume()
         method call prior to starting. Since a volume index rebuild may be required
         a job object will be exposed for this operation.
-
-        No additional options are currently defined.
     -->
     <method name="StartVolume">
       <arg name="name" type="s" direction="in" />
@@ -125,7 +121,7 @@
   <!--
       org.freedesktop.UDisks2.Block.VDO:
       @short_description: block object interface for managing a running VDO volume
-      @since: 2.7.7
+      @since: 2.8.0
 
       This interface is exposed for block objects that represent existing and running VDO volumes.
 
@@ -188,14 +184,12 @@
 
     <!--
         Deactivate:
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Deactivates the VDO volume. Deactivating a currently running volume does
         not stop it.  Once a volume is deactivated it needs to be activated again
         using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call
         on the manager object.
-
-        No additional options are currently defined.
     -->
     <method name="Deactivate">
       <arg name="options" direction="in" type="a{sv}" />
@@ -204,12 +198,10 @@
     <!--
         EnableCompression:
         @enable: A boolean value indicating whether compression should be enabled.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Enables or disables compression on the VDO volume. If the VDO volume
         is running, takes effect immediately.
-
-        No additional options are currently defined.
     -->
     <method name="EnableCompression">
       <arg name="enable" direction="in" type="b" />
@@ -219,12 +211,10 @@
     <!--
         EnableDeduplication:
         @enable: A boolean value indicating whether deduplication should be enabled.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Enables or disables deduplication on the VDO volume. If the VDO volume
         is running, takes effect immediately.
-
-        No additional options are currently defined.
     -->
     <method name="EnableDeduplication">
       <arg name="enable" direction="in" type="b" />
@@ -234,7 +224,7 @@
     <!--
         ChangeWritePolicy:
         @write_policy: The desired write policy. 
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Modifies the write policy of the running VDO volume. Known @write_policy
         values include:
@@ -243,8 +233,6 @@
           <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
           <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
         </variablelist>
-
-        No additional options are currently defined.
     -->
     <method name="ChangeWritePolicy">
       <arg name="write_policy" direction="in" type="s" />
@@ -254,11 +242,9 @@
     <!--
         Remove:
         @force: A boolean value indicating whether an unmount attempt should be performed first. 
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Removes the VDO volume and associated indexes.
-
-        No additional options are currently defined.
     -->
     <method name="Remove">
       <arg name="force" direction="in" type="b" />
@@ -268,13 +254,11 @@
     <!--
         Stop:
         @force: A boolean value indicating whether an unmount attempt should be performed first. 
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Stops a running VDO volume and associated services. Once a volume is stopped
         it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolume()
         method call on the manager object.
-
-        No additional options are currently defined.
     -->
     <method name="Stop">
       <arg name="force" direction="in" type="b" />
@@ -284,11 +268,9 @@
     <!--
         GrowLogical:
         @size: The logical VDO volume size in bytes. The maximum size supported is 4P.
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Grows the logical size of a VDO volume. The volume must be running.
-
-        No additional options are currently defined.
     -->
     <method name="GrowLogical">
       <arg name="size" direction="in" type="t" />
@@ -297,11 +279,9 @@
 
     <!--
         GrowPhysical:
-        @options: Additional options.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Grows the physical size of a VDO volume. The volume must be running.
-
-        No additional options are currently defined.
     -->
     <method name="GrowPhysical">
       <arg name="options" direction="in" type="a{sv}" />
