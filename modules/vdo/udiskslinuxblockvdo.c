@@ -641,6 +641,38 @@ handle_stop (UDisksBlockVDO        *block_vdo,
 }
 
 static void
+stats_add_element (const gchar *key, const gchar *value, GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{ss}", key, value);
+}
+
+static gboolean
+handle_get_statistics (UDisksBlockVDO        *block_vdo,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *arg_options)
+{
+  const gchar *dm_name;
+  GHashTable *stats;
+  GVariantBuilder builder;
+  GError *error = NULL;
+
+  dm_name = udisks_block_vdo_get_name (block_vdo);
+  stats = bd_vdo_get_stats_full (dm_name, &error);
+  if (stats == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return TRUE;
+    }
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ss}"));
+  g_hash_table_foreach (stats, (GHFunc) stats_add_element, &builder);
+  udisks_block_vdo_complete_get_statistics (block_vdo, invocation, g_variant_builder_end (&builder));
+  g_hash_table_destroy (stats);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static void
 udisks_linux_block_vdo_iface_init (UDisksBlockVDOIface *iface)
 {
   iface->handle_change_write_policy = handle_change_write_policy;
@@ -651,4 +683,5 @@ udisks_linux_block_vdo_iface_init (UDisksBlockVDOIface *iface)
   iface->handle_grow_physical = handle_grow_physical;
   iface->handle_remove = handle_remove;
   iface->handle_stop = handle_stop;
+  iface->handle_get_statistics = handle_get_statistics;
 }

@@ -287,5 +287,128 @@
       <arg name="options" direction="in" type="a{sv}" />
     </method>
 
+    <!--
+        GetStatistics:
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @stats: Array of key-value string pairs
+
+        Retrieves statistics for the specified VDO volume. Statistics are collected from the values exposed by the kernel <literal>kvdo</literal> module.
+
+        List of known keys:
+        <variablelist>
+        <varlistentry><term>writeAmplificationRatio</term><listitem><para>The average number of block writes to the underlying storage per block written to the VDO device.</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocks</term><listitem><para>The total number of 1K blocks allocated for a VDO volume (= physical volume size * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocksUsed</term><listitem><para>The total number of 1K blocks used on a VDO volume (= physical blocks used * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocksAvailable</term><listitem><para>The total number of 1K blocks available on a VDO volume (= physical blocks free * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>usedPercent</term><listitem><para>The percentage of physical blocks used on a VDO volume (= used blocks / allocated blocks * 100).</para></listitem></varlistentry>
+        <varlistentry><term>savings, savingPercent</term><listitem><para>The percentage of physical blocks saved on a VDO volume (= [logical blocks used - physical blocks used] / logical blocks used).</para></listitem></varlistentry>
+        <varlistentry><term>fiveTwelveByteEmulation</term><listitem><para>Indicates whether 512 byte emulation is on or off for the volume.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slab_count</term><listitem><para>The total number of slabs.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slabs_opened</term><listitem><para> The total number of slabs from which blocks have ever been allocated.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slabs_reopened</term><listitem><para>The number of times slabs have been re-opened since the VDO was started.</para></listitem></varlistentry>
+        <varlistentry><term>bios_acknowledged_discard, bios_acknowledged_flush, bios_acknowledged_fua, bios_acknowledged_read, bios_acknowledged_write</term><listitem><para>The number of block I/O requests acknowledged by VDO.</para></listitem></varlistentry>
+        <varlistentry><term>bios_acknowledged_partial_discard, bios_acknowledged_partial_flush, bios_acknowledged_partial_fua, bios_acknowledged_partial_read, bios_acknowledged_partial_write</term><listitem><para>The number of partial block I/O requests acknowledged by VDO. Applies only to 512-byte emulation mode.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_discard, bios_in_flush, bios_in_fua, bios_in_read, bios_in_write</term><listitem><para>The number of block I/O requests received by VDO.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_partial_discard, bios_in_partial_flush, bios_in_partial_fua, bios_in_partial_read, bios_in_partial_write</term><listitem><para>The number of partial block I/O requests received by VDO. Applies only to 512-byte emulation mode.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_progress_discard, bios_in_progress_flush, bios_in_progress_fua, bios_in_progress_read, bios_in_progress_write</term><listitem><para>The number of bios submitted to the VDO which have not yet been acknowledged.</para></listitem></varlistentry>
+        <varlistentry><term>bios_journal_completed_discard, bios_journal_completed_flush, bios_journal_completed_fua, bios_journal_completed_read, bios_journal_completed_write</term><listitem><para>The number of recovery journal block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_journal_discard, bios_journal_flush, bios_journal_fua, bios_journal_read, bios_journal_write</term><listitem><para>The number of recovery journal block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_meta_completed_discard, bios_meta_completed_flush, bios_meta_completed_fua, bios_meta_completed_read, bios_meta_completed_write</term><listitem><para>The number of metadata block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_meta_discard, bios_meta_flush, bios_meta_fua, bios_meta_read", bios_meta_write</term><listitem><para>The number of metadata block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_out_completed_discard, bios_out_completed_flush, bios_out_completed_fua, bios_out_completed_read, bios_out_completed_write</term><listitem><para>The number of non-metadata block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_out_discard, bios_out_flush, bios_out_fua, bios_out_read, bios_out_write</term><listitem><para>The number of non-metadata block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_page_cache_completed_discard, bios_page_cache_completed_flush, bios_page_cache_completed_fua, bios_page_cache_completed_read, bios_page_cache_completed_write</term><listitem><para>The number of block map I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_page_cache_discard, bios_page_cache_flush, bios_page_cache_fua, bios_page_cache_read, bios_page_cache_write</term><listitem><para>The number of block map I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_cache_pressure</term><listitem><para>The number of times a free page was not available when needed.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_cache_size</term><listitem><para>The size of the block map cache, in bytes.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_clean_pages</term><listitem><para>The number of clean pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_dirty_pages</term><listitem><para>The number of dirty pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_discard_required</term><listitem><para>The total number of block map requests that required a page to be discarded.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_pages</term><listitem><para>The number of block map cache pages that have write errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_reads</term><listitem><para>The total number of block map read errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_writes</term><listitem><para>The total number of block map write errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_fetch_required</term><listitem><para>The total number of requests that required a page fetch.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_flush_count</term><listitem><para>The total number of flushes issued by the block map.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_found_in_cache</term><listitem><para>The total number of block map cache hits.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_free_pages</term><listitem><para>The number of free pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_incoming_pages</term><listitem><para>The number of block map cache pages that are being read into the cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_outgoing_pages</term><listitem><para>The number of block map cache pages that are being written.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_pages_loaded</term><listitem><para>The total number of page fetches.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_pages_saved</term><listitem><para>The total number of page saves.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_read_count</term><listitem><para>The total number of block map page reads.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_read_outgoing</term><listitem><para>The total number of block map reads for pages that were being written.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_reclaimed</term><listitem><para>The total number of block map pages that were reclaimed.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_wait_for_page</term><listitem><para>The total number of requests that had to wait for a page.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_write_count</term><listitem><para>The total number of block map page writes.</para></listitem></varlistentry>
+        <varlistentry><term>block_size</term><listitem><para>The block size of a VDO volume, in bytes.</para></listitem></varlistentry>
+        <varlistentry><term>complete_recoveries</term><listitem><para>The number of times a VDO volume has recovered from an unclean shutdown.</para></listitem></varlistentry>
+        <varlistentry><term>currentVIOs_in_progress</term><listitem><para>The number of I/O requests the VDO is current processing.</para></listitem></varlistentry>
+        <varlistentry><term>data_blocks_used</term><listitem><para>The number of physical blocks currently in use by a VDO volume to store data.</para></listitem></varlistentry>
+        <varlistentry><term>dedupe_advice_timeouts</term><listitem><para>The number of times deduplication queries timed out.</para></listitem></varlistentry>
+        <varlistentry><term>errors_invalid_advicePBNCount</term><listitem><para>The number of times the index returned invalid advice.</para></listitem></varlistentry>
+        <varlistentry><term>errors_no_space_error_count</term><listitem><para>The number of write requests which failed due to the VDO volume being out of space.</para></listitem></varlistentry>
+        <varlistentry><term>errors_read_only_error_count</term><listitem><para>The number of write requests which failed due to the VDO volume being in read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>flush_out</term><listitem><para>The number of flush requests submitted by VDO to the underlying storage.</para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_concurrent_data_matches</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_concurrent_hash_collisions</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_dedupe_advice_stale</term><listitem><para>The number of times deduplication advice was incorrect.</para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_dedupe_advice_valid</term><listitem><para>The number of times deduplication advice was correct.</para></listitem></varlistentry>
+        <varlistentry><term>index_curr_dedupe_queries</term><listitem><para>The number of deduplication queries currently in flight.</para></listitem></varlistentry>
+        <varlistentry><term>index_entries_indexed</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_max_dedupe_queries</term><listitem><para>The maximum number of in-flight deduplication queries.</para></listitem></varlistentry>
+        <varlistentry><term>index_posts_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_posts_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_queries_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_queries_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_updates_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_updates_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>in_recovery_mode</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>instance</term><listitem><para>The VDO instance.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_batching</term><listitem><para>The number of journal block writes started minus the number of journal blocks written.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_committed</term><listitem><para>The number of journal blocks written to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_started</term><listitem><para>The number of journal blocks which have been touched in memory.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_writing</term><listitem><para>The number of journal blocks written (with metadatata in active memory) minus the number of journal blocks committed.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_written</term><listitem><para>The total number of journal blocks for which a write has been issued.</para></listitem></varlistentry>
+        <varlistentry><term>journal_disk_full</term><listitem><para>The number of times a request could not make a recovery journal entry because the recovery journal was full.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_batching</term><listitem><para>The number of journal entry writes started minus the number of journal entries written.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_committed</term><listitem><para>The number of journal entries written to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_started</term><listitem><para>The number of journal entries which have been made in memory.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_writing</term><listitem><para>The number of journal entries in submitted writes minus the number of journal entries committed to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_written</term><listitem><para>The total number of journal entries for which a write has been issued.</para></listitem></varlistentry>
+        <varlistentry><term>journal_slab_journal_commits_requested</term><listitem><para>The number of times the recovery journal requested slab journal commits.</para></listitem></varlistentry>
+        <varlistentry><term>logical_blocks</term><listitem><para>The maximum number of logical blocks that can be mapped by a VDO volume.</para></listitem></varlistentry>
+        <varlistentry><term>logical_block_size</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>logical_blocks_used</term><listitem><para>The number of logical blocks currently mapped.</para></listitem></varlistentry>
+        <varlistentry><term>maxVIOs</term><listitem><para>The maximum number of simultaneous I/O requests the VDO has processed.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_bios_used</term><listitem><para>KVDO module bios use.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_bytes_used</term><listitem><para>KVDO module bytes use.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_peak_bio_count</term><listitem><para>KVDO module peak bio coun.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_peak_bytes_used</term><listitem><para>KVDO module peak bytes use.</para></listitem></varlistentry>
+        <varlistentry><term>mode</term><listitem><para>Indicates whether a VDO volume is operating normally, is in recovery mode, or is in read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>overhead_blocks_used</term><listitem><para>The number of physical blocks currently in use by a VDO volume to store VDO metadata.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_blocks_written</term><listitem><para>The number of physical blocks of compressed data that have been written since the VDO volume was last restarted. The remaining fields are primarily intended for software support and are subject to change in future releases; management tools should not rely upon them.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_fragments_in_packer</term><listitem><para>The number of compressed fragments being processed that have not yet been written.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_fragments_written</term><listitem><para>The number of compressed fragments that have been written since the VDO volume was last restarted.</para></listitem></varlistentry>
+        <varlistentry><term>physical_blocks</term><listitem><para>The total number of physical blocks allocated for a VDO volume.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_accesses</term><listitem><para>The number of times VDO searched the read cache.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_data_hits</term><listitem><para>The number of times VDO found an entry in the read cache for the desired data block, where the block's contents had been read into memory.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_hits</term><listitem><para>The number of times VDO found an entry in the read cache for the desired data block, whether or not the block's contents had yet been read into memory.</para></listitem></varlistentry>
+        <varlistentry><term>read_only_recoveries</term><listitem><para>The number of times a VDO volume has been recovered from read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>recovery_percentage</term><listitem><para>Indicates online recovery progress (\%), or N/A if the volume is not in recovery mode.</para></listitem></varlistentry>
+        <varlistentry><term>ref_counts_blocks_written</term><listitem><para>The number of reference block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_blocked_count</term><listitem><para>The number of times an entry was added to a slab journal that was over the blocking threshold.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_blocks_written</term><listitem><para>The number of slab journal block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_disk_full_count</term><listitem><para>The number of times an on-disk slab journal was full.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_flush_count</term><listitem><para>The number of times an entry was added to a slab journal that was over the flush threshold.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_tail_busy_count</term><listitem><para>The number of times write requests blocked waiting for a slab journal write.</para></listitem></varlistentry>
+        <varlistentry><term>slab_summary_blocks_written</term><listitem><para>The number of slab summary block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>write_policy</term><listitem><para>The write policy (sync or async).</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="GetStatistics">
+      <arg name="options" direction="in" type="a{sv}" />
+      <arg name="stats" direction="out" type="a{ss}" />
+    </method>
+
   </interface>
 </node>
