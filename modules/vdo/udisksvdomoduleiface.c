@@ -101,7 +101,8 @@ check_want_vdo_block (UDisksObject *object)
       /* Test if we can get VDO info */
       bd_info = bd_vdo_info (dm_name, NULL);
       ret = bd_info != NULL;
-      bd_vdo_info_free (bd_info);
+      if (bd_info != NULL)
+        bd_vdo_info_free (bd_info);
     }
 
   g_object_unref (device);
