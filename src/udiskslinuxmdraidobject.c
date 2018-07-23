@@ -542,7 +542,7 @@ attr_changed (GIOChannel   *channel,
  * for notification - instead it excepts user-space to select(2)-ish
  * on a fd for the sysfs attribute. Annoying. See
  *
- *  http://www.kernel.org/doc/Documentation/md.txt
+ *  https://www.kernel.org/doc/Documentation/admin-guide/md.rst
  *
  * for more details.
  */

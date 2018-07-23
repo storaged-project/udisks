@@ -2242,7 +2242,7 @@
 
          This property corresponds to the
          <literal>sync_action</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="SyncAction" type="s" access="read"/>
@@ -2252,7 +2252,7 @@
 
          This property corresponds to the
          <literal>sync_completed</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="SyncCompleted" type="d" access="read"/>
@@ -2267,7 +2267,7 @@
 
          This property corresponds to the
          <literal>sync_speed</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="SyncRate" type="t" access="read"/>
@@ -2281,7 +2281,7 @@
 
          This property is based on the value of the
          <literal>sync_speed</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="SyncRemainingTime" type="t" access="read"/>
@@ -2291,7 +2291,7 @@
 
          This property corresponds to the
          <literal>degraded</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="Degraded" type="u" access="read"/>
@@ -2304,7 +2304,7 @@
 
          This property corresponds to the
          <literal>bitmap/location</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="BitmapLocation" type="ay" access="read"/>
@@ -2314,7 +2314,7 @@
 
          This property corresponds to the
          <literal>chunk_size</literal> sysfs file, see the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="ChunkSize" type="t" access="read"/>
@@ -2340,7 +2340,7 @@
          This property correspond to the
          <filename>/sys/block/mdN/md/dev-*</filename> directories in sysfs and the sysfs files in each directory.
          See the
-         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
          file shipped with the kernel sources.
     -->
     <property name="ActiveDevices" type="a(oiasta{sv})" access="read"/>
@@ -2443,7 +2443,7 @@
 
         This method call is similar to writing to the
         <literal>sync_action</literal> sysfs file, see the
-        <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+        <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
         file shipped with the kernel sources.
     -->
     <method name="RequestSyncAction">
