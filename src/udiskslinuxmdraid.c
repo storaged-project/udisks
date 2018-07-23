@@ -365,44 +365,41 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
         }
     }
 
-  if (sync_action)
+  if (sync_action == NULL || g_strcmp0 (sync_action, "idle") == 0)
     {
-      if (g_strcmp0 (sync_action, "idle") != 0)
+      if (udisks_linux_mdraid_object_has_sync_job (object))
         {
-          if (! udisks_linux_mdraid_object_has_sync_job (object))
-            {
-              /* Launch a job */
-              job = udisks_daemon_launch_simple_job (daemon,
-                                                     UDISKS_OBJECT (object),
-                                                     sync_action_to_job_id (sync_action),
-                                                     0,
-                                                     NULL /* cancellable */);
+          /* Complete the job */
+          udisks_linux_mdraid_object_complete_sync_job (object,
+                                                        TRUE,
+                                                        "Finished");
+        }
+    }
+  else
+    {
+      if (! udisks_linux_mdraid_object_has_sync_job (object))
+        {
+          /* Launch a job */
+          job = udisks_daemon_launch_simple_job (daemon,
+                                                 UDISKS_OBJECT (object),
+                                                 sync_action_to_job_id (sync_action),
+                                                 0,
+                                                 NULL /* cancellable */);
 
-              /* Mark the job as not cancellable. It simply has to finish... */
-              udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
-              udisks_linux_mdraid_object_set_sync_job (object, job);
-            }
-          else
-            job = udisks_linux_mdraid_object_get_sync_job (object);
-
-          /* Update the job's interface */
-          udisks_job_set_progress (UDISKS_JOB (job), sync_completed_val);
-          udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
-          udisks_job_set_rate (UDISKS_JOB (job), sync_rate);
-
-          udisks_job_set_expected_end_time (UDISKS_JOB (job),
-                                            g_get_real_time () + sync_remaining_time);
+          /* Mark the job as not cancellable. It simply has to finish... */
+          udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
+          udisks_linux_mdraid_object_set_sync_job (object, job);
         }
       else
-        {
-          if (udisks_linux_mdraid_object_has_sync_job (object))
-            {
-              /* Complete the job */
-              udisks_linux_mdraid_object_complete_sync_job (object,
-                                                            TRUE,
-                                                            "Finished");
-            }
-        }
+        job = udisks_linux_mdraid_object_get_sync_job (object);
+
+      /* Update the job's interface */
+      udisks_job_set_progress (UDISKS_JOB (job), sync_completed_val);
+      udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+      udisks_job_set_rate (UDISKS_JOB (job), sync_rate);
+
+      udisks_job_set_expected_end_time (UDISKS_JOB (job),
+                                        g_get_real_time () + sync_remaining_time);
     }
   udisks_mdraid_set_sync_completed (iface, sync_completed_val);
   udisks_mdraid_set_sync_rate (iface, sync_rate);
