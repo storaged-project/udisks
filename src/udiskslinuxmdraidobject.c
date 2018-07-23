@@ -118,6 +118,9 @@ udisks_linux_mdraid_object_finalize (GObject *_object)
 
   remove_watches (object);
 
+  /* complete the sync job if running */
+  udisks_linux_mdraid_object_complete_sync_job (object, TRUE, "Finished");
+
   if (object->iface_mdraid != NULL)
     g_object_unref (object->iface_mdraid);
 
