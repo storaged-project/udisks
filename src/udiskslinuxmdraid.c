@@ -1474,6 +1474,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_mdraid_complete_request_sync_action (_mdraid, invocation);
 
  out:
