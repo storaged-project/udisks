@@ -8,7 +8,11 @@ import time
 import sys
 from datetime import datetime
 from systemd import journal
-from monotonic import monotonic
+
+if sys.version_info.major == 3 and sys.version_info.minor >= 3:
+    from time import monotonic
+else:
+    from monotonic import monotonic
 
 import gi
 gi.require_version('GUdev', '1.0')
