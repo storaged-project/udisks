@@ -90,6 +90,9 @@ typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
 struct _UDisksLinuxBlock
 {
   UDisksBlockSkeleton parent_instance;
+
+  /* only allow single cryptsetup call at once */
+  GMutex encrypted_lock;
 };
 
 struct _UDisksLinuxBlockClass
@@ -107,13 +110,29 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlock, udisks_linux_block, UDISKS_TYPE_BLOCK
 static void
 udisks_linux_block_init (UDisksLinuxBlock *block)
 {
+  g_mutex_init (&(block->encrypted_lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (block),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 static void
+udisks_linux_block_finalize (GObject *object)
+{
+  UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (object);
+
+  g_mutex_clear (&(block->encrypted_lock));
+
+  if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize (object);
+}
+
+static void
 udisks_linux_block_class_init (UDisksLinuxBlockClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize = udisks_linux_block_finalize;
 }
 
 /**
@@ -2727,6 +2746,22 @@ udisks_linux_block_is_unknown_crypto (UDisksBlock *block)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+void
+udisks_linux_block_encrypted_lock (UDisksBlock *block)
+{
+  UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
+  g_mutex_lock (&block_iface->encrypted_lock);
+}
+
+void
+udisks_linux_block_encrypted_unlock (UDisksBlock *block)
+{
+  UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
+  g_mutex_unlock (&block_iface->encrypted_lock);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 handle_format_failure (GDBusMethodInvocation *invocation,
                        GError *error)
@@ -3072,6 +3107,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       data.device = device_name;
       data.passphrase = encrypt_passphrase;
 
+      udisks_linux_block_encrypted_lock (block);
       /* Create it */
       if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                    object,
@@ -3086,8 +3122,10 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                  "Error creating LUKS device: %s", error->message));
           g_clear_error (&error);
+          udisks_linux_block_encrypted_unlock (block);
           goto out;
         }
+      udisks_linux_block_encrypted_unlock (block);
 
       /* Wait for the UUID to be set */
       if (udisks_daemon_wait_for_object_sync (daemon,
@@ -3111,6 +3149,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           goto out;
         }
 
+      udisks_linux_block_encrypted_lock (block);
       data.map_name = mapped_name;
       data.read_only = FALSE;
       if (!udisks_daemon_launch_threaded_job_sync (daemon,
@@ -3126,8 +3165,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                  "Error opening LUKS device: %s", error->message));
           g_clear_error (&error);
+          udisks_linux_block_encrypted_unlock (block);
           goto out;
         }
+
+      udisks_linux_block_encrypted_unlock (block);
 
       /* Wait for it */
       cleartext_object = udisks_daemon_wait_for_object_sync (daemon,

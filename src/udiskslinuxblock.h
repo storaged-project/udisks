@@ -62,6 +62,9 @@ gboolean     udisks_linux_block_is_tcrypt (UDisksBlock *block);
 
 gboolean     udisks_linux_block_is_unknown_crypto (UDisksBlock *block);
 
+void         udisks_linux_block_encrypted_lock (UDisksBlock *block);
+void         udisks_linux_block_encrypted_unlock (UDisksBlock *block);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_H__ */
