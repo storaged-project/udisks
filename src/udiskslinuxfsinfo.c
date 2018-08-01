@@ -176,7 +176,7 @@ const FSInfo _fs_info[] =
     },
     {
       FS_UDF,
-      NULL,
+      "udflabel --utf8 $DEVICE $LABEL",
       NULL,
       FALSE, /* supports_online_label_rename */
       TRUE,  /* supports_owners */

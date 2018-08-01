@@ -344,7 +344,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # umount
         disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
-        
+
 
 
 
@@ -775,7 +775,7 @@ class UDFTestCase(UdisksFSTestCase):
     _fs_name = 'udf'
     _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
     _can_label = True
-    _can_relabel = False
+    _can_relabel = True and UdisksFSTestCase.command_exists('udflabel')
     _can_mount = True and UdisksFSTestCase.module_loaded('udf')
 
 class FailsystemTestCase(UdisksFSTestCase):
@@ -815,7 +815,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
     def test_relabel(self):
         # we need some filesystem that doesn't support setting label after creating it
-        fs = UDFTestCase
+        fs = MinixTestCase
 
         if not fs._can_create:
             self.skipTest('Cannot create %s filesystem to test not supported '
@@ -824,7 +824,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
-        # create udf filesystem without label and try to set it later
+        # create minix filesystem without label and try to set it later
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self._clean_format, self.vdevs[0])
 
