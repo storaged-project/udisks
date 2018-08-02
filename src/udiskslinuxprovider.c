@@ -809,7 +809,7 @@ perform_initial_housekeeping_for_drive (GTask           *task,
                                         gpointer         task_data,
                                         GCancellable    *cancellable)
 {
-  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (task_data);
+  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (source_object);
   GError *error;
 
   error = NULL;
@@ -1049,8 +1049,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                   /* schedule initial housekeeping for the drive unless coldplugging */
                   if (!provider->coldplug)
                     {
-                      task = g_task_new (NULL, NULL, NULL, NULL);
-                      g_task_set_task_data (task, g_object_ref (object), NULL);
+                      task = g_task_new (object, NULL, NULL, NULL);
                       g_task_run_in_thread (task, perform_initial_housekeeping_for_drive);
                       g_object_unref (task);
                     }
@@ -1455,7 +1454,7 @@ housekeeping_thread_func (GTask           *task,
                           gpointer         task_data,
                           GCancellable    *cancellable)
 {
-  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (task_data);
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (source_object);
   guint secs_since_last;
   guint64 now;
 
@@ -1489,8 +1488,7 @@ on_housekeeping_timeout (gpointer user_data)
   if (provider->housekeeping_running)
     goto out;
   provider->housekeeping_running = TRUE;
-  task = g_task_new (NULL, NULL, NULL, NULL);
-  g_task_set_task_data (task, g_object_ref (provider), NULL);
+  task = g_task_new (provider, NULL, NULL, NULL);
   g_task_run_in_thread (task, housekeeping_thread_func);
   g_object_unref (task);
 
