@@ -168,22 +168,21 @@ udisks_threaded_job_set_property (GObject      *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-job_complete (gpointer user_data)
+static void
+job_complete (GObject      *source_object,
+              GAsyncResult *res,
+              gpointer      user_data)
 {
-  UDisksThreadedJob *job = UDISKS_THREADED_JOB (user_data);
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
   gboolean ret;
 
-  /* take a reference so it's safe for a signal-handler to release the last one */
-  g_object_ref (job);
+  /* GTask holds a reference to 'job' so it's safe for a signal-handler to release the last one */
   g_signal_emit (job,
                  signals[THREADED_JOB_COMPLETED_SIGNAL],
                  0,
                  job->job_result,
                  job->job_error,
                  &ret);
-  g_object_unref (job);
-  return FALSE;
 }
 
 static void
@@ -192,7 +191,7 @@ run_task_job (GTask            *task,
               gpointer          task_data,
               GCancellable     *cancellable)
 {
-  UDisksThreadedJob *job = UDISKS_THREADED_JOB (task_data);
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
 
   g_assert (!job->job_result);
   g_assert_no_error (job->job_error);
@@ -204,8 +203,6 @@ run_task_job (GTask            *task,
                                        job->user_data,
                                        &job->job_error);
     }
-
-  g_main_context_invoke (g_task_get_context (task), job_complete, job);
 }
 
 static void
@@ -365,12 +362,11 @@ udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
 void udisks_threaded_job_start (UDisksThreadedJob *job) {
   GTask *task;
 
-  task = g_task_new (NULL,
+  task = g_task_new (job,
                      udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
-                     NULL,
+                     job_complete,
                      NULL);
 
-  g_task_set_task_data (task, job, NULL);
   g_task_set_return_on_cancel (task, TRUE);
   g_task_run_in_thread (task, run_task_job);
   g_object_unref (task);
