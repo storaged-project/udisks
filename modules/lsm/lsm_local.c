@@ -180,6 +180,9 @@ led_control (UDisksDriveLsmLocal *ud_drv_lsm_local,
       goto out;
     }
 
+  /* success, complete the method call in a generic way */
+  g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
+
  out:
   g_free ((gchar *) blk_path);
   if (lsm_err != NULL)
