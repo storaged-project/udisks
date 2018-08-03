@@ -199,19 +199,11 @@ _lsm_local_update(UDisksObject *object,
                   const gchar *uevent_action,
                   GDBusInterface *_iface)
 {
-
   if (strcmp (uevent_action, _UDEV_ACTION_ADD) == 0)
     {
       return udisks_linux_drive_lsm_local_update
         (UDISKS_LINUX_DRIVE_LSM_LOCAL (_iface),
          UDISKS_LINUX_DRIVE_OBJECT (object));
-    }
-  else if (strcmp (uevent_action, _UDEV_ACTION_REMOVE) == 0)
-    {
-      if (UDISKS_IS_LINUX_DRIVE_LSM_LOCAL (_iface))
-        g_object_unref
-          (UDISKS_LINUX_DRIVE_LSM_LOCAL (_iface));
-      return TRUE;
     }
   return FALSE;
 }
