@@ -3,6 +3,8 @@ import re
 import time
 import unittest
 
+from distutils.version import LooseVersion
+
 import udiskstestcase
 from udiskstestcase import unstable_test
 
@@ -128,7 +130,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         dbus_writes.assertEqual(int(sys_writes))
 
         sys_mmstat = self.read_file('/sys/block/%s/mm_stat' % zram_name).strip().split()
-        self.assertEqual(len(sys_mmstat), 7)
+        self.assertGreaterEqual(len(sys_mmstat), 7)  # 7 stats on 4.11, 8 stats on 4.18
         sys_compr = sys_mmstat[1]
         sys_orig = sys_mmstat[0]
 
@@ -184,10 +186,11 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         self.assertIn('/dev/%s' % zram_name, swaps)
 
         # test some properties
-        # we need to read system values from different files on Fedora and CentOS
-        if self.distro[1] == "fedora":
+        # location of some sysfs files we use is different since linux 4.11
+        kernel_version = os.uname()[2]
+        if LooseVersion(kernel_version) >= LooseVersion("4.11"):
             self._test_zram_properties_fedora(zram, zram_name)
-        elif self.distro[1] in ('centos', 'enterprise_linux'):
+        else:
             self._test_zram_properties_centos(zram, zram_name)
 
         # deactivate the ZRAM device
