@@ -5,6 +5,7 @@ import dbus
 import subprocess
 import os
 import time
+import re
 import sys
 from datetime import datetime
 from systemd import journal
@@ -41,6 +42,50 @@ def get_call_long(call):
     return call_long
 
 
+def get_version_from_pretty_name(pretty_name):
+    """ Try to get distro and version from 'OperatingSystemPrettyName'
+        hostname property.
+
+        It should look like this:
+         - "Debian GNU/Linux 9 (stretch)"
+         - "Fedora 27 (Workstation Edition)"
+         - "CentOS Linux 7 (Core)"
+
+        So just return first word as distro and first number as version.
+    """
+    distro = pretty_name.split()[0].lower()
+    match = re.search(r"\d+", pretty_name)
+    if match is not None:
+        version = match.group(0)
+    else:
+        raise RuntimeError("Cannot get distro name and version from '%s'" % pretty_name)
+
+    return (distro, version)
+
+
+def get_version():
+    """ Try to get distro and version
+    """
+
+    bus = dbus.SystemBus()
+
+    # get information about the distribution from systemd (hostname1)
+    sys_info = bus.get_object("org.freedesktop.hostname1", "/org/freedesktop/hostname1")
+    cpe = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemCPEName", dbus_interface=dbus.PROPERTIES_IFACE))
+
+    if cpe:
+        # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
+        _project, distro, version = tuple(cpe.split(":")[2:5])
+    else:
+        pretty_name = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemPrettyName", dbus_interface=dbus.PROPERTIES_IFACE))
+        distro, version = get_version_from_pretty_name(pretty_name)
+
+    # we want just the major version, so remove all decimal places (if any)
+    version = str(int(float(version)))
+
+    return (distro, version)
+
+
 def skip_on(skip_on_distros, skip_on_version="", reason=""):
     """A function returning a decorator to skip some test on a given distribution-version combination
 
@@ -53,14 +98,7 @@ def skip_on(skip_on_distros, skip_on_version="", reason=""):
     if isinstance(skip_on_distros, str):
         skip_on_distros = (skip_on_distros,)
 
-    bus = dbus.SystemBus()
-
-    # get information about the distribution from systemd (hostname1)
-    sys_info = bus.get_object("org.freedesktop.hostname1", "/org/freedesktop/hostname1")
-    cpe = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemCPEName", dbus_interface=dbus.PROPERTIES_IFACE))
-
-    # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
-    project, distro, version = tuple(cpe.split(":")[2:5])
+    distro, version = get_version()
 
     def decorator(func):
         if distro in skip_on_distros and (not skip_on_version or skip_on_version == version):
@@ -241,12 +279,7 @@ class UdisksTestCase(unittest.TestCase):
         self.path_prefix = '/org/freedesktop/UDisks2'
         self.bus = dbus.SystemBus()
 
-        # get information about the distribution from systemd (hostname1)
-        sys_info = self.bus.get_object("org.freedesktop.hostname1", "/org/freedesktop/hostname1")
-        cpe = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemCPEName", dbus_interface=dbus.PROPERTIES_IFACE))
-
-        # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
-        self.distro = tuple(cpe.split(":")[2:5])
+        self.distro = get_version()
 
         self._orig_call_async = self.bus.call_async
         self._orig_call_blocking = self.bus.call_blocking
