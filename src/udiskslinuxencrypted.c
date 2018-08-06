@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <blockdev/crypto.h>
+
 #include <glib/gstdio.h>
 
 #include "udiskslogging.h"
@@ -120,6 +122,32 @@ update_child_configuration (UDisksLinuxEncrypted   *encrypted,
                                             udisks_block_get_id_uuid (block)));
 }
 
+static void
+update_metadata_size (UDisksLinuxEncrypted   *encrypted,
+                      UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  guint64 metadata_size;
+  GError *error = NULL;
+
+  device = udisks_linux_block_object_get_device (object);
+
+  metadata_size = bd_crypto_luks_get_metadata_size (g_udev_device_get_device_file (device->udev_device),
+                                                    &error);
+
+  if (error != NULL)
+  {
+    udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
+                    g_udev_device_get_device_file (device->udev_device),
+                    error->message,
+                    g_quark_to_string (error->domain),
+                    error->code);
+    g_clear_error (&error);
+  }
+
+  udisks_encrypted_set_metadata_size(UDISKS_ENCRYPTED (encrypted), metadata_size);
+}
+
 /**
  * udisks_linux_encrypted_update:
  * @encrypted: A #UDisksLinuxEncrypted.
@@ -133,6 +161,8 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
 {
   UDisksBlock *block = udisks_object_peek_block (UDISKS_OBJECT (object));
 
+  udisks_linux_block_encrypted_lock (block);
+
   update_child_configuration (encrypted, object);
 
   /* set block type according to hint_encryption_type */
@@ -141,6 +171,10 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
     if (g_strcmp0(udisks_encrypted_get_hint_encryption_type(UDISKS_ENCRYPTED(encrypted)), "TCRYPT") == 0)
       udisks_block_set_id_type (block, "crypto_TCRYPT");
   }
+
+  update_metadata_size (encrypted, object);
+
+  udisks_linux_block_encrypted_unlock (block);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -489,6 +523,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   else
     open_func = tcrypt_open_job_func;
 
+  udisks_linux_block_encrypted_lock (block);
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                object,
                                                "encrypted-unlock",
@@ -510,7 +545,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
        * in this case we don't know for sure if we used the correct
        * encryption type. */
       udisks_encrypted_set_hint_encryption_type (encrypted, old_hint_encryption_type);
-
+      udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
   else
@@ -519,6 +554,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
        * used in udisks_encrypted_set_hint_encryption_type() */
       g_free (old_hint_encryption_type);
     }
+
+  udisks_linux_block_encrypted_unlock (block);
 
   /* Determine the resulting cleartext object */
   error = NULL;
@@ -699,6 +736,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
   else
     close_func = tcrypt_close_job_func;
 
+  udisks_linux_block_encrypted_lock (block);
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                object,
                                                "encrypted-lock",
@@ -718,8 +756,11 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                    loc_error->message);
       ret = FALSE;
       g_clear_error (&loc_error);
+      udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
+
+  udisks_linux_block_encrypted_unlock (block);
 
   cleartext_path = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
   if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
@@ -857,6 +898,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                      &(data.new_passphrase)))
     data.new_passphrase = g_string_new (new_passphrase);
 
+  udisks_linux_block_encrypted_lock (block);
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                object,
                                                "encrypted-modify",
@@ -874,8 +916,11 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                              udisks_block_get_device (block),
                                              error->message);
       g_clear_error (&error);
+      udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
+
+  udisks_linux_block_encrypted_unlock (block);
 
   udisks_encrypted_complete_change_passphrase (encrypted, invocation);
 
