@@ -117,8 +117,14 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         _ret, luks_uuid = self.run_command('lsblk -d -no UUID /dev/%s' % dm_name)
         self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
 
+        dbus_cleartext = self.get_property(disk, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual(self.path_prefix +'/block_devices/' + obj_name)
+
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertFalse(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+        dbus_cleartext = self.get_property(disk, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual('/')
 
         # check that luks device disappears after lock
         udisks = self.get_object('')
@@ -142,6 +148,9 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
                            dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks)
         self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+        dbus_cleartext = self.get_property(disk, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual(luks)
 
     @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_open_crypttab(self):

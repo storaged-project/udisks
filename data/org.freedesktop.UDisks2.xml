@@ -2040,6 +2040,11 @@
     -->
     <property name="MetadataSize" type="t" access="read"/>
 
+    <!-- CleartextDevice:
+         For an unlocked device, the object path of its cleartext device.
+    -->
+    <property name="CleartextDevice" type="o" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.
