@@ -12,9 +12,11 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         self.manager_obj = self.get_object('/Manager')
 
     def _get_modules(self):
-        project, distro, version = self.distro
-        if ((project, distro) in (('redhat', 'enterprise_linux'), ('centos', 'centos')) and version.startswith("7")):
+        distro, version = self.distro
+        if distro in ('enterprise_linux', 'centos') and version == '7':
             return self.udisks_modules - {'Bcache'}
+        elif distro in ('enterprise_linux', 'centos') and int(version) > 7:
+            return self.udisks_modules - {'Bcache', 'BTRFS'}
         else:
             return self.udisks_modules
 

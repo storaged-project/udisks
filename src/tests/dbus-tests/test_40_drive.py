@@ -46,7 +46,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
             self.udev_settle()
             self.run_command('modprobe -r scsi_debug')
 
-    @udiskstestcase.skip_on(("centos", "enterprise_linux"), reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
+    @udiskstestcase.skip_on(("centos", "enterprise_linux"), "7", reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
     def test_10_eject(self):
         ''' Test of Drive.Eject method '''
 
@@ -60,7 +60,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         drive = self.get_drive(dev)
         drive.Eject(self.no_options)
 
-    @udiskstestcase.skip_on(("centos", "enterprise_linux"), reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
+    @udiskstestcase.skip_on(("centos", "enterprise_linux"), "7", reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
     def test_20_poweroff(self):
         ''' Test of Drive.PowerOff method '''
         for dev in (self.vdevs[0], self.cd_dev):
@@ -73,7 +73,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
                                        'Failed: No usb device'):
                 drive.PowerOff(self.no_options)
 
-    @udiskstestcase.skip_on(("centos", "enterprise_linux"), reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
+    @udiskstestcase.skip_on(("centos", "enterprise_linux"), "7", reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
     def test_30_setconfiguration(self):
         ''' Test of Drive.SetConfiguration method '''
         # set configuration value to some improbable value
@@ -84,7 +84,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         conf_value.assertIsNotNone()
         self.assertEqual(str(conf_value.value['ata-pm-standby']), '286')
 
-    @udiskstestcase.skip_on(("centos", "enterprise_linux"), reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
+    @udiskstestcase.skip_on(("centos", "enterprise_linux"), "7", reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
     def test_40_properties(self):
         ''' Test of Drive properties values '''
 
