@@ -587,7 +587,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                                          wait_for_cleartext_object,
                                                          g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object))),
                                                          g_free,
-                                                         10, /* timeout_seconds */
+                                                         20, /* timeout_seconds */
                                                          &error);
   if (cleartext_object == NULL)
     {
