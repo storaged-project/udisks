@@ -4,3 +4,7 @@
 modules=*
 # Valid options are 'ondemand' or 'onstartup'.
 modules_load_preference=ondemand
+
+[defaults]
+# Valid options are 'luks1' or 'luks2'
+encryption=luks1

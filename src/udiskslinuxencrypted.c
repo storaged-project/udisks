@@ -45,6 +45,7 @@
 #include "udiskscrypttabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udisksspawnedjob.h"
+#include "udiskssimplejob.h"
 
 #define MAX_TCRYPT_KEYFILES 256
 
@@ -852,7 +853,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   const gchar *action_id;
   GError *error = NULL;
   gchar *device = NULL;
-  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, FALSE, FALSE };
+  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, NULL };
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -958,10 +959,156 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_resize (UDisksEncrypted       *encrypted,
+               GDBusMethodInvocation *invocation,
+               guint64                size,
+               GVariant              *options)
+{
+  UDisksObject *object = NULL;
+  UDisksBlock *block;
+  UDisksObject *cleartext_object = NULL;
+  UDisksBlock *cleartext_block;
+  UDisksDaemon *daemon;
+  uid_t caller_uid;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
+  GString *effective_passphrase = NULL;
+
+  object = udisks_daemon_util_dup_object (encrypted, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  block = udisks_object_peek_block (object);
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  /* Fail if the device is not a LUKS device */
+  if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+        g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device %s does not appear to be a LUKS device",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Fail if device is not unlocked */
+  cleartext_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                         wait_for_cleartext_object,
+                                                         g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object))),
+                                                         g_free,
+                                                         0, /* timeout_seconds */
+                                                         NULL); /* error */
+  if (cleartext_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device %s is not unlocked",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+  cleartext_block = udisks_object_peek_block (cleartext_object);
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests resizing a encrypted block device.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to resize the encrypted device $(drive)");
+  if (! udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (! udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to resize the device. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                     object,
+                                                     action_id,
+                                                     options,
+                                                     message,
+                                                     invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "encrypted-resize",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
+    ;
+  else if (udisks_variant_lookup_binary (options, "passphrase", &effective_passphrase))
+    ;
+  else
+    effective_passphrase = NULL;
+
+  /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
+  if (! bd_crypto_luks_resize_luks2_blob (udisks_block_get_device (cleartext_block),
+                                          size / 512,
+                                          effective_passphrase ? (const guint8*) effective_passphrase->str : NULL,
+                                          effective_passphrase ? effective_passphrase->len : 0,
+                                          &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error resizing encrypted device %s: %s",
+                                             udisks_block_get_device (cleartext_block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_encrypted_complete_resize (encrypted, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&cleartext_object);
+  g_clear_object (&object);
+  g_clear_error (&error);
+  udisks_string_wipe_and_free (effective_passphrase);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 encrypted_iface_init (UDisksEncryptedIface *iface)
 {
   iface->handle_unlock              = handle_unlock;
   iface->handle_lock                = handle_lock;
   iface->handle_change_passphrase   = handle_change_passphrase;
+  iface->handle_resize              = handle_resize;
 }

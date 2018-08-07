@@ -422,10 +422,11 @@ class UdisksTestCase(unittest.TestCase):
         return ''.join(chr(x) for x in ay[:-1])
 
     @classmethod
-    def str_to_ay(self, string):
+    def str_to_ay(self, string, terminate=True):
         """Convert a string to a bytearray (terminated with '\0')"""
 
-        string += '\0'
+        if terminate:
+            string += '\0'
 
         return dbus.Array([dbus.Byte(ord(c)) for c in string],
                           signature=dbus.Signature('y'), variant_level=1)

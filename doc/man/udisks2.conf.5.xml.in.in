@@ -50,6 +50,9 @@
     [udisks2]
     modules=*
     modules_load_preference=ondemand
+
+    [defaults]
+    encryption=luks1
     </programlisting>
 
     <para>
@@ -69,6 +72,14 @@
             This key tells udisksd when to load the plugins: either at startup
             or on demand by D-Bus
             <function>org.freedesktop.UDisks2.Manager.EnableModules()</function>.
+          </para>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>encryption = luks1|luks2</option></term>
+          <para>
+            This variable controls which encryption technology will be used
+            by default when creating an encrypted filesystem.
           </para>
         </varlistentry>
       </variablelist>

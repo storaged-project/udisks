@@ -34,6 +34,8 @@ struct _UDisksConfigManager {
 
   UDisksModuleLoadPreference load_preference;
   GList *modules;
+
+  const gchar *encryption;
 };
 
 struct _UDisksConfigManagerClass {
@@ -47,12 +49,16 @@ enum
   PROP_0,
   PROP_UNINSTALLED,
   PROP_PREFERENCE,
+  PROP_ENCRYPTION,
   PROP_N
 };
 
 static const gchar *modules_group_name = PACKAGE_NAME_UDISKS2;
 static const gchar *modules_key = "modules";
 static const gchar *modules_load_preference_key = "modules_load_preference";
+
+static const gchar *defaults_group_name = "defaults";
+static const gchar *defaults_encryption_key = "encryption";
 
 static void
 udisks_config_manager_get_property (GObject    *object,
@@ -72,9 +78,35 @@ udisks_config_manager_get_property (GObject    *object,
       g_value_set_int (value, udisks_config_manager_get_load_preference (manager));
       break;
 
+    case PROP_ENCRYPTION:
+      g_value_set_string (value, udisks_config_manager_get_encryption (manager));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
+    }
+}
+
+static const gchar *
+get_encryption_config (const GValue *value)
+{
+  const gchar *encryption = g_value_get_string (value);
+
+  if (g_strcmp0 (encryption, UDISKS_ENCRYPTION_LUKS1) == 0)
+    {
+      return UDISKS_ENCRYPTION_LUKS1;
+    }
+  else if (g_strcmp0 (encryption, UDISKS_ENCRYPTION_LUKS2) == 0)
+    {
+      return UDISKS_ENCRYPTION_LUKS2;
+    }
+  else
+    {
+      udisks_warning ("Unknown value used for 'encryption': %s"
+                      "; defaulting to '%s'",
+                      encryption, UDISKS_ENCRYPTION_DEFAULT);
+      return UDISKS_ENCRYPTION_DEFAULT;
     }
 }
 
@@ -94,6 +126,10 @@ udisks_config_manager_set_property (GObject      *object,
 
     case PROP_PREFERENCE:
       manager->load_preference = g_value_get_int (value);
+      break;
+
+    case PROP_ENCRYPTION:
+      manager->encryption = get_encryption_config (value);
       break;
 
     default:
@@ -137,6 +173,7 @@ udisks_config_manager_constructed (GObject *object)
   GKeyFile *config_file;
   gchar *conf_filename;
   gchar *load_preference;
+  gchar *encryption;
   gchar *module_i;
   gchar *tmp;
   gchar **modules;
@@ -151,7 +188,9 @@ udisks_config_manager_constructed (GObject *object)
                                     udisks_config_manager_get_uninstalled (manager) ?
                                       BUILD_DIR :
                                       PACKAGE_SYSCONF_DIR,
-                                    PROJECT_SYSCONF_DIR,
+                                    udisks_config_manager_get_uninstalled (manager) ?
+                                      "udisks" :
+                                      PROJECT_SYSCONF_DIR,
                                     PACKAGE_NAME_UDISKS2 ".conf",
                                     NULL);
 
@@ -226,6 +265,42 @@ udisks_config_manager_constructed (GObject *object)
           manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
         }
 
+      /* Read the load preference configuration option. */
+      encryption = g_key_file_get_string (config_file,
+                                          defaults_group_name,
+                                          defaults_encryption_key,
+                                          &error);
+      if (encryption)
+        {
+          /* Convert the key value to lowercase. */
+          tmp = g_ascii_strdown (encryption, -1);
+          /* Check the key value */
+          if (g_strcmp0 (tmp, UDISKS_ENCRYPTION_LUKS1) == 0)
+            {
+              manager->encryption = UDISKS_ENCRYPTION_LUKS1;
+            }
+          else if (g_strcmp0 (tmp, UDISKS_ENCRYPTION_LUKS2) == 0)
+            {
+              manager->encryption = UDISKS_ENCRYPTION_LUKS2;
+            }
+          else
+            {
+              udisks_warning ("Unknown value used for 'encryption': %s"
+                              "; defaulting to '%s'",
+                              encryption, UDISKS_ENCRYPTION_DEFAULT);
+              manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
+            }
+
+          g_free (encryption);
+          g_free (tmp);
+        }
+      else
+        {
+          g_clear_error (&error);
+          udisks_debug ("No 'encryption' found in configuration file");
+          manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
+        }
+
     }
   else
     {
@@ -233,6 +308,7 @@ udisks_config_manager_constructed (GObject *object)
       udisks_warning ("Can't load configuration file %s", conf_filename);
       manager->modules = NULL; /* NULL == '*' */
       manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+      manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
     }
 
 
@@ -310,6 +386,22 @@ udisks_config_manager_class_init (UDisksConfigManagerClass *klass)
                                                      G_PARAM_STATIC_STRINGS |
                                                      G_PARAM_CONSTRUCT_ONLY));
 
+  /**
+   * UDisksConfigManager:encryption:
+   *
+   * Default encryption technolog.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_ENCRYPTION,
+                                   g_param_spec_string ("encryption",
+                                                        "Default encryption technology",
+                                                        "Encryption technology used when creating encrypted filesystems",
+                                                        UDISKS_ENCRYPTION_DEFAULT,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_STRINGS |
+                                                        G_PARAM_CONSTRUCT_ONLY));
+
 }
 
 static void
@@ -362,4 +454,12 @@ udisks_config_manager_get_load_preference (UDisksConfigManager *manager)
   g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager),
                         UDISKS_MODULE_LOAD_ONDEMAND);
   return manager->load_preference;
+}
+
+const gchar *
+udisks_config_manager_get_encryption (UDisksConfigManager *manager)
+{
+  g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager),
+                        UDISKS_ENCRYPTION_DEFAULT);
+  return manager->encryption;
 }

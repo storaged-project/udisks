@@ -54,6 +54,9 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         dbus_type = self.get_property(disk, '.Block', 'IdType')
         dbus_type.assertEqual('crypto_LUKS')
 
+        dbus_version = self.get_property(disk, '.Block', 'IdVersion')
+        dbus_version.assertEqual(self.luks_version)
+
         device = self.get_property(disk, '.Block', 'Device')
         device.assertEqual(self.str_to_ay(self.vdevs[0]))  # device is an array of byte
 
@@ -249,9 +252,38 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
                            dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks)
 
+    def get_block_size(self, name):
+        _ret, size_string = self.run_command('lsblk -n -b -o SIZE /dev/%s' % name)
+        self.assertEqual(_ret, 0)
+        return int(size_string)
+
+    def test_resize(self):
+        device = self.get_device(self.vdevs[0])
+        self._create_luks(device, 'test')
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        _ret, clear_dev = self.run_command('ls /sys/block/%s/holders/' % os.path.basename(self.vdevs[0]))
+        self.assertEqual(_ret, 0)
+        clear_size = self.get_block_size(clear_dev)
+
+        device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size2 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size2, 100*1024*1024)
+
+        device.Resize(dbus.UInt64(clear_size), self.no_options,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size3 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size3, clear_size)
+
 
 class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
     '''This is a LUKS1 encrypted device test suite'''
+
+    luks_version = '1'
 
     def _create_luks(self, device, passphrase):
         device.Format('xfs', {'encrypt.passphrase': passphrase},
@@ -271,24 +303,11 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
 class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     '''This is a LUKS2 encrypted device test suite'''
 
+    luks_version = '2'
+
     def _create_luks(self, device, passphrase):
-        # we currently don't support creating luks2 format using udisks
-        device_path = '/dev/' + device.object_path.split('/')[-1]
-        ret, out = self.run_command('echo -n "%s" | cryptsetup luksFormat '\
-                                    '--type=luks2 %s -' % (passphrase, device_path))
-        if ret != 0:
-            raise RuntimeError('Failed to create luks2 format on %s:\n%s' % (device_path, out))
-
-        # udisks opens the device after creating it so we have to do the same
-        ret, out = self.run_command('echo -n "%s" | cryptsetup luksOpen '\
-                                    '%s luks-`cryptsetup luksUUID %s` -' % (passphrase, device_path, device_path))
-        if ret != 0:
-            raise RuntimeError('Failed to open luks2 device %s:\n%s' % (device_path, out))
-
-        # and create xfs filesystem on it too
-        ret, out = self.run_command('mkfs.xfs /dev/mapper/luks-`cryptsetup luksUUID %s`' % device_path)
-        if ret != 0:
-            raise RuntimeError('Failed to create xfs filesystem on device %s:\n%s' % (device_path, out))
+        device.Format('xfs', {'encrypt.passphrase': passphrase, 'encrypt.type': 'luks2'},
+                      dbus_interface=self.iface_prefix + '.Block')
 
     def _get_metadata_size_from_dump(self, disk):
         ret, out = self.run_command("cryptsetup luksDump %s" % disk)
@@ -307,8 +326,49 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         super(UdisksEncryptedTestLUKS2, self).setUp()
 
-    def test_create(self):
-        self.skipTest('Creating of LUKS2 is not supported yet.')
+    def test_resize(self):
+        passwd = 'test'
+
+        device = self.get_device(self.vdevs[0])
+        self._create_luks(device, passwd)
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        _ret, clear_dev = self.run_command('ls /sys/block/%s/holders/' % os.path.basename(self.vdevs[0]))
+        self.assertEqual(_ret, 0)
+        clear_size = self.get_block_size(clear_dev)
+
+        # no passphrase for LUKS 2 = fail
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient persmissions to resize device. *'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
+                          dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # wrong passphrase
+        d = dbus.Dictionary(signature='sv')
+        d['passphrase'] = 'wrongpassphrase'
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Failed to activate device: Operation not permitted'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            device.Resize(dbus.UInt64(100*1024*1024), d,
+                          dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # right passphrase
+        d = dbus.Dictionary(signature='sv')
+        d['passphrase'] = passwd
+        device.Resize(dbus.UInt64(100*1024*1024), d,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size2 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size2, 100*1024*1024)
+
+        # resize back to the original size (using binary passphrase)
+        d = dbus.Dictionary(signature='sv')
+        d['keyfile_contents'] = self.str_to_ay(passwd, False)
+        device.Resize(dbus.UInt64(clear_size), d,
+                      dbus_interface=self.iface_prefix + '.Encrypted')
+
+        clear_size3 = self.get_block_size(clear_dev)
+        self.assertEqual(clear_size3, clear_size)
 
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest

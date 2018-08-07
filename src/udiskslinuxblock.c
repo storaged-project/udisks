@@ -47,6 +47,7 @@
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
+#include "udisksconfigmanager.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
 #include "udisksfstabmonitor.h"
@@ -2862,6 +2863,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
   UDisksState *state;
+  UDisksConfigManager *config_manager = NULL;
   const gchar *action_id;
   const gchar *message;
   const FSInfo *fs_info;
@@ -2874,6 +2876,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gid_t caller_gid;
   gboolean take_ownership = FALSE;
   GString *encrypt_passphrase = NULL;
+  gchar *encrypt_type = NULL;
   gchar *erase_type = NULL;
   gchar *mapped_name = NULL;
   const gchar *label = NULL;
@@ -2898,11 +2901,13 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
+  config_manager = udisks_daemon_get_config_manager (daemon);
   command = NULL;
   error_message = NULL;
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   udisks_variant_lookup_binary (options, "encrypt.passphrase", &encrypt_passphrase);
+  g_variant_lookup (options, "encrypt.type", "s", &encrypt_type);
   g_variant_lookup (options, "erase", "s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
@@ -3119,7 +3124,13 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       data.device = device_name;
       data.passphrase = encrypt_passphrase;
 
+      if (encrypt_type != NULL)
+          data.type = encrypt_type;
+      else
+          data.type = g_strdup (udisks_config_manager_get_encryption (config_manager));
+
       udisks_linux_block_encrypted_lock (block);
+
       /* Create it */
       if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                    object,
@@ -3386,6 +3397,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     g_variant_unref (config_items);
   g_free (erase_type);
   udisks_string_wipe_and_free (encrypt_passphrase);
+  g_free (encrypt_type);
   g_clear_object (&cleartext_object);
   g_clear_object (&cleartext_block);
   g_clear_object (&udev_cleartext_device);
