@@ -82,31 +82,31 @@
     </method>
 
     <!--
-        ActivateVolume:
+        ActivateVolumeByName:
         @name: Name of an existing VDO volume to activate.
         @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Activates existing VDO volume. Activated volume can be started using the
-        org.freedesktop.UDisks2.Manager.VDO.StartVolume() method call.
+        org.freedesktop.UDisks2.Manager.VDO.StartVolumeByName() method call.
     -->
-    <method name="ActivateVolume">
+    <method name="ActivateVolumeByName">
       <arg name="name" type="s" direction="in" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
 
     <!--
-        StartVolume:
+        StartVolumeByName:
         @name: The VDO volume name.
         @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
         @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
         @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
 
         Starts a stopped, activated VDO volume and associated services. Deactivated
-        volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume()
+        volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolumeByName()
         method call prior to starting. Since a volume index rebuild may be required
         a job object will be exposed for this operation.
     -->
-    <method name="StartVolume">
+    <method name="StartVolumeByName">
       <arg name="name" type="s" direction="in" />
       <arg name="force_rebuild" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
@@ -188,7 +188,7 @@
 
         Deactivates the VDO volume. Deactivating a currently running volume does
         not stop it.  Once a volume is deactivated it needs to be activated again
-        using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolume() method call
+        using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolumeByName() method call
         on the manager object.
     -->
     <method name="Deactivate">
@@ -257,7 +257,7 @@
         @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Stops a running VDO volume and associated services. Once a volume is stopped
-        it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolume()
+        it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolumeByName()
         method call on the manager object.
     -->
     <method name="Stop">

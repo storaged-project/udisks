@@ -338,10 +338,10 @@ handle_create_volume (UDisksManagerVDO      *manager,
 }
 
 static gboolean
-handle_activate_volume (UDisksManagerVDO      *manager,
-                        GDBusMethodInvocation *invocation,
-                        const gchar           *arg_name,
-                        GVariant              *arg_options)
+handle_activate_volume_by_name (UDisksManagerVDO      *manager,
+                                GDBusMethodInvocation *invocation,
+                                const gchar           *arg_name,
+                                GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
   GError *error = NULL;
@@ -362,18 +362,18 @@ handle_activate_volume (UDisksManagerVDO      *manager,
     }
 
   /* Complete the DBus call */
-  udisks_manager_vdo_complete_activate_volume (manager, invocation);
+  udisks_manager_vdo_complete_activate_volume_by_name (manager, invocation);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
 }
 
 static gboolean
-handle_start_volume (UDisksManagerVDO      *manager,
-                     GDBusMethodInvocation *invocation,
-                     const gchar           *arg_name,
-                     gboolean               arg_force_rebuild,
-                     GVariant              *arg_options)
+handle_start_volume_by_name (UDisksManagerVDO      *manager,
+                             GDBusMethodInvocation *invocation,
+                             const gchar           *arg_name,
+                             gboolean               arg_force_rebuild,
+                             GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
   UDisksObject *object;
@@ -433,8 +433,8 @@ handle_start_volume (UDisksManagerVDO      *manager,
 
   /* Complete the DBus call */
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
-  udisks_manager_vdo_complete_start_volume (manager, invocation,
-                                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  udisks_manager_vdo_complete_start_volume_by_name (manager, invocation,
+                                                    g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
   g_object_unref (object);
 
   /* Indicate that we handled the method invocation */
@@ -445,6 +445,6 @@ static void
 udisks_linux_manager_vdo_iface_init (UDisksManagerVDOIface *iface)
 {
   iface->handle_create_volume = handle_create_volume;
-  iface->handle_activate_volume = handle_activate_volume;
-  iface->handle_start_volume = handle_start_volume;
+  iface->handle_activate_volume_by_name = handle_activate_volume_by_name;
+  iface->handle_start_volume_by_name = handle_start_volume_by_name;
 }

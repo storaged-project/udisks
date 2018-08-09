@@ -181,22 +181,22 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         # attempt to start non-existing volume
         msg = 'VDO volume .* not found'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            vdo_path = manager.StartVolume('nonsense123345', False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
+            vdo_path = manager.StartVolumeByName('nonsense123345', False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # attempt to start deactivated volume
         # XXX - bug in vdo: returns 0 even when it cannot be started, catching the consequences here
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error waiting .*: Timed out waiting for object'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            vdo_path = manager.StartVolume(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
+            vdo_path = manager.StartVolumeByName(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # attempt to activate non-existing volume
         msg = 'VDO volume .* not found'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            vdo_path = manager.ActivateVolume('nonsense123999', self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
+            vdo_path = manager.ActivateVolumeByName('nonsense123999', self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # activate the working volume and start it again
-        manager.ActivateVolume(vdo_name, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
-        vdo_path = manager.StartVolume(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
+        manager.ActivateVolumeByName(vdo_name, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
+        vdo_path = manager.StartVolumeByName(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # check that the volume exists
         self.assertTrue(os.path.exists('/dev/mapper/%s' % vdo_name))
