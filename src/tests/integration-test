@@ -506,19 +506,23 @@ class UDisksTestCase(unittest.TestCase):
         time.sleep(0.5)
         cls.sync()
 
+    def _check_with_retry(self, fn, value, cmp_fn):
+        retries = 10
+        while retries > 0:
+            if cmp_fn(fn(), value):
+                return True
+            retries -= 1
+            time.sleep(0.5)
+            self.sync()
+        return False
+
     def assertEventually(self, fn, value):
         """Check that an function is eventually equal to value.
 
         This is mostly meant for checking object properties, as these are
         updated asynchronously. This retries up to 10 times.
         """
-        retries = 10
-        while retries > 0:
-            if fn() == value:
-                break
-            retries -= 1
-            time.sleep(0.1)
-            self.sync()
+        self._check_with_retry(fn, value, lambda x, y: x == y)
 
         if isinstance(value, set):
             self.assertEqual(set(fn()), value)
@@ -529,6 +533,13 @@ class UDisksTestCase(unittest.TestCase):
         """Check that an object's property is eventually equal to value"""
 
         self.assertEventually(lambda: obj.get_property(name), value)
+
+    def assertNotProperty(self, obj, name, value):
+        """Check that an object's property is eventually not equal to value"""
+
+        if not self._check_with_retry(lambda: obj.get_property(name), value, lambda x, y: x != y):
+            # we know it is equal, the assert here is just to raise the AssertionError
+            self.assertNotEqual(obj.get_property(name), value)
 
     @classmethod
     def write_stderr(cls, msg):
@@ -1739,7 +1750,11 @@ def remove_lio():
     for disk_file in glob("/var/tmp/udisks_test_disk*"):
         os.unlink(disk_file)
 
+def is_s390():
+    return os.uname()[4].startswith('s390')
 
+
+@unittest.skipIf(is_s390(), "mdadm is broken on s390x")
 class MDRaid(UDisksTestCase):
     """
     Test some of the code we are refactoring.
@@ -1770,6 +1785,7 @@ class MDRaid(UDisksTestCase):
         block_path = "/org/freedesktop/UDisks2/block_devices/%s" % os.path.basename(self.md_legs[0])
         bo = self.client.get_object(block_path)
         block_interface = bo.get_interface('org.freedesktop.UDisks2.Block')
+        self.assertNotProperty(block_interface, 'mdraid-member', '/')
         mdraid_path = block_interface.get_property('mdraid-member')
         mdraid_object = self.client.get_object(mdraid_path)
 
