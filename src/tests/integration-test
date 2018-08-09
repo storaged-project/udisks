@@ -1750,7 +1750,11 @@ def remove_lio():
     for disk_file in glob("/var/tmp/udisks_test_disk*"):
         os.unlink(disk_file)
 
+def is_s390():
+    return os.uname()[4].startswith('s390')
 
+
+@unittest.skipIf(is_s390(), "mdadm is broken on s390x")
 class MDRaid(UDisksTestCase):
     """
     Test some of the code we are refactoring.
