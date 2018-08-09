@@ -371,7 +371,12 @@ handle_change_write_policy (UDisksBlockVDO        *block_vdo,
   dm_name = udisks_block_vdo_get_name (block_vdo);
   if (! bd_vdo_change_write_policy (dm_name, write_policy, NULL, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error changing write policy: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -379,7 +384,12 @@ handle_change_write_policy (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after changing write policy: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_block_vdo_complete_change_write_policy (block_vdo, invocation);
@@ -406,7 +416,12 @@ handle_deactivate (UDisksBlockVDO        *block_vdo,
   if (! bd_vdo_deactivate (dm_name, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error deactivating volume: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -415,7 +430,12 @@ handle_deactivate (UDisksBlockVDO        *block_vdo,
   if (! do_refresh (block_vdo, dm_name, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after deactivating the volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
@@ -448,7 +468,12 @@ handle_enable_compression (UDisksBlockVDO        *block_vdo,
           bd_vdo_disable_compression (dm_name, NULL, &error);
   if (! ret)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error changing compression state: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -456,7 +481,12 @@ handle_enable_compression (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after changing compression state: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_block_vdo_complete_enable_compression (block_vdo, invocation);
@@ -488,7 +518,12 @@ handle_enable_deduplication (UDisksBlockVDO        *block_vdo,
           bd_vdo_disable_deduplication (dm_name, NULL, &error);
   if (! ret)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error changing deduplication: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -496,7 +531,12 @@ handle_enable_deduplication (UDisksBlockVDO        *block_vdo,
   /* Perform refresh */
   if (! do_refresh (block_vdo, dm_name, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after changing deduplication: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_block_vdo_complete_enable_deduplication (block_vdo, invocation);
@@ -524,7 +564,12 @@ handle_grow_logical (UDisksBlockVDO        *block_vdo,
   if (! bd_vdo_grow_logical (dm_name, arg_size, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error growing logical size of the volume: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -533,7 +578,12 @@ handle_grow_logical (UDisksBlockVDO        *block_vdo,
   if (! do_refresh (block_vdo, dm_name, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after growing logical size of the volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
@@ -561,7 +611,12 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
   if (! bd_vdo_grow_physical (dm_name, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error growing physical size of the volume: %s",
+                                             error->message);
+      g_error_free (error);
       /* Perform refresh anyway, without error checking */
       do_refresh (block_vdo, dm_name, NULL);
       return TRUE;
@@ -570,7 +625,12 @@ handle_grow_physical (UDisksBlockVDO        *block_vdo,
   if (! do_refresh (block_vdo, dm_name, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting info after growing physical size of the volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
@@ -599,7 +659,12 @@ handle_remove (UDisksBlockVDO        *block_vdo,
   if (! bd_vdo_remove (dm_name, arg_force, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error removing volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
@@ -629,7 +694,12 @@ handle_stop (UDisksBlockVDO        *block_vdo,
   if (! bd_vdo_stop (dm_name, arg_force, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error stopping volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
@@ -660,7 +730,12 @@ handle_get_statistics (UDisksBlockVDO        *block_vdo,
   stats = bd_vdo_get_stats_full (dm_name, &error);
   if (stats == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error retrieving volume statistics: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ss}"));

@@ -251,7 +251,12 @@ handle_create_volume (UDisksManagerVDO      *manager,
   write_policy = bd_vdo_get_write_policy_from_str (arg_write_policy, &error);
   if (error != NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error determining VDO write policy: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
 
@@ -301,7 +306,12 @@ handle_create_volume (UDisksManagerVDO      *manager,
   if (! bd_vdo_create (arg_name, dev, arg_logical_size, arg_index_memory, arg_compression, arg_deduplication, write_policy, NULL, &error))
     {
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating new VDO volume: %s",
+                                             error->message);
+      g_error_free (error);
       g_object_unref (block_object);
       g_free (dev);
       return TRUE;
@@ -357,7 +367,12 @@ handle_activate_volume_by_name (UDisksManagerVDO      *manager,
 
   if (! bd_vdo_activate (arg_name, NULL, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error activating VDO volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
 
@@ -410,7 +425,12 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
 
   if (! bd_vdo_start (arg_name, arg_force_rebuild, NULL, &error))
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error starting volume: %s",
+                                             error->message);
+      g_error_free (error);
       return TRUE;
     }
 
