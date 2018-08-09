@@ -117,6 +117,12 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         prop_index_memory = self.get_property(vdo, '.Block.VDO', 'IndexMemory')
         prop_index_memory.assertGreater(0)
 
+        # test getting statistics
+        stats = vdo.GetStatistics(self.no_options, dbus_interface=self.iface_prefix + '.Block.VDO')
+        self.assertIsNotNone(stats)
+        self.assertGreater(len(stats), 0)
+        self.assertIn("block_size", stats)
+
         # destroy the volume
         vdo.Remove(False, self.no_options, dbus_interface=self.iface_prefix + '.Block.VDO')
 
