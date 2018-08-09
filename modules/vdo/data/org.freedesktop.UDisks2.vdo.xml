@@ -270,7 +270,7 @@
         @size: The logical VDO volume size in bytes. The maximum size supported is 4P.
         @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-        Grows the logical size of a VDO volume. The volume must be running.
+        Grows the logical size of a VDO volume to a size specified by the @size argument. The volume must be running.
     -->
     <method name="GrowLogical">
       <arg name="size" direction="in" type="t" />
@@ -281,7 +281,7 @@
         GrowPhysical:
         @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-        Grows the physical size of a VDO volume. The volume must be running.
+        Grows the physical size of a VDO volume to the size of underlying block device. The volume must be running.
     -->
     <method name="GrowPhysical">
       <arg name="options" direction="in" type="a{sv}" />
