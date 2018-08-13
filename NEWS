@@ -1,17 +1,70 @@
 ---------------------------
-udisks 2.7.8 (unreleased)
+udisks 2.8.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.7.7:
-(TODO: make shortlog)
+
+Harry Mallon (1):
+      Add Apple APFS fstype
+
+Jan Pokorny (1):
+      New property for LUKS metadata size (fixed)
+
+Marius Vollmer (1):
+      core: Add Encrypted.Resize method
+
+Tomas Bzatek (21):
+      vdo: Introduce the VDO plugin
+      vdo: Implement the org.freedesktop.UDisks2.Block.VDO.GrowPhysical() method
+      vdo: Documentation fixes
+      vdo: Move the Activate() method to the Manager object
+      vdo: Drop redundant @since annotations from the docs
+      vdo: Expose job objects for long running operations
+      vdo: Clarify limitations and API design decisions
+      vdo: Documentation indentation fixes
+      dbus-tests: Set proper path to in-tree udisks tools
+      vdo: Add tests
+      vdo: Docs annotation fixes
+      vdo: Implement org.freedesktop.UDisks2.Block.VDO.GetStatistics()
+      vdo: Fix unchecked struct free
+      vdo: Clarify sizes applicable to the grow methods
+      vdo: Rename {Start,Activate}Volume -> {Start,Activate}VolumeByName
+      vdo: Skip tests when the vdo command is not available
+      vdo: Properly prefix errors returned by libblockdev calls
+      vdo: Add tests for org.freedesktop.UDisks2.Block.VDO.GetStatistics()
+      lsm: Relicense to GPLv2+
+      vdo: Fix POTFILES
+      Require libblockdev >= 2.19 for the VDO support
+
+Vojtech Trefny (17):
+      Wait for LV object to disappear after Deactivate and Delete
+      Check more properties in LVM tests
+      Post-release version bump to 2.7.8
+      udiskstestcase.py: Use 'monotic' from 'time' on python >= 3.3
+      Prevent running multiple cryptsetup calls on one device
+      Allow changing label on udf filesystems
+      Test ZRAM stats based on kernel version, not distribution
+      Skip drive tests only on CentOS/RHEL 7
+      Add a helper functions to get distro name and version in tests
+      Do not check if btrfs module was loaded on newer CentOS/RHEL
+      Add default encryption "technology" to udisks2.conf
+      Fix configuration directory when running from source
+      Add support for creating LUKS 2 encrypted devices
+      Allow resizing LUKS 2 devices
+      Add a property with the cleartext device path for unlocked LUKS
+      integration-test: Wait for the 'mdraid-member' property update
+      integration-test: Skip MDRAID tests on s390
+
+segfault (1):
+      Increase timeout for waiting for cleartext object after unlocking
 
 Thanks to all our contributors.
 
-Vojtech Trefny
-(TODO: date --rfc-3339='date')
+Tomas Bzatek
+2018-08-13
 
 ---------------------------
 udisks 2.7.7

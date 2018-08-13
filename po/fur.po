@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-05 12:26+0100\n"
+"POT-Creation-Date: 2018-08-10 13:08+0200\n"
 "PO-Revision-Date: 2017-12-24 12:44+0000\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fur\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.4.5\n"
+"X-Generator: Zanata 4.6.0\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -486,46 +486,46 @@ msgstr ""
 msgid "Authentication is required to manage LVM"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:416
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:423
 msgid "Authentication is required to delete a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:516
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:535
 msgid "Authentication is required to rename a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:577
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:596
 msgid "Authentication is required to resize a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:670
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:689
 msgid "Authentication is required to activate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:737
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:756
 msgid "Authentication is required to deactivate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:789
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:822
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:846
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:908
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:879
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:941
 msgid "LVMCache not enabled at compile time."
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:860
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:893
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:882
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:944
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:915
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:977
 #, c-format
 msgid "Error converting volume: %s"
 msgstr ""
 
-#: ../modules/lvm2/udiskslinuxlogicalvolume.c:922
+#: ../modules/lvm2/udiskslinuxlogicalvolume.c:955
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 
@@ -601,41 +601,41 @@ msgstr ""
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #. 
-#: ../src/udiskslinuxblock.c:1168
+#: ../src/udiskslinuxblock.c:1295
 msgid "Authentication is required to read system-level secrets"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1838
+#: ../src/udiskslinuxblock.c:1965
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:1856
+#: ../src/udiskslinuxblock.c:1983
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1915
+#: ../src/udiskslinuxblock.c:2042
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:1933
+#: ../src/udiskslinuxblock.c:2060
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:2005
+#: ../src/udiskslinuxblock.c:2132
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:2023
+#: ../src/udiskslinuxblock.c:2150
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr ""
 
@@ -652,7 +652,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:2804 ../src/udiskslinuxdriveata.c:2247
+#: ../src/udiskslinuxblock.c:2973 ../src/udiskslinuxdriveata.c:2252
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 
@@ -663,16 +663,12 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:2816
+#: ../src/udiskslinuxblock.c:2985
 msgid "Authentication is required to format $(drive)"
 msgstr ""
 
-#: ../src/udiskslinuxblock.c:2858 ../src/udiskslinuxmdraid.c:1553
+#: ../src/udiskslinuxblock.c:3027 ../src/udiskslinuxmdraid.c:1553
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
-
-#: ../src/udiskslinuxblock.c:2862 ../src/udiskslinuxdriveata.c:2259
-msgid "Formatting Device"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when creating a
@@ -681,7 +677,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3338
+#: ../src/udiskslinuxblock.c:3518
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
 
@@ -691,7 +687,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3400
+#: ../src/udiskslinuxblock.c:3580
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
 
@@ -701,7 +697,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3465
+#: ../src/udiskslinuxblock.c:3645
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 
@@ -711,7 +707,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3539
+#: ../src/udiskslinuxblock.c:3719
 msgid "Authentication is required to open $(drive)."
 msgstr ""
 
@@ -721,7 +717,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxblock.c:3592
+#: ../src/udiskslinuxblock.c:3772
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 
@@ -846,7 +842,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxencrypted.c:383 ../src/udiskslinuxencrypted.c:758
+#: ../src/udiskslinuxencrypted.c:483 ../src/udiskslinuxencrypted.c:910
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 
@@ -857,10 +853,20 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxencrypted.c:602
+#: ../src/udiskslinuxencrypted.c:746
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
+msgstr ""
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests resizing a encrypted block device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxencrypted.c:1036
+msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
@@ -869,7 +875,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1322 ../src/udiskslinuxfilesystem.c:1500
+#: ../src/udiskslinuxfilesystem.c:1383 ../src/udiskslinuxfilesystem.c:1561
 msgid "Authentication is required to mount $(drive)"
 msgstr ""
 
@@ -883,7 +889,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/udiskslinuxfilesystem.c:1407
+#: ../src/udiskslinuxfilesystem.c:1468
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -899,7 +905,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/udiskslinuxfilesystem.c:1742
+#: ../src/udiskslinuxfilesystem.c:1803
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -912,7 +918,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1790
+#: ../src/udiskslinuxfilesystem.c:1851
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 
@@ -922,7 +928,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:1974
+#: ../src/udiskslinuxfilesystem.c:2035
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 
@@ -932,7 +938,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2156
+#: ../src/udiskslinuxfilesystem.c:2217
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 
@@ -942,7 +948,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2314
+#: ../src/udiskslinuxfilesystem.c:2376
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 
@@ -952,7 +958,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2473
+#: ../src/udiskslinuxfilesystem.c:2536
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 
@@ -962,7 +968,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxfilesystem.c:2609
+#: ../src/udiskslinuxfilesystem.c:2673
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1068,7 +1074,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/udiskslinuxpartitiontable.c:317
+#: ../src/udiskslinuxpartitiontable.c:316
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr ""
 
@@ -1104,7 +1110,7 @@ msgstr ""
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
-#: ../udisks/udisksclient.c:1066
+#: ../udisks/udisksclient.c:1058
 msgctxt "dos-part-flag"
 msgid "Bootable"
 msgstr ""
@@ -1112,7 +1118,7 @@ msgstr ""
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. 
-#: ../udisks/udisksclient.c:1076
+#: ../udisks/udisksclient.c:1068
 msgctxt "gpt-part-flag"
 msgid "System"
 msgstr ""
@@ -1121,7 +1127,7 @@ msgstr ""
 #. partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. 
-#: ../udisks/udisksclient.c:1083
+#: ../udisks/udisksclient.c:1075
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
 msgstr ""
@@ -1129,7 +1135,7 @@ msgstr ""
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. 
-#: ../udisks/udisksclient.c:1090
+#: ../udisks/udisksclient.c:1082
 msgctxt "gpt-part-flag"
 msgid "Read-only"
 msgstr ""
@@ -1137,7 +1143,7 @@ msgstr ""
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. 
-#: ../udisks/udisksclient.c:1097
+#: ../udisks/udisksclient.c:1089
 msgctxt "gpt-part-flag"
 msgid "Hidden"
 msgstr ""
@@ -1145,77 +1151,77 @@ msgstr ""
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. 
-#: ../udisks/udisksclient.c:1104
+#: ../udisks/udisksclient.c:1096
 msgctxt "gpt-part-flag"
 msgid "No Automount"
 msgstr ""
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
-#: ../udisks/udisksclient.c:1117
+#: ../udisks/udisksclient.c:1109
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
 msgstr ""
 
 #. Translators: The Partition info when unknown
-#: ../udisks/udisksclient.c:1128
+#: ../udisks/udisksclient.c:1120
 msgctxt "partition-info"
 msgid "Unknown"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1605
+#: ../udisks/udisksclient.c:1592
 msgctxt "byte-size-pow2"
 msgid "KiB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1611
+#: ../udisks/udisksclient.c:1598
 msgctxt "byte-size-pow2"
 msgid "MiB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1617
+#: ../udisks/udisksclient.c:1604
 msgctxt "byte-size-pow2"
 msgid "GiB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1623
+#: ../udisks/udisksclient.c:1610
 msgctxt "byte-size-pow2"
 msgid "TiB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1648
+#: ../udisks/udisksclient.c:1635
 msgctxt "byte-size-pow10"
 msgid "KB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1654
+#: ../udisks/udisksclient.c:1641
 msgctxt "byte-size-pow10"
 msgid "MB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1660
+#: ../udisks/udisksclient.c:1647
 msgctxt "byte-size-pow10"
 msgid "GB"
 msgstr ""
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: ../udisks/udisksclient.c:1666
+#: ../udisks/udisksclient.c:1653
 msgctxt "byte-size-pow10"
 msgid "TB"
 msgstr ""
@@ -1223,7 +1229,7 @@ msgstr ""
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
 #. 
-#: ../udisks/udisksclient.c:1709
+#: ../udisks/udisksclient.c:1696
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
@@ -1232,62 +1238,62 @@ msgstr ""
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
 #. 
-#: ../udisks/udisksclient.c:1719
+#: ../udisks/udisksclient.c:1706
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1780
+#: ../udisks/udisksclient.c:1767
 msgctxt "media"
 msgid "CompactFlash"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1785
+#: ../udisks/udisksclient.c:1772
 msgctxt "media"
 msgid "MemoryStick"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1790
+#: ../udisks/udisksclient.c:1777
 msgctxt "media"
 msgid "SmartMedia"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1795
+#: ../udisks/udisksclient.c:1782
 msgctxt "media"
 msgid "SecureDigital"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1800
+#: ../udisks/udisksclient.c:1787
 msgctxt "media"
 msgid "SD High Capacity"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1805
+#: ../udisks/udisksclient.c:1792
 msgctxt "media"
 msgid "Floppy"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1810
+#: ../udisks/udisksclient.c:1797
 msgctxt "media"
 msgid "Zip"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1815
+#: ../udisks/udisksclient.c:1802
 msgctxt "media"
 msgid "Jaz"
 msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
-#: ../udisks/udisksclient.c:1820
+#: ../udisks/udisksclient.c:1807
 msgctxt "media"
 msgid "Flash"
 msgstr ""
@@ -1296,7 +1302,7 @@ msgstr ""
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #. 
-#: ../udisks/udisksclient.c:1854
+#: ../udisks/udisksclient.c:1841
 msgctxt "disc-type"
 msgid "CD"
 msgstr ""
@@ -1305,7 +1311,7 @@ msgstr ""
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #. 
-#: ../udisks/udisksclient.c:1863
+#: ../udisks/udisksclient.c:1850
 msgctxt "disc-type"
 msgid "DVD"
 msgstr ""
@@ -1314,7 +1320,7 @@ msgstr ""
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #. 
-#: ../udisks/udisksclient.c:1872
+#: ../udisks/udisksclient.c:1859
 msgctxt "disc-type"
 msgid "Blu-Ray"
 msgstr ""
@@ -1323,297 +1329,322 @@ msgstr ""
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #. 
-#: ../udisks/udisksclient.c:1881
+#: ../udisks/udisksclient.c:1868
 msgctxt "disc-type"
 msgid "HDDVD"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1902
+#: ../udisks/udisksclient.c:1889
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1902 ../udisks/udisksclient.c:1903
-#: ../udisks/udisksclient.c:1904 ../udisks/udisksclient.c:1905
-#: ../udisks/udisksclient.c:1906
+#: ../udisks/udisksclient.c:1889 ../udisks/udisksclient.c:1890
+#: ../udisks/udisksclient.c:1891 ../udisks/udisksclient.c:1892
+#: ../udisks/udisksclient.c:1893
 msgctxt "fs-type"
 msgid "FAT"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1903
+#: ../udisks/udisksclient.c:1890
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1904
+#: ../udisks/udisksclient.c:1891
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1905
+#: ../udisks/udisksclient.c:1892
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1907
+#: ../udisks/udisksclient.c:1894
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1907 ../udisks/udisksclient.c:1908
+#: ../udisks/udisksclient.c:1894 ../udisks/udisksclient.c:1895
 msgctxt "fs-type"
 msgid "NTFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1909
+#: ../udisks/udisksclient.c:1896
 msgctxt "fs-type"
 msgid "HFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1910
+#: ../udisks/udisksclient.c:1897
 msgctxt "fs-type"
 msgid "HFS+"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1911
+#: ../udisks/udisksclient.c:1898
+msgctxt "fs-type"
+msgid "APFS"
+msgstr ""
+
+#: ../udisks/udisksclient.c:1899
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1911 ../udisks/udisksclient.c:1912
+#: ../udisks/udisksclient.c:1899 ../udisks/udisksclient.c:1900
 msgctxt "fs-type"
 msgid "Ext2"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1913
+#: ../udisks/udisksclient.c:1901
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1913 ../udisks/udisksclient.c:1914
+#: ../udisks/udisksclient.c:1901 ../udisks/udisksclient.c:1902
 msgctxt "fs-type"
 msgid "Ext3"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1915
+#: ../udisks/udisksclient.c:1903
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1915 ../udisks/udisksclient.c:1916
+#: ../udisks/udisksclient.c:1903 ../udisks/udisksclient.c:1904
 msgctxt "fs-type"
 msgid "Ext4"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1917
+#: ../udisks/udisksclient.c:1905
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1917 ../udisks/udisksclient.c:1918
+#: ../udisks/udisksclient.c:1905 ../udisks/udisksclient.c:1906
 msgctxt "fs-type"
 msgid "JDB"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1918
+#: ../udisks/udisksclient.c:1906
 msgctxt "fs-type"
 msgid "Journal for Ext"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1919
+#: ../udisks/udisksclient.c:1907
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
+#: ../udisks/udisksclient.c:1907 ../udisks/udisksclient.c:1908
 msgctxt "fs-type"
 msgid "XFS"
 msgstr ""
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
-#: ../udisks/udisksclient.c:1922
+#: ../udisks/udisksclient.c:1910
 msgctxt "fs-type"
 msgid "Btrfs"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1923
+#: ../udisks/udisksclient.c:1911
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1923 ../udisks/udisksclient.c:1924
+#: ../udisks/udisksclient.c:1911 ../udisks/udisksclient.c:1912
 msgctxt "fs-type"
 msgid "ISO9660"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1924
+#: ../udisks/udisksclient.c:1912
 msgctxt "fs-type"
 msgid "ISO 9660"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1925
+#: ../udisks/udisksclient.c:1913
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1925 ../udisks/udisksclient.c:1926
+#: ../udisks/udisksclient.c:1913 ../udisks/udisksclient.c:1914
 msgctxt "fs-type"
 msgid "UDF"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1927 ../udisks/udisksclient.c:1928
+#: ../udisks/udisksclient.c:1915 ../udisks/udisksclient.c:1916
 msgctxt "fs-type"
 msgid "exFAT"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1928
+#: ../udisks/udisksclient.c:1916
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1929
+#: ../udisks/udisksclient.c:1917
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
+#: ../udisks/udisksclient.c:1917 ../udisks/udisksclient.c:1918
 msgctxt "fs-type"
 msgid "Swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1931
+#: ../udisks/udisksclient.c:1919
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1931 ../udisks/udisksclient.c:1932
+#: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
 msgid "LVM2 PV"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1932
+#: ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1933
+#: ../udisks/udisksclient.c:1921
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1933 ../udisks/udisksclient.c:1934
+#: ../udisks/udisksclient.c:1921 ../udisks/udisksclient.c:1922
 msgctxt "fs-type"
 msgid "Linux RAID Member"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1935
+#: ../udisks/udisksclient.c:1923
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1935
+#: ../udisks/udisksclient.c:1923
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1936
+#: ../udisks/udisksclient.c:1924
 msgctxt "fs-type"
 msgid "ZFS Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1936
+#: ../udisks/udisksclient.c:1924
 msgctxt "fs-type"
 msgid "ZFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1937
+#: ../udisks/udisksclient.c:1925
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1937
+#: ../udisks/udisksclient.c:1925
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1938
+#: ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1938
+#: ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1939
+#: ../udisks/udisksclient.c:1927
+msgctxt "fs-type"
+msgid "Possibly Encrypted"
+msgstr ""
+
+#: ../udisks/udisksclient.c:1927
+msgctxt "fs-type"
+msgid "Encrypted?"
+msgstr ""
+
+#: ../udisks/udisksclient.c:1928
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1939 ../udisks/udisksclient.c:1940
+#: ../udisks/udisksclient.c:1928 ../udisks/udisksclient.c:1929
 msgctxt "fs-type"
 msgid "LUKS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1940
+#: ../udisks/udisksclient.c:1929
 msgctxt "fs-type"
 msgid "LUKS Encryption"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1941
+#: ../udisks/udisksclient.c:1930
+msgctxt "fs-type"
+msgid "VeraCrypt/TrueCrypt Encryption"
+msgstr ""
+
+#: ../udisks/udisksclient.c:1930
+msgctxt "fs-type"
+msgid "VeraCrypt/TrueCrypt"
+msgstr ""
+
+#: ../udisks/udisksclient.c:1931
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1941
+#: ../udisks/udisksclient.c:1931
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1942
+#: ../udisks/udisksclient.c:1932
 msgctxt "fs-type"
 msgid "VMFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1943
+#: ../udisks/udisksclient.c:1933
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1943
+#: ../udisks/udisksclient.c:1933
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1944
+#: ../udisks/udisksclient.c:1934
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
 msgstr ""
 
-#: ../udisks/udisksclient.c:1944
+#: ../udisks/udisksclient.c:1934
 msgctxt "fs-type"
 msgid "VMFS Member"
 msgstr ""
@@ -1622,7 +1653,7 @@ msgstr ""
 #. * First %s is the raw filesystem type obtained from udev, second %s is
 #. version.
 #. 
-#: ../udisks/udisksclient.c:2020
+#: ../udisks/udisksclient.c:2010
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
@@ -1631,7 +1662,7 @@ msgstr ""
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
 #. 
-#: ../udisks/udisksclient.c:2029
+#: ../udisks/udisksclient.c:2019
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
@@ -1639,376 +1670,381 @@ msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
 #. 
-#: ../udisks/udisksclient.c:2035 ../udisks/udisksclient.c:2049
+#: ../udisks/udisksclient.c:2025 ../udisks/udisksclient.c:2039
 msgctxt "fs-type"
 msgid "Unknown"
 msgstr ""
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2066
+#: ../udisks/udisksclient.c:2056
 msgid "Master Boot Record"
 msgstr ""
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2068
+#: ../udisks/udisksclient.c:2058
 msgid "GUID Partition Table"
 msgstr ""
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2070
+#: ../udisks/udisksclient.c:2060
 msgid "Apple Partition Map"
 msgstr ""
 
 #. Translators: name of partition table format
-#: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
+#: ../udisks/udisksclient.c:2103 ../udisks/udisksclient.c:2108
 msgctxt "partition-subtype"
 msgid "Generic"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2119
+#: ../udisks/udisksclient.c:2104 ../udisks/udisksclient.c:2109
 msgctxt "partition-subtype"
 msgid "Linux"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2115 ../udisks/udisksclient.c:2120
-#: ../udisks/udisksclient.c:2125
+#: ../udisks/udisksclient.c:2105 ../udisks/udisksclient.c:2110
+#: ../udisks/udisksclient.c:2115
 msgctxt "partition-subtype"
 msgid "Windows"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2116 ../udisks/udisksclient.c:2122
+#: ../udisks/udisksclient.c:2106 ../udisks/udisksclient.c:2112
 msgctxt "partition-subtype"
 msgid "Other"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2121 ../udisks/udisksclient.c:2124
+#: ../udisks/udisksclient.c:2111 ../udisks/udisksclient.c:2114
 msgctxt "partition-subtype"
 msgid "Mac OS X"
 msgstr ""
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
-#: ../udisks/udisksclient.c:2212
+#: ../udisks/udisksclient.c:2202
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2213
+#: ../udisks/udisksclient.c:2203
 msgctxt "part-type"
 msgid "EFI System"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2214
+#: ../udisks/udisksclient.c:2204
 msgctxt "part-type"
 msgid "BIOS Boot"
 msgstr ""
 
 #. This is also defined in the Apple and Solaris section
-#: ../udisks/udisksclient.c:2216
+#: ../udisks/udisksclient.c:2206
 msgctxt "part-type"
 msgid "ZFS"
 msgstr ""
 
 #. Extended Boot Partition, see
 #. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
-#: ../udisks/udisksclient.c:2218
+#: ../udisks/udisksclient.c:2208
 msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr ""
 
 #. Discoverable Linux Partitions, see
 #. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
-#: ../udisks/udisksclient.c:2220
+#: ../udisks/udisksclient.c:2210
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2221
+#: ../udisks/udisksclient.c:2211
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2222
+#: ../udisks/udisksclient.c:2212
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2223
+#: ../udisks/udisksclient.c:2213
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr ""
 
 #. Linux
-#: ../udisks/udisksclient.c:2225
+#: ../udisks/udisksclient.c:2215
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2226
+#: ../udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2227
+#: ../udisks/udisksclient.c:2217
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2228 ../udisks/udisksclient.c:2313
+#: ../udisks/udisksclient.c:2218 ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2229
+#: ../udisks/udisksclient.c:2219
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr ""
 
 #. Microsoft
-#: ../udisks/udisksclient.c:2231
+#: ../udisks/udisksclient.c:2221
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2232
+#: ../udisks/udisksclient.c:2222
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2233
+#: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2234
+#: ../udisks/udisksclient.c:2224
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2235
+#: ../udisks/udisksclient.c:2225
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr ""
 
 #. Apple OS X
-#: ../udisks/udisksclient.c:2237
+#: ../udisks/udisksclient.c:2227
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr ""
 
+#: ../udisks/udisksclient.c:2228
+msgctxt "part-type"
+msgid "Apple APFS"
+msgstr ""
+
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: ../udisks/udisksclient.c:2238 ../udisks/udisksclient.c:2292
+#: ../udisks/udisksclient.c:2229 ../udisks/udisksclient.c:2283
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2239
+#: ../udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr ""
 
 #. same as ZFS
-#: ../udisks/udisksclient.c:2240
+#: ../udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2241
+#: ../udisks/udisksclient.c:2232
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2242
+#: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2243
+#: ../udisks/udisksclient.c:2234
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2244
+#: ../udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2245
+#: ../udisks/udisksclient.c:2236
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr ""
 
 #. HP-UX
-#: ../udisks/udisksclient.c:2247
+#: ../udisks/udisksclient.c:2238
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2248
+#: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr ""
 
 #. FreeBSD
-#: ../udisks/udisksclient.c:2250
+#: ../udisks/udisksclient.c:2241
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2251
+#: ../udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2252
+#: ../udisks/udisksclient.c:2243
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2253
+#: ../udisks/udisksclient.c:2244
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2254
+#: ../udisks/udisksclient.c:2245
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2255
+#: ../udisks/udisksclient.c:2246
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr ""
 
 #. Solaris
-#: ../udisks/udisksclient.c:2257
+#: ../udisks/udisksclient.c:2248
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2258
+#: ../udisks/udisksclient.c:2249
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2259
+#: ../udisks/udisksclient.c:2250
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2260
+#: ../udisks/udisksclient.c:2251
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2261
+#: ../udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr ""
 
 #. same as ZFS
-#: ../udisks/udisksclient.c:2262
+#: ../udisks/udisksclient.c:2253
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2263
+#: ../udisks/udisksclient.c:2254
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2264
+#: ../udisks/udisksclient.c:2255
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2265
+#: ../udisks/udisksclient.c:2256
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2266
+#: ../udisks/udisksclient.c:2257
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2267
+#: ../udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2268
+#: ../udisks/udisksclient.c:2259
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2269
+#: ../udisks/udisksclient.c:2260
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr ""
 
 #. NetBSD
-#: ../udisks/udisksclient.c:2271
+#: ../udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2272
+#: ../udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2273
+#: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2274
+#: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2275
+#: ../udisks/udisksclient.c:2266
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2276
+#: ../udisks/udisksclient.c:2267
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr ""
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
-#: ../udisks/udisksclient.c:2278
+#: ../udisks/udisksclient.c:2269
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2279
+#: ../udisks/udisksclient.c:2270
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr ""
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
 #. /disk-format
-#: ../udisks/udisksclient.c:2281
+#: ../udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2282
+#: ../udisks/udisksclient.c:2273
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2283
+#: ../udisks/udisksclient.c:2274
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2284
+#: ../udisks/udisksclient.c:2275
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr ""
@@ -2016,394 +2052,399 @@ msgstr ""
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: ../udisks/udisksclient.c:2288
+#: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2293
+#: ../udisks/udisksclient.c:2284
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2294
+#: ../udisks/udisksclient.c:2285
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2295
+#: ../udisks/udisksclient.c:2286
 msgctxt "part-type"
 msgid "Unused"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2296
+#: ../udisks/udisksclient.c:2287
 msgctxt "part-type"
 msgid "Empty"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2297
+#: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "Driver"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2298
+#: ../udisks/udisksclient.c:2289
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2299
+#: ../udisks/udisksclient.c:2290
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2300
+#: ../udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2301
+#: ../udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2302
+#: ../udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2303
+#: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2304
+#: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr ""
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: ../udisks/udisksclient.c:2307
+#: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "Extended"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2308
+#: ../udisks/udisksclient.c:2299
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2309
+#: ../udisks/udisksclient.c:2300
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2310
+#: ../udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2311
+#: ../udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "Linux"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2312
+#: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2314
+#: ../udisks/udisksclient.c:2305
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2315
+#: ../udisks/udisksclient.c:2306
 msgctxt "part-type"
 msgid "FAT12"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2316
+#: ../udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2317
+#: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "FAT16"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2318
+#: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2319
+#: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2320
+#: ../udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2321
+#: ../udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2322
+#: ../udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2323
+#: ../udisks/udisksclient.c:2314
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2324
+#: ../udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2325
+#: ../udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2326
+#: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2327
+#: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2328
+#: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2329
+#: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2330
+#: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "OPUS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2331
+#: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2332
+#: ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2333
+#: ../udisks/udisksclient.c:2324
 msgctxt "part-type"
 msgid "Minix"
 msgstr ""
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: ../udisks/udisksclient.c:2334 ../udisks/udisksclient.c:2335
+#: ../udisks/udisksclient.c:2325 ../udisks/udisksclient.c:2326
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2336
+#: ../udisks/udisksclient.c:2327
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2337
+#: ../udisks/udisksclient.c:2328
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2338 ../udisks/udisksclient.c:2339
+#: ../udisks/udisksclient.c:2329 ../udisks/udisksclient.c:2330
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2340
+#: ../udisks/udisksclient.c:2331
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2341
+#: ../udisks/udisksclient.c:2332
 msgctxt "part-type"
 msgid "Solaris"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2342
+#: ../udisks/udisksclient.c:2333
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2343
+#: ../udisks/udisksclient.c:2334
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2489
+#: ../udisks/udisksclient.c:2475
 msgctxt "job"
 msgid "SMART self-test"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2490
+#: ../udisks/udisksclient.c:2476
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2491
+#: ../udisks/udisksclient.c:2477
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2492
+#: ../udisks/udisksclient.c:2478
 msgctxt "job"
 msgid "Locking Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2493
+#: ../udisks/udisksclient.c:2479
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2494
+#: ../udisks/udisksclient.c:2480
+msgctxt "job"
+msgid "Resizing Encrypted Device"
+msgstr ""
+
+#: ../udisks/udisksclient.c:2481
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2495
+#: ../udisks/udisksclient.c:2482
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2496
+#: ../udisks/udisksclient.c:2483
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2497
+#: ../udisks/udisksclient.c:2484
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2498
+#: ../udisks/udisksclient.c:2485
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2499
+#: ../udisks/udisksclient.c:2486
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2500
+#: ../udisks/udisksclient.c:2487
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2501
+#: ../udisks/udisksclient.c:2488
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2502
+#: ../udisks/udisksclient.c:2489
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2503
+#: ../udisks/udisksclient.c:2490
 msgctxt "job"
 msgid "Erasing Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2504
+#: ../udisks/udisksclient.c:2491
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2505
+#: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2506
+#: ../udisks/udisksclient.c:2493
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2507
+#: ../udisks/udisksclient.c:2494
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2508
+#: ../udisks/udisksclient.c:2495
 msgctxt "job"
 msgid "Creating Partition"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2509
+#: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2510
+#: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2511
+#: ../udisks/udisksclient.c:2498
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2512
+#: ../udisks/udisksclient.c:2499
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2513
+#: ../udisks/udisksclient.c:2500
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2514
+#: ../udisks/udisksclient.c:2501
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2515
+#: ../udisks/udisksclient.c:2502
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2516
+#: ../udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2517
+#: ../udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2518
+#: ../udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr ""
 
-#: ../udisks/udisksclient.c:2526
+#: ../udisks/udisksclient.c:2512
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"

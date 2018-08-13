@@ -5,16 +5,60 @@
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             2.17
+%global libblockdev_version             2.19
+
+%define with_bcache                     1
+%define with_btrfs                      1
+%define with_vdo                        1
+%define with_lsm                        1
+%define with_zram                       1
+%define with_lvmcache                   1
+
+# valid options are 'luks1' or 'luks2'
+%define default_luks_encryption         luks1
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
+
+# bcache is not available on RHEL
+%if (0%{?rhel}) || %{with_bcache} == 0
+%define with_bcache 0
+%endif
+
+# btrfs is not available on RHEL > 7
+%if 0%{?rhel} > 7 || %{with_btrfs} == 0
+%define with_btrfs 0
+%endif
+
+# vdo is not available on Fedora
+%if (0%{?fedora}) || %{with_vdo} == 0
+%define with_vdo 0
+%endif
+
+# vdo is not available on i686
+%ifnarch x86_64 aarch64 ppc64le s390x
+%define with_vdo 0
+%endif
+
+# feature parity with existing RHEL 7 packages
+%if (0%{?rhel}) && (0%{?rhel} <= 7)
+%define with_lsm 0
+%define with_zram 0
+%define with_lvmcache 0
+%endif
+
+# default to LUKS2 for RHEL > 7
+%if 0%{?rhel} > 7
+%define default_luks_encryption luks2
+%endif
+
+
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.7.8
+Version: 2.8.0
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
@@ -148,7 +192,7 @@ Obsoletes: libstoraged-devel
 This package contains the development files for the library lib%{name}, a
 dynamic library, which provides access to the udisksd daemon.
 
-%if %{is_fedora}
+%if 0%{?with_bcache}
 %package -n %{name}-bcache
 Summary: Module for Bcache
 Group: System Environment/Libraries
@@ -161,7 +205,9 @@ Obsoletes: storaged-bcache
 
 %description -n %{name}-bcache
 This package contains module for Bcache configuration.
+%endif
 
+%if 0%{?with_btrfs}
 %package -n %{name}-btrfs
 Summary: Module for BTRFS
 Group: System Environment/Libraries
@@ -174,7 +220,9 @@ Obsoletes: storaged-btrfs
 
 %description -n %{name}-btrfs
 This package contains module for BTRFS configuration.
+%endif
 
+%if 0%{?with_lsm}
 %package -n %{name}-lsm
 Summary: Module for LSM
 Group: System Environment/Libraries
@@ -188,7 +236,9 @@ Obsoletes: storaged-lsm
 
 %description -n %{name}-lsm
 This package contains module for LSM configuration.
+%endif
 
+%if 0%{?with_zram}
 %package -n %{name}-zram
 Summary: Module for ZRAM
 Group: System Environment/Libraries
@@ -205,11 +255,27 @@ Obsoletes: storaged-zram
 This package contains module for ZRAM configuration.
 %endif
 
+%if 0%{?with_vdo}
+%package -n %{name}-vdo
+Summary: Module for VDO
+Group: System Environment/Libraries
+Requires: %{name}%{?_isa} = %{version}-%{release}
+License: LGPLv2+
+Requires: vdo
+Requires: libblockdev-vdo >= %{libblockdev_version}
+BuildRequires: libblockdev-vdo-devel >= %{libblockdev_version}
+
+%description -n %{name}-vdo
+This package contains module for VDO management.
+%endif
+
 %prep
 %setup -q -n udisks-%{version}
+sed -i udisks/udisks2.conf.in -e "s/encryption=luks1/encryption=%{default_luks_encryption}/"
 
 %build
 autoreconf -ivf
+# modules need to be explicitly enabled
 %configure            \
     --sysconfdir=/etc \
 %if %{with_gtk_doc}
@@ -217,12 +283,26 @@ autoreconf -ivf
 %else
     --disable-gtk-doc \
 %endif
-%if %{is_fedora}
-    --enable-modules
-%else
-    --enable-iscsi    \
-    --enable-lvm2
+%if 0%{?with_bcache}
+    --enable-bcache   \
 %endif
+%if 0%{?with_btrfs}
+    --enable-btrfs    \
+%endif
+%if 0%{?with_vdo}
+    --enable-vdo      \
+%endif
+%if 0%{?with_zram}
+    --enable-zram     \
+%endif
+%if 0%{?with_lsm}
+    --enable-lsm      \
+%endif
+%if 0%{?with_lvmcache}
+    --enable-lvmcache \
+%endif
+    --enable-lvm2     \
+    --enable-iscsi
 make %{?_smp_mflags}
 
 %install
@@ -255,7 +335,7 @@ udevadm trigger
 
 %ldconfig_scriptlets -n lib%{name}
 
-%if %{is_fedora}
+%if 0%{?with_zram}
 %post -n %{name}-zram
 %systemd_post zram-setup@.service
 
@@ -328,22 +408,28 @@ udevadm trigger
 %endif
 %{_libdir}/pkgconfig/udisks2.pc
 
-%if %{is_fedora}
+%if 0%{?with_bcache}
 %files -n %{name}-bcache
 %{_libdir}/udisks2/modules/libudisks2_bcache.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.bcache.policy
+%endif
 
+%if 0%{?with_btrfs}
 %files -n %{name}-btrfs
 %{_libdir}/udisks2/modules/libudisks2_btrfs.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.btrfs.policy
+%endif
 
+%if 0%{?with_lsm}
 %files -n %{name}-lsm
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_lsm.so
 %{_mandir}/man5/udisks2_lsm.conf.*
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lsm.policy
 %attr(0600,root,root) %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
+%endif
 
+%if 0%{?with_zram}
 %files -n %{name}-zram
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
@@ -351,7 +437,25 @@ udevadm trigger
 %{_unitdir}/zram-setup@.service
 %endif
 
+%if 0%{?with_vdo}
+%files -n %{name}-vdo
+%{_libdir}/udisks2/modules/libudisks2_vdo.so
+%{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.vdo.policy
+%endif
+
 %changelog
+* Mon Aug 13 2018 Tomas Bzatek <tbzatek@redhat.com> - 2.8.0-1
+- Version 2.8.0
+
+* Tue Jul 24 2018 Adam Williamson <awilliam@redhat.com> - 2.7.7-3
+- Rebuild for new libconfig
+
+* Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.7-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Wed Jul 04 2018 Vojtech Trefny <vtrefny@redhat.com> - 2.7.7-1
+- Version 2.7.7
+
 * Thu Feb 08 2018 Vojtech Trefny <vtrefny@redhat.com> - 2.7.6-1
 - Version 2.7.6
 
