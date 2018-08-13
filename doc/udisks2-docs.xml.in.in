@@ -381,6 +381,7 @@
       <!-- BTRFS_DBUS_INTERFACE -->
       <!-- ZRAM_DBUS_INTERFACE -->
       <!-- BCACHE_DBUS_INTERFACE -->
+      <!-- VDO_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -411,6 +412,7 @@
       <!-- BTRFS_GENERATED_CODE -->
       <!-- ZRAM_GENERATED_CODE -->
       <!-- BCACHE_GENERATED_CODE -->
+      <!-- VDO_GENERATED_CODE -->
     </chapter>
   </part>
 

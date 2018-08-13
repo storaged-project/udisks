@@ -154,7 +154,7 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 AC_SUBST(GMODULE_CFLAGS)
 AC_SUBST(GMODULE_LIBS)
 
-PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.18])
+PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.19])
 AC_SUBST(BLOCKDEV_CFLAGS)
 AC_SUBST(BLOCKDEV_LIBS)
 
@@ -505,6 +505,36 @@ if test "x$enable_bcache" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
+# VDO module
+have_vdo=no
+AC_ARG_ENABLE(vdo, AS_HELP_STRING([--enable-vdo], [enable VDO support]))
+if test "x$enable_vdo" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_available_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS"
+    LDFLAGS="$GLIB_LIBS"
+
+    # libblockdev-vdo
+    AC_MSG_CHECKING([libblockdev-vdo presence])
+    AC_TRY_COMPILE([#include <blockdev/vdo.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    have_vdo=yes],
+                   [AC_MSG_RESULT([no])
+                    have_vdo=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    if test "x$have_vdo" = "xno"; then
+        if test "x$enable_vdo" = "xyes" -o "x$enable_modules" = "xyes"; then
+            AC_MSG_ERROR([VDO support requested but header or library not found])
+        fi
+    fi
+fi
+AM_CONDITIONAL(HAVE_VDO, [test "x$have_vdo" = "xyes"])
+
 # libblockdev part
 SAVE_CFLAGS=$CFLAGS
 SAVE_LDFLAGS=$LDFLAGS
@@ -673,6 +703,8 @@ modules/lsm/Makefile
 modules/lsm/data/Makefile
 modules/bcache/Makefile
 modules/bcache/data/Makefile
+modules/vdo/Makefile
+modules/vdo/data/Makefile
 doc/Makefile
 doc/udisks2-docs.xml.in
 doc/udisks2-sections.txt.in
@@ -711,6 +743,10 @@ doc/udisks2-docs.xml.bcache.dbus
 doc/udisks2-docs.xml.bcache.generated
 doc/udisks2-sections.txt.bcache.sections
 doc/udisks2.types.bcache
+doc/udisks2-docs.xml.vdo.dbus
+doc/udisks2-docs.xml.vdo.generated
+doc/udisks2-sections.txt.vdo.sections
+doc/udisks2.types.vdo
 po/Makefile.in
 ])
 
@@ -755,4 +791,5 @@ echo "
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
         Bcache module:              ${have_bcache}
+        VDO module:                 ${have_vdo}
 "

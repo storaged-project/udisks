@@ -6,19 +6,22 @@ from distutils.spawn import find_executable
 class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
-    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM'])
+    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM', 'VDO'])
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
 
     def _get_modules(self):
         distro, version = self.distro
+        modules = self.udisks_modules
         if distro in ('enterprise_linux', 'centos') and version == '7':
-            return self.udisks_modules - {'Bcache'}
+            modules = modules - {'Bcache'}
         elif distro in ('enterprise_linux', 'centos') and int(version) > 7:
-            return self.udisks_modules - {'Bcache', 'BTRFS'}
-        else:
-            return self.udisks_modules
+            modules = modules - {'Bcache', 'BTRFS'}
+        # assuming the kvdo module is typically pulled in as a vdo tool dependency
+        if not find_executable("vdo"):
+            modules = modules - {'VDO'}
+        return modules
 
     def test_10_manager(self):
         '''Testing the manager object presence'''

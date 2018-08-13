@@ -1,0 +1,414 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2018 Tomas Bzatek <tbzatek@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Manager.VDO:
+      @short_description: VDO volume management
+      @since: 2.8.0
+
+      This interface provides a way to create new and activate or start existing
+      VDO volumes. Once a volume has been started an additional #org.freedesktop.UDisks2.Block.VDO
+      interface will be exported on the related block object.
+
+      There are several limitations introduced by the backing <literal>vdo</literal>
+      tool that are reflected in the #org.freedesktop.UDisks2.Manager.VDO interface.
+      The <literal>vdo</literal> tool operates on VDO names and can't take block
+      device path as an identifier. Volumes that are in stopped state don't expose
+      any <literal>udev</literal> attribute containing VDO name or any other information
+      that can be used for identification. That means that some of the
+      #org.freedesktop.UDisks2.Block.VDO interface methods take VDO volume name
+      as an argument instead of an object path to the backing block device.
+
+      For the moment the VDO configuration file is not used to retrieve any extra
+      information.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager.VDO">
+    <!-- prereq: org.freedesktop.UDisks2.Manager -->
+
+    <!--
+        CreateVolume:
+        @name: The VDO volume name.
+        @device: Object path to an object implementing the #org.freedesktop.UDisks2.Block interface, used as an underlying storage device.
+        @logical_size: Logical VDO volume size in bytes or 0 for default (size of @device)
+        @index_memory: Amount of index memory in bytes or 0 for default. Note that only some sizes are valid here (0.25, 0.5 and 0.75 GB and integer multiples of 1 GB). Invalid sizes will be rounded DOWN to nearest GB (or one of the allowed decimal values).
+        @compression: Enables or disables compression when creating a VDO volume.
+        @deduplication: Enables or disables deduplication when creating a VDO volume.
+        @write_policy: Specifies the write policy.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
+
+        Creates a VDO volume from @device and its associated index and makes it available.
+
+        Known @write_policy values include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="CreateVolume">
+      <arg name="name" type="s" direction="in" />
+      <arg name="device" type="o" direction="in" />
+      <arg name="logical_size" type="t" direction="in" />
+      <arg name="index_memory" type="t" direction="in" />
+      <arg name="compression" type="b" direction="in" />
+      <arg name="deduplication" type="b" direction="in" />
+      <arg name="write_policy" type="s" direction="in" />
+      <arg name="options" type="a{sv}" direction="in" />
+      <arg name="vdo" direction="out" type="o" />
+    </method>
+
+    <!--
+        ActivateVolumeByName:
+        @name: Name of an existing VDO volume to activate.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Activates existing VDO volume. Activated volume can be started using the
+        org.freedesktop.UDisks2.Manager.VDO.StartVolumeByName() method call.
+    -->
+    <method name="ActivateVolumeByName">
+      <arg name="name" type="s" direction="in" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        StartVolumeByName:
+        @name: The VDO volume name.
+        @force_rebuild: Forces an offline rebuild of a read-only VDO's metadata before starting so that it may be brought back online and made available. This option may result in data loss or corruption.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @vdo: An object path to the object implementing the #org.freedesktop.UDisks2.Block.VDO interface.
+
+        Starts a stopped, activated VDO volume and associated services. Deactivated
+        volumes need to be activated using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolumeByName()
+        method call prior to starting. Since a volume index rebuild may be required
+        a job object will be exposed for this operation.
+    -->
+    <method name="StartVolumeByName">
+      <arg name="name" type="s" direction="in" />
+      <arg name="force_rebuild" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+      <arg name="vdo" direction="out" type="o" />
+    </method>
+
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Block.VDO:
+      @short_description: block object interface for managing a running VDO volume
+      @since: 2.8.0
+
+      This interface is exposed for block objects that represent existing and running VDO volumes.
+
+      Due to the VDO design not every change trigerred outside of udisks gets
+      propagated via <literal>udev</literal> and may go unnoticed. It's guaranteed
+      that changes made via udisks are properly reflected in the object properties
+      though.
+  -->
+  <interface name="org.freedesktop.UDisks2.Block.VDO">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+
+    <!-- Name:
+         The name of the VDO device.
+    -->
+    <property name="Name" type="s" access="read" />
+
+    <!-- Active:
+         Indicates whether the device is active.
+    -->
+    <property name="Active" type="b" access="read" />
+
+    <!-- Compression:
+         Indicates whether compression is enabled.
+    -->
+    <property name="Compression" type="b" access="read" />
+
+    <!-- Deduplication:
+         Indicates whether deduplication is enabled.
+    -->
+    <property name="Deduplication" type="b" access="read" />
+
+    <!-- LogicalSize:
+         The logical size of the VDO volume.
+    -->
+    <property name="LogicalSize" type="t" access="read" />
+
+    <!-- PhysicalSize:
+         The physical size of the VDO volume.
+    -->
+    <property name="PhysicalSize" type="t" access="read" />
+
+    <!-- IndexMemory:
+         The index memory size of the VDO volume.
+    -->
+    <property name="IndexMemory" type="t" access="read" />
+
+    <!-- WritePolicy:
+         The current write policy of the VDO volume.
+
+        Known values include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <property name="WritePolicy" type="s" access="read" />
+
+
+    <!--
+        Deactivate:
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Deactivates the VDO volume. Deactivating a currently running volume does
+        not stop it.  Once a volume is deactivated it needs to be activated again
+        using the org.freedesktop.UDisks2.Manager.VDO.ActivateVolumeByName() method call
+        on the manager object.
+    -->
+    <method name="Deactivate">
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        EnableCompression:
+        @enable: A boolean value indicating whether compression should be enabled.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Enables or disables compression on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
+    -->
+    <method name="EnableCompression">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        EnableDeduplication:
+        @enable: A boolean value indicating whether deduplication should be enabled.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Enables or disables deduplication on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
+    -->
+    <method name="EnableDeduplication">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        ChangeWritePolicy:
+        @write_policy: The desired write policy. 
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Modifies the write policy of the running VDO volume. Known @write_policy
+        values include:
+        <variablelist>
+          <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+          <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+          <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="ChangeWritePolicy">
+      <arg name="write_policy" direction="in" type="s" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        Remove:
+        @force: A boolean value indicating whether an unmount attempt should be performed first. 
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Removes the VDO volume and associated indexes.
+    -->
+    <method name="Remove">
+      <arg name="force" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        Stop:
+        @force: A boolean value indicating whether an unmount attempt should be performed first. 
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Stops a running VDO volume and associated services. Once a volume is stopped
+        it needs to be started again using the org.freedesktop.UDisks2.Manager.VDO.StartVolumeByName()
+        method call on the manager object.
+    -->
+    <method name="Stop">
+      <arg name="force" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        GrowLogical:
+        @size: The logical VDO volume size in bytes. The maximum size supported is 4P.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Grows the logical size of a VDO volume to a size specified by the @size argument. The volume must be running.
+    -->
+    <method name="GrowLogical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        GrowPhysical:
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Grows the physical size of a VDO volume to the size of underlying block device. The volume must be running.
+    -->
+    <method name="GrowPhysical">
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        GetStatistics:
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @stats: Array of key-value string pairs
+
+        Retrieves statistics for the specified VDO volume. Statistics are collected from the values exposed by the kernel <literal>kvdo</literal> module.
+
+        List of known keys:
+        <variablelist>
+        <varlistentry><term>writeAmplificationRatio</term><listitem><para>The average number of block writes to the underlying storage per block written to the VDO device.</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocks</term><listitem><para>The total number of 1K blocks allocated for a VDO volume (= physical volume size * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocksUsed</term><listitem><para>The total number of 1K blocks used on a VDO volume (= physical blocks used * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>oneKBlocksAvailable</term><listitem><para>The total number of 1K blocks available on a VDO volume (= physical blocks free * block size / 1024).</para></listitem></varlistentry>
+        <varlistentry><term>usedPercent</term><listitem><para>The percentage of physical blocks used on a VDO volume (= used blocks / allocated blocks * 100).</para></listitem></varlistentry>
+        <varlistentry><term>savings, savingPercent</term><listitem><para>The percentage of physical blocks saved on a VDO volume (= [logical blocks used - physical blocks used] / logical blocks used).</para></listitem></varlistentry>
+        <varlistentry><term>fiveTwelveByteEmulation</term><listitem><para>Indicates whether 512 byte emulation is on or off for the volume.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slab_count</term><listitem><para>The total number of slabs.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slabs_opened</term><listitem><para> The total number of slabs from which blocks have ever been allocated.</para></listitem></varlistentry>
+        <varlistentry><term>allocator_slabs_reopened</term><listitem><para>The number of times slabs have been re-opened since the VDO was started.</para></listitem></varlistentry>
+        <varlistentry><term>bios_acknowledged_discard, bios_acknowledged_flush, bios_acknowledged_fua, bios_acknowledged_read, bios_acknowledged_write</term><listitem><para>The number of block I/O requests acknowledged by VDO.</para></listitem></varlistentry>
+        <varlistentry><term>bios_acknowledged_partial_discard, bios_acknowledged_partial_flush, bios_acknowledged_partial_fua, bios_acknowledged_partial_read, bios_acknowledged_partial_write</term><listitem><para>The number of partial block I/O requests acknowledged by VDO. Applies only to 512-byte emulation mode.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_discard, bios_in_flush, bios_in_fua, bios_in_read, bios_in_write</term><listitem><para>The number of block I/O requests received by VDO.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_partial_discard, bios_in_partial_flush, bios_in_partial_fua, bios_in_partial_read, bios_in_partial_write</term><listitem><para>The number of partial block I/O requests received by VDO. Applies only to 512-byte emulation mode.</para></listitem></varlistentry>
+        <varlistentry><term>bios_in_progress_discard, bios_in_progress_flush, bios_in_progress_fua, bios_in_progress_read, bios_in_progress_write</term><listitem><para>The number of bios submitted to the VDO which have not yet been acknowledged.</para></listitem></varlistentry>
+        <varlistentry><term>bios_journal_completed_discard, bios_journal_completed_flush, bios_journal_completed_fua, bios_journal_completed_read, bios_journal_completed_write</term><listitem><para>The number of recovery journal block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_journal_discard, bios_journal_flush, bios_journal_fua, bios_journal_read, bios_journal_write</term><listitem><para>The number of recovery journal block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_meta_completed_discard, bios_meta_completed_flush, bios_meta_completed_fua, bios_meta_completed_read, bios_meta_completed_write</term><listitem><para>The number of metadata block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_meta_discard, bios_meta_flush, bios_meta_fua, bios_meta_read", bios_meta_write</term><listitem><para>The number of metadata block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_out_completed_discard, bios_out_completed_flush, bios_out_completed_fua, bios_out_completed_read, bios_out_completed_write</term><listitem><para>The number of non-metadata block I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_out_discard, bios_out_flush, bios_out_fua, bios_out_read, bios_out_write</term><listitem><para>The number of non-metadata block I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_page_cache_completed_discard, bios_page_cache_completed_flush, bios_page_cache_completed_fua, bios_page_cache_completed_read, bios_page_cache_completed_write</term><listitem><para>The number of block map I/O requests completed by the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>bios_page_cache_discard, bios_page_cache_flush, bios_page_cache_fua, bios_page_cache_read, bios_page_cache_write</term><listitem><para>The number of block map I/O requests submitted by VDO to the storage device.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_cache_pressure</term><listitem><para>The number of times a free page was not available when needed.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_cache_size</term><listitem><para>The size of the block map cache, in bytes.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_clean_pages</term><listitem><para>The number of clean pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_dirty_pages</term><listitem><para>The number of dirty pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_discard_required</term><listitem><para>The total number of block map requests that required a page to be discarded.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_pages</term><listitem><para>The number of block map cache pages that have write errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_reads</term><listitem><para>The total number of block map read errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_failed_writes</term><listitem><para>The total number of block map write errors.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_fetch_required</term><listitem><para>The total number of requests that required a page fetch.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_flush_count</term><listitem><para>The total number of flushes issued by the block map.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_found_in_cache</term><listitem><para>The total number of block map cache hits.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_free_pages</term><listitem><para>The number of free pages in the block map cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_incoming_pages</term><listitem><para>The number of block map cache pages that are being read into the cache.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_outgoing_pages</term><listitem><para>The number of block map cache pages that are being written.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_pages_loaded</term><listitem><para>The total number of page fetches.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_pages_saved</term><listitem><para>The total number of page saves.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_read_count</term><listitem><para>The total number of block map page reads.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_read_outgoing</term><listitem><para>The total number of block map reads for pages that were being written.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_reclaimed</term><listitem><para>The total number of block map pages that were reclaimed.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_wait_for_page</term><listitem><para>The total number of requests that had to wait for a page.</para></listitem></varlistentry>
+        <varlistentry><term>block_map_write_count</term><listitem><para>The total number of block map page writes.</para></listitem></varlistentry>
+        <varlistentry><term>block_size</term><listitem><para>The block size of a VDO volume, in bytes.</para></listitem></varlistentry>
+        <varlistentry><term>complete_recoveries</term><listitem><para>The number of times a VDO volume has recovered from an unclean shutdown.</para></listitem></varlistentry>
+        <varlistentry><term>currentVIOs_in_progress</term><listitem><para>The number of I/O requests the VDO is current processing.</para></listitem></varlistentry>
+        <varlistentry><term>data_blocks_used</term><listitem><para>The number of physical blocks currently in use by a VDO volume to store data.</para></listitem></varlistentry>
+        <varlistentry><term>dedupe_advice_timeouts</term><listitem><para>The number of times deduplication queries timed out.</para></listitem></varlistentry>
+        <varlistentry><term>errors_invalid_advicePBNCount</term><listitem><para>The number of times the index returned invalid advice.</para></listitem></varlistentry>
+        <varlistentry><term>errors_no_space_error_count</term><listitem><para>The number of write requests which failed due to the VDO volume being out of space.</para></listitem></varlistentry>
+        <varlistentry><term>errors_read_only_error_count</term><listitem><para>The number of write requests which failed due to the VDO volume being in read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>flush_out</term><listitem><para>The number of flush requests submitted by VDO to the underlying storage.</para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_concurrent_data_matches</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_concurrent_hash_collisions</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_dedupe_advice_stale</term><listitem><para>The number of times deduplication advice was incorrect.</para></listitem></varlistentry>
+        <varlistentry><term>hash_lock_dedupe_advice_valid</term><listitem><para>The number of times deduplication advice was correct.</para></listitem></varlistentry>
+        <varlistentry><term>index_curr_dedupe_queries</term><listitem><para>The number of deduplication queries currently in flight.</para></listitem></varlistentry>
+        <varlistentry><term>index_entries_indexed</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_max_dedupe_queries</term><listitem><para>The maximum number of in-flight deduplication queries.</para></listitem></varlistentry>
+        <varlistentry><term>index_posts_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_posts_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_queries_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_queries_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_updates_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>index_updates_not_found</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>in_recovery_mode</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>instance</term><listitem><para>The VDO instance.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_batching</term><listitem><para>The number of journal block writes started minus the number of journal blocks written.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_committed</term><listitem><para>The number of journal blocks written to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_started</term><listitem><para>The number of journal blocks which have been touched in memory.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_writing</term><listitem><para>The number of journal blocks written (with metadatata in active memory) minus the number of journal blocks committed.</para></listitem></varlistentry>
+        <varlistentry><term>journal_blocks_written</term><listitem><para>The total number of journal blocks for which a write has been issued.</para></listitem></varlistentry>
+        <varlistentry><term>journal_disk_full</term><listitem><para>The number of times a request could not make a recovery journal entry because the recovery journal was full.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_batching</term><listitem><para>The number of journal entry writes started minus the number of journal entries written.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_committed</term><listitem><para>The number of journal entries written to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_started</term><listitem><para>The number of journal entries which have been made in memory.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_writing</term><listitem><para>The number of journal entries in submitted writes minus the number of journal entries committed to storage.</para></listitem></varlistentry>
+        <varlistentry><term>journal_entries_written</term><listitem><para>The total number of journal entries for which a write has been issued.</para></listitem></varlistentry>
+        <varlistentry><term>journal_slab_journal_commits_requested</term><listitem><para>The number of times the recovery journal requested slab journal commits.</para></listitem></varlistentry>
+        <varlistentry><term>logical_blocks</term><listitem><para>The maximum number of logical blocks that can be mapped by a VDO volume.</para></listitem></varlistentry>
+        <varlistentry><term>logical_block_size</term><listitem><para></para></listitem></varlistentry>
+        <varlistentry><term>logical_blocks_used</term><listitem><para>The number of logical blocks currently mapped.</para></listitem></varlistentry>
+        <varlistentry><term>maxVIOs</term><listitem><para>The maximum number of simultaneous I/O requests the VDO has processed.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_bios_used</term><listitem><para>KVDO module bios use.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_bytes_used</term><listitem><para>KVDO module bytes use.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_peak_bio_count</term><listitem><para>KVDO module peak bio coun.</para></listitem></varlistentry>
+        <varlistentry><term>memory_usage_peak_bytes_used</term><listitem><para>KVDO module peak bytes use.</para></listitem></varlistentry>
+        <varlistentry><term>mode</term><listitem><para>Indicates whether a VDO volume is operating normally, is in recovery mode, or is in read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>overhead_blocks_used</term><listitem><para>The number of physical blocks currently in use by a VDO volume to store VDO metadata.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_blocks_written</term><listitem><para>The number of physical blocks of compressed data that have been written since the VDO volume was last restarted. The remaining fields are primarily intended for software support and are subject to change in future releases; management tools should not rely upon them.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_fragments_in_packer</term><listitem><para>The number of compressed fragments being processed that have not yet been written.</para></listitem></varlistentry>
+        <varlistentry><term>packer_compressed_fragments_written</term><listitem><para>The number of compressed fragments that have been written since the VDO volume was last restarted.</para></listitem></varlistentry>
+        <varlistentry><term>physical_blocks</term><listitem><para>The total number of physical blocks allocated for a VDO volume.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_accesses</term><listitem><para>The number of times VDO searched the read cache.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_data_hits</term><listitem><para>The number of times VDO found an entry in the read cache for the desired data block, where the block's contents had been read into memory.</para></listitem></varlistentry>
+        <varlistentry><term>read_cache_hits</term><listitem><para>The number of times VDO found an entry in the read cache for the desired data block, whether or not the block's contents had yet been read into memory.</para></listitem></varlistentry>
+        <varlistentry><term>read_only_recoveries</term><listitem><para>The number of times a VDO volume has been recovered from read-only mode.</para></listitem></varlistentry>
+        <varlistentry><term>recovery_percentage</term><listitem><para>Indicates online recovery progress (\%), or N/A if the volume is not in recovery mode.</para></listitem></varlistentry>
+        <varlistentry><term>ref_counts_blocks_written</term><listitem><para>The number of reference block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_blocked_count</term><listitem><para>The number of times an entry was added to a slab journal that was over the blocking threshold.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_blocks_written</term><listitem><para>The number of slab journal block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_disk_full_count</term><listitem><para>The number of times an on-disk slab journal was full.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_flush_count</term><listitem><para>The number of times an entry was added to a slab journal that was over the flush threshold.</para></listitem></varlistentry>
+        <varlistentry><term>slab_journal_tail_busy_count</term><listitem><para>The number of times write requests blocked waiting for a slab journal write.</para></listitem></varlistentry>
+        <varlistentry><term>slab_summary_blocks_written</term><listitem><para>The number of slab summary block writes issued.</para></listitem></varlistentry>
+        <varlistentry><term>write_policy</term><listitem><para>The write policy (sync or async).</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="GetStatistics">
+      <arg name="options" direction="in" type="a{sv}" />
+      <arg name="stats" direction="out" type="a{ss}" />
+    </method>
+
+  </interface>
+</node>
