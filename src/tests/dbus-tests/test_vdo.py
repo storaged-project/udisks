@@ -212,8 +212,8 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             vdo_path = manager.StartVolumeByName('nonsense123345', False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # attempt to start deactivated volume
-        # XXX - bug in vdo: returns 0 even when it cannot be started, catching the consequences here
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error waiting .*: Timed out waiting for object'
+        # XXX - bug in older vdo: returns 0 even when it cannot be started, catching the consequences here
+        msg = 'org.freedesktop.UDisks2.Error.Failed: (Error waiting .*: Timed out waiting for object|Error starting volume: Process reported exit code 5: .* not activated)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             vdo_path = manager.StartVolumeByName(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
