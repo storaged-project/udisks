@@ -14,6 +14,9 @@ from distutils.spawn import find_executable
 import udiskstestcase
 
 
+VDO_CONFIG = '/etc/vdoconf.yml'
+
+
 class UdisksVDOTest(udiskstestcase.UdisksTestCase):
     '''This is a basic VDO test suite'''
 
@@ -43,6 +46,13 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         self.device = self.get_device(self.dev_name)
         self.assertIsNotNone(self.device)
         super(UdisksVDOTest, self).setUp()
+
+        # revert any changes in the /etc/vdoconf.yml
+        if os.path.exists(VDO_CONFIG):
+            vdo_config = self.read_file(VDO_CONFIG)
+            self.addCleanup(self.write_file, VDO_CONFIG, vdo_config)
+        else:
+            self.addCleanup(self.remove_file, VDO_CONFIG, True)
 
     def tearDown(self):
         # tear down loop device
