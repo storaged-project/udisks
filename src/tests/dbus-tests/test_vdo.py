@@ -281,7 +281,7 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         orig_physical_size.assertGreater(0)
 
         # no room to grow, expect a failure and no change in property value
-        msg = 'Cannot grow physical on VDO'
+        msg = '(Cannot grow physical on VDO|Cannot prepare to grow physical on VDO .*; device-mapper: message ioctl on .* failed: Invalid argument)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             vdo.GrowPhysical(self.no_options, dbus_interface=self.iface_prefix + '.Block.VDO')
         new_physical_size = self.get_property(vdo, '.Block.VDO', 'PhysicalSize')
