@@ -391,7 +391,15 @@ class UdisksTestCase(unittest.TestCase):
         try:
             with open(filename, 'w') as f:
                 f.write(content)
-        except FileNotFoundError as e:
+        except OSError as e:
+            if not ignore_nonexistent:
+                raise e
+
+    @classmethod
+    def remove_file(self, filename, ignore_nonexistent=False):
+        try:
+            os.remove(filename)
+        except OSError as e:
             if not ignore_nonexistent:
                 raise e
 

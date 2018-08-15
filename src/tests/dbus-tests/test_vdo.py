@@ -5,7 +5,16 @@ import six
 import dbus
 import unittest
 
+import gi
+gi.require_version('BlockDev', '2.0')
+from gi.repository import BlockDev
+
+from distutils.spawn import find_executable
+
 import udiskstestcase
+
+
+VDO_CONFIG = '/etc/vdoconf.yml'
 
 
 class UdisksVDOTest(udiskstestcase.UdisksTestCase):
@@ -20,6 +29,12 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for VDO tests not loaded, skipping.')
 
+        if not find_executable('vdo'):
+            raise unittest.SkipTest('vdo executable not foundin $PATH, skipping.')
+
+        if not BlockDev.utils_have_kernel_module('kvdo'):
+            raise unittest.SkipTest('VDO kernel module not available, skipping.')
+
     def setUp(self):
         # create backing sparse file
         # VDO needs at least 5G of space and we need some room for the grow test
@@ -31,6 +46,13 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         self.device = self.get_device(self.dev_name)
         self.assertIsNotNone(self.device)
         super(UdisksVDOTest, self).setUp()
+
+        # revert any changes in the /etc/vdoconf.yml
+        if os.path.exists(VDO_CONFIG):
+            vdo_config = self.read_file(VDO_CONFIG)
+            self.addCleanup(self.write_file, VDO_CONFIG, vdo_config)
+        else:
+            self.addCleanup(self.remove_file, VDO_CONFIG, True)
 
     def tearDown(self):
         # tear down loop device
@@ -190,8 +212,8 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             vdo_path = manager.StartVolumeByName('nonsense123345', False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
         # attempt to start deactivated volume
-        # XXX - bug in vdo: returns 0 even when it cannot be started, catching the consequences here
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error waiting .*: Timed out waiting for object'
+        # XXX - bug in older vdo: returns 0 even when it cannot be started, catching the consequences here
+        msg = 'org.freedesktop.UDisks2.Error.Failed: (Error waiting .*: Timed out waiting for object|Error starting volume: Process reported exit code 5: .* not activated)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             vdo_path = manager.StartVolumeByName(vdo_name, False, self.no_options, dbus_interface=self.iface_prefix + '.Manager.VDO')
 
@@ -259,7 +281,7 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         orig_physical_size.assertGreater(0)
 
         # no room to grow, expect a failure and no change in property value
-        msg = 'Cannot grow physical on VDO'
+        msg = '(Cannot grow physical on VDO|Cannot prepare to grow physical on VDO .*; device-mapper: message ioctl on .* failed: Invalid argument)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             vdo.GrowPhysical(self.no_options, dbus_interface=self.iface_prefix + '.Block.VDO')
         new_physical_size = self.get_property(vdo, '.Block.VDO', 'PhysicalSize')
