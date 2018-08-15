@@ -272,14 +272,19 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
   BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
   BDPluginSpec loop_plugin = {BD_PLUGIN_LOOP, NULL};
+#ifdef HAVE_MDRAID
   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
+#endif
   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
 
   /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
      Additional plugins are required by various modules, but they make sure
      plugins are loaded themselves. */
-  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
+  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin,
+#ifdef HAVE_MDRAID
+                             &mdraid_plugin,
+#endif
                              &fs_plugin, &crypto_plugin, NULL};
   BDPluginSpec **plugin_p = NULL;
   error = NULL;
@@ -1804,13 +1809,17 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
 
   UDisksObject *object = NULL;
   UDisksObject *crypto_object = NULL;
+#ifdef HAVE_MDRAID
   UDisksObject *mdraid_object = NULL;
+#endif
   UDisksObject *table_object = NULL;
   GList *track_parent_funcs;
 
   UDisksBlock *block;
   UDisksBlock *crypto_block;
+#ifdef HAVE_MDRAID
   UDisksMDRaid *mdraid;
+#endif
   UDisksPartition *partition;
   UDisksBlock *table_block;
 
@@ -1833,6 +1842,7 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
             }
         }
 
+#ifdef HAVE_MDRAID
       mdraid_object = udisks_daemon_find_object (daemon, udisks_block_get_mdraid (block));
       if (mdraid_object)
         {
@@ -1844,6 +1854,7 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
               goto out;
             }
         }
+#endif
 
       partition = udisks_object_peek_partition (object);
       if (partition)
@@ -1869,7 +1880,9 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
  out:
   g_clear_object (&object);
   g_clear_object (&crypto_object);
+#ifdef HAVE_MDRAID
   g_clear_object (&mdraid_object);
+#endif
   g_clear_object (&table_object);
 
   if (parent_path)

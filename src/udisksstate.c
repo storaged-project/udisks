@@ -184,9 +184,11 @@ static void      udisks_state_check_unlocked_crypto_dev (UDisksState          *s
 static void      udisks_state_check_loop          (UDisksState          *state,
                                                    gboolean              check_only,
                                                    GArray               *devs_to_clean);
+#ifdef HAVE_MDRAID
 static void      udisks_state_check_mdraid        (UDisksState          *state,
                                                    gboolean              check_only,
                                                    GArray               *devs_to_clean);
+#endif
 static GVariant *udisks_state_get                 (UDisksState          *state,
                                                    const gchar          *key,
                                                    const GVariantType   *type,
@@ -433,9 +435,11 @@ udisks_state_check_in_thread (UDisksState *state)
                            TRUE, /* check_only */
                            devs_to_clean);
 
+#ifdef HAVE_MDRAID
   udisks_state_check_mdraid (state,
                              TRUE, /* check_only */
                              devs_to_clean);
+#endif
 
   /* Then go through all mounted filesystems and pass the
    * devices that we intend to clean...
@@ -452,9 +456,11 @@ udisks_state_check_in_thread (UDisksState *state)
                            FALSE, /* check_only */
                            NULL);
 
+#ifdef HAVE_MDRAID
   udisks_state_check_mdraid (state,
                              FALSE, /* check_only */
                              NULL);
+#endif
 
   g_array_unref (devs_to_clean);
 
@@ -1813,6 +1819,7 @@ udisks_state_has_loop (UDisksState   *state,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_MDRAID
 /* returns TRUE if the entry should be kept */
 static gboolean
 udisks_state_check_mdraid_entry (UDisksState  *state,
@@ -2092,6 +2099,7 @@ udisks_state_has_mdraid (UDisksState   *state,
   g_mutex_unlock (&state->lock);
   return ret;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 

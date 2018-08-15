@@ -32,7 +32,9 @@
 #include <glib/gstdio.h>
 
 #include <blockdev/fs.h>
+#ifdef HAVE_MDRAID
 #include <blockdev/mdraid.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"

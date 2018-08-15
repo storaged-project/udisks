@@ -568,6 +568,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
       g_object_unref (crypto_object);
     }
 
+#ifdef HAVE_MDRAID
   /* MDRaid devices */
   if (g_strcmp0 (udisks_block_get_mdraid (block), "/") != 0)
     {
@@ -581,6 +582,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
             }
         }
     }
+#endif
 
  out:
   g_clear_object (&partition);
@@ -1597,6 +1599,7 @@ udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie *cookie)
 #endif
 }
 
+#ifdef HAVE_MDRAID
 /**
  * udisks_daemon_util_get_free_mdraid_device:
  *
@@ -1629,6 +1632,7 @@ udisks_daemon_util_get_free_mdraid_device (void)
  out:
   return ret;
 }
+#endif
 
 
 /**

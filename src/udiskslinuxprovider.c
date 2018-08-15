@@ -29,7 +29,10 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
+#ifdef HAVE_MDRAID
 #include "udiskslinuxmdraidobject.h"
+#include "udiskslinuxmdraidprovider.h"
+#endif
 #include "udiskslinuxmanager.h"
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
@@ -74,10 +77,9 @@ struct _UDisksLinuxProvider
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
 
-  /* maps from array UUID and sysfs_path to UDisksLinuxMDRaidObject instances */
-  GHashTable *uuid_to_mdraid;
-  GHashTable *sysfs_path_to_mdraid;
-  GHashTable *sysfs_path_to_mdraid_members;
+#ifdef HAVE_MDRAID
+  UDisksLinuxMDRaidProvider mdraid;
+#endif
 
   /* maps from UDisksModuleObjectNewFuncs to nested hashtables containing object
    * skeleton instances as keys and GLists of consumed sysfs path as values */
@@ -170,9 +172,9 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
   g_hash_table_unref (provider->sysfs_path_to_drive);
-  g_hash_table_unref (provider->uuid_to_mdraid);
-  g_hash_table_unref (provider->sysfs_path_to_mdraid);
-  g_hash_table_unref (provider->sysfs_path_to_mdraid_members);
+#ifdef HAVE_MDRAID
+  udisks_linux_mdraid_provider_finalize (&provider->mdraid);
+#endif
   g_hash_table_unref (provider->module_funcs_to_instances);
   g_object_unref (provider->gudev_client);
 
@@ -645,18 +647,9 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                          g_str_equal,
                                                          g_free,
                                                          NULL);
-  provider->uuid_to_mdraid = g_hash_table_new_full (g_str_hash,
-                                                    g_str_equal,
-                                                    g_free,
-                                                    (GDestroyNotify) g_object_unref);
-  provider->sysfs_path_to_mdraid = g_hash_table_new_full (g_str_hash,
-                                                          g_str_equal,
-                                                          g_free,
-                                                          NULL);
-  provider->sysfs_path_to_mdraid_members = g_hash_table_new_full (g_str_hash,
-                                                                  g_str_equal,
-                                                                  g_free,
-                                                                  NULL);
+#ifdef HAVE_MDRAID
+  udisks_linux_mdraid_provider_start(&provider->mdraid);
+#endif
   provider->module_funcs_to_instances = g_hash_table_new_full (g_direct_hash,
                                                                g_direct_equal,
                                                                NULL,
@@ -822,156 +815,6 @@ perform_initial_housekeeping_for_drive (GTask           *task,
                       error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-/* called with lock held */
-
-static void
-maybe_remove_mdraid_object (UDisksLinuxProvider     *provider,
-                            UDisksLinuxMDRaidObject *object)
-{
-  gchar *object_uuid = NULL;
-  UDisksDaemon *daemon = NULL;
-
-  /* remove the object only if there are no devices left */
-  if (udisks_linux_mdraid_object_have_devices (object))
-    goto out;
-
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-
-  object_uuid = g_strdup (udisks_linux_mdraid_object_get_uuid (object));
-  g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
-                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-  g_warn_if_fail (g_hash_table_remove (provider->uuid_to_mdraid, object_uuid));
-
- out:
-  g_free (object_uuid);
-}
-
-static void
-handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
-                                          const gchar         *action,
-                                          UDisksLinuxDevice   *device,
-                                          const gchar         *uuid,
-                                          gboolean             is_member)
-{
-  UDisksLinuxMDRaidObject *object;
-  UDisksDaemon *daemon;
-  const gchar *sysfs_path;
-
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
-
-  /* if uuid is NULL or bogus, consider it a remove event */
-  if (uuid == NULL || g_strcmp0 (uuid, "00000000:00000000:00000000:00000000") == 0)
-    action = "remove";
-  else
-    {
-      /* sometimes the bogus UUID looks legit, but it is still bogus. */
-      if (!is_member)
-        {
-          UDisksLinuxMDRaidObject *candidate = g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path);
-          if (candidate != NULL &&
-              g_strcmp0 (uuid, udisks_linux_mdraid_object_get_uuid (candidate)) != 0)
-            {
-              udisks_debug ("UUID of %s became bogus (changed from %s to %s)",
-                            sysfs_path, udisks_linux_mdraid_object_get_uuid (candidate), uuid);
-              action = "remove";
-            }
-        }
-    }
-
-  if (g_strcmp0 (action, "remove") == 0)
-    {
-      /* first check if this device was a member */
-      object = g_hash_table_lookup (provider->sysfs_path_to_mdraid_members, sysfs_path);
-      if (object != NULL)
-        {
-          udisks_linux_mdraid_object_uevent (object, action, device, TRUE /* is_member */);
-          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid_members, sysfs_path));
-          maybe_remove_mdraid_object (provider, object);
-        }
-
-      /* then check if the device was the raid device */
-      object = g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path);
-      if (object != NULL)
-        {
-          udisks_linux_mdraid_object_uevent (object, action, device, FALSE /* is_member */);
-          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid, sysfs_path));
-          maybe_remove_mdraid_object (provider, object);
-        }
-    }
-  else
-    {
-      if (uuid == NULL)
-        goto out;
-
-      object = g_hash_table_lookup (provider->uuid_to_mdraid, uuid);
-      if (object != NULL)
-        {
-          if (is_member)
-            {
-              if (g_hash_table_lookup (provider->sysfs_path_to_mdraid_members, sysfs_path) == NULL)
-                g_hash_table_insert (provider->sysfs_path_to_mdraid_members, g_strdup (sysfs_path), object);
-            }
-          else
-            {
-              if (g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path) == NULL)
-                g_hash_table_insert (provider->sysfs_path_to_mdraid, g_strdup (sysfs_path), object);
-            }
-          udisks_linux_mdraid_object_uevent (object, action, device, is_member);
-        }
-      else
-        {
-          object = udisks_linux_mdraid_object_new (daemon, uuid);
-          udisks_linux_mdraid_object_uevent (object, action, device, is_member);
-          g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                        G_DBUS_OBJECT_SKELETON (object));
-          g_hash_table_insert (provider->uuid_to_mdraid, g_strdup (uuid), object);
-          if (is_member)
-            g_hash_table_insert (provider->sysfs_path_to_mdraid_members, g_strdup (sysfs_path), object);
-          else
-            g_hash_table_insert (provider->sysfs_path_to_mdraid, g_strdup (sysfs_path), object);
-        }
-    }
-
- out:
-  ;
-}
-
-static void
-handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
-                                const gchar         *action,
-                                UDisksLinuxDevice   *device)
-{
-  const gchar *uuid;
-  const gchar *member_uuid;
-
-  /* For nested RAID levels, a device can be both a member of one
-   * array and the RAID device for another. Therefore we need to
-   * consider both UUIDs.
-   *
-   * For removal, we also need to consider the case where there is no
-   * UUID.
-   */
-  uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_UUID");
-  if (! uuid)
-    uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_UUID");
-
-  member_uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_UUID");
-  if (! member_uuid)
-    member_uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_UUID");
-
-  if (uuid != NULL)
-    handle_block_uevent_for_mdraid_with_uuid (provider, action, device, uuid, FALSE);
-
-  if (member_uuid != NULL)
-    handle_block_uevent_for_mdraid_with_uuid (provider, action, device, member_uuid, TRUE);
-
-  if (uuid == NULL && member_uuid == NULL)
-    handle_block_uevent_for_mdraid_with_uuid (provider, action, device, NULL, FALSE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1301,6 +1144,10 @@ handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
                      UDisksLinuxDevice   *device)
 {
+  UDisksDaemon *daemon;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
   /* We use the sysfs block device for all of
    *
    *  - UDisksLinuxDriveObject
@@ -1314,7 +1161,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
-      handle_block_uevent_for_mdraid (provider, action, device);
+#ifdef HAVE_MDRAID
+      handle_block_uevent_for_mdraid (daemon, &provider->mdraid, action, device);
+#endif /* HAVE_MDRAID */
       handle_block_uevent_for_modules (provider, action, device);
     }
   else
@@ -1333,7 +1182,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       else
         {
           handle_block_uevent_for_modules (provider, action, device);
-          handle_block_uevent_for_mdraid (provider, action, device);
+#ifdef HAVE_MDRAID
+          handle_block_uevent_for_mdraid (daemon, &provider->mdraid, action, device);
+#endif /* HAVE_MDRAID */
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
         }
