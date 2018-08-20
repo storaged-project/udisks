@@ -425,6 +425,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
 
   if (! bd_vdo_start (arg_name, arg_force_rebuild, NULL, &error))
     {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
