@@ -900,7 +900,7 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
 {
   GError *error;
   gint child_argc;
-  gchar **child_argv;
+  gchar **child_argv = NULL;
   struct passwd pwstruct;
   gchar pwbuf[8192];
   struct passwd *pw = NULL;
@@ -1066,7 +1066,7 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
   g_source_unref (job->child_stderr_source);
 
  out:
-  ;
+  g_strfreev (child_argv);
 }
 
 /* manage strings with potentially unsafe content */
