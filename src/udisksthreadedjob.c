@@ -53,9 +53,6 @@ struct _UDisksThreadedJob
   UDisksThreadedJobFunc job_func;
   gpointer user_data;
   GDestroyNotify user_data_free_func;
-
-  gboolean job_result;
-  GError *job_error;
 };
 
 struct _UDisksThreadedJobClass
@@ -96,9 +93,6 @@ static void
 udisks_threaded_job_finalize (GObject *object)
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
-
-  if (job->job_error != NULL)
-    g_clear_error (&(job->job_error));
 
   if (job->user_data_free_func != NULL)
     job->user_data_free_func (job->user_data);
@@ -175,14 +169,18 @@ job_complete (GObject      *source_object,
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
   gboolean ret;
+  gboolean job_result;
+  GError *job_error = NULL;
 
-  /* GTask holds a reference to 'job' so it's safe for a signal-handler to release the last one */
+  job_result = g_task_propagate_boolean (G_TASK (res), &job_error);
+
   g_signal_emit (job,
                  signals[THREADED_JOB_COMPLETED_SIGNAL],
                  0,
-                 job->job_result,
-                 job->job_error,
+                 job_result,
+                 job_error,
                  &ret);
+  g_clear_error (&job_error);
 }
 
 static void
@@ -192,17 +190,19 @@ run_task_job (GTask            *task,
               GCancellable     *cancellable)
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
+  GError *job_error = NULL;
 
-  g_assert (!job->job_result);
-  g_assert_no_error (job->job_error);
+  if (g_task_return_error_if_cancelled (task))
+    return;
 
-  if (!g_cancellable_set_error_if_cancelled (cancellable, &job->job_error))
+  if (! job->job_func (job, cancellable, job->user_data, &job_error))
     {
-      job->job_result = job->job_func (job,
-                                       cancellable,
-                                       job->user_data,
-                                       &job->job_error);
+      g_task_return_error (task, job_error);
+      return;
     }
+
+  g_warn_if_fail (job_error == NULL);
+  g_task_return_boolean (task, TRUE);
 }
 
 static void
