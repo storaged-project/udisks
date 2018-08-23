@@ -134,7 +134,6 @@ on_timeout (gpointer user_data)
 {
   GCancellable *cancellable = G_CANCELLABLE (user_data);
   g_cancellable_cancel (cancellable);
-  g_main_loop_quit (loop);
   return FALSE;
 }
 
@@ -148,7 +147,6 @@ test_spawned_job_cancelled_midway (void)
   job = udisks_spawned_job_new ("/bin/sleep 0.5", NULL, getuid (), geteuid (), NULL, cancellable);
   udisks_spawned_job_start (job);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
-  g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
@@ -554,7 +552,6 @@ test_threaded_job_cancelled_midway (void)
   job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   udisks_threaded_job_start (job);
-  g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              (gpointer) "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_assert_cmpint (count, >, 0);
