@@ -90,11 +90,6 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -D_FILE_OFFSET_BITS=64                    \
 ])
 
-AC_PATH_PROG([XSLTPROC], [xsltproc])
-if test -z "$XSLTPROC"; then
-  AC_MSG_ERROR([xsltproc is needed])
-fi
-
 if test -z "$enable_modules"; then
   enable_modules=no
 fi
