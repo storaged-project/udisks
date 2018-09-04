@@ -179,6 +179,39 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void update_partitions_list (UDisksObject           *disk_object,
+                                    UDisksLinuxBlockObject *part_object)
+{
+  UDisksPartitionTable *table = NULL;
+  gchar **partitions = NULL;
+  const gchar *object_path = NULL;
+  guint num_parts = 0;
+
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (part_object));
+  if (object_path == NULL)
+    return;
+
+  table = udisks_object_peek_partition_table (disk_object);
+  if (table == NULL)
+    return;
+
+  partitions = udisks_partition_table_dup_partitions (table);
+  if (partitions != NULL && g_strv_contains ((const gchar **) partitions, object_path))
+    /* this partition is already in the property */
+    goto out;
+
+  num_parts = g_strv_length (partitions);
+  partitions = g_realloc (partitions, (num_parts + 2) * sizeof (gchar *));
+  partitions[num_parts] = g_strdup (object_path);
+  partitions[num_parts + 1] = NULL;
+
+  udisks_partition_table_set_partitions (table, (const gchar**) partitions);
+
+out:
+  if (partitions)
+    g_strfreev (partitions);
+}
+
 /**
  * udisks_linux_partition_update:
  * @partition: A #UDisksLinuxPartition.
@@ -265,8 +298,10 @@ udisks_linux_partition_update (UDisksLinuxPartition   *partition,
         }
     }
 
-  if (disk_block_object != NULL)
+  if (disk_block_object != NULL) {
     table_object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (disk_block_object));
+    update_partitions_list (disk_block_object, object);
+  }
 
   udisks_partition_set_number (UDISKS_PARTITION (partition), number);
   udisks_partition_set_type_ (UDISKS_PARTITION (partition), type);
