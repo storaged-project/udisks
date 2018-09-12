@@ -1680,6 +1680,42 @@ get_error_code_for_umount (const gchar *error_message)
     return UDISKS_ERROR_FAILED;
 }
 
+typedef struct
+{
+  const gchar *object_path;
+  guint64      old_size;
+  gchar       *mount_point;
+} WaitForFilesystemMountPointsData;
+
+static UDisksObject *
+wait_for_filesystem_mount_points (UDisksDaemon *daemon,
+                                  gpointer      user_data)
+{
+  WaitForFilesystemMountPointsData *data = user_data;
+  UDisksObject *object = NULL;
+  UDisksFilesystem *filesystem = NULL;
+  const gchar * const *mount_points = NULL;
+
+  object = udisks_daemon_find_object (daemon, data->object_path);
+
+  if (object != NULL)
+    {
+      filesystem = udisks_object_peek_filesystem (object);
+      if (filesystem != NULL)
+        {
+          mount_points = udisks_filesystem_get_mount_points (filesystem);
+        }
+      /* If we know which mount point should have gone, directly test for it, otherwise test if any has gone */
+      if (mount_points != NULL && ((data->mount_point != NULL && g_strv_contains (mount_points, data->mount_point)) ||
+          g_strv_length ((gchar **) mount_points) == data->old_size))
+        {
+          g_clear_object (&object);
+        }
+    }
+
+  return object;
+}
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unmount (UDisksFilesystem      *filesystem,
@@ -1701,6 +1737,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
   gboolean fstab_mounted;
   gboolean success;
   UDisksBaseJob *job = NULL;
+  UDisksObject *filesystem_object = NULL;
+  WaitForFilesystemMountPointsData wait_data = {NULL, 0, NULL};
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
@@ -1734,6 +1772,9 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                              udisks_block_get_device (block));
       goto out;
     }
+
+  wait_data.object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  wait_data.old_size = g_strv_length ((gchar **) mount_points);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
@@ -1825,8 +1866,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                      udisks_block_get_device (block),
                      mount_point,
                      caller_uid);
-      udisks_filesystem_complete_unmount (filesystem, invocation);
-      goto out;
+      goto waiting;
     }
 
   error = NULL;
@@ -1891,12 +1931,24 @@ handle_unmount (UDisksFilesystem      *filesystem,
                  udisks_block_get_device (block),
                  caller_uid);
 
+  waiting:
+  /* wait for mount-points update before returning from method */
+  wait_data.mount_point = g_strdup (mount_point);
+  filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                          wait_for_filesystem_mount_points,
+                                                          &wait_data,
+                                                          NULL,
+                                                          5,
+                                                          NULL);
+
   udisks_filesystem_complete_unmount (filesystem, invocation);
 
  out:
+  g_free (wait_data.mount_point);
   g_free (mount_point);
   g_free (fstab_mount_options);
   g_clear_object (&object);
+  g_clear_object (&filesystem_object);
 
   g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
 
