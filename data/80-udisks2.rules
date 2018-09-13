@@ -10,7 +10,7 @@
 # Skip probing if not a block device or if requested by other rules
 #
 SUBSYSTEM!="block", GOTO="udisks_probe_end"
-ENV{DM_MULTIPATH_DEVICE_PATH}=="?*", GOTO="udisks_probe_end"
+ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="udisks_probe_end"
 ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="udisks_probe_end"
 
 # MD-RAID (aka Linux Software RAID) members
