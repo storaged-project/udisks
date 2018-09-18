@@ -60,7 +60,7 @@ udisks_log (UDisksLogLevel     level,
 
 #if GLIB_CHECK_VERSION(2, 50, 0)
   g_log_structured ("udisks", (GLogLevelFlags) level,
-                    "MESSAGE", message, "THREAD_ID", "%d", (gint) syscall (SYS_gettid),
+                    "MESSAGE", "%s", message, "THREAD_ID", "%d", (gint) syscall (SYS_gettid),
                     "CODE_FUNC", function, "CODE_FILE", location);
 #else
   g_log ("udisks", level, "[%d]: %s [%s, %s()]", (gint) syscall (SYS_gettid), message, location, function);
