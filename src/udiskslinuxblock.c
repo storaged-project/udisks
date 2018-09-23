@@ -966,6 +966,21 @@ udisks_linux_find_child_configuration (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+get_slave_sysfs_path (const gchar *sysfs_path)
+{
+  gchar *ret = NULL;
+  gchar **slaves;
+  slaves = udisks_daemon_util_resolve_links (sysfs_path, "slaves");
+  if (slaves != NULL && g_strv_length (slaves) == 1)
+    {
+      ret = g_strdup (slaves[0]);
+    }
+
+  g_strfreev (slaves);
+  return ret;
+}
+
 /**
  * udisks_linux_block_update:
  * @block: A #UDisksLinuxBlock.
@@ -1039,13 +1054,13 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
       if (dm_uuid != NULL &&
            (g_str_has_prefix (dm_uuid, "CRYPT-LUKS") || g_str_has_prefix (dm_uuid, "CRYPT-TCRYPT")))
         {
-          gchar **slaves;
-          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device),
-                                                     "slaves");
-          if (g_strv_length (slaves) == 1)
+          gchar *slave_sysfs_path;
+          slave_sysfs_path = get_slave_sysfs_path (g_udev_device_get_sysfs_path (device->udev_device));
+
+          while (slave_sysfs_path)
             {
               UDisksLinuxBlockObject *slave_object;
-              slave_object = find_block_device_by_sysfs_path (object_manager, slaves[0]);
+              slave_object = find_block_device_by_sysfs_path (object_manager, slave_sysfs_path);
               if (slave_object != NULL)
                 {
                   UDisksEncrypted *enc;
@@ -1062,9 +1077,16 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
                     }
 
                   g_object_unref (slave_object);
+                  g_free (slave_sysfs_path);
+                  break;
+                }
+              else
+                {
+                  gchar *old_sysfs_path = slave_sysfs_path;
+                  slave_sysfs_path = get_slave_sysfs_path (old_sysfs_path);
+                  g_free (old_sysfs_path);
                 }
             }
-          g_strfreev (slaves);
         }
       g_free (dm_uuid);
     }
