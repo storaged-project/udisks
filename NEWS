@@ -1,4 +1,19 @@
 ---------------------------
+udisks 2.8.2 (unreleased)
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.8.1:
+(TODO: make shortlog)
+
+Thanks to all our contributors.
+
+Tomas Bzatek
+(TODO: date --rfc-3339='date')
+
+---------------------------
 udisks 2.8.1
 ---------------------------
 
