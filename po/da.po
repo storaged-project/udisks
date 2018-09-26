@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-08-10 13:08+0200\n"
-"PO-Revision-Date: 2018-01-30 03:39+0000\n"
+"PO-Revision-Date: 2018-09-20 10:40+0000\n"
 "Last-Translator: scootergrisen <scootergrisen@gmail.com>\n"
 "Language-Team: Danish\n"
 "MIME-Version: 1.0\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: da\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Zanata 4.6.0\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -358,11 +358,11 @@ msgstr ""
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:1
 msgid "Manage Bcache"
-msgstr "Håndter Bcache"
+msgstr "Håndter bcache"
 
 #: ../modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in.h:2
 msgid "Authentication is required to manage Bcache"
-msgstr "Der kræves godkendelse for at håndtere Bcache"
+msgstr "Der kræves godkendelse for at håndtere bcache"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:276
 msgid "Authentication is required to destroy bcache device."
@@ -876,6 +876,8 @@ msgstr ""
 #: ../src/udiskslinuxencrypted.c:1036
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Der kræves godkendelse for at ændre størrelsen på den krypterede enhed "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1403,7 +1405,7 @@ msgstr "HFS+"
 #: ../udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 #: ../udisks/udisksclient.c:1899
 #, c-format
@@ -1594,12 +1596,12 @@ msgstr "Intel RSTe RAID-medlem"
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Muligvis krypteret"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "Krypteret?"
 
 #: ../udisks/udisksclient.c:1928
 #, c-format
@@ -1620,12 +1622,12 @@ msgstr "LUKS-kryptering"
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "VeraCrypt-/TrueCrypt-krypteret"
 
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1847,7 +1849,7 @@ msgstr "Apple HFS/HFS+"
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -1875,7 +1877,7 @@ msgstr "Apple RAID (frakoblet)"
 #: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Apple Boot"
-msgstr "Apple Boot"
+msgstr "Apple"
 
 #: ../udisks/udisksclient.c:2234
 msgctxt "part-type"
@@ -2334,7 +2336,7 @@ msgstr "Redigerer krypteret enhed"
 #: ../udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Ændre størrelsen på krypteret enhed"
 
 #: ../udisks/udisksclient.c:2481
 msgctxt "job"

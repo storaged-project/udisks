@@ -1,17 +1,38 @@
 ---------------------------
-udisks 2.8.1 (unreleased)
+udisks 2.8.1
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.8.0:
-(TODO: make shortlog)
+
+Adam Williamson (1):
+      Fix DM_MULTIPATH_DEVICE_PATH in udev rules
+
+John Keeping (1):
+      configure: remove redundant xsltproc check
+
+Kai Lüke (1):
+      Fix string format vulnerability
+
+Tomas Bzatek (2):
+      Post-release version bump to 2.8.1
+      vdo: Fix expected test error on grow_physical
+
+Vojtech Trefny (4):
+      Skip VDO tests if vdo tool or kvdo kernel module isn't available
+      Revert (or remove) changes in the vdo config after tests
+      Fix expected error message when starting inactive VDO volume
+      Update the Partitions property on partition "add" event
+
+segfault (1):
+      Fix backing device not set when unlocking multiple encrypted volume
 
 Thanks to all our contributors.
 
-Tomas Bzatek
-(TODO: date --rfc-3339='date')
+Vojtech Trefny
+2018-09-26
 
 ---------------------------
 udisks 2.8.0

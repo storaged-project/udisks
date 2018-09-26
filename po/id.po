@@ -6,20 +6,21 @@
 # Andika Triwidada <andika@gmail.com>, 2012-2014
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Andika Triwidada <andika@gmail.com>, 2017. #zanata
+# Andika Triwidada <andika@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-08-10 13:08+0200\n"
-"PO-Revision-Date: 2017-12-25 06:31+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2018-09-11 12:45+0000\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: id\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Zanata 4.6.0\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -878,6 +879,7 @@ msgstr ""
 #: ../src/udiskslinuxencrypted.c:1036
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Otentikasi diperlukan untuk mengubah ukuran perangkat terenkripsi $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1410,7 +1412,7 @@ msgstr "HFS+"
 #: ../udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 #: ../udisks/udisksclient.c:1899
 #, c-format
@@ -1601,12 +1603,12 @@ msgstr "Anggota RAID Intel RSTe"
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Mungkin Terenkripsi"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "Terenkripsi?"
 
 #: ../udisks/udisksclient.c:1928
 #, c-format
@@ -1627,12 +1629,12 @@ msgstr "Enkripsi LUKS"
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "Enkripsi VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1854,7 +1856,7 @@ msgstr "HFS/HFS+ Apple"
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -2341,7 +2343,7 @@ msgstr "Memodifikasi Perangkat Terenkripsi"
 #: ../udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Mengubah Ukuran Perangkat Terenkripsi"
 
 #: ../udisks/udisksclient.c:2481
 msgctxt "job"

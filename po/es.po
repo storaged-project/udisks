@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-08-10 13:08+0200\n"
-"PO-Revision-Date: 2018-01-03 07:32+0000\n"
+"PO-Revision-Date: 2018-08-21 10:05+0000\n"
 "Last-Translator: Máximo Castañeda Riloba <mcrcctm@gmail.com>\n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Zanata 4.6.0\n"
+"X-Generator: Zanata 4.6.2\n"
 
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
@@ -1194,6 +1194,8 @@ msgstr ""
 #: ../src/udiskslinuxencrypted.c:1036
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Se requiere autenticación para cambiar el tamaño del dispositivo cifrado "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1855,7 +1857,7 @@ msgstr "HFS+"
 #: ../udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
@@ -2115,12 +2117,12 @@ msgstr "Miembro de RAID Intel RSTe"
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Tal vez cifrado"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "¿Cifrado?"
 
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
@@ -2147,12 +2149,12 @@ msgstr "Cifrado LUKS"
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "Cifrado VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
@@ -2448,7 +2450,7 @@ msgstr "HFS/HFS+ de Apple"
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -3119,7 +3121,7 @@ msgstr "Modificando el dispositivo cifrado"
 #: ../udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Redimensionando dispositivo cifrado"
 
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged

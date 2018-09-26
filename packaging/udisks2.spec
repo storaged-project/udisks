@@ -444,6 +444,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Wed Sep 26 2018 Vojtech Trefny <vtrefny@redhat.com> - 2.8.1-1
+- Version 2.8.1
+
 * Mon Aug 13 2018 Tomas Bzatek <tbzatek@redhat.com> - 2.8.0-1
 - Version 2.8.0
 

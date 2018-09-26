@@ -7,12 +7,13 @@
 # Piotr Drąg <piotrdrag@gmail.com>, 2016. #zanata
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-08-10 13:08+0200\n"
-"PO-Revision-Date: 2017-12-05 12:27+0000\n"
+"PO-Revision-Date: 2018-08-14 01:55+0000\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish\n"
 "MIME-Version: 1.0\n"
@@ -20,7 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pl\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Zanata 4.6.0\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -920,6 +921,8 @@ msgstr ""
 #: ../src/udiskslinuxencrypted.c:1036
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby zmienić rozmiar zaszyfrowanego "
+"urządzenia $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1469,7 +1472,7 @@ msgstr "HFS+"
 #: ../udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 #: ../udisks/udisksclient.c:1899
 #, c-format
@@ -1662,12 +1665,12 @@ msgstr "Element macierzy RAID RSTe firmy Intel"
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Może być zaszyfrowane"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "Zaszyfrowane?"
 
 #: ../udisks/udisksclient.c:1928
 #, c-format
@@ -1688,12 +1691,12 @@ msgstr "Szyfrowanie LUKS"
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "Szyfrowanie VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1915,7 +1918,7 @@ msgstr "Partycja HFS/HFS+ firmy Apple"
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Partycja APFS firmy Apple"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -2402,7 +2405,7 @@ msgstr "Modyfikowanie zaszyfrowanego urządzenia"
 #: ../udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Zmienianie rozmiaru zaszyfrowanego urządzenia"
 
 #: ../udisks/udisksclient.c:2481
 msgctxt "job"

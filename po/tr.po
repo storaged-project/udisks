@@ -10,20 +10,21 @@
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Muhammet Kara <muhammet.k@gmail.com>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Emin Tufan Çetin <etcetin@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-08-10 13:08+0200\n"
-"PO-Revision-Date: 2017-11-06 03:49+0000\n"
-"Last-Translator: Muhammet Kara <muhammet.k@gmail.com>\n"
+"PO-Revision-Date: 2018-09-02 08:28+0000\n"
+"Last-Translator: Emin Tufan Çetin <etcetin@gmail.com>\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: tr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Zanata 4.6.0\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -66,11 +67,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:9
 msgid "Take ownership of a filesystem"
-msgstr ""
+msgstr "Dosya sisteminin sahipliğini al"
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:10
 msgid "Authentication is required to take ownership of a filesystem."
-msgstr ""
+msgstr "Dosya sisteminin sahipliğini almak için kimlik doğrulaması gerekli "
 
 #: ../data/org.freedesktop.UDisks2.policy.in.h:11
 msgid "Unlock an encrypted device"
@@ -373,260 +374,242 @@ msgid "Authentication is required to manage Bcache"
 msgstr "Bcache'i yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:276
-#, fuzzy
 msgid "Authentication is required to destroy bcache device."
-msgstr "Aygıtı değiştirmek için kimlik doğrulaması gerekli"
+msgstr "Bcache aygıtını yok etmek için kimlik doğrulaması gerekli."
 
 #: ../modules/bcache/udiskslinuxblockbcache.c:335
-#, fuzzy
 msgid "Authentication is required to set mode of bcache device."
-msgstr "Aygıtı değiştirmek için kimlik doğrulaması gerekli"
+msgstr "Bcache aygıtının kipini belirlemek için kimlik doğrulaması gerekli."
 
 #: ../modules/bcache/udiskslinuxmanagerbcache.c:247
-#, fuzzy
 msgid "Authentication is required to create bcache device."
-msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
+msgstr "Bcache aygıtı oluşturmak için kimlik doğrulaması gerekli."
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:1
 msgid "Manage BTRFS"
-msgstr ""
+msgstr "BTRFS'i yönet"
 
 #: ../modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage BTRFS"
-msgstr "RAID dizilerini yönetmek için kimlik doğrulaması gerekli"
+msgstr "BTRFS'i yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:343
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:616
-#, fuzzy
 msgid "Authentication is required to change label for BTRFS volume"
-msgstr "İşlem iptal etmek için kimlik doğrulaması gerekli"
+msgstr "BTRFS biriminin etiketini değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:473
-#, fuzzy
 msgid "Authentication is required to add the device to the volume"
-msgstr "RAID dizisine aygıt eklemek için kimlik doğrulaması gerekli"
+msgstr "Aygıtı birime eklemek için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:684
-#, fuzzy
 msgid "Authentication is required to create a new snapshot"
-msgstr "RAID dizisi oluşturmak için kimlik doğrulaması gerekli"
+msgstr "Yeni anlık görüntü oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:743
-#, fuzzy
 msgid "Authentication is required to check and repair the volume"
-msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
+msgstr "Birimi denetlemek ve onarmak için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxfilesystembtrfs.c:796
-#, fuzzy
 msgid "Authentication is required to resize the volume"
-msgstr "Ortam çıkarmak için kimlik doğrulaması gerekli"
+msgstr "Birimi yeniden boyutlandırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/btrfs/udiskslinuxmanagerbtrfs.c:210
-#, fuzzy
 msgid "Authentication is required to create a new volume"
-msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
+msgstr "Yeni birim oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "iSCSI'yı yönet"
 
 #: ../modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
-msgstr ""
+msgstr "iSCSI'yı yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:136
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:722
-#, fuzzy
 msgid "Authentication is required to perform iSCSI logout"
-msgstr "$(drive) sürücüsünü biçimlendirmek için kimlik doğrulaması gerekli"
+msgstr "iSCSI çıkışı gerçekleştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/udiskslinuxiscsisession.c:169
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:747
 #, c-format
 msgid "Logout failed: %s"
-msgstr ""
+msgstr "Çıkış başarısız: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
 #, c-format
 msgid "Error opening %s: %s"
-msgstr ""
+msgstr "%s açılırken hata: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "%s okunurken hata: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
-#, fuzzy
 msgid "Authentication is required change iSCSI initiator name"
-msgstr "RAID dizilerini yönetmek için kimlik doğrulaması gerekli"
+msgstr "iSCSI başlatıcı adını değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:393
 msgid "Empty initiator name"
-msgstr ""
+msgstr "Boş başlatıcı adı"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s: %s"
-msgstr ""
+msgstr "%s'e yazım hatası: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
-#, fuzzy
 msgid "Authentication is required to discover targets"
-msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
+msgstr "Hedefleri keşfetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:545
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:594
 #, c-format
 msgid "Discovery failed: %s"
-msgstr ""
+msgstr "Keşif başarısız: %s"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:579
-#, fuzzy
 msgid "Authentication is required to discover firmware targets"
-msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
+msgstr ""
+"Donanım yazılımı (firmware) hedeflerini keşfetmek için kimlik doğrulaması "
+"gerekli"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:632
-#, fuzzy
 msgid "Authentication is required to perform iSCSI login"
-msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
+msgstr "iSCSI girişi gerçekleştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/iscsi/udiskslinuxmanageriscsiinitiator.c:657
 #, c-format
 msgid "Login failed: %s"
-msgstr ""
+msgstr "Giriş başarısız: %s"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "LVM'i yönet"
 
 #: ../modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "LVM'i yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:423
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Mantıksal birimi silmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:535
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Mantıksal birimi yeniden adlandırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:596
-#, fuzzy
 msgid "Authentication is required to resize a logical volume"
-msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
+msgstr ""
+"Mantıksal birimi yeniden boyutlandırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:689
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Mantıksal birimi aktifleştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:756
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Mantıksal birimi pasifleştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:822
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
+"Mantıksal birimin anlık görüntüsünü oluşturmak için kimlik doğrulaması "
+"gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:879
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:941
 msgid "LVMCache not enabled at compile time."
-msgstr ""
+msgstr "LVMCache derleme zamanında etkinleştirilmemiş."
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:893
-#, fuzzy
 msgid "Authentication is required to convert logical volume to cache"
-msgstr "Aygıt açmak için kimlik doğrulaması gerekli"
+msgstr ""
+"Mantıksal birimi önbelleğe dönüştürmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:915
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:977
 #, c-format
 msgid "Error converting volume: %s"
-msgstr ""
+msgstr "Birim dönüştürürken hata: %s"
 
 #: ../modules/lvm2/udiskslinuxlogicalvolume.c:955
-#, fuzzy
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
+msgstr ""
+"Önbellek mantıksal biriminin, önbellek havuz mantıksal biriminden ayrılması "
+"için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Birim kümesi oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:303
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Birim kümesi silmek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:405
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Birim kümesini yeniden adlandırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:516
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "Birim kümesine aygıt eklemek için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:613
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "Birim kümesinden aygıt kaldırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:622
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "Birim kümesindeki aygıtı boşaltmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:825
 msgid "Authentication is required to create a logical volume"
-msgstr ""
+msgstr "Mantıksal birim oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:831
-#, fuzzy
 msgid "Authentication is required to create a thin volume"
-msgstr "$(drive) üzerinde bölüm oluşturmak için kimlik doğrulaması gerekli"
+msgstr "İnce birim oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lvm2/udiskslinuxvolumegroup.c:837
-#, fuzzy
 msgid "Authentication is required to create a thin pool volume"
-msgstr "$(drive) üzerinde bölüm oluşturmak için kimlik doğrulaması gerekli"
+msgstr "İnce havuz birimi oluşturmak için kimlik doğrulaması gerekli"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:1
 msgid "Manage disk drive LED"
-msgstr ""
+msgstr "Disk sürücüsü LED'ini yönet"
 
 #: ../modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in.h:2
 msgid "Authentication is required to manage disk drive LED"
-msgstr ""
+msgstr "Disk sürücüsü LED'ini yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:1
-#, fuzzy
 msgid "Manage zRAM"
-msgstr "RAID dizilerini yönet"
+msgstr "zRAM'i yönet"
 
 #: ../modules/zram/data/org.freedesktop.UDisks2.zram.policy.in.h:2
-#, fuzzy
 msgid "Authentication is required to manage zRAM"
-msgstr "RAID dizilerini yönetmek için kimlik doğrulaması gerekli"
+msgstr "zRAM'i yönetmek için kimlik doğrulaması gerekli"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:387
-#, fuzzy
 msgid "Authentication is required to add zRAM kernel module"
-msgstr "İşlem iptal etmek için kimlik doğrulaması gerekli"
+msgstr "zRAM çekirdek modülü eklemek için kimlik doğrulaması gerekli"
 
 #: ../modules/zram/udiskslinuxmanagerzram.c:483
-#, fuzzy
 msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Aygıt açmak için kimlik doğrulaması gerekli"
+msgstr "zRAM çekirdek modülü kaldırmak için kimlik doğrulaması gerekli"
 
 #: ../modules/zram/udiskslinuxblockzram.c:281
-#, fuzzy
 msgid "Authentication is required to enable zRAM device"
-msgstr "Aygıt açmak için kimlik doğrulaması gerekli"
+msgstr "zRAM aygıtını etkinleştirmek için kimlik doğrulaması gerekli"
 
 #: ../modules/zram/udiskslinuxblockzram.c:382
-#, fuzzy
 msgid "Authentication is required to disable zRAM device"
-msgstr "Aygıtı değiştirmek için kimlik doğrulaması gerekli"
+msgstr "zRAM aygıtını devre dışı bırakmak için kimlik doğrulaması gerekli"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -704,7 +687,7 @@ msgstr "$(drive) sürücüsünü biçimlendirmek için kimlik doğrulaması gere
 
 #: ../src/udiskslinuxblock.c:3027 ../src/udiskslinuxmdraid.c:1553
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Sistem yapılandırmasını düzenlemek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
@@ -747,7 +730,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:3719
 msgid "Authentication is required to open $(drive)."
-msgstr ""
+msgstr "$(drive) sürücüsünü açmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -922,6 +905,8 @@ msgstr ""
 #: ../src/udiskslinuxencrypted.c:1036
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Şifrelenmiş $(drive) aygıtını yeniden boyutlandırmak için kimlik doğrulaması"
+" gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1003,6 +988,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2217
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
+"$(drive) üzerindeki dosya sistemini yeniden boyutlandırmak için kimlik "
+"doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1013,6 +1000,7 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2376
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
+"$(drive) üzerindeki dosya sistemini onarmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1023,6 +1011,8 @@ msgstr ""
 #: ../src/udiskslinuxfilesystem.c:2536
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
+"$(drive) üzerindeki dosya sistemini denetlemek için kimlik doğrulaması "
+"gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -1034,6 +1024,8 @@ msgstr ""
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
+"$(drive) üzerindeki dosya sisteminin sahipliğini değiştirmek için kimlik "
+"doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1122,7 +1114,7 @@ msgstr ""
 
 #: ../src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "RAID dizisini silmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1179,6 +1171,8 @@ msgstr ""
 #: ../src/udiskslinuxswapspace.c:397
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
+"$(drive) üzerindeki takas alanının etiketini belirlemek için kimlik "
+"doğrulaması gerekli"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -1247,56 +1241,56 @@ msgstr "Bilinmeyen"
 #: ../udisks/udisksclient.c:1592
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1598
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1604
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1610
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1635
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1641
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1647
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
 #: ../udisks/udisksclient.c:1653
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1458,7 +1452,7 @@ msgstr "HFS+"
 #: ../udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 #: ../udisks/udisksclient.c:1899
 #, c-format
@@ -1628,33 +1622,33 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
-msgstr ""
+msgstr "Intel Rapid Storage Teknolojisi kurumsal RAID Üyesi (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1925
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Intel RSTe RAID Üyesi (%s)"
 
 #: ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Intel Rapid Storage Teknolojisi kurumsal RAID Üyesi"
 
 #: ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Intel RSTe RAID Üyesi"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Muhtemelen Şifreli"
 
 #: ../udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "Şifrelenmiş?"
 
 #: ../udisks/udisksclient.c:1928
 #, c-format
@@ -1675,12 +1669,12 @@ msgstr "LUKS Şifreleme"
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt Şifreleme"
 
 #: ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1902,7 +1896,7 @@ msgstr "Apple HFS/HFS+"
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -2127,7 +2121,7 @@ msgstr "ChromeOS için Ayrılmış"
 #: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Intel FFS Ayrılmış Alan"
 
 #: ../udisks/udisksclient.c:2284
 msgctxt "part-type"
@@ -2243,7 +2237,7 @@ msgstr "FAT16"
 #: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
-msgstr ""
+msgstr "NTFS/exFAT/HPFS"
 
 #: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
@@ -2389,7 +2383,7 @@ msgstr "Şifreli Aygıt Değiştiriliyor"
 #: ../udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Şifrelenmiş Aygıt Yeniden Boyutlandırılıyor"
 
 #: ../udisks/udisksclient.c:2481
 msgctxt "job"
@@ -2404,12 +2398,12 @@ msgstr "Takas Aygıtı Durduruluyor"
 #: ../udisks/udisksclient.c:2483
 msgctxt "job"
 msgid "Modifying Swap Device"
-msgstr ""
+msgstr "Takas Aygıtı Düzenleniyor"
 
 #: ../udisks/udisksclient.c:2484
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Denetleniyor"
 
 #: ../udisks/udisksclient.c:2485
 msgctxt "job"
@@ -2429,12 +2423,12 @@ msgstr "Dosya Sistemi Değiştiriliyor"
 #: ../udisks/udisksclient.c:2488
 msgctxt "job"
 msgid "Repairing Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Onarılıyor"
 
 #: ../udisks/udisksclient.c:2489
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Yeniden Boyutlandırılıyor"
 
 #: ../udisks/udisksclient.c:2490
 msgctxt "job"
