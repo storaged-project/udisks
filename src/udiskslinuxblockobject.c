@@ -222,6 +222,7 @@ udisks_linux_block_object_constructed (GObject *_object)
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
   GString *str;
   UDisksBlock *block = NULL;
+  UDisksPartition *partition = NULL;
 
   object->mount_monitor = udisks_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -244,6 +245,13 @@ udisks_linux_block_object_constructed (GObject *_object)
 
   block = udisks_object_peek_block (UDISKS_OBJECT (object));
   if (block && g_strcmp0 (udisks_block_get_crypto_backing_device (block), "/") != 0)
+    udisks_linux_block_object_uevent (object, "change", NULL);
+
+  /* run update for partitions again -- it sets the "Partitions" property
+   * on the PartitionTable interface and we need the object path for that
+   */
+  partition = udisks_object_peek_partition (UDISKS_OBJECT (object));
+  if (partition)
     udisks_linux_block_object_uevent (object, "change", NULL);
 
   if (G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed != NULL)

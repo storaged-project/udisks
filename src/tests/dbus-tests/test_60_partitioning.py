@@ -469,6 +469,10 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         # make sure partition is not in the system
         self.assertFalse(os.path.isdir(part_syspath))
 
+        # partitions property of the disk should be updated too
+        dbus_parts = self.get_property(disk, '.PartitionTable', 'Partitions')
+        dbus_parts.assertFalse()
+
     def test_dos_flags(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
