@@ -1,17 +1,17 @@
 ---------------------------
-udisks 2.7.8 (unreleased)
+udisks 2.7.8
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.7.7:
-(TODO: make shortlog)
+This is a bugfix release for UDisks 2.7. Included fixes:
 
-Thanks to all our contributors.
+- Fix string format vulnerability
+  Fixes CVE-2018-17336
 
 Vojtech Trefny
-(TODO: date --rfc-3339='date')
+2018-10-01
 
 ---------------------------
 udisks 2.7.7
