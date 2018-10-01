@@ -1,17 +1,20 @@
 ---------------------------
-udisks 2.6.6 (unreleased)
+udisks 2.6.6
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.6.5:
-(TODO: make shortlog)
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
 
-Thanks to all our contributors.
+This is a bugfix release for UDisks 2.6. Included fixes:
+
+- Fix string format vulnerability
+  Fixes CVE-2018-17336
 
 Vojtech Trefny
-(TODO: date)
+2018-10-01
 
 ---------------------------
 udisks 2.6.5
