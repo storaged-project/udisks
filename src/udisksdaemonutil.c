@@ -1587,7 +1587,7 @@ udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie *cookie)
       g_assert (cookie->magic == 0xdeadbeef);
       if (close (cookie->fd) != 0)
         {
-          udisks_critical ("Error closing inhbit-fd: %m");
+          udisks_critical ("Error closing inhibit-fd: %m");
         }
       g_free (cookie);
     }
