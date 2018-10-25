@@ -155,6 +155,8 @@ gchar *udisks_client_get_job_description_from_operation (const gchar *operation)
 gchar *udisks_client_get_job_description (UDisksClient   *client,
                                           UDisksJob      *job);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(UDisksClient, g_object_unref)
+
 /**
  * UDisksPartitionTypeInfo:
  * @table_type: A partition table type e.g. 'dos' or 'gpt'
@@ -182,6 +184,8 @@ struct _UDisksPartitionTypeInfo
 
 GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;
 void                 udisks_partition_type_info_free       (UDisksPartitionTypeInfo  *info);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(UDisksPartitionTypeInfo, udisks_partition_type_info_free)
 
 G_END_DECLS
 

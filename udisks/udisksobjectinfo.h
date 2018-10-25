@@ -46,6 +46,8 @@ GIcon        *udisks_object_info_get_media_icon_symbolic (UDisksObjectInfo  *inf
 const gchar  *udisks_object_info_get_one_liner           (UDisksObjectInfo  *info);
 const gchar  *udisks_object_info_get_sort_key            (UDisksObjectInfo  *info);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(UDisksObjectInfo, g_object_unref)
+
 G_END_DECLS
 
 #endif /* __UDISKS_OBJECT_INFO_H__ */
