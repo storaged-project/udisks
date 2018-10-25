@@ -182,6 +182,7 @@ struct _UDisksPartitionTypeInfo
   UDisksPartitionTypeInfoFlags  flags;
 };
 
+#define UDISKS_TYPE_PARTITION_TYPE_INFO (udisks_partition_type_info_get_type ())
 GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;
 void                 udisks_partition_type_info_free       (UDisksPartitionTypeInfo  *info);
 
