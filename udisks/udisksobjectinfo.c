@@ -48,7 +48,7 @@
  * The value return by udisks_object_info_get_one_liner() is designed
  * to contain enough information such that it is all that needs to be
  * shown about the object. As a result for e.g.  block devices or
- * drives it contains the special device device
+ * drives it contains the special device file
  * e.g. <filename>/dev/sda</filename>.
  *
  * Since: 2.1
