@@ -243,6 +243,7 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
         vdo.Remove(False, self.no_options, dbus_interface=self.iface_prefix + '.Block.VDO')
         self.assertFalse(os.path.exists('/dev/mapper/%s' % vdo_name))
 
+    @udiskstestcase.unstable_test
     def test_grow_physical(self):
         '''Test org.freedesktop.UDisks2.Block.VDO.GrowPhysical()'''
 
