@@ -53,15 +53,19 @@ udisks_log (UDisksLogLevel     level,
 {
   va_list var_args;
   gchar *message;
+  gchar *thread_id;
 
   va_start (var_args, format);
   message = g_strdup_vprintf (format, var_args);
   va_end (var_args);
 
 #if GLIB_CHECK_VERSION(2, 50, 0)
+  thread_id = g_strdup_printf ("%d", (gint) syscall (SYS_gettid));
   g_log_structured ("udisks", (GLogLevelFlags) level,
-                    "MESSAGE", "%s", message, "THREAD_ID", "%d", (gint) syscall (SYS_gettid),
-                    "CODE_FUNC", function, "CODE_FILE", location);
+                    "THREAD_ID", thread_id,
+                    "CODE_FUNC", function, "CODE_FILE", location,
+                    "MESSAGE", "%s", message);
+  g_free (thread_id);
 #else
   g_log ("udisks", level, "[%d]: %s [%s, %s()]", (gint) syscall (SYS_gettid), message, location, function);
 #endif
