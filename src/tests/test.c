@@ -549,6 +549,7 @@ test_threaded_job_cancelled_midway (void)
 
   cancellable = g_cancellable_new ();
   count = 0;
+  /* XXX: taking pointer to stack variable, watch out for thread job running after being cancelled */
   job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   udisks_threaded_job_start (job);
@@ -584,6 +585,7 @@ test_threaded_job_override_signal_handler (void)
 
   job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
   handler_ran = FALSE;
+  /* XXX: taking pointer to stack variable, watch out for thread job running after being cancelled */
   g_signal_connect (job, "threaded-job-completed", G_CALLBACK (on_threaded_job_completed), &handler_ran);
   udisks_threaded_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
