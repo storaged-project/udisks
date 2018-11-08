@@ -2499,7 +2499,8 @@
       the D-Bus method used to initiate the operation to return,
       usually returning the
       <literal>org.freedesktop.UDisks2.Error.Cancelled</literal>
-      error.
+      error. Once cancellation is requested it may take some time before
+      the job is actually completed as there might be ongoing I/O.
   -->
   <interface name="org.freedesktop.UDisks2.Job">
 

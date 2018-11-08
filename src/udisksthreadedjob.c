@@ -367,7 +367,9 @@ void udisks_threaded_job_start (UDisksThreadedJob *job) {
                      job_complete,
                      NULL);
 
-  g_task_set_return_on_cancel (task, TRUE);
+  /* Only spawn the completed callback once the job func has finished, we don't
+   * support early return as there still might be some undergoing I/O. */
+  g_task_set_return_on_cancel (task, FALSE);
   g_task_run_in_thread (task, run_task_job);
   g_object_unref (task);
 }
