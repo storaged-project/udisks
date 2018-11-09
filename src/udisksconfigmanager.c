@@ -53,12 +53,12 @@ enum
   PROP_N
 };
 
-static const gchar *modules_group_name = PACKAGE_NAME_UDISKS2;
-static const gchar *modules_key = "modules";
-static const gchar *modules_load_preference_key = "modules_load_preference";
+#define MODULES_GROUP_NAME  PACKAGE_NAME_UDISKS2
+#define MODULES_KEY "modules"
+#define MODULES_LOAD_PREFERENCE_KEY "modules_load_preference"
 
-static const gchar *defaults_group_name = "defaults";
-static const gchar *defaults_encryption_key = "encryption";
+#define DEFAULTS_GROUP_NAME "defaults"
+#define DEFAULTS_ENCRYPTION_KEY "encryption"
 
 static void
 udisks_config_manager_get_property (GObject    *object,
@@ -203,8 +203,8 @@ udisks_config_manager_constructed (GObject *object)
                                  &error))
     {
       modules = g_key_file_get_string_list (config_file,
-                                            modules_group_name,
-                                            modules_key,
+                                            MODULES_GROUP_NAME,
+                                            MODULES_KEY,
                                             &length,
                                             &error);
       /* Read the list of modules to load. */
@@ -231,8 +231,8 @@ udisks_config_manager_constructed (GObject *object)
 
       /* Read the load preference configuration option. */
       load_preference = g_key_file_get_string (config_file,
-                                               modules_group_name,
-                                               modules_load_preference_key,
+                                               MODULES_GROUP_NAME,
+                                               MODULES_LOAD_PREFERENCE_KEY,
                                                &error);
       if (load_preference)
         {
@@ -267,8 +267,8 @@ udisks_config_manager_constructed (GObject *object)
 
       /* Read the load preference configuration option. */
       encryption = g_key_file_get_string (config_file,
-                                          defaults_group_name,
-                                          defaults_encryption_key,
+                                          DEFAULTS_GROUP_NAME,
+                                          DEFAULTS_ENCRYPTION_KEY,
                                           &error);
       if (encryption)
         {
