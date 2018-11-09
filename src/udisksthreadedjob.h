@@ -35,7 +35,9 @@ UDisksThreadedJob *udisks_threaded_job_new              (UDisksThreadedJobFunc  
                                                          GDestroyNotify         user_data_free_func,
                                                          UDisksDaemon          *daemon,
                                                          GCancellable          *cancellable);
-void udisks_threaded_job_start (UDisksThreadedJob *job);
+void               udisks_threaded_job_start            (UDisksThreadedJob     *job);
+gboolean           udisks_threaded_job_run_sync         (UDisksThreadedJob     *job,
+                                                         GError               **error);
 gpointer           udisks_threaded_job_get_user_data    (UDisksThreadedJob     *job);
 
 G_END_DECLS
