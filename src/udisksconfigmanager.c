@@ -142,7 +142,6 @@ static void
 udisks_config_manager_constructed (GObject *object)
 {
   UDisksConfigManager *manager = UDISKS_CONFIG_MANAGER (object);
-  GError *error = NULL;
   GKeyFile *config_file;
   gchar *conf_filename;
   gchar *load_preference;
@@ -151,7 +150,6 @@ udisks_config_manager_constructed (GObject *object)
   gchar *tmp;
   gchar **modules;
   gchar **modules_tmp;
-  gsize length;
 
   config_file = g_key_file_new ();
   g_key_file_set_list_separator (config_file, ',');
@@ -173,13 +171,13 @@ udisks_config_manager_constructed (GObject *object)
   if (g_key_file_load_from_file (config_file,
                                  conf_filename,
                                  G_KEY_FILE_NONE,
-                                 &error))
+                                 NULL))
     {
       modules = g_key_file_get_string_list (config_file,
                                             MODULES_GROUP_NAME,
                                             MODULES_KEY,
-                                            &length,
-                                            &error);
+                                            NULL,
+                                            NULL);
       /* Read the list of modules to load. */
       if (modules)
         {
@@ -199,14 +197,13 @@ udisks_config_manager_constructed (GObject *object)
         {
           udisks_debug ("No 'modules' found in configuration file");
           manager->modules = NULL;
-          g_clear_error (&error);
         }
 
       /* Read the load preference configuration option. */
       load_preference = g_key_file_get_string (config_file,
                                                MODULES_GROUP_NAME,
                                                MODULES_LOAD_PREFERENCE_KEY,
-                                               &error);
+                                               NULL);
       if (load_preference)
         {
           /* Convert the key value to lowercase. */
@@ -233,7 +230,6 @@ udisks_config_manager_constructed (GObject *object)
         }
       else
         {
-          g_clear_error (&error);
           udisks_debug ("No 'modules_load_preference' found in configuration file");
           manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
         }
@@ -242,7 +238,7 @@ udisks_config_manager_constructed (GObject *object)
       encryption = g_key_file_get_string (config_file,
                                           DEFAULTS_GROUP_NAME,
                                           DEFAULTS_ENCRYPTION_KEY,
-                                          &error);
+                                          NULL);
       if (encryption)
         {
           /* Convert the key value to lowercase. */
@@ -269,7 +265,6 @@ udisks_config_manager_constructed (GObject *object)
         }
       else
         {
-          g_clear_error (&error);
           udisks_debug ("No 'encryption' found in configuration file");
           manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
         }
@@ -277,7 +272,6 @@ udisks_config_manager_constructed (GObject *object)
     }
   else
     {
-      g_clear_error (&error);
       udisks_warning ("Can't load configuration file %s", conf_filename);
       manager->modules = NULL; /* NULL == '*' */
       manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
