@@ -171,6 +171,8 @@ udisks_config_manager_constructed (GObject *object)
       g_list_free_full (manager->modules, (GDestroyNotify) g_free);
       manager->modules = NULL;  /* NULL == '*' */
     }
+  manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+  manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
 
   /* Load config */
   if (g_key_file_load_from_file (config_file,
@@ -218,7 +220,6 @@ udisks_config_manager_constructed (GObject *object)
               udisks_warning ("Unknown value used for 'modules_load_preference': %s"
                               "; defaulting to 'ondemand'",
                               load_preference);
-              manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
             }
 
           g_free (load_preference);
@@ -226,7 +227,6 @@ udisks_config_manager_constructed (GObject *object)
       else
         {
           udisks_debug ("No 'modules_load_preference' found in configuration file");
-          manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
         }
 
       /* Read the load preference configuration option. */
@@ -249,8 +249,7 @@ udisks_config_manager_constructed (GObject *object)
             {
               udisks_warning ("Unknown value used for 'encryption': %s"
                               "; defaulting to '%s'",
-                              encryption, UDISKS_ENCRYPTION_DEFAULT);
-              manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
+                              encryption, manager->encryption);
             }
 
           g_free (encryption);
@@ -258,15 +257,12 @@ udisks_config_manager_constructed (GObject *object)
       else
         {
           udisks_debug ("No 'encryption' found in configuration file");
-          manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
         }
 
     }
   else
     {
       udisks_warning ("Can't load configuration file %s", conf_filename);
-      manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
-      manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
     }
 
 
