@@ -138,33 +138,6 @@ udisks_config_manager_set_property (GObject      *object,
     }
 }
 
-/* TODO: move to util */
-static gchar *
-strtrim (const gchar *s)
-{
-  gchar *result = NULL;
-  const gchar *b;
-  const gchar *e;
-  size_t len = strlen(s);
-  size_t new_len = len;
-
-  /* Trim the beginning */
-  for (b = s; isspace (*b); ++b, --new_len)
-    ;
-
-  /* Trim the end */
-  e = &s[len] - 1;
-  for (e = &s[len] - 1; isspace (*e); --e, --new_len)
-    ;
-
-  /* Copy the trimmed tring */
-  result = g_malloc (sizeof (char) * (new_len + 1));
-  strncpy (result, b, new_len);
-  result[new_len] = '\0';
-
-  return result;
-}
-
 static void
 udisks_config_manager_constructed (GObject *object)
 {
@@ -219,7 +192,7 @@ udisks_config_manager_constructed (GObject *object)
           modules_tmp = modules;
           for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
               manager->modules = g_list_append (manager->modules,
-                                                strtrim (module_i));
+                                                g_strdup (g_strstrip (module_i)));
           g_strfreev (modules);
         }
       else
