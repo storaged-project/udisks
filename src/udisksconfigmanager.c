@@ -167,6 +167,12 @@ udisks_config_manager_constructed (GObject *object)
 
   udisks_debug ("Loading configuration file: %s", conf_filename);
 
+  if (manager->modules)
+    {
+      g_list_free_full (manager->modules, (GDestroyNotify) g_free);
+      manager->modules = NULL;  /* NULL == '*' */
+    }
+
   /* Load config */
   if (g_key_file_load_from_file (config_file,
                                  conf_filename,
@@ -181,12 +187,6 @@ udisks_config_manager_constructed (GObject *object)
       /* Read the list of modules to load. */
       if (modules)
         {
-          if (manager->modules)
-            {
-              g_list_free_full (manager->modules, (GDestroyNotify) g_free);
-              manager->modules = NULL;
-            }
-
           modules_tmp = modules;
           for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
               manager->modules = g_list_append (manager->modules,
@@ -196,7 +196,6 @@ udisks_config_manager_constructed (GObject *object)
       else
         {
           udisks_debug ("No 'modules' found in configuration file");
-          manager->modules = NULL;
         }
 
       /* Read the load preference configuration option. */
@@ -273,7 +272,6 @@ udisks_config_manager_constructed (GObject *object)
   else
     {
       udisks_warning ("Can't load configuration file %s", conf_filename);
-      manager->modules = NULL; /* NULL == '*' */
       manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
       manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
     }
