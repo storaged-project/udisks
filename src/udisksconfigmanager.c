@@ -147,7 +147,6 @@ udisks_config_manager_constructed (GObject *object)
   gchar *load_preference;
   gchar *encryption;
   gchar *module_i;
-  gchar *tmp;
   gchar **modules;
   gchar **modules_tmp;
 
@@ -205,14 +204,12 @@ udisks_config_manager_constructed (GObject *object)
                                                NULL);
       if (load_preference)
         {
-          /* Convert the key value to lowercase. */
-          tmp = g_ascii_strdown (load_preference, -1);
           /* Check the key value */
-          if (g_strcmp0 (tmp, "ondemand") == 0)
+          if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
             {
               manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
             }
-          else if (g_strcmp0 (tmp, "onstartup") == 0)
+          else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
             {
               manager->load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
             }
@@ -225,7 +222,6 @@ udisks_config_manager_constructed (GObject *object)
             }
 
           g_free (load_preference);
-          g_free (tmp);
         }
       else
         {
@@ -240,14 +236,12 @@ udisks_config_manager_constructed (GObject *object)
                                           NULL);
       if (encryption)
         {
-          /* Convert the key value to lowercase. */
-          tmp = g_ascii_strdown (encryption, -1);
           /* Check the key value */
-          if (g_strcmp0 (tmp, UDISKS_ENCRYPTION_LUKS1) == 0)
+          if (g_ascii_strcasecmp (encryption, UDISKS_ENCRYPTION_LUKS1) == 0)
             {
               manager->encryption = UDISKS_ENCRYPTION_LUKS1;
             }
-          else if (g_strcmp0 (tmp, UDISKS_ENCRYPTION_LUKS2) == 0)
+          else if (g_ascii_strcasecmp (encryption, UDISKS_ENCRYPTION_LUKS2) == 0)
             {
               manager->encryption = UDISKS_ENCRYPTION_LUKS2;
             }
@@ -260,7 +254,6 @@ udisks_config_manager_constructed (GObject *object)
             }
 
           g_free (encryption);
-          g_free (tmp);
         }
       else
         {
