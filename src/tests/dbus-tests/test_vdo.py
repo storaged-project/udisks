@@ -55,6 +55,8 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             self.addCleanup(self.remove_file, VDO_CONFIG, True)
 
     def tearDown(self):
+        # need to process scheduled cleanup before the backing device is torn down
+        self.doCleanups()
         # tear down loop device
         self.run_command('losetup --detach %s' % self.dev_name)
         os.remove(self.LOOP_DEVICE_PATH)
