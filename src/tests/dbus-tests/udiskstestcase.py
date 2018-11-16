@@ -122,12 +122,12 @@ def unstable_test(test):
         except unittest.SkipTest:
             # make sure skipped tests are just skipped as usual
             raise
-        except:
+        except Exception as e:
             # and swallow everything else, just report a failure of an unstable
             # test, unless told otherwise
             if "UNSTABLE_TESTS_FATAL" in os.environ:
                 raise
-            print("unstable-fail...", end="", file=sys.stderr)
+            print("unstable-fail: Ignoring exception '%s'\n" % e, end="", file=sys.stderr)
 
     return decorated_test
 
@@ -200,7 +200,7 @@ class DBusProperty(object):
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s is not grater than %s' % (self._value, value))
+            raise AssertionError('%s is not greater than %s' % (self._value, value))
 
     def assertLess(self, value, timeout=TIMEOUT):
         check_fn = lambda x: x < value
