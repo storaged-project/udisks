@@ -62,12 +62,12 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
 
     def _force_remove(self, vdo_name):
          if os.path.exists('/dev/mapper/%s' % vdo_name):
-             ret, _out = self.run_command('vdo stop --force --name %s' % vdo_name)
+             ret, out = self.run_command('vdo stop --force --name %s' % vdo_name)
              if ret != 0:
-                 self.fail('Failed to stop the vdo volume %s' % vdo_name)
-             ret, _out = self.run_command('vdo remove --force --name %s' % vdo_name)
+                 self.fail('Failed to stop the vdo volume %s: %s' % (vdo_name, out))
+             ret, out = self.run_command('vdo remove --force --name %s' % vdo_name)
              if ret != 0:
-                 self.fail('Failed to remove vdo volume %s' % vdo_name)
+                 self.fail('Failed to remove vdo volume %s: %s' % (vdo_name, out))
 
     def test_create_and_attributes(self):
         '''Test creating a new vdo volume and verify its properties'''
