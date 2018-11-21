@@ -55,6 +55,8 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             self.addCleanup(self.remove_file, VDO_CONFIG, True)
 
     def tearDown(self):
+        # need to process scheduled cleanup before the backing device is torn down
+        self.doCleanups()
         # tear down loop device
         self.run_command('losetup --detach %s' % self.dev_name)
         os.remove(self.LOOP_DEVICE_PATH)
@@ -62,12 +64,12 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
 
     def _force_remove(self, vdo_name):
          if os.path.exists('/dev/mapper/%s' % vdo_name):
-             ret, _out = self.run_command('vdo stop --force --name %s' % vdo_name)
+             ret, out = self.run_command('vdo stop --force --name %s' % vdo_name)
              if ret != 0:
-                 self.fail('Failed to stop the vdo volume %s' % vdo_name)
-             ret, _out = self.run_command('vdo remove --force --name %s' % vdo_name)
+                 self.fail('Failed to stop the vdo volume %s: %s' % (vdo_name, out))
+             ret, out = self.run_command('vdo remove --force --name %s' % vdo_name)
              if ret != 0:
-                 self.fail('Failed to remove vdo volume %s' % vdo_name)
+                 self.fail('Failed to remove vdo volume %s: %s' % (vdo_name, out))
 
     def test_create_and_attributes(self):
         '''Test creating a new vdo volume and verify its properties'''
