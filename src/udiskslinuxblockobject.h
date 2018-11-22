@@ -42,6 +42,7 @@ gchar                    *udisks_linux_block_object_get_device_file (UDisksLinux
 
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
 void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
+gboolean                  udisks_linux_block_object_contains_filesystem (UDisksObject *object);
 
 G_END_DECLS
 
