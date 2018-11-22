@@ -2214,6 +2214,7 @@ wait_for_filesystem (UDisksDaemon *daemon,
   UDisksObject *ret = NULL;
   UDisksBlock *block = NULL;
   UDisksPartitionTable *partition_table = NULL;
+  UDisksFilesystem *filesystem = NULL;
   gchar *id_type = NULL;
   gchar *partition_table_type = NULL;
 
@@ -2222,6 +2223,7 @@ wait_for_filesystem (UDisksDaemon *daemon,
     goto out;
 
   partition_table = udisks_object_get_partition_table (data->object);
+  filesystem = udisks_object_get_filesystem (data->object);
 
   id_type = udisks_block_dup_id_type (block);
 
@@ -2237,8 +2239,15 @@ wait_for_filesystem (UDisksDaemon *daemon,
 
   if (g_strcmp0 (id_type, data->type) == 0)
     {
-      ret = g_object_ref (data->object);
-      goto out;
+      /* check that we should expect a filesystem and wait for corresponding interface
+       * to be exported on the object */
+      if (g_strcmp0 (data->type, "empty") == 0 ||
+          ! udisks_linux_block_object_contains_filesystem (data->object) ||
+          filesystem != NULL)
+        {
+          ret = g_object_ref (data->object);
+          goto out;
+        }
     }
 
   if (partition_table != NULL)
@@ -2255,6 +2264,7 @@ wait_for_filesystem (UDisksDaemon *daemon,
   g_free (partition_table_type);
   g_free (id_type);
   g_clear_object (&partition_table);
+  g_clear_object (&filesystem);
   g_clear_object (&block);
   return ret;
 }
