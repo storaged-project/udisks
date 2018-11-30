@@ -8,7 +8,7 @@ dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
 $(dbusservice_DATA): $(dbusservice_in_files) Makefile
 	@sed -e "s|\@udisksdprivdir\@|$(libexecdir)/udisks2|" $< > $@
 
-dbusconfdir = $(sysconfdir)/dbus-1/system.d
+dbusconfdir = $(datadir)/dbus-1/system.d
 dbusconf_in_files = org.freedesktop.UDisks2.conf.in
 dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
 

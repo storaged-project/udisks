@@ -356,7 +356,7 @@ udevadm trigger
 %endif
 %{_sysconfdir}/udisks2/udisks2.conf
 
-%{_sysconfdir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
+%{_datadir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
 %{_unitdir}/udisks2.service
 %{_unitdir}/clean-mount-point@.service
