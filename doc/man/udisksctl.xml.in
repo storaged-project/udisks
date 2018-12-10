@@ -34,6 +34,7 @@
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
         <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+        <arg choice="plain">--drive <replaceable>DRIVE</replaceable></arg>
       </group>
     </cmdsynopsis>
 
@@ -168,8 +169,9 @@
         <listitem>
           <para>
             Shows detailed information about
-            <replaceable>OBJECT</replaceable> or
-            <replaceable>DEVICE</replaceable>.
+            <replaceable>OBJECT</replaceable>,
+            <replaceable>DEVICE</replaceable> or
+            <replaceable>DRIVE</replaceable>.
           </para>
         </listitem>
       </varlistentry>
@@ -179,21 +181,40 @@
         <listitem>
           <para>
             Mounts a device. The device will be mounted in a
-            subdirectory in the <filename>/media</filename> hierarchy
+            subdirectory in the <filename>/run/media</filename> hierarchy
             - upon successful completion, the mount point will be
             printed to standard output.
           </para>
-          <para>
+        </listitem>
+
+        <varlistentry>
+          <term><option>-t</option></term>
+          <term><option>--filesystem-type</option></term>
+          <listitem>
+            <para>
+            Filesystem type to use. If not specified, autodetected filesystem
+            type will be used.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-o</option></term>
+          <term><option>--options</option></term>
+          <listitem>
+            <para>
             The device will be mounted with a safe set of default
             options. You can influence the options passed to the
             <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-            command with <option>--options</option>. Note that only
+            command using this option. Note that only
             safe options are allowed - requests with inherently unsafe
             options such as <parameter>suid</parameter> or
             <parameter>dev</parameter> that would allow the caller to
             gain additional privileges, are rejected.
-          </para>
-        </listitem>
+            </para>
+          </listitem>
+        </varlistentry>
+
       </varlistentry>
 
       <varlistentry>
@@ -206,6 +227,18 @@
             references exists.
           </para>
         </listitem>
+
+        <varlistentry>
+          <term><option>-f</option></term>
+          <term><option>--force</option></term>
+          <listitem>
+            <para>
+              Lazy unmount. Detach the filesystem from the file hierarchy
+              now, and clean up all references to this filesystem as soon
+              as it is not busy anymore.
+            </para>
+          </listitem>
+        </varlistentry>
       </varlistentry>
 
       <varlistentry>
@@ -218,6 +251,15 @@
             printed to standard output.
           </para>
         </listitem>
+
+        <varlistentry>
+          <term><option>--key-file=<replaceable>PATH</replaceable></option></term>
+          <listitem>
+            <para>
+              Read passphrase from the given file.
+            </para>
+          </listitem>
+        </varlistentry>
       </varlistentry>
 
       <varlistentry>
@@ -237,6 +279,48 @@
             Sets up a loop device backed by <replaceable>FILE</replaceable>.
           </para>
         </listitem>
+
+        <varlistentry>
+          <term><option>-f</option></term>
+          <term><option>--file=<replaceable>FILE</replaceable></option></term>
+          <listitem>
+            <para>
+              File to set up a loop device for.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-r</option></term>
+          <term><option>--read-only</option></term>
+          <listitem>
+            <para>
+              Set up a read-only loop device.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-o</option></term>
+          <term><option>--offset=<replaceable>OFFSET</replaceable></option></term>
+          <listitem>
+            <para>
+              The data start is moved <replaceable>OFFSET</replaceable> bytes
+              into the specified file.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-s</option></term>
+          <term><option>--size=<replaceable>SIZE</replaceable></option></term>
+          <listitem>
+            <para>
+              The data end is set to no more than <replaceable>SIZE</replaceable>
+              bytes after the data start.
+            </para>
+          </listitem>
+        </varlistentry>
       </varlistentry>
 
       <varlistentry>
@@ -285,6 +369,16 @@
             a disk is failing.
           </para>
         </listitem>
+
+        <varlistentry>
+          <term><option>-f</option></term>
+          <term><option>--file=<replaceable>FILE</replaceable></option></term>
+          <listitem>
+            <para>
+              File with the libatasmart blob.
+            </para>
+          </listitem>
+        </varlistentry>
       </varlistentry>
 
       <varlistentry>
@@ -312,9 +406,56 @@
   </refsect1>
 
   <refsect1>
+    <title>DEVICE SPECIFICATION</title>
+    <para>
+      For commands that require a device as an argument following options
+      can be used to specify it.
+    </para>
+    <variablelist>
+
+      <varlistentry>
+        <term><option>-b</option></term>
+        <term><option>--block-device=<replaceable>DEVICE</replaceable></option></term>
+        <listitem>
+          <para>
+            Specify a device by its device file path. For example
+            <emphasis>/dev/sda</emphasis>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-p</option></term>
+        <term><option>--object-path=<replaceable>OBJECT</replaceable></option></term>
+        <listitem>
+          <para>
+            Specify a device by the UDisks internal object path without the
+            /org/freedesktop/UDisks2 prefix. For example
+            <emphasis>block_devices/sda</emphasis>
+            for the <filename class="devicefile">/dev/sda</filename> disk.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option></term>
+        <term><option>--drive=<replaceable>DRIVE</replaceable></option></term>
+        <listitem>
+          <para>
+            Specify a drive by name, for example <emphasis>VirtIO_Disk</emphasis>.
+            This can be currently used only together with the
+            <option>info</option> command.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
     <title>COMMON OPTIONS</title>
     <para>
-      The option <option >--no-user-interaction</option> can be used
+      The option <option>--no-user-interaction</option> can be used
       to request that no interaction (such as the user being
       presented with an authentication dialog) must occur when
       checking with
