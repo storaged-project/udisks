@@ -920,7 +920,7 @@ udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
   fd = open (path, O_WRONLY);
   if (fd < 0)
     {
-      udisks_warning ("Error opening %s: %m", path);
+      udisks_warning ("Error opening %s while triggering uevent: %m", path);
       goto out;
     }
 
@@ -961,7 +961,7 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
   fd = open (device_file, O_RDONLY);
   if (fd == -1)
     {
-      udisks_warning ("Error opening %s: %m", device_file);
+      udisks_warning ("Error opening %s while re-reading partition table: %m", device_file);
     }
   else
     {

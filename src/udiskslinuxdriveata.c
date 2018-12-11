@@ -446,7 +446,7 @@ static gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar 
   if (fd == -1)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device file %s: %m",
+                   "Error opening device file %s while getting PM state: %m",
                    g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
@@ -1437,7 +1437,7 @@ handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening device file %s: %m",
+                                             "Error opening device file %s while changing PM state: %m",
                                              g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
@@ -1594,7 +1594,7 @@ apply_configuration_thread_func (gpointer user_data)
   fd = open (device_file, O_RDWR|O_NONBLOCK);
   if (fd == -1)
     {
-      udisks_critical ("Error opening device file %s: %m", device_file);
+      udisks_critical ("Error opening device file %s while applying ATA configuration: %m", device_file);
       goto out;
     }
 
@@ -1940,7 +1940,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
   if (fd == -1)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device file %s: %m",
+                   "Error opening device file %s for secure erase: %m",
                    device_file);
       goto out;
     }
@@ -2372,7 +2372,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening device file %s: %m",
+                                             "Error opening device file %s while changing SMART status: %m",
                                              g_udev_device_get_device_file (device->udev_device));
       goto out;
     }

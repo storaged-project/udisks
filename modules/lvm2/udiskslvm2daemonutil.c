@@ -73,7 +73,7 @@ udisks_daemon_util_lvm2_block_is_unused (UDisksBlock  *block,
   if (fd < 0)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device %s: %m",
+                   "Error opening device %s for unused block device detection: %m",
                    device_file);
       return FALSE;
     }
@@ -186,7 +186,7 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
   if (fd < 0)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device %s: %m",
+                   "Error opening device %s for wiping: %m",
                    device_file);
       ret = FALSE;
       goto out;

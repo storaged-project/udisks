@@ -2416,7 +2416,7 @@ erase_device (UDisksBlock   *block,
   if (fd == -1)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device %s: %m", device_file);
+                   "Error opening device %s for erase: %m", device_file);
       goto out;
     }
 
@@ -3501,7 +3501,7 @@ open_device (const gchar      *device,
   if (fd == -1)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening %s: %m", device);
+                   "Error opening device %s: %m", device);
       goto out;
     }
 

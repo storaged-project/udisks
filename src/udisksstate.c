@@ -509,7 +509,7 @@ trigger_change_uevent (const gchar *sysfs_path)
   fd = open (path, O_WRONLY);
   if (fd < 0)
     {
-      udisks_warning ("Error opening %s: %m", path);
+      udisks_warning ("Error opening %s for trigerring change uevent: %m", path);
       goto out;
     }
 

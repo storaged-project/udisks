@@ -659,7 +659,7 @@ handle_mdraid_create (UDisksManager         *_object,
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
-                                                 "Error opening device %s: %m",
+                                                 "Error opening device %s while creating mdraid: %m",
                                                  device_file);
           g_free (device_file);
           success = FALSE;
