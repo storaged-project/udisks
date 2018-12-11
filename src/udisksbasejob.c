@@ -68,7 +68,8 @@ enum
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (UDisksBaseJob, udisks_base_job, UDISKS_TYPE_JOB_SKELETON,
-                                  G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
+                                  G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init)
+                                  G_ADD_PRIVATE (UDisksBaseJob));
 
 static void
 udisks_base_job_finalize (GObject *object)
@@ -233,8 +234,6 @@ udisks_base_job_class_init (UDisksBaseJobClass *klass)
                                                          G_PARAM_READABLE |
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_STATIC_STRINGS));
-
-  g_type_class_add_private (klass, sizeof (UDisksBaseJobPrivate));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
