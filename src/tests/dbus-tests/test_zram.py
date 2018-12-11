@@ -119,7 +119,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     def _test_zram_properties_fedora(self, zram_obj, zram_name):
         # test some properties
         sys_stat = self.read_file('/sys/block/%s/stat' % zram_name).strip().split()
-        self.assertEqual(len(sys_stat), 11)
+        self.assertGreaterEqual(len(sys_stat), 11) # 15 stats since 4.19
         sys_reads = sys_stat[0]
         sys_writes = sys_stat[4]
 
