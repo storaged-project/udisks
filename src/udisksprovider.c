@@ -58,7 +58,8 @@ enum
   PROP_DAEMON
 };
 
-G_DEFINE_ABSTRACT_TYPE (UDisksProvider, udisks_provider, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (UDisksProvider, udisks_provider, G_TYPE_OBJECT,
+                                  G_ADD_PRIVATE (UDisksProvider));
 
 static void
 udisks_provider_finalize (GObject *object)
@@ -152,8 +153,6 @@ udisks_provider_class_init (UDisksProviderClass *klass)
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
-
-  g_type_class_add_private (klass, sizeof (UDisksProviderPrivate));
 }
 
 /**
