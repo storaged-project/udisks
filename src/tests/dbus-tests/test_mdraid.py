@@ -99,7 +99,19 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
     def _md_data(self, array_name):
         _ret, out = self.run_command('mdadm --detail --export /dev/md/%s' % array_name)
 
-        return {key: value for (key, value) in [line.split('=') for line in out.split()]}
+        data = {}
+
+        for (key, value) in [line.split('=') for line in out.split()]:
+            # there is an "extra" "_ev_" in the keys since mdadm 4.1
+            # this is probably a bug in mdadm, but we need to fix it somehow
+            # until they fix it (or call it a feature) and it's better to do
+            # it here than change every test
+            if key.startswith('MD_DEVICE_ev'):
+                data[key.replace('_ev_', '_')] = value
+            else:
+                data[key] = value
+
+        return data
 
     @unstable_test
     def test_create(self):
