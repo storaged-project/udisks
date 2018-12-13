@@ -387,9 +387,9 @@ class UdisksTestCase(unittest.TestCase):
 
 
     @classmethod
-    def write_file(self, filename, content, ignore_nonexistent=False):
+    def write_file(self, filename, content, ignore_nonexistent=False, binary=False):
         try:
-            with open(filename, 'w') as f:
+            with open(filename, 'wb' if binary else 'w') as f:
                 f.write(content)
         except OSError as e:
             if not ignore_nonexistent:
@@ -437,6 +437,13 @@ class UdisksTestCase(unittest.TestCase):
             string += '\0'
 
         return dbus.Array([dbus.Byte(ord(c)) for c in string],
+                          signature=dbus.Signature('y'), variant_level=1)
+
+    @classmethod
+    def bytes_to_ay(self, bytes):
+        """Convert Python bytes to a DBus bytearray"""
+
+        return dbus.Array([dbus.Byte(b) for b in bytes],
                           signature=dbus.Signature('y'), variant_level=1)
 
     @classmethod
