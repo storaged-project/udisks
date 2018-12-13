@@ -243,6 +243,7 @@ check_crypttab (UDisksBlock  *block,
                 gboolean     *out_found,
                 gchar       **out_name,
                 gchar       **out_passphrase,
+                gsize        *out_passphrase_len,
                 gchar       **out_options,
                 GError      **error)
 {
@@ -269,7 +270,7 @@ check_crypttab (UDisksBlock  *block,
                 {
                   if (!g_file_get_contents (passphrase_path,
                                             out_passphrase,
-                                            NULL,
+                                            out_passphrase_len,
                                             error))
                     {
                       g_variant_unref (details);
@@ -339,6 +340,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gboolean is_in_crypttab = FALSE;
   gchar *crypttab_name = NULL;
   gchar *crypttab_passphrase = NULL;
+  gsize crypttab_passphrase_len = 0;
   gchar *crypttab_options = NULL;
   gchar *device = NULL;
   gchar *old_hint_encryption_type;
@@ -443,6 +445,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                        &is_in_crypttab,
                        &crypttab_name,
                        &crypttab_passphrase,
+                       &crypttab_passphrase_len,
                        &crypttab_options,
                        &error))
     {
@@ -457,8 +460,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
   else if (passphrase && (strlen (passphrase) > 0))
     effective_passphrase = g_string_new (passphrase);
-  else if (is_in_crypttab && crypttab_passphrase != NULL && strlen (crypttab_passphrase) > 0)
-    effective_passphrase = g_string_new (crypttab_passphrase);
+  else if (is_in_crypttab && crypttab_passphrase != NULL && crypttab_passphrase_len > 0)
+    effective_passphrase = g_string_new_len (crypttab_passphrase, crypttab_passphrase_len);
   else if (keyfiles[0] != NULL)
     effective_passphrase = g_string_new (NULL);
   else
