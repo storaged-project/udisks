@@ -515,8 +515,8 @@ partition_table_check (UDisksObject *object)
        * mark us as a partition table ... except if we are partitioned by the
        * kernel
        *
-       * (see filesystem_check() for the similar case where we don't pretend
-       * to be a filesystem)
+       * (see udisks_linux_block_object_contains_filesystem() for the similar case
+       * where we don't pretend to be a filesystem)
        */
       if (g_strcmp0 (g_udev_device_get_property (block_object->device->udev_device, "ID_FS_USAGE"), "filesystem") == 0)
         {
@@ -627,8 +627,16 @@ drive_does_not_detect_media_change (UDisksLinuxBlockObject *object)
   return ret;
 }
 
-static gboolean
-filesystem_check (UDisksObject *object)
+/**
+ * udisks_linux_block_object_contains_filesystem:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Check whether filesystem has been detected on the block device.
+ *
+ * Returns: %TRUE if the block device contains filesystem, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_block_object_contains_filesystem (UDisksObject *object)
 {
   UDisksLinuxBlockObject *block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
   gboolean ret = FALSE;
@@ -836,7 +844,7 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
 
   update_iface (UDISKS_OBJECT (object), action, block_device_check, block_device_connect, block_device_update,
                 UDISKS_TYPE_LINUX_BLOCK, &object->iface_block_device);
-  update_iface (UDISKS_OBJECT (object), action, filesystem_check, filesystem_connect, filesystem_update,
+  update_iface (UDISKS_OBJECT (object), action, udisks_linux_block_object_contains_filesystem, filesystem_connect, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &object->iface_filesystem);
   update_iface (UDISKS_OBJECT (object), action, swapspace_check, swapspace_connect, swapspace_update,
                 UDISKS_TYPE_LINUX_SWAPSPACE, &object->iface_swapspace);
