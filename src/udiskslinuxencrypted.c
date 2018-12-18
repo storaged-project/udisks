@@ -181,7 +181,8 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
     g_clear_error (&error);
   }
 
-  udisks_encrypted_set_metadata_size(UDISKS_ENCRYPTED (encrypted), metadata_size);
+  g_object_unref (device);
+  udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), metadata_size);
 }
 
 static void
