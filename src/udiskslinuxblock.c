@@ -3479,8 +3479,8 @@ open_device (const gchar      *device,
   if (flags & O_RDWR || flags & O_RDONLY || flags & O_WRONLY)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Using 'O_RDWR', 'O_RDONLY' and 'O_WRONLY' flags is not permitted.\
-                    Use 'mode' argument instead.");
+                   "Using 'O_RDWR', 'O_RDONLY' and 'O_WRONLY' flags is not permitted. "
+                   "Use 'mode' argument instead.");
       goto out;
     }
 
