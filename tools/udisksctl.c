@@ -2572,6 +2572,9 @@ handle_command_dump (gint        *argc,
 
   ret = 0;
 
+  /* explicitly close stdout so that pagers are aware of EOF */
+  fclose (stdout);
+
  out:
   g_option_context_free (o);
   return ret;
