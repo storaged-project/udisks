@@ -385,6 +385,17 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
             self.fail("Failed to get LUKS 2 offset information using 'cryptsetup luksDump %s'" % disk)
         return int(m.group(1))
 
+    def _get_key_location(self, device):
+        ret, out = self.run_command('cryptsetup status %s' % device)
+        if ret != 0:
+            self.fail('Failed to get key location from:\n%s' % out)
+
+        m = re.search(r'\s*key location:\s*(\S+)\s*', out)
+        if not m or len(m.groups()) != 1:
+            self.fail('Failed to get key locaton from:\n%s' % out)
+
+        return m.group(1)
+
     def setUp(self):
         cryptsetup_version = self._get_cryptsetup_version()
         if cryptsetup_version < LooseVersion('2.0.0'):
@@ -404,11 +415,12 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         self.assertEqual(_ret, 0)
         clear_size = self.get_block_size(clear_dev)
 
-        # no passphrase for LUKS 2 = fail
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient persmissions to resize device. *'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
-                          dbus_interface=self.iface_prefix + '.Encrypted')
+        # kernel keyring support and no passphrase for LUKS 2 given = fail
+        if self._get_key_location('/dev/' + clear_dev) == 'keyring':
+            msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient persmissions to resize device. *'
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
+                              dbus_interface=self.iface_prefix + '.Encrypted')
 
         # wrong passphrase
         d = dbus.Dictionary(signature='sv')
