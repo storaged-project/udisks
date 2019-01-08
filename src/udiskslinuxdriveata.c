@@ -434,7 +434,7 @@ selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
   return ret;
 }
 
-static gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
+gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
 {
   int fd;
   gboolean rc = FALSE;

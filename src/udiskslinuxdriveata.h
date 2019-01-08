@@ -28,6 +28,11 @@ G_BEGIN_DECLS
 #define UDISKS_TYPE_LINUX_DRIVE_ATA  (udisks_linux_drive_ata_get_type ())
 #define UDISKS_LINUX_DRIVE_ATA(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_ATA, UDisksLinuxDriveAta))
 #define UDISKS_IS_LINUX_DRIVE_ATA(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_ATA))
+#define UDISKS_LINUX_DRIVE_ATA_AWAKE(device) ({\
+		                               guchar state; \
+		                               get_pm_state (device, NULL, &state); \
+		                               state == 0x00 ? FALSE : TRUE; \
+		                             })
 
 GType           udisks_linux_drive_ata_get_type           (void) G_GNUC_CONST;
 UDisksDriveAta *udisks_linux_drive_ata_new                (void);
@@ -50,6 +55,10 @@ gboolean        udisks_linux_drive_ata_secure_erase_sync   (UDisksLinuxDriveAta 
 void            udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
                                                             UDisksLinuxDevice       *device,
                                                             GVariant                *configuration);
+
+gboolean       get_pm_state                                 (UDisksLinuxDevice      *device,
+                                                            GError                  **error,
+                                                            guchar                  *count);
 
 G_END_DECLS
 
