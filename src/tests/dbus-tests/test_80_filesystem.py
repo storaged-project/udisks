@@ -895,6 +895,8 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
             ret, _out = self.run_command("genisoimage -V TEST_iso9660 -o %s %s" % (dev, tmp))
             self.assertEqual(ret, 0)
             self.udev_settle()
+            # give udisks chance to probe the filesystem
+            time.sleep(1)
         finally:
             shutil.rmtree(tmp)
 
