@@ -189,6 +189,7 @@ UDisksThreadedJob
 UDisksThreadedJobFunc
 udisks_threaded_job_new
 udisks_threaded_job_start
+udisks_threaded_job_run_sync
 udisks_threaded_job_get_user_data
 <SUBSECTION Standard>
 UDISKS_TYPE_THREADED_JOB

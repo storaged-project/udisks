@@ -118,6 +118,9 @@ udisks_linux_mdraid_object_finalize (GObject *_object)
 
   remove_watches (object);
 
+  /* complete the sync job if running */
+  udisks_linux_mdraid_object_complete_sync_job (object, TRUE, "Finished");
+
   if (object->iface_mdraid != NULL)
     g_object_unref (object->iface_mdraid);
 
@@ -542,7 +545,7 @@ attr_changed (GIOChannel   *channel,
  * for notification - instead it excepts user-space to select(2)-ish
  * on a fd for the sysfs attribute. Annoying. See
  *
- *  http://www.kernel.org/doc/Documentation/md.txt
+ *  https://www.kernel.org/doc/Documentation/admin-guide/md.rst
  *
  * for more details.
  */

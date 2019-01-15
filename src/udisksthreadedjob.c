@@ -53,9 +53,6 @@ struct _UDisksThreadedJob
   UDisksThreadedJobFunc job_func;
   gpointer user_data;
   GDestroyNotify user_data_free_func;
-
-  gboolean job_result;
-  GError *job_error;
 };
 
 struct _UDisksThreadedJobClass
@@ -96,9 +93,6 @@ static void
 udisks_threaded_job_finalize (GObject *object)
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
-
-  if (job->job_error != NULL)
-    g_clear_error (&(job->job_error));
 
   if (job->user_data_free_func != NULL)
     job->user_data_free_func (job->user_data);
@@ -168,22 +162,41 @@ udisks_threaded_job_set_property (GObject      *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-job_complete (gpointer user_data)
-{
-  UDisksThreadedJob *job = UDISKS_THREADED_JOB (user_data);
-  gboolean ret;
 
-  /* take a reference so it's safe for a signal-handler to release the last one */
-  g_object_ref (job);
+static gboolean
+job_finish (UDisksThreadedJob  *job,
+            GTask              *task,
+            GError            **error)
+{
+  gboolean ret;
+  gboolean job_result;
+  GError *job_error = NULL;
+
+  job_result = g_task_propagate_boolean (task, &job_error);
+
   g_signal_emit (job,
                  signals[THREADED_JOB_COMPLETED_SIGNAL],
                  0,
-                 job->job_result,
-                 job->job_error,
+                 job_result,
+                 job_error,
                  &ret);
-  g_object_unref (job);
-  return FALSE;
+  if (! job_result)
+    {
+      g_assert (job_error != NULL);
+      g_propagate_error (error, job_error);
+    }
+
+  return job_result;
+}
+
+static void
+job_complete_cb (GObject      *source_object,
+                 GAsyncResult *res,
+                 gpointer      user_data)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
+
+  job_finish (job, G_TASK (res), NULL);
 }
 
 static void
@@ -192,20 +205,20 @@ run_task_job (GTask            *task,
               gpointer          task_data,
               GCancellable     *cancellable)
 {
-  UDisksThreadedJob *job = UDISKS_THREADED_JOB (task_data);
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (source_object);
+  GError *job_error = NULL;
 
-  g_assert (!job->job_result);
-  g_assert_no_error (job->job_error);
+  if (g_task_return_error_if_cancelled (task))
+    return;
 
-  if (!g_cancellable_set_error_if_cancelled (cancellable, &job->job_error))
+  if (! job->job_func (job, cancellable, job->user_data, &job_error))
     {
-      job->job_result = job->job_func (job,
-                                       cancellable,
-                                       job->user_data,
-                                       &job->job_error);
+      g_task_return_error (task, job_error);
+      return;
     }
 
-  g_main_context_invoke (g_task_get_context (task), job_complete, job);
+  g_warn_if_fail (job_error == NULL);
+  g_task_return_boolean (task, TRUE);
 }
 
 static void
@@ -362,18 +375,55 @@ udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
  * #UDisksJob::completed signals to get notified when the job is done.
  *
  * */
-void udisks_threaded_job_start (UDisksThreadedJob *job) {
+void
+udisks_threaded_job_start (UDisksThreadedJob *job)
+{
   GTask *task;
 
-  task = g_task_new (NULL,
+  task = g_task_new (job,
+                     udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
+                     job_complete_cb,
+                     NULL);
+
+  /* Only spawn the completed callback once the job func has finished, we don't
+   * support early return as there still might be some undergoing I/O. */
+  g_task_set_return_on_cancel (task, FALSE);
+  g_task_run_in_thread (task, run_task_job);
+  g_object_unref (task);
+}
+
+/**
+ * udisks_threaded_job_run_sync:
+ * @job: the job to run
+ * @error: The #GError set in case of failure
+ *
+ * Run the @job synchronously.
+ *
+ * Connect to the #UDisksThreadedJob::threaded-job-completed or
+ * #UDisksJob::completed signals to get notified when the job is done.
+ *
+ * Returns: %TRUE if the job succeeded, %FALSE in case of failure with @error being set.
+ */
+gboolean
+udisks_threaded_job_run_sync (UDisksThreadedJob     *job,
+                              GError               **error)
+{
+  GTask *task;
+  gboolean job_result;
+
+  task = g_task_new (job,
                      udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
                      NULL,
                      NULL);
 
-  g_task_set_task_data (task, job, NULL);
-  g_task_set_return_on_cancel (task, TRUE);
-  g_task_run_in_thread (task, run_task_job);
+  g_task_set_return_on_cancel (task, FALSE);
+  g_task_run_in_thread_sync (task, run_task_job);
+
+  job_result = job_finish (job, task, error);
+
   g_object_unref (task);
+
+  return job_result;
 }
 
 /**

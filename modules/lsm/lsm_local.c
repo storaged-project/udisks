@@ -132,6 +132,12 @@ get_blk_path (UDisksDriveLsmLocal *ud_drv_lsm_local,
 
   ud_blk = udisks_object_get_block (UDISKS_OBJECT (ud_lx_blk_obj));
   blk_path = udisks_block_dup_device (ud_blk);
+  if (blk_path == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to retrieve block path of specified disk drive");
+      goto out;
+    }
 
 out:
   g_clear_object (&ud_blk);
@@ -156,9 +162,6 @@ led_control (UDisksDriveLsmLocal *ud_drv_lsm_local,
   blk_path = get_blk_path(ud_drv_lsm_local, invocation);
   if (blk_path == NULL)
     {
-      g_dbus_method_invocation_return_error
-        (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-         "Failed to retrieve block path of specified disk drive");
       goto out;
     }
 
@@ -176,6 +179,9 @@ led_control (UDisksDriveLsmLocal *ud_drv_lsm_local,
            lsm_error_message_get (lsm_err));
       goto out;
     }
+
+  /* success, complete the method call in a generic way */
+  g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
 
  out:
   g_free ((gchar *) blk_path);

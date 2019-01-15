@@ -1221,37 +1221,6 @@ udisks_bd_thread_disable_progress (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef struct
-{
-  GMainContext *context;
-  GMainLoop    *loop;
-  gboolean      result;
-  GError       *error;
-} ThreadedJobSyncData;
-
-static gboolean
-threaded_job_sync_on_threaded_job_completed (UDisksThreadedJob *job,
-                                             gboolean           result,
-                                             GError            *error,
-                                             gpointer           user_data)
-{
-  ThreadedJobSyncData *data = user_data;
-  data->result = result;
-  if (error)
-    data->error = g_error_copy (error);
-  return FALSE; /* let other handlers run */
-}
-
-static void
-threaded_job_sync_on_completed (UDisksJob    *job,
-                                gboolean      success,
-                                const gchar  *message,
-                                gpointer      user_data)
-{
-  ThreadedJobSyncData *data = user_data;
-  g_main_loop_quit (data->loop);
-}
-
 /**
  * udisks_daemon_launch_threaded_job_sync:
  * @daemon: A #UDisksDaemon.
@@ -1281,16 +1250,10 @@ udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
                                         GError               **error)
 {
   UDisksBaseJob *job;
-  ThreadedJobSyncData data;
+  gboolean job_result;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-
-  data.context = g_main_context_new ();
-  g_main_context_push_thread_default (data.context);
-  data.loop = g_main_loop_new (data.context, FALSE);
-  data.error = NULL;
-  data.result = FALSE;
 
   job = udisks_daemon_launch_threaded_job (daemon,
                                            object,
@@ -1300,27 +1263,14 @@ udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
                                            user_data,
                                            user_data_free_func,
                                            cancellable);
-  g_signal_connect (job,
-                    "threaded-job-completed",
-                    G_CALLBACK (threaded_job_sync_on_threaded_job_completed),
-                    &data);
-  g_signal_connect_after (job,
-                          "completed",
-                          G_CALLBACK (threaded_job_sync_on_completed),
-                          &data);
 
-  udisks_threaded_job_start (UDISKS_THREADED_JOB (job));
-  g_main_loop_run (data.loop);
-
-  g_main_loop_unref (data.loop);
-  g_main_context_pop_thread_default (data.context);
-  g_main_context_unref (data.context);
-
-  if (data.error)
-    g_propagate_error (error, data.error);
+  /* TODO: There might not be much difference between calling the job_func() right away
+   *       instead of having it enclosed in a GTask since we're blocking anyway.
+   *       Deeper investigation of differences required. */
+  job_result = udisks_threaded_job_run_sync (UDISKS_THREADED_JOB (job), error);
 
   /* note: the job object is freed in the ::completed handler */
-  return data.result;
+  return job_result;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
