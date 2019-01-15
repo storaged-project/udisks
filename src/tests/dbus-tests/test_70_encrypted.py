@@ -392,7 +392,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         m = re.search(r'\s*key location:\s*(\S+)\s*', out)
         if not m or len(m.groups()) != 1:
-            self.fail('Failed to get key locaton from:\n%s' % out)
+            self.fail('Failed to get key location from:\n%s' % out)
 
         return m.group(1)
 
