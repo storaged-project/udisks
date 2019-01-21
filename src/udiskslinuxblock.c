@@ -551,18 +551,24 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
       else if (partlabel != NULL || partuuid != NULL)
         {
           UDisksLinuxBlockObject *object;
-          GUdevDevice *u_dev = NULL;
+          UDisksLinuxDevice *linux_device;
 
           object = udisks_daemon_util_dup_object (block, NULL);
           if (object == NULL)
             goto continue_loop;
-          u_dev = udisks_linux_block_object_get_device (object)->udev_device;
+          linux_device = udisks_linux_block_object_get_device (object);
           g_clear_object (&object);
-          if (u_dev == NULL)
+          if (linux_device == NULL)
             goto continue_loop;
-          if ((partuuid != NULL && g_strcmp0 (partuuid, g_udev_device_get_property (u_dev, "ID_PART_ENTRY_UUID")) == 0) ||
-              (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (u_dev, "ID_PART_ENTRY_NAME")) == 0))
+          if (linux_device->udev_device == NULL)
+            {
+              g_object_unref (linux_device);
+              goto continue_loop;
+            }
+          if ((partuuid != NULL && g_strcmp0 (partuuid, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
+              (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0))
             ret = g_list_prepend (ret, g_object_ref (entry));
+          g_object_unref (linux_device);
         }
 
     continue_loop:
