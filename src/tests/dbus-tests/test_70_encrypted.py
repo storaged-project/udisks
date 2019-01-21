@@ -392,7 +392,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         m = re.search(r'\s*key location:\s*(\S+)\s*', out)
         if not m or len(m.groups()) != 1:
-            self.fail('Failed to get key locaton from:\n%s' % out)
+            self.fail('Failed to get key location from:\n%s' % out)
 
         return m.group(1)
 
@@ -425,7 +425,8 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         # wrong passphrase
         d = dbus.Dictionary(signature='sv')
         d['passphrase'] = 'wrongpassphrase'
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Failed to activate device: Operation not permitted'
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: '\
+              'Failed to activate device: (Operation not permitted|Incorrect passphrase)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             device.Resize(dbus.UInt64(100*1024*1024), d,
                           dbus_interface=self.iface_prefix + '.Encrypted')
