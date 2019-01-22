@@ -827,8 +827,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
   data.lv_name = udisks_linux_logical_volume_object_get_name (object);
   data.new_lv_name = name;
-  if (size > 0)
-    data.new_lv_size = size;
+  data.new_lv_size = size;
 
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                UDISKS_OBJECT (object),
