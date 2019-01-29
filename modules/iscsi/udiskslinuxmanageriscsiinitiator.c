@@ -304,7 +304,7 @@ handle_get_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error opening %s: %s"),
+                                             N_("Error opening %s while getting iSCSI initiator name: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -324,7 +324,7 @@ handle_get_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error reading %s: %s"),
+                                             N_("Error reading %s while getting iSCSI initiator name: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -410,7 +410,7 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error opening %s: %s"),
+                                             N_("Error opening %s while setting iSCSI initiator name: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -427,7 +427,7 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error writing to %s: %s"),
+                                             N_("Error writing to %s while setting iSCSI initiator name: %s"),
                                              initiator_filename,
                                              strerror (errno));
 

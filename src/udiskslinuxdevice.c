@@ -189,7 +189,7 @@ probe_ata (UDisksLinuxDevice  *device,
   if (fd == -1)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device file %s: %m",
+                   "Error opening device file %s while probing ATA specifics: %m",
                    device_file);
       goto out;
     }

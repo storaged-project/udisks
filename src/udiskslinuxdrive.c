@@ -1451,7 +1451,7 @@ handle_power_off (UDisksDrive           *_drive,
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
-                                                 "Error opening %s: %m",
+                                                 "Error opening %s for fsync: %m",
                                                  device_file);
           goto out;
         }
@@ -1488,7 +1488,7 @@ handle_power_off (UDisksDrive           *_drive,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error opening %s: %m",
+                                             "Error opening %s for cache synchronize: %m",
                                              udisks_block_get_device (block));
       goto out;
     }
@@ -1558,7 +1558,7 @@ handle_power_off (UDisksDrive           *_drive,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error opening %s: %m",
+                                             "Error opening %s for device removal: %m",
                                              remove_path);
       goto out;
     }
