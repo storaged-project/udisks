@@ -432,7 +432,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   /* we need the uid of the caller for the unlocked-crypto-dev file */
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -723,8 +723,6 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               NULL,
-                                               NULL,
                                                error))
     {
       ret = FALSE;
@@ -886,7 +884,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
     }
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -1005,7 +1003,7 @@ handle_resize (UDisksEncrypted       *encrypted,
     }
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);

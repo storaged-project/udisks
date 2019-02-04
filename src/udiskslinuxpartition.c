@@ -132,8 +132,6 @@ check_authorization (UDisksPartition       *partition,
                                                invocation,
                                                NULL /* GCancellable */,
                                                caller_uid,
-                                               NULL,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

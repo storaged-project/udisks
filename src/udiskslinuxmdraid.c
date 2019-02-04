@@ -588,7 +588,6 @@ handle_start (UDisksMDRaid           *_mdraid,
   const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   GList *member_devices = NULL;
   gchar *raid_device_file = NULL;
@@ -618,8 +617,6 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -760,7 +757,6 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
   UDisksLinuxMDRaidObject *object;
   uid_t started_by_uid;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   UDisksBaseJob *job = NULL;
   const gchar *device_file = NULL;
@@ -780,8 +776,6 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                error))
     {
       ret = FALSE;
@@ -958,7 +952,6 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   const gchar *message;
   uid_t started_by_uid;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   const gchar *member_device_file = NULL;
@@ -987,8 +980,6 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1124,7 +1115,6 @@ handle_add_device (UDisksMDRaid           *_mdraid,
   const gchar *message;
   uid_t started_by_uid;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   const gchar *new_member_device_file = NULL;
@@ -1148,8 +1138,6 @@ handle_add_device (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1258,7 +1246,6 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   const gchar *message;
   uid_t started_by_uid;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   GError *error = NULL;
@@ -1279,8 +1266,6 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1378,7 +1363,6 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   const gchar *message;
   uid_t started_by_uid;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
   GError *error = NULL;
   const gchar *device_file = NULL;
@@ -1399,8 +1383,6 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1494,7 +1476,6 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
   UDisksLinuxMDRaidObject *object;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   const gchar *message;
   const gchar *action_id;
   gboolean teardown_flag = FALSE;
@@ -1521,8 +1502,6 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                error))
     {
       ret = FALSE;

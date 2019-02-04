@@ -264,7 +264,6 @@ handle_create_volume (UDisksManagerVDO      *manager,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                NULL, NULL,
                                                 &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -409,7 +408,6 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                NULL, NULL,
                                                 &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);

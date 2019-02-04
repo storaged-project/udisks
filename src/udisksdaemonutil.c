@@ -632,8 +632,6 @@ check_authorization_no_polkit (UDisksDaemon            *daemon,
                                                invocation,
                                                NULL,         /* GCancellable* */
                                                &caller_uid,
-                                               NULL,         /* gid_t *out_gid */
-                                               NULL,         /* gchar **out_user_name */
                                                &sub_error))
     {
       g_set_error (error,
@@ -1002,6 +1000,56 @@ out:
   return ret;
 }
 
+/**
+ * udisks_daemon_util_get_user_info:
+ * @out_gid: (out) (allow-none): Return location for resolved gid or %NULL.
+ * @out_user_name: (out) (allow-none): Return location for resolved user name or %NULL.
+ * @error: Return location for error.
+ *
+ * Gets the UNIX group and user name for a user id.
+ *
+ * Returns: %TRUE if the user information was obtained, %FALSE otherwise
+ */
+gboolean
+udisks_daemon_util_get_user_info (const uid_t uid,
+                                  gid_t *out_gid,
+                                  gchar **out_user_name,
+                                  GError     **error)
+{
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  struct passwd *pw = NULL;
+  int rc;
+
+  rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc == 0 && pw == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "User with uid %d does not exist", (gint) uid);
+      goto out;
+    }
+  else if (pw == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error looking up passwd struct for uid %d: %m", (gint) uid);
+      goto out;
+    }
+
+  if (out_gid != NULL)
+    *out_gid = pw->pw_gid;
+
+  if (out_user_name != NULL)
+      *out_user_name = g_strdup (pwstruct.pw_name);
+
+  return TRUE;
+
+out:
+  return FALSE;
+}
 
 /**
  * udisks_daemon_util_get_caller_uid_sync:
@@ -1009,12 +1057,9 @@ out:
  * @invocation: A #GDBusMethodInvocation.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @out_uid: (out): Return location for resolved uid or %NULL.
- * @out_gid: (out) (allow-none): Return location for resolved gid or %NULL.
- * @out_user_name: (out) (allow-none): Return location for resolved user name or %NULL.
  * @error: Return location for error.
  *
- * Gets the UNIX user id (and possibly group id and user name) of the
- * peer represented by @invocation.
+ * Gets the UNIX user id of the peer represented by @invocation.
  *
  * Returns: %TRUE if the user id (and possibly group id) was obtained, %FALSE otherwise
  */
@@ -1023,8 +1068,6 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                                         GDBusMethodInvocation   *invocation,
                                         GCancellable            *cancellable,
                                         uid_t                   *out_uid,
-                                        gid_t                   *out_gid,
-                                        gchar                  **out_user_name,
                                         GError                 **error)
 {
   gboolean ret;
@@ -1043,36 +1086,6 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
 
   if (out_uid != NULL)
     *out_uid = uid;
-
-  if (out_gid != NULL || out_user_name != NULL)
-    {
-      struct passwd pwstruct;
-      gchar pwbuf[8192];
-      struct passwd *pw = NULL;
-      int rc;
-
-      rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
-      if (rc == 0 && pw == NULL)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "User with uid %d does not exist", (gint) uid);
-          goto out;
-        }
-      else if (pw == NULL)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "Error looking up passwd struct for uid %d: %m", (gint) uid);
-          goto out;
-        }
-      if (out_gid != NULL)
-        *out_gid = pw->pw_gid;
-      if (out_user_name != NULL)
-        *out_user_name = g_strdup (pwstruct.pw_name);
-    }
 
   ret = TRUE;
 

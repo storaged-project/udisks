@@ -965,7 +965,6 @@ handle_eject (UDisksDrive           *_drive,
   GError *error = NULL;
   gchar *escaped_device = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -999,8 +998,6 @@ handle_eject (UDisksDrive           *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1344,7 +1341,6 @@ handle_power_off (UDisksDrive           *_drive,
   GError *error = NULL;
   gchar *escaped_device = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   GList *sibling_objects = NULL, *l;
   gint fd = -1;
 
@@ -1403,8 +1399,6 @@ handle_power_off (UDisksDrive           *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

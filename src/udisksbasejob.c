@@ -367,7 +367,6 @@ handle_cancel (UDisksJob              *_job,
   const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
 
   object = udisks_daemon_util_dup_object (job, &error);
@@ -381,8 +380,6 @@ handle_cancel (UDisksJob              *_job,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);

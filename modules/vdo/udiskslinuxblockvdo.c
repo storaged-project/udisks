@@ -302,7 +302,6 @@ check_pk_auth (UDisksBlockVDO        *block_vdo,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                NULL, NULL,
                                                 &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
