@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <glib.h>
 #include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
@@ -1031,7 +1032,7 @@ handle_eject (UDisksDrive           *_drive,
                                                     invocation))
     goto out;
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  escaped_device = g_shell_quote (udisks_block_get_device (block));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -1341,7 +1342,6 @@ handle_power_off (UDisksDrive           *_drive,
   const gchar *message;
   gchar *error_message = NULL;
   GError *error = NULL;
-  gchar *escaped_device = NULL;
   uid_t caller_uid;
   GList *sibling_objects = NULL, *l;
   gint fd = -1;
@@ -1527,7 +1527,6 @@ handle_power_off (UDisksDrive           *_drive,
     }
   fd = -1;
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     {
@@ -1593,7 +1592,6 @@ handle_power_off (UDisksDrive           *_drive,
   g_free (remove_path);
   g_clear_object (&usb_device);
   g_clear_object (&device);
-  g_free (escaped_device);
   g_clear_object (&block_object);
   g_free (error_message);
   g_clear_object (&object);
