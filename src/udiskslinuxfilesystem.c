@@ -2261,6 +2261,10 @@ handle_resize (UDisksFilesystem      *filesystem,
       goto out;
     }
 
+  /* At least resize2fs might need another uevent after it is done.
+   */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+
   udisks_filesystem_complete_resize (filesystem, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
