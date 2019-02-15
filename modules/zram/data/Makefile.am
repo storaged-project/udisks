@@ -5,9 +5,10 @@ polkitdir       = $(datadir)/polkit-1/actions
 polkit_in_files = org.freedesktop.UDisks2.zram.policy.in
 polkit_DATA     = $(polkit_in_files:.policy.in=.policy)
 
-systemdsystemunit_DATA = zram-setup@.service
+$(polkit_DATA): $(polkit_in_files)
+	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 
-@INTLTOOL_POLICY_RULE@
+systemdsystemunit_DATA = zram-setup@.service
 
 EXTRA_DIST =                                                                   \
 	org.freedesktop.UDisks2.zram.xml                                       \

@@ -37,8 +37,6 @@ AC_PROG_LIBTOOL
 # Compilation
 #
 
-GNOME_COMPILE_WARNINGS([maximum])
-
 CC_CHECK_CFLAGS_APPEND([                          \
         -Wall                                     \
         -W                                        \
@@ -654,10 +652,11 @@ fi
 # Internationalization
 #
 
-IT_PROG_INTLTOOL([$INTLTOOL_REQUIRED])
+AM_GNU_GETTEXT_VERSION([0.19.8])
+AM_GNU_GETTEXT([external])
+
 GETTEXT_PACKAGE=udisks2
 AC_SUBST([GETTEXT_PACKAGE])
-AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
 AC_DEFINE([PROJECT_SYSCONF_DIR], ["udisks2"], [Project configuration directory])
