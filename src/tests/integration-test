@@ -1816,6 +1816,7 @@ class MDRaid(UDisksTestCase):
     @classmethod
     def setUpClass(cls):
         cls.devices = setup_lio()
+        cls.sync()
 
     @classmethod
     def tearDownClass(cls):
