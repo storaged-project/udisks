@@ -164,7 +164,6 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksDaemon *daemon;
   GError *error = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
 
   object = udisks_daemon_util_dup_object (swapspace, &error);
   if (object == NULL)
@@ -179,8 +178,6 @@ handle_start (UDisksSwapspace        *swapspace,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -259,7 +256,6 @@ handle_stop (UDisksSwapspace        *swapspace,
   UDisksObject *object;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
@@ -270,8 +266,6 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -334,7 +328,6 @@ handle_set_label (UDisksSwapspace        *swapspace,
   GError *error = NULL;
   UDisksBlock *block = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -344,8 +337,6 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

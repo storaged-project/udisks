@@ -249,7 +249,6 @@ handle_delete (UDisksVolumeGroup     *_group,
   UDisksLinuxVolumeGroupObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   gboolean teardown_flag = FALSE;
   GList *objects_to_wipe = NULL;
   GList *l;
@@ -286,8 +285,6 @@ handle_delete (UDisksVolumeGroup     *_group,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -371,7 +368,6 @@ handle_rename (UDisksVolumeGroup     *_group,
   UDisksLinuxVolumeGroupObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   UDisksObject *group_object = NULL;
   VGJobData data;
 
@@ -388,8 +384,6 @@ handle_rename (UDisksVolumeGroup     *_group,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -462,7 +456,6 @@ handle_add_device (UDisksVolumeGroup     *_group,
   UDisksDaemon *daemon;
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   UDisksObject *new_member_device_object = NULL;
   UDisksBlock *new_member_device = NULL;
@@ -483,8 +476,6 @@ handle_add_device (UDisksVolumeGroup     *_group,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -598,7 +589,6 @@ handle_remove_common (UDisksVolumeGroup     *_group,
   UDisksDaemon *daemon;
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
@@ -638,8 +628,6 @@ handle_remove_common (UDisksVolumeGroup     *_group,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -812,7 +800,6 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   UDisksLinuxVolumeGroupObject *object = NULL;
   UDisksDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   const gchar *lv_objpath;
   LVJobData data;
   UDisksLinuxLogicalVolumeObject *pool_object = NULL;
@@ -852,8 +839,6 @@ handle_create_volume (UDisksVolumeGroup              *_group,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

@@ -220,7 +220,7 @@ handle_delete (UDisksLoop            *loop,
   state = udisks_daemon_get_state (daemon);
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -316,7 +316,7 @@ handle_set_autoclear (UDisksLoop             *loop,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);

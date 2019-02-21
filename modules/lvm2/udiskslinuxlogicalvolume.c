@@ -362,8 +362,7 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
               const gchar                        *auth_err_msg,
               UDisksLinuxLogicalVolumeObject    **object,
               UDisksDaemon                      **daemon,
-              uid_t                              *out_uid,
-              gid_t                              *out_gid)
+              uid_t                              *out_uid)
 {
   gboolean rc = FALSE;
   GError *error = NULL;
@@ -381,8 +380,6 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
                                                invocation,
                                                NULL /* GCancellable */,
                                                out_uid,
-                                               out_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -421,7 +418,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to delete a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   if (teardown_flag &&
@@ -533,7 +530,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to rename a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -594,7 +591,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to resize a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -687,7 +684,7 @@ handle_activate (UDisksLogicalVolume *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to activate a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -754,7 +751,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to deactivate a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -820,7 +817,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to create a snapshot of a logical volume"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -890,7 +887,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to convert logical volume to cache"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -952,7 +949,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to split cache pool LV off of a cache LV"),
-                     &object, &daemon, &caller_uid, NULL))
+                     &object, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);

@@ -1358,9 +1358,14 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               &caller_user_name,
                                                &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, &caller_user_name, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -1731,7 +1736,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
     }
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -1917,7 +1922,6 @@ handle_set_label (UDisksFilesystem      *filesystem,
   const gchar *message;
   gchar *real_label = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   gchar *command;
   gint status = 0;
   gchar *out_message = NULL;
@@ -1945,8 +1949,6 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2121,7 +2123,6 @@ handle_resize (UDisksFilesystem      *filesystem,
   const gchar *action_id = NULL;
   const gchar *message = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
   gchar *required_utility = NULL;
@@ -2143,8 +2144,6 @@ handle_resize (UDisksFilesystem      *filesystem,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                &caller_gid,
-                                                NULL,
                                                 &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2293,7 +2292,6 @@ handle_repair (UDisksFilesystem      *filesystem,
   const gchar *action_id = NULL;
   const gchar *message = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   gboolean ret = FALSE;
   UDisksBaseJob *job = NULL;
@@ -2316,8 +2314,6 @@ handle_repair (UDisksFilesystem      *filesystem,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                &caller_gid,
-                                                NULL,
                                                 &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2453,7 +2449,6 @@ handle_check (UDisksFilesystem      *filesystem,
   const gchar *action_id = NULL;
   const gchar *message = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   gboolean ret = FALSE;
   UDisksBaseJob *job = NULL;
@@ -2476,8 +2471,6 @@ handle_check (UDisksFilesystem      *filesystem,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                &caller_gid,
-                                                NULL,
                                                 &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2635,11 +2628,16 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
-                                                &caller_gid,
-                                                NULL,
                                                 &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, NULL /* user name */, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
       goto out;
     }
 

@@ -79,12 +79,15 @@ gboolean udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon   
                                                                  GDBusMethodInvocation  *invocation,
                                                                  GError                **error);
 
+gboolean udisks_daemon_util_get_user_info (const uid_t   uid,
+                                           gid_t        *out_gid,
+                                           gchar       **out_user_name,
+                                           GError      **error);
+
 gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                                                  GDBusMethodInvocation   *invocation,
                                                  GCancellable            *cancellable,
                                                  uid_t                   *out_uid,
-                                                 gid_t                   *out_gid,
-                                                 gchar                  **out_user_name,
                                                  GError                 **error);
 
 gboolean udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,

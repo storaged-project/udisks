@@ -268,7 +268,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   BDPartTypeReq part_type = 0;
   gchar *table_type = NULL;
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
   gchar *partition_type = NULL;
@@ -297,8 +296,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

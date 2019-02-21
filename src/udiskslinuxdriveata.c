@@ -1143,7 +1143,6 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
   UDisksDaemon *daemon;
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   uid_t caller_uid;
-  gid_t caller_gid;
   GError *error;
 
   error = NULL;
@@ -1180,8 +1179,6 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1388,8 +1385,6 @@ handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               NULL,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2205,7 +2200,6 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   const gchar *message;
   const gchar *action_id;
   uid_t caller_uid;
-  gid_t caller_gid;
   gboolean enhanced = FALSE;
 
   object = udisks_daemon_util_dup_object (drive, &error);
@@ -2232,8 +2226,6 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2294,7 +2286,6 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   const gchar *message;
   const gchar *action_id;
   uid_t caller_uid;
-  gid_t caller_gid;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -2320,8 +2311,6 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               &caller_gid,
-                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
