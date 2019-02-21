@@ -284,7 +284,8 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         # Create the caching LV
         cache_lvname = 'udisks_test_cache_lv'
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
-        lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64(vgsize / 2), self.no_options,
+        # 8 MiB reserved for the cache metadata created automatically by LVM
+        lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64((vgsize / 2) - 8 * 1024**2), self.no_options,
                                              dbus_interface=self.iface_prefix + '.VolumeGroup')
         cache_lv = self.bus.get_object(self.iface_prefix, lv_cache_path)
         self.assertIsNotNone(cache_lv)
