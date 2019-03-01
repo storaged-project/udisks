@@ -60,7 +60,6 @@ doc/udisks2.interfaces
 doc/udisks2.prerequisites
 doc/*.signals
 gtk-doc.make
-intltool-*
 libtool
 m4/
 po/POTFILES

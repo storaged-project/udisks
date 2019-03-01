@@ -32,12 +32,13 @@ polkitdir        = $(datadir)/polkit-1/actions
 polkit_in_files  = org.freedesktop.UDisks2.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
+$(polkit_DATA): $(polkit_in_files)
+	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
+
 completionsdir = $(datadir)/bash-completion/completions
 completions_DATA =                                                             \
 	completions/udisksctl                                                  \
 	$(NULL)
-
-@INTLTOOL_POLICY_RULE@
 
 EXTRA_DIST =                                                                   \
 	80-udisks2.rules                                                       \

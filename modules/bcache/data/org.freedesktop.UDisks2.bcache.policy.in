@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
@@ -10,8 +10,8 @@
   <icon_name>drive-removable-media</icon_name>
 
   <action id="org.freedesktop.udisks2.bcache.manage-bcache">
-    <_description>Manage Bcache</_description>
-    <_message>Authentication is required to manage Bcache</_message>
+    <description>Manage Bcache</description>
+    <message>Authentication is required to manage Bcache</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

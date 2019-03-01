@@ -75,11 +75,10 @@ BuildRequires: libgudev1-devel >= %{systemd_version}
 BuildRequires: libatasmart-devel >= %{libatasmart_version}
 BuildRequires: polkit-devel >= %{polkit_version}
 BuildRequires: systemd-devel >= %{systemd_version}
-BuildRequires: gnome-common
 BuildRequires: libacl-devel
 BuildRequires: chrpath
 BuildRequires: gtk-doc
-BuildRequires: intltool
+BuildRequires: gettext-devel
 BuildRequires: redhat-rpm-config
 BuildRequires: libblockdev-devel        >= %{libblockdev_version}
 BuildRequires: libblockdev-part-devel   >= %{libblockdev_version}

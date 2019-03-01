@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
@@ -13,8 +13,8 @@
   <!-- Mounting filesystems -->
 
   <action id="org.freedesktop.udisks2.filesystem-mount">
-    <_description>Mount a filesystem</_description>
-    <_message>Authentication is required to mount the filesystem</_message>
+    <description>Mount a filesystem</description>
+    <message>Authentication is required to mount the filesystem</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -24,8 +24,8 @@
 
   <!-- mount a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.filesystem-mount-system">
-    <_description>Mount a filesystem on a system device</_description>
-    <_message>Authentication is required to mount the filesystem</_message>
+    <description>Mount a filesystem on a system device</description>
+    <message>Authentication is required to mount the filesystem</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -35,8 +35,8 @@
 
   <!-- mount a device attached to another seat -->
   <action id="org.freedesktop.udisks2.filesystem-mount-other-seat">
-    <_description>Mount a filesystem from a device plugged into another seat</_description>
-    <_message>Authentication is required to mount the filesystem</_message>
+    <description>Mount a filesystem from a device plugged into another seat</description>
+    <message>Authentication is required to mount the filesystem</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -46,8 +46,8 @@
 
   <!-- mount a device referenced in the /etc/fstab file with the x-udisks-auth option -->
   <action id="org.freedesktop.udisks2.filesystem-fstab">
-    <_description>Mount/unmount filesystems defined in the fstab file with the x-udisks-auth option</_description>
-    <_message>Authentication is required to mount/unmount the filesystem</_message>
+    <description>Mount/unmount filesystems defined in the fstab file with the x-udisks-auth option</description>
+    <message>Authentication is required to mount/unmount the filesystem</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -60,8 +60,8 @@
 
   <!-- unmount a filesystem mounted by another user -->
   <action id="org.freedesktop.udisks2.filesystem-unmount-others">
-    <_description>Unmount a device mounted by another user</_description>
-    <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
+    <description>Unmount a device mounted by another user</description>
+    <message>Authentication is required to unmount a filesystem mounted by another user</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -73,8 +73,8 @@
   <!-- Taking ownership of filesystems -->
 
   <action id="org.freedesktop.udisks2.filesystem-take-ownership">
-    <_description>Take ownership of a filesystem</_description>
-    <_message>Authentication is required to take ownership of a filesystem.</_message>
+    <description>Take ownership of a filesystem</description>
+    <message>Authentication is required to take ownership of a filesystem.</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -86,8 +86,8 @@
   <!-- Unlocking encrypted devices -->
 
   <action id="org.freedesktop.udisks2.encrypted-unlock">
-    <_description>Unlock an encrypted device</_description>
-    <_message>Authentication is required to unlock an encrypted device</_message>
+    <description>Unlock an encrypted device</description>
+    <message>Authentication is required to unlock an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -97,8 +97,8 @@
 
   <!-- unlock a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-system">
-    <_description>Unlock an encrypted system device</_description>
-    <_message>Authentication is required to unlock an encrypted device</_message>
+    <description>Unlock an encrypted system device</description>
+    <message>Authentication is required to unlock an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -108,8 +108,8 @@
 
   <!-- mount a device attached to another seat -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-other-seat">
-    <_description>Unlock an encrypted device plugged into another seat</_description>
-    <_message>Authentication is required to unlock an encrypted device</_message>
+    <description>Unlock an encrypted device plugged into another seat</description>
+    <message>Authentication is required to unlock an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -119,8 +119,8 @@
 
   <!-- unlock a device referenced in the /etc/crypttab file with the x-udisks-auth option -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-crypttab">
-    <_description>Unlock an encrypted device specified in the crypttab file with the x-udisks-auth option</_description>
-    <_message>Authentication is required to unlock an encrypted device</_message>
+    <description>Unlock an encrypted device specified in the crypttab file with the x-udisks-auth option</description>
+    <message>Authentication is required to unlock an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -133,8 +133,8 @@
 
   <!-- lock a device unlocked by another user -->
   <action id="org.freedesktop.udisks2.encrypted-lock-others">
-    <_description>Lock an encrypted device unlocked by another user</_description>
-    <_message>Authentication is required to lock an encrypted device unlocked by another user</_message>
+    <description>Lock an encrypted device unlocked by another user</description>
+    <message>Authentication is required to lock an encrypted device unlocked by another user</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -146,8 +146,8 @@
   <!-- Changing passphrases on encrypted devices -->
 
   <action id="org.freedesktop.udisks2.encrypted-change-passphrase">
-    <_description>Change passphrase for an encrypted device</_description>
-    <_message>Authentication is required to change the passphrase for an encrypted device</_message>
+    <description>Change passphrase for an encrypted device</description>
+    <message>Authentication is required to change the passphrase for an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -157,8 +157,8 @@
 
   <!-- change passphrase on a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.encrypted-change-passphrase-system">
-    <_description>Change passphrase for an encrypted device</_description>
-    <_message>Authentication is required to change the passphrase for an encrypted device</_message>
+    <description>Change passphrase for an encrypted device</description>
+    <message>Authentication is required to change the passphrase for an encrypted device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -170,8 +170,8 @@
   <!-- Setting up loop devices -->
 
   <action id="org.freedesktop.udisks2.loop-setup">
-    <_description>Manage loop devices</_description>
-    <_message>Authentication is required to set up a loop device</_message>
+    <description>Manage loop devices</description>
+    <message>Authentication is required to set up a loop device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -184,8 +184,8 @@
   <!-- Deleting and modifying loop devices -->
 
   <action id="org.freedesktop.udisks2.loop-delete-others">
-    <_description>Delete loop devices</_description>
-    <_message>Authentication is required to delete a loop device set up by another user</_message>
+    <description>Delete loop devices</description>
+    <message>Authentication is required to delete a loop device set up by another user</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -194,8 +194,8 @@
   </action>
 
   <action id="org.freedesktop.udisks2.loop-modify-others">
-    <_description>Modify loop devices</_description>
-    <_message>Authentication is required to modify a loop device set up by another user</_message>
+    <description>Modify loop devices</description>
+    <message>Authentication is required to modify a loop device set up by another user</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -207,8 +207,8 @@
   <!-- Manage (start/stop) swapspace -->
 
   <action id="org.freedesktop.udisks2.manage-swapspace">
-    <_description>Manage swapspace</_description>
-    <_message>Authentication is required to manage swapspace</_message>
+    <description>Manage swapspace</description>
+    <message>Authentication is required to manage swapspace</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -220,8 +220,8 @@
   <!-- Manage MD-RAID -->
 
   <action id="org.freedesktop.udisks2.manage-md-raid">
-    <_description>Manage RAID arrays</_description>
-    <_message>Authentication is required to manage RAID arrays</_message>
+    <description>Manage RAID arrays</description>
+    <message>Authentication is required to manage RAID arrays</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -233,8 +233,8 @@
   <!-- Power off drives -->
 
   <action id="org.freedesktop.udisks2.power-off-drive">
-    <_description>Power off drive</_description>
-    <_message>Authentication is required to power off a drive</_message>
+    <description>Power off drive</description>
+    <message>Authentication is required to power off a drive</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -244,8 +244,8 @@
 
   <!-- Power off a drive considered a "system device" -->
   <action id="org.freedesktop.udisks2.power-off-drive-system">
-    <_description>Power off a system drive</_description>
-    <_message>Authentication is required to power off a drive</_message>
+    <description>Power off a system drive</description>
+    <message>Authentication is required to power off a drive</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -255,8 +255,8 @@
 
   <!-- Power off a drive attached to another seat -->
   <action id="org.freedesktop.udisks2.power-off-drive-other-seat">
-    <_description>Power off a drive attached to another seat</_description>
-    <_message>Authentication is required to power off a drive plugged into another seat</_message>
+    <description>Power off a drive attached to another seat</description>
+    <message>Authentication is required to power off a drive plugged into another seat</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -268,8 +268,8 @@
   <!-- Eject media from a drive -->
 
   <action id="org.freedesktop.udisks2.eject-media">
-    <_description>Eject media</_description>
-    <_message>Authentication is required to eject media</_message>
+    <description>Eject media</description>
+    <message>Authentication is required to eject media</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -279,8 +279,8 @@
 
   <!-- eject media from a drive considered a "system device" -->
   <action id="org.freedesktop.udisks2.eject-media-system">
-    <_description>Eject media from a system drive</_description>
-    <_message>Authentication is required to eject media</_message>
+    <description>Eject media from a system drive</description>
+    <message>Authentication is required to eject media</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -290,8 +290,8 @@
 
   <!-- eject media from a drive attached to another seat -->
   <action id="org.freedesktop.udisks2.eject-media-other-seat">
-    <_description>Eject media from a drive attached to another seat</_description>
-    <_message>Authentication is required to eject media from a drive plugged into another seat</_message>
+    <description>Eject media from a drive attached to another seat</description>
+    <message>Authentication is required to eject media from a drive plugged into another seat</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -303,8 +303,8 @@
   <!-- Modify a device (create new filesystem, partitioning, change FS label etc.) -->
 
   <action id="org.freedesktop.udisks2.modify-device">
-    <_description>Modify a device</_description>
-    <_message>Authentication is required to modify a device</_message>
+    <description>Modify a device</description>
+    <message>Authentication is required to modify a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -314,8 +314,8 @@
 
   <!-- modify a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.modify-device-system">
-    <_description>Modify a system device</_description>
-    <_message>Authentication is required to modify a device</_message>
+    <description>Modify a system device</description>
+    <message>Authentication is required to modify a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -325,8 +325,8 @@
 
   <!-- modify a device attached to another seat -->
   <action id="org.freedesktop.udisks2.modify-device-other-seat">
-    <_description>Modify a device</_description>
-    <_message>Authentication is required to modify a device plugged into another seat</_message>
+    <description>Modify a device</description>
+    <message>Authentication is required to modify a device plugged into another seat</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -336,8 +336,8 @@
 
   <!-- rescan a device -->
   <action id="org.freedesktop.udisks2.rescan">
-    <_description>Rescan a device</_description>
-    <_message>Authentication is required to rescan a device</_message>
+    <description>Rescan a device</description>
+    <message>Authentication is required to rescan a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -349,8 +349,8 @@
   <!-- Open a device for reading (for creating / restoring disk images) -->
 
   <action id="org.freedesktop.udisks2.open-device">
-    <_description>Open a device</_description>
-    <_message>Authentication is required to open a device</_message>
+    <description>Open a device</description>
+    <message>Authentication is required to open a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -359,8 +359,8 @@
   </action>
 
   <action id="org.freedesktop.udisks2.open-device-system">
-    <_description>Open a system device</_description>
-    <_message>Authentication is required to open a device</_message>
+    <description>Open a system device</description>
+    <message>Authentication is required to open a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -379,8 +379,8 @@
   -->
 
   <action id="org.freedesktop.udisks2.modify-system-configuration">
-    <_description>Modify system-wide configuration</_description>
-    <_message>Authentication is required to modify system-wide configuration</_message>
+    <description>Modify system-wide configuration</description>
+    <message>Authentication is required to modify system-wide configuration</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -390,8 +390,8 @@
 
   <!-- Get secrets from system-wide configuration files -->
   <action id="org.freedesktop.udisks2.read-system-configuration-secrets">
-    <_description>Modify system-wide configuration</_description>
-    <_message>Authentication is required to retrieve secrets from system-wide configuration</_message>
+    <description>Modify system-wide configuration</description>
+    <message>Authentication is required to retrieve secrets from system-wide configuration</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -403,8 +403,8 @@
   <!-- Drive configuration (Power Management, Acustics, etc.) -->
 
   <action id="org.freedesktop.udisks2.modify-drive-settings">
-    <_description>Modify drive settings</_description>
-    <_message>Authentication is required to modify drive settings</_message>
+    <description>Modify drive settings</description>
+    <message>Authentication is required to modify drive settings</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -417,8 +417,8 @@
 
   <!-- Update/refresh SMART data -->
   <action id="org.freedesktop.udisks2.ata-smart-update">
-    <_description>Update SMART data</_description>
-    <_message>Authentication is required to update SMART data</_message>
+    <description>Update SMART data</description>
+    <message>Authentication is required to update SMART data</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -428,8 +428,8 @@
 
   <!-- Set SMART data from blob -->
   <action id="org.freedesktop.udisks2.ata-smart-simulate">
-    <_description>Set SMART data from blob</_description>
-    <_message>Authentication is required to set SMART data from blob</_message>
+    <description>Set SMART data from blob</description>
+    <message>Authentication is required to set SMART data from blob</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -439,8 +439,8 @@
 
   <!-- Start and abort SMART self-tests -->
   <action id="org.freedesktop.udisks2.ata-smart-selftest">
-    <_description>Run SMART self-test</_description>
-    <_message>Authentication is required to run a SMART self-test</_message>
+    <description>Run SMART self-test</description>
+    <message>Authentication is required to run a SMART self-test</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -450,8 +450,8 @@
 
   <!-- Enable/Disable SMART -->
   <action id="org.freedesktop.udisks2.ata-smart-enable-disable">
-    <_description>Enable/Disable SMART</_description>
-    <_message>Authentication is required to enable/disable SMART</_message>
+    <description>Enable/Disable SMART</description>
+    <message>Authentication is required to enable/disable SMART</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -464,8 +464,8 @@
 
   <!-- Check power state -->
   <action id="org.freedesktop.udisks2.ata-check-power">
-    <_description>Check power state</_description>
-    <_message>Authentication is required to check the power state</_message>
+    <description>Check power state</description>
+    <message>Authentication is required to check the power state</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -475,8 +475,8 @@
 
   <!-- Send standby command / resume from standby -->
   <action id="org.freedesktop.udisks2.ata-standby">
-    <_description>Send standby command</_description>
-    <_message>Authentication is required to put a drive into standby mode</_message>
+    <description>Send standby command</description>
+    <message>Authentication is required to put a drive into standby mode</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -486,8 +486,8 @@
 
   <!-- Send standby command / resume from standby to a drive considered a "system device" -->
   <action id="org.freedesktop.udisks2.ata-standby-system">
-    <_description>Send standby command to a system drive</_description>
-    <_message>Authentication is required to put a drive into standby mode</_message>
+    <description>Send standby command to a system drive</description>
+    <message>Authentication is required to put a drive into standby mode</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -497,8 +497,8 @@
 
   <!-- Send standby command  / resume from standby to a drive on another seat -->
   <action id="org.freedesktop.udisks2.ata-standby-other-seat">
-    <_description>Send standby command to drive on other seat</_description>
-    <_message>Authentication is required to put a drive into standby mode</_message>
+    <description>Send standby command to drive on other seat</description>
+    <message>Authentication is required to put a drive into standby mode</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -511,8 +511,8 @@
 
   <!-- Send SECURE ERASE UNIT command -->
   <action id="org.freedesktop.udisks2.ata-secure-erase">
-    <_description>Securely erase a hard disk</_description>
-    <_message>Authentication is required to securely erase a hard disk</_message>
+    <description>Securely erase a hard disk</description>
+    <message>Authentication is required to securely erase a hard disk</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -525,8 +525,8 @@
 
   <!-- Cancel own job -->
   <action id="org.freedesktop.udisks2.cancel-job">
-    <_description>Cancel job</_description>
-    <_message>Authentication is required to cancel a job</_message>
+    <description>Cancel job</description>
+    <message>Authentication is required to cancel a job</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -536,8 +536,8 @@
 
   <!-- Cancel job initiated by other user -->
   <action id="org.freedesktop.udisks2.cancel-job-other-user">
-    <_description>Cancel job started by another user</_description>
-    <_message>Authentication is required to cancel a job started by another user</_message>
+    <description>Cancel job started by another user</description>
+    <message>Authentication is required to cancel a job started by another user</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

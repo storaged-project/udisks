@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
@@ -10,8 +10,8 @@
   <icon_name>drive-removable-media</icon_name>
 
   <action id="org.freedesktop.udisks2.zram.manage-zram">
-    <_description>Manage zRAM</_description>
-    <_message>Authentication is required to manage zRAM</_message>
+    <description>Manage zRAM</description>
+    <message>Authentication is required to manage zRAM</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
