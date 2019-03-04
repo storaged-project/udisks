@@ -80,9 +80,9 @@ TRANSLATIONS
 
 - Don't use VPATH build (To be fixed)
 
-- Push (new) translations to Zanata:
-  - Run 'make -C po update-po' to update translation strings
-  - Run 'zanata-cli push --push-type trans' to push new translations
+- Push new strings for translation to Zanata:
+  - Run 'make -C po udisks2.pot' to extract translatable strings
+  - Run 'zanata-cli push' to submit the template
 
 - Pull translations from Zanata:
   - Run 'zanata-cli pull'

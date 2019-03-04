@@ -1,17 +1,106 @@
 ---------------------------
-udisks 2.8.2 (unreleased)
+udisks 2.8.2
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
+The 2.8.2 release brings mostly bugfixes without any changes to the public API.
+Notable changes include:
+
+ * migration from intltool to gettext, udisks no longer depends on gnome-common
+ * added 'windows_names' as a default mount option for ntfs-3g
+ * fixed an issue potentially leading to open filedescriptors exhaustion
+
 Changes since 2.8.1:
-(TODO: make shortlog)
+
+A-Shahbazi (1):
+      Add 'windows_names' as a default mount option for ntfs-3g
+
+Iain Lane (1):
+      integration-test: Sync after creating our fake devices
+
+Malte (1):
+      Split out get_user_info from get_caller_uid_sync.
+
+Marius Vollmer (2):
+      lvm2: Always initialize data.new_lv_size in CreateSnapshot
+      udiskslinuxfilesystem: Trigger uevent after resize
+
+Martin Blanchard (1):
+      build: Migrate from intltool to gettext
+
+Michael Biebl (1):
+      Move D-Bus policy file to /usr/share/dbus-1/system.d/
+
+Raine Makelainen (1):
+      Cleanup some indentation errors from src/Makefile.am
+
+StefanBruens (1):
+      Accept 2nd partition as IsoHybrid data partition, 1st one may be EFI
+
+Tomas Bzatek (36):
+      udiskslogging: Fix THREAD_ID field logging
+      udisksconfigmanager: Use #define for constants
+      udisksconfigmanager: Make use of g_strstrip()
+      udisksconfigmanager: Get rid of set-but-unused variables
+      udisksconfigmanager: Prevent potential memory leak
+      udisksconfigmanager: Use g_ascii_strcasecmp() for case-insensitive string comparison
+      udisksconfigmanager: Refactor properties defaults
+      dbus-tests: Include stdout/stderr in exception message during VDO cleanup
+      dbus-tests: Process cleanup before tearing down VDO backing device
+      dbus-tests: @unstable-fail: Print out the exception message
+      udiskslinuxblockobject: Make filesystem_check() public
+      udiskslinuxblock: Wait for .Filesystem d-bus interface after Format()
+      mdraid: Update links to kernel docs
+      mdraid: Finish pending sync job on finalize()
+      mdraid: Handle NULL sync_action value
+      mdraid: Properly finish the RequestSyncAction() job
+      UDisksThreadedJob: Fix GTask completed handler
+      udiskslinuxprovider: Properly ref objects the tasks are running on
+      lsm: Don't unref published interface
+      lsm: Prevent overwriting already set error
+      lsm: Properly complete incoming method calls
+      vdo: Properly finish the job when bd_vdo_start() fails
+      udiskslinuxswapspace: Run the jobs synchronously
+      test: Reuse mainloop from _g_assert_signal_received()
+      udisksthreadedjob: Use GTask constructions to propagate result and error
+      udisksspawnedjob: Fix a memory leak
+      udisksthreadedjob: Don't return early on cancellation request
+      tests: Add warning about using stack variables
+      udisksthreadedjob: Provide _sync method to run the job
+      tests: Add tests for udisks_threaded_job_run_sync()
+      Enhance 'Error opening %s' messages
+      udiskslinuxblockobject: Add guards around nested UDisksLinuxDevice
+      Fix leaking UDisksLinuxDevice
+      udisksctl: Explicitly close stdout once dump command finishes
+      tests: Sleep for a while after ISO9660 image creation and udev settle
+      doc: Fix typo in the 'disks_filesystem_complete_resize' symbol
+
+Vojtech Trefny (11):
+      Post-release version bump to 2.8.2
+      Mark VDO grow physical test case as unstable
+      man: Describe command options in the udisksctl man page
+      test_mdraid: Adjust to new mdadm --detail output
+      test_zram: Fix how we check zram stats from sysfs
+      Use G_ADD_PRIVATE instead of deprecated g_type_class_add_private
+      Fix reading passphrase from key file specified in crypttab
+      Add test for opening encrypted devices with key files in crypttab
+      Fix LUKS2 resize password test
+      tests: Fix typo in LUKS tests
+      tests: Fix incorrect passphrase error message check
+
+Will Thompson (5):
+      udisksdaemonutil: fix 'inhbit' typo
+      udisksobjectinfo: fix "device device" typo in docs
+      Add g_autoptr() for Client, PartitionTypeInfo, ObjectInfo
+      Add UDISKS_TYPE_PARTITION_TYPE_INFO macro
+      block: remove extra whitespace in OpenDevice error message
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2019-03-04
 
 ---------------------------
 udisks 2.8.1

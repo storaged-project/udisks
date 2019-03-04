@@ -21,6 +21,7 @@
 __pycache__
 .deps
 .libs
+ABOUT-NLS
 INSTALL
 Makefile
 Makefile.in
@@ -36,6 +37,7 @@ data/*.service
 doc/man/udisks.xml
 doc/man/udisks2.conf.5.xml
 doc/man/udisks2.conf.5.xml.in
+doc/man/udisks2_lsm.conf.5.xml
 doc/man/udisks2_lsm.conf.5.xml.in
 doc/man/udisksctl.xml
 doc/man/udisksd.xml

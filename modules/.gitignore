@@ -1,3 +1,4 @@
 *.so
 */*-generated*
+*/*_generated*
 org.freedesktop.UDisks2*.policy

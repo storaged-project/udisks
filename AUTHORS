@@ -5,6 +5,7 @@ Maintainer:
   Vratislav Podzimek <vpodzime@redhat.com>
 
 Contributors (In alphabetical order):
+  A-Shahbazi <a.shahbazi@yandex.com>
   Adam Williamson <awilliam@redhat.com>
   Alban Browaeys <prahal@yahoo.com>
   Andrea Azzarone <andrea.azzarone@canonical.com>
@@ -40,9 +41,11 @@ Contributors (In alphabetical order):
   Kylie McClain <somasis@exherbo.org>
   Linus Torvalds <torvalds@linux-foundation.org>
   Lubomir Rintel <lkundrak@v3.sk>
+  Malte Kraus <malte.kraus@suse.com>
   Mantas Mikulėnas <grawity@gmail.com>
   Marius Vollmer <mvollmer@redhat.com>
   Marti Raudsepp <marti@juffo.org>
+  Martin Blanchard <tchaik@gmx.com>
   Martin Hatina <mhatina@redhat.com>
   Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
   Mathieu Trudel-Lapierre <mathieu.trudel-lapierre@canonical.com>
@@ -61,6 +64,7 @@ Contributors (In alphabetical order):
   Philip Withnall <withnall@endlessm.com>
   Phillip Susi <psusi@ubuntu.com>
   Piotr Drąg <piotrdrag@gmail.com>
+  Raine Makelainen <raine.makelainen@jolla.com>
   Richard Hughes <richard@hughsie.com>
   Ritesh Khadgaray <khadgaray@gmail.com>
   Ross Lagerwall <rosslagerwall@gmail.com>
@@ -73,6 +77,7 @@ Contributors (In alphabetical order):
   Sjoerd Simons <sjoerd.simons@collabora.co.uk>
   squimrel <squimrel@users.noreply.github.com>
   Stef Walter <stefw@redhat.com>
+  Stefan Bruens <stefan.bruens@rwth-aachen.de>
   Stefan Sauer <ensonic@users.sf.net>
   Sunjin Yang <lethean@emstone.com>
   Thomas Gläßle <t_glaessle@gmx.de>
