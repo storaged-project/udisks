@@ -65,7 +65,6 @@ Release: 1%{?dist}
 Release: 0.%{build_date}git%{git_hash}%{?dist}
 %endif
 License: GPLv2+
-Group:   System Environment/Libraries
 URL:     https://github.com/storaged-project/udisks
 Source0: https://github.com/storaged-project/udisks/releases/download/udisks-%{version}/udisks-%{version}.tar.bz2
 
@@ -142,7 +141,6 @@ manipulate disks, storage devices and technologies.
 
 %package -n lib%{name}
 Summary: Dynamic library to access the udisksd daemon
-Group: System Environment/Libraries
 License: LGPLv2+
 Provides:  libstoraged = %{version}-%{release}
 Obsoletes: libstoraged
@@ -153,7 +151,6 @@ access to the udisksd daemon.
 
 %package -n %{name}-iscsi
 Summary: Module for iSCSI
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: iscsi-initiator-utils
@@ -166,7 +163,6 @@ This package contains module for iSCSI configuration.
 
 %package -n %{name}-lvm2
 Summary: Module for LVM2
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: lvm2
@@ -181,7 +177,6 @@ This package contains module for LVM2 configuration.
 
 %package -n lib%{name}-devel
 Summary: Development files for lib%{name}
-Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Provides:  libstoraged-devel = %{version}-%{release}
@@ -194,7 +189,6 @@ dynamic library, which provides access to the udisksd daemon.
 %if 0%{?with_bcache}
 %package -n %{name}-bcache
 Summary: Module for Bcache
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-kbd >= %{libblockdev_version}
@@ -209,7 +203,6 @@ This package contains module for Bcache configuration.
 %if 0%{?with_btrfs}
 %package -n %{name}-btrfs
 Summary: Module for BTRFS
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-btrfs >= %{libblockdev_version}
@@ -224,7 +217,6 @@ This package contains module for BTRFS configuration.
 %if 0%{?with_lsm}
 %package -n %{name}-lsm
 Summary: Module for LSM
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libstoragemgmt
@@ -240,7 +232,6 @@ This package contains module for LSM configuration.
 %if 0%{?with_zram}
 %package -n %{name}-zram
 Summary: Module for ZRAM
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: libblockdev-kbd >= %{libblockdev_version}
@@ -257,7 +248,6 @@ This package contains module for ZRAM configuration.
 %if 0%{?with_vdo}
 %package -n %{name}-vdo
 Summary: Module for VDO
-Group: System Environment/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: vdo
