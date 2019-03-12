@@ -73,6 +73,7 @@ BuildRequires: gobject-introspection-devel >= %{gobject_introspection_version}
 BuildRequires: libgudev1-devel >= %{systemd_version}
 BuildRequires: libatasmart-devel >= %{libatasmart_version}
 BuildRequires: polkit-devel >= %{polkit_version}
+BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel >= %{systemd_version}
 BuildRequires: libacl-devel
 BuildRequires: chrpath
@@ -347,6 +348,7 @@ udevadm trigger
 
 %{_datadir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
+%{_tmpfilesdir}/%{name}.conf
 %{_unitdir}/udisks2.service
 %{_unitdir}/clean-mount-point@.service
 %{_udevrulesdir}/80-udisks2.rules
@@ -433,6 +435,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Fri Mar 15 2019 Debarshi Ray <rishi@fedoraproject.org> - 2.8.2-2
+- Update for tmpfiles.d snippet
+
 * Mon Mar 04 2019 Tomas Bzatek <tbzatek@redhat.com> - 2.8.2-1
 - Version 2.8.2
 

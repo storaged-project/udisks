@@ -1,6 +1,8 @@
 
 NULL =
 
+SUBDIRS = tmpfiles.d
+
 dbusservicedir       = $(datadir)/dbus-1/system-services
 dbusservice_in_files = org.freedesktop.UDisks2.service.in
 dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
