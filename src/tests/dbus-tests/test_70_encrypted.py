@@ -343,8 +343,10 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
         options = dbus.Dictionary(signature='sv')
         if binary:
             options['encrypt.passphrase'] = self.bytes_to_ay(passphrase)
+            options['encrypt.type'] = 'luks1'
         else:
             options['encrypt.passphrase'] = passphrase
+            options['encrypt.type'] = 'luks1'
         device.Format('xfs', options,
                       dbus_interface=self.iface_prefix + '.Block')
 
