@@ -55,9 +55,25 @@
          @since: 2.0.1
 
          Returns a iSCSI initiator name.
+
+         Note: Initiator name can contain non UTF-8 characters. In this case
+         this function will return "Invalid UTF-8" string. Use
+         #org.freedesktop.UDisks2.Manager.ISCSI.Initiator:GetInitiatorNameRaw
+         to get raw, undecoded initiator name.
     -->
     <method name="GetInitiatorName">
       <arg name="result" direction="out" type="s"/>
+    </method>
+
+    <!--
+         GetInitiatorNameRaw:
+         @result: The iSCSI initiator name.
+         @since: 2.8.3
+
+         Returns an iSCSI initiator name as a raw NULL terminated byte array.
+    -->
+    <method name="GetInitiatorNameRaw">
+      <arg name="result" direction="out" type="ay"/>
     </method>
 
     <!--

@@ -9,6 +9,9 @@ import time
 import unittest
 
 
+INITIATOR_FILE = "/etc/iscsi/initiatorname.iscsi"
+
+
 class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     '''Basic iSCSI test suite'''
 
@@ -42,6 +45,25 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         init = manager.GetInitiatorName(self.no_options,
                                         dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
         self.assertEqual(init, self.initiator)
+
+    def _read_initator_name(self):
+        with open(INITIATOR_FILE, "rb") as f:
+            initiator = f.read().strip().split(b"InitiatorName=")[1]
+
+        return initiator
+
+    def test_initiator_name(self):
+        manager = self.get_object('/Manager')
+
+        initiator_dbus = manager.GetInitiatorName(self.no_options,
+                                                  dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+        initiator_sys = self._read_initator_name()
+        self.assertEqual(initiator_dbus, initiator_sys.decode())
+
+        initiator_dbus = manager.GetInitiatorNameRaw(self.no_options,
+                                                     dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+        # raw name is null terminated, we need to cut the last item from the bytearray
+        self.assertEqual(bytes(initiator_dbus)[:-1], initiator_sys)
 
     def test_login_noauth(self):
         manager = self.get_object('/Manager')

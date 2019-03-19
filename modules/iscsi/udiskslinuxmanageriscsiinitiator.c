@@ -83,6 +83,7 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerISCSIInitiator, udisks_linux_manager_
 
 const gchar *initiator_filename = "/etc/iscsi/initiatorname.iscsi";
 const gchar *initiator_name_prefix = "InitiatorName=";
+const gsize initiator_name_prefix_len = 14;
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -282,71 +283,57 @@ handle_get_firmware_initiator_name (UDisksManagerISCSIInitiator *object,
   return TRUE;
 }
 
-static gboolean
-handle_get_initiator_name (UDisksManagerISCSIInitiator *object,
-                           GDBusMethodInvocation       *invocation)
+
+static gchar* _get_initiator_name (GError **error)
 {
-  UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  gchar *initiator_name = NULL;
+  gchar *initiator_contents = NULL;
+  gboolean success = FALSE;
 
-  int initiator_name_fd = -1;
-  int nbytes;
-  gchar buf[64]; /* Do we need more? */
-  gchar *initiator_name;
-  size_t len;
-  GString *content = NULL;
-
-  /* Enter a critical section. */
-  g_mutex_lock (&manager->initiator_config_mutex);
-
-  initiator_name_fd = open (initiator_filename, O_RDONLY);
-  if (initiator_name_fd == -1)
+  success = g_file_get_contents (initiator_filename,
+                                 &initiator_contents,
+                                 NULL,
+                                 error);
+  if (!success)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             N_("Error opening %s while getting iSCSI initiator name: %s"),
-                                             initiator_filename,
-                                             strerror (errno));
-
-      goto out;
-    }
-
-  /* Read the initiator name. */
-  content = g_string_new (NULL);
-  while ((nbytes = read (initiator_name_fd, buf, sizeof (buf) - 1)) > 0)
-    {
-      buf[nbytes] = '\0';
-      content = g_string_append (content, buf);
-    }
-
-  if (nbytes < 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             N_("Error reading %s while getting iSCSI initiator name: %s"),
-                                             initiator_filename,
-                                             strerror (errno));
-
-      goto out;
+      g_prefix_error (error, "Error reading iSCSI initiator name from '%s': ", initiator_filename);
+      return NULL;
     }
 
   /* We don't want to create a scanner for this iscsi initiator name grammar.
    * So for simplicity, we just search for "InitiatorName=" prefix and if
    * found, we just shift the name pointer.  The string may contain whitespace
    * at the end; it's removed as well. */
-  len = strlen (initiator_name_prefix);
-  initiator_name = content->str;
-  if (strncmp (content->str, initiator_name_prefix, len) == 0)
+  if (strncmp (initiator_contents, initiator_name_prefix, initiator_name_prefix_len) == 0)
     {
       /* Shift the pointer by prefix length further. */
-      initiator_name = &content->str[len];
+      initiator_name = initiator_contents + initiator_name_prefix_len;
     }
   /* Trim the whitespace at the end of the string. */
-  while (g_ascii_isspace (content->str[content->len - 1]))
+  initiator_name = g_strchomp (initiator_name);
+
+  initiator_name = g_strdup (initiator_name);
+
+  g_free (initiator_contents);
+  return initiator_name;
+}
+
+static gboolean
+handle_get_initiator_name (UDisksManagerISCSIInitiator *object,
+                           GDBusMethodInvocation       *invocation)
+{
+  UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  gchar *initiator_name = NULL;
+  GError *error = NULL;
+
+  /* Enter a critical section. */
+  g_mutex_lock (&manager->initiator_config_mutex);
+
+  initiator_name = _get_initiator_name(&error);
+  if (!initiator_name)
     {
-      content->str[content->len - 1] = '\0';
-      content->len--;
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
     }
 
   /* Return the initiator name */
@@ -359,9 +346,41 @@ out:
   g_mutex_unlock (&manager->initiator_config_mutex);
 
   /* Release the resources */
-  g_string_free (content, TRUE);
-  if (initiator_name_fd != -1)
-    close (initiator_name_fd);
+  g_free (initiator_name);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
+handle_get_initiator_name_raw (UDisksManagerISCSIInitiator *object,
+                               GDBusMethodInvocation       *invocation)
+{
+  UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  gchar *initiator_name = NULL;
+  GError *error = NULL;
+
+  /* Enter a critical section. */
+  g_mutex_lock (&manager->initiator_config_mutex);
+
+  initiator_name = _get_initiator_name(&error);
+  if (!initiator_name)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Return the initiator name */
+  udisks_manager_iscsi_initiator_complete_get_initiator_name_raw (object,
+                                                                  invocation,
+                                                                  initiator_name);
+
+out:
+  /* Leave the critical section. */
+  g_mutex_unlock (&manager->initiator_config_mutex);
+
+  /* Release the resources */
+  g_free (initiator_name);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
@@ -795,6 +814,7 @@ udisks_linux_manager_iscsi_initiator_iface_init (UDisksManagerISCSIInitiatorIfac
 {
   iface->handle_get_firmware_initiator_name = handle_get_firmware_initiator_name;
   iface->handle_get_initiator_name = handle_get_initiator_name;
+  iface->handle_get_initiator_name_raw = handle_get_initiator_name_raw;
   iface->handle_set_initiator_name = handle_set_initiator_name;
   iface->handle_discover_send_targets = handle_discover_send_targets;
   iface->handle_discover_firmware = handle_discover_firmware;
