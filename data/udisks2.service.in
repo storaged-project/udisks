@@ -3,10 +3,27 @@ Description=Disk Manager
 Documentation=man:udisks(8)
 
 [Service]
-Type=dbus
 BusName=org.freedesktop.UDisks2
+CapabilityBoundingSet=CAP_SYS_RAWIO
 ExecStart=@udisksdprivdir@/udisksd
+IPAddressDeny=any
 KillSignal=SIGINT
+LimitMEMLOCK=0
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @cpu-emulation @debug @obsolete @reboot
+Type=dbus
+UMask=0077
 
 [Install]
 WantedBy=graphical.target
