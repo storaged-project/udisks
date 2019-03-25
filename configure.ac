@@ -124,6 +124,7 @@ AC_ARG_ENABLE(fhs-media,
                               [Mount devices in /media instead of /run/media [default=no]])],
               AS_IF([test "x$enable_fhs_media" == "xyes"], [fhs_media=yes]),
               fhs_media=no)
+AM_CONDITIONAL(HAVE_FHS_MEDIA, test "x$fhs_media" = "xyes")
 if test "x$fhs_media" = "xyes"; then
   AC_DEFINE([HAVE_FHS_MEDIA], 1, [Define to 1 to use /media for mounting])
 fi
@@ -213,6 +214,14 @@ if test "x$with_systemdsystemunitdir" != "xno"; then
   AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$systemdsystemunitdir"])
+
+AC_ARG_WITH([tmpfilesdir],
+            AS_HELP_STRING([--with-tmpfilesdir=DIR], [Directory for configuring creation of files at boot]),
+            [],
+            [with_tmpfilesdir=$($PKG_CONFIG --variable=tmpfilesdir systemd)])
+if test "x$with_tmpfilesdir" != "xno"; then
+  AC_SUBST([tmpfilesdir], [$with_tmpfilesdir])
+fi
 
 # kernel modules
 AC_ARG_WITH([modloaddir],
@@ -676,6 +685,7 @@ fi
 AC_OUTPUT([
 Makefile
 data/Makefile
+data/tmpfiles.d/Makefile
 udisks/Makefile
 udisks/udisks2.conf
 udisks/udisks2.pc
@@ -762,6 +772,7 @@ echo "
 
         udevdir:                    ${udevdir}
         systemdsystemunitdir:       ${systemdsystemunitdir}
+        tmpfilesdir:                ${tmpfilesdir}
         using libsystemd-login:     ${have_libsystemd_login}
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
