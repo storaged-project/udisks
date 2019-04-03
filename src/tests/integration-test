@@ -1824,6 +1824,70 @@ class MDRaid(UDisksTestCase):
 
 # ----------------------------------------------------------------------------
 
+def _copy_files(source_files, target_dir, tmpdir):
+    """
+    Copies the source files to the target directory.  If the file exists in the
+    target dir it's backed up to tmpdir and placed on a list of files to
+    restore.  If the file doesn't exist it's flagged to be deleted.
+    Use restore_files for processing.
+
+    Returns a list of files that need to be restored or deleted.
+    """
+    restore_list = []
+    for f in source_files:
+        tgt = os.path.join(target_dir, os.path.basename(f))
+        if os.path.exists(tgt):
+            shutil.move(tgt, tmpdir)
+            restore_list.append((tgt, False))
+        else:
+            restore_list.append((tgt, True))
+
+        print("Copying file: %s to %s directory!" % (f, target_dir))
+        shutil.copy(f, target_dir)
+
+    return restore_list
+
+
+def install_config_files(projdir, tmpdir):
+    """
+    Copies DBus, PolicyKit and UDev config file(s)
+
+    Returns a list of files that need to be restored or deleted.
+    """
+    copied = []
+
+    # udev rules
+    tgtdir = next((d for d in ['/usr/lib/udev/rules.d/', '/lib/udev/rules.d'] if os.path.exists(d)), None)
+    if tgtdir is None:
+        raise RuntimeError('Cannot find udev rules directory')
+
+    copied.extend(_copy_files((os.path.join(projdir, 'data/80-udisks2.rules'),),
+                              tgtdir, tmpdir))
+
+    # dbus config files
+    copied.extend(_copy_files((os.path.join(projdir, 'data/org.freedesktop.UDisks2.conf'),),
+                              '/etc/dbus-1/system.d/', tmpdir))
+
+    # polkit policies
+    policies = glob(projdir + '/data/*.policy') + glob(projdir + '/modules/*/data/*.policy')
+    copied.extend(_copy_files(policies, '/usr/share/polkit-1/actions/', tmpdir))
+
+    # udisks2.conf
+    copied.extend(_copy_files((os.path.join(projdir, 'udisks/udisks2.conf'),),
+                              '/etc/udisks2/', tmpdir))
+
+    return copied
+
+def restore_files(restore_list, tmpdir):
+    for f, delete in restore_list:
+        if delete:
+            print(f)
+            os.unlink(f)
+        else:
+            shutil.move(os.path.join(tmpdir, os.path.basename(f)), f)
+
+# ----------------------------------------------------------------------------
+
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='udisks2 integration test suite')
@@ -1832,6 +1896,14 @@ if __name__ == '__main__':
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     cli_args = argparser.parse_args()
+
+    testdir = os.path.abspath(os.path.dirname(__file__))
+    projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..')))
+    tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
+    atexit.register(shutil.rmtree, tmpdir)
+
+    files_to_restore = install_config_files(projdir, tmpdir)
+    atexit.register(restore_files, files_to_restore, tmpdir)
 
     UDisksTestCase.init(logfile=cli_args.logfile)
     if cli_args.testname:
