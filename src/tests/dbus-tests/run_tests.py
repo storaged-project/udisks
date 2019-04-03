@@ -13,7 +13,6 @@ import glob
 import shutil
 import tempfile
 import re
-import imp
 import atexit
 from datetime import datetime
 
@@ -127,30 +126,11 @@ def udev_shake():
 if __name__ == '__main__':
     tmpdir = None
     daemon = None
-    cleaner = None
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
     # store time when tests started (needed for journal cropping)
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # XXX: Disable cleaning using blivet for now, it's causing issues because
-    # importing blivet in the cleanup code makes the system udisks daemon
-    # autostart while the cleanup removes devices wildly which causes the daemon
-    # to segfault.
-    skip_clean = True
-    # try:
-    #     imp.find_module('blivet')
-    # except ImportError:
-    #     skip_clean = True
-    # else:
-    #     skip_clean = False
-
-    if skip_clean:
-        print('Blivet not installed: Skipping force clean')
-    else:
-        import force_clean
-        cleaner = force_clean.ForceClean()
 
     argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -177,9 +157,6 @@ if __name__ == '__main__':
     if not args.system:
         if os.path.exists(os.path.join(projdir, 'tools', 'udisksctl')):
             os.environ["PATH"] = ':'.join([os.path.join(projdir, 'tools'), os.environ["PATH"]])
-
-    if not skip_clean:
-        cleaner.record_state()
 
     if not args.system:
         tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
@@ -228,13 +205,10 @@ if __name__ == '__main__':
 
         udev_shake()
 
-    if not skip_clean:
-        cleaner.restore_state()
-    else:
-        # remove the fake SCSI devices and their backing files
-        subprocess.call(['targetcli', 'clearconfig confirm=True'])
-        for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
-            os.unlink(disk_file)
+    # remove the fake SCSI devices and their backing files
+    subprocess.call(['targetcli', 'clearconfig confirm=True'])
+    for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
+        os.unlink(disk_file)
 
     # dump cropped journal to log file
     with open('journaldump.log', "w") as outfile:
