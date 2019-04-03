@@ -110,17 +110,10 @@ def install_config_files(projdir, tmpdir):
     return copied
 
 def restore_files(restore_list, tmpdir):
-    banner = False
     for f, delete in restore_list:
         if delete:
-            if not banner:
-                print("*NOT* deleting the following file(s) that we placed there!")
-                banner = True
             print(f)
-            # os.unlink(f)
-            # The other test(s) needs these files, lets leave until we get
-            # this common code integrated with them as well.
-            pass
+            os.unlink(f)
         else:
             shutil.move(os.path.join(tmpdir, os.path.basename(f)), f)
 
