@@ -5,10 +5,14 @@ import six
 import tempfile
 import time
 import unittest
+import configparser
 
 from distutils.version import LooseVersion
 
 import udiskstestcase
+
+
+UDISKS_CONFIG_FILE = "/etc/udisks2/udisks2.conf"
 
 
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
@@ -343,8 +347,10 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
         options = dbus.Dictionary(signature='sv')
         if binary:
             options['encrypt.passphrase'] = self.bytes_to_ay(passphrase)
+            options['encrypt.type'] = 'luks1'
         else:
             options['encrypt.passphrase'] = passphrase
+            options['encrypt.type'] = 'luks1'
         device.Format('xfs', options,
                       dbus_interface=self.iface_prefix + '.Block')
 
@@ -448,6 +454,38 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         clear_size3 = self.get_block_size(clear_dev)
         self.assertEqual(clear_size3, clear_size)
+
+    def _get_default_luks_version(self):
+        if not os.path.exists(UDISKS_CONFIG_FILE):
+            self.fail('UDisks config file not found.')
+
+        config = configparser.ConfigParser()
+        config.read(UDISKS_CONFIG_FILE)
+
+        if 'defaults' not in config:
+            self.fail('Failed to read defaults from UDisks config file.')
+
+        # get luks version from 'luks1' or 'luks2'
+        return config['defaults']['encryption'][-1]
+
+    def test_create_default(self):
+        disk_name = os.path.basename(self.vdevs[0])
+        disk = self.get_object('/block_devices/' + disk_name)
+
+        # create LUKS without specifying version
+        options = dbus.Dictionary(signature='sv')
+        options['encrypt.passphrase'] = 'test'
+
+        disk.Format('xfs', options,
+                    dbus_interface=self.iface_prefix + '.Block')
+
+        self.addCleanup(self._remove_luks, disk)
+        self.udev_settle()
+
+        default_version = self._get_default_luks_version()
+
+        dbus_version = self.get_property(disk, '.Block', 'IdVersion')
+        dbus_version.assertEqual(default_version)
 
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest

@@ -99,6 +99,17 @@ def install_new_dbus_conf(projdir, tmpdir):
                        '/etc/dbus-1/system.d/',
                        tmpdir)
 
+def install_new_udisks_conf(projdir, tmpdir):
+    """
+    Copies the UDisks config file(s)
+
+    Returns a list of files that need to be restored or deleted.
+    """
+    return _copy_files([os.path.join(projdir,
+                                     'udisks/udisks2.conf'), ],
+                       '/etc/udisks2/',
+                       tmpdir)
+
 
 def install_new_udev_rules(projdir, tmpdir):
     """
@@ -204,6 +215,7 @@ if __name__ == '__main__':
         atexit.register(shutil.rmtree, tmpdir)
         files_to_restore.extend(install_new_policy(projdir, tmpdir))
         files_to_restore.extend(install_new_dbus_conf(projdir, tmpdir))
+        files_to_restore.extend(install_new_udisks_conf(projdir, tmpdir))
         files_to_restore.extend(install_new_udev_rules(projdir, tmpdir))
 
         udev_shake()
