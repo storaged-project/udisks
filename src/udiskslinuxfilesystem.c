@@ -139,50 +139,19 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/**
- * udisks_linux_filesystem_update:
- * @filesystem: A #UDisksLinuxFilesystem.
- * @object: The enclosing #UDisksLinuxBlockObject instance.
- *
- * Updates the interface.
- */
-void
-udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
-                                UDisksLinuxBlockObject *object)
+static guint64
+get_filesystem_size (UDisksLinuxBlockObject *object)
 {
-  UDisksMountMonitor *mount_monitor;
+  guint64 size = 0;
   UDisksLinuxDevice *device;
-  GPtrArray *p;
-  GList *mounts;
-  GList *l;
   gchar *dev;
   const gchar *type;
-  guint64 size;
   GError *error = NULL;
 
-  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
-
-  p = g_ptr_array_new ();
-  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
-  /* we are guaranteed that the list is sorted so if there are
-   * multiple mounts we'll always get the same order
-   */
-  for (l = mounts; l != NULL; l = l->next)
-    {
-      UDisksMount *mount = UDISKS_MOUNT (l->data);
-      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM)
-        g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
-    }
-  g_ptr_array_add (p, NULL);
-  udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
-                                      (const gchar *const *) p->pdata);
-  g_ptr_array_free (p, TRUE);
-  g_list_free_full (mounts, g_object_unref);
-
   dev = udisks_linux_block_object_get_device_file (object);
   type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
-  size = 0;
+
   if (g_strcmp0 (type, "ext2") == 0) {
       BDFSExt2Info *info = bd_fs_ext2_get_info (dev, &error);
       if (info)
@@ -212,11 +181,54 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
           bd_fs_xfs_info_free (info);
         }
   }
-  udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), size);
 
   g_free (dev);
   g_object_unref (device);
   g_clear_error (&error);
+
+  return size;
+}
+
+/**
+ * udisks_linux_filesystem_update:
+ * @filesystem: A #UDisksLinuxFilesystem.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Updates the interface.
+ */
+void
+udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
+                                UDisksLinuxBlockObject *object)
+{
+  UDisksMountMonitor *mount_monitor;
+  UDisksLinuxDevice *device;
+  GPtrArray *p;
+  GList *mounts;
+  GList *l;
+
+  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
+  device = udisks_linux_block_object_get_device (object);
+
+  p = g_ptr_array_new ();
+  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
+  /* we are guaranteed that the list is sorted so if there are
+   * multiple mounts we'll always get the same order
+   */
+  for (l = mounts; l != NULL; l = l->next)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM)
+        g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
+    }
+  g_ptr_array_add (p, NULL);
+  udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
+                                      (const gchar *const *) p->pdata);
+  g_ptr_array_free (p, TRUE);
+  g_list_free_full (mounts, g_object_unref);
+
+  udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
+
+  g_object_unref (device);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2316,6 +2328,7 @@ handle_resize (UDisksFilesystem      *filesystem,
    */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
 
+  udisks_filesystem_set_size (filesystem, get_filesystem_size (UDISKS_LINUX_BLOCK_OBJECT (object)));
   udisks_filesystem_complete_resize (filesystem, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
