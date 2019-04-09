@@ -13,7 +13,6 @@ import glob
 import shutil
 import tempfile
 import re
-import imp
 import atexit
 from datetime import datetime
 
@@ -79,69 +78,41 @@ def _copy_files(source_files, target_dir, tmpdir):
     return restore_list
 
 
-def install_new_policy(projdir, tmpdir):
+def install_config_files(projdir, tmpdir):
     """
-    Copies the polkit policy files.
-    """
-    files = glob.glob(projdir + '/data/*.policy') + \
-            glob.glob(projdir + '/modules/*/data/*.policy')
-    return _copy_files(files, '/usr/share/polkit-1/actions/', tmpdir)
-
-
-def install_new_dbus_conf(projdir, tmpdir):
-    """
-    Copies the DBus config file(s)
+    Copies DBus, PolicyKit and UDev config file(s)
 
     Returns a list of files that need to be restored or deleted.
     """
-    return _copy_files([os.path.join(projdir,
-                                    "data/org.freedesktop.UDisks2.conf"), ],
-                       '/etc/dbus-1/system.d/',
-                       tmpdir)
+    copied = []
 
-def install_new_udisks_conf(projdir, tmpdir):
-    """
-    Copies the UDisks config file(s)
+    # udev rules
+    tgtdir = next((d for d in ['/usr/lib/udev/rules.d/', '/lib/udev/rules.d'] if os.path.exists(d)), None)
+    if tgtdir is None:
+        raise RuntimeError('Cannot find udev rules directory')
 
-    Returns a list of files that need to be restored or deleted.
-    """
-    return _copy_files([os.path.join(projdir,
-                                     'udisks/udisks2.conf'), ],
-                       '/etc/udisks2/',
-                       tmpdir)
+    copied.extend(_copy_files((os.path.join(projdir, 'data/80-udisks2.rules'),),
+                              tgtdir, tmpdir))
 
+    # dbus config files
+    copied.extend(_copy_files((os.path.join(projdir, 'data/org.freedesktop.UDisks2.conf'),),
+                              '/etc/dbus-1/system.d/', tmpdir))
 
-def install_new_udev_rules(projdir, tmpdir):
-    """
-    Copies the udev rules file to correct location.
+    # polkit policies
+    policies = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
+    copied.extend(_copy_files(policies, '/usr/share/polkit-1/actions/', tmpdir))
 
-    Returns a list of file(s) that need to be restored or deleted.
-    """
-    tgt = ""
-    for p in ['/usr/lib/udev/rules.d/', '/lib/udev/rules.d']:
-        if os.path.exists(p):
-            tgt = p
-            break
+    # udisks2.conf
+    copied.extend(_copy_files((os.path.join(projdir, 'udisks/udisks2.conf'),),
+                              '/etc/udisks2/', tmpdir))
 
-    assert tgt
-    return _copy_files([os.path.join(projdir,
-                                    "data/80-udisks2.rules"), ],
-                       tgt,
-                       tmpdir)
-
+    return copied
 
 def restore_files(restore_list, tmpdir):
-    banner = False
     for f, delete in restore_list:
         if delete:
-            if not banner:
-                print("*NOT* deleting the following file(s) that we placed there!")
-                banner = True
             print(f)
-            # os.unlink(f)
-            # The other test(s) needs these files, lets leave until we get
-            # this common code integrated with them as well.
-            pass
+            os.unlink(f)
         else:
             shutil.move(os.path.join(tmpdir, os.path.basename(f)), f)
 
@@ -153,33 +124,13 @@ def udev_shake():
 
 
 if __name__ == '__main__':
-    files_to_restore = []
     tmpdir = None
     daemon = None
-    cleaner = None
     suite = unittest.TestSuite()
     daemon_log = sys.stdout
 
     # store time when tests started (needed for journal cropping)
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # XXX: Disable cleaning using blivet for now, it's causing issues because
-    # importing blivet in the cleanup code makes the system udisks daemon
-    # autostart while the cleanup removes devices wildly which causes the daemon
-    # to segfault.
-    skip_clean = True
-    # try:
-    #     imp.find_module('blivet')
-    # except ImportError:
-    #     skip_clean = True
-    # else:
-    #     skip_clean = False
-
-    if skip_clean:
-        print('Blivet not installed: Skipping force clean')
-    else:
-        import force_clean
-        cleaner = force_clean.ForceClean()
 
     argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -207,16 +158,12 @@ if __name__ == '__main__':
         if os.path.exists(os.path.join(projdir, 'tools', 'udisksctl')):
             os.environ["PATH"] = ':'.join([os.path.join(projdir, 'tools'), os.environ["PATH"]])
 
-    if not skip_clean:
-        cleaner.record_state()
-
     if not args.system:
         tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
         atexit.register(shutil.rmtree, tmpdir)
-        files_to_restore.extend(install_new_policy(projdir, tmpdir))
-        files_to_restore.extend(install_new_dbus_conf(projdir, tmpdir))
-        files_to_restore.extend(install_new_udisks_conf(projdir, tmpdir))
-        files_to_restore.extend(install_new_udev_rules(projdir, tmpdir))
+
+        files_to_restore = install_config_files(projdir, tmpdir)
+        atexit.register(restore_files, files_to_restore, tmpdir)
 
         udev_shake()
 
@@ -256,17 +203,12 @@ if __name__ == '__main__':
         if args.logfile:
             daemon_log.close()
 
-        restore_files(files_to_restore, tmpdir)
-
         udev_shake()
 
-    if not skip_clean:
-        cleaner.restore_state()
-    else:
-        # remove the fake SCSI devices and their backing files
-        subprocess.call(['targetcli', 'clearconfig confirm=True'])
-        for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
-            os.unlink(disk_file)
+    # remove the fake SCSI devices and their backing files
+    subprocess.call(['targetcli', 'clearconfig confirm=True'])
+    for disk_file in glob.glob("/var/tmp/udisks_test_disk*"):
+        os.unlink(disk_file)
 
     # dump cropped journal to log file
     with open('journaldump.log', "w") as outfile:
