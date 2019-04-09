@@ -307,6 +307,42 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIn(tmp, out)
         self.assertIn('ro', out)
 
+    def test_unmount_no_race_in_mount_points(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._clean_format, self.vdevs[0])
+
+        # not mounted
+        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts.assertLen(0)
+
+        # mount
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = self._fs_name
+        d['options'] = 'ro'
+        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # dbus mountpoint
+        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
+        self.assertEqual(dbus_mnt, mnt_path)
+
+        # umount and check that mount-points is immediately empty
+        disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        mounts_after_unmount = self.get_property_raw(disk, '.Filesystem', 'MountPoints')
+        self.assertEqual(len(mounts_after_unmount), 0)
+
     def test_userspace_mount_options(self):
         libmount_version = self._get_libmount_version()
         if libmount_version < LooseVersion('2.30'):
