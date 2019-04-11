@@ -103,6 +103,8 @@ def install_config_files(projdir, tmpdir):
     copied.extend(_copy_files(policies, '/usr/share/polkit-1/actions/', tmpdir))
 
     # udisks2.conf
+    if not os.path.exists('/etc/udisks2'):
+        os.mkdir('/etc/udisks2', 0o755)
     copied.extend(_copy_files((os.path.join(projdir, 'udisks/udisks2.conf'),),
                               '/etc/udisks2/', tmpdir))
 
