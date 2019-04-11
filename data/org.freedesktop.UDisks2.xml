@@ -1884,6 +1884,10 @@
         typically results in the user having to authenticate as an
         administrator). If authorized, the filesystem is unmounted.
 
+        If the mountpoint was previously created by udisks it is
+        guaranteed it will be removed upon returning from this method
+        call.
+
         If the filesystem is busy, this operation fails with the error
         <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks2.Error.DeviceBusy</constant></link>
         unless the @force option is used.
