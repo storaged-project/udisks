@@ -434,7 +434,8 @@ selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
   return ret;
 }
 
-static gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
+static gboolean
+get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
 {
   int fd;
   gboolean rc = FALSE;
@@ -596,7 +597,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     {
       guchar count;
       gboolean noio = FALSE;
-      if (!get_pm_state(device, error, &count))
+      if (!get_pm_state (device, error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
       if (drive->standby_enabled)
@@ -1248,6 +1249,79 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_drive_ata_get_pm_state:
+ * @drive: A #UDisksLinuxDriveAta.
+ * @error: Return location for error.
+ * @pm_state: Return location for the current power state value.
+ *
+ * Get the current power mode state.
+ *
+ * The format of @pm_state is the result obtained from sending the
+ * ATA command `CHECK POWER MODE` to the drive.
+ *
+ * Known values include:
+ *  - `0x00`: Device is in PM2: Standby state.
+ *  - `0x40`: Device is in the PM0: Active state, the NV Cache power mode is enabled, and the spindle is spun down or spinning down.
+ *  - `0x41`: Device is in the PM0: Active state, the NV Cache power mode is enabled, and the spindle is spun up or spinning up.
+ *  - `0x80`: Device is in PM1: Idle state.
+ *  - `0xff`: Device is in the PM0: Active state or PM1: Idle State.
+ *
+ * Typically user interfaces will report "Drive is spun down" if @pm_state is
+ * 0x00 and "Drive is spun up" otherwise.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+udisks_linux_drive_ata_get_pm_state (UDisksLinuxDriveAta  *drive,
+                                     GError              **error,
+                                     guchar               *pm_state)
+{
+  UDisksLinuxDriveObject *object;
+  UDisksLinuxDevice *device = NULL;
+  gboolean ret = FALSE;
+
+  object = udisks_daemon_util_dup_object (drive, error);
+  if (object == NULL)
+    goto out;
+
+  if (!udisks_drive_ata_get_pm_supported (UDISKS_DRIVE_ATA (drive)) ||
+      !udisks_drive_ata_get_pm_enabled (UDISKS_DRIVE_ATA (drive)))
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "PM is not supported or enabled");
+      goto out;
+    }
+
+  /* If a secure erase is in progress, the CHECK POWER command would be queued
+   * until the erase has been completed (can easily take hours).
+   */
+  if (drive->secure_erase_in_progress)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                           "A secure erase is in progress");
+      goto out;
+    }
+
+  /* TODO: some SSD controllers may block for considerable time when trimming large amount of blocks */
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
+
+  ret = get_pm_state (device, error, pm_state);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&object);
+
+  return ret;
+}
+
 static gboolean
 handle_pm_get_state (UDisksDriveAta        *_drive,
                      GDBusMethodInvocation *invocation,
@@ -1256,7 +1330,6 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject  *object = NULL;
   UDisksDaemon *daemon;
-  UDisksLinuxDevice *device = NULL;
   GError *error = NULL;
   const gchar *message;
   const gchar *action_id;
@@ -1266,27 +1339,6 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   if (object == NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  daemon = udisks_linux_drive_object_get_daemon (object);
-
-  if (!udisks_drive_ata_get_pm_supported (UDISKS_DRIVE_ATA (drive)) ||
-      !udisks_drive_ata_get_pm_enabled (UDISKS_DRIVE_ATA (drive)))
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "PM is not supported or enabled");
-      goto out;
-    }
-
-  /* If a secure erase is in progress, the CHECK POWER command would be queued
-   * until the erase has been completed (can easily take hours). So just return
-   * 0xff which is active/idle...
-   */
-  if (drive->secure_erase_in_progress)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
-                                             "A secure erase is in progress");
       goto out;
     }
 
@@ -1302,6 +1354,7 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   /* TODO: maybe not check with polkit if this is OK (consider gnome-disks(1) polling all drives every few seconds) */
 
   /* Check that the user is authorized */
+  daemon = udisks_linux_drive_object_get_daemon (object);
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     UDISKS_OBJECT (object),
                                                     action_id,
@@ -1310,20 +1363,12 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
                                                     invocation))
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  if (device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No udev device");
-      goto out;
-    }
-  if (get_pm_state (device, &error, &count))
+  if (udisks_linux_drive_ata_get_pm_state (drive, &error, &count))
     udisks_drive_ata_complete_pm_get_state (_drive, invocation, count);
   else
     g_dbus_method_invocation_take_error (invocation, error);
 
  out:
-  g_clear_object (&device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
