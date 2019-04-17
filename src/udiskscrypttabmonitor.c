@@ -346,6 +346,52 @@ have_entry (UDisksCrypttabMonitor *monitor,
   return ret;
 }
 
+/**
+ * split_crypttab_line:
+ *
+ * Splits line from /etc/crypttab to parts (device, name, password and options).
+ * This function also handles columns with multiple deliminters (tabs or spaces).
+ *
+ */
+static gchar **
+split_crypttab_line (const gchar *line, guint *num_tokens)
+{
+  GSList *list = NULL;
+  gint next = 0;
+  gchar **tokens = NULL;
+  gchar *line_copy = NULL;
+  gchar *str1, *str2, *token, *subtoken;
+  gchar *saveptr1, *saveptr2;
+
+  /* strtok will modify the line, so we need to make a copy */
+  line_copy = g_strdup (line);
+
+  for (str1 = line_copy; ; str1 = NULL)
+    {
+      token = strtok_r (str1, " ", &saveptr1);
+      if (token == NULL)
+          break;
+      for (str2 = token; ; str2 = NULL)
+        {
+            subtoken = strtok_r (str2, "\t", &saveptr2);
+            if (subtoken == NULL)
+                break;
+            list = g_slist_append (list, g_strdup (subtoken));
+        }
+     }
+
+  *num_tokens = g_slist_length (list);
+  tokens = g_new0 (gchar *, *num_tokens + 1);
+  for (GSList *list_p = list; list_p != NULL; list_p = list_p->next)
+    tokens[next++] = list_p->data;
+  tokens[next] = NULL;
+
+  g_slist_free (list);
+  g_free (line_copy);
+
+  return tokens;
+}
+
 static void
 udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
 {
@@ -389,8 +435,7 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
       if (line[0] == '#')
         continue;
 
-      tokens = g_strsplit_set (line, " \t", 0);
-      num_tokens = g_strv_length (tokens);
+      tokens = split_crypttab_line (line, &num_tokens);
       if (num_tokens < 2)
         {
           udisks_warning ("Line %u of /etc/crypttab only contains %u tokens", n, num_tokens);
