@@ -141,6 +141,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertTrue(bool(mode & os.O_ASYNC))
         os.close(fd)
 
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_configuration_fstab(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes
@@ -194,6 +195,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertFalse()
 
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_configuration_crypttab(self):
 
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
