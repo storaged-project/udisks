@@ -21,6 +21,7 @@
 #define __UDISKS_ISCSI_TYPES_H__
 
 #define ISCSI_MODULE_NAME "iscsi"
+#define ISCSI_MODULE_POLICY_ACTION_ID "org.freedesktop.udisks2.iscsi.manage-iscsi"
 
 typedef struct _UDisksISCSIState UDisksISCSIState;
 
