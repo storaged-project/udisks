@@ -451,6 +451,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -553,6 +554,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error renaming logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -619,6 +621,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error resizing logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -707,6 +710,7 @@ handle_activate (UDisksLogicalVolume *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error activating logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -773,6 +777,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error deactivating logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -841,6 +846,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating snapshot: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -910,6 +916,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -917,7 +924,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
 out:
   g_clear_object (&object);
 
-return TRUE;
+  return TRUE;
 
 #endif /* HAVE_LVMCACHE */
 }
@@ -972,6 +979,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 

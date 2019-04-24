@@ -323,6 +323,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error creating a physical volume: %s",
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -347,6 +348,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume group: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 

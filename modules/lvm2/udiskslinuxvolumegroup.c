@@ -328,6 +328,7 @@ handle_delete (UDisksVolumeGroup     *_group,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting volume group: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -417,6 +418,7 @@ handle_rename (UDisksVolumeGroup     *_group,
                                              UDISKS_ERROR_FAILED,
                                              "Error renaming volume group: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -540,6 +542,7 @@ handle_add_device (UDisksVolumeGroup     *_group,
                                                  "Error creating LVM metadata on %s: %s",
                                                  pv_data.path,
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -564,6 +567,7 @@ handle_add_device (UDisksVolumeGroup     *_group,
                                              "Error adding %s to volume group: %s",
                                              data.pv_path,
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -680,6 +684,7 @@ handle_remove_common (UDisksVolumeGroup     *_group,
                                              (is_remove) ? "Error remove %s from volume group: %s" : "Error emptying %s: %s",
                                              data.pv_path,
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -702,6 +707,7 @@ handle_remove_common (UDisksVolumeGroup     *_group,
                                                  data.pv_path,
                                                  udisks_linux_volume_group_object_get_name (object),
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -888,6 +894,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
