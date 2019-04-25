@@ -3,6 +3,7 @@ import dbus
 import fcntl
 import os
 import time
+import unittest
 
 import udiskstestcase
 
@@ -140,6 +141,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertTrue(bool(mode & os.O_ASYNC))
         os.close(fd)
 
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_configuration_fstab(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes
@@ -193,6 +195,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertFalse()
 
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_configuration_crypttab(self):
 
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
@@ -245,6 +248,30 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertFalse()
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_configuration_crypttab_multiple_spaces(self):
+        # this test will change /etc/crypttab, we might want to revert the changes when it finishes
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+
+        # format the disk
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+
+        # cleanup -- close the luks and remove format
+        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self._close_luks, disk)
+
+        # write configuration to crypttab
+        uuid = self.get_property(disk, '.Block', 'IdUUID')
+        self.write_file('/etc/crypttab', '%s  UUID=%s\t none\n' % (self.vdevs[0], uuid.value))
+
+        conf = self.get_property(disk, '.Block', 'Configuration')
+        conf.assertTrue()
+
+        self.assertEqual(conf.value[0][1]['name'], self.str_to_ay(self.vdevs[0]))
+        self.assertEqual(conf.value[0][1]['device'], self.str_to_ay('UUID=%s' % uuid.value))
 
     def test_rescan(self):
 
