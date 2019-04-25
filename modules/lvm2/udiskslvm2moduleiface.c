@@ -210,17 +210,17 @@ lvm_update_vgs (GObject      *source_obj,
 
       for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
         if (g_strcmp0 ((*pvs_p)->vg_name, vg_name) == 0)
-            vg_pvs = g_slist_prepend (vg_pvs, *pvs_p);
+            vg_pvs = g_slist_prepend (vg_pvs, bd_lvm_pvdata_copy (*pvs_p));
 
       udisks_linux_volume_group_object_update (group, *vgs_p, vg_pvs);
     }
 
-  /* this is safe to do -- all BDLVMPVdata objects are still existing because
-     the function that frees them is scheduled in main loop by the
-     udisks_linux_volume_group_object_update() call above */
+  /* UDisksLinuxVolumeGroupObject carries copies of BDLVMPVdata that belong to the VG.
+  *  The rest of the PVs, either not assigned to any VG or assigned to a non-existing VG,
+  *  are basically unused and freed here anyway.
+  */
   for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
-    if ((*pvs_p)->vg_name == NULL)
-      bd_lvm_pvdata_free (*pvs_p);
+    bd_lvm_pvdata_free (*pvs_p);
 
   /* only free the containers, the contents were passed further */
   g_free (vgs);
