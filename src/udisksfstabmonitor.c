@@ -98,7 +98,11 @@ udisks_fstab_monitor_finalize (GObject *object)
 {
   UDisksFstabMonitor *monitor = UDISKS_FSTAB_MONITOR (object);
 
-  g_object_unref (monitor->file_monitor);
+  if (monitor->file_monitor != NULL)
+    {
+      g_file_monitor_cancel (monitor->file_monitor);
+      g_object_unref (monitor->file_monitor);
+    }
 
   g_list_free_full (monitor->fstab_entries, g_object_unref);
 
