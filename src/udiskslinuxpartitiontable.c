@@ -148,6 +148,7 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
                                          partition_object_paths);
 
 
+  g_free (partition_object_paths);
   g_clear_object (&device);
   g_list_free_full (partition_objects, g_object_unref);
 }
