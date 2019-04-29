@@ -96,8 +96,27 @@ udisks_linux_logical_volume_init (UDisksLinuxLogicalVolume *logical_volume)
 }
 
 static void
+udisks_linux_logical_volume_constructed (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->constructed != NULL)
+      G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->constructed (_object);
+}
+
+static void
+udisks_linux_logical_volume_finalize (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->finalize != NULL)
+      G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->finalize (_object);
+}
+
+static void
 udisks_linux_logical_volume_class_init (UDisksLinuxLogicalVolumeClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize    = udisks_linux_logical_volume_finalize;
+  gobject_class->constructed = udisks_linux_logical_volume_constructed;
 }
 
 /**
