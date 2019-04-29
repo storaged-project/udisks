@@ -460,7 +460,8 @@ wait_for_any_zram_object (UDisksDaemon *daemon,
   objects = udisks_daemon_get_objects (daemon);
   for (l = objects; !ret && l != NULL; l = l->next)
     if (g_dbus_object_get_interface (G_DBUS_OBJECT (l->data), "org.freedesktop.UDisks2.Block.ZRAM"))
-      ret = l->data;
+      ret = g_object_ref (l->data);
+
   g_list_free_full (objects, g_object_unref);
   return ret;
 }
