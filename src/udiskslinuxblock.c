@@ -2928,6 +2928,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gboolean teardown_flag = FALSE;
   gboolean no_discard_flag = FALSE;
   BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
+  UDisksObject *filesystem_object;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -3110,17 +3111,19 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (was_partitioned)
     udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
-  if (udisks_daemon_wait_for_object_sync (daemon,
-                                          wait_for_filesystem,
-                                          wait_data,
-                                          NULL,
-                                          15,
-                                          &error) == NULL)
+  filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                          wait_for_filesystem,
+                                                          wait_data,
+                                                          NULL,
+                                                          15,
+                                                          &error);
+  if (filesystem_object == NULL)
     {
       g_prefix_error (&error, "Error synchronizing after initial wipe: ");
       g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
+  g_object_unref (filesystem_object);
 
   if (no_discard_flag && fs_info->option_no_discard)
     command_options = fs_info->option_no_discard;
@@ -3165,6 +3168,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   if (encrypt_passphrase != NULL)
     {
+      UDisksObject *luks_uuid_object;
       CryptoJobData data;
       data.device = device_name;
       data.passphrase = encrypt_passphrase;
@@ -3196,17 +3200,19 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       udisks_linux_block_encrypted_unlock (block);
 
       /* Wait for the UUID to be set */
-      if (udisks_daemon_wait_for_object_sync (daemon,
-                                              wait_for_luks_uuid,
-                                              wait_data,
-                                              NULL,
-                                              30,
-                                              &error) == NULL)
+      luks_uuid_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                             wait_for_luks_uuid,
+                                                             wait_data,
+                                                             NULL,
+                                                             30,
+                                                             &error);
+      if (luks_uuid_object == NULL)
         {
           g_prefix_error (&error, "Error waiting for LUKS UUID: ");
           handle_format_failure (invocation, error);
           goto out;
         }
+      g_object_unref (luks_uuid_object);
 
       /* Open it */
       mapped_name = make_block_luksname (block, &error);
@@ -3355,12 +3361,13 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
    */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs));
   wait_data->object = object_to_mkfs;
-  if (udisks_daemon_wait_for_object_sync (daemon,
-                                          wait_for_filesystem,
-                                          wait_data,
-                                          NULL,
-                                          30,
-                                          &error) == NULL)
+  filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                          wait_for_filesystem,
+                                                          wait_data,
+                                                          NULL,
+                                                          30,
+                                                          &error);
+  if (filesystem_object == NULL)
     {
       g_prefix_error (&error,
                       "Error synchronizing after formatting with type `%s': ",
@@ -3368,6 +3375,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       handle_format_failure (invocation, error);
       goto out;
     }
+  g_object_unref (filesystem_object);
 
   /* Change overship, if requested and supported */
   if (take_ownership && fs_info->supports_owners)
