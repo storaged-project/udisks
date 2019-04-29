@@ -239,13 +239,7 @@ static UDisksObject *
 wait_for_bcache (UDisksDaemon *daemon,
                  gpointer      user_data)
 {
-  UDisksObject *ret = udisks_daemon_find_object (daemon, (gchar*) user_data);
-  /* find_object() increments the ref count, we need to decrement it back
-     otherwise the ref count potentially grows in a cycle (when waiting for the
-     object to disappear) */
-  if (ret)
-    g_object_unref (ret);
-  return ret;
+  return udisks_daemon_find_object (daemon, (gchar*) user_data);
 }
 
 static gboolean
