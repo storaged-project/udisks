@@ -2,6 +2,8 @@ import dbus
 import os
 import re
 import six
+import shutil
+import tarfile
 import tempfile
 import time
 import unittest
@@ -19,15 +21,16 @@ import udiskstestcase
 UDISKS_CONFIG_FILE = "/etc/udisks2/udisks2.conf"
 
 
+def _get_cryptsetup_version():
+    _ret, out = udiskstestcase.UdisksTestCase.run_command('cryptsetup --version')
+    m = re.search(r'cryptsetup ([\d\.]+)', out)
+    if not m or len(m.groups()) != 1:
+        raise RuntimeError('Failed to determine cryptsetup version from: %s' % out)
+    return LooseVersion(m.groups()[0])
+
+
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     '''This is an encrypted device test suite'''
-
-    def _get_cryptsetup_version(self):
-        _ret, out = self.run_command('cryptsetup --version')
-        m = re.search(r'cryptsetup ([\d\.]+)', out)
-        if not m or len(m.groups()) != 1:
-            raise RuntimeError('Failed to determine cryptsetup version from: %s' % out)
-        return LooseVersion(m.groups()[0])
 
     def _create_luks(self, device, passphrase, binary=False):
         raise NotImplementedError()
@@ -428,7 +431,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         return m.group(1)
 
     def setUp(self):
-        cryptsetup_version = self._get_cryptsetup_version()
+        cryptsetup_version = _get_cryptsetup_version()
         if cryptsetup_version < LooseVersion('2.0.0'):
             self.skipTest('LUKS2 not supported')
 
@@ -529,7 +532,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     def test_integrity(self):
         passwd = 'test'
 
-        cryptsetup_version = self._get_cryptsetup_version()
+        cryptsetup_version = _get_cryptsetup_version()
         if cryptsetup_version < LooseVersion('2.2.0'):
             self.skipTest('Integrity devices are not marked as internal in cryptsetup < 2.2.0')
 
@@ -562,6 +565,77 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         dbus_cleartext = self.get_property(device, '.Encrypted', 'CleartextDevice')
         dbus_cleartext.assertEqual('/')
+
+
+class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
+
+    # we can't create BitLocker formats using libblockdev
+    # so we are using these images from cryptsetup test suite
+    # https://gitlab.com/cryptsetup/cryptsetup/blob/master/tests/bitlk-images.tar.xz
+    bitlk_img = "bitlk-aes-xts-128.img"
+    passphrase = "anaconda"
+    tempdir = None
+
+    def tearDown(self):
+        try:
+            self.loop.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+        except dbus.exceptions.DBusException as e:
+            # ignore when the device is actually already locked
+            if not str(e).endswith('is not unlocked'):
+                raise e
+
+        self.loop.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Loop')
+        shutil.rmtree(self.tempdir)
+
+        super(UdisksEncryptedTestBITLK, self).tearDown()
+
+    def setUp(self):
+        cryptsetup_version = _get_cryptsetup_version()
+        if cryptsetup_version < LooseVersion('2.3.0'):
+            self.skipTest('BITLK not supported')
+
+        self.manager = self.get_interface('/Manager', '.Manager')
+        self.tempdir = tempfile.mkdtemp(prefix='udisks_test_bitlk')
+        images = os.path.join(os.path.dirname(__file__), 'bitlk-images.tar.gz')
+        with tarfile.open(images, 'r') as tar:
+            tar.extractall(self.tempdir)
+
+        with open(os.path.join(self.tempdir, self.bitlk_img), 'r+b') as loop_file:
+            fd = loop_file.fileno()
+            loop_path = self.manager.LoopSetup(fd, self.no_options)
+            self.assertIsNotNone(loop_path)
+            self.loop = self.bus.get_object(self.iface_prefix, loop_path)
+
+        super(UdisksEncryptedTestBITLK, self).setUp()
+
+    def test_open_close(self):
+        self.assertHasIface(self.loop, self.iface_prefix + '.Encrypted')
+
+        crypt_path = self.loop.Unlock(self.passphrase, self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(crypt_path)
+        crypt_dev = self.bus.get_object(self.iface_prefix, crypt_path)
+        self.assertIsNotNone(crypt_dev)
+
+        dbus_cleartext = self.get_property(self.loop, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual(str(crypt_path))
+        dbus_type = self.get_property(self.loop, '.Encrypted', 'HintEncryptionType')
+        dbus_type.assertEqual("BITLK")
+
+        dbus_backing = self.get_property(crypt_dev, '.Block', 'CryptoBackingDevice')
+        dbus_backing.assertEqual(self.loop.object_path)
+        dbus_fs = self.get_property(crypt_dev, '.Block', 'IdType')
+        dbus_fs.assertEqual("ntfs")
+
+        self.loop.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        dbus_cleartext = self.get_property(self.loop, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual('/')
+
+        # check that the DM crypt device disappears after lock
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        self.assertNotIn(str(crypt_path), objects.keys())
 
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest

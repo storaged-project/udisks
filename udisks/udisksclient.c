@@ -2049,6 +2049,7 @@ static const struct
   {"crypto",     "crypto_LUKS",       "*",     NC_("fs-type", "LUKS Encryption (version %s)"),      NC_("fs-type", "LUKS")},
   {"crypto",     "crypto_LUKS",       NULL,    NC_("fs-type", "LUKS Encryption"),                   NC_("fs-type", "LUKS")},
   {"crypto",     "crypto_TCRYPT",     NULL,    NC_("fs-type", "VeraCrypt/TrueCrypt Encryption"),    NC_("fs-type", "VeraCrypt/TrueCrypt")},
+  {"crypto",     "BitLocker",         NULL,    NC_("fs-type", "BitLocker Encryption"),              NC_("fs-type", "BitLocker")},
   {"filesystem", "VMFS",              "*",     NC_("fs-type", "VMFS (version %s)"),                 NC_("fs-type", "VMFS (v%s)")},
   {"filesystem", "VMFS",              NULL,    NC_("fs-type", "VMFS"),                              NC_("fs-type", "VMFS")},
   {"raid",       "VMFS_volume_member", "*",    NC_("fs-type", "VMFS Volume Member (version %s)"),   NC_("fs-type", "VMFS Member (v%s)")},

@@ -60,6 +60,8 @@ gboolean     udisks_linux_block_is_luks (UDisksBlock *block);
 
 gboolean     udisks_linux_block_is_tcrypt (UDisksBlock *block);
 
+gboolean     udisks_linux_block_is_bitlk (UDisksBlock *block);
+
 gboolean     udisks_linux_block_is_unknown_crypto (UDisksBlock *block);
 
 void         udisks_linux_block_encrypted_lock (UDisksBlock *block);

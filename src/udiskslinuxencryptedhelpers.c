@@ -113,3 +113,23 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
   CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_tc_close (data->map_name, error);
 }
+
+gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
+                              GCancellable       *cancellable,
+                              gpointer            user_data,
+                              GError            **error)
+{
+  CryptoJobData *data = (CryptoJobData*) user_data;
+  return bd_crypto_bitlk_open (data->device, data->map_name,
+                               (const guint8*) data->passphrase->str, data->passphrase->len,
+                               data->read_only, error);
+}
+
+gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
+                               GCancellable       *cancellable,
+                               gpointer            user_data,
+                               GError            **error)
+{
+  CryptoJobData *data = (CryptoJobData*) user_data;
+  return bd_crypto_bitlk_close (data->map_name, error);
+}

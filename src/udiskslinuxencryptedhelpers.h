@@ -74,6 +74,15 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
                                 gpointer            user_data,
                                 GError            **error);
 
+gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
+                              GCancellable       *cancellable,
+                              gpointer            user_data,
+                              GError            **error);
+
+gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
+                               GCancellable       *cancellable,
+                               gpointer            user_data,
+                               GError            **error);
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_ENCRYPTED_HELPERS_H__ */
