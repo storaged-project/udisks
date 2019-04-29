@@ -330,7 +330,7 @@ out:
   g_free ((gchar *) cache_dev_path);
   g_free (bcache_name);
   g_free (bcache_file);
-  g_object_unref (bcache_object);
+  g_clear_object (&bcache_object);
   g_clear_object (&backing_dev_object);
   g_clear_object (&backing_dev_block);
   g_clear_object (&cache_dev_object);
