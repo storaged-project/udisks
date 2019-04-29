@@ -363,6 +363,7 @@ teardown_logical_volume (UDisksLogicalVolume   *volume,
                                                 error))
                     {
                       g_list_free_full (siblings, g_object_unref);
+                      g_clear_object (&group_object);
                       return FALSE;
                     }
                 }
@@ -371,6 +372,7 @@ teardown_logical_volume (UDisksLogicalVolume   *volume,
         }
     }
 
+  g_clear_object (&group_object);
   return TRUE;
 }
 
@@ -505,8 +507,13 @@ wait_for_logical_volume_object (UDisksDaemon *daemon,
                                 gpointer      user_data)
 {
   struct WaitData *data = user_data;
-  return UDISKS_OBJECT (udisks_linux_volume_group_object_find_logical_volume_object (data->group_object,
-                                                                                     data->name));
+  UDisksLinuxLogicalVolumeObject *object;
+
+  object = udisks_linux_volume_group_object_find_logical_volume_object (data->group_object, data->name);
+  if (object == NULL)
+    return NULL;
+
+  return g_object_ref (UDISKS_OBJECT (object));
 }
 
 static const gchar *
@@ -517,6 +524,7 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
   struct WaitData data;
   UDisksDaemon *daemon;
   UDisksObject *volume_object;
+  const gchar *object_path;
 
   data.group_object = group_object;
   data.name = name;
@@ -530,7 +538,10 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
   if (volume_object == NULL)
     return NULL;
 
-  return g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object));
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object));
+  g_object_unref (volume_object);
+
+  return object_path;
 }
 
 static gboolean

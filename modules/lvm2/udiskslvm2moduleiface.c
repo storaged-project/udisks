@@ -299,8 +299,14 @@ static gboolean
 is_recorded_as_physical_volume (UDisksDaemon      *daemon,
                                 UDisksLinuxDevice *device)
 {
-  UDisksObject *object = udisks_daemon_find_block (daemon, g_udev_device_get_device_number (device->udev_device));
-  return object && udisks_object_peek_physical_volume (object) != NULL;
+  UDisksObject *object;
+  gboolean ret;
+
+  object = udisks_daemon_find_block (daemon, g_udev_device_get_device_number (device->udev_device));
+  ret = object && udisks_object_peek_physical_volume (object) != NULL;
+
+  g_clear_object (&object);
+  return ret;
 }
 
 static GDBusObjectSkeleton *
@@ -367,7 +373,7 @@ udisks_module_track_parent (UDisksDaemon  *daemon,
   const gchar *parent_uuid = NULL;
 
   UDisksObject *object;
-  UDisksObject *lvol_object;
+  UDisksObject *lvol_object = NULL;
   UDisksBlockLVM2 *block_lvm2;
   UDisksLogicalVolume *lvol;
 
@@ -392,6 +398,7 @@ udisks_module_track_parent (UDisksDaemon  *daemon,
     }
 
  out:
+  g_clear_object (&lvol_object);
   g_clear_object (&object);
   if (uuid_ret)
     *uuid_ret = g_strdup (parent_uuid);
