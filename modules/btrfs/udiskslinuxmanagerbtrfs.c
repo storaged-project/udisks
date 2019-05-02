@@ -199,8 +199,7 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
 {
   UDisksLinuxManagerBTRFS *l_manager = UDISKS_LINUX_MANAGER_BTRFS (manager);
   GError *error = NULL;
-  const gchar **devices = NULL;
-  guint num_devices = 0;
+  GPtrArray *devices = NULL;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_btrfs_get_daemon (l_manager),
@@ -210,14 +209,11 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
                                      N_("Authentication is required to create a new volume"),
                                      invocation);
 
-  num_devices = g_strv_length ((gchar**) arg_blocks);
-  devices = alloca (sizeof (const gchar*) * (num_devices + 1));
-  devices[num_devices] = NULL;
-
+  devices = g_ptr_array_new_with_free_func (g_free);
   for (guint n = 0; arg_blocks != NULL && arg_blocks[n] != NULL; n++)
     {
-      UDisksObject *object = NULL;
-      UDisksBlock *block = NULL;
+      UDisksObject *object;
+      UDisksBlock *block;
 
       object = udisks_daemon_find_object (l_manager->daemon, arg_blocks[n]);
       if (object == NULL)
@@ -230,7 +226,7 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
           goto out;
         }
 
-      block = udisks_object_get_block (object);
+      block = udisks_object_peek_block (object);
       if (block == NULL)
         {
           g_dbus_method_invocation_return_error (invocation,
@@ -242,12 +238,12 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
           goto out;
         }
 
-      devices[n] = udisks_block_dup_device (block);
+      g_ptr_array_add (devices, udisks_block_dup_device (block));
       g_object_unref (object);
-      g_object_unref (block);
     }
+  g_ptr_array_add (devices, NULL);
 
-  if (!bd_btrfs_create_volume (devices, arg_label, arg_data_level, arg_md_level, NULL, &error))
+  if (!bd_btrfs_create_volume ((const gchar **) devices->pdata, arg_label, arg_data_level, arg_md_level, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -257,6 +253,8 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
   udisks_manager_btrfs_complete_create_volume (manager, invocation);
 
 out:
+  if (devices != NULL)
+    g_ptr_array_free (devices, TRUE);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
