@@ -96,7 +96,7 @@ btrfs_block_check (UDisksObject *object)
   fs_type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
 
   rc = g_strcmp0 (fs_type, "btrfs");
-  g_object_unref(device);
+  g_object_unref (device);
 
   return rc == 0;
 }

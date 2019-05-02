@@ -41,7 +41,7 @@ udisks_btrfs_state_new (UDisksDaemon *daemon)
 {
   UDisksBTRFSState *state;
 
-  state = g_malloc0 (sizeof(UDisksBTRFSState));
+  state = g_malloc0 (sizeof (UDisksBTRFSState));
 
   if (state)
     {
