@@ -191,7 +191,8 @@ udisks_linux_manager_bcache_new (UDisksDaemon *daemon)
  * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
  */
 
-UDisksDaemon *udisks_linux_manager_bcache_get_daemon (UDisksLinuxManagerBcache* manager)
+UDisksDaemon *
+udisks_linux_manager_bcache_get_daemon (UDisksLinuxManagerBcache* manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_BCACHE (manager), NULL);
   return manager->daemon;
@@ -231,10 +232,10 @@ handle_bcache_create (UDisksManagerBcache    *object,
 
   UDisksObject *backing_dev_object = NULL;
   UDisksBlock *backing_dev_block = NULL;
-  const gchar *backing_dev_path = NULL;
+  gchar *backing_dev_path = NULL;
   UDisksObject *cache_dev_object = NULL;
   UDisksBlock *cache_dev_block = NULL;
-  const gchar *cache_dev_path = NULL;
+  gchar *cache_dev_path = NULL;
   gchar *bcache_name = NULL;
   gchar *bcache_file = NULL;
   UDisksObject *bcache_object = NULL;
@@ -326,8 +327,8 @@ handle_bcache_create (UDisksManagerBcache    *object,
                                                 invocation,
                                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (bcache_object)));
 out:
-  g_free ((gchar *) backing_dev_path);
-  g_free ((gchar *) cache_dev_path);
+  g_free (backing_dev_path);
+  g_free (cache_dev_path);
   g_free (bcache_name);
   g_free (bcache_file);
   g_clear_object (&bcache_object);
