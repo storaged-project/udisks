@@ -647,6 +647,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
@@ -661,6 +662,8 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  "Error opening device %s while creating mdraid: %m",
                                                  device_file);
           g_free (device_file);
+          g_object_unref (block);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
