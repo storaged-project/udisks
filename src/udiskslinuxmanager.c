@@ -1100,7 +1100,6 @@ handle_resolve_device (UDisksManager         *object,
                        GVariant              *arg_devspec,
                        GVariant              *arg_options)
 {
-
   gchar *devpath = NULL;
   gchar *devuuid = NULL;
   gchar *devlabel = NULL;
@@ -1140,21 +1139,20 @@ handle_resolve_device (UDisksManager         *object,
         }
     }
 
-    ret_paths = g_new0 (const gchar *, num_found + 1);
-    for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
-      {
-        ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
-      }
+  ret_paths = g_new0 (const gchar *, num_found + 1);
+  for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
+    {
+      ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
+    }
 
-    udisks_manager_complete_resolve_device (object,
-                                            invocation,
-                                            ret_paths);
+  udisks_manager_complete_resolve_device (object,
+                                          invocation,
+                                          ret_paths);
 
-    g_slist_free_full (blocks, g_object_unref);
-    g_slist_free_full (ret, g_object_unref);
+  g_slist_free_full (blocks, g_object_unref);
+  g_slist_free_full (ret, g_object_unref);
 
-    return TRUE;  /* returning TRUE means that we handled the method invocation */
-
+  return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
