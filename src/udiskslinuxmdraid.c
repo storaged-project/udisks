@@ -1091,7 +1091,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_remove_device (_mdraid, invocation);
 
  out:
-  g_free (member_states);
+  g_strfreev (member_states);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&raid_device);

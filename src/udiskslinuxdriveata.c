@@ -916,8 +916,8 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
                              GDBusMethodInvocation *invocation,
                              GVariant              *options)
 {
-  UDisksLinuxDriveObject  *object;
-  UDisksLinuxBlockObject *block_object;
+  UDisksLinuxDriveObject *object;
+  UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   GError *error;
@@ -1005,6 +1005,7 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
 
  out:
   g_clear_object (&object);
+  g_clear_object (&block_object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -1139,7 +1140,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                              GVariant              *options)
 {
   UDisksLinuxDriveObject  *object;
-  UDisksLinuxBlockObject *block_object;
+  UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   uid_t caller_uid;
@@ -1243,6 +1244,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
 
  out:
   g_clear_object (&object);
+  g_clear_object (&block_object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 

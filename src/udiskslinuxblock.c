@@ -2564,8 +2564,14 @@ static UDisksPartitionTable *
 peek_partition_table (UDisksDaemon    *daemon,
                       UDisksPartition *partition)
 {
-  UDisksObject *object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
-  return object? udisks_object_peek_partition_table (object) : NULL;
+  UDisksObject *object;
+  UDisksPartitionTable *pt;
+
+  object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+  pt = object ? udisks_object_peek_partition_table (object) : NULL;
+
+  g_clear_object (&object);
+  return pt;
 }
 
 static UDisksBlock *

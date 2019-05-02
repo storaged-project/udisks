@@ -339,7 +339,7 @@ update_configuration (UDisksLinuxDrive       *drive,
   udisks_drive_set_configuration (UDISKS_DRIVE (drive), value);
 
   if (key_file != NULL)
-    g_key_file_unref (key_file);
+    g_key_file_free (key_file);
   if (value != NULL)
     g_variant_unref (value);
 
@@ -1391,6 +1391,7 @@ handle_power_off (UDisksDrive           *_drive,
           UDisksBlock *sibling_block = udisks_object_get_block (UDISKS_OBJECT (sibling_block_object));
           if (sibling_block != NULL)
             blocks_to_sync = g_list_prepend (blocks_to_sync, sibling_block);
+          g_object_unref (sibling_block_object);
         }
     }
 

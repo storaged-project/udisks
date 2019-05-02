@@ -1134,7 +1134,7 @@ handle_resolve_device (UDisksManager         *object,
 
       if (found)
         {
-          ret = g_slist_prepend (ret, g_object_ref (blocks_p->data));
+          ret = g_slist_prepend (ret, blocks_p->data);
           num_found++;
         }
     }
@@ -1149,8 +1149,9 @@ handle_resolve_device (UDisksManager         *object,
                                           invocation,
                                           ret_paths);
 
+  g_free (ret_paths);
   g_slist_free_full (blocks, g_object_unref);
-  g_slist_free_full (ret, g_object_unref);
+  g_slist_free (ret);
 
   return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
