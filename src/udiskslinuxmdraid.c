@@ -1213,7 +1213,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_add (device_file, new_member_device_file, 0, NULL, &error))
     {
-      g_prefix_error (&error, "Error adding %s to RAID array %s:", device_file, new_member_device_file);
+      g_prefix_error (&error, "Error adding %s to RAID array %s:", new_member_device_file, device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
