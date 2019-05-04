@@ -39,6 +39,10 @@
     <!-- SupportedFilesystems: List of supported filesystem by UDisks2 -->
     <property name="SupportedFilesystems" type="as" access="read"/>
 
+    <!-- SupportedEncryptionTypes: List of supported encryption types by UDisks2 -->
+    <property name="SupportedEncryptionTypes" type="as" access="read"/>
+    <property name="DefaultEncryptionType" type="s" access="read"/>
+
     <!--
         CanFormat:
         @type: The filesystem type to be tested for formatting availability.
