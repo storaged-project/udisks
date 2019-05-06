@@ -272,7 +272,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
           goto out;
         }
 
-      block = udisks_object_peek_block (object);
+      block = udisks_object_get_block (object);
       if (block == NULL)
         {
           g_dbus_method_invocation_return_error (invocation,
@@ -288,6 +288,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
         {
           g_dbus_method_invocation_take_error (invocation, error);
           g_object_unref (object);
+          g_object_unref (block);
           goto out;
         }
 
