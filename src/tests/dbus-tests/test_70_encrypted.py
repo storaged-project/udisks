@@ -82,7 +82,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
 
         self.assertIsNotNone(luks)
@@ -118,7 +118,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the uuid of the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
         self.assertIsNotNone(luks)
 
@@ -269,7 +269,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the luks object and mount it
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
         self.assertIsNotNone(luks)
 
