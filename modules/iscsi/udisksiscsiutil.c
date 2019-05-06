@@ -106,7 +106,6 @@ enum {
 
 const gchar *iscsi_nodes_fmt = "a(sisis)";
 const gchar *iscsi_node_fmt = "(sisis)";
-const gchar *iscsi_policy_action_id = "org.freedesktop.udisks2.iscsi.manage-iscsi";
 
 static struct libiscsi_context *
 iscsi_get_libiscsi_context (UDisksDaemon *daemon)

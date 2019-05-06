@@ -131,7 +131,7 @@ handle_logout_interface (UDisksISCSISession    *session,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     iscsi_policy_action_id,
+                                     ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to perform iSCSI logout"),
                                      invocation);

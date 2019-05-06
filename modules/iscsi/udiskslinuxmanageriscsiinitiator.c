@@ -81,9 +81,8 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerISCSIInitiator, udisks_linux_manager_
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_ISCSI_INITIATOR,
                                                 udisks_linux_manager_iscsi_initiator_iface_init));
 
-const gchar *initiator_filename = "/etc/iscsi/initiatorname.iscsi";
-const gchar *initiator_name_prefix = "InitiatorName=";
-const gsize initiator_name_prefix_len = 14;
+#define INITIATOR_FILENAME "/etc/iscsi/initiatorname.iscsi"
+#define INITIATOR_NAME_KEY "InitiatorName"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -284,37 +283,46 @@ handle_get_firmware_initiator_name (UDisksManagerISCSIInitiator *object,
 }
 
 
-static gchar* _get_initiator_name (GError **error)
-{
-  gchar *initiator_name = NULL;
-  gchar *initiator_contents = NULL;
-  gboolean success = FALSE;
+#define FAKE_GROUP_NAME "general"       /* NOTE: shows up in some error messages */
 
-  success = g_file_get_contents (initiator_filename,
-                                 &initiator_contents,
-                                 NULL,
-                                 error);
-  if (!success)
+static gchar *
+_get_initiator_name (GError **error)
+{
+  gchar *initiator_name;
+  gchar *contents = NULL;
+  gchar *contents_group;
+  GKeyFile *key_file;
+
+  if (! g_file_get_contents (INITIATOR_FILENAME, &contents, NULL, error))
     {
-      g_prefix_error (error, "Error reading iSCSI initiator name from '%s': ", initiator_filename);
+      g_prefix_error (error, "Error reading iSCSI initiator name from '%s': ", INITIATOR_FILENAME);
       return NULL;
     }
 
-  /* We don't want to create a scanner for this iscsi initiator name grammar.
-   * So for simplicity, we just search for "InitiatorName=" prefix and if
-   * found, we just shift the name pointer.  The string may contain whitespace
-   * at the end; it's removed as well. */
-  if (strncmp (initiator_contents, initiator_name_prefix, initiator_name_prefix_len) == 0)
+  /* key-value pairs have to belong to some group, let's create a fake one just to satisfy the parser needs */
+  contents_group = g_strconcat ("[" FAKE_GROUP_NAME "]\n", contents, NULL);
+  g_free (contents);
+
+  key_file = g_key_file_new ();
+  if (! g_key_file_load_from_data (key_file, contents_group, -1, G_KEY_FILE_NONE, error))
     {
-      /* Shift the pointer by prefix length further. */
-      initiator_name = initiator_contents + initiator_name_prefix_len;
+      g_prefix_error (error, "Error reading iSCSI initiator name from '%s': ", INITIATOR_FILENAME);
+      g_key_file_free (key_file);
+      g_free (contents_group);
+      return NULL;
     }
-  /* Trim the whitespace at the end of the string. */
-  initiator_name = g_strchomp (initiator_name);
 
-  initiator_name = g_strdup (initiator_name);
+  initiator_name = g_key_file_get_string (key_file, FAKE_GROUP_NAME, INITIATOR_NAME_KEY, error);
+  if (initiator_name == NULL)
+    g_prefix_error (error, "Error reading iSCSI initiator name from '%s': ", INITIATOR_FILENAME);
 
-  g_free (initiator_contents);
+  g_key_file_free (key_file);
+  g_free (contents_group);
+
+  /* trim the whitespace at the end of the string */
+  if (initiator_name != NULL)
+    initiator_name = g_strchomp (initiator_name);
+
   return initiator_name;
 }
 
@@ -393,82 +401,87 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
                            GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  int initiator_name_fd = -1;
-  GString *content = NULL;
+  gchar *contents = NULL;
+  gchar *contents_group;
+  gchar *initiator_name;
+  GKeyFile *key_file;
+  GError *error = NULL;
 
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
-                                       NULL,
-                                       iscsi_policy_action_id,
-                                       arg_options,
-                                       N_("Authentication is required change iSCSI initiator name"),
-                                       invocation);
+  if (! udisks_daemon_util_check_authorization_sync (manager->daemon,
+                                                     NULL,
+                                                     ISCSI_MODULE_POLICY_ACTION_ID,
+                                                     arg_options,
+                                                     N_("Authentication is required change iSCSI initiator name"),
+                                                     invocation))
+    return TRUE;
 
   if (!arg_name || strlen (arg_name) == 0)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             N_("Empty initiator name"));
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     N_("Empty initiator name"));
       return TRUE;
     }
 
-  /* Enter a critical section. */
+  /* enter critical section */
   g_mutex_lock (&manager->initiator_config_mutex);
 
-  initiator_name_fd = open (initiator_filename,
-                            O_WRONLY |
-                            O_TRUNC  |
-                            S_IRUSR  |
-                            S_IWUSR  |
-                            S_IRGRP  |
-                            S_IROTH);
+  /* first try to read existing file */
+  g_file_get_contents (INITIATOR_FILENAME, &contents, NULL, NULL /* ignore errors */);
 
-  if (initiator_name_fd == -1)
+  /* key-value pairs have to belong to some group, let's create a fake one just to satisfy the parser needs */
+  contents_group = g_strconcat ("[" FAKE_GROUP_NAME "]\n", contents, NULL);
+  g_free (contents);
+
+  key_file = g_key_file_new ();
+  if (! g_key_file_load_from_data (key_file, contents_group, -1,
+                                   G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS,
+                                   NULL /* ignore errors */))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             N_("Error opening %s while setting iSCSI initiator name: %s"),
-                                             initiator_filename,
-                                             strerror (errno));
-
-      goto mutex_out;
+      /* ignoring errors, leaving the keyfile instance empty (e.g. empty or non-existing config file) */
     }
+  g_free (contents_group);
 
-  /* Make a new initiator name */
-  content = g_string_new (initiator_name_prefix);
-  g_string_append_printf (content, "%s\n", arg_name);
+  /* ensure trailing space in the initiator name */
+  if (arg_name[strlen (arg_name) - 1] != ' ')
+    initiator_name = g_strconcat (arg_name, " ", NULL);
+  else
+    initiator_name = g_strdup (arg_name);
+  g_key_file_set_string (key_file, FAKE_GROUP_NAME, INITIATOR_NAME_KEY, initiator_name);
+  g_free (initiator_name);
 
-  /* Write the new initiator name */
-  if (write (initiator_name_fd, content->str, content->len) != (ssize_t) content->len)
+  contents_group = g_key_file_to_data (key_file, NULL, NULL);
+  /* strip the fake group name */
+  contents = contents_group ? g_strrstr (contents_group, "[" FAKE_GROUP_NAME "]") : NULL;
+  if (contents != NULL)
+    contents += strlen ("[" FAKE_GROUP_NAME "]\n");
+
+  if (contents == NULL)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             N_("Error writing to %s while setting iSCSI initiator name: %s"),
-                                             initiator_filename,
-                                             strerror (errno));
-
-      goto mutex_out;
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     N_("Error parsing the iSCSI initiator name"));
     }
+  else if (! g_file_set_contents (INITIATOR_FILENAME, contents, -1, &error))
+    {
+      g_prefix_error (&error, N_("Error writing to %s while setting iSCSI initiator name: "), INITIATOR_FILENAME);
+      g_dbus_method_invocation_take_error (invocation, error);
+    }
+  else
+    {
+      /* finish with no error */
+      udisks_manager_iscsi_initiator_complete_set_initiator_name (object, invocation);
+    }
+  g_free (contents_group);
+  g_key_file_free (key_file);
 
-  /* Finish with no error */
-  udisks_manager_iscsi_initiator_complete_set_initiator_name (object,
-                                                              invocation);
-
-mutex_out:
-  /* Leave the critical section. */
+  /* leave critical section */
   g_mutex_unlock (&manager->initiator_config_mutex);
 
-out:
-  /* Release the resources */
-  if (content)
-    g_string_free (content, TRUE);
-  if (initiator_name_fd != -1)
-    close (initiator_name_fd);
-
-  /* Indicate that we handled the method invocation */
+  /* indicate that we handled the method invocation */
   return TRUE;
 }
 
@@ -482,7 +495,6 @@ out:
  * Performs firmware discovery (ppc or ibft).
  */
 static gint
-
 discover_firmware (UDisksManagerISCSIInitiator  *object,
                    GVariant                    **nodes,
                    gint                         *nodes_cnt,
@@ -535,7 +547,7 @@ handle_discover_send_targets (UDisksManagerISCSIInitiator *object,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                      NULL,
-                                     iscsi_policy_action_id,
+                                     ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to discover targets"),
                                      invocation);
@@ -593,7 +605,7 @@ handle_discover_firmware (UDisksManagerISCSIInitiator *object,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                      NULL,
-                                     iscsi_policy_action_id,
+                                     ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to discover firmware targets"),
                                      invocation);
@@ -646,7 +658,7 @@ handle_login (UDisksManagerISCSIInitiator *object,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                      NULL,
-                                     iscsi_policy_action_id,
+                                     ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to perform iSCSI login"),
                                      invocation);
@@ -736,7 +748,7 @@ handle_logout(UDisksManagerISCSIInitiator *object,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                      NULL,
-                                     iscsi_policy_action_id,
+                                     ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to perform iSCSI logout"),
                                      invocation);

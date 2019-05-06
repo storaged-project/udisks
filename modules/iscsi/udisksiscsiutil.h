@@ -33,8 +33,6 @@ typedef enum
 struct libiscsi_context;
 struct libiscsi_node;
 
-extern const gchar      *iscsi_policy_action_id;
-
 gint                     iscsi_login (UDisksDaemon  *daemon,
                                       const gchar   *name,
                                       const gint     tpgt,
