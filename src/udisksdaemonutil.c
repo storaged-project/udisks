@@ -146,7 +146,13 @@ udisks_variant_lookup_binary (GVariant     *dict,
 {
   GVariant* item = g_variant_lookup_value (dict, name, NULL);
   if (item)
-    return udisks_variant_get_binary (item, out_text);
+    {
+      gboolean ret = udisks_variant_get_binary (item, out_text);
+      g_variant_unref (item);
+
+      return ret;
+    }
+
   return FALSE;
 }
 
