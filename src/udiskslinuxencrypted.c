@@ -431,7 +431,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
 
   /* we need the uid of the caller for the unlocked-crypto-dev file */
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -440,7 +439,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
 
   /* check if in crypttab file */
-  error = NULL;
   if (!check_crypttab (block,
                        TRUE,
                        &is_in_crypttab,
@@ -568,6 +566,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                              "Error unlocking %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
+      g_clear_error (&error);
 
       /* Restore the old encryption type if the unlock failed, because
        * in this case we don't know for sure if we used the correct
@@ -586,7 +585,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
   udisks_linux_block_encrypted_unlock (block);
 
   /* Determine the resulting cleartext object */
-  error = NULL;
   cleartext_object = udisks_daemon_wait_for_object_sync (daemon,
                                                          wait_for_cleartext_object,
                                                          g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object))),
@@ -883,7 +881,6 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1002,7 +999,6 @@ handle_resize (UDisksEncrypted       *encrypted,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
