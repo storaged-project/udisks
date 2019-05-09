@@ -1674,7 +1674,12 @@ make_block_luksname (UDisksBlock *block, GError **error)
   gchar *uuid = bd_crypto_luks_uuid (udisks_block_get_device (block), error);
 
   if (uuid)
-    return g_strdup_printf ("luks-%s", uuid);
+    {
+      gchar *ret = g_strdup_printf ("luks-%s", uuid);
+      g_free (uuid);
+
+      return ret;
+    }
   else
     return NULL;
 }
