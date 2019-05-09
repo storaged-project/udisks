@@ -1185,6 +1185,8 @@ handle_set_configuration (UDisksDrive           *_drive,
   g_free (data);
   g_free (path);
   g_clear_object (&object);
+  if (key_file != NULL)
+    g_key_file_free (key_file);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
