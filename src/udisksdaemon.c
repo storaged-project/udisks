@@ -922,6 +922,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                           command_line);
 
   udisks_string_wipe_and_free (input_string_as_gstring);
+  g_free (command_line);
   return job;
 }
 
@@ -1084,6 +1085,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                           command_line);
 
   udisks_string_wipe_and_free (input_string_as_gstring);
+  g_free (command_line);
   return ret;
 }
 
