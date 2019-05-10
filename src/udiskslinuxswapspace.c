@@ -214,6 +214,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                              UDISKS_ERROR_FAILED,
                                              "Error activating swap: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -261,7 +262,6 @@ handle_stop (UDisksSwapspace        *swapspace,
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -307,6 +307,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                              UDISKS_ERROR_FAILED,
                                              "Error deactivating swap: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -382,6 +383,7 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -390,7 +392,6 @@ handle_set_label (UDisksSwapspace        *swapspace,
 
  out:
   g_clear_object (&object);
-  g_clear_error (&error);
   return TRUE;
 }
 
