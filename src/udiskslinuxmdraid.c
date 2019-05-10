@@ -516,12 +516,11 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           /* ... and finally build (builder consumes each GVariant instance) */
           for (n = 0; n < p->len; n++)
             g_variant_builder_add_value (&builder, p->pdata[n]);
-          g_ptr_array_free (p, TRUE);
 
           g_dir_close (md_dir);
         }
       g_free (md_dir_name);
-
+      g_ptr_array_free (p, TRUE);
     }
   udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
