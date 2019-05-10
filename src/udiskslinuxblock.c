@@ -3187,7 +3187,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       if (encrypt_type != NULL)
           data.type = encrypt_type;
       else
-          data.type = g_strdup (udisks_config_manager_get_encryption (config_manager));
+          data.type = udisks_config_manager_get_encryption (config_manager);
 
       udisks_linux_block_encrypted_lock (block);
 
