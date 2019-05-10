@@ -1068,6 +1068,7 @@ handle_get_block_devices (UDisksManager         *object,
                                               invocation,
                                               block_paths);
 
+  g_free (block_paths);
   g_slist_free_full (blocks, g_object_unref);
 
   return TRUE;  /* returning TRUE means that we handled the method invocation */
