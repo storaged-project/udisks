@@ -271,7 +271,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   uid_t caller_uid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
-  gchar *partition_type = NULL;
+  const gchar *partition_type = NULL;
 
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
@@ -282,7 +282,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  g_variant_lookup (options, "partition-type", "s", &partition_type);
+  g_variant_lookup (options, "partition-type", "&s", &partition_type);
 
   block = udisks_object_get_block (object);
   if (block == NULL)
