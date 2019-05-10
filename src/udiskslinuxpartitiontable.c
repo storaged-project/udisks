@@ -551,7 +551,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
  out:
   g_free (table_type);
   g_free (wait_data);
-  g_free (overlapping_part);
   g_clear_error (&error);
   g_clear_object (&partition_block);
   g_free (device_name);
@@ -559,6 +558,8 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   g_clear_object (&block);
   if (part_spec)
     bd_part_spec_free (part_spec);
+  if (overlapping_part)
+    bd_part_spec_free (overlapping_part);
   return partition_object;
 }
 
