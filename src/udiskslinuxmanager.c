@@ -1076,7 +1076,7 @@ handle_get_block_devices (UDisksManager         *object,
 static gboolean
 compare_paths (UDisksManager         *object,
                UDisksBlock           *block,
-               gchar                 *path)
+               const gchar           *path)
 {
   const gchar *const *symlinks = NULL;
 
@@ -1100,9 +1100,9 @@ handle_resolve_device (UDisksManager         *object,
                        GVariant              *arg_devspec,
                        GVariant              *arg_options)
 {
-  gchar *devpath = NULL;
-  gchar *devuuid = NULL;
-  gchar *devlabel = NULL;
+  const gchar *devpath = NULL;
+  const gchar *devuuid = NULL;
+  const gchar *devlabel = NULL;
 
   GSList *blocks = NULL;
   GSList *blocks_p = NULL;
@@ -1116,9 +1116,9 @@ handle_resolve_device (UDisksManager         *object,
   gboolean found = FALSE;
   guint i = 0;
 
-  g_variant_lookup (arg_devspec, "path", "s", &devpath);
-  g_variant_lookup (arg_devspec, "uuid", "s", &devuuid);
-  g_variant_lookup (arg_devspec, "label", "s", &devlabel);
+  g_variant_lookup (arg_devspec, "path", "&s", &devpath);
+  g_variant_lookup (arg_devspec, "uuid", "&s", &devuuid);
+  g_variant_lookup (arg_devspec, "label", "&s", &devlabel);
 
   blocks = get_block_objects (object, &num_blocks);
 
