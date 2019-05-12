@@ -36,6 +36,8 @@ GList               *udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor
 gboolean             udisks_mount_monitor_is_dev_in_use      (UDisksMountMonitor  *monitor,
                                                               dev_t                dev,
                                                               UDisksMountType     *out_type);
+UDisksMount         *udisks_mount_monitor_get_mount_for_path (UDisksMountMonitor  *monitor,
+                                                              const gchar         *mount_path);
 
 G_END_DECLS
 

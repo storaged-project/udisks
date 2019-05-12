@@ -1124,11 +1124,13 @@ has_option (const gchar *options,
 }
 
 static gboolean
-is_in_fstab (UDisksBlock  *block,
+is_in_fstab (UDisksDaemon *daemon,
+             UDisksBlock  *block,
              const gchar  *fstab_path,
              gchar       **out_mount_point,
              gchar       **out_mount_options)
 {
+  UDisksMountMonitor *mount_monitor = udisks_daemon_get_mount_monitor (daemon);
   gboolean ret;
   FILE *f;
   char buf[8192];
@@ -1190,11 +1192,21 @@ is_in_fstab (UDisksBlock  *block,
 
       if (udisks_block_get_device_number (block) == sb.st_rdev)
         {
-          ret = TRUE;
-          if (out_mount_point != NULL)
-            *out_mount_point = g_strdup (m->mnt_dir);
-          if (out_mount_options != NULL)
-            *out_mount_options = g_strdup (m->mnt_opts);
+          /* If this block device is found in fstab, but something else is already
+           * mounted on that mount point, ignore the fstab entry.
+           */
+          UDisksMount *mount = udisks_mount_monitor_get_mount_for_path (mount_monitor,
+                                                                        m->mnt_dir);
+          if (mount == NULL || sb.st_rdev == udisks_mount_get_dev (mount))
+            {
+              ret = TRUE;
+              if (out_mount_point != NULL)
+                *out_mount_point = g_strdup (m->mnt_dir);
+              if (out_mount_options != NULL)
+                *out_mount_options = g_strdup (m->mnt_opts);
+            }
+
+          g_clear_object (&mount);
         }
 
     continue_loop:
@@ -1213,7 +1225,8 @@ is_in_fstab (UDisksBlock  *block,
  * TODO: check if systemd has a specific "unit" for the device
  */
 static gboolean
-is_system_managed (UDisksBlock  *block,
+is_system_managed (UDisksDaemon *daemon,
+                   UDisksBlock  *block,
                    gchar       **out_mount_point,
                    gchar       **out_mount_options)
 {
@@ -1222,7 +1235,7 @@ is_system_managed (UDisksBlock  *block,
   ret = TRUE;
 
   /* First, check /etc/fstab */
-  if (is_in_fstab (block, "/etc/fstab", out_mount_point, out_mount_options))
+  if (is_in_fstab (daemon, block, "/etc/fstab", out_mount_point, out_mount_options))
     goto out;
 
   ret = FALSE;
@@ -1337,7 +1350,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   device = udisks_block_dup_device (block);
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (block, &mount_point_to_use, &fstab_mount_options))
+  if (is_system_managed (daemon, block, &mount_point_to_use, &fstab_mount_options))
     {
       system_managed = TRUE;
     }
@@ -1797,7 +1810,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
     }
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (block, &mount_point, &fstab_mount_options))
+  if (is_system_managed (daemon, block, &mount_point, &fstab_mount_options))
     {
       system_managed = TRUE;
     }

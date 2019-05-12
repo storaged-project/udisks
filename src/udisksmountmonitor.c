@@ -724,3 +724,36 @@ udisks_mount_monitor_is_dev_in_use (UDisksMountMonitor  *monitor,
  out:
   return ret;
 }
+
+/**
+ * udisks_mount_monitor_get_mount_for_path:
+ * @monitor: A #UDisksMountMonitor.
+ * @mount_path: A filesystem path on which a device may be mounted.
+ *
+ * Gets the #UDisksMount mounted at @mount_path, if any.
+ *
+ * Returns: (transfer full) (nullable): the #UDisksMount (of type
+ *  #UDISKS_MOUNT_TYPE_FILESYSTEM) mounted at @mount_path, or %NULL if nothing
+ *  is mounted there.
+ */
+UDisksMount *
+udisks_mount_monitor_get_mount_for_path (UDisksMountMonitor  *monitor,
+                                         const gchar         *mount_path)
+{
+  GList *l;
+
+  g_return_val_if_fail (UDISKS_IS_MOUNT_MONITOR (monitor), NULL);
+  g_return_val_if_fail (mount_path != NULL, NULL);
+
+  udisks_mount_monitor_ensure (monitor);
+  for (l = monitor->mounts; l != NULL; l = l->next)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM &&
+          g_strcmp0 (udisks_mount_get_mount_path (mount), mount_path) == 0)
+        return g_object_ref (mount);
+    }
+
+  return NULL;
+}
