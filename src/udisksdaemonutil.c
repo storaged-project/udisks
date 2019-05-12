@@ -911,7 +911,7 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                                                       &sub_error);
   if (result == NULL)
     {
-      if (sub_error->domain > != POLKIT_ERROR)
+      if (sub_error->domain != POLKIT_ERROR)
         {
           /* assume polkit authority is not available (e.g. could be the service
            * manager returning org.freedesktop.systemd1.Masked)
