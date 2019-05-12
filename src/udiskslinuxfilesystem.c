@@ -1882,6 +1882,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
     }
 
   error = NULL;
+  g_clear_pointer (&mount_point, g_free);
   mount_point = udisks_state_find_mounted_fs (state,
                                               udisks_block_get_device_number (block),
                                               &mounted_by_uid,
