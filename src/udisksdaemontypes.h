@@ -23,7 +23,9 @@
 #include "config.h"
 
 #include <gio/gio.h>
+#ifdef HAVE_POLKIT_AGENT_1
 #include <polkit/polkit.h>
+#endif
 #include <udisks/udisks.h>
 #include <gudev/gudev.h>
 

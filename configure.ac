@@ -152,13 +152,30 @@ PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.19])
 AC_SUBST(BLOCKDEV_CFLAGS)
 AC_SUBST(BLOCKDEV_LIBS)
 
-PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102])
+
+PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102],
+                  [have_polkit-gobject-1=yes],
+                  [have_polkit-gobject-1=no])
+AM_CONDITIONAL(HAVE_POLKIT_GOBJECT_1, test x$have_polkit-gobject-1 = xyes)
+if test "x$have_polkit-gobject-1" = "xyes"; then
+  AC_DEFINE([HAVE_POLKIT_GOBJECT_1], 1, [Define to 1 if polkit-gobject-1 >= 0.102 is available])
+fi
+AC_SUBST(HAVE_POLKIT_GOBJECT_1)
 AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
 AC_SUBST(POLKIT_GOBJECT_1_LIBS)
 
-PKG_CHECK_MODULES(POLKIT_AGENT_1, [polkit-agent-1 >= 0.102])
+
+PKG_CHECK_MODULES(POLKIT_AGENT_1, [polkit-agent-1 >= 0.102],
+                  [have_polkit-agent-1=yes],
+                  [have_polkit-agent-1=no])
+AM_CONDITIONAL(HAVE_POLKIT_AGENT_1, test x$have_polkit-agent-1 = xyes)
+if test "x$have_polkit-agent-1" = "xyes"; then
+  AC_DEFINE([HAVE_POLKIT_AGENT_1], 1, [Define to 1 if polkit-agent-1 >= 0.102 is available])
+fi
+AC_SUBST(HAVE_POLKIT_AGENT_1)
 AC_SUBST(POLKIT_AGENT_1_CFLAGS)
 AC_SUBST(POLKIT_AGENT_1_LIBS)
+
 
 PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
@@ -778,6 +795,8 @@ echo "
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
         using libmount:             ${have_libmount}
+        using polkitagent:          ${have_polkit-agent-1}
+        using polkitobject:         ${have_polkit-gobject-1}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

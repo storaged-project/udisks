@@ -56,6 +56,7 @@
 #define LOGIND_AVAILABLE() (access("/run/systemd/seats/", F_OK) >= 0)
 #endif
 
+#define ALLOW_USER_INTERACTION 1
 /**
  * SECTION:udisksdaemonutil
  * @title: Utilities
@@ -592,6 +593,8 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
  *
  * http://cgit.freedesktop.org/polkit/commit/?h=wip/js-rule-files&id=224f7b892478302dccbe7e567b013d3c73d376fd
  */
+
+#ifdef HAVE_POLKIT_AGENT_1
 static void
 _safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gchar *value)
 {
@@ -614,7 +617,7 @@ _safe_polkit_details_insert_uint64 (PolkitDetails *details, const gchar *key, gu
   snprintf (buf, sizeof buf, "0x%08llx", (unsigned long long int) value);
   polkit_details_insert (details, key, buf);
 }
-
+#endif
 static gboolean
 check_authorization_no_polkit (UDisksDaemon            *daemon,
                                UDisksObject            *object,
@@ -706,6 +709,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                              GDBusMethodInvocation *invocation)
 {
   GError *error = NULL;
+  #ifdef HAVE_POLKIT_AGENT_1
   if (!udisks_daemon_util_check_authorization_sync_with_error (daemon,
                                                                object,
                                                                action_id,
@@ -717,7 +721,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
       g_dbus_method_invocation_take_error (invocation, error);
       return FALSE;
     }
-
+   #endif
   return TRUE;
 }
 
@@ -730,11 +734,16 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                                                         GDBusMethodInvocation  *invocation,
                                                         GError                **error)
 {
+  #ifdef HAVE_POLKIT_AGENT_1
   PolkitAuthority *authority = NULL;
   PolkitSubject *subject = NULL;
   PolkitDetails *details = NULL;
   PolkitCheckAuthorizationFlags flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
   PolkitAuthorizationResult *result = NULL;
+  #else
+  int* authority = NULL;
+  #endif
+
   GError *sub_error = NULL;
   gboolean ret = FALSE;
   UDisksBlock *block = NULL;
@@ -745,15 +754,19 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
   gboolean auth_no_user_interaction = FALSE;
   const gchar *details_device = NULL;
   gchar *details_drive = NULL;
-
+  #ifdef HAVE_POLKIT_AGENT_1
   authority = udisks_daemon_get_authority (daemon);
+  #else
+  authority = NULL; 
+  #endif
   if (authority == NULL)
     {
       ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation, error);
       goto out;
     }
-
+  #ifdef HAVE_POLKIT_AGENT_1
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
+  #endif
   if (options != NULL)
     {
       g_variant_lookup (options,
@@ -761,12 +774,15 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                         "b",
                         &auth_no_user_interaction);
     }
+  #ifdef HAVE_POLKIT_AGENT_1  
   if (!auth_no_user_interaction)
     flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
 
   details = polkit_details_new ();
   polkit_details_insert (details, "polkit.message", message);
   polkit_details_insert (details, "polkit.gettext_domain", "udisks2");
+  
+  #endif
 
   /* Find drive associated with the block device, if any */
   if (object != NULL)
@@ -820,21 +836,22 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
           s = NULL;
         }
       g_free (s);
-
+      #ifdef HAVE_POLKIT_AGENT_1
       _safe_polkit_details_insert (details, "drive.wwn", udisks_drive_get_wwn (drive));
       _safe_polkit_details_insert (details, "drive.serial", udisks_drive_get_serial (drive));
       _safe_polkit_details_insert (details, "drive.vendor", udisks_drive_get_vendor (drive));
       _safe_polkit_details_insert (details, "drive.model", udisks_drive_get_model (drive));
       _safe_polkit_details_insert (details, "drive.revision", udisks_drive_get_revision (drive));
+      #endif
       if (udisks_drive_get_removable (drive))
         {
           const gchar *const *media_compat;
           GString *media_compat_str;
           const gchar *sep = ",";
-
+          #ifdef HAVE_POLKIT_AGENT_1
           polkit_details_insert (details, "drive.removable", "true");
           _safe_polkit_details_insert (details, "drive.removable.bus", udisks_drive_get_connection_bus (drive));
-
+          #endif
           media_compat_str = g_string_new (NULL);
           media_compat = udisks_drive_get_media_compatibility (drive);
           if (media_compat)
@@ -848,12 +865,13 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                   g_string_append (media_compat_str, media_compat[i]);
                 }
             }
-
+          #ifdef HAVE_POLKIT_AGENT_1  
           _safe_polkit_details_insert (details, "drive.removable.media", media_compat_str->str);
+          #endif
           g_string_free (media_compat_str, TRUE);
         }
     }
-
+  #ifdef HAVE_POLKIT_AGENT_1
   if (block != NULL)
     {
       _safe_polkit_details_insert (details, "id.type",    udisks_block_get_id_type (block));
@@ -871,17 +889,19 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
       _safe_polkit_details_insert        (details, "partition.name",   udisks_partition_get_name (partition));
       _safe_polkit_details_insert        (details, "partition.uuid",   udisks_partition_get_uuid (partition));
     }
+  #endif
 
   /* Fall back to Block:preferred-device */
   if (details_drive == NULL && block != NULL)
     details_drive = udisks_block_dup_preferred_device (block);
-
+  #ifdef HAVE_POLKIT_AGENT_1
   if (details_device != NULL)
     polkit_details_insert (details, "device", details_device);
   if (details_drive != NULL)
     polkit_details_insert (details, "drive", details_drive);
-
+  
   sub_error = NULL;
+
   result = polkit_authority_check_authorization_sync (authority,
                                                       subject,
                                                       action_id,
@@ -891,7 +911,7 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                                                       &sub_error);
   if (result == NULL)
     {
-      if (sub_error->domain != POLKIT_ERROR)
+      if (sub_error->domain > != POLKIT_ERROR)
         {
           /* assume polkit authority is not available (e.g. could be the service
            * manager returning org.freedesktop.systemd1.Masked)
@@ -928,7 +948,7 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
                      "Not authorized to perform operation");
       goto out;
     }
-
+  #endif
   ret = TRUE;
 
  out:
@@ -938,9 +958,11 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
   g_clear_object (&block);
   g_clear_object (&partition);
   g_clear_object (&drive);
+  #ifdef HAVE_POLKIT_AGENT_1
   g_clear_object (&subject);
   g_clear_object (&details);
   g_clear_object (&result);
+  #endif
   return ret;
 }
 

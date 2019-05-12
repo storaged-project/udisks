@@ -75,8 +75,12 @@ struct _UDisksDaemon
   UDisksLinuxProvider *linux_provider;
 
   /* may be NULL if polkit is masked */
-  PolkitAuthority *authority;
 
+#ifdef HAVE_POLKIT_AGENT_1
+  PolkitAuthority *authority;
+#else
+  int* authority;
+#endif
   UDisksState *state;
 
   UDisksFstabMonitor *fstab_monitor;
@@ -314,8 +318,11 @@ udisks_daemon_constructed (GObject *object)
                             bd_get_plugin_name ((*plugin_p)->name));
       }
     }
-
+#ifdef HAVE_POLKIT_AGENT_1
   daemon->authority = polkit_authority_get_sync (NULL, &error);
+#else
+  daemon->authority = NULL;
+#endif    
   if (daemon->authority == NULL)
     {
       udisks_critical ("Error initializing polkit authority: %s (%s, %d)",
@@ -654,6 +661,8 @@ udisks_daemon_get_linux_provider (UDisksDaemon *daemon)
  * authority is not available. Do not free, the object is owned by
  * @daemon.
  */
+
+#ifdef HAVE_POLKIT_AGENT_1
 PolkitAuthority *
 udisks_daemon_get_authority (UDisksDaemon *daemon)
 {
@@ -661,6 +670,7 @@ udisks_daemon_get_authority (UDisksDaemon *daemon)
   return daemon->authority;
 }
 
+#endif
 /**
  * udisks_daemon_get_state:
  * @daemon: A #UDisksDaemon.

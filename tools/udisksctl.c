@@ -34,11 +34,11 @@
 #include <unistd.h>
 
 #include <locale.h>
-
+#ifdef HAVE_POLKIT_AGENT_1
 #include <polkit/polkit.h>
 #define POLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE
 #include <polkitagent/polkitagent.h>
-
+#endif
 static UDisksClient *client = NULL;
 static GMainLoop *loop = NULL;
 
@@ -58,10 +58,15 @@ static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *c
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_POLKIT_AGENT_1
 static PolkitAgentListener *local_polkit_agent = NULL;
+#endif
 static gpointer local_agent_handle = NULL;
 
 static gboolean
+
+#ifdef HAVE_POLKIT_AGENT_1
+
 setup_local_polkit_agent (void)
 {
   gboolean ret;
@@ -121,7 +126,7 @@ shutdown_local_polkit_agent (void)
     g_object_unref (local_polkit_agent);
 }
 
-
+#endif
 /* ---------------------------------------------------------------------------------------------------- */
 
 typedef enum
@@ -812,6 +817,7 @@ handle_command_mount_unmount (gint        *argc,
                                               NULL,                       /* GCancellable */
                                               &error))
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -819,6 +825,17 @@ handle_command_mount_unmount (gint        *argc,
               g_clear_error (&error);
               goto try_again;
             }
+          #else
+
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto try_again;
+            }
+          #endif
+
           g_printerr ("Error mounting %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
@@ -841,6 +858,7 @@ handle_command_mount_unmount (gint        *argc,
                                                 NULL,         /* GCancellable */
                                                 &error))
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -848,6 +866,16 @@ handle_command_mount_unmount (gint        *argc,
               g_clear_error (&error);
               goto try_again;
             }
+          #else
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto try_again;
+            }
+          #endif  
+
           g_printerr ("Error unmounting %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
@@ -1296,6 +1324,7 @@ handle_command_unlock_lock (gint        *argc,
                                               NULL,                       /* GCancellable */
                                               &error))
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -1303,6 +1332,16 @@ handle_command_unlock_lock (gint        *argc,
               g_clear_error (&error);
               goto try_again;
             }
+          #else
+            if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto try_again;
+            }
+          #endif
+
           g_printerr ("Error unlocking %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
@@ -1327,6 +1366,7 @@ handle_command_unlock_lock (gint        *argc,
                                             NULL,         /* GCancellable */
                                             &error))
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -1334,6 +1374,16 @@ handle_command_unlock_lock (gint        *argc,
               g_clear_error (&error);
               goto try_again;
             }
+          #else
+             if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto try_again;
+            }
+          #endif  
+
           g_printerr ("Error locking %s: %s\n",
                       udisks_block_get_device (block),
                       error->message);
@@ -1673,6 +1723,7 @@ handle_command_loop (gint        *argc,
                                                 &error);
       if (!rc)
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -1680,6 +1731,16 @@ handle_command_loop (gint        *argc,
               g_clear_error (&error);
               goto setup_try_again;
             }
+          #else
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto setup_try_again;
+            }
+          #endif  
+
           g_object_unref (fd_list);
           g_printerr ("Error setting up loop device for %s: %s\n",
                       opt_loop_file,
@@ -1739,6 +1800,7 @@ handle_command_loop (gint        *argc,
                                          NULL,                       /* GCancellable */
                                          &error))
         {
+          #ifdef HAVE_POLKIT_AGENT_1
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
               setup_local_polkit_agent ())
@@ -1746,6 +1808,16 @@ handle_command_loop (gint        *argc,
               g_clear_error (&error);
               goto delete_try_again;
             }
+          #else
+           if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+              
+            {
+              g_clear_error (&error);
+              goto delete_try_again;
+            }
+          #endif 
+
           g_printerr ("Error deleting loop device %s: %s\n",
                       udisks_block_get_device (udisks_object_peek_block (object)),
                       error->message);
@@ -2019,6 +2091,7 @@ handle_command_smart_simulate (gint        *argc,
                                                 NULL,                       /* GCancellable */
                                                 &error))
     {
+      #ifdef HAVE_POLKIT_AGENT_1
       if (error->domain == UDISKS_ERROR &&
           error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
           setup_local_polkit_agent ())
@@ -2026,6 +2099,17 @@ handle_command_smart_simulate (gint        *argc,
           g_clear_error (&error);
           goto try_again;
         }
+      #else
+       if (error->domain == UDISKS_ERROR &&
+          error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+          
+        {
+          g_clear_error (&error);
+          goto try_again;
+        }
+      #endif
+
+        
       g_dbus_error_strip_remote_error (error);
       g_printerr ("Error updating SMART data: %s (%s, %d)\n",
                   error->message, g_quark_to_string (error->domain), error->code);
@@ -2252,6 +2336,7 @@ handle_command_power_off (gint        *argc,
                                          NULL,                       /* GCancellable */
                                          &error))
     {
+      #ifdef HAVE_POLKIT_AGENT_1
       if (error->domain == UDISKS_ERROR &&
           error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
           setup_local_polkit_agent ())
@@ -2259,6 +2344,16 @@ handle_command_power_off (gint        *argc,
           g_clear_error (&error);
           goto try_again;
         }
+      #else
+       if (error->domain == UDISKS_ERROR &&
+          error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN)
+          
+        {
+          g_clear_error (&error);
+          goto try_again;
+        }
+      #endif
+
       g_dbus_error_strip_remote_error (error);
       g_printerr ("Error powering off drive: %s (%s, %d)\n",
                   error->message, g_quark_to_string (error->domain), error->code);
@@ -3470,7 +3565,9 @@ main (int argc,
   if (client != NULL)
     g_object_unref (client);
   _color_shutdown ();
+  #ifdef HAVE_POLKIT_AGENT_1
   shutdown_local_polkit_agent ();
+  #endif
   return ret;
 }
 

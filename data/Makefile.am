@@ -30,13 +30,14 @@ endif
 udevrulesdir = $(udevdir)/rules.d
 udevrules_DATA = 80-udisks2.rules
 
+if HAVE_POLKIT_AGENT_1
 polkitdir        = $(datadir)/polkit-1/actions
 polkit_in_files  = org.freedesktop.UDisks2.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 $(polkit_DATA): $(polkit_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
-
+endif
 completionsdir = $(datadir)/bash-completion/completions
 completions_DATA =                                                             \
 	completions/udisksctl                                                  \
@@ -48,13 +49,17 @@ EXTRA_DIST =                                                                   \
 	$(systemdservice_in_files)                                             \
 	$(dbusservice_in_files)                                                \
 	$(dbusconf_in_files)                                                   \
-	$(polkit_in_files)                                                     \
 	$(completions_DATA)                                                    \
 	$(NULL)
+
+if HAVE_POLKIT_AGENT_1
+EXTRA_DIST += $(polkit_in_files)  
+endif
 
 clean-local:
 	rm -f *~                                                               \
 	udisks2.service                                                        \
 	$(dbusservice_DATA)                                                    \
-	$(dbusconf_DATA)                                                       \
-	$(polkit_DATA)
+	$(dbusconf_DATA)                                                       
+	
+	

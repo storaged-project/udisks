@@ -45,7 +45,9 @@ UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *
 UDisksUtabMonitor        *udisks_daemon_get_utab_monitor      (UDisksDaemon    *daemon);
 #endif
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
+#ifdef HAVE_POLKIT_AGENT_1
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
+#endif
 UDisksState              *udisks_daemon_get_state             (UDisksDaemon    *daemon);
 UDisksModuleManager      *udisks_daemon_get_module_manager    (UDisksDaemon    *daemon);
 UDisksConfigManager      *udisks_daemon_get_config_manager    (UDisksDaemon    *daemon);
