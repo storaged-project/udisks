@@ -63,11 +63,11 @@ static PolkitAgentListener *local_polkit_agent = NULL;
 #endif
 static gpointer local_agent_handle = NULL;
 
-static gboolean
+
 
 #ifdef HAVE_POLKIT_AGENT_1
 
-setup_local_polkit_agent (void)
+static gboolean setup_local_polkit_agent (void)
 {
   gboolean ret;
   GError *error;
