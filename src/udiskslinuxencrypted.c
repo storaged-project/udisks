@@ -197,13 +197,16 @@ update_cleartext_device (UDisksLinuxEncrypted   *encrypted,
      want -- returns a cleartext object for an encrypted object */
   cleartext_object = wait_for_cleartext_object (daemon, (gpointer) encrypted_path);
 
-  if (cleartext_object) {
+  if (cleartext_object)
+    {
       udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted),
                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
-  }
-  else {
-    udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
-  }
+      g_object_unref (cleartext_object);
+    }
+  else
+    {
+      udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
+    }
 }
 
 /**
@@ -311,9 +314,9 @@ has_option (const gchar *options,
           goto out;
         }
     }
-  g_strfreev (tokens);
 
  out:
+  g_strfreev (tokens);
   return ret;
 }
 
@@ -575,12 +578,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
       udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
-  else
-    {
-      /* We have to free old_hint_encryption_type if and only if it was not
-       * used in udisks_encrypted_set_hint_encryption_type() */
-      g_free (old_hint_encryption_type);
-    }
 
   udisks_linux_block_encrypted_unlock (block);
 
@@ -624,6 +621,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
   g_free (crypttab_passphrase);
   g_free (crypttab_options);
   g_free (name);
+  g_free (old_hint_encryption_type);
+  if (keyfiles_variant)
+    g_variant_unref (keyfiles_variant);
   g_clear_object (&cleartext_device);
   g_clear_object (&cleartext_object);
   g_clear_object (&object);
