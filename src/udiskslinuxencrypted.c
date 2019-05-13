@@ -347,7 +347,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gsize crypttab_passphrase_len = 0;
   gchar *crypttab_options = NULL;
   gchar *device = NULL;
-  gchar *old_hint_encryption_type;
+  gchar *old_hint_encryption_type = NULL;
   gboolean read_only = FALSE;
   gboolean is_hidden = FALSE;
   gboolean is_system = FALSE;
