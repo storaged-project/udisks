@@ -172,14 +172,14 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
                                                     &error);
 
   if (error != NULL)
-  {
-    udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
-                    g_udev_device_get_device_file (device->udev_device),
-                    error->message,
-                    g_quark_to_string (error->domain),
-                    error->code);
-    g_clear_error (&error);
-  }
+    {
+      udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
+                      g_udev_device_get_device_file (device->udev_device),
+                      error->message,
+                      g_quark_to_string (error->domain),
+                      error->code);
+      g_clear_error (&error);
+    }
 
   g_object_unref (device);
   udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), metadata_size);
@@ -229,10 +229,10 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
 
   /* set block type according to hint_encryption_type */
   if (udisks_linux_block_is_unknown_crypto (block))
-  {
-    if (g_strcmp0(udisks_encrypted_get_hint_encryption_type(UDISKS_ENCRYPTED(encrypted)), "TCRYPT") == 0)
-      udisks_block_set_id_type (block, "crypto_TCRYPT");
-  }
+    {
+      if (g_strcmp0 (udisks_encrypted_get_hint_encryption_type (UDISKS_ENCRYPTED (encrypted)), "TCRYPT") == 0)
+        udisks_block_set_id_type (block, "crypto_TCRYPT");
+    }
 
   update_metadata_size (encrypted, object);
 
@@ -894,8 +894,8 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   if (udisks_block_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-change-passphrase-system";
-  //if (is_in_crypttab)
-  //  action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
+  /*  if (is_in_crypttab)
+        action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";  */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
