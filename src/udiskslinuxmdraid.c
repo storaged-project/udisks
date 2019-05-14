@@ -1592,7 +1592,6 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
       if (!bd_md_destroy (device, error))
         {
           g_prefix_error (error, "Error wiping device %s:", device);
-          g_dbus_method_invocation_take_error (invocation, *error);
           ret = FALSE;
           goto out;
         }
@@ -1603,6 +1602,7 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
  out:
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
+  g_clear_object (&object);
   return ret;
 }
 
