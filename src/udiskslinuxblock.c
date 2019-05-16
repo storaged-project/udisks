@@ -3171,6 +3171,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           goto out;
         }
 
+      g_free (error_message);
       g_free (command);
     }
 
@@ -3356,6 +3357,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             g_free (error_message);
             goto out;
           }
+        g_free (error_message);
       }
     else
       {
