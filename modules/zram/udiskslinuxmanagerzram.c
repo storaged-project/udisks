@@ -327,7 +327,7 @@ wait_for_zram_objects (UDisksDaemon *daemon,
   UDisksObject **objects = NULL;
   gchar **zram_paths = (gchar **) user_data;
 
-  num_zrams = g_strv_length ((gchar **) user_data);
+  num_zrams = g_strv_length (zram_paths);
   objects = g_new0 (UDisksObject *, num_zrams + 1);
 
   for (zram_p = zram_paths; *zram_p != NULL; zram_p++, next_obj++)
@@ -381,7 +381,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
   guint64 *num_streams;
   gchar **zram_paths = NULL;
   UDisksObject **zram_objects = NULL;
-  const gchar **zram_object_paths = NULL;
+  gchar **zram_object_paths = NULL;
 
   /* Policy check */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
@@ -411,7 +411,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
       goto out;
     }
 
-  zram_paths = g_new0 (gchar *, sizes_len);
+  zram_paths = g_new0 (gchar *, sizes_len + 1);
   for (gsize i = 0; i < sizes_len; i++)
     zram_paths[i] = g_strdup_printf ("/dev/zram%" G_GSIZE_FORMAT, i);
 
@@ -436,21 +436,18 @@ handle_create_devices (UDisksManagerZRAM     *object,
     udisks_linux_block_object_trigger_uevent (lb_object);
   }
 
-  zram_object_paths = g_new0 (const gchar *, sizes_len);
+  zram_object_paths = g_new0 (gchar *, sizes_len + 1);
   for (gsize i = 0; i < sizes_len; i++) {
-    zram_object_paths[i] = g_dbus_object_get_object_path (G_DBUS_OBJECT (zram_objects[i]));
+    zram_object_paths[i] = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (zram_objects[i])));
     g_object_unref (zram_objects[i]);
   }
 
   udisks_manager_zram_complete_create_devices (object,
                                                invocation,
-                                               zram_object_paths);
+                                               (const gchar **) zram_object_paths);
 out:
-  if (zram_paths)
-    for (gsize i = 0; i < sizes_len; i++)
-      g_free (zram_paths[i]);
-
-  g_free (zram_paths);
+  g_strfreev (zram_paths);
+  g_strfreev (zram_object_paths);
 
   return TRUE;
 }
