@@ -256,7 +256,11 @@ create_conf_files (guint64   num_devices,
                                   "SWAP=n\n",
                                   num_streams[i],
                                   sizes[i]);
-      g_file_set_contents (filename, contents, -1, error);
+      if (! g_file_set_contents (filename, contents, -1, error))
+        {
+          rval = FALSE;
+          goto out;
+        }
     }
 out:
   g_free (filename);
