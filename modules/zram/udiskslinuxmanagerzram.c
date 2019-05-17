@@ -446,6 +446,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
                                                invocation,
                                                (const gchar **) zram_object_paths);
 out:
+  g_free (zram_objects);
   g_strfreev (zram_paths);
   g_strfreev (zram_object_paths);
 
