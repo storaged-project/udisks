@@ -1117,9 +1117,9 @@ has_option (const gchar *options,
           goto out;
         }
     }
-  g_strfreev (tokens);
 
  out:
+  g_strfreev (tokens);
   return ret;
 }
 
