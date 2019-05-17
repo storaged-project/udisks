@@ -409,6 +409,7 @@ udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_obj
   /* Did we get uevent for this session? */
   if (session_id && g_strcmp0 (session_id, session_object->session_id) == 0)
     {
+      g_free (session_id);
       if (g_strcmp0 (action, "remove") == 0)
         {
           /* Returning FALSE means that the device is removed. */
