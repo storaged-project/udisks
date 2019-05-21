@@ -356,7 +356,7 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
   UDisksISCSISession *iface;
   UDisksISCSIState *state;
   struct libiscsi_context *ctx;
-  struct libiscsi_session_info session_info;
+  struct libiscsi_session_info session_info = {0,};
 
   g_return_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object));
 

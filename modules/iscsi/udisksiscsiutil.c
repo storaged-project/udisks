@@ -293,8 +293,8 @@ iscsi_login (UDisksDaemon  *daemon,
              gchar        **errorstr)
 {
   struct libiscsi_context *ctx;
-  struct libiscsi_auth_info auth_info;
-  struct libiscsi_node node;
+  struct libiscsi_auth_info auth_info = {0,};
+  struct libiscsi_node node = {0,};
   GVariant *params_without_chap;
   const gchar *username = NULL;
   const gchar *password = NULL;
@@ -354,7 +354,7 @@ iscsi_logout (UDisksDaemon  *daemon,
               gchar        **errorstr)
 {
   struct libiscsi_context *ctx;
-  struct libiscsi_node node;
+  struct libiscsi_node node = {0,};
   gint err;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), 1);
@@ -392,7 +392,7 @@ iscsi_discover_send_targets (UDisksDaemon   *daemon,
                              gchar         **errorstr)
 {
   struct libiscsi_context *ctx;
-  struct libiscsi_auth_info auth_info;
+  struct libiscsi_auth_info auth_info = {0,};
   struct libiscsi_node *found_nodes;
   const gchar *username = NULL;
   const gchar *password = NULL;
