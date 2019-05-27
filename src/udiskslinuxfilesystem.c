@@ -1937,7 +1937,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
   else
     udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
-  /* OK, filesystem unmounted.. the state/cleanup routines will remove the mountpoint for us */
+  /* filesystem unmounted, run the state/cleanup routines now to remove the mountpoint (if applicable) */
+  udisks_state_check_sync (state);
 
   udisks_notice ("Unmounted %s on behalf of uid %u",
                  udisks_block_get_device (block),

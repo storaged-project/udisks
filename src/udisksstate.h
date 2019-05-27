@@ -35,6 +35,7 @@ UDisksDaemon  *udisks_state_get_daemon           (UDisksState   *state);
 void           udisks_state_start_cleanup        (UDisksState   *state);
 void           udisks_state_stop_cleanup         (UDisksState   *state);
 void           udisks_state_check                (UDisksState   *state);
+void           udisks_state_check_sync           (UDisksState   *state);
 /* mounted-fs */
 void           udisks_state_add_mounted_fs       (UDisksState   *state,
                                                   const gchar   *mount_point,

@@ -391,6 +391,64 @@ udisks_state_check (UDisksState *state)
                          state);
 }
 
+
+typedef struct
+{
+  UDisksState *state;
+  gboolean     finished;
+  GCond        cond;
+  GMutex       data_mutex;
+} UDisksStateCheckSyncData;
+
+static gboolean
+udisks_state_check_sync_func (UDisksStateCheckSyncData *data)
+{
+  udisks_state_check_in_thread (data->state);
+
+  /* signal the calling thread the cleanup has finished */
+  g_mutex_lock (&data->data_mutex);
+  data->finished = TRUE;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->data_mutex);
+
+  return FALSE;
+}
+
+/**
+ * udisks_state_check_sync:
+ * @state: A #UDisksState.
+ *
+ * Causes the clean-up thread for @state to check if anything should be cleaned up and perform the cleanup.
+ *
+ * This can be called from any thread and in contrast to udisks_state_check() will block the calling thread until cleanup is finished.
+ */
+void
+udisks_state_check_sync (UDisksState *state)
+{
+  UDisksStateCheckSyncData data = {0, };
+
+  g_return_if_fail (UDISKS_IS_STATE (state));
+  g_return_if_fail (state->thread != NULL);
+
+  g_cond_init (&data.cond);
+  g_mutex_init (&data.data_mutex);
+  data.state = state;
+  data.finished = FALSE;
+
+  g_mutex_lock (&data.data_mutex);
+  g_main_context_invoke (state->context,
+                         (GSourceFunc) udisks_state_check_sync_func,
+                         &data);
+
+  /* wait for the mainloop running in the cleanup thread to process our injected task */
+  while (!data.finished)
+    g_cond_wait (&data.cond, &data.data_mutex);
+  g_mutex_unlock (&data.data_mutex);
+
+  g_cond_clear (&data.cond);
+  g_mutex_clear (&data.data_mutex);
+}
+
 /**
  * udisks_state_get_daemon:
  * @state: A #UDisksState.
