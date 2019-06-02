@@ -709,7 +709,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                              GDBusMethodInvocation *invocation)
 {
   GError *error = NULL;
-  #ifdef HAVE_POLKIT_AGENT_1
+  
   if (!udisks_daemon_util_check_authorization_sync_with_error (daemon,
                                                                object,
                                                                action_id,
@@ -721,7 +721,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
       g_dbus_method_invocation_take_error (invocation, error);
       return FALSE;
     }
-   #endif
+   
   return TRUE;
 }
 
