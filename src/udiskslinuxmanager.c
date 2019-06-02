@@ -47,6 +47,7 @@
 #include "udisksmodulemanager.h"
 #include "udiskslinuxfsinfo.h"
 #include "udiskssimplejob.h"
+#include "udisksconfigmanager.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -153,6 +154,20 @@ udisks_linux_manager_init (UDisksLinuxManager *manager)
 
   udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager),
                                             get_supported_filesystems ());
+  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
+                                                 get_supported_encryption_types ());
+}
+
+static void
+udisks_linux_manager_constructed (GObject *obj)
+{
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (obj);
+  UDisksConfigManager *config_manager = udisks_daemon_get_config_manager (manager->daemon);
+
+  udisks_manager_set_default_encryption_type (UDISKS_MANAGER (manager),
+                                              udisks_config_manager_get_encryption (config_manager));
+
+  G_OBJECT_CLASS (udisks_linux_manager_parent_class)->constructed (obj);
 }
 
 static void
@@ -161,6 +176,7 @@ udisks_linux_manager_class_init (UDisksLinuxManagerClass *klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->constructed  = udisks_linux_manager_constructed;
   gobject_class->finalize     = udisks_linux_manager_finalize;
   gobject_class->set_property = udisks_linux_manager_set_property;
   gobject_class->get_property = udisks_linux_manager_get_property;

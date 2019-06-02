@@ -82,7 +82,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
 
         self.assertIsNotNone(luks)
@@ -118,7 +118,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the uuid of the luks device
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
         self.assertIsNotNone(luks)
 
@@ -269,7 +269,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # get the luks object and mount it
         _ret, dm_name = self.run_command('ls /sys/block/%s/holders/' % disk_name)
-        obj_name = 'dm_2d' + dm_name[-1]  # '-' is encoded as '_2d' in object paths
+        obj_name = 'dm_2d' + dm_name[3:]  # '-' is encoded as '_2d' in object paths
         luks = self.get_object('/block_devices/' + obj_name)
         self.assertIsNotNone(luks)
 
@@ -456,17 +456,9 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         self.assertEqual(clear_size3, clear_size)
 
     def _get_default_luks_version(self):
-        if not os.path.exists(UDISKS_CONFIG_FILE):
-            self.fail('UDisks config file not found.')
-
-        config = configparser.ConfigParser()
-        config.read(UDISKS_CONFIG_FILE)
-
-        if 'defaults' not in config:
-            self.fail('Failed to read defaults from UDisks config file.')
-
-        # get luks version from 'luks1' or 'luks2'
-        return config['defaults']['encryption'][-1]
+        manager = self.get_object('/Manager')
+        default_encryption_type = self.get_property(manager, '.Manager', 'DefaultEncryptionType')
+        return default_encryption_type.value[-1]
 
     def test_create_default(self):
         disk_name = os.path.basename(self.vdevs[0])
@@ -487,5 +479,25 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         dbus_version = self.get_property(disk, '.Block', 'IdVersion')
         dbus_version.assertEqual(default_version)
 
+    def test_suppported_encryption_types(self):
+        manager = self.get_object('/Manager')
+        supported_encryption_types = self.get_property(manager, '.Manager', 'SupportedEncryptionTypes')
+        supported_encryption_types.assertLen(2)
+        supported_encryption_types.assertContains("luks1")
+        supported_encryption_types.assertContains("luks2")
+
+    def test_default_encryption_type(self):
+        if not os.path.exists(UDISKS_CONFIG_FILE):
+            self.fail('UDisks config file not found.')
+
+        config = configparser.ConfigParser()
+        config.read(UDISKS_CONFIG_FILE)
+
+        if 'defaults' not in config:
+            self.fail('Failed to read defaults from UDisks config file.')
+
+        manager = self.get_object('/Manager')
+        default_encryption_type = self.get_property(manager, '.Manager', 'DefaultEncryptionType')
+        default_encryption_type.assertEqual(config['defaults']['encryption'])
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest
