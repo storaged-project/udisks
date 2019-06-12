@@ -617,7 +617,7 @@ update_vg (GObject      *source_obj,
           udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
           udisks_linux_logical_volume_object_update_etctabs (volume);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
-          g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), g_object_ref (volume));
+          g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), volume);
         }
       else
         udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
@@ -636,8 +636,6 @@ update_vg (GObject      *source_obj,
           g_dbus_object_manager_server_unexport (manager,
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (volume)));
           g_hash_table_iter_remove (&volume_iter);
-
-          g_object_unref (G_OBJECT (volume));
         }
     }
 

@@ -96,8 +96,27 @@ udisks_linux_logical_volume_init (UDisksLinuxLogicalVolume *logical_volume)
 }
 
 static void
+udisks_linux_logical_volume_constructed (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->constructed != NULL)
+      G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->constructed (_object);
+}
+
+static void
+udisks_linux_logical_volume_finalize (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->finalize != NULL)
+      G_OBJECT_CLASS (udisks_linux_logical_volume_parent_class)->finalize (_object);
+}
+
+static void
 udisks_linux_logical_volume_class_init (UDisksLinuxLogicalVolumeClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize    = udisks_linux_logical_volume_finalize;
+  gobject_class->constructed = udisks_linux_logical_volume_constructed;
 }
 
 /**
@@ -344,6 +363,7 @@ teardown_logical_volume (UDisksLogicalVolume   *volume,
                                                 error))
                     {
                       g_list_free_full (siblings, g_object_unref);
+                      g_clear_object (&group_object);
                       return FALSE;
                     }
                 }
@@ -352,6 +372,7 @@ teardown_logical_volume (UDisksLogicalVolume   *volume,
         }
     }
 
+  g_clear_object (&group_object);
   return TRUE;
 }
 
@@ -451,6 +472,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -485,8 +507,13 @@ wait_for_logical_volume_object (UDisksDaemon *daemon,
                                 gpointer      user_data)
 {
   struct WaitData *data = user_data;
-  return UDISKS_OBJECT (udisks_linux_volume_group_object_find_logical_volume_object (data->group_object,
-                                                                                     data->name));
+  UDisksLinuxLogicalVolumeObject *object;
+
+  object = udisks_linux_volume_group_object_find_logical_volume_object (data->group_object, data->name);
+  if (object == NULL)
+    return NULL;
+
+  return g_object_ref (UDISKS_OBJECT (object));
 }
 
 static const gchar *
@@ -497,6 +524,7 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
   struct WaitData data;
   UDisksDaemon *daemon;
   UDisksObject *volume_object;
+  const gchar *object_path;
 
   data.group_object = group_object;
   data.name = name;
@@ -510,7 +538,10 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
   if (volume_object == NULL)
     return NULL;
 
-  return g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object));
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (volume_object));
+  g_object_unref (volume_object);
+
+  return object_path;
 }
 
 static gboolean
@@ -553,6 +584,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error renaming logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -619,6 +651,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error resizing logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -707,6 +740,7 @@ handle_activate (UDisksLogicalVolume *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error activating logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -773,6 +807,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error deactivating logical volume: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -841,6 +876,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating snapshot: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -910,6 +946,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -917,7 +954,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
 out:
   g_clear_object (&object);
 
-return TRUE;
+  return TRUE;
 
 #endif /* HAVE_LVMCACHE */
 }
@@ -972,6 +1009,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
                                              UDISKS_ERROR_FAILED,
                                              N_("Error converting volume: %s"),
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 

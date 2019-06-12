@@ -75,8 +75,27 @@ udisks_linux_block_lvm2_init (UDisksLinuxBlockLVM2 *block)
 }
 
 static void
+udisks_linux_block_lvm2_constructed (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_block_lvm2_parent_class)->constructed != NULL)
+      G_OBJECT_CLASS (udisks_linux_block_lvm2_parent_class)->constructed (_object);
+}
+
+static void
+udisks_linux_block_lvm2_finalize (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_block_lvm2_parent_class)->finalize != NULL)
+      G_OBJECT_CLASS (udisks_linux_block_lvm2_parent_class)->finalize (_object);
+}
+
+static void
 udisks_linux_block_lvm2_class_init (UDisksLinuxBlockLVM2Class *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize    = udisks_linux_block_lvm2_finalize;
+  gobject_class->constructed = udisks_linux_block_lvm2_constructed;
 }
 
 /**

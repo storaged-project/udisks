@@ -82,8 +82,27 @@ udisks_linux_physical_volume_init (UDisksLinuxPhysicalVolume *physical_volume)
 }
 
 static void
+udisks_linux_physical_volume_constructed (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_physical_volume_parent_class)->constructed != NULL)
+      G_OBJECT_CLASS (udisks_linux_physical_volume_parent_class)->constructed (_object);
+}
+
+static void
+udisks_linux_physical_volume_finalize (GObject *_object)
+{
+  if (G_OBJECT_CLASS (udisks_linux_physical_volume_parent_class)->finalize != NULL)
+      G_OBJECT_CLASS (udisks_linux_physical_volume_parent_class)->finalize (_object);
+}
+
+static void
 udisks_linux_physical_volume_class_init (UDisksLinuxPhysicalVolumeClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize    = udisks_linux_physical_volume_finalize;
+  gobject_class->constructed = udisks_linux_physical_volume_constructed;
 }
 
 /**

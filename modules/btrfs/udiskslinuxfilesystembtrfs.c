@@ -259,39 +259,9 @@ out:
     bd_btrfs_filesystem_info_free (btrfs_info);
   if (error)
     g_clear_error (&error);
-  g_free ((gpointer) dev_file);
+  g_free (dev_file);
 
   return rval;
-}
-
-static const gchar *const *
-udisks_filesystem_btrfs_get_mount_points (UDisksFilesystemBTRFS  *fs_btrfs,
-                                          GError                **error)
-{
-  UDisksObject *object = NULL;
-  UDisksFilesystem *fs = NULL;
-  const gchar *const *mount_points = NULL;
-
-  g_return_val_if_fail (UDISKS_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
-  g_return_val_if_fail (error, NULL);
-
-  /* Get enclosing object for this interface. */
-  object = udisks_daemon_util_dup_object (fs_btrfs, error);
-  g_return_val_if_fail (object, NULL);
-
-  /* Get UDisksFilesystem. */
-  fs = udisks_object_get_filesystem (object);
-  mount_points = udisks_filesystem_get_mount_points (fs);
-
-  if (! mount_points || ! *mount_points)
-    {
-      *error = g_error_new (UDISKS_ERROR,
-                            UDISKS_ERROR_NOT_MOUNTED,
-                            "Volume not mounted");
-      return NULL;
-    }
-
-  return mount_points;
 }
 
 /**
@@ -305,15 +275,32 @@ static gchar *
 udisks_filesystem_btrfs_get_first_mount_point (UDisksFilesystemBTRFS  *fs_btrfs,
                                                GError                **error)
 {
-  const gchar *const *mount_points;
+  UDisksObject *object;
+  UDisksFilesystem *fs;
+  const gchar * const *mount_points;
+  gchar *mount_point = NULL;
 
   g_return_val_if_fail (UDISKS_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
 
-  mount_points = udisks_filesystem_btrfs_get_mount_points (fs_btrfs, error);
-  if (! mount_points)
-    return NULL;
+  /* Get enclosing object for this interface. */
+  object = udisks_daemon_util_dup_object (fs_btrfs, error);
+  g_return_val_if_fail (object, NULL);
 
-  return g_strdup (*mount_points);
+  /* Get UDisksFilesystem. */
+  fs = udisks_object_peek_filesystem (object);
+  mount_points = udisks_filesystem_get_mount_points (fs);
+  if (mount_points != NULL && *mount_points != NULL)
+    mount_point = g_strdup (*mount_points);
+
+  g_object_unref (object);
+
+  if (mount_point == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_MOUNTED,
+                           "Volume not mounted");
+      return NULL;
+    }
+  return mount_point;
 }
 
 static gboolean
@@ -326,7 +313,6 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
   UDisksLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *dev_file = NULL;
-  gchar *label = NULL;
 
   object = udisks_daemon_util_dup_object (l_fs_btrfs, &error);
   if (! object)
@@ -343,19 +329,17 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
                                      N_("Authentication is required to change label for BTRFS volume"),
                                      invocation);
 
-  /* Allow any arbitrary label. */
-  label = g_strdup (arg_label);
-
   /* Get the device filename (eg.: /dev/sda1) */
   dev_file = udisks_linux_block_object_get_device_file (object);
   if (! dev_file)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error_literal (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Cannot find the device file");
       goto out;
     }
 
   /* Change the label. */
-  if (! bd_btrfs_change_label (dev_file, label, &error))
+  if (! bd_btrfs_change_label (dev_file, arg_label, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -366,8 +350,7 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
                                               invocation);
 out:
   g_clear_object (&object);
-  g_free ((gpointer) dev_file);
-  g_free ((gpointer) label);
+  g_free (dev_file);
   return TRUE;
 }
 
@@ -382,7 +365,6 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
   GError *error = NULL;
-  gchar *name = NULL;
   gchar *mount_point = NULL;
 
   object = udisks_daemon_util_dup_object (l_fs_btrfs, &error);
@@ -409,7 +391,6 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
                                              "Invalid subvolume name");
       goto out;
     }
-  name = g_strdup (arg_name);
 
   /* Get the mount point for this volume. */
   mount_point = udisks_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
@@ -420,7 +401,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
     }
 
   /* Add/remove the subvolume. */
-  if (! subvolume_action (mount_point, name, NULL, &error))
+  if (! subvolume_action (mount_point, arg_name, NULL, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -433,8 +414,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
 out:
   /* Release the resources */
   g_clear_object (&object);
-  g_free ((gpointer) name);
-  g_free ((gpointer) mount_point);
+  g_free (mount_point);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
@@ -451,7 +431,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   UDisksLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *mount_point = NULL;
-  gchar *device = NULL;
+  const gchar *device;
   UDisksDaemon *daemon = NULL;
   UDisksObject *new_device_object = NULL;
   UDisksBlock *new_device_block = NULL;
@@ -504,7 +484,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
-  device = udisks_block_dup_device (new_device_block);
+  device = udisks_block_get_device (new_device_block);
 
   /* Add/remove the device to/from the volume. */
   if (! device_action (mount_point, device, NULL, &error))
@@ -524,8 +504,7 @@ out:
   g_clear_object (&object);
   g_clear_object (&new_device_object);
   g_clear_object (&new_device_block);
-  g_free ((gpointer) mount_point);
-  g_free ((gpointer) device);
+  g_free (mount_point);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;
@@ -648,19 +627,19 @@ out:
   /* Release the resources */
   g_clear_object (&object);
   btrfs_free_subvolumes_info (subvolumes_info);
-  g_free ((gpointer) mount_point);
+  g_free (mount_point);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
 }
 
 static gboolean
-handle_create_snapshot(UDisksFilesystemBTRFS  *fs_btrfs,
-                       GDBusMethodInvocation  *invocation,
-                       const gchar            *arg_source,
-                       const gchar            *arg_dest,
-                       gboolean                arg_ro,
-                       GVariant               *arg_options)
+handle_create_snapshot (UDisksFilesystemBTRFS  *fs_btrfs,
+                        GDBusMethodInvocation  *invocation,
+                        const gchar            *arg_source,
+                        const gchar            *arg_dest,
+                        gboolean                arg_ro,
+                        GVariant               *arg_options)
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
@@ -710,9 +689,9 @@ handle_create_snapshot(UDisksFilesystemBTRFS  *fs_btrfs,
 out:
   /* Release the resources */
   g_clear_object (&object);
-  g_free ((gpointer) source);
-  g_free ((gpointer) dest);
-  g_free ((gpointer) mount_point);
+  g_free (source);
+  g_free (dest);
+  g_free (mount_point);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
@@ -747,7 +726,8 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
   dev_file = udisks_linux_block_object_get_device_file (object);
   if (! dev_file)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_error_literal (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Cannot find the device file");
       goto out;
     }
 
@@ -764,7 +744,7 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
 
 out:
   g_clear_object (&object);
-  g_free ((gpointer) dev_file);
+  g_free (dev_file);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
@@ -817,7 +797,7 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
 
 out:
   g_clear_object (&object);
-  g_free ((gpointer) mount_point);
+  g_free (mount_point);
 
   /* Indicate that we handled the method invocation */
   return TRUE;

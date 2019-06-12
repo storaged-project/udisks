@@ -172,14 +172,14 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
                                                     &error);
 
   if (error != NULL)
-  {
-    udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
-                    g_udev_device_get_device_file (device->udev_device),
-                    error->message,
-                    g_quark_to_string (error->domain),
-                    error->code);
-    g_clear_error (&error);
-  }
+    {
+      udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
+                      g_udev_device_get_device_file (device->udev_device),
+                      error->message,
+                      g_quark_to_string (error->domain),
+                      error->code);
+      g_clear_error (&error);
+    }
 
   g_object_unref (device);
   udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), metadata_size);
@@ -197,13 +197,16 @@ update_cleartext_device (UDisksLinuxEncrypted   *encrypted,
      want -- returns a cleartext object for an encrypted object */
   cleartext_object = wait_for_cleartext_object (daemon, (gpointer) encrypted_path);
 
-  if (cleartext_object) {
+  if (cleartext_object)
+    {
       udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted),
                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
-  }
-  else {
-    udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
-  }
+      g_object_unref (cleartext_object);
+    }
+  else
+    {
+      udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (encrypted), "/");
+    }
 }
 
 /**
@@ -226,10 +229,10 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
 
   /* set block type according to hint_encryption_type */
   if (udisks_linux_block_is_unknown_crypto (block))
-  {
-    if (g_strcmp0(udisks_encrypted_get_hint_encryption_type(UDISKS_ENCRYPTED(encrypted)), "TCRYPT") == 0)
-      udisks_block_set_id_type (block, "crypto_TCRYPT");
-  }
+    {
+      if (g_strcmp0 (udisks_encrypted_get_hint_encryption_type (UDISKS_ENCRYPTED (encrypted)), "TCRYPT") == 0)
+        udisks_block_set_id_type (block, "crypto_TCRYPT");
+    }
 
   update_metadata_size (encrypted, object);
 
@@ -311,9 +314,9 @@ has_option (const gchar *options,
           goto out;
         }
     }
-  g_strfreev (tokens);
 
  out:
+  g_strfreev (tokens);
   return ret;
 }
 
@@ -344,7 +347,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gsize crypttab_passphrase_len = 0;
   gchar *crypttab_options = NULL;
   gchar *device = NULL;
-  gchar *old_hint_encryption_type;
+  gchar *old_hint_encryption_type = NULL;
   gboolean read_only = FALSE;
   gboolean is_hidden = FALSE;
   gboolean is_system = FALSE;
@@ -431,7 +434,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
 
   /* we need the uid of the caller for the unlocked-crypto-dev file */
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -440,7 +442,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
 
   /* check if in crypttab file */
-  error = NULL;
   if (!check_crypttab (block,
                        TRUE,
                        &is_in_crypttab,
@@ -568,6 +569,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                              "Error unlocking %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
+      g_clear_error (&error);
 
       /* Restore the old encryption type if the unlock failed, because
        * in this case we don't know for sure if we used the correct
@@ -576,17 +578,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
       udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
-  else
-    {
-      /* We have to free old_hint_encryption_type if and only if it was not
-       * used in udisks_encrypted_set_hint_encryption_type() */
-      g_free (old_hint_encryption_type);
-    }
 
   udisks_linux_block_encrypted_unlock (block);
 
   /* Determine the resulting cleartext object */
-  error = NULL;
   cleartext_object = udisks_daemon_wait_for_object_sync (daemon,
                                                          wait_for_cleartext_object,
                                                          g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object))),
@@ -626,6 +621,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
   g_free (crypttab_passphrase);
   g_free (crypttab_options);
   g_free (name);
+  g_free (old_hint_encryption_type);
+  if (keyfiles_variant)
+    g_variant_unref (keyfiles_variant);
   g_clear_object (&cleartext_device);
   g_clear_object (&cleartext_object);
   g_clear_object (&object);
@@ -883,7 +881,6 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -897,8 +894,8 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   if (udisks_block_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-change-passphrase-system";
-  //if (is_in_crypttab)
-  //  action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
+  /*  if (is_in_crypttab)
+        action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";  */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
@@ -1002,7 +999,6 @@ handle_resize (UDisksEncrypted       *encrypted,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);

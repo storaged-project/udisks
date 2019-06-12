@@ -201,14 +201,14 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
       rval = FALSE;
       goto out;
     }
-  mode = bd_kbd_bcache_get_mode(dev_file, &error);
+  mode = bd_kbd_bcache_get_mode (dev_file, &error);
   if (mode == BD_KBD_MODE_UNKNOWN)
     {
       udisks_critical ("Can't get Bcache mode for %s: %s", dev_file, error->message);
       rval = FALSE;
       goto out;
     }
-  mode_str = bd_kbd_bcache_get_mode_str(mode, &error);
+  mode_str = bd_kbd_bcache_get_mode_str (mode, &error);
   if (! mode_str)
     {
       udisks_critical ("Can't get Bcache mode string for %s: %s", dev_file, error->message);
@@ -239,13 +239,7 @@ static UDisksObject *
 wait_for_bcache (UDisksDaemon *daemon,
                  gpointer      user_data)
 {
-  UDisksObject *ret = udisks_daemon_find_object (daemon, (gchar*) user_data);
-  /* find_object() increments the ref count, we need to decrement it back
-     otherwise the ref count potentially grows in a cycle (when waiting for the
-     object to disappear) */
-  if (ret)
-    g_object_unref (ret);
-  return ret;
+  return udisks_daemon_find_object (daemon, (gchar*) user_data);
 }
 
 static gboolean
@@ -258,8 +252,7 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
   UDisksLinuxBlockObject *object = NULL;
   UDisksDaemon *u_daemon = NULL;
   gchar *devname = NULL;
-  gboolean bcache_object_disappeared = FALSE;
-  gchar *object_path = NULL;
+  const gchar *object_path;
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (! object)
@@ -285,14 +278,13 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
     }
 
   u_daemon = udisks_linux_block_bcache_get_daemon (block);
-  object_path = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-  bcache_object_disappeared = udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
-                                                                               wait_for_bcache,
-                                                                               object_path,
-                                                                               NULL,
-                                                                               10,
-                                                                               &error);
-  if (!bcache_object_disappeared)
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
+                                                         wait_for_bcache,
+                                                         (gpointer) object_path,
+                                                         NULL,
+                                                         10,
+                                                         &error))
     {
       g_prefix_error (&error, "Error waiting for bcache to disappear: ");
       g_dbus_method_invocation_take_error (invocation, error);
@@ -302,7 +294,6 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
   udisks_block_bcache_complete_bcache_destroy (block_, invocation);
 out:
   g_free (devname);
-  g_free (object_path);
   g_clear_object (&object);
   return TRUE;
 }
@@ -318,7 +309,6 @@ handle_set_mode (UDisksBlockBcache      *block_,
   UDisksLinuxBlockObject *object = NULL;
   gchar *devname = NULL;
   BDKBDBcacheMode mode;
-  gchar *modestr = NULL;
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (! object)
@@ -337,9 +327,7 @@ handle_set_mode (UDisksBlockBcache      *block_,
 
   devname = udisks_linux_block_object_get_device_file (object);
 
-  modestr = g_strdup (arg_mode);
-  mode = bd_kbd_bcache_get_mode_from_str (modestr, &error);
-
+  mode = bd_kbd_bcache_get_mode_from_str (arg_mode, &error);
   if (error != NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -358,7 +346,6 @@ handle_set_mode (UDisksBlockBcache      *block_,
 
 out:
   g_free (devname);
-  g_free (modestr);
   g_clear_object (&object);
   return TRUE;
 }

@@ -138,13 +138,11 @@ start_job_func (UDisksThreadedJob  *job,
                 gpointer            user_data,
                 GError            **error)
 {
-
-  UDisksObject *object = NULL;
-  UDisksBlock *block = NULL;
-  gchar *device = NULL;
+  UDisksObject *object = UDISKS_OBJECT (user_data);
+  UDisksBlock *block;
+  gchar *device;
   gboolean ret = FALSE;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (user_data)));
   block = udisks_object_get_block (object);
   device = udisks_block_dup_device (block);
 
@@ -180,8 +178,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -204,7 +201,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                                "swapspace-start",
                                                caller_uid,
                                                start_job_func,
-                                               swapspace,
+                                               object,
                                                NULL, /* user_data_free_func */
                                                NULL, /* cancellable */
                                                &error))
@@ -214,6 +211,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                              UDISKS_ERROR_FAILED,
                                              "Error activating swap: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -231,13 +229,11 @@ stop_job_func (UDisksThreadedJob  *job,
                gpointer            user_data,
                GError            **error)
 {
-
-  UDisksObject *object = NULL;
-  UDisksBlock *block = NULL;
-  gchar *device = NULL;
+  UDisksObject *object = UDISKS_OBJECT (user_data);
+  UDisksBlock *block;
+  gchar *device;
   gboolean ret = FALSE;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (user_data)));
   block = udisks_object_get_block (object);
   device = udisks_block_dup_device (block);
 
@@ -258,18 +254,22 @@ handle_stop (UDisksSwapspace        *swapspace,
   uid_t caller_uid;
   GError *error = NULL;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
+  object = udisks_daemon_util_dup_object (swapspace, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -297,7 +297,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                "swapspace-stop",
                                                caller_uid,
                                                stop_job_func,
-                                               swapspace,
+                                               object,
                                                NULL, /* user_data_free_func */
                                                NULL, /* cancellable */
                                                &error))
@@ -307,12 +307,14 @@ handle_stop (UDisksSwapspace        *swapspace,
                                              UDISKS_ERROR_FAILED,
                                              "Error deactivating swap: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
   udisks_swapspace_complete_stop (swapspace, invocation);
 
  out:
+  g_clear_object (&object);
   return TRUE;
 }
 
@@ -329,7 +331,13 @@ handle_set_label (UDisksSwapspace        *swapspace,
   UDisksBlock *block = NULL;
   uid_t caller_uid;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
+  object = udisks_daemon_util_dup_object (swapspace, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
 
@@ -339,8 +347,7 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -382,6 +389,7 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -390,7 +398,6 @@ handle_set_label (UDisksSwapspace        *swapspace,
 
  out:
   g_clear_object (&object);
-  g_clear_error (&error);
   return TRUE;
 }
 

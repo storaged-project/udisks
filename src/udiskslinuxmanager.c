@@ -663,6 +663,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
@@ -677,6 +678,8 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  "Error opening device %s while creating mdraid: %m",
                                                  device_file);
           g_free (device_file);
+          g_object_unref (block);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
@@ -1081,6 +1084,7 @@ handle_get_block_devices (UDisksManager         *object,
                                               invocation,
                                               block_paths);
 
+  g_free (block_paths);
   g_slist_free_full (blocks, g_object_unref);
 
   return TRUE;  /* returning TRUE means that we handled the method invocation */
@@ -1089,7 +1093,7 @@ handle_get_block_devices (UDisksManager         *object,
 static gboolean
 compare_paths (UDisksManager         *object,
                UDisksBlock           *block,
-               gchar                 *path)
+               const gchar           *path)
 {
   const gchar *const *symlinks = NULL;
 
@@ -1113,10 +1117,9 @@ handle_resolve_device (UDisksManager         *object,
                        GVariant              *arg_devspec,
                        GVariant              *arg_options)
 {
-
-  gchar *devpath = NULL;
-  gchar *devuuid = NULL;
-  gchar *devlabel = NULL;
+  const gchar *devpath = NULL;
+  const gchar *devuuid = NULL;
+  const gchar *devlabel = NULL;
 
   GSList *blocks = NULL;
   GSList *blocks_p = NULL;
@@ -1130,9 +1133,9 @@ handle_resolve_device (UDisksManager         *object,
   gboolean found = FALSE;
   guint i = 0;
 
-  g_variant_lookup (arg_devspec, "path", "s", &devpath);
-  g_variant_lookup (arg_devspec, "uuid", "s", &devuuid);
-  g_variant_lookup (arg_devspec, "label", "s", &devlabel);
+  g_variant_lookup (arg_devspec, "path", "&s", &devpath);
+  g_variant_lookup (arg_devspec, "uuid", "&s", &devuuid);
+  g_variant_lookup (arg_devspec, "label", "&s", &devlabel);
 
   blocks = get_block_objects (object, &num_blocks);
 
@@ -1148,26 +1151,26 @@ handle_resolve_device (UDisksManager         *object,
 
       if (found)
         {
-          ret = g_slist_prepend (ret, g_object_ref (blocks_p->data));
+          ret = g_slist_prepend (ret, blocks_p->data);
           num_found++;
         }
     }
 
-    ret_paths = g_new0 (const gchar *, num_found + 1);
-    for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
-      {
-        ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
-      }
+  ret_paths = g_new0 (const gchar *, num_found + 1);
+  for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
+    {
+      ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
+    }
 
-    udisks_manager_complete_resolve_device (object,
-                                            invocation,
-                                            ret_paths);
+  udisks_manager_complete_resolve_device (object,
+                                          invocation,
+                                          ret_paths);
 
-    g_slist_free_full (blocks, g_object_unref);
-    g_slist_free_full (ret, g_object_unref);
+  g_free (ret_paths);
+  g_slist_free_full (blocks, g_object_unref);
+  g_slist_free (ret);
 
-    return TRUE;  /* returning TRUE means that we handled the method invocation */
-
+  return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -92,7 +92,7 @@ bcache_block_check (UDisksObject *object)
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
   rval = g_str_has_prefix (g_udev_device_get_device_file (device->udev_device),
                             "/dev/bcache");
-  g_object_unref(device);
+  g_object_unref (device);
   return rval;
 }
 

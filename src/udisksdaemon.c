@@ -922,6 +922,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                           command_line);
 
   udisks_string_wipe_and_free (input_string_as_gstring);
+  g_free (command_line);
   return job;
 }
 
@@ -1084,6 +1085,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                           command_line);
 
   udisks_string_wipe_and_free (input_string_as_gstring);
+  g_free (command_line);
   return ret;
 }
 
@@ -1369,6 +1371,8 @@ static gpointer wait_for_objects (UDisksDaemon                *daemon,
         }
       else
         {
+          if (to_disappear)
+            g_object_unref (G_OBJECT (ret));
           goto again;
         }
     }
@@ -1472,7 +1476,9 @@ udisks_daemon_wait_for_objects_sync (UDisksDaemon                 *daemon,
  * %UDISKS_ERROR_TIMED_OUT).
  *
  * Note that @wait_func will be called from time to time - for example
- * if there is a device event.
+ * if there is a device event. For consistency @wait_func is supposed
+ * to return full reference to an existing object; udisks_daemon_wait_for_object_to_disappear_sync()
+ * will take care of dropping the reference after each iteration.
  *
  * Returns: (transfer full): Whether the object picked by @wait_func disappeared or not (@error is set).
  */
@@ -1484,13 +1490,19 @@ udisks_daemon_wait_for_object_to_disappear_sync (UDisksDaemon               *dae
                                                  guint                       timeout_seconds,
                                                  GError                      **error)
 {
-  return NULL == wait_for_objects (daemon,
-                                   (UDisksDaemonWaitFuncGeneric) wait_func,
-                                   user_data,
-                                   user_data_free_func,
-                                   timeout_seconds,
-                                   TRUE, /* to_disappear */
-                                   error);
+  UDisksObject *object;
+
+  object = (UDisksObject *) wait_for_objects (daemon,
+                                              (UDisksDaemonWaitFuncGeneric) wait_func,
+                                              user_data,
+                                              user_data_free_func,
+                                              timeout_seconds,
+                                              TRUE, /* to_disappear */
+                                              error);
+  if (object != NULL)
+    g_object_unref (object);
+
+  return NULL == object;
 }
 
 

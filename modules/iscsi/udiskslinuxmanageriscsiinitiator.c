@@ -654,6 +654,8 @@ handle_login (UDisksManagerISCSIInitiator *object,
   gint err = 0;
   gchar *errorstr = NULL;
   GError *error = NULL;
+  UDisksObject *iscsi_object = NULL;
+  UDisksObject *iscsi_session_object = NULL;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
@@ -691,12 +693,13 @@ handle_login (UDisksManagerISCSIInitiator *object,
     }
 
   /* sit and wait until the device appears on dbus */
-  if (udisks_daemon_wait_for_object_sync (manager->daemon,
-                                          wait_for_iscsi_object,
-                                          g_strdup (arg_name),
-                                          g_free,
-                                          15, /* timeout_seconds */
-                                          &error) == NULL)
+  iscsi_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                     wait_for_iscsi_object,
+                                                     g_strdup (arg_name),
+                                                     g_free,
+                                                     15, /* timeout_seconds */
+                                                     &error);
+   if (iscsi_object == NULL)
     {
       g_prefix_error (&error, "Error waiting for iSCSI device to appear: ");
       g_dbus_method_invocation_take_error (invocation, error);
@@ -705,12 +708,13 @@ handle_login (UDisksManagerISCSIInitiator *object,
 
   if (udisks_manager_iscsi_initiator_get_sessions_supported (UDISKS_MANAGER_ISCSI_INITIATOR (manager)))
     {
-      if (udisks_daemon_wait_for_object_sync (manager->daemon,
-                                              wait_for_iscsi_session_object,
-                                              g_strdup (arg_name),
-                                              g_free,
-                                              15, /* timeout_seconds */
-                                              &error) == NULL)
+      iscsi_session_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                                 wait_for_iscsi_session_object,
+                                                                 g_strdup (arg_name),
+                                                                 g_free,
+                                                                 15, /* timeout_seconds */
+                                                                 &error);
+      if (iscsi_session_object == NULL)
         {
           g_prefix_error (&error, "Error waiting for iSCSI session object to appear: ");
           g_dbus_method_invocation_take_error (invocation, error);
@@ -723,6 +727,8 @@ handle_login (UDisksManagerISCSIInitiator *object,
                                                  invocation);
 
 out:
+  g_clear_object (&iscsi_object);
+  g_clear_object (&iscsi_session_object);
   g_free ((gpointer) errorstr);
 
   /* Indicate that we handled the method invocation. */

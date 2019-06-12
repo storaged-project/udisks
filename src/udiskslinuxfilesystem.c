@@ -1117,9 +1117,9 @@ has_option (const gchar *options,
           goto out;
         }
     }
-  g_strfreev (tokens);
 
  out:
+  g_strfreev (tokens);
   return ret;
 }
 
@@ -1365,7 +1365,6 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -1468,6 +1467,7 @@ handle_mount (UDisksFilesystem      *filesystem,
         {
           if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
             {
+              g_clear_error (&error);
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
@@ -1495,6 +1495,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                  "Error mounting system-managed device %s: %s",
                                                  device,
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
       udisks_notice ("Mounted %s (system) at %s on behalf of uid %u",
@@ -1538,7 +1539,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     }
 
   /* calculate filesystem type (guaranteed to be valid UTF-8) */
-  error = NULL;
   fs_type_to_use = calculate_fs_type (block,
                                       options,
                                       &error);
@@ -1550,7 +1550,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     }
 
   /* calculate mount options (guaranteed to be valid UTF-8) */
-  error = NULL;
   mount_options_to_use = calculate_mount_options (daemon,
                                                   block,
                                                   caller_uid,
@@ -1597,7 +1596,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     goto out;
 
   /* calculate mount point (guaranteed to be valid UTF-8) */
-  error = NULL;
   mount_point_to_use = calculate_mount_point (daemon,
                                               block,
                                               caller_uid,
@@ -1644,6 +1642,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                              mount_point_to_use,
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
   else
@@ -1788,7 +1787,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
   wait_data.object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
   wait_data.old_size = g_strv_length ((gchar **) mount_points);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1844,6 +1842,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
         {
           if (!unmount_fstab_as_root && error->code == BD_FS_ERROR_AUTH)
             {
+              g_clear_error (&error);
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
@@ -1871,6 +1870,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                                  "Error unmounting system-managed device %s: %s",
                                                  udisks_block_get_device (block),
                                                  error->message);
+          g_clear_error (&error);
 
           goto out;
         }
@@ -1881,7 +1881,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
       goto waiting;
     }
 
-  error = NULL;
   mount_point = udisks_state_find_mounted_fs (state,
                                               udisks_block_get_device_number (block),
                                               &mounted_by_uid,
@@ -1932,6 +1931,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
   else
@@ -1992,13 +1992,12 @@ handle_set_label (UDisksFilesystem      *filesystem,
   gchar *out_message = NULL;
   gboolean success = FALSE;
   gchar *tmp;
-  GError *error;
+  GError *error = NULL;
 
   object = NULL;
   daemon = NULL;
   command = NULL;
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
@@ -2009,7 +2008,6 @@ handle_set_label (UDisksFilesystem      *filesystem,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -2703,7 +2701,6 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
   if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, NULL /* user name */, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
       goto out;
     }
 

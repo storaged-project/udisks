@@ -516,12 +516,11 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           /* ... and finally build (builder consumes each GVariant instance) */
           for (n = 0; n < p->len; n++)
             g_variant_builder_add_value (&builder, p->pdata[n]);
-          g_ptr_array_free (p, TRUE);
 
           g_dir_close (md_dir);
         }
       g_free (md_dir_name);
-
+      g_ptr_array_free (p, TRUE);
     }
   udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
@@ -1091,7 +1090,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_remove_device (_mdraid, invocation);
 
  out:
-  g_free (member_states);
+  g_strfreev (member_states);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&raid_device);
@@ -1593,7 +1592,6 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
       if (!bd_md_destroy (device, error))
         {
           g_prefix_error (error, "Error wiping device %s:", device);
-          g_dbus_method_invocation_take_error (invocation, *error);
           ret = FALSE;
           goto out;
         }
@@ -1604,6 +1602,7 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
  out:
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
+  g_clear_object (&object);
   return ret;
 }
 

@@ -147,7 +147,7 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
   UDisksObject *block_object;
   UDisksPhysicalVolume *physical_volume;
   const gchar *volume_group_objpath;
-  UDisksObject *volume_group_object;
+  UDisksObject *volume_group_object = NULL;
   UDisksVolumeGroup *volume_group;
   gchar *volume_group_name = NULL;
   gboolean was_partitioned;
@@ -242,12 +242,14 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
  out:
   if (fd >= 0)
     close (fd);
+  g_clear_object (&volume_group_object);
   g_free (volume_group_name);
   return ret;
 }
 
 /* -------------------------------------------------------------------------------- */
 
+/*  transfer-none  */
 UDisksLinuxVolumeGroupObject *
 udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
                                                   const gchar  *name)
