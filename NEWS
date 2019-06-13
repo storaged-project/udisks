@@ -1,17 +1,96 @@
 ---------------------------
-udisks 2.8.3 (unreleased)
+udisks 2.8.3
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.8.2:
-(TODO: make shortlog)
+
+Debarshi Ray (1):
+      Install a tmpfiles.d snippet to create /run/media on boot with systemd
+
+Kai Lüke (3):
+      Filesystem.Unmount waits for mount-points to be updated
+      Create get_filesystem_size helper function
+      Filesystem.Resize sets size property
+
+Marius Vollmer (3):
+      mdraid: Fix order of device names in "add disk" error message
+      dbus-tests: Survive with more than 10 dm-* devices
+      manager: Expose supported encryption types and their default
+
+Tomas Bzatek (53):
+      packaging: Remove obsolete Group tag
+      udisks_state: Implement synchronous variant of udisks_state_check()
+      udiskslinuxfilesystem: Explicitly remove the mountpoint after unmount
+      iscsi: Use proper parser to get and set initiator name
+      dbus-tests: Do not look for udisks daemon binary if system instance is requested
+      lvm: Fix leaking error
+      lvm: Properly free also unused PVs from the list
+      udisksfstabmonitor: Properly cancel the monitor
+      udiskslinuxpartitiontable: Fix small memleak
+      lvm: Add empty GObject constructors and destructors
+      bcache: Fix possible NULL bcache_object unref
+      udisksdaemon: Fix leaking object references from the wait func waiting for object disappearance
+      udiskslinuxblock: Fix leaked object references returned from udisks_daemon_wait_for_object_sync()
+      iscsi: Fix leaked object references returned from udisks_daemon_wait_for_object_sync()
+      zram: Adapt to recent udisks_daemon_wait_for_object_to_disappear_sync() reference counting changes
+      bcache: Adapt to recent udisks_daemon_wait_for_object_to_disappear_sync() reference counting changes
+      lvm2: Fix object reference leaks related to udisks_daemon_* calls
+      udiskslinuxmanager: Fix small leaks related to UDisksDaemon calls
+      udiskslinuxmanager: Fix wrong indentation
+      udiskslinuxmanagerbtrfs: Use GPtrArray for dynamic lists
+      bcache: Minor data type fixes
+      btrfs: Minor data type and GError fixes
+      udisksclient: Fix a memory leak
+      Fix a couple of memory leaks
+      lvm: Fix missing object interface reference
+      lvm: Fix leaking UDisksLinuxLogicalVolumeObject
+      udiskslinuxdrive: Fix leaking GKeyFile
+      udiskslinuxblock: Fix leaking LUKS UUID
+      udisksdaemonutil: Fix leaking variant
+      udiskslinuxencrypted: Fix leaking error
+      udiskslinuxfilesystem: Fix leaking errors
+      udiskslinuxmdraid: Fix leaking GPtrArray
+      udiskslinuxpartitiontable: Properly free BDPartSpec structures
+      udiskslinuxmanager: Get string constants instead of allocated values
+      udiskslinuxpartitiontable: Get string constants instead of allocated values
+      udiskslinuxswapspace: Fix leaking errors
+      udisksdaemon: Fix leaking commandline format strings
+      udiskslinuxmanager: Fix leaking array shell
+      udiskslinuxblock: Fix leaking string
+      udiskslinuxencrypted: Fix some memory leaks
+      udiskslinuxencrypted: Minor indentation fixes
+      udiskslinuxencrypted: Fix uninitialized variable
+      udiskslinuxmdraid: Fix leaking object
+      udiskslinuxswapspace: Rework how references are held
+      udiskslinuxblock: Fix leaking stdout and stderr from spawned jobs
+      zram: Fail if creation of supplemental scripts fail
+      zram: Fix array handling
+      udiskslinuxfilesystem: Fix a g_strsplit() leak
+      zram: Fix one more tiny leak
+      iscsi: Fix small memory leak
+      udiskslinuxprovider: Fix thread double free
+      iscsi: Initialize stack-allocated structs
+
+Vojtech Trefny (11):
+      tests: Do not rely on default LUKS version being luks1
+      Add function to get iSCSI initiator name as a byte array
+      tests: Check that we use default LUKS version from config
+      Install udisks2.conf config file when running tests from source
+      tests: Simplify code for copying config files for tests
+      tests: Delete config files we created for tests
+      tests: Install UDisks config files for integration tests too
+      tests: Remove force cleaning using Blivet
+      tests: Create udisks2 conf directory if it doesn't exist
+      Fix parsing crypttab with multiple spaces
+      Skip tests that modify crypttab and fstab in non-testing environments
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2019-06-13
 
 ---------------------------
 udisks 2.8.2

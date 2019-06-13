@@ -17,10 +17,10 @@ msgstr ""
 "PO-Revision-Date: 2018-08-21 10:05+0000\n"
 "Last-Translator: Máximo Castañeda Riloba <mcrcctm@gmail.com>\n"
 "Language-Team: Spanish\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -2732,8 +2732,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "vmkcore de VMWare"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 # auto translated by TM merge from project: storaged, version: storaged,
 # DocId: storaged
 #: udisks/udisksclient.c:2272

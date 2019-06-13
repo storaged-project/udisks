@@ -18,10 +18,10 @@ msgstr ""
 "PO-Revision-Date: 2017-08-22 03:48+0000\n"
 "Last-Translator: cheng ye <18969068329@163.com>\n"
 "Language-Team: Chinese (China)\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -2024,8 +2024,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

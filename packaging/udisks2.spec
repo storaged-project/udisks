@@ -435,6 +435,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Thu Jun 13 2019 Tomas Bzatek <tbzatek@redhat.com> - 2.8.3-1
+- Version 2.8.3
+
 * Fri Mar 15 2019 Debarshi Ray <rishi@fedoraproject.org> - 2.8.2-2
 - Update for tmpfiles.d snippet
 
