@@ -198,7 +198,7 @@ static void update_partitions_list (UDisksObject           *disk_object,
     /* this partition is already in the property */
     goto out;
 
-  num_parts = g_strv_length (partitions);
+  num_parts = partitions ? g_strv_length (partitions) : 0;
   partitions = g_realloc (partitions, (num_parts + 2) * sizeof (gchar *));
   partitions[num_parts] = g_strdup (object_path);
   partitions[num_parts + 1] = NULL;
