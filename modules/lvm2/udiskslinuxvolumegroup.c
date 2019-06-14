@@ -438,7 +438,7 @@ handle_rename (UDisksVolumeGroup     *_group,
   if (group_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for volume group object for %s",
+                      "Error waiting for volume group object for '%s': ",
                       new_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -919,7 +919,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for logical volume object for %s",
+                      "Error waiting for logical volume object for '%s': ",
                       arg_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
