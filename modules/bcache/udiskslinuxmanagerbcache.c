@@ -317,7 +317,7 @@ handle_bcache_create (UDisksManagerBcache    *object,
   if (bcache_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for bcache object after creating %s",
+                      "Error waiting for bcache object after creating '%s': ",
                       bcache_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
