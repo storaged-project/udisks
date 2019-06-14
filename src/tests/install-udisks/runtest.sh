@@ -47,7 +47,7 @@ rlJournalStart
         rlRun "su -c 'make' udisks"
 
         rlRun "make install"
-        rlRun "cp data/org.freedesktop.UDisks2 /etc/dbus-1/system.d/"
+        rlRun "cp data/org.freedesktop.UDisks2 /usr/share/dbus-1/system.d/"
         rlRun "cp data/org.freedesktop.UDisks2.policy /usr/share/polkit-1/"
         rlRun "cp modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy /usr/share/polkit-1/"
     rlPhaseEnd

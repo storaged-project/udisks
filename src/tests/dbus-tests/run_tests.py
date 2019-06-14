@@ -96,7 +96,7 @@ def install_config_files(projdir, tmpdir):
 
     # dbus config files
     copied.extend(_copy_files((os.path.join(projdir, 'data/org.freedesktop.UDisks2.conf'),),
-                              '/etc/dbus-1/system.d/', tmpdir))
+                              '/usr/share/dbus-1/system.d/', tmpdir))
 
     # polkit policies
     policies = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
