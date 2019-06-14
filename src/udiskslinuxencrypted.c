@@ -591,7 +591,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (cleartext_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for cleartext object after unlocking %s",
+                      "Error waiting for cleartext object after unlocking '%s': ",
                       udisks_block_get_device (block));
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
