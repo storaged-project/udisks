@@ -51,6 +51,7 @@
 #include "udisksmount.h"
 #include "udiskslinuxdevice.h"
 #include "udiskssimplejob.h"
+#include "udiskslinuxdriveata.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -189,6 +190,28 @@ get_filesystem_size (UDisksLinuxBlockObject *object)
   return size;
 }
 
+static UDisksDriveAta *
+get_drive_ata (UDisksLinuxBlockObject *object)
+{
+  UDisksObject *drive_object = NULL;
+  UDisksDriveAta *ata = NULL;
+  UDisksBlock *block;
+
+  block = udisks_object_peek_block (UDISKS_OBJECT (object));
+  if (block == NULL)
+    return NULL;
+
+  drive_object = udisks_daemon_find_object (udisks_linux_block_object_get_daemon (object), udisks_block_get_drive (block));
+  if (drive_object == NULL)
+    return NULL;
+
+  ata = udisks_object_get_drive_ata (drive_object);
+
+  g_object_unref (drive_object);
+
+  return ata;
+}
+
 /**
  * udisks_linux_filesystem_update:
  * @filesystem: A #UDisksLinuxFilesystem.
@@ -202,9 +225,12 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 {
   UDisksMountMonitor *mount_monitor;
   UDisksLinuxDevice *device;
+  UDisksDriveAta *ata = NULL;
   GPtrArray *p;
   GList *mounts;
   GList *l;
+  gboolean skip_fs_size = FALSE;
+  guchar pm_state;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -226,7 +252,19 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
-  udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
+  /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
+   * drive waking up - nothing has changed anyway since it's been sleeping...
+   */
+  ata = get_drive_ata (object);
+  if (ata != NULL)
+    {
+      if (udisks_linux_drive_ata_get_pm_state (UDISKS_LINUX_DRIVE_ATA (ata), NULL, &pm_state))
+        skip_fs_size = ! UDISKS_LINUX_DRIVE_ATA_IS_AWAKE (pm_state);
+    }
+  g_clear_object (&ata);
+
+  if (! skip_fs_size)
+    udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
 
   g_object_unref (device);
 }

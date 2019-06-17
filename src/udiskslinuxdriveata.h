@@ -29,6 +29,16 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_DRIVE_ATA(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_ATA, UDisksLinuxDriveAta))
 #define UDISKS_IS_LINUX_DRIVE_ATA(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_ATA))
 
+/**
+ * UDISKS_LINUX_DRIVE_ATA_IS_AWAKE:
+ * @pm_state: The power state value.
+ *
+ * Decodes the power state value as returned by #udisks_linux_drive_ata_get_pm_state.
+ *
+ * Returns: %TRUE when the drive is awake, %FALSE when sleeping.
+*/
+#define         UDISKS_LINUX_DRIVE_ATA_IS_AWAKE(pm_state) (pm_state >= 0x41)
+
 GType           udisks_linux_drive_ata_get_type           (void) G_GNUC_CONST;
 UDisksDriveAta *udisks_linux_drive_ata_new                (void);
 gboolean        udisks_linux_drive_ata_update             (UDisksLinuxDriveAta     *drive,
@@ -50,6 +60,10 @@ gboolean        udisks_linux_drive_ata_secure_erase_sync   (UDisksLinuxDriveAta 
 void            udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
                                                             UDisksLinuxDevice       *device,
                                                             GVariant                *configuration);
+
+gboolean        udisks_linux_drive_ata_get_pm_state        (UDisksLinuxDriveAta     *drive,
+                                                            GError                 **error,
+                                                            guchar                  *pm_state);
 
 G_END_DECLS
 
