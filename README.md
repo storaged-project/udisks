@@ -88,7 +88,7 @@ Please report bugs via the GitHub's issues tracker at
      sudo cp data/*.policy /usr/share/polkit-1/actions/
      sudo cp modules/*/data/*.policy /usr/share/polkit-1/actions/
      
-     sudo cp data/org.freedesktop.UDisks2.conf /etc/dbus-1/system.d/
+     sudo cp data/org.freedesktop.UDisks2.conf /usr/share/dbus-1/system.d/
      
      sudo cp data/80-udisks2.rules /usr/lib/udev/rules.d/
      ```
