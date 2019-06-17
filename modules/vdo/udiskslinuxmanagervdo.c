@@ -327,7 +327,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
   if (vdo_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for VDO object after creating %s: ",
+                      "Error waiting for VDO object after creating '%s': ",
                       arg_name);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
@@ -443,7 +443,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
   if (object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for VDO object after starting %s: ",
+                      "Error waiting for VDO object after starting '%s': ",
                       arg_name);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);

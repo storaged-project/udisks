@@ -381,7 +381,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   if (group_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for volume group object for %s",
+                      "Error waiting for volume group object for '%s': ",
                       arg_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

@@ -487,7 +487,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
                                                          &error))
     {
       g_prefix_error (&error,
-                      "Error waiting for block object to disappear after deleting %s",
+                      "Error waiting for block object to disappear after deleting '%s': ",
                       udisks_logical_volume_get_name (_volume));
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -592,7 +592,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for logical volume object for %s",
+                      "Error waiting for logical volume object for '%s': ",
                       new_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -753,7 +753,7 @@ handle_activate (UDisksLogicalVolume *_volume,
   if (block_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for block object for %s",
+                      "Error waiting for block object for '%s': ",
                       udisks_logical_volume_get_name (_volume));
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -819,7 +819,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                                          &error))
     {
       g_prefix_error (&error,
-                      "Error waiting for block object to disappear after deactivating %s",
+                      "Error waiting for block object to disappear after deactivating '%s': ",
                       udisks_logical_volume_get_name (_volume));
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -884,7 +884,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for logical volume object for %s",
+                      "Error waiting for logical volume object for '%s': ",
                       name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

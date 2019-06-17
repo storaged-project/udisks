@@ -439,7 +439,7 @@ handle_loop_setup (UDisksManager          *object,
   if (loop_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for loop object after creating %s",
+                      "Error waiting for loop object after creating '%s': ",
                       loop_device);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -703,7 +703,7 @@ handle_mdraid_create (UDisksManager         *_object,
           else
             {
               g_prefix_error (&error,
-                              "Error wiping device %s to be used in the RAID array:",
+                              "Error wiping device '%s' to be used in the RAID array: ",
                               udisks_block_get_device (block));
               g_dbus_method_invocation_take_error (invocation, error);
               success = FALSE;
@@ -739,7 +739,7 @@ handle_mdraid_create (UDisksManager         *_object,
 
   if (!bd_md_create (array_name, arg_level, disks, 0, NULL, FALSE, arg_chunk, NULL, &error))
     {
-      g_prefix_error (&error, "Error creating RAID array:");
+      g_prefix_error (&error, "Error creating RAID array: ");
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       success = FALSE;
@@ -752,7 +752,7 @@ handle_mdraid_create (UDisksManager         *_object,
       raid_node = bd_md_node_from_name (array_name, &error);
       if (!raid_node)
         {
-          g_prefix_error (&error, "Failed to get md node for array %s", array_name);
+          g_prefix_error (&error, "Failed to get md node for array '%s': ", array_name);
           g_dbus_method_invocation_take_error (invocation, error);
           success = FALSE;
           goto out;
@@ -773,7 +773,7 @@ handle_mdraid_create (UDisksManager         *_object,
   if (array_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for array object after creating %s",
+                      "Error waiting for array object after creating '%s': ",
                       raid_device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       success = FALSE;
@@ -814,7 +814,7 @@ handle_mdraid_create (UDisksManager         *_object,
         g_clear_error (&error);
       else
         {
-          g_prefix_error (&error, "Error wiping raid device %s:", raid_device_file);
+          g_prefix_error (&error, "Error wiping raid device '%s': ", raid_device_file);
           g_dbus_method_invocation_take_error (invocation, error);
           success = FALSE;
           goto out;

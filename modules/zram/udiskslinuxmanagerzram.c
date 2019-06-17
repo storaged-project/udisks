@@ -426,7 +426,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
   if (zram_objects == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for ZRAM objects after creating.");
+                      "Error waiting for ZRAM objects after creating: ");
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
