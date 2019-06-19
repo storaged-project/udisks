@@ -129,6 +129,13 @@ class UDisksTestCase(unittest.TestCase):
         if (os.access(cls.daemon_path, os.X_OK)):
             print('Testing binaries from local build tree')
             cls.check_build_tree_config()
+            # copy required system files
+            testdir = os.path.abspath(os.path.dirname(__file__))
+            projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..')))
+            tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
+            atexit.register(shutil.rmtree, tmpdir)
+            files_to_restore = install_config_files(projdir, tmpdir)
+            atexit.register(restore_files, files_to_restore, tmpdir)
         else:
             print('Testing installed system binaries')
             cls.daemon_path = None
@@ -1866,7 +1873,7 @@ def install_config_files(projdir, tmpdir):
 
     # dbus config files
     copied.extend(_copy_files((os.path.join(projdir, 'data/org.freedesktop.UDisks2.conf'),),
-                              '/etc/dbus-1/system.d/', tmpdir))
+                              '/usr/share/dbus-1/system.d/', tmpdir))
 
     # polkit policies
     policies = glob(projdir + '/data/*.policy') + glob(projdir + '/modules/*/data/*.policy')
@@ -1898,14 +1905,6 @@ if __name__ == '__main__':
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     cli_args = argparser.parse_args()
-
-    testdir = os.path.abspath(os.path.dirname(__file__))
-    projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..')))
-    tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
-    atexit.register(shutil.rmtree, tmpdir)
-
-    files_to_restore = install_config_files(projdir, tmpdir)
-    atexit.register(restore_files, files_to_restore, tmpdir)
 
     UDisksTestCase.init(logfile=cli_args.logfile)
     if cli_args.testname:

@@ -198,8 +198,14 @@ wait_for_volume_group_object (UDisksDaemon *daemon,
                               gpointer      user_data)
 {
   const gchar *name = user_data;
+  UDisksLinuxVolumeGroupObject *object;
 
-  return UDISKS_OBJECT (udisks_daemon_util_lvm2_find_volume_group_object (daemon, name));
+  object = udisks_daemon_util_lvm2_find_volume_group_object (daemon, name);
+
+  if (object == NULL)
+    return NULL;
+
+  return g_object_ref (UDISKS_OBJECT (object));
 }
 
 static gboolean
@@ -274,12 +280,15 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
+          g_object_unref (object);
           goto out;
         }
 
       if (!udisks_daemon_util_lvm2_block_is_unused (block, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
+          g_object_unref (object);
+          g_object_unref (block);
           goto out;
         }
 
@@ -323,6 +332,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error creating a physical volume: %s",
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
     }
@@ -347,6 +357,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                              UDISKS_ERROR_FAILED,
                                              "Error creating volume group: %s",
                                              error->message);
+      g_clear_error (&error);
       goto out;
     }
 
@@ -370,7 +381,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   if (group_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for volume group object for %s",
+                      "Error waiting for volume group object for '%s': ",
                       arg_name);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -379,6 +390,8 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   udisks_manager_lvm2_complete_volume_group_create (_object,
                                                     invocation,
                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
+  g_object_unref (group_object);
+
  out:
   g_list_free_full (blocks, g_object_unref);
 

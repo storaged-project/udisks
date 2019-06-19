@@ -51,6 +51,7 @@
 #include "udisksmount.h"
 #include "udiskslinuxdevice.h"
 #include "udiskssimplejob.h"
+#include "udiskslinuxdriveata.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -189,6 +190,28 @@ get_filesystem_size (UDisksLinuxBlockObject *object)
   return size;
 }
 
+static UDisksDriveAta *
+get_drive_ata (UDisksLinuxBlockObject *object)
+{
+  UDisksObject *drive_object = NULL;
+  UDisksDriveAta *ata = NULL;
+  UDisksBlock *block;
+
+  block = udisks_object_peek_block (UDISKS_OBJECT (object));
+  if (block == NULL)
+    return NULL;
+
+  drive_object = udisks_daemon_find_object (udisks_linux_block_object_get_daemon (object), udisks_block_get_drive (block));
+  if (drive_object == NULL)
+    return NULL;
+
+  ata = udisks_object_get_drive_ata (drive_object);
+
+  g_object_unref (drive_object);
+
+  return ata;
+}
+
 /**
  * udisks_linux_filesystem_update:
  * @filesystem: A #UDisksLinuxFilesystem.
@@ -202,9 +225,12 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 {
   UDisksMountMonitor *mount_monitor;
   UDisksLinuxDevice *device;
+  UDisksDriveAta *ata = NULL;
   GPtrArray *p;
   GList *mounts;
   GList *l;
+  gboolean skip_fs_size = FALSE;
+  guchar pm_state;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -226,7 +252,19 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
-  udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
+  /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
+   * drive waking up - nothing has changed anyway since it's been sleeping...
+   */
+  ata = get_drive_ata (object);
+  if (ata != NULL)
+    {
+      if (udisks_linux_drive_ata_get_pm_state (UDISKS_LINUX_DRIVE_ATA (ata), NULL, &pm_state))
+        skip_fs_size = ! UDISKS_LINUX_DRIVE_ATA_IS_AWAKE (pm_state);
+    }
+  g_clear_object (&ata);
+
+  if (! skip_fs_size)
+    udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
 
   g_object_unref (device);
 }
@@ -1117,9 +1155,9 @@ has_option (const gchar *options,
           goto out;
         }
     }
-  g_strfreev (tokens);
 
  out:
+  g_strfreev (tokens);
   return ret;
 }
 
@@ -1378,7 +1416,6 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -1481,6 +1518,7 @@ handle_mount (UDisksFilesystem      *filesystem,
         {
           if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
             {
+              g_clear_error (&error);
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
@@ -1508,6 +1546,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                                  "Error mounting system-managed device %s: %s",
                                                  device,
                                                  error->message);
+          g_clear_error (&error);
           goto out;
         }
       udisks_notice ("Mounted %s (system) at %s on behalf of uid %u",
@@ -1551,7 +1590,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     }
 
   /* calculate filesystem type (guaranteed to be valid UTF-8) */
-  error = NULL;
   fs_type_to_use = calculate_fs_type (block,
                                       options,
                                       &error);
@@ -1563,7 +1601,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     }
 
   /* calculate mount options (guaranteed to be valid UTF-8) */
-  error = NULL;
   mount_options_to_use = calculate_mount_options (daemon,
                                                   block,
                                                   caller_uid,
@@ -1610,7 +1647,6 @@ handle_mount (UDisksFilesystem      *filesystem,
     goto out;
 
   /* calculate mount point (guaranteed to be valid UTF-8) */
-  error = NULL;
   mount_point_to_use = calculate_mount_point (daemon,
                                               block,
                                               caller_uid,
@@ -1657,6 +1693,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                              mount_point_to_use,
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
   else
@@ -1801,7 +1838,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
   wait_data.object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
   wait_data.old_size = g_strv_length ((gchar **) mount_points);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1857,6 +1893,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
         {
           if (!unmount_fstab_as_root && error->code == BD_FS_ERROR_AUTH)
             {
+              g_clear_error (&error);
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
@@ -1884,6 +1921,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                                  "Error unmounting system-managed device %s: %s",
                                                  udisks_block_get_device (block),
                                                  error->message);
+          g_clear_error (&error);
 
           goto out;
         }
@@ -1894,7 +1932,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
       goto waiting;
     }
 
-  error = NULL;
   g_clear_pointer (&mount_point, g_free);
   mount_point = udisks_state_find_mounted_fs (state,
                                               udisks_block_get_device_number (block),
@@ -1946,12 +1983,14 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
       goto out;
     }
   else
     udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
-  /* OK, filesystem unmounted.. the state/cleanup routines will remove the mountpoint for us */
+  /* filesystem unmounted, run the state/cleanup routines now to remove the mountpoint (if applicable) */
+  udisks_state_check_sync (state);
 
   udisks_notice ("Unmounted %s on behalf of uid %u",
                  udisks_block_get_device (block),
@@ -2005,13 +2044,12 @@ handle_set_label (UDisksFilesystem      *filesystem,
   gchar *out_message = NULL;
   gboolean success = FALSE;
   gchar *tmp;
-  GError *error;
+  GError *error = NULL;
 
   object = NULL;
   daemon = NULL;
   command = NULL;
 
-  error = NULL;
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
@@ -2022,7 +2060,6 @@ handle_set_label (UDisksFilesystem      *filesystem,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -2716,7 +2753,6 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
   if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, NULL /* user name */, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
       goto out;
     }
 

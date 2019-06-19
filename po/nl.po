@@ -9,18 +9,19 @@
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # Vojtěch Trefný <vtrefny@redhat.com>, 2017. #zanata
 # Geert Warrink <geert.warrink@onsnet.nu>, 2018. #zanata
+# Geert Warrink <geert.warrink@onsnet.nu>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.2\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-03-01 15:54+0100\n"
-"PO-Revision-Date: 2018-08-29 12:51+0000\n"
+"PO-Revision-Date: 2019-03-04 03:29+0000\n"
 "Last-Translator: Geert Warrink <geert.warrink@onsnet.nu>\n"
 "Language-Team: Dutch\n"
+"Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: nl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -455,11 +456,15 @@ msgstr "Uitloggen mislukte: %s"
 #, c-format
 msgid "Error opening %s while getting iSCSI initiator name: %s"
 msgstr ""
+"Fout bij het openen van %s tijdens het verkrijgen van de iSCSI initiator "
+"naam: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s while getting iSCSI initiator name: %s"
 msgstr ""
+"Fout bij het lezen van %s tijdens het verkrijgen van de iSCSI initiator "
+"naam: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 msgid "Authentication is required change iSCSI initiator name"
@@ -473,11 +478,15 @@ msgstr "Lege initiatornaam"
 #, c-format
 msgid "Error opening %s while setting iSCSI initiator name: %s"
 msgstr ""
+"Fout bij het openen van %s tijdens het instellen van de iSCSI initiator "
+"naam: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: %s"
 msgstr ""
+"Fout bij het schrijven naar %s tijdens het instellen van de iSCSI initiator "
+"naam: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 msgid "Authentication is required to discover targets"
@@ -610,64 +619,72 @@ msgstr "Authenticatie is vereist om een schijf LED te beheren"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:16
 msgid "Manage VDO"
-msgstr ""
+msgstr "Beheer VDO"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr ""
+msgstr "Authenticatie is vereist om VDO te beheren"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
 msgstr ""
+"Authenticatie is vereist om de schrijf tactiek van het VDO volume te "
+"veranderen"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om het VDO volume uit te schakelen"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
 msgstr ""
+"Authenticatie is vereist om compressie op het VDO volume aan te zetten"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
 msgstr ""
+"Authenticatie is vereist om compressie op het VDO volume uit te zetten"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
 msgstr ""
+"Authenticatie is vereist om deduplicatie op het VDO volume aan te zetten"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
 msgstr ""
+"Authenticatie is vereist om deduplicatie op het VDO volume uit te zetten"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
 msgstr ""
+"Authenticatie is vereist om de logische VDO volumegrootte te laten toenemen"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
 msgstr ""
+"Authenticatie is vereist om de logische VDO volumegrootte te laten toenemen"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om het VDO volume te verwijderen"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om het VDO volume te stoppen"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om een nieuw VDO volume aan te maken"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om een bestand VDO volume te activeren"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "Authenticatie is vereist om het VDO volume te starten"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
@@ -2091,8 +2108,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

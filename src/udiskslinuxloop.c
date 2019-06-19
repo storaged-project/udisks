@@ -269,7 +269,7 @@ handle_delete (UDisksLoop            *loop,
 
   if (!bd_loop_teardown (device_file, &error))
     {
-      g_prefix_error (&error, "Error deleting %s: ", device_file);
+      g_prefix_error (&error, "Error deleting '%s': ", device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;

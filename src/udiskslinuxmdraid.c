@@ -516,12 +516,11 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           /* ... and finally build (builder consumes each GVariant instance) */
           for (n = 0; n < p->len; n++)
             g_variant_builder_add_value (&builder, p->pdata[n]);
-          g_ptr_array_free (p, TRUE);
 
           g_dir_close (md_dir);
         }
       g_free (md_dir_name);
-
+      g_ptr_array_free (p, TRUE);
     }
   udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
@@ -669,7 +668,7 @@ handle_start (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_activate (NULL, NULL, udisks_mdraid_get_uuid (UDISKS_MDRAID (mdraid)), opt_start_degraded, NULL, &error))
     {
-      g_prefix_error (&error, "Error starting RAID array:");
+      g_prefix_error (&error, "Error starting RAID array: ");
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
@@ -687,7 +686,7 @@ handle_start (UDisksMDRaid           *_mdraid,
   if (block_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for MD block device after starting array");
+                      "Error waiting for MD block device after starting array: ");
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
@@ -843,7 +842,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_deactivate (device_file, error))
     {
-      g_prefix_error (error, "Error stopping RAID array %s:", device_file);
+      g_prefix_error (error, "Error stopping RAID array '%s': ", device_file);
       g_dbus_method_invocation_take_error (invocation, *error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
       ret = FALSE;
@@ -1067,7 +1066,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_remove (device_file, member_device_file, set_faulty, NULL, &error))
     {
-      g_prefix_error (&error, "Error removing %s from RAID array %s:", device_file, member_device_file);
+      g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", device_file, member_device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
@@ -1080,7 +1079,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
       if (!bd_fs_wipe (member_device_file, TRUE, &error))
         {
           g_prefix_error (&error,
-                          "Error wiping  %s after removal from RAID array %s:",
+                          "Error wiping '%s' after removal from RAID array '%s': ",
                           member_device_file,
                           device_file);
           g_dbus_method_invocation_take_error (invocation, error);
@@ -1091,7 +1090,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_remove_device (_mdraid, invocation);
 
  out:
-  g_free (member_states);
+  g_strfreev (member_states);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&raid_device);
@@ -1213,7 +1212,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_add (device_file, new_member_device_file, 0, NULL, &error))
     {
-      g_prefix_error (&error, "Error adding %s to RAID array %s:", new_member_device_file, device_file);
+      g_prefix_error (&error, "Error adding '%s' to RAID array '%s': ", new_member_device_file, device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
@@ -1331,7 +1330,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_set_bitmap_location (device_file, value, &error))
     {
-      g_prefix_error (&error, "Error setting bitmap on RAID array %s: ", device_file);
+      g_prefix_error (&error, "Error setting bitmap on RAID array '%s': ", device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
@@ -1592,8 +1591,7 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
 
       if (!bd_md_destroy (device, error))
         {
-          g_prefix_error (error, "Error wiping device %s:", device);
-          g_dbus_method_invocation_take_error (invocation, *error);
+          g_prefix_error (error, "Error wiping device '%s': ", device);
           ret = FALSE;
           goto out;
         }
@@ -1604,6 +1602,7 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
  out:
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
+  g_clear_object (&object);
   return ret;
 }
 

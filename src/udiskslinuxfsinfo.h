@@ -40,6 +40,7 @@ typedef struct
 
 const FSInfo  *get_fs_info (const gchar *fstype);
 const gchar  **get_supported_filesystems (void);
+const gchar  **get_supported_encryption_types (void);
 
 G_END_DECLS
 

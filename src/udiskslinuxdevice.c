@@ -210,7 +210,7 @@ probe_ata (UDisksLinuxDevice  *device,
                                          error))
         {
           g_free (output.buffer);
-          g_prefix_error (error, "Error sending ATA command IDENTIFY DEVICE to %s: ",
+          g_prefix_error (error, "Error sending ATA command IDENTIFY DEVICE to '%s': ",
                           device_file);
           goto out;
         }
@@ -233,7 +233,7 @@ probe_ata (UDisksLinuxDevice  *device,
                                          error))
         {
           g_free (output.buffer);
-          g_prefix_error (error, "Error sending ATA command IDENTIFY PACKET DEVICE to %s: ",
+          g_prefix_error (error, "Error sending ATA command IDENTIFY PACKET DEVICE to '%s': ",
                           device_file);
           goto out;
         }

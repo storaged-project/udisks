@@ -15,10 +15,10 @@ msgstr ""
 "PO-Revision-Date: 2016-10-06 01:34+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Korean\n"
+"Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -2049,8 +2049,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

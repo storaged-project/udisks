@@ -148,6 +148,7 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
                                          partition_object_paths);
 
 
+  g_free (partition_object_paths);
   g_clear_object (&device);
   g_list_free_full (partition_objects, g_object_unref);
 }
@@ -270,7 +271,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   uid_t caller_uid;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
-  gchar *partition_type = NULL;
+  const gchar *partition_type = NULL;
 
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
@@ -281,7 +282,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  g_variant_lookup (options, "partition-type", "s", &partition_type);
+  g_variant_lookup (options, "partition-type", "&s", &partition_type);
 
   block = udisks_object_get_block (object);
   if (block == NULL)
@@ -550,7 +551,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
  out:
   g_free (table_type);
   g_free (wait_data);
-  g_free (overlapping_part);
   g_clear_error (&error);
   g_clear_object (&partition_block);
   g_free (device_name);
@@ -558,6 +558,8 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   g_clear_object (&block);
   if (part_spec)
     bd_part_spec_free (part_spec);
+  if (overlapping_part)
+    bd_part_spec_free (overlapping_part);
   return partition_object;
 }
 

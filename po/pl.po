@@ -8,18 +8,19 @@
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2018. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.2\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-03-01 15:54+0100\n"
-"PO-Revision-Date: 2018-08-14 01:55+0000\n"
+"PO-Revision-Date: 2019-03-04 05:52+0000\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pl\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -456,12 +457,12 @@ msgstr "Wylogowanie się nie powiodło: %s"
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
 #, c-format
 msgid "Error opening %s while getting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Błąd otwierania %s podczas uzyskiwania nazwy inicjatora iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s while getting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Błąd odczytu %s podczas uzyskiwania nazwy inicjatora iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 msgid "Authentication is required change iSCSI initiator name"
@@ -474,12 +475,12 @@ msgstr "Pusta nazwa inicjatora"
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
 #, c-format
 msgid "Error opening %s while setting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Błąd otwierania %s podczas ustawiania nazwy inicjatora iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Błąd zapisu do %s podczas ustawiania nazwy inicjatora iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 msgid "Authentication is required to discover targets"
@@ -613,64 +614,68 @@ msgstr "Wymagane jest uwierzytelnienie, aby zarządzać diodą LED dysku"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:16
 msgid "Manage VDO"
-msgstr ""
+msgstr "Zarządzanie VDO"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby zmienić zasady zapisu woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby dezaktywować wolumin VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby włączyć kompresję woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć kompresję woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby włączyć deduplikację woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby wyłączyć deduplikację woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby powiększyć logiczny rozmiar woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby powiększyć fizyczny rozmiar woluminu VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby usunąć wolumin VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zatrzymać wolumin VDO"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby utworzyć nowy wolumin VDO"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby aktywować istniejący wolumin VDO"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby uruchomić wolumin VDO"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
@@ -1154,8 +1159,8 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
-"Wymagane jest uwierzytelnienie, aby skonfigurować mapę bitową celów zapisu w"
-" macierzy RAID"
+"Wymagane jest uwierzytelnienie, aby skonfigurować mapę bitową celów zapisu "
+"w macierzy RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
@@ -2132,8 +2137,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "vmkcore oprogramowania VMWare"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

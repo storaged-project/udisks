@@ -23,6 +23,7 @@
 
 #include "config.h"
 #include "udiskslinuxfsinfo.h"
+#include "udisksconfigmanager.h"
 
 #define FS_EXT2      "ext2"
 #define FS_EXT3      "ext3"
@@ -270,4 +271,23 @@ const gchar **
 get_supported_filesystems (void)
 {
   return _fs_names;
+}
+
+const gchar *_encryption_types[] =
+  {
+    UDISKS_ENCRYPTION_LUKS1,
+    UDISKS_ENCRYPTION_LUKS2,
+    NULL
+  };
+
+/**
+ * get_supported_encryption_types:
+ *
+ * Returns: a NULL terminated list of supported encryption types. Do not free or
+ * modify.
+ */
+const gchar **
+get_supported_encryption_types (void)
+{
+  return _encryption_types;
 }

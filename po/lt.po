@@ -7,18 +7,19 @@
 # aurisc4 <aurisc4@gmail.com>, 2013
 # Tomas Smetana <tsmetana@redhat.com>, 2016. #zanata
 # Moo <hazap@hotmail.com>, 2018. #zanata
+# Moo <hazap@hotmail.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.2\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-03-01 15:54+0100\n"
-"PO-Revision-Date: 2018-10-08 09:21+0000\n"
+"PO-Revision-Date: 2019-04-06 08:05+0000\n"
 "Last-Translator: Moo <hazap@hotmail.com>\n"
 "Language-Team: Lithuanian\n"
+"Language: lt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: lt\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -45,8 +46,8 @@ msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
 msgstr ""
-"Prijungti/atjungti fstab faile apibrėžtas failų sistemas, naudojant x"
-"-udisks-auth parametrą"
+"Prijungti/atjungti fstab faile apibrėžtas failų sistemas, naudojant "
+"x-udisks-auth parametrą"
 
 #: data/org.freedesktop.UDisks2.policy.in:50
 msgid "Authentication is required to mount/unmount the filesystem"
@@ -452,12 +453,12 @@ msgstr "Atsijungimas nepavyko: %s"
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
 #, c-format
 msgid "Error opening %s while getting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Klaida atveriant %s kol gaunamas iSCSI iniciatoriaus pavadinimas: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s while getting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Klaida skaitant %s kol gaunamas iSCSI iniciatoriaus pavadinimas: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 msgid "Authentication is required change iSCSI initiator name"
@@ -472,11 +473,12 @@ msgstr "Tuščias iniciatoriaus pavadinimas"
 #, c-format
 msgid "Error opening %s while setting iSCSI initiator name: %s"
 msgstr ""
+"Klaida atveriant %s kol nustatomas iSCSI iniciatoriaus pavadinimas: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: %s"
-msgstr ""
+msgstr "Klaida rašant į %s kol nustatomas iSCSI iniciatoriaus pavadinimas: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 msgid "Authentication is required to discover targets"
@@ -604,64 +606,65 @@ msgstr ""
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:16
 msgid "Manage VDO"
-msgstr ""
+msgstr "Tvarkyti VDO"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr ""
+msgstr "Norint tvarkyti VDO, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
 msgstr ""
+"Norint pakeisti rašymo politiką į VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr ""
+msgstr "Norint pasyvinti VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
-msgstr ""
+msgstr "Norint VDO tome įjungti glaudinimą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
-msgstr ""
+msgstr "Norint VDO tome išjungti glaudinimą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
-msgstr ""
+msgstr "Norint VDO tome įjungti išdubliavimą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
-msgstr ""
+msgstr "Norint VDO tome išjungti išdubliavimą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
-msgstr ""
+msgstr "Norint padidinti loginį VDO tomo dydį, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
-msgstr ""
+msgstr "Norint padidinti fizinį VDO tomo dydį, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "Norint pašalinti VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "Norint stabdyti VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Norint sukurti naują VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Norint aktyvuoti esamą VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "Norint paleisti VDO tomą, reikia patvirtinti tapatybę"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
@@ -2103,8 +2106,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

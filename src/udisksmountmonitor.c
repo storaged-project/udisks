@@ -74,6 +74,7 @@ struct _UDisksMountMonitor
 
   gboolean have_data;
   GList *mounts;
+  GMutex mounts_mutex;
 };
 
 typedef struct _UDisksMountMonitorClass UDisksMountMonitorClass;
@@ -122,6 +123,8 @@ udisks_mount_monitor_finalize (GObject *object)
 
   g_list_free_full (monitor->mounts, g_object_unref);
 
+  g_mutex_clear (&monitor->mounts_mutex);
+
   if (G_OBJECT_CLASS (udisks_mount_monitor_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_mount_monitor_parent_class)->finalize (object);
 }
@@ -130,6 +133,7 @@ static void
 udisks_mount_monitor_init (UDisksMountMonitor *monitor)
 {
   monitor->mounts = NULL;
+  g_mutex_init (&monitor->mounts_mutex);
 }
 
 static void
@@ -239,12 +243,16 @@ reload_mounts (UDisksMountMonitor *monitor)
 
   udisks_mount_monitor_ensure (monitor);
 
+  g_mutex_lock (&monitor->mounts_mutex);
   old_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  g_mutex_unlock (&monitor->mounts_mutex);
 
   udisks_mount_monitor_invalidate (monitor);
   udisks_mount_monitor_ensure (monitor);
 
-  cur_mounts = g_list_copy (monitor->mounts);
+  g_mutex_lock (&monitor->mounts_mutex);
+  cur_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  g_mutex_unlock (&monitor->mounts_mutex);
 
   old_mounts = g_list_sort (old_mounts, (GCompareFunc) udisks_mount_compare);
   cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) udisks_mount_compare);
@@ -263,7 +271,7 @@ reload_mounts (UDisksMountMonitor *monitor)
     }
 
   g_list_free_full (old_mounts, g_object_unref);
-  g_list_free (cur_mounts);
+  g_list_free_full (cur_mounts, g_object_unref);
   g_list_free (removed);
   g_list_free (added);
 }
@@ -380,10 +388,14 @@ udisks_mount_monitor_new (void)
 static void
 udisks_mount_monitor_invalidate (UDisksMountMonitor *monitor)
 {
+  g_mutex_lock (&monitor->mounts_mutex);
+
   monitor->have_data = FALSE;
 
   g_list_free_full (monitor->mounts, g_object_unref);
   monitor->mounts = NULL;
+
+  g_mutex_unlock (&monitor->mounts_mutex);
 }
 
 static gboolean
@@ -628,6 +640,8 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
   if (monitor->have_data)
     goto out;
 
+  g_mutex_lock (&monitor->mounts_mutex);
+
   error = NULL;
   if (!udisks_mount_monitor_get_mountinfo (monitor, &error))
     {
@@ -645,6 +659,7 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
     }
 
   monitor->have_data = TRUE;
+  g_mutex_unlock (&monitor->mounts_mutex);
 
  out:
   ;
@@ -672,6 +687,8 @@ udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor *monitor,
 
   udisks_mount_monitor_ensure (monitor);
 
+  g_mutex_lock (&monitor->mounts_mutex);
+
   for (l = monitor->mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
@@ -681,6 +698,8 @@ udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor *monitor,
           ret = g_list_prepend (ret, g_object_ref (mount));
         }
     }
+
+  g_mutex_unlock (&monitor->mounts_mutex);
 
   /* Sort the list to ensure that shortest mount paths appear first */
   ret = g_list_sort (ret, (GCompareFunc) udisks_mount_compare);
@@ -708,6 +727,9 @@ udisks_mount_monitor_is_dev_in_use (UDisksMountMonitor  *monitor,
 
   ret = FALSE;
   udisks_mount_monitor_ensure (monitor);
+
+  g_mutex_lock (&monitor->mounts_mutex);
+
   for (l = monitor->mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
@@ -722,6 +744,7 @@ udisks_mount_monitor_is_dev_in_use (UDisksMountMonitor  *monitor,
     }
 
  out:
+  g_mutex_unlock (&monitor->mounts_mutex);
   return ret;
 }
 

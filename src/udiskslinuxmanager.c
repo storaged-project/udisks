@@ -47,6 +47,7 @@
 #include "udisksmodulemanager.h"
 #include "udiskslinuxfsinfo.h"
 #include "udiskssimplejob.h"
+#include "udisksconfigmanager.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -153,6 +154,20 @@ udisks_linux_manager_init (UDisksLinuxManager *manager)
 
   udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager),
                                             get_supported_filesystems ());
+  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
+                                                 get_supported_encryption_types ());
+}
+
+static void
+udisks_linux_manager_constructed (GObject *obj)
+{
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (obj);
+  UDisksConfigManager *config_manager = udisks_daemon_get_config_manager (manager->daemon);
+
+  udisks_manager_set_default_encryption_type (UDISKS_MANAGER (manager),
+                                              udisks_config_manager_get_encryption (config_manager));
+
+  G_OBJECT_CLASS (udisks_linux_manager_parent_class)->constructed (obj);
 }
 
 static void
@@ -161,6 +176,7 @@ udisks_linux_manager_class_init (UDisksLinuxManagerClass *klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->constructed  = udisks_linux_manager_constructed;
   gobject_class->finalize     = udisks_linux_manager_finalize;
   gobject_class->set_property = udisks_linux_manager_set_property;
   gobject_class->get_property = udisks_linux_manager_get_property;
@@ -423,7 +439,7 @@ handle_loop_setup (UDisksManager          *object,
   if (loop_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for loop object after creating %s",
+                      "Error waiting for loop object after creating '%s': ",
                       loop_device);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -647,6 +663,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  UDISKS_ERROR_FAILED,
                                                  "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
@@ -661,6 +678,8 @@ handle_mdraid_create (UDisksManager         *_object,
                                                  "Error opening device %s while creating mdraid: %m",
                                                  device_file);
           g_free (device_file);
+          g_object_unref (block);
+          g_object_unref (object);
           success = FALSE;
           goto out;
         }
@@ -684,7 +703,7 @@ handle_mdraid_create (UDisksManager         *_object,
           else
             {
               g_prefix_error (&error,
-                              "Error wiping device %s to be used in the RAID array:",
+                              "Error wiping device '%s' to be used in the RAID array: ",
                               udisks_block_get_device (block));
               g_dbus_method_invocation_take_error (invocation, error);
               success = FALSE;
@@ -720,7 +739,7 @@ handle_mdraid_create (UDisksManager         *_object,
 
   if (!bd_md_create (array_name, arg_level, disks, 0, NULL, FALSE, arg_chunk, NULL, &error))
     {
-      g_prefix_error (&error, "Error creating RAID array:");
+      g_prefix_error (&error, "Error creating RAID array: ");
       g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       success = FALSE;
@@ -733,7 +752,7 @@ handle_mdraid_create (UDisksManager         *_object,
       raid_node = bd_md_node_from_name (array_name, &error);
       if (!raid_node)
         {
-          g_prefix_error (&error, "Failed to get md node for array %s", array_name);
+          g_prefix_error (&error, "Failed to get md node for array '%s': ", array_name);
           g_dbus_method_invocation_take_error (invocation, error);
           success = FALSE;
           goto out;
@@ -754,7 +773,7 @@ handle_mdraid_create (UDisksManager         *_object,
   if (array_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for array object after creating %s",
+                      "Error waiting for array object after creating '%s': ",
                       raid_device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       success = FALSE;
@@ -795,7 +814,7 @@ handle_mdraid_create (UDisksManager         *_object,
         g_clear_error (&error);
       else
         {
-          g_prefix_error (&error, "Error wiping raid device %s:", raid_device_file);
+          g_prefix_error (&error, "Error wiping raid device '%s': ", raid_device_file);
           g_dbus_method_invocation_take_error (invocation, error);
           success = FALSE;
           goto out;
@@ -1065,6 +1084,7 @@ handle_get_block_devices (UDisksManager         *object,
                                               invocation,
                                               block_paths);
 
+  g_free (block_paths);
   g_slist_free_full (blocks, g_object_unref);
 
   return TRUE;  /* returning TRUE means that we handled the method invocation */
@@ -1073,7 +1093,7 @@ handle_get_block_devices (UDisksManager         *object,
 static gboolean
 compare_paths (UDisksManager         *object,
                UDisksBlock           *block,
-               gchar                 *path)
+               const gchar           *path)
 {
   const gchar *const *symlinks = NULL;
 
@@ -1097,10 +1117,9 @@ handle_resolve_device (UDisksManager         *object,
                        GVariant              *arg_devspec,
                        GVariant              *arg_options)
 {
-
-  gchar *devpath = NULL;
-  gchar *devuuid = NULL;
-  gchar *devlabel = NULL;
+  const gchar *devpath = NULL;
+  const gchar *devuuid = NULL;
+  const gchar *devlabel = NULL;
 
   GSList *blocks = NULL;
   GSList *blocks_p = NULL;
@@ -1114,9 +1133,9 @@ handle_resolve_device (UDisksManager         *object,
   gboolean found = FALSE;
   guint i = 0;
 
-  g_variant_lookup (arg_devspec, "path", "s", &devpath);
-  g_variant_lookup (arg_devspec, "uuid", "s", &devuuid);
-  g_variant_lookup (arg_devspec, "label", "s", &devlabel);
+  g_variant_lookup (arg_devspec, "path", "&s", &devpath);
+  g_variant_lookup (arg_devspec, "uuid", "&s", &devuuid);
+  g_variant_lookup (arg_devspec, "label", "&s", &devlabel);
 
   blocks = get_block_objects (object, &num_blocks);
 
@@ -1132,26 +1151,26 @@ handle_resolve_device (UDisksManager         *object,
 
       if (found)
         {
-          ret = g_slist_prepend (ret, g_object_ref (blocks_p->data));
+          ret = g_slist_prepend (ret, blocks_p->data);
           num_found++;
         }
     }
 
-    ret_paths = g_new0 (const gchar *, num_found + 1);
-    for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
-      {
-        ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
-      }
+  ret_paths = g_new0 (const gchar *, num_found + 1);
+  for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
+    {
+      ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
+    }
 
-    udisks_manager_complete_resolve_device (object,
-                                            invocation,
-                                            ret_paths);
+  udisks_manager_complete_resolve_device (object,
+                                          invocation,
+                                          ret_paths);
 
-    g_slist_free_full (blocks, g_object_unref);
-    g_slist_free_full (ret, g_object_unref);
+  g_free (ret_paths);
+  g_slist_free_full (blocks, g_object_unref);
+  g_slist_free (ret);
 
-    return TRUE;  /* returning TRUE means that we handled the method invocation */
-
+  return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

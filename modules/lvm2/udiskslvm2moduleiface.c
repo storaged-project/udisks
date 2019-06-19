@@ -210,17 +210,17 @@ lvm_update_vgs (GObject      *source_obj,
 
       for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
         if (g_strcmp0 ((*pvs_p)->vg_name, vg_name) == 0)
-            vg_pvs = g_slist_prepend (vg_pvs, *pvs_p);
+            vg_pvs = g_slist_prepend (vg_pvs, bd_lvm_pvdata_copy (*pvs_p));
 
       udisks_linux_volume_group_object_update (group, *vgs_p, vg_pvs);
     }
 
-  /* this is safe to do -- all BDLVMPVdata objects are still existing because
-     the function that frees them is scheduled in main loop by the
-     udisks_linux_volume_group_object_update() call above */
+  /* UDisksLinuxVolumeGroupObject carries copies of BDLVMPVdata that belong to the VG.
+  *  The rest of the PVs, either not assigned to any VG or assigned to a non-existing VG,
+  *  are basically unused and freed here anyway.
+  */
   for (BDLVMPVdata **pvs_p=pvs; *pvs_p; pvs_p++)
-    if ((*pvs_p)->vg_name == NULL)
-      bd_lvm_pvdata_free (*pvs_p);
+    bd_lvm_pvdata_free (*pvs_p);
 
   /* only free the containers, the contents were passed further */
   g_free (vgs);
@@ -299,8 +299,14 @@ static gboolean
 is_recorded_as_physical_volume (UDisksDaemon      *daemon,
                                 UDisksLinuxDevice *device)
 {
-  UDisksObject *object = udisks_daemon_find_block (daemon, g_udev_device_get_device_number (device->udev_device));
-  return object && udisks_object_peek_physical_volume (object) != NULL;
+  UDisksObject *object;
+  gboolean ret;
+
+  object = udisks_daemon_find_block (daemon, g_udev_device_get_device_number (device->udev_device));
+  ret = object && udisks_object_peek_physical_volume (object) != NULL;
+
+  g_clear_object (&object);
+  return ret;
 }
 
 static GDBusObjectSkeleton *
@@ -367,7 +373,7 @@ udisks_module_track_parent (UDisksDaemon  *daemon,
   const gchar *parent_uuid = NULL;
 
   UDisksObject *object;
-  UDisksObject *lvol_object;
+  UDisksObject *lvol_object = NULL;
   UDisksBlockLVM2 *block_lvm2;
   UDisksLogicalVolume *lvol;
 
@@ -392,6 +398,7 @@ udisks_module_track_parent (UDisksDaemon  *daemon,
     }
 
  out:
+  g_clear_object (&lvol_object);
   g_clear_object (&object);
   if (uuid_ret)
     *uuid_ret = g_strdup (parent_uuid);

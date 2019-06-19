@@ -262,7 +262,12 @@ class DBusProperty(object):
                 raise AssertionError('Expected length %d, but %s has length %d' % (length,
                                                                                    self._value,
                                                                                    len(self._value)))
+    def assertContains(self, member, timeout=TIMEOUT):
+        check_fn = lambda x: member in x
+        ret = self._check(timeout, check_fn)
 
+        if not ret:
+            raise AssertionError('%s does not contain %s' % (self._value, member))
 
 class UdisksTestCase(unittest.TestCase):
     iface_prefix = None

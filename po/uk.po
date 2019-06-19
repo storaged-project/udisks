@@ -10,18 +10,19 @@
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # Yuri Chornoivan <yurchor@ukr.net>, 2017. #zanata
 # Yuri Chornoivan <yurchor@ukr.net>, 2018. #zanata
+# Yuri Chornoivan <yurchor@ukr.net>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.2\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-03-01 15:54+0100\n"
-"PO-Revision-Date: 2018-08-10 03:15+0000\n"
+"PO-Revision-Date: 2019-03-04 07:59+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian\n"
+"Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: uk\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Zanata 4.6.2\n"
 
@@ -103,8 +104,8 @@ msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
 msgstr ""
-"Розблокувати зашифрований пристрій, вказаний у файлі crypttab з параметром x"
-"-udisks-auth"
+"Розблокувати зашифрований пристрій, вказаний у файлі crypttab з параметром "
+"x-udisks-auth"
 
 #: data/org.freedesktop.UDisks2.policy.in:136
 msgid "Lock an encrypted device unlocked by another user"
@@ -483,11 +484,13 @@ msgstr "Помилка виходу: %s"
 #, c-format
 msgid "Error opening %s while getting iSCSI initiator name: %s"
 msgstr ""
+"Помилка під час відкриття %s, а саме, отримання назви ініціатора iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
 #, c-format
 msgid "Error reading %s while getting iSCSI initiator name: %s"
 msgstr ""
+"Помилка під час читання %s, а саме, отримання назви ініціатора iSCSI: %s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
 msgid "Authentication is required change iSCSI initiator name"
@@ -501,11 +504,15 @@ msgstr "Порожня назва ініціатора"
 #, c-format
 msgid "Error opening %s while setting iSCSI initiator name: %s"
 msgstr ""
+"Помилка під час відкриття %s, а саме, встановлення назви ініціатора iSCSI: "
+"%s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: %s"
 msgstr ""
+"Помилка під час запису до %s, а саме, встановлення назви ініціатора iSCSI: "
+"%s"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
 msgid "Authentication is required to discover targets"
@@ -559,7 +566,7 @@ msgstr "Щоб активувати логічний том, слід пройт
 
 #: modules/lvm2/udiskslinuxlogicalvolume.c:753
 msgid "Authentication is required to deactivate a logical volume"
-msgstr "Щоб дезактивувати логічний том, слід пройти розпізнавання"
+msgstr "Щоб деактивувати логічний том, слід пройти розпізнавання"
 
 #: modules/lvm2/udiskslinuxlogicalvolume.c:819
 msgid "Authentication is required to create a snapshot of a logical volume"
@@ -637,64 +644,64 @@ msgstr "Для керування лампочкою дискового прис
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:16
 msgid "Manage VDO"
-msgstr ""
+msgstr "Керування VDO"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr ""
+msgstr "Щоб отримати доступ до керування VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
-msgstr ""
+msgstr "Щоб змінити правила запису тому VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr ""
+msgstr "Щоб деактивувати том VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
-msgstr ""
+msgstr "Щоб увімкнути стискання на томі VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
-msgstr ""
+msgstr "Щоб вимкнути стискання на томі VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
-msgstr ""
+msgstr "Щоб увімкнути дедублікацію томі VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
-msgstr ""
+msgstr "Щоб вимкнути дедублікацію на томі VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
-msgstr ""
+msgstr "Щоб збільшити розміри логічного тому VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
-msgstr ""
+msgstr "Щоб збільшити розміри фізичного тому VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "Щоб вилучити том VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "Щоб зупинити роботу тому VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Щоб створити том VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Щоб активувати наявний том VDO, слід пройти розпізнавання"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "Щоб розпочати роботу тому VDO, слід пройти розпізнавання"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
@@ -2168,8 +2175,8 @@ msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
-#. /disk-format
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
+#. docs/disk-format
 #: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "ChromeOS Firmware"

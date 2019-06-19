@@ -96,7 +96,7 @@ def install_config_files(projdir, tmpdir):
 
     # dbus config files
     copied.extend(_copy_files((os.path.join(projdir, 'data/org.freedesktop.UDisks2.conf'),),
-                              '/etc/dbus-1/system.d/', tmpdir))
+                              '/usr/share/dbus-1/system.d/', tmpdir))
 
     # polkit policies
     policies = glob.glob(projdir + '/data/*.policy') + glob.glob(projdir + '/modules/*/data/*.policy')
@@ -152,15 +152,15 @@ if __name__ == '__main__':
     testdir = os.path.abspath(os.path.dirname(__file__))
     projdir = os.path.abspath(os.path.normpath(os.path.join(testdir, '..', '..', '..')))
 
-    # find which binary we're about to test: this also affects the D-Bus interface and object paths
-    daemon_bin = find_daemon(projdir, args.system)
-
     # use in-tree udisks tools
     if not args.system:
         if os.path.exists(os.path.join(projdir, 'tools', 'udisksctl')):
             os.environ["PATH"] = ':'.join([os.path.join(projdir, 'tools'), os.environ["PATH"]])
 
     if not args.system:
+        # find which binary we're about to test: this also affects the D-Bus interface and object paths
+        daemon_bin = find_daemon(projdir, args.system)
+
         tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
         atexit.register(shutil.rmtree, tmpdir)
 
