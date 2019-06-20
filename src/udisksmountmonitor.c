@@ -769,14 +769,22 @@ udisks_mount_monitor_get_mount_for_path (UDisksMountMonitor  *monitor,
   g_return_val_if_fail (mount_path != NULL, NULL);
 
   udisks_mount_monitor_ensure (monitor);
+
+  g_mutex_lock (&monitor->mounts_mutex);
+
   for (l = monitor->mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
 
       if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM &&
           g_strcmp0 (udisks_mount_get_mount_path (mount), mount_path) == 0)
-        return g_object_ref (mount);
+        {
+          g_object_ref (mount);
+          g_mutex_unlock (&monitor->mounts_mutex);
+          return mount;
+        }
     }
 
+  g_mutex_unlock (&monitor->mounts_mutex);
   return NULL;
 }
