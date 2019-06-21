@@ -1051,6 +1051,10 @@ class FS(UDisksTestCase):
         if fs_type not in ['reiserfs', 'xfs']:
             # the scsi_debug CD drive content is the same as for the HD drive, but
             # udev does not know about this; so give it a nudge to re-probe
+            subprocess.call(['partprobe', self.cd_device])
+            self.sync()
+            time.sleep(2)
+            # for some reason udev still wouldn't notice the filesystem, poke it manually
             subprocess.call(['udevadm', 'trigger', '--action=change',
                              '--sysname-match=' + os.path.basename(self.cd_device)])
             self.sync()
