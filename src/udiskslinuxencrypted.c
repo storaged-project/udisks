@@ -1072,6 +1072,8 @@ handle_resize (UDisksEncrypted       *encrypted,
   else
     effective_passphrase = NULL;
 
+  udisks_linux_block_encrypted_lock (block);
+
   /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
   if (! bd_crypto_luks_resize_luks2_blob (udisks_block_get_device (cleartext_block),
                                           size / 512,
@@ -1086,8 +1088,11 @@ handle_resize (UDisksEncrypted       *encrypted,
                                              udisks_block_get_device (cleartext_block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      udisks_linux_block_encrypted_unlock (block);
       goto out;
     }
+
+  udisks_linux_block_encrypted_unlock (block);
 
   udisks_encrypted_complete_resize (encrypted, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
