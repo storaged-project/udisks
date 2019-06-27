@@ -288,9 +288,12 @@ udisks_filesystem_btrfs_get_first_mount_point (UDisksFilesystemBTRFS  *fs_btrfs,
 
   /* Get UDisksFilesystem. */
   fs = udisks_object_peek_filesystem (object);
-  mount_points = udisks_filesystem_get_mount_points (fs);
-  if (mount_points != NULL && *mount_points != NULL)
-    mount_point = g_strdup (*mount_points);
+  if (fs != NULL)
+    {
+      mount_points = udisks_filesystem_get_mount_points (fs);
+      if (mount_points != NULL && *mount_points != NULL)
+        mount_point = g_strdup (*mount_points);
+    }
 
   g_object_unref (object);
 
