@@ -289,7 +289,7 @@ read_child_stderr (GIOChannel *channel,
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
   gchar buf[1024];
-  gsize bytes_read;
+  gsize bytes_read = 0;
 
   g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
   g_string_append_len (job->child_stderr, buf, bytes_read);
@@ -303,7 +303,7 @@ read_child_stdout (GIOChannel *channel,
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
   gchar buf[1024];
-  gsize bytes_read;
+  gsize bytes_read = 0;
 
   g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
   g_string_append_len (job->child_stdout, buf, bytes_read);
@@ -316,7 +316,7 @@ write_child_stdin (GIOChannel *channel,
                    gpointer user_data)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
-  gsize bytes_written;
+  gsize bytes_written = 0;
   gsize bytes_to_write = 0;
 
   if (job->input_string != NULL)
@@ -358,11 +358,13 @@ child_watch_cb (GPid     pid,
   gsize buf_size;
   gboolean ret;
 
+  buf_size = 0;
   if (g_io_channel_read_to_end (job->child_stdout_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
     {
       g_string_append_len (job->child_stdout, buf, buf_size);
       g_free (buf);
     }
+  buf_size = 0;
   if (g_io_channel_read_to_end (job->child_stderr_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
     {
       g_string_append_len (job->child_stderr, buf, buf_size);
