@@ -3411,12 +3411,14 @@ main (int argc,
 
       /* compute cur and prev */
       completion_prev = NULL;
+      /* coverity[tainted_data] */
       completion_cur = pick_word_at (completion_line, completion_point, &cur_begin);
       if (cur_begin > 0)
         {
           gint prev_end;
           for (prev_end = cur_begin - 1; prev_end >= 0; prev_end--)
             {
+              /* coverity[tainted_data] */
               if (!g_ascii_isspace (completion_line[prev_end]))
                 {
                   completion_prev = pick_word_at (completion_line, prev_end, NULL);
