@@ -2459,6 +2459,20 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!-- Delete:
+         @options: Options.
+
+         Stops the RAID array and destroys all RAID metadata on member devices.
+
+         If the option <parameter>tear-down</parameter> is set to
+         %TRUE, then the RAID array block device and all its children
+         will be cleaned up before stopping.  This cleanup consists of
+         removing entries from /etc/fstab and /etc/crypttab, and
+         locking of encrypted block devices.  Entries in /etc/fstab
+         and /etc/crypttab that have been created with the
+         'track-parents' options to AddConfigurationItem will be
+         removed even if their block device is currently unavailable.
+    -->
     <method name="Delete">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
