@@ -37,6 +37,7 @@ import os
 import contextlib
 import signal
 from os.path import dirname
+from distutils.spawn import find_executable
 
 srcdir = dirname(dirname(dirname(os.path.realpath(__file__))))
 libdir = os.path.join(srcdir, 'udisks', '.libs')
@@ -177,6 +178,7 @@ class UDisksTestCase(unittest.TestCase):
 
         cls.stop_daemon()
 
+        cls.teardown_cd_vdev(cls.cd_device)
         cls.teardown_vdev(cls.device)
         cls.device = None
 
@@ -475,6 +477,21 @@ class UDisksTestCase(unittest.TestCase):
 
         print('Set up test device: r/w: %s, r/o: %s' % (rw_dev, ro_dev))
         return (rw_dev, ro_dev)
+
+    @classmethod
+    def teardown_cd_vdev(cls, cd_device):
+        """Remove pktcdvd device attached to the specified scsi_debug cdrom device.
+
+        Newer udftools ship an udev rule that calls pktsetup to create a /dev/pktcdvd/
+        device on every cd-rom device. So if there's no pktsetup tool in the system,
+        the attached device wouldn't most likely exist either. """
+        if os.path.exists(cd_device) and find_executable("pktsetup"):
+            try:
+                rdev = os.stat(cd_device).st_rdev
+                subprocess.call(['pktsetup', '-d', '%d:%d' % (os.major(rdev), os.minor(rdev))])
+                subprocess.call(['rmmod', 'pktcdvd'])
+            except Exception as e:
+                print("Ignoring exception raised during pktcdvd device removal: %s" % e)
 
     @classmethod
     def teardown_vdev(cls, device):
@@ -1051,6 +1068,10 @@ class FS(UDisksTestCase):
         if fs_type not in ['reiserfs', 'xfs']:
             # the scsi_debug CD drive content is the same as for the HD drive, but
             # udev does not know about this; so give it a nudge to re-probe
+            subprocess.call(['partprobe', self.cd_device])
+            self.sync()
+            time.sleep(2)
+            # for some reason udev still wouldn't notice the filesystem, poke it manually
             subprocess.call(['udevadm', 'trigger', '--action=change',
                              '--sysname-match=' + os.path.basename(self.cd_device)])
             self.sync()
