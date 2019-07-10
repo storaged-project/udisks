@@ -48,9 +48,11 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
     def _read_initator_name(self):
         with open(INITIATOR_FILE, "rb") as f:
-            initiator = f.read().strip().split(b"InitiatorName=")[1]
+            data = f.read()
 
-        return initiator
+        # in Python 2 data is string even when opening the file as 'rb'
+        initiator = bytearray(data)
+        return initiator.strip().split(b"InitiatorName=")[1]
 
     def test_initiator_name(self):
         manager = self.get_object('/Manager')
@@ -63,7 +65,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         initiator_dbus = manager.GetInitiatorNameRaw(self.no_options,
                                                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
         # raw name is null terminated, we need to cut the last item from the bytearray
-        self.assertEqual(bytes(initiator_dbus)[:-1], initiator_sys)
+        self.assertEqual(bytearray(initiator_dbus)[:-1], initiator_sys)
 
     def test_login_noauth(self):
         manager = self.get_object('/Manager')
