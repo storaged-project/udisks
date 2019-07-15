@@ -267,7 +267,6 @@ sed -i udisks/udisks2.conf.in -e "s/encryption=luks1/encryption=%{default_luks_e
 autoreconf -ivf
 # modules need to be explicitly enabled
 %configure            \
-    --sysconfdir=/etc \
 %if %{with_gtk_doc}
     --enable-gtk-doc  \
 %else
