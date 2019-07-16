@@ -303,8 +303,8 @@ udisks_client_new (GCancellable        *cancellable,
  *
  * Finishes an operation started with udisks_client_new().
  *
- * Returns: A #UDisksClient or %NULL if @error is set. Free with
- * g_object_unref() when done with it.
+ * Returns: (transfer full): A #UDisksClient or %NULL if @error is set. Free
+ * with g_object_unref() when done with it.
  */
 UDisksClient *
 udisks_client_new_finish (GAsyncResult        *res,
@@ -328,8 +328,8 @@ udisks_client_new_finish (GAsyncResult        *res,
  *
  * Synchronously gets a #UDisksClient for the local system.
  *
- * Returns: A #UDisksClient or %NULL if @error is set. Free with
- * g_object_unref() when done with it.
+ * Returns: (transfer full): A #UDisksClient or %NULL if @error is set. Free
+ * with g_object_unref() when done with it.
  */
 UDisksClient *
 udisks_client_new_sync (GCancellable  *cancellable,
@@ -1675,7 +1675,7 @@ get_pow10_size (guint64 size)
  *
  * Utility function to get a human-readable string that represents @size.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: (transfer full): A string that should be freed with g_free().
  */
 gchar *
 udisks_client_get_size_for_display (UDisksClient  *client,
@@ -1736,8 +1736,8 @@ udisks_client_get_size_for_display (UDisksClient  *client,
  * Gets a human-readable string of the media described by
  * @media_compat. The returned information is localized.
  *
- * Returns: A string that should be freed with g_free() or %NULL if
- * unknown.
+ * Returns: (transfer full): A string that should be freed with g_free() or
+ * %NULL if unknown.
  */
 gchar *
 udisks_client_get_media_compat_for_display (UDisksClient       *client,
@@ -1948,7 +1948,7 @@ static const struct
  *
  * Gets a human readable localized string for @usage, @type and @version.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: (transfer full): A string that should be freed with g_free().
  */
 gchar *
 udisks_client_get_id_for_display (UDisksClient *client,
@@ -2071,7 +2071,7 @@ static const struct
  *
  * Gets a human readable localized string for @partition_table_type.
  *
- * Returns: A description of @partition_table_type or %NULL.
+ * Returns: (transfer none): A description of @partition_table_type or %NULL.
  */
 const gchar *
 udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
@@ -2127,7 +2127,8 @@ static const struct
  *
  * Gets a human readable localized string for @partition_table_type and @partition_table_subtype.
  *
- * Returns: A description of @partition_table_type and @partition_table_subtype or %NULL.
+ * Returns: (transfer none): A description of @partition_table_type and
+ * @partition_table_subtype or %NULL.
  */
 const gchar *
 udisks_client_get_partition_table_subtype_for_display (UDisksClient  *client,
@@ -2384,7 +2385,8 @@ udisks_client_get_partition_type_infos (UDisksClient   *client,
  *
  * Gets a human readable localized string for @partiton_table_type and @partition_type.
  *
- * Returns: A description of @partition_type or %NULL if unknown.
+ * Returns: (transfer none): A description of @partition_type or %NULL if
+ * unknown.
  */
 const gchar *
 udisks_client_get_partition_type_for_display (UDisksClient  *client,
@@ -2420,7 +2422,8 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
  * useful in scenarios where different subtypes is using the same
  * partition type.
  *
- * Returns: A description of @partition_type or %NULL if unknown.
+ * Returns: (transfer none): A description of @partition_type or %NULL if
+ * unknown.
  *
  * Since: 2.1.1
  */
@@ -2463,7 +2466,7 @@ udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
  * D-Bus property.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: (transfer full): A string that should be freed with g_free().
  */
 gchar *
 udisks_client_get_job_description_from_operation (const gchar *operation)
@@ -2529,7 +2532,7 @@ udisks_client_get_job_description_from_operation (const gchar *operation)
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
  * D-Bus property.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: (transfer full): A string that should be freed with g_free().
  */
 gchar *
 udisks_client_get_job_description (UDisksClient   *client,
