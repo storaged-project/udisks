@@ -41,6 +41,12 @@ void                udisks_client_new                (GCancellable        *cance
                                                       gpointer             user_data);
 UDisksClient       *udisks_client_new_finish         (GAsyncResult        *res,
                                                       GError             **error);
+void                udisks_client_new_for_connection (GDBusConnection     *connection,
+                                                      GCancellable        *cancellable,
+                                                      GAsyncReadyCallback  callback,
+                                                      gpointer             user_data);
+UDisksClient       *udisks_client_new_for_connection_finish (GAsyncResult  *res,
+                                                             GError       **error);
 UDisksClient       *udisks_client_new_sync           (GCancellable        *cancellable,
                                                       GError             **error);
 GDBusObjectManager *udisks_client_get_object_manager (UDisksClient        *client);

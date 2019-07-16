@@ -31,6 +31,8 @@ UDISKS_CHECK_VERSION
 UDisksClient
 udisks_client_new
 udisks_client_new_finish
+udisks_client_new_for_connection
+udisks_client_new_for_connection_finish
 udisks_client_new_sync
 udisks_client_get_object
 udisks_client_peek_object
