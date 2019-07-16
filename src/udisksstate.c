@@ -766,7 +766,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
           gchar *error_message;
 
           error_message = NULL;
-          escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
+          escaped_mount_point = g_shell_quote (mount_point);
           /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (state->daemon,
                                                       NULL, /* UDisksObject */

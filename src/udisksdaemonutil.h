@@ -99,9 +99,6 @@ gboolean udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon
 gpointer  udisks_daemon_util_dup_object (gpointer   interface_,
                                          GError   **error);
 
-gchar *udisks_daemon_util_escape (const gchar *str);
-gchar *udisks_daemon_util_escape_and_quote (const gchar *str);
-
 gchar *udisks_daemon_util_hexdump (gconstpointer data, gsize len);
 void udisks_daemon_util_hexdump_debug (gconstpointer data, gsize len);
 
