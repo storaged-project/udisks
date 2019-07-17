@@ -1065,7 +1065,8 @@ class FS(UDisksTestCase):
         # this is known-broken for reiserfs and xfs right now:
         # https://github.com/karelzak/util-linux/issues/17
         # https://github.com/karelzak/util-linux/issues/18
-        if fs_type not in ['reiserfs', 'xfs']:
+        # exfat can be mounted with '-o rw' even if read-only
+        if fs_type not in ['reiserfs', 'xfs', 'exfat']:
             # the scsi_debug CD drive content is the same as for the HD drive, but
             # udev does not know about this; so give it a nudge to re-probe
             subprocess.call(['partprobe', self.cd_device])
