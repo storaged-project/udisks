@@ -935,8 +935,8 @@ class FS(UDisksTestCase):
 
         self.assertProperty(fs, 'mount-points', [mount_a])
 
-        if fs_type != 'ntfs':
-            # ntfs-3g does not support multiple mounts
+        if fs_type not in ('ntfs', 'exfat'):
+            # ntfs-3g and exfat don't support multiple mounts
             subprocess.check_call([mount_prog, self.device, mount_b])
             self.assertProperty(fs, 'mount-points', {mount_a, mount_b})
             subprocess.call(['umount', mount_b])
