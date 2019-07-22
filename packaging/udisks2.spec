@@ -434,6 +434,9 @@ udevadm trigger
 %endif
 
 %changelog
+* Mon Jul 22 2019 Tomas Bzatek <tbzatek@redhat.com> - 2.8.4-1
+- Version 2.8.4
+
 * Thu Jun 13 2019 Tomas Bzatek <tbzatek@redhat.com> - 2.8.3-1
 - Version 2.8.3
 

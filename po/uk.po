@@ -13,10 +13,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2019. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: udisks 2.8.2\n"
+"Project-Id-Version: udisks 2.8.4\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2019-03-01 15:54+0100\n"
-"PO-Revision-Date: 2019-03-04 07:59+0000\n"
+"POT-Creation-Date: 2019-06-17 14:38+0200\n"
+"PO-Revision-Date: 2019-06-18 04:19+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian\n"
 "Language: uk\n"
@@ -137,7 +137,7 @@ msgstr "Керування петльовими пристроями"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:341
+#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:357
 msgid "Authentication is required to set up a loop device"
 msgstr ""
 "Щоб отримати доступ до визначення петльового пристрою, слід пройти "
@@ -412,18 +412,18 @@ msgstr "Керування Bcache"
 msgid "Authentication is required to manage Bcache"
 msgstr "Щоб отримати доступ до керування Bcache, слід пройти розпізнавання"
 
-#: modules/bcache/udiskslinuxblockbcache.c:276
+#: modules/bcache/udiskslinuxblockbcache.c:269
 msgid "Authentication is required to destroy bcache device."
 msgstr ""
 "Щоб отримати доступ до знищення пристрою bcache, слід пройти розпізнавання"
 
-#: modules/bcache/udiskslinuxblockbcache.c:335
+#: modules/bcache/udiskslinuxblockbcache.c:325
 msgid "Authentication is required to set mode of bcache device."
 msgstr ""
 "Щоб отримати доступ до встановлення режиму роботи пристрою bcache, слід "
 "пройти розпізнавання"
 
-#: modules/bcache/udiskslinuxmanagerbcache.c:247
+#: modules/bcache/udiskslinuxmanagerbcache.c:248
 msgid "Authentication is required to create bcache device."
 msgstr ""
 "Щоб отримати доступ до створення пристрою bcache, слід пройти розпізнавання"
@@ -436,28 +436,28 @@ msgstr "Керування BTRFS"
 msgid "Authentication is required to manage BTRFS"
 msgstr "Щоб отримати доступ до керування BTRFS, слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:343
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:616
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:329
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:595
 msgid "Authentication is required to change label for BTRFS volume"
 msgstr "Щоб змінити мітку тому BTRFS, слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:473
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:453
 msgid "Authentication is required to add the device to the volume"
 msgstr "Щоб додати пристрій до тому, слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:684
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:663
 msgid "Authentication is required to create a new snapshot"
 msgstr "Щоб створити знімок, слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:743
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:722
 msgid "Authentication is required to check and repair the volume"
 msgstr "Для виконання перевірки і відновлення тому слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:796
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:776
 msgid "Authentication is required to resize the volume"
 msgstr "Щоб отримати доступ до зміни розміру тому, слід пройти розпізнавання"
 
-#: modules/btrfs/udiskslinuxmanagerbtrfs.c:210
+#: modules/btrfs/udiskslinuxmanagerbtrfs.c:209
 msgid "Authentication is required to create a new volume"
 msgstr "Щоб створити том, слід пройти розпізнавання"
 
@@ -470,72 +470,55 @@ msgid "Authentication is required to manage iSCSI"
 msgstr "Щоб отримати доступ до керування iSCSI, слід пройти розпізнавання"
 
 #: modules/iscsi/udiskslinuxiscsisession.c:136
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:722
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:759
 msgid "Authentication is required to perform iSCSI logout"
 msgstr "Щоб отримати доступ до виходу з iSCSI, слід пройти розпізнавання"
 
 #: modules/iscsi/udiskslinuxiscsisession.c:169
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:747
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:784
 #, c-format
 msgid "Logout failed: %s"
 msgstr "Помилка виходу: %s"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:307
-#, c-format
-msgid "Error opening %s while getting iSCSI initiator name: %s"
-msgstr ""
-"Помилка під час відкриття %s, а саме, отримання назви ініціатора iSCSI: %s"
-
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:327
-#, c-format
-msgid "Error reading %s while getting iSCSI initiator name: %s"
-msgstr ""
-"Помилка під час читання %s, а саме, отримання назви ініціатора iSCSI: %s"
-
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:385
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:415
 msgid "Authentication is required change iSCSI initiator name"
 msgstr "Щоб змінити назву ініціатора iSCSI, слід пройти розпізнавання"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:393
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:424
 msgid "Empty initiator name"
 msgstr "Порожня назва ініціатора"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:413
-#, c-format
-msgid "Error opening %s while setting iSCSI initiator name: %s"
-msgstr ""
-"Помилка під час відкриття %s, а саме, встановлення назви ініціатора iSCSI: "
-"%s"
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:466
+msgid "Error parsing the iSCSI initiator name"
+msgstr "Помилка під час спроби обробити назву ініціатора iSCSI"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:430
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:470
 #, c-format
-msgid "Error writing to %s while setting iSCSI initiator name: %s"
-msgstr ""
-"Помилка під час запису до %s, а саме, встановлення назви ініціатора iSCSI: "
-"%s"
+msgid "Error writing to %s while setting iSCSI initiator name: "
+msgstr "Помилка запису до %s під час встановлення назви ініціатора iSCSI: "
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:521
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:552
 msgid "Authentication is required to discover targets"
 msgstr ""
 "Щоб отримати доступ до виявлення призначень, слід пройти розпізнавання"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:545
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:594
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:576
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:625
 #, c-format
 msgid "Discovery failed: %s"
 msgstr "Помилка під час спроби виявлення: %s"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:579
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:610
 msgid "Authentication is required to discover firmware targets"
 msgstr ""
 "Щоб отримати доступ до виявлення призначено мікрокоду, слід пройти "
 "розпізнавання"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:632
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:665
 msgid "Authentication is required to perform iSCSI login"
 msgstr "Щоб отримати доступ до входу до iSCSI, слід пройти розпізнавання"
 
-#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:657
+#: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:690
 #, c-format
 msgid "Login failed: %s"
 msgstr "Помилка під час спроби увійти: %s"
@@ -548,87 +531,87 @@ msgstr "Керування LVM"
 msgid "Authentication is required to manage LVM"
 msgstr "Щоб отримати доступ до керування LVM, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:420
+#: modules/lvm2/udiskslinuxlogicalvolume.c:441
 msgid "Authentication is required to delete a logical volume"
 msgstr "Щоб вилучити логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:532
+#: modules/lvm2/udiskslinuxlogicalvolume.c:563
 msgid "Authentication is required to rename a logical volume"
 msgstr "Щоб перейменувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:593
+#: modules/lvm2/udiskslinuxlogicalvolume.c:625
 msgid "Authentication is required to resize a logical volume"
 msgstr "Щоб змінити розміри логічного тому, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:686
+#: modules/lvm2/udiskslinuxlogicalvolume.c:719
 msgid "Authentication is required to activate a logical volume"
 msgstr "Щоб активувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:753
+#: modules/lvm2/udiskslinuxlogicalvolume.c:787
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "Щоб деактивувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:819
+#: modules/lvm2/udiskslinuxlogicalvolume.c:854
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "Щоб створити знімок логічного тому, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:875
-#: modules/lvm2/udiskslinuxlogicalvolume.c:937
+#: modules/lvm2/udiskslinuxlogicalvolume.c:911
+#: modules/lvm2/udiskslinuxlogicalvolume.c:974
 msgid "LVMCache not enabled at compile time."
 msgstr "LVMCache не було увімкнено під час збирання програми."
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:889
+#: modules/lvm2/udiskslinuxlogicalvolume.c:925
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 "Щоб отримати доступ до перетворення логічного тому на кеш, слід пройти "
 "розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:911
-#: modules/lvm2/udiskslinuxlogicalvolume.c:973
+#: modules/lvm2/udiskslinuxlogicalvolume.c:947
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1010
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Помилка під час спроби перетворення тому: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:951
+#: modules/lvm2/udiskslinuxlogicalvolume.c:988
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Щоб отримати доступ до виділення буфера кешу буфера кешування логічного тому"
 " з логічного тому кешування, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxmanagerlvm2.c:235
+#: modules/lvm2/udiskslinuxmanagerlvm2.c:241
 msgid "Authentication is required to create a volume group"
 msgstr "Щоб створити групу томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:300
+#: modules/lvm2/udiskslinuxvolumegroup.c:301
 msgid "Authentication is required to delete a volume group"
 msgstr "Щоб вилучити групу томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:399
+#: modules/lvm2/udiskslinuxvolumegroup.c:407
 msgid "Authentication is required to rename a volume group"
 msgstr "Щоб перейменувати групу томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:507
+#: modules/lvm2/udiskslinuxvolumegroup.c:517
 msgid "Authentication is required to add a device to a volume group"
 msgstr "Щоб додати пристрій до групи томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:603
+#: modules/lvm2/udiskslinuxvolumegroup.c:615
 msgid "Authentication is required to remove a device from a volume group"
 msgstr "Щоб вилучити пристрій із групи томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:612
+#: modules/lvm2/udiskslinuxvolumegroup.c:624
 msgid "Authentication is required to empty a device in a volume group"
 msgstr "Щоб спорожнити пристрій у групі томів, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:812
+#: modules/lvm2/udiskslinuxvolumegroup.c:835
 msgid "Authentication is required to create a logical volume"
 msgstr "Щоб створити логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:818
+#: modules/lvm2/udiskslinuxvolumegroup.c:841
 msgid "Authentication is required to create a thin volume"
 msgstr ""
 "Щоб отримати доступ до створення тонкого тому, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:824
+#: modules/lvm2/udiskslinuxvolumegroup.c:847
 msgid "Authentication is required to create a thin pool volume"
 msgstr ""
 "Щоб отримати доступ до створення тому тонкого буфера, слід пройти "
@@ -711,12 +694,12 @@ msgstr "Керування zRAM"
 msgid "Authentication is required to manage zRAM"
 msgstr "Щоб отримати доступ до керування zRAM, слід пройти розпізнавання"
 
-#: modules/zram/udiskslinuxmanagerzram.c:387
+#: modules/zram/udiskslinuxmanagerzram.c:391
 msgid "Authentication is required to add zRAM kernel module"
 msgstr ""
 "Щоб отримати доступ до додавання модуля ядра zRAM, слід пройти розпізнавання"
 
-#: modules/zram/udiskslinuxmanagerzram.c:483
+#: modules/zram/udiskslinuxmanagerzram.c:486
 msgid "Authentication is required to remove zRAM kernel module"
 msgstr ""
 "Щоб отримати доступ до вилучення модуля ядра zRAM, слід пройти розпізнавання"
@@ -741,7 +724,7 @@ msgstr ""
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:1993
+#: src/udiskslinuxblock.c:1998
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до додавання запису до файла /etc/fstab, слід пройти "
@@ -749,14 +732,14 @@ msgstr ""
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
-#: src/udiskslinuxblock.c:2011
+#: src/udiskslinuxblock.c:2016
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
 "Щоб отримати доступ до додавання запису до файла /etc/crypttab, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2070
+#: src/udiskslinuxblock.c:2075
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до вилучення запису з файла /etc/fstab, слід пройти "
@@ -764,7 +747,7 @@ msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: src/udiskslinuxblock.c:2088
+#: src/udiskslinuxblock.c:2093
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
@@ -772,7 +755,7 @@ msgstr ""
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2160
+#: src/udiskslinuxblock.c:2165
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до внесення змін до файла /etc/fstab, слід пройти "
@@ -780,7 +763,7 @@ msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: src/udiskslinuxblock.c:2178
+#: src/udiskslinuxblock.c:2183
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr ""
 "Щоб отримати доступ до внесення змін до файла /etc/crypttab, слід пройти "
@@ -797,7 +780,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3018 src/udiskslinuxdriveata.c:2244
+#: src/udiskslinuxblock.c:3030 src/udiskslinuxdriveata.c:2246
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Щоб отримати доступ до безпечного витирання $(drive), слід пройти "
@@ -809,12 +792,12 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3030
+#: src/udiskslinuxblock.c:3042
 msgid "Authentication is required to format $(drive)"
 msgstr ""
 "Щоб отримати доступ до форматування $(drive), слід пройти розпізнавання"
 
-#: src/udiskslinuxblock.c:3072 src/udiskslinuxmdraid.c:1530
+#: src/udiskslinuxblock.c:3084 src/udiskslinuxmdraid.c:1529
 msgid "Authentication is required to modify the system configuration"
 msgstr "Щоб внести зміни до налаштувань системи, слід пройти розпізнавання"
 
@@ -823,7 +806,7 @@ msgstr "Щоб внести зміни до налаштувань систем�
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3563
+#: src/udiskslinuxblock.c:3584
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Щоб відкрити пристрій $(drive) для читання, слід пройти розпізнавання"
 
@@ -832,7 +815,7 @@ msgstr "Щоб відкрити пристрій $(drive) для читання,
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3625
+#: src/udiskslinuxblock.c:3646
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Щоб відкрити пристрій $(drive) для запису, слід пройти розпізнавання"
 
@@ -841,7 +824,7 @@ msgstr "Щоб відкрити пристрій $(drive) для запису, �
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3690
+#: src/udiskslinuxblock.c:3711
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Щоб відкрити пристрій $(drive) для тестування, слід пройти розпізнавання"
@@ -851,7 +834,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3764
+#: src/udiskslinuxblock.c:3785
 msgid "Authentication is required to open $(drive)."
 msgstr "Щоб відкрити $(drive), слід пройти розпізнавання"
 
@@ -860,7 +843,7 @@ msgstr "Щоб відкрити $(drive), слід пройти розпізна
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#: src/udiskslinuxblock.c:3817
+#: src/udiskslinuxblock.c:3838
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 "Для виконання повторного сканування $(drive) слід пройти розпізнавання"
@@ -890,7 +873,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdrive.c:1415
+#: src/udiskslinuxdrive.c:1418
 msgid "Authentication is required to power off $(drive)"
 msgstr ""
 "Щоб отримати доступ до вимикання живлення диска $(drive), слід пройти "
@@ -934,7 +917,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdriveata.c:1211
+#: src/udiskslinuxdriveata.c:1212
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
 "Щоб отримати доступ до запуску самоперевірки SMART на $(drive), слід пройти "
@@ -945,7 +928,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdriveata.c:1299
+#: src/udiskslinuxdriveata.c:1301
 msgid "Authentication is required to check power state for $(drive)"
 msgstr "Щоб перевірити стан живлення $(drive), слід пройти розпізнавання"
 
@@ -955,13 +938,13 @@ msgstr "Щоб перевірити стан живлення $(drive), слід
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdriveata.c:1402
+#: src/udiskslinuxdriveata.c:1404
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 "Щоб отримати доступ до пробудження $(drive) зі стану очікування, слід пройти"
 " розпізнавання"
 
-#: src/udiskslinuxdriveata.c:1403
+#: src/udiskslinuxdriveata.c:1405
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Щоб перевести $(drive) у стан очікування, слід пройти розпізнавання"
 
@@ -970,7 +953,7 @@ msgstr "Щоб перевести $(drive) у стан очікування, с�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdriveata.c:2329
+#: src/udiskslinuxdriveata.c:2331
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr ""
 "Щоб отримати доступ до вмикання SMART диска $(drive), слід пройти "
@@ -981,7 +964,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxdriveata.c:2339
+#: src/udiskslinuxdriveata.c:2341
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr ""
 "Щоб отримати доступ до вимикання SMART диска $(drive), слід пройти "
@@ -992,7 +975,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxencrypted.c:487 src/udiskslinuxencrypted.c:912
+#: src/udiskslinuxencrypted.c:488 src/udiskslinuxencrypted.c:909
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Щоб отримати доступ до розблокування зашифрованого пристрою $(drive), слід "
@@ -1004,7 +987,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxencrypted.c:748
+#: src/udiskslinuxencrypted.c:746
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
@@ -1017,7 +1000,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxencrypted.c:1038
+#: src/udiskslinuxencrypted.c:1034
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
 "Для зміни розмірів зашифрованого пристрою $(drive) слід пройти розпізнавання"
@@ -1027,7 +1010,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:1388 src/udiskslinuxfilesystem.c:1566
+#: src/udiskslinuxfilesystem.c:1399 src/udiskslinuxfilesystem.c:1577
 msgid "Authentication is required to mount $(drive)"
 msgstr "Щоб отримати доступ до монтування $(drive), слід пройти розпізнавання"
 
@@ -1040,7 +1023,7 @@ msgstr "Щоб отримати доступ до монтування $(drive),
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#: src/udiskslinuxfilesystem.c:1473
+#: src/udiskslinuxfilesystem.c:1485
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1057,7 +1040,7 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#: src/udiskslinuxfilesystem.c:1808
+#: src/udiskslinuxfilesystem.c:1860
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1071,7 +1054,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:1856
+#: src/udiskslinuxfilesystem.c:1907
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Щоб отримати доступ до демонтування $(drive), змонтованого іншим "
@@ -1082,7 +1065,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:2037
+#: src/udiskslinuxfilesystem.c:2100
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Щоб змінити мітку файлової системи на $(drive), слід пройти розпізнавання"
@@ -1092,7 +1075,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:2216
+#: src/udiskslinuxfilesystem.c:2279
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Щоб змінити розмір файлової системи на $(drive), слід пройти розпізнавання"
@@ -1102,7 +1085,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:2376
+#: src/udiskslinuxfilesystem.c:2440
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "Щоб відновити файлову систему на $(drive), слід пройти розпізнавання"
 
@@ -1111,7 +1094,7 @@ msgstr "Щоб відновити файлову систему на $(drive), �
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:2533
+#: src/udiskslinuxfilesystem.c:2597
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "Щоб перевірити файлову систему на $(drive), слід пройти розпізнавання"
 
@@ -1120,7 +1103,7 @@ msgstr "Щоб перевірити файлову систему на $(drive),
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxfilesystem.c:2675
+#: src/udiskslinuxfilesystem.c:2738
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1152,7 +1135,7 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:537
+#: src/udiskslinuxmanager.c:553
 msgid "Authentication is required to create a RAID array"
 msgstr ""
 "Щоб отримати доступ до створення масиву RAID, слід пройти розпізнавання"
@@ -1160,14 +1143,14 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:647
+#: src/udiskslinuxmdraid.c:646
 msgid "Authentication is required to start a RAID array"
 msgstr "Щоб отримати доступ до запуску масиву RAID, слід пройти розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:813
+#: src/udiskslinuxmdraid.c:812
 msgid "Authentication is required to stop a RAID array"
 msgstr ""
 "Щоб отримати доступ до зупинення роботи масиву RAID, слід пройти "
@@ -1176,7 +1159,7 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1036
+#: src/udiskslinuxmdraid.c:1035
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
 "Щоб отримати доступ до вилучення пристрою з масиву RAID, слід пройти "
@@ -1185,7 +1168,7 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1187
+#: src/udiskslinuxmdraid.c:1186
 msgid "Authentication is required to add a device to a RAID array"
 msgstr ""
 "Щоб отримати доступ до додавання пристрою до масиву RAID, слід пройти "
@@ -1194,7 +1177,7 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1306
+#: src/udiskslinuxmdraid.c:1305
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1205,14 +1188,14 @@ msgstr ""
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1425
+#: src/udiskslinuxmdraid.c:1424
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Щоб отримати доступ до запуску або призупинення чищення даних масиву RAID, "
 "слід пройти розпізнавання"
 
-#: src/udiskslinuxmdraid.c:1511
+#: src/udiskslinuxmdraid.c:1510
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
 "Щоб отримати доступ до вилучення масиву RAID, слід пройти розпізнавання"
@@ -1233,7 +1216,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxpartitiontable.c:313
+#: src/udiskslinuxpartitiontable.c:314
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Щоб створити розділ на $(drive), слід пройти розпізнавання"
 
@@ -1242,7 +1225,7 @@ msgstr "Щоб створити розділ на $(drive), слід пройт�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxswapspace.c:198
+#: src/udiskslinuxswapspace.c:195
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr ""
 "Щоб увімкнути простір резервної пам’яті (свопінґу) на $(drive), слід пройти "
@@ -1264,7 +1247,7 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#: src/udiskslinuxswapspace.c:358
+#: src/udiskslinuxswapspace.c:365
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
 "Щоб встановити мітку для резервної пам’яті (свопінґу) на $(drive), слід "
@@ -1272,14 +1255,14 @@ msgstr ""
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
-#: udisks/udisksclient.c:1058
+#: udisks/udisksclient.c:1061
 msgctxt "dos-part-flag"
 msgid "Bootable"
 msgstr "Завантажуваний"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#: udisks/udisksclient.c:1068
+#: udisks/udisksclient.c:1071
 msgctxt "gpt-part-flag"
 msgid "System"
 msgstr "Системний"
@@ -1287,105 +1270,105 @@ msgstr "Системний"
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
 #. partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#: udisks/udisksclient.c:1075
+#: udisks/udisksclient.c:1078
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
 msgstr "Застарілий завантажувач BIOS"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#: udisks/udisksclient.c:1082
+#: udisks/udisksclient.c:1085
 msgctxt "gpt-part-flag"
 msgid "Read-only"
 msgstr "Лише читання"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#: udisks/udisksclient.c:1089
+#: udisks/udisksclient.c:1092
 msgctxt "gpt-part-flag"
 msgid "Hidden"
 msgstr "Прихований"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#: udisks/udisksclient.c:1096
+#: udisks/udisksclient.c:1099
 msgctxt "gpt-part-flag"
 msgid "No Automount"
 msgstr "Не автомонтується"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
-#: udisks/udisksclient.c:1109
+#: udisks/udisksclient.c:1112
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
 msgstr "%s (%s)"
 
 #. Translators: The Partition info when unknown
-#: udisks/udisksclient.c:1120
+#: udisks/udisksclient.c:1123
 msgctxt "partition-info"
 msgid "Unknown"
 msgstr "Невідомо"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1592
+#: udisks/udisksclient.c:1595
 msgctxt "byte-size-pow2"
 msgid "KiB"
 msgstr "КіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1598
+#: udisks/udisksclient.c:1601
 msgctxt "byte-size-pow2"
 msgid "MiB"
 msgstr "МіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1604
+#: udisks/udisksclient.c:1607
 msgctxt "byte-size-pow2"
 msgid "GiB"
 msgstr "ГіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1610
+#: udisks/udisksclient.c:1613
 msgctxt "byte-size-pow2"
 msgid "TiB"
 msgstr "ТіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1635
+#: udisks/udisksclient.c:1638
 msgctxt "byte-size-pow10"
 msgid "KB"
 msgstr "кБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1641
+#: udisks/udisksclient.c:1644
 msgctxt "byte-size-pow10"
 msgid "MB"
 msgstr "МБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1647
+#: udisks/udisksclient.c:1650
 msgctxt "byte-size-pow10"
 msgid "GB"
 msgstr "ГБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or
 #. not at all)
-#: udisks/udisksclient.c:1653
+#: udisks/udisksclient.c:1656
 msgctxt "byte-size-pow10"
 msgid "TB"
 msgstr "ТБ"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#: udisks/udisksclient.c:1696
+#: udisks/udisksclient.c:1699
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
@@ -1393,62 +1376,62 @@ msgstr "%s (%s байтів)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#: udisks/udisksclient.c:1706
+#: udisks/udisksclient.c:1709
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
 msgstr "%s (%s байтів)"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1767
+#: udisks/udisksclient.c:1770
 msgctxt "media"
 msgid "CompactFlash"
 msgstr "CompactFlash"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1772
+#: udisks/udisksclient.c:1775
 msgctxt "media"
 msgid "MemoryStick"
 msgstr "MemoryStick"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1777
+#: udisks/udisksclient.c:1780
 msgctxt "media"
 msgid "SmartMedia"
 msgstr "SmartMedia"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1782
+#: udisks/udisksclient.c:1785
 msgctxt "media"
 msgid "SecureDigital"
 msgstr "SecureDigital"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1787
+#: udisks/udisksclient.c:1790
 msgctxt "media"
 msgid "SD High Capacity"
 msgstr "SD високої місткості"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1792
+#: udisks/udisksclient.c:1795
 msgctxt "media"
 msgid "Floppy"
 msgstr "Дискета"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1797
+#: udisks/udisksclient.c:1800
 msgctxt "media"
 msgid "Zip"
 msgstr "Zip"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1802
+#: udisks/udisksclient.c:1805
 msgctxt "media"
 msgid "Jaz"
 msgstr "Jaz"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1807
+#: udisks/udisksclient.c:1810
 msgctxt "media"
 msgid "Flash"
 msgstr "флеш-накопичувач"
@@ -1456,7 +1439,7 @@ msgstr "флеш-накопичувач"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#: udisks/udisksclient.c:1841
+#: udisks/udisksclient.c:1844
 msgctxt "disc-type"
 msgid "CD"
 msgstr "CD"
@@ -1464,7 +1447,7 @@ msgstr "CD"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#: udisks/udisksclient.c:1850
+#: udisks/udisksclient.c:1853
 msgctxt "disc-type"
 msgid "DVD"
 msgstr "DVD"
@@ -1472,7 +1455,7 @@ msgstr "DVD"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#: udisks/udisksclient.c:1859
+#: udisks/udisksclient.c:1862
 msgctxt "disc-type"
 msgid "Blu-Ray"
 msgstr "Blu-Ray"
@@ -1480,322 +1463,322 @@ msgstr "Blu-Ray"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#: udisks/udisksclient.c:1868
+#: udisks/udisksclient.c:1871
 msgctxt "disc-type"
 msgid "HDDVD"
 msgstr "HDDVD"
 
-#: udisks/udisksclient.c:1889
+#: udisks/udisksclient.c:1892
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
 msgstr "FAT (12-бітова версія)"
 
-#: udisks/udisksclient.c:1889 udisks/udisksclient.c:1890
-#: udisks/udisksclient.c:1891 udisks/udisksclient.c:1892
-#: udisks/udisksclient.c:1893
+#: udisks/udisksclient.c:1892 udisks/udisksclient.c:1893
+#: udisks/udisksclient.c:1894 udisks/udisksclient.c:1895
+#: udisks/udisksclient.c:1896
 msgctxt "fs-type"
 msgid "FAT"
 msgstr "FAT"
 
-#: udisks/udisksclient.c:1890
+#: udisks/udisksclient.c:1893
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
 msgstr "FAT (16-бітова версія)"
 
-#: udisks/udisksclient.c:1891
+#: udisks/udisksclient.c:1894
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
 msgstr "FAT (32-бітова версія)"
 
-#: udisks/udisksclient.c:1892
+#: udisks/udisksclient.c:1895
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
 msgstr "FAT (версія %s)"
 
-#: udisks/udisksclient.c:1894
+#: udisks/udisksclient.c:1897
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
 msgstr "NTFS (версія %s)"
 
-#: udisks/udisksclient.c:1894 udisks/udisksclient.c:1895
+#: udisks/udisksclient.c:1897 udisks/udisksclient.c:1898
 msgctxt "fs-type"
 msgid "NTFS"
 msgstr "NTFS"
 
-#: udisks/udisksclient.c:1896
+#: udisks/udisksclient.c:1899
 msgctxt "fs-type"
 msgid "HFS"
 msgstr "HFS"
 
-#: udisks/udisksclient.c:1897
+#: udisks/udisksclient.c:1900
 msgctxt "fs-type"
 msgid "HFS+"
 msgstr "HFS+"
 
-#: udisks/udisksclient.c:1898
+#: udisks/udisksclient.c:1901
 msgctxt "fs-type"
 msgid "APFS"
 msgstr "APFS"
 
-#: udisks/udisksclient.c:1899
+#: udisks/udisksclient.c:1902
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
 msgstr "Ext2 (версія %s)"
 
-#: udisks/udisksclient.c:1899 udisks/udisksclient.c:1900
+#: udisks/udisksclient.c:1902 udisks/udisksclient.c:1903
 msgctxt "fs-type"
 msgid "Ext2"
 msgstr "Ext2"
 
-#: udisks/udisksclient.c:1901
+#: udisks/udisksclient.c:1904
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
 msgstr "Ext3 (версія %s)"
 
-#: udisks/udisksclient.c:1901 udisks/udisksclient.c:1902
+#: udisks/udisksclient.c:1904 udisks/udisksclient.c:1905
 msgctxt "fs-type"
 msgid "Ext3"
 msgstr "Ext3"
 
-#: udisks/udisksclient.c:1903
+#: udisks/udisksclient.c:1906
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
 msgstr "Ext4 (версія %s)"
 
-#: udisks/udisksclient.c:1903 udisks/udisksclient.c:1904
+#: udisks/udisksclient.c:1906 udisks/udisksclient.c:1907
 msgctxt "fs-type"
 msgid "Ext4"
 msgstr "Ext4"
 
-#: udisks/udisksclient.c:1905
+#: udisks/udisksclient.c:1908
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
 msgstr "Журнал Ext (версія %s)"
 
-#: udisks/udisksclient.c:1905 udisks/udisksclient.c:1906
+#: udisks/udisksclient.c:1908 udisks/udisksclient.c:1909
 msgctxt "fs-type"
 msgid "JDB"
 msgstr "JDB"
 
-#: udisks/udisksclient.c:1906
+#: udisks/udisksclient.c:1909
 msgctxt "fs-type"
 msgid "Journal for Ext"
 msgstr "Журнал Ext"
 
-#: udisks/udisksclient.c:1907
+#: udisks/udisksclient.c:1910
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
 msgstr "XFS (версія %s)"
 
-#: udisks/udisksclient.c:1907 udisks/udisksclient.c:1908
+#: udisks/udisksclient.c:1910 udisks/udisksclient.c:1911
 msgctxt "fs-type"
 msgid "XFS"
 msgstr "XFS"
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
-#: udisks/udisksclient.c:1910
+#: udisks/udisksclient.c:1913
 msgctxt "fs-type"
 msgid "Btrfs"
 msgstr "Btrfs"
 
-#: udisks/udisksclient.c:1911
+#: udisks/udisksclient.c:1914
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
 msgstr "ISO 9660 (версія %s)"
 
-#: udisks/udisksclient.c:1911 udisks/udisksclient.c:1912
+#: udisks/udisksclient.c:1914 udisks/udisksclient.c:1915
 msgctxt "fs-type"
 msgid "ISO9660"
 msgstr "ISO9660"
 
-#: udisks/udisksclient.c:1912
+#: udisks/udisksclient.c:1915
 msgctxt "fs-type"
 msgid "ISO 9660"
 msgstr "ISO 9660"
 
-#: udisks/udisksclient.c:1913
+#: udisks/udisksclient.c:1916
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
 msgstr "UDF (версія %s)"
 
-#: udisks/udisksclient.c:1913 udisks/udisksclient.c:1914
+#: udisks/udisksclient.c:1916 udisks/udisksclient.c:1917
 msgctxt "fs-type"
 msgid "UDF"
 msgstr "UDF"
 
-#: udisks/udisksclient.c:1915 udisks/udisksclient.c:1916
+#: udisks/udisksclient.c:1918 udisks/udisksclient.c:1919
 msgctxt "fs-type"
 msgid "exFAT"
 msgstr "exFAT"
 
-#: udisks/udisksclient.c:1916
+#: udisks/udisksclient.c:1919
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
 msgstr "exFAT (версія %s)"
 
-#: udisks/udisksclient.c:1917
+#: udisks/udisksclient.c:1920
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
 msgstr "Swap (версія %s)"
 
-#: udisks/udisksclient.c:1917 udisks/udisksclient.c:1918
+#: udisks/udisksclient.c:1920 udisks/udisksclient.c:1921
 msgctxt "fs-type"
 msgid "Swap"
 msgstr "Swap"
 
-#: udisks/udisksclient.c:1919
+#: udisks/udisksclient.c:1922
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
 msgstr "Фізичний том LVM2 (%s)"
 
-#: udisks/udisksclient.c:1919 udisks/udisksclient.c:1920
+#: udisks/udisksclient.c:1922 udisks/udisksclient.c:1923
 msgctxt "fs-type"
 msgid "LVM2 PV"
 msgstr "LVM2 PV"
 
-#: udisks/udisksclient.c:1920
+#: udisks/udisksclient.c:1923
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
 msgstr "Фізичний том LVM2"
 
-#: udisks/udisksclient.c:1921
+#: udisks/udisksclient.c:1924
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
 msgstr "Елемент RAID Linux (версія %s)"
 
-#: udisks/udisksclient.c:1921 udisks/udisksclient.c:1922
+#: udisks/udisksclient.c:1924 udisks/udisksclient.c:1925
 msgctxt "fs-type"
 msgid "Linux RAID Member"
 msgstr "Елемент RAID Linux"
 
-#: udisks/udisksclient.c:1923
+#: udisks/udisksclient.c:1926
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
 msgstr "Пристрій ZFS (версія ZPool %s)"
 
-#: udisks/udisksclient.c:1923
+#: udisks/udisksclient.c:1926
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
 msgstr "ZFS (в.%s)"
 
-#: udisks/udisksclient.c:1924
+#: udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "ZFS Device"
 msgstr "Пристрій ZFS"
 
-#: udisks/udisksclient.c:1924
+#: udisks/udisksclient.c:1927
 msgctxt "fs-type"
 msgid "ZFS"
 msgstr "ZFS"
 
-#: udisks/udisksclient.c:1925
+#: udisks/udisksclient.c:1928
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr "Елемент Intel Rapid Storage Technology enterprise RAID (версія %s)"
 
-#: udisks/udisksclient.c:1925
+#: udisks/udisksclient.c:1928
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
 msgstr "Елемент Intel RSTe RAID (%s)"
 
-#: udisks/udisksclient.c:1926
+#: udisks/udisksclient.c:1929
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
 msgstr "Елемент Intel Rapid Storage Technology enterprise RAID"
 
-#: udisks/udisksclient.c:1926
+#: udisks/udisksclient.c:1929
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
 msgstr "Елемент Intel RSTe RAID"
 
-#: udisks/udisksclient.c:1927
+#: udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
 msgstr "Можливо зашифровано"
 
-#: udisks/udisksclient.c:1927
+#: udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "Encrypted?"
 msgstr "Зашифровано?"
 
-#: udisks/udisksclient.c:1928
+#: udisks/udisksclient.c:1931
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
 msgstr "Шифрування LUKS (версія %s)"
 
-#: udisks/udisksclient.c:1928 udisks/udisksclient.c:1929
+#: udisks/udisksclient.c:1931 udisks/udisksclient.c:1932
 msgctxt "fs-type"
 msgid "LUKS"
 msgstr "LUKS"
 
-#: udisks/udisksclient.c:1929
+#: udisks/udisksclient.c:1932
 msgctxt "fs-type"
 msgid "LUKS Encryption"
 msgstr "Шифрування LUKS"
 
-#: udisks/udisksclient.c:1930
+#: udisks/udisksclient.c:1933
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
 msgstr "Шифрування VeraCrypt/TrueCrypt"
 
-#: udisks/udisksclient.c:1930
+#: udisks/udisksclient.c:1933
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
 msgstr "VeraCrypt/TrueCrypt"
 
-#: udisks/udisksclient.c:1931
+#: udisks/udisksclient.c:1934
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
 msgstr "VMFS (версія %s)"
 
-#: udisks/udisksclient.c:1931
+#: udisks/udisksclient.c:1934
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
 msgstr "VMFS (v%s)"
 
-#: udisks/udisksclient.c:1932
+#: udisks/udisksclient.c:1935
 msgctxt "fs-type"
 msgid "VMFS"
 msgstr "VMFS"
 
-#: udisks/udisksclient.c:1933
+#: udisks/udisksclient.c:1936
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
 msgstr "VMFS елемент тому (версія %s)"
 
-#: udisks/udisksclient.c:1933
+#: udisks/udisksclient.c:1936
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
 msgstr "Елемент VMFS (v%s)"
 
-#: udisks/udisksclient.c:1934
+#: udisks/udisksclient.c:1937
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
 msgstr "Елемент тому VMFS"
 
-#: udisks/udisksclient.c:1934
+#: udisks/udisksclient.c:1937
 msgctxt "fs-type"
 msgid "VMFS Member"
 msgstr "Елемент VMFS"
@@ -1803,7 +1786,7 @@ msgstr "Елемент VMFS"
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is
 #. version.
-#: udisks/udisksclient.c:2010
+#: udisks/udisksclient.c:2013
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
@@ -1811,388 +1794,388 @@ msgstr "Невідомий (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#: udisks/udisksclient.c:2019
+#: udisks/udisksclient.c:2022
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
 msgstr "Невідомий (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#: udisks/udisksclient.c:2025 udisks/udisksclient.c:2039
+#: udisks/udisksclient.c:2028 udisks/udisksclient.c:2042
 msgctxt "fs-type"
 msgid "Unknown"
 msgstr "Невідомий"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2056
+#: udisks/udisksclient.c:2059
 msgid "Master Boot Record"
 msgstr "Головний завантажувальний запис (MBR)"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2058
+#: udisks/udisksclient.c:2061
 msgid "GUID Partition Table"
 msgstr "Таблиця розділів GUID"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2060
+#: udisks/udisksclient.c:2063
 msgid "Apple Partition Map"
 msgstr "Карта розділів Apple"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2103 udisks/udisksclient.c:2108
+#: udisks/udisksclient.c:2106 udisks/udisksclient.c:2111
 msgctxt "partition-subtype"
 msgid "Generic"
 msgstr "Загальний"
 
-#: udisks/udisksclient.c:2104 udisks/udisksclient.c:2109
+#: udisks/udisksclient.c:2107 udisks/udisksclient.c:2112
 msgctxt "partition-subtype"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2105 udisks/udisksclient.c:2110
-#: udisks/udisksclient.c:2115
+#: udisks/udisksclient.c:2108 udisks/udisksclient.c:2113
+#: udisks/udisksclient.c:2118
 msgctxt "partition-subtype"
 msgid "Windows"
 msgstr "Windows"
 
-#: udisks/udisksclient.c:2106 udisks/udisksclient.c:2112
+#: udisks/udisksclient.c:2109 udisks/udisksclient.c:2115
 msgctxt "partition-subtype"
 msgid "Other"
 msgstr "Інше"
 
-#: udisks/udisksclient.c:2111 udisks/udisksclient.c:2114
+#: udisks/udisksclient.c:2114 udisks/udisksclient.c:2117
 msgctxt "partition-subtype"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
-#: udisks/udisksclient.c:2202
+#: udisks/udisksclient.c:2205
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
 msgstr "Схема розділів MBR"
 
-#: udisks/udisksclient.c:2203
+#: udisks/udisksclient.c:2206
 msgctxt "part-type"
 msgid "EFI System"
 msgstr "Система EFI"
 
-#: udisks/udisksclient.c:2204
+#: udisks/udisksclient.c:2207
 msgctxt "part-type"
 msgid "BIOS Boot"
 msgstr "Завантажувач BIOS"
 
 #. This is also defined in the Apple and Solaris section
-#: udisks/udisksclient.c:2206
+#: udisks/udisksclient.c:2209
 msgctxt "part-type"
 msgid "ZFS"
 msgstr "ZFS"
 
 #. Extended Boot Partition, see
 #. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
-#: udisks/udisksclient.c:2208
+#: udisks/udisksclient.c:2211
 msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr "Розширений завантажувальний розділ"
 
 #. Discoverable Linux Partitions, see
 #. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
-#: udisks/udisksclient.c:2210
+#: udisks/udisksclient.c:2213
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr "Кореневий розділ Linux (x86)"
 
-#: udisks/udisksclient.c:2211
+#: udisks/udisksclient.c:2214
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
 msgstr "Кореневий розділ Linux (x86_64)"
 
-#: udisks/udisksclient.c:2212
+#: udisks/udisksclient.c:2215
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr "Домашній розділ Linux"
 
-#: udisks/udisksclient.c:2213
+#: udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr "Розділ даних сервера Linux"
 
 #. Linux
-#: udisks/udisksclient.c:2215
+#: udisks/udisksclient.c:2218
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Linux, Swap"
 
-#: udisks/udisksclient.c:2216
+#: udisks/udisksclient.c:2219
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr "Файлова система Linux"
 
-#: udisks/udisksclient.c:2217
+#: udisks/udisksclient.c:2220
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr "Linux, RAID"
 
-#: udisks/udisksclient.c:2218 udisks/udisksclient.c:2304
+#: udisks/udisksclient.c:2221 udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux, LVM"
 
-#: udisks/udisksclient.c:2219
+#: udisks/udisksclient.c:2222
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Linux, зарезервований"
 
 #. Microsoft
-#: udisks/udisksclient.c:2221
+#: udisks/udisksclient.c:2224
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "Базові дані"
 
-#: udisks/udisksclient.c:2222
+#: udisks/udisksclient.c:2225
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Microsoft, зарезервований"
 
-#: udisks/udisksclient.c:2223
+#: udisks/udisksclient.c:2226
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft, метадані LDM"
 
-#: udisks/udisksclient.c:2224
+#: udisks/udisksclient.c:2227
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft, дані LDM"
 
-#: udisks/udisksclient.c:2225
+#: udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Середовище відновлення Microsoft Windows"
 
 #. Apple OS X
-#: udisks/udisksclient.c:2227
+#: udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple, HFS/HFS+"
 
-#: udisks/udisksclient.c:2228
+#: udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Apple APFS"
 msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: udisks/udisksclient.c:2229 udisks/udisksclient.c:2283
+#: udisks/udisksclient.c:2232 udisks/udisksclient.c:2286
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple, UFS"
 
-#: udisks/udisksclient.c:2230
+#: udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple, ZFS"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2231
+#: udisks/udisksclient.c:2234
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple, RAID"
 
-#: udisks/udisksclient.c:2232
+#: udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple, RAID (вимкнено)"
 
-#: udisks/udisksclient.c:2233
+#: udisks/udisksclient.c:2236
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Apple, завантажувальний"
 
-#: udisks/udisksclient.c:2234
+#: udisks/udisksclient.c:2237
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple, мітка"
 
-#: udisks/udisksclient.c:2235
+#: udisks/udisksclient.c:2238
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV, відновлювальний"
 
-#: udisks/udisksclient.c:2236
+#: udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Основне сховище Apple"
 
 #. HP-UX
-#: udisks/udisksclient.c:2238
+#: udisks/udisksclient.c:2241
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX, дані"
 
-#: udisks/udisksclient.c:2239
+#: udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX, службовий"
 
 #. FreeBSD
-#: udisks/udisksclient.c:2241
+#: udisks/udisksclient.c:2244
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "FreeBSD, завантажувальний"
 
-#: udisks/udisksclient.c:2242
+#: udisks/udisksclient.c:2245
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD, дані"
 
-#: udisks/udisksclient.c:2243
+#: udisks/udisksclient.c:2246
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "FreeBSD, Swap"
 
-#: udisks/udisksclient.c:2244
+#: udisks/udisksclient.c:2247
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD, UFS"
 
-#: udisks/udisksclient.c:2245
+#: udisks/udisksclient.c:2248
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD, Vinum"
 
-#: udisks/udisksclient.c:2246
+#: udisks/udisksclient.c:2249
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD, ZFS"
 
 #. Solaris
-#: udisks/udisksclient.c:2248
+#: udisks/udisksclient.c:2251
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Solaris, завантажувальний"
 
-#: udisks/udisksclient.c:2249
+#: udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris, кореневий"
 
-#: udisks/udisksclient.c:2250
+#: udisks/udisksclient.c:2253
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Solaris, Swap"
 
-#: udisks/udisksclient.c:2251
+#: udisks/udisksclient.c:2254
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris, резервна копія"
 
-#: udisks/udisksclient.c:2252
+#: udisks/udisksclient.c:2255
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris, /usr"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2253
+#: udisks/udisksclient.c:2256
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris, /var"
 
-#: udisks/udisksclient.c:2254
+#: udisks/udisksclient.c:2257
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris, /home"
 
-#: udisks/udisksclient.c:2255
+#: udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris, альтернативний сектор"
 
-#: udisks/udisksclient.c:2256
+#: udisks/udisksclient.c:2259
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Solaris, зарезервований"
 
-#: udisks/udisksclient.c:2257
+#: udisks/udisksclient.c:2260
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Solaris, зарезервований (2)"
 
-#: udisks/udisksclient.c:2258
+#: udisks/udisksclient.c:2261
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Solaris, зарезервований (3)"
 
-#: udisks/udisksclient.c:2259
+#: udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Solaris, зарезервований (4)"
 
-#: udisks/udisksclient.c:2260
+#: udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Solaris, зарезервований (5)"
 
 #. NetBSD
-#: udisks/udisksclient.c:2262
+#: udisks/udisksclient.c:2265
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "NetBSD, Swap"
 
-#: udisks/udisksclient.c:2263
+#: udisks/udisksclient.c:2266
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD, FFS"
 
-#: udisks/udisksclient.c:2264
+#: udisks/udisksclient.c:2267
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD, LFS"
 
-#: udisks/udisksclient.c:2265
+#: udisks/udisksclient.c:2268
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD, RAID"
 
-#: udisks/udisksclient.c:2266
+#: udisks/udisksclient.c:2269
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "NetBSD, з’єднаний"
 
-#: udisks/udisksclient.c:2267
+#: udisks/udisksclient.c:2270
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD, зашифрований"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
-#: udisks/udisksclient.c:2269
+#: udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: udisks/udisksclient.c:2270
+#: udisks/udisksclient.c:2273
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-
 #. docs/disk-format
-#: udisks/udisksclient.c:2272
+#: udisks/udisksclient.c:2275
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr "Мікропрограма ChromeOS"
 
-#: udisks/udisksclient.c:2273
+#: udisks/udisksclient.c:2276
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr "Ядро ChromeOS"
 
-#: udisks/udisksclient.c:2274
+#: udisks/udisksclient.c:2277
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr "Коренева файлова система ChromeOS"
 
-#: udisks/udisksclient.c:2275
+#: udisks/udisksclient.c:2278
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr "Резервний розділ ChromeOS"
@@ -2200,399 +2183,399 @@ msgstr "Резервний розділ ChromeOS"
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: udisks/udisksclient.c:2279
+#: udisks/udisksclient.c:2282
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr "Intel FFS, зарезервований"
 
-#: udisks/udisksclient.c:2284
+#: udisks/udisksclient.c:2287
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple, HFS/HFS"
 
-#: udisks/udisksclient.c:2285
+#: udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Карта розділів Apple"
 
-#: udisks/udisksclient.c:2286
+#: udisks/udisksclient.c:2289
 msgctxt "part-type"
 msgid "Unused"
 msgstr "Не використовується"
 
-#: udisks/udisksclient.c:2287
+#: udisks/udisksclient.c:2290
 msgctxt "part-type"
 msgid "Empty"
 msgstr "Порожній"
 
-#: udisks/udisksclient.c:2288
+#: udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "Driver"
 msgstr "Driver"
 
-#: udisks/udisksclient.c:2289
+#: udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Driver 4.3"
 
-#: udisks/udisksclient.c:2290
+#: udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "Файлова система ProDOS"
 
-#: udisks/udisksclient.c:2291
+#: udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: udisks/udisksclient.c:2292
+#: udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: udisks/udisksclient.c:2293
+#: udisks/udisksclient.c:2296
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: udisks/udisksclient.c:2294
+#: udisks/udisksclient.c:2297
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: udisks/udisksclient.c:2295
+#: udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: udisks/udisksclient.c:2298
+#: udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "Extended"
 msgstr "Розширений"
 
-#: udisks/udisksclient.c:2299
+#: udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI, GPT"
 
-#: udisks/udisksclient.c:2300
+#: udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: udisks/udisksclient.c:2301
+#: udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Linux, swap"
 
-#: udisks/udisksclient.c:2302
+#: udisks/udisksclient.c:2305
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2303
+#: udisks/udisksclient.c:2306
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Linux, розширений"
 
-#: udisks/udisksclient.c:2305
+#: udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Linux, авто-RAID"
 
-#: udisks/udisksclient.c:2306
+#: udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: udisks/udisksclient.c:2307
+#: udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32МБ"
 
-#: udisks/udisksclient.c:2308
+#: udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: udisks/udisksclient.c:2309
+#: udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
 msgstr "NTFS/exFAT/HPFS"
 
-#: udisks/udisksclient.c:2310
+#: udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95, FAT32"
 
-#: udisks/udisksclient.c:2311
+#: udisks/udisksclient.c:2314
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95, FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2312
+#: udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95, FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2313
+#: udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95, Ext'd (LBA)"
 
-#: udisks/udisksclient.c:2314
+#: udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "Прихований FAT12"
 
-#: udisks/udisksclient.c:2315
+#: udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "Прихований FAT16 <32МБ"
 
-#: udisks/udisksclient.c:2316
+#: udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "Прихований FAT16"
 
-#: udisks/udisksclient.c:2317
+#: udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "Прихований HPFS/NTFS"
 
-#: udisks/udisksclient.c:2318
+#: udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "Прихований W95, FAT32"
 
-#: udisks/udisksclient.c:2319
+#: udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "Прихований W95, FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2320
+#: udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "Прихований W95, FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2321
+#: udisks/udisksclient.c:2324
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: udisks/udisksclient.c:2322
+#: udisks/udisksclient.c:2325
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Діагностичний Compaq"
 
-#: udisks/udisksclient.c:2323
+#: udisks/udisksclient.c:2326
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: udisks/udisksclient.c:2324
+#: udisks/udisksclient.c:2327
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: udisks/udisksclient.c:2325 udisks/udisksclient.c:2326
+#: udisks/udisksclient.c:2328 udisks/udisksclient.c:2329
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "Присипляння"
 
-#: udisks/udisksclient.c:2327
+#: udisks/udisksclient.c:2330
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: udisks/udisksclient.c:2328
+#: udisks/udisksclient.c:2331
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: udisks/udisksclient.c:2329 udisks/udisksclient.c:2330
+#: udisks/udisksclient.c:2332 udisks/udisksclient.c:2333
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: udisks/udisksclient.c:2331
+#: udisks/udisksclient.c:2334
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Solaris, завантажувальний"
 
-#: udisks/udisksclient.c:2332
+#: udisks/udisksclient.c:2335
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: udisks/udisksclient.c:2333
+#: udisks/udisksclient.c:2336
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS, BFS"
 
-#: udisks/udisksclient.c:2334
+#: udisks/udisksclient.c:2337
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS, SkyFS"
 
-#: udisks/udisksclient.c:2475
+#: udisks/udisksclient.c:2478
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "Самоперевірка SMART"
 
-#: udisks/udisksclient.c:2476
+#: udisks/udisksclient.c:2479
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "Виштовхування носія"
 
-#: udisks/udisksclient.c:2477
+#: udisks/udisksclient.c:2480
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "Розблокування пристрою"
 
-#: udisks/udisksclient.c:2478
+#: udisks/udisksclient.c:2481
 msgctxt "job"
 msgid "Locking Device"
 msgstr "Блокування пристрою"
 
-#: udisks/udisksclient.c:2479
+#: udisks/udisksclient.c:2482
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "Внесення змін до зашифрованого пристрою"
 
-#: udisks/udisksclient.c:2480
+#: udisks/udisksclient.c:2483
 msgctxt "job"
 msgid "Resizing Encrypted Device"
 msgstr "Зміна розмірів зашифрованого пристрою"
 
-#: udisks/udisksclient.c:2481
+#: udisks/udisksclient.c:2484
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Запуск пристрою свопінґу"
 
-#: udisks/udisksclient.c:2482
+#: udisks/udisksclient.c:2485
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Зупинення пристрою свопінґу"
 
-#: udisks/udisksclient.c:2483
+#: udisks/udisksclient.c:2486
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "Внесення змін до пристрою резервної пам'яті"
 
-#: udisks/udisksclient.c:2484
+#: udisks/udisksclient.c:2487
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "Перевірка файлової системи"
 
-#: udisks/udisksclient.c:2485
+#: udisks/udisksclient.c:2488
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "Монтування файлової системи"
 
-#: udisks/udisksclient.c:2486
+#: udisks/udisksclient.c:2489
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "Демонтування файлової системи"
 
-#: udisks/udisksclient.c:2487
+#: udisks/udisksclient.c:2490
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "Внесення змін до файлової системи"
 
-#: udisks/udisksclient.c:2488
+#: udisks/udisksclient.c:2491
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "Відновлення файлової системи"
 
-#: udisks/udisksclient.c:2489
+#: udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "Зміна розмірів файлової системи"
 
-#: udisks/udisksclient.c:2490
+#: udisks/udisksclient.c:2493
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "Спорожнення пристрою"
 
-#: udisks/udisksclient.c:2491
+#: udisks/udisksclient.c:2494
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Створення файлової системи"
 
-#: udisks/udisksclient.c:2492
+#: udisks/udisksclient.c:2495
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Налаштовування петльового пристрою"
 
-#: udisks/udisksclient.c:2493
+#: udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Внесення змін до розділу"
 
-#: udisks/udisksclient.c:2494
+#: udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Вилучення розділу"
 
-#: udisks/udisksclient.c:2495
+#: udisks/udisksclient.c:2498
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Створення розділу"
 
-#: udisks/udisksclient.c:2496
+#: udisks/udisksclient.c:2499
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Спорожнення"
 
-#: udisks/udisksclient.c:2497
+#: udisks/udisksclient.c:2500
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "Безпечне витирання ATA"
 
-#: udisks/udisksclient.c:2498
+#: udisks/udisksclient.c:2501
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "Покращене безпечне витирання ATA"
 
-#: udisks/udisksclient.c:2499
+#: udisks/udisksclient.c:2502
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "Зупинення роботи масиву RAID"
 
-#: udisks/udisksclient.c:2500
+#: udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "Запуск масиву RAID"
 
-#: udisks/udisksclient.c:2501
+#: udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "Позначення помилкового пристрою"
 
-#: udisks/udisksclient.c:2502
+#: udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "Вилучення пристрою з масиву"
 
-#: udisks/udisksclient.c:2503
+#: udisks/udisksclient.c:2506
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "Додавання пристрою до масиву"
 
-#: udisks/udisksclient.c:2504
+#: udisks/udisksclient.c:2507
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "Встановлення бітового значення порядку запису"
 
-#: udisks/udisksclient.c:2505
+#: udisks/udisksclient.c:2508
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "Створення масиву RAID"
 
-#: udisks/udisksclient.c:2512
+#: udisks/udisksclient.c:2515
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"

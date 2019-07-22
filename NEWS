@@ -1,17 +1,57 @@
 ---------------------------
-udisks 2.8.4 (unreleased)
+udisks 2.8.4
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.8.3:
-(TODO: make shortlog)
+
+Malte Kraus (1):
+      Use g_shell_quote for inputs to g_shell_parse_argv
+
+Matthew Leeds (1):
+      udisksclient: Add missing transfer annotations
+
+Tomas Bzatek (19):
+      udiskslinuxdriveata: Make get_pm_state() public
+      udiskslinuxfilesystem: Prevent drive waking up on FS size update
+      udisksmountmonitor: Add locking around the mounts list
+      Post-release version bump to 2.8.4
+      tests: Reflect new location of D-Bus service files
+      integration-test: Do not copy config files when testing system instance
+      udiskslinuxpartition: Fix potential NULL dereference
+      Error message prefix tweaks
+      lvm2: Error message prefix tweaks
+      bcache: Error message prefix tweaks
+      zram: Error message prefix tweaks
+      vdo: Error message prefix tweaks
+      udisksmountmonitor: Add locking around udisks_mount_monitor_get_mount_for_path()
+      integration-test: Force re-read partition table on a sr0 scsi_debug device
+      udisksspawnedjob: Initialize I/O counters to zero
+      btrfs: Handle NULL filesystem interface
+      udisksctl: Ignore coverity TAINTED_SCALAR (CWE-20) errors
+      mdraid: Document the Delete() method
+      integration-test: Remove attached pktcdvd device
+
+Vojtech Trefny (5):
+      Fix reading iSCSI initiator name from file in tests with Python 2
+      spec: Do not hardcode sysconfdir to /etc (#1729430)
+      Fix cryptsetup calls locking
+      integration-test: Skip read only mounting test for exFAT
+      integration_test: Skip multiple mountpoints test with exFAT
+
+Vratislav Podzimek (1):
+      Leave 8 MiB for cache metadata in the LVM test
+
+Will Thompson (2):
+      Filesystem.Unmount: don't leak mount_point
+      Filesystem: ignore fstab entry if another device is mounted there
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2019-07-22
 
 ---------------------------
 udisks 2.8.3
