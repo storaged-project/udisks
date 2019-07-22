@@ -1,7 +1,7 @@
 
 m4_define([udisks_major_version], [2])
-m4_define([udisks_minor_version], [8])
-m4_define([udisks_micro_version], [4])
+m4_define([udisks_minor_version], [9])
+m4_define([udisks_micro_version], [0])
 
 m4_define([udisks_version], [udisks_major_version.udisks_minor_version.udisks_micro_version])
 

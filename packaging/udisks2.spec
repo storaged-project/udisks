@@ -58,7 +58,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.8.4
+Version: 2.9.0
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
