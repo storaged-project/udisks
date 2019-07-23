@@ -254,13 +254,16 @@ variant_to_string_with_indent (GVariant *value,
       value_str = g_variant_dup_bytestring (value, NULL);
     }
   else if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING_ARRAY) ||
-           g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
+           g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY) ||
+           g_variant_is_of_type (value, G_VARIANT_TYPE_OBJECT_PATH_ARRAY))
     {
       const gchar **strv;
       guint m;
       GString *str;
       if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
         strv = g_variant_get_bytestring_array (value, NULL);
+      else if (g_variant_is_of_type (value, G_VARIANT_TYPE_OBJECT_PATH_ARRAY))
+        strv = g_variant_get_objv (value, NULL);
       else
         strv = g_variant_get_strv (value, NULL);
       str = g_string_new (NULL);
