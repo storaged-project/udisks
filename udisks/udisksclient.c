@@ -55,6 +55,7 @@ struct _UDisksClient
   gboolean is_initialized;
   GError *initialization_error;
 
+  GDBusConnection *bus_connection;
   GDBusObjectManager *object_manager;
 
   GMainContext *context;
@@ -72,7 +73,8 @@ enum
 {
   PROP_0,
   PROP_OBJECT_MANAGER,
-  PROP_MANAGER
+  PROP_MANAGER,
+  PROP_BUS_CONNECTION
 };
 
 enum
@@ -158,6 +160,8 @@ udisks_client_finalize (GObject *object)
   if (client->context != NULL)
     g_main_context_unref (client->context);
 
+  g_clear_object (&client->bus_connection);
+
   G_OBJECT_CLASS (udisks_client_parent_class)->finalize (object);
 }
 
@@ -191,6 +195,32 @@ udisks_client_get_property (GObject    *object,
       g_value_set_object (value, udisks_client_get_manager (client));
       break;
 
+    case PROP_BUS_CONNECTION:
+      g_value_set_object (value, client->bus_connection);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+udisks_client_set_property (GObject      *object,
+                            guint         prop_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
+{
+  UDisksClient *client = UDISKS_CLIENT (object);
+
+  switch (prop_id)
+    {
+    case PROP_BUS_CONNECTION:
+      /* Construct only. */
+      g_assert (client->bus_connection == NULL);
+      client->bus_connection = g_value_dup_object (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -205,6 +235,7 @@ udisks_client_class_init (UDisksClientClass *klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_client_finalize;
   gobject_class->get_property = udisks_client_get_property;
+  gobject_class->set_property = udisks_client_set_property;
 
   klass->changed_blacklist = g_hash_table_new (g_str_hash, g_str_equal);
   g_hash_table_insert (klass->changed_blacklist, (gpointer) "SmartSelftestPercentRemaining", NULL);
@@ -238,6 +269,25 @@ udisks_client_class_init (UDisksClientClass *klass)
                                                         "The UDisksManager",
                                                         UDISKS_TYPE_MANAGER,
                                                         G_PARAM_READABLE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksClient:bus-connection:
+   *
+   * The #GDBusConnection used to create the #UDisksClient:object-manager, or
+   * %NULL if one wasn't specified during construction of the #UDisksClient (in
+   * which case a system bus connection is used).
+   *
+   * Since: 2.9.0
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_BUS_CONNECTION,
+                                   g_param_spec_object ("bus-connection",
+                                                        "Bus Connection",
+                                                        "The D-Bus connection with which to talk to udisksd",
+                                                        G_TYPE_DBUS_CONNECTION,
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
@@ -297,18 +347,41 @@ udisks_client_new (GCancellable        *cancellable,
 }
 
 /**
- * udisks_client_new_finish:
- * @res: A #GAsyncResult.
- * @error: Return location for error or %NULL.
+ * udisks_client_new_for_connection:
+ * @connection: (nullable): a #GDBusConnection. If %NULL, a system bus
+ *   connection will be used.
+ * @cancellable: A #GCancellable or %NULL.
+ * @callback: Function that will be called when the result is ready.
+ * @user_data: Data to pass to @callback.
  *
- * Finishes an operation started with udisks_client_new().
+ * Like #udisks_client_new() but takes a #GDBusConnection which will be used
+ * when connecting to the UDisks daemon over D-Bus. This is useful for unit
+ * tests which may want to use #GTestDBus to create a D-Bus daemon on the
+ * session bus.
  *
- * Returns: (transfer full): A #UDisksClient or %NULL if @error is set. Free
- * with g_object_unref() when done with it.
+ * Since: 2.9.0
  */
-UDisksClient *
-udisks_client_new_finish (GAsyncResult        *res,
-                          GError             **error)
+void
+udisks_client_new_for_connection (GDBusConnection     *connection,
+                                  GCancellable        *cancellable,
+                                  GAsyncReadyCallback  callback,
+                                  gpointer             user_data)
+{
+  g_return_if_fail (connection == NULL || G_IS_DBUS_CONNECTION (connection));
+
+  g_async_initable_new_async (UDISKS_TYPE_CLIENT,
+                              G_PRIORITY_DEFAULT,
+                              cancellable,
+                              callback,
+                              user_data,
+                              "bus-connection",
+                              connection,
+                              NULL);
+}
+
+static UDisksClient *
+_udisks_client_new_finish (GAsyncResult  *res,
+                           GError       **error)
 {
   GObject *ret;
   GObject *source_object;
@@ -319,6 +392,42 @@ udisks_client_new_finish (GAsyncResult        *res,
     return UDISKS_CLIENT (ret);
   else
     return NULL;
+}
+
+/**
+ * udisks_client_new_finish:
+ * @res: A #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with udisks_client_new().
+ *
+ * Returns: (transfer full): A #UDisksClient or %NULL if @error is set. Free
+ * with g_object_unref() when done with it.
+ */
+UDisksClient *
+udisks_client_new_finish (GAsyncResult  *res,
+                          GError       **error)
+{
+  return _udisks_client_new_finish (res, error);
+}
+
+/**
+ * udisks_client_new_for_connection_finish:
+ * @res: A #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with udisks_client_new_for_connection().
+ *
+ * Returns: (transfer full): A #UDisksClient or %NULL if @error is set. Free
+ * with g_object_unref() when done with it.
+ *
+ * Since: 2.9.0
+ */
+UDisksClient *
+udisks_client_new_for_connection_finish (GAsyncResult  *res,
+                                         GError       **error)
+{
+  return _udisks_client_new_finish (res, error);
 }
 
 /**
@@ -357,12 +466,13 @@ initable_init (GInitable     *initable,
   gboolean ret;
   GList *objects, *l;
   GList *interfaces, *ll;
+  GDBusConnection *bus_connection;
 
   ret = FALSE;
 
-  /* This method needs to be idempotent to work with the singleton
-   * pattern. See the docs for g_initable_init(). We implement this by
-   * locking.
+  /* Lock here so this method is idempotent, which will be useful in case
+   * #UDisksClient is ever made a singleton (though care would have to be taken
+   * to return a new instance when a #GDBusConnection was given by the caller).
    */
   G_LOCK (init_lock);
   if (client->is_initialized)
@@ -379,12 +489,24 @@ initable_init (GInitable     *initable,
   if (client->context != NULL)
     g_main_context_ref (client->context);
 
-  client->object_manager = udisks_object_manager_client_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-                                                                          G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
-                                                                          "org.freedesktop.UDisks2",
-                                                                          "/org/freedesktop/UDisks2",
-                                                                          cancellable,
-                                                                          &client->initialization_error);
+  if (client->bus_connection == NULL)
+    {
+      bus_connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, cancellable, &client->initialization_error);
+      if (bus_connection == NULL)
+        goto out;
+    }
+  else
+    {
+      bus_connection = g_object_ref (client->bus_connection);
+    }
+
+  client->object_manager = udisks_object_manager_client_new_sync (bus_connection,
+                                                                  G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+                                                                  "org.freedesktop.UDisks2",
+                                                                  "/org/freedesktop/UDisks2",
+                                                                  cancellable,
+                                                                  &client->initialization_error);
+  g_clear_object (&bus_connection);
   if (client->object_manager == NULL)
     goto out;
 
