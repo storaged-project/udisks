@@ -42,6 +42,14 @@ def get_call_long(call):
     return call_long
 
 
+def get_version_from_lsb():
+    ret, out = run_command("lsb_release -rs")
+    if ret != 0:
+        raise RuntimeError("Cannot get distro version from lsb_release output: '%s'" % out)
+
+    return out.split(".")[0]
+
+
 def get_version_from_pretty_name(pretty_name):
     """ Try to get distro and version from 'OperatingSystemPrettyName'
         hostname property.
@@ -58,7 +66,7 @@ def get_version_from_pretty_name(pretty_name):
     if match is not None:
         version = match.group(0)
     else:
-        raise RuntimeError("Cannot get distro name and version from '%s'" % pretty_name)
+        version = get_version_from_lsb()
 
     return (distro, version)
 
@@ -76,12 +84,11 @@ def get_version():
     if cpe:
         # 2nd to 4th fields from e.g. "cpe:/o:fedoraproject:fedora:25" or "cpe:/o:redhat:enterprise_linux:7.3:GA:server"
         _project, distro, version = tuple(cpe.split(":")[2:5])
+        # we want just the major version, so remove all decimal places (if any)
+        version = str(int(float(version)))
     else:
         pretty_name = str(sys_info.Get("org.freedesktop.hostname1", "OperatingSystemPrettyName", dbus_interface=dbus.PROPERTIES_IFACE))
         distro, version = get_version_from_pretty_name(pretty_name)
-
-    # we want just the major version, so remove all decimal places (if any)
-    version = str(int(float(version)))
 
     return (distro, version)
 
