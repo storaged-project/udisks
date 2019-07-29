@@ -2165,12 +2165,12 @@ udisks_state_get (UDisksState           *state,
   GError *local_error = NULL;
   gsize length = 0;
 
-  *ok = TRUE;
-
+  g_return_val_if_fail (ok != NULL, NULL);
   g_return_val_if_fail (UDISKS_IS_STATE (state), NULL);
   g_return_val_if_fail (key != NULL, NULL);
   g_return_val_if_fail (g_variant_type_is_definite (type), NULL);
-  g_return_val_if_fail (ok != NULL, NULL);
+
+  *ok = TRUE;
 
   /* TODO:
    *
