@@ -603,7 +603,6 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   gboolean is_mounted;
   gboolean device_exists;
   gboolean device_to_be_cleaned;
-  gboolean attempt_no_cleanup;
   UDisksMountMonitor *monitor;
   GUdevClient *udev_client;
   GUdevDevice *udev_device;
@@ -614,7 +613,6 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   is_mounted = FALSE;
   device_exists = FALSE;
   device_to_be_cleaned = FALSE;
-  attempt_no_cleanup = FALSE;
   block_device_value = NULL;
   fstab_mount_value = NULL;
   fstab_mount = FALSE;
@@ -639,7 +637,6 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
       s = g_variant_print (value, TRUE);
       udisks_critical ("mounted-fs entry %s is invalid: no block-device key/value pair", s);
       g_free (s);
-      attempt_no_cleanup = FALSE;
       goto out;
     }
   block_device = g_variant_get_uint64 (block_device_value);
@@ -650,7 +647,6 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
       s = g_variant_print (value, TRUE);
       udisks_critical ("mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
       g_free (s);
-      attempt_no_cleanup = FALSE;
       goto out;
     }
   fstab_mount = g_variant_get_boolean (fstab_mount_value);
@@ -742,7 +738,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
 
  out:
 
-  if (!keep && !attempt_no_cleanup)
+  if (!keep)
     {
       if (!device_exists)
         {
