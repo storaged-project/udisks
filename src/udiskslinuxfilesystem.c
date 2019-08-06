@@ -956,7 +956,7 @@ add_acl (const gchar  *path,
 
 /*
  * calculate_mount_point: <internal>
- * @dameon: A #UDisksDaemon.
+ * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
  * @uid: user id of the calling user
  * @gid: group id of the calling user
