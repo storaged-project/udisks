@@ -1562,7 +1562,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                                    mount_point_to_use,
                                    udisks_block_get_device_number (block),
                                    caller_uid,
-                                   TRUE); /* fstab_mounted */
+                                   TRUE,   /* fstab_mounted */
+                                   FALSE); /* persistent */
 
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
@@ -1710,7 +1711,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                                mount_point_to_use,
                                udisks_block_get_device_number (block),
                                caller_uid,
-                               FALSE); /* fstab_mounted */
+                               FALSE,  /* fstab_mounted */
+                               mpoint_persistent);
 
   udisks_notice ("Mounted %s at %s on behalf of uid %u",
                  device,
