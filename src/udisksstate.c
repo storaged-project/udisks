@@ -651,14 +651,14 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
 
   if (realpath (mount_point_str, mount_point) == NULL)
     {
-      udisks_critical ("mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
+      udisks_critical ("udisks_state_check_mounted_fs_entry: mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
     }
 
   block_device_value = lookup_asv (details, "block-device");
   if (block_device_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_critical ("mounted-fs entry %s is invalid: no block-device key/value pair", s);
+      udisks_critical ("udisks_state_check_mounted_fs_entry: mounted-fs entry %s is invalid: no block-device key/value pair", s);
       g_free (s);
       goto out;
     }
@@ -668,7 +668,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   if (fstab_mount_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_critical ("mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
+      udisks_critical ("udisks_state_check_mounted_fs_entry: mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
       g_free (s);
       goto out;
     }
@@ -1545,7 +1545,7 @@ udisks_state_check_loop_entry (UDisksState  *state,
     {
       gchar *s;
       s = g_variant_print (value, TRUE);
-      udisks_critical ("loop entry %s is invalid: no backing-file key/value pair", s);
+      udisks_critical ("udisks_state_check_loop_entry: loop entry %s is invalid: no backing-file key/value pair", s);
       g_free (s);
       goto out;
     }
@@ -1555,12 +1555,12 @@ udisks_state_check_loop_entry (UDisksState  *state,
   device = g_udev_client_query_by_device_file (udev_client, loop_device);
   if (device == NULL)
     {
-      udisks_info ("no udev device for %s", loop_device);
+      udisks_info ("udisks_state_check_loop_entry: no udev device for %s", loop_device);
       goto out;
     }
   if (g_udev_device_get_sysfs_attr (device, "loop/offset") == NULL)
     {
-      udisks_info ("loop device %s is not setup  (no loop/offset sysfs file)", loop_device);
+      udisks_info ("udisks_state_check_loop_entry: loop device %s is not setup  (no loop/offset sysfs file)", loop_device);
       goto out;
     }
 
@@ -1575,7 +1575,7 @@ udisks_state_check_loop_entry (UDisksState  *state,
   sysfs_backing_file = g_udev_device_get_sysfs_attr (device, "loop/backing_file");
   if (g_strcmp0 (sysfs_backing_file, backing_file) != 0)
     {
-      udisks_notice ("unexpected name for %s - expected `%s' but got `%s'",
+      udisks_notice ("udisks_state_check_loop_entry: unexpected name for %s - expected `%s' but got `%s'",
                      loop_device, backing_file, sysfs_backing_file);
       goto out;
     }
@@ -1899,13 +1899,13 @@ udisks_state_check_mdraid_entry (UDisksState  *state,
   device = g_udev_client_query_by_device_number (udev_client, G_UDEV_DEVICE_TYPE_BLOCK, raid_device);
   if (device == NULL)
     {
-      udisks_info ("no udev device for raid device %u:%u", major (raid_device), minor (raid_device));
+      udisks_info ("udisks_state_check_mdraid_entry: no udev device for raid device %u:%u", major (raid_device), minor (raid_device));
       goto out;
     }
   array_state = g_udev_device_get_sysfs_attr (device, "md/array_state");
   if (array_state == NULL)
     {
-      udisks_info ("raid device %u:%u is not setup  (no md/array_state sysfs file)",
+      udisks_info ("udisks_state_check_mdraid_entry: raid device %u:%u is not setup  (no md/array_state sysfs file)",
                    major (raid_device), minor (raid_device));
       goto out;
     }
@@ -2197,7 +2197,7 @@ udisks_state_get (UDisksState           *state,
           goto out;
         }
 
-      udisks_warning ("Error getting %s: %s (%s, %d)",
+      udisks_warning ("Error getting state data %s: %s (%s, %d)",
                       key,
                       local_error->message,
                       g_quark_to_string (local_error->domain),
@@ -2255,7 +2255,7 @@ udisks_state_set (UDisksState          *state,
                             size,
                             &error))
     {
-      udisks_warning ("Error setting %s: %s (%s, %d)", key,
+      udisks_warning ("Error setting state data %s: %s (%s, %d)", key,
                      error->message,
                      g_quark_to_string (error->domain),
                      error->code);
