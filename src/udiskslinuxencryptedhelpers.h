@@ -74,6 +74,12 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
                                 gpointer            user_data,
                                 GError            **error);
 
+gboolean is_luks (UDisksLinuxBlockObject *object);
+
+gboolean is_tcrypt (UDisksLinuxBlockObject *object);
+
+gboolean is_integrity (UDisksLinuxBlockObject *object);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_ENCRYPTED_HELPERS_H__ */

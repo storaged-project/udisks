@@ -7,6 +7,10 @@ import time
 import unittest
 import configparser
 
+import gi
+gi.require_version('BlockDev', '2.0')
+from gi.repository import BlockDev
+
 from distutils.version import LooseVersion
 
 import udiskstestcase
@@ -369,6 +373,16 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     '''This is a LUKS2 encrypted device test suite'''
 
     luks_version = '2'
+    requested_plugins = BlockDev.plugin_specs_from_names(("crypto",))
+
+    @classmethod
+    def setUpClass(cls):
+        if not BlockDev.is_initialized():
+            BlockDev.init(cls.requested_plugins, None)
+        else:
+            BlockDev.reinit(cls.requested_plugins, True, None)
+
+        super(UdisksEncryptedTestLUKS2, cls).setUpClass()
 
     def _create_luks(self, device, passphrase, binary=False):
         options = dbus.Dictionary(signature='sv')
@@ -380,6 +394,17 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
             options['encrypt.type'] = 'luks2'
         device.Format('xfs', options,
                       dbus_interface=self.iface_prefix + '.Block')
+
+    def _create_luks_integrity(self, device, passphrase):
+        if not BlockDev.utils_have_kernel_module('dm-integrity'):
+            self.skipTest('dm-integrity kernel module not available, skipping.')
+
+        # UDisks doesn't support creating LUKS2 with integrity, we need to use libblockdev
+        extra = BlockDev.CryptoLUKSExtra()
+        extra.integrity = 'hmac(sha256)'
+
+        BlockDev.crypto_luks_format(device, 'aes-cbc-essiv:sha256', 512, passphrase,
+                                    None, 0, BlockDev.CryptoLUKSVersion.LUKS2, extra)
 
     def _get_metadata_size_from_dump(self, disk):
         ret, out = self.run_command("cryptsetup luksDump %s" % disk)
@@ -499,5 +524,37 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         manager = self.get_object('/Manager')
         default_encryption_type = self.get_property(manager, '.Manager', 'DefaultEncryptionType')
         default_encryption_type.assertEqual(config['defaults']['encryption'])
+
+    def test_integrity(self):
+        passwd = 'test'
+
+        device = self.get_device(self.vdevs[0])
+        self._create_luks_integrity(self.vdevs[0], passwd)
+
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        # the device is not opened, we need to read the UUID from LUKS metadata
+        luks_uuid = BlockDev.crypto_luks_uuid(self.vdevs[0])
+
+        luks_path = device.Unlock('test', self.no_options,
+                                  dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks_path)
+        self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+        luks = self.bus.get_object(self.iface_prefix, luks_path)
+        self.assertIsNotNone(luks)
+
+        crypto_dev = self.get_property(luks, '.Block', 'CryptoBackingDevice')
+        crypto_dev.assertEqual(device.object_path)
+
+        dbus_cleartext = self.get_property(device, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual(luks_path)
+
+        device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        dbus_cleartext = self.get_property(device, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual('/')
+
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest

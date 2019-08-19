@@ -128,7 +128,8 @@ wait_for_cleartext_object (UDisksDaemon *daemon,
       block = udisks_object_get_block (object);
       if (block != NULL)
         {
-          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
+          if (!is_integrity (UDISKS_LINUX_BLOCK_OBJECT (object)) &&
+              g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
             {
               g_object_unref (block);
               ret = g_object_ref (object);

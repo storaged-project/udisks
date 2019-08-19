@@ -25,6 +25,8 @@
 
 #include "udisksthreadedjob.h"
 #include "udiskslinuxencryptedhelpers.h"
+#include "udiskslinuxblockobject.h"
+#include "udiskslinuxdevice.h"
 
 gboolean luks_format_job_func (UDisksThreadedJob  *job,
                       GCancellable       *cancellable,
@@ -112,4 +114,52 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_tc_close (data->map_name, error);
+}
+
+static const gchar *
+get_dm_uuid (UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device = NULL;
+
+  device = udisks_linux_block_object_get_device (object);
+  if (!device)
+    return NULL;
+
+  if (!g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
+    return NULL;
+
+  return g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
+}
+
+static gboolean
+is_crypt_type (UDisksLinuxBlockObject *object, const gchar *type)
+{
+  const gchar *dm_uuid = NULL;
+  gboolean ret = FALSE;
+
+  dm_uuid = get_dm_uuid (object);
+  if (!dm_uuid)
+    return FALSE;
+
+  ret = g_str_has_prefix (dm_uuid, type);
+
+  return ret;
+}
+
+gboolean
+is_luks (UDisksLinuxBlockObject *object)
+{
+  return is_crypt_type (object, "CRYPT-LUKS");
+}
+
+gboolean
+is_tcrypt (UDisksLinuxBlockObject *object)
+{
+  return is_crypt_type (object, "CRYPT-TCRYPT");
+}
+
+gboolean
+is_integrity (UDisksLinuxBlockObject *object)
+{
+  return is_crypt_type (object, "CRYPT-INTEGRITY");
 }

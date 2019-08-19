@@ -152,37 +152,6 @@ udisks_linux_block_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *
-get_sysfs_attr (GUdevDevice *device,
-                const gchar *attr)
-{
-  gchar *filename = NULL;
-  gchar *value = NULL;
-  gboolean ret = FALSE;
-  GError *error = NULL;
-
-  filename = g_strconcat (g_udev_device_get_sysfs_path (device),
-                          "/",
-                          attr,
-                          NULL);
-
-
-  ret = g_file_get_contents (filename,
-                             &value,
-                             NULL,
-                             &error);
-  if (!ret)
-    {
-      udisks_debug ("Failed to read sysfs attribute %s: %s", attr, error->message);
-      g_clear_error (&error);
-    }
-
-  g_free (filename);
-  return value;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 static UDisksLinuxBlockObject *
 find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
                                  const gchar              *sysfs_path)
@@ -1053,48 +1022,41 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
    *       in user-space and wants you to use libdevmapper to obtain it...
    */
   udisks_block_set_crypto_backing_device (iface, "/");
-  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
+  if (is_luks (object) || is_tcrypt (object) || is_integrity (object))
     {
-      gchar *dm_uuid;
-      dm_uuid = get_sysfs_attr (device->udev_device, "dm/uuid");
-      if (dm_uuid != NULL &&
-           (g_str_has_prefix (dm_uuid, "CRYPT-LUKS") || g_str_has_prefix (dm_uuid, "CRYPT-TCRYPT")))
+      gchar *slave_sysfs_path;
+      slave_sysfs_path = get_slave_sysfs_path (g_udev_device_get_sysfs_path (device->udev_device));
+
+      while (slave_sysfs_path)
         {
-          gchar *slave_sysfs_path;
-          slave_sysfs_path = get_slave_sysfs_path (g_udev_device_get_sysfs_path (device->udev_device));
-
-          while (slave_sysfs_path)
+          UDisksLinuxBlockObject *slave_object;
+          slave_object = find_block_device_by_sysfs_path (object_manager, slave_sysfs_path);
+          if (slave_object != NULL && !is_integrity (slave_object))
             {
-              UDisksLinuxBlockObject *slave_object;
-              slave_object = find_block_device_by_sysfs_path (object_manager, slave_sysfs_path);
-              if (slave_object != NULL)
+              UDisksEncrypted *enc;
+
+              udisks_block_set_crypto_backing_device (iface,
+                                                      g_dbus_object_get_object_path (G_DBUS_OBJECT (slave_object)));
+
+              /* also set the CleartextDevice property for the parent device */
+              enc = udisks_object_peek_encrypted (UDISKS_OBJECT (slave_object));
+              if (enc != NULL)
                 {
-                  UDisksEncrypted *enc;
-
-                  udisks_block_set_crypto_backing_device (iface,
-                                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (slave_object)));
-
-                  /* also set the CleartextDevice property for the parent device */
-                  enc = udisks_object_peek_encrypted (UDISKS_OBJECT (slave_object));
-                  if (enc != NULL)
-                    {
-                      udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (enc),
-                                                             g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-                    }
-
-                  g_object_unref (slave_object);
-                  g_free (slave_sysfs_path);
-                  break;
+                  udisks_encrypted_set_cleartext_device (UDISKS_ENCRYPTED (enc),
+                                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
                 }
-              else
-                {
-                  gchar *old_sysfs_path = slave_sysfs_path;
-                  slave_sysfs_path = get_slave_sysfs_path (old_sysfs_path);
-                  g_free (old_sysfs_path);
-                }
+
+              g_object_unref (slave_object);
+              g_free (slave_sysfs_path);
+              break;
+            }
+          else
+            {
+              gchar *old_sysfs_path = slave_sysfs_path;
+              slave_sysfs_path = get_slave_sysfs_path (old_sysfs_path);
+              g_free (old_sysfs_path);
             }
         }
-      g_free (dm_uuid);
     }
 
   /* Sort out preferred device... this is what UI shells should
