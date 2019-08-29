@@ -82,7 +82,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         # validate that configration property has changed
         conf_value = self.get_property(self.cd_drive, '.Drive', 'Configuration')
         conf_value.assertIsNotNone()
-        self.assertEqual(str(conf_value.value['ata-pm-standby']), '286')
+        self.assertEqual(int(conf_value.value['ata-pm-standby']), 286)
 
     @udiskstestcase.skip_on(("centos", "enterprise_linux"), "7", reason="SCSI debug bug causing kernel panic on CentOS/RHEL 7")
     def test_40_properties(self):
@@ -132,4 +132,4 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         timemediadetected = self.get_property(self.cd_drive, '.Drive', 'TimeMediaDetected')
         self.assertEqual(timedetected.value, timemediadetected.value)
         sortkey = self.get_property(self.cd_drive, '.Drive', 'SortKey')
-        sortkey.assertEqual('01hotplug/%s' % timedetected.value)
+        sortkey.assertEqual('01hotplug/%d' % timedetected.value)
