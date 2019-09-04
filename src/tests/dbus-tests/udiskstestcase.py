@@ -582,7 +582,7 @@ class JournalRecorder(FlightRecorder):
         self._stopped = monotonic()
 
     def _save(self):
-        j = journal.Reader()
+        j = journal.Reader(converters={"MESSAGE": lambda x: x.decode(errors="replace")})
         j.this_boot()
         j.seek_monotonic(self._started)
         journal_data = ""
