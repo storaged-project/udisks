@@ -1,6 +1,7 @@
 
 NULL =
 
+if ENABLE_DAEMON
 SUBDIRS = tmpfiles.d
 
 dbusservicedir       = $(datadir)/dbus-1/system-services
@@ -36,6 +37,7 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 $(polkit_DATA): $(polkit_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
+endif
 
 completionsdir = $(datadir)/bash-completion/completions
 completions_DATA =                                                             \

@@ -73,7 +73,9 @@ extra_files =                                                                  \
 
 # ------------------------------------------------------------------------------
 
+if ENABLE_GTK_DOC
 all-local: generate-main-sgml-file
+endif
 
 # New gtk-doc 2.16 for some reason automatically creates a no-op
 # "$(DOC_MAIN_SGML_FILE)" make target that overrides our target

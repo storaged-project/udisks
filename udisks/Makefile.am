@@ -4,9 +4,11 @@ SUBDIRS = modules.conf.d
 
 NULL =
 
+if ENABLE_DAEMON
 moduleconfdir = $(sysconfdir)/udisks2/
 
 moduleconf_DATA = udisks2.conf
+endif
 
 AM_CPPFLAGS = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
