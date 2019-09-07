@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SHELL = /bin/bash
+SHELL = @BASH@
 .SHELLFLAGS = -o pipefail -c
 
 PYTHON ?= python3

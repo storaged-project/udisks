@@ -33,6 +33,10 @@ AC_ISC_POSIX
 AC_HEADER_STDC
 AC_PROG_LIBTOOL
 
+AC_PATH_PROG([BASH], [bash])
+if test -z "$BASH"; then
+  AC_MSG_ERROR([bash is required to run Makefile])
+fi
 
 # Compilation
 #
