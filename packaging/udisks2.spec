@@ -18,6 +18,8 @@
 %define default_luks_encryption         luks1
 
 %define is_fedora                       0%{?rhel} == 0
+%define is_rhel7                        (0%{?rhel} && 0%{?rhel} == 7)
+%define is_rhel8                        (0%{?rhel} && 0%{?rhel} == 8)
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
@@ -33,14 +35,24 @@
 %define with_btrfs 0
 %endif
 
-# vdo is not available on Fedora
-%if (0%{?fedora}) || %{with_vdo} == 0
+# vdo:
+# - Fedora: not available at all
+# - RHEL7: only x86_64
+# - RHEL8: all archs except i686
+%if %{is_fedora} || %{with_vdo} == 0
 %define with_vdo 0
 %endif
 
-# vdo is not available on i686
+%if %{is_rhel7}
+%ifnarch x86_64
+%define with_vdo 0
+%endif
+%endif
+
+%if %{is_rhel8}
 %ifnarch x86_64 aarch64 ppc64le s390x
 %define with_vdo 0
+%endif
 %endif
 
 # feature parity with existing RHEL 7 packages
