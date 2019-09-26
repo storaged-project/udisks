@@ -21,14 +21,16 @@ UDISKS_TYPES=$(DOC_MODULE).types
 UDISKS_SECTIONS=$(DOC_MODULE)-sections.txt
 
 # The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR = $(top_srcdir)
+DOC_SOURCE_DIR = $(top_srcdir) $(top_builddir)
 
 HFILE_GLOB =                                                                   \
 	$(top_srcdir)/udisks/*.h                                               \
+	$(top_builddir)/udisks/*.h                                             \
 	$(NULL)
 
 CFILE_GLOB =                                                                   \
 	$(top_srcdir)/udisks/*.c                                               \
+	$(top_builddir)/udisks/*.c                                             \
 	$(NULL)
 
 if ENABLE_DAEMON
