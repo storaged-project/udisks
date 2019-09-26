@@ -88,60 +88,60 @@ generate-main-sgml-file: $(DOC_MAIN_SGML_FILE).in $(UDISKS_SECTIONS).in $(UDISKS
 	cp $(UDISKS_SECTIONS).in $(builddir)/$(UDISKS_SECTIONS) && \
 	cp $(UDISKS_TYPES).in $(builddir)/$(UDISKS_TYPES)
 if HAVE_LVM2
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lvm2.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).lvm2.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).lvm2.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lvm2.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).lvm2.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).lvm2.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# LVM2_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# LVM2_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_LVM2
 if HAVE_LSM
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lsm.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).lsm.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).lsm.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lsm.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).lsm.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).lsm.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- LSM_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# LSM_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- LSM_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# LSM_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_LSM
 if HAVE_ISCSI
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).iscsi.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).iscsi.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).iscsi.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).iscsi.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# ISCSI_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_ISCSI
 if HAVE_BTRFS
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).btrfs.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).btrfs.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).btrfs.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).btrfs.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).btrfs.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).btrfs.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- BTRFS_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# BTRFS_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- BTRFS_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# BTRFS_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_BTRFS
 if HAVE_ZRAM
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).zram.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).zram.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).zram.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).zram.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).zram.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).zram.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- ZRAM_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# ZRAM_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- ZRAM_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# ZRAM_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_ZRAM
 if HAVE_BCACHE
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).bcache.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).bcache.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).bcache.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).bcache.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).bcache.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).bcache.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- BCACHE_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# BCACHE_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- BCACHE_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# BCACHE_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_BCACHE
 if HAVE_VDO
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).vdo.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_SECTIONS).vdo.sed $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(UDISKS_TYPES).vdo.sed $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).vdo.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).vdo.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).vdo.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- VDO_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -i "/\# VDO_TYPES/d" $(builddir)/$(UDISKS_TYPES)
+	$(AM_V_at) $(SED) "/<\!-- VDO_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# VDO_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_VDO
 
 # GTKDOC for LVM2
