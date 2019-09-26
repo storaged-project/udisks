@@ -1,0 +1,4 @@
+    <xi:include href="man/udisksd.xml"/>
+    <xi:include href="man/udisks.xml"/>
+    <xi:include href="man/umount.udisks2.xml"/>
+    <xi:include href="man/udisks2.conf.5.xml"/>

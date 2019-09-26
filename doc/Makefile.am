@@ -25,13 +25,23 @@ DOC_SOURCE_DIR = $(top_srcdir)
 
 HFILE_GLOB =                                                                   \
 	$(top_srcdir)/udisks/*.h                                               \
-	$(top_srcdir)/src/*.h                                                  \
-	$(top_srcdir)/modules/*.h
+	$(NULL)
 
 CFILE_GLOB =                                                                   \
 	$(top_srcdir)/udisks/*.c                                               \
+	$(NULL)
+
+if ENABLE_DAEMON
+HFILE_GLOB +=                                                                  \
+	$(top_srcdir)/src/*.h                                                  \
+	$(top_srcdir)/modules/*.h                                              \
+	$(NULL)
+
+CFILE_GLOB +=                                                                  \
 	$(top_srcdir)/src/*.c                                                  \
-	$(top_srcdir)/modules/*.c
+	$(top_srcdir)/modules/*.c                                              \
+	$(NULL)
+endif # ENABLE_DAEMON
 
 # Headers to ignore
 IGNORE_HFILES=                                                                 \
@@ -52,8 +62,13 @@ GTKDOC_LIBS =                                                                  \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(top_builddir)/udisks/libudisks2.la                                   \
+	$(NULL)
+
+if ENABLE_DAEMON
+GTKDOC_LIBS +=                                                                 \
 	$(top_builddir)/src/libudisks-daemon.la                                \
 	$(NULL)
+endif # ENABLE_DAEMON
 
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=udisks
@@ -87,6 +102,14 @@ generate-main-sgml-file: $(DOC_MAIN_SGML_FILE).in $(UDISKS_SECTIONS).in $(UDISKS
 	cp $(DOC_MAIN_SGML_FILE).in $(builddir)/$(DOC_MAIN_SGML_FILE) && \
 	cp $(UDISKS_SECTIONS).in $(builddir)/$(UDISKS_SECTIONS) && \
 	cp $(UDISKS_TYPES).in $(builddir)/$(UDISKS_TYPES)
+if ENABLE_DAEMON
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).daemon.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).daemon.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).daemon.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
+else
+	$(AM_V_at) $(SED) "/<\!-- DAEMON_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
+	$(AM_V_at) $(SED) "/\# DAEMON_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
+endif # ENABLE_DAEMON
 if HAVE_LVM2
 	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lvm2.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
 	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).lvm2.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
@@ -220,6 +243,8 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).btrfs.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).btrfs.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).btrfs.sed                                        \
+	$(DOC_MAIN_SGML_FILE).daemon.part.in                                   \
+	$(DOC_MAIN_SGML_FILE).daemon.sed                                       \
 	$(DOC_MAIN_SGML_FILE).iscsi.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).iscsi.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).iscsi.sed                                        \
@@ -242,6 +267,8 @@ EXTRA_DIST +=                                                                  \
         $(UDISKS_TYPES).bcache.sed                                             \
 	$(UDISKS_TYPES).btrfs.in                                               \
 	$(UDISKS_TYPES).btrfs.sed                                              \
+	$(UDISKS_TYPES).daemon.in                                              \
+	$(UDISKS_TYPES).daemon.sed                                             \
 	$(UDISKS_TYPES).iscsi.in                                               \
 	$(UDISKS_TYPES).iscsi.sed                                              \
 	$(UDISKS_TYPES).lsm.in                                                 \
@@ -258,6 +285,8 @@ EXTRA_DIST +=                                                                  \
         $(UDISKS_SECTIONS).bcache.sed                                          \
 	$(UDISKS_SECTIONS).btrfs.sections.in                                   \
 	$(UDISKS_SECTIONS).btrfs.sed                                           \
+	$(UDISKS_SECTIONS).daemon.sections.in                                  \
+	$(UDISKS_SECTIONS).daemon.sed                                          \
 	$(UDISKS_SECTIONS).iscsi.sections.in                                   \
 	$(UDISKS_SECTIONS).iscsi.sed                                           \
 	$(UDISKS_SECTIONS).lsm.sections.in                                     \

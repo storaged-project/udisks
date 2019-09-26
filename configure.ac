@@ -739,6 +739,10 @@ doc/man/udisksctl.xml
 doc/man/umount.udisks2.xml
 doc/man/udisks2.conf.5.xml.in
 doc/man/udisks2_lsm.conf.5.xml.in
+doc/udisks2-docs.xml.daemon.man
+doc/udisks2-docs.xml.daemon.part
+doc/udisks2-sections.txt.daemon.sections
+doc/udisks2.types.daemon
 doc/udisks2-docs.xml.iscsi.dbus
 doc/udisks2-docs.xml.iscsi.generated
 doc/udisks2-sections.txt.iscsi.sections
