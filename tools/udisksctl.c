@@ -829,7 +829,7 @@ handle_command_mount_unmount (gint        *argc,
           g_object_unref (object);
           goto out;
         }
-      g_print ("Mounted %s at %s.\n",
+      g_print ("Mounted %s at %s\n",
                udisks_block_get_device (block),
                mount_path);
       g_free (mount_path);
