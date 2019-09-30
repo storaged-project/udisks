@@ -237,9 +237,9 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).in.in                                            \
 	$(DOC_MAIN_SGML_FILE).in                                               \
-        $(DOC_MAIN_SGML_FILE).bcache.dbus.in                                   \
-        $(DOC_MAIN_SGML_FILE).bcache.generated.in                              \
-        $(DOC_MAIN_SGML_FILE).bcache.sed                                       \
+	$(DOC_MAIN_SGML_FILE).bcache.dbus.in                                   \
+	$(DOC_MAIN_SGML_FILE).bcache.generated.in                              \
+	$(DOC_MAIN_SGML_FILE).bcache.sed                                       \
 	$(DOC_MAIN_SGML_FILE).btrfs.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).btrfs.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).btrfs.sed                                        \
@@ -263,8 +263,8 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
 	$(UDISKS_TYPES).in.in                                                  \
 	$(UDISKS_TYPES).in                                                     \
-        $(UDISKS_TYPES).bcache.in                                              \
-        $(UDISKS_TYPES).bcache.sed                                             \
+	$(UDISKS_TYPES).bcache.in                                              \
+	$(UDISKS_TYPES).bcache.sed                                             \
 	$(UDISKS_TYPES).btrfs.in                                               \
 	$(UDISKS_TYPES).btrfs.sed                                              \
 	$(UDISKS_TYPES).daemon.in                                              \
@@ -281,8 +281,8 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_TYPES).zram.sed                                               \
 	$(UDISKS_SECTIONS).in.in                                               \
 	$(UDISKS_SECTIONS).in                                                  \
-        $(UDISKS_SECTIONS).bcache.sections.in                                  \
-        $(UDISKS_SECTIONS).bcache.sed                                          \
+	$(UDISKS_SECTIONS).bcache.sections.in                                  \
+	$(UDISKS_SECTIONS).bcache.sed                                          \
 	$(UDISKS_SECTIONS).btrfs.sections.in                                   \
 	$(UDISKS_SECTIONS).btrfs.sed                                           \
 	$(UDISKS_SECTIONS).daemon.sections.in                                  \
