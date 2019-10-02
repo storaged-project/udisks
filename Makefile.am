@@ -1,13 +1,19 @@
 ## Process this file with automake to produce Makefile.in
 
-SHELL = /bin/bash
+SHELL = @BASH@
 .SHELLFLAGS = -o pipefail -c
 
 PYTHON ?= python3
 
 NULL =
 
-SUBDIRS = data udisks src tools modules po doc
+SUBDIRS = data udisks
+
+if ENABLE_DAEMON
+SUBDIRS += src
+endif
+
+SUBDIRS += tools modules po doc
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 

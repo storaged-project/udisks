@@ -6,11 +6,16 @@ man_MANS =
 if ENABLE_MAN
 man_MANS +=                                                                    \
 	udisksctl.1                                                            \
+	$(NULL)
+
+if ENABLE_DAEMON
+man_MANS +=                                                                    \
 	udisksd.8                                                              \
 	udisks.8                                                               \
 	umount.udisks2.8                                                       \
 	udisks2.conf.5                                                         \
 	$(NULL)
+endif # ENABLE_DAEMON
 
 if HAVE_LSM
 man_MANS += udisks2_lsm.conf.5
