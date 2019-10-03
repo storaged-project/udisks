@@ -311,6 +311,12 @@ chrpath --delete %{buildroot}/%{_libexecdir}/udisks2/udisksd
 %post -n %{name}
 %systemd_post udisks2.service
 %systemd_post clean-mount-point@.service
+# skip retriggering if udevd isn't even accessible, e.g. containers or
+# rpm-ostree-based systems
+if [ -S /run/udev/control ]; then
+    udevadm control --reload
+    udevadm trigger
+fi
 udevadm control --reload
 udevadm trigger
 
