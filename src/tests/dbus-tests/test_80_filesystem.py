@@ -1,5 +1,6 @@
 import dbus
 import os
+import errno
 import re
 import six
 import shutil
@@ -35,6 +36,17 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     def _unmount(self, disk_path):
         self.run_command('umount %s' % disk_path)
+
+    def _rmtree(self, path):
+        for _ in range(10):
+            try:
+                shutil.rmtree(path)
+                break
+            except OSError as e:
+                if e.errno == errno.EBUSY:
+                    time.sleep(0.5)
+                    continue
+                raise
 
     def _add_user(self, username):
         ret, out = self.run_command('useradd -M -p "" %s' % username)
@@ -280,7 +292,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create a tempdir
         tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp)
+        self.addCleanup(self._rmtree, tmp)
 
         # configuration items as arrays of dbus.Byte
         mnt = self.str_to_ay(tmp)
@@ -513,7 +525,7 @@ class VFATTestCase(UdisksFSTestCase):
     def _set_fstab_mountpoint(self, disk, options):
         # create a tempdir
         tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp)
+        self.addCleanup(self._rmtree, tmp)
 
         # configuration items as arrays of dbus.Byte
         mnt = self.str_to_ay(tmp)
