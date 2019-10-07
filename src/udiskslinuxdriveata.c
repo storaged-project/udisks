@@ -1640,33 +1640,6 @@ apply_configuration_thread_func (gpointer user_data)
       goto out;
     }
 
-  if (data->ata_pm_standby != -1)
-    {
-      /* ATA8: 7.18 IDLE - E3h, Non-Data */
-      UDisksAtaCommandInput input = {.command = 0xe3, .count = data->ata_pm_standby};
-      UDisksAtaCommandOutput output = {0};
-      if (!udisks_ata_send_command_sync (fd,
-                                         -1,
-                                         UDISKS_ATA_COMMAND_PROTOCOL_NONE,
-                                         &input,
-                                         &output,
-                                         &error))
-        {
-          udisks_critical ("Error sending ATA command IDLE (timeout=%d) to %s: %s (%s, %d)",
-                        data->ata_pm_standby, device_file,
-                        error->message, g_quark_to_string (error->domain), error->code);
-          g_clear_error (&error);
-        }
-      else
-        {
-          gchar *pretty = ata_pm_standby_to_string (data->ata_pm_standby);
-          udisks_notice ("Set standby timer to %s (value %d) on %s [%s]",
-                         pretty, data->ata_pm_standby, device_file, udisks_drive_get_id (data->drive));
-          g_free (pretty);
-          data->ata->standby_enabled = data->ata_pm_standby != 0;
-        }
-    }
-
   if (data->ata_apm_level != -1)
     {
       /* ATA8: 7.48 SET FEATURES - EFh, Non-Data
@@ -1695,6 +1668,33 @@ apply_configuration_thread_func (gpointer user_data)
         {
           udisks_notice ("Set APM level to %d on %s [%s]",
                          data->ata_apm_level, device_file, udisks_drive_get_id (data->drive));
+        }
+    }
+
+  if (data->ata_pm_standby != -1)
+    {
+      /* ATA8: 7.18 IDLE - E3h, Non-Data */
+      UDisksAtaCommandInput input = {.command = 0xe3, .count = data->ata_pm_standby};
+      UDisksAtaCommandOutput output = {0};
+      if (!udisks_ata_send_command_sync (fd,
+                                         -1,
+                                         UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                         &input,
+                                         &output,
+                                         &error))
+        {
+          udisks_critical ("Error sending ATA command IDLE (timeout=%d) to %s: %s (%s, %d)",
+                        data->ata_pm_standby, device_file,
+                        error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+        }
+      else
+        {
+          gchar *pretty = ata_pm_standby_to_string (data->ata_pm_standby);
+          udisks_notice ("Set standby timer to %s (value %d) on %s [%s]",
+                         pretty, data->ata_pm_standby, device_file, udisks_drive_get_id (data->drive));
+          g_free (pretty);
+          data->ata->standby_enabled = data->ata_pm_standby != 0;
         }
     }
 
