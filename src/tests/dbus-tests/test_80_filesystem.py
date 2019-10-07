@@ -159,6 +159,9 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
 
+        if not self._can_query_size:
+            self.skipTest('Cannot determine size of %s filesystem' % self._fs_name)
+
         manager = self.get_interface(self.get_object('/Manager'), '.Manager')
         try:
           rep, mode, _ = manager.CanResize(self._fs_name)
