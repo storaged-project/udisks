@@ -317,8 +317,6 @@ if [ -S /run/udev/control ]; then
     udevadm control --reload
     udevadm trigger
 fi
-udevadm control --reload
-udevadm trigger
 
 %preun -n %{name}
 %systemd_preun udisks2.service
