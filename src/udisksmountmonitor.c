@@ -72,9 +72,14 @@ struct _UDisksMountMonitor
   GIOChannel *swaps_channel;
   GSource *swaps_watch_source;
 
-  gboolean have_data;
   GList *mounts;
+  GList *old_mounts;
   GMutex mounts_mutex;
+
+  gchar *mountinfo_checksum;
+  gchar *swaps_checksum;
+
+  GMainContext *monitor_context;
 };
 
 typedef struct _UDisksMountMonitorClass UDisksMountMonitorClass;
@@ -103,7 +108,6 @@ static guint signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (UDisksMountMonitor, udisks_mount_monitor, G_TYPE_OBJECT)
 
 static void udisks_mount_monitor_ensure (UDisksMountMonitor *monitor);
-static void udisks_mount_monitor_invalidate (UDisksMountMonitor *monitor);
 static void udisks_mount_monitor_constructed (GObject *object);
 
 static void
@@ -121,7 +125,14 @@ udisks_mount_monitor_finalize (GObject *object)
   if (monitor->swaps_watch_source != NULL)
     g_source_destroy (monitor->swaps_watch_source);
 
+  if (monitor->monitor_context != NULL)
+    g_main_context_unref (monitor->monitor_context);
+
   g_list_free_full (monitor->mounts, g_object_unref);
+  g_list_free_full (monitor->old_mounts, g_object_unref);
+
+  g_free (monitor->mountinfo_checksum);
+  g_free (monitor->swaps_checksum);
 
   g_mutex_clear (&monitor->mounts_mutex);
 
@@ -133,6 +144,7 @@ static void
 udisks_mount_monitor_init (UDisksMountMonitor *monitor)
 {
   monitor->mounts = NULL;
+  monitor->old_mounts = NULL;
   g_mutex_init (&monitor->mounts_mutex);
 }
 
@@ -235,7 +247,6 @@ diff_sorted_lists (GList *list1,
 static void
 reload_mounts (UDisksMountMonitor *monitor)
 {
-  GList *old_mounts;
   GList *cur_mounts;
   GList *added;
   GList *removed;
@@ -244,19 +255,13 @@ reload_mounts (UDisksMountMonitor *monitor)
   udisks_mount_monitor_ensure (monitor);
 
   g_mutex_lock (&monitor->mounts_mutex);
-  old_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
-  g_mutex_unlock (&monitor->mounts_mutex);
-
-  udisks_mount_monitor_invalidate (monitor);
-  udisks_mount_monitor_ensure (monitor);
-
-  g_mutex_lock (&monitor->mounts_mutex);
   cur_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   g_mutex_unlock (&monitor->mounts_mutex);
 
-  old_mounts = g_list_sort (old_mounts, (GCompareFunc) udisks_mount_compare);
+  /* no need to lock monitor->old_mounts as reload_mounts() should
+   * always be called from monitor->monitor_context. */
   cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) udisks_mount_compare);
-  diff_sorted_lists (old_mounts, cur_mounts, (GCompareFunc) udisks_mount_compare, &added, &removed);
+  diff_sorted_lists (monitor->old_mounts, cur_mounts, (GCompareFunc) udisks_mount_compare, &added, &removed);
 
   for (l = removed; l != NULL; l = l->next)
     {
@@ -270,8 +275,9 @@ reload_mounts (UDisksMountMonitor *monitor)
       g_signal_emit (monitor, signals[MOUNT_ADDED_SIGNAL], 0, mount);
     }
 
-  g_list_free_full (old_mounts, g_object_unref);
-  g_list_free_full (cur_mounts, g_object_unref);
+  g_list_free_full (monitor->old_mounts, g_object_unref);
+  monitor->old_mounts = cur_mounts;
+
   g_list_free (removed);
   g_list_free (added);
 }
@@ -302,11 +308,27 @@ swaps_changed_event (GIOChannel *channel,
   return TRUE;
 }
 
+static gboolean
+mounts_changed_idle_cb (gpointer user_data)
+{
+  UDisksMountMonitor *monitor = UDISKS_MOUNT_MONITOR (user_data);
+
+  reload_mounts (monitor);
+
+  /* remove the source */
+  return FALSE;
+}
+
 static void
 udisks_mount_monitor_constructed (GObject *object)
 {
   UDisksMountMonitor *monitor = UDISKS_MOUNT_MONITOR (object);
   GError *error;
+
+  monitor->monitor_context = g_main_context_ref_thread_default ();
+
+  /* fetch initial data */
+  udisks_mount_monitor_ensure (monitor);
 
   error = NULL;
   monitor->mounts_channel = g_io_channel_new_file ("/proc/self/mountinfo", "r", &error);
@@ -325,7 +347,7 @@ udisks_mount_monitor_constructed (GObject *object)
 #if __GNUC__ >= 8
 #pragma GCC diagnostic pop
 #endif
-      g_source_attach (monitor->mounts_watch_source, g_main_context_get_thread_default ());
+      g_source_attach (monitor->mounts_watch_source, monitor->monitor_context);
       g_source_unref (monitor->mounts_watch_source);
     }
   else
@@ -351,7 +373,7 @@ udisks_mount_monitor_constructed (GObject *object)
 #if __GNUC__ >= 8
 #pragma GCC diagnostic pop
 #endif
-      g_source_attach (monitor->swaps_watch_source, g_main_context_get_thread_default ());
+      g_source_attach (monitor->swaps_watch_source, monitor->monitor_context);
       g_source_unref (monitor->swaps_watch_source);
     }
   else
@@ -385,19 +407,6 @@ udisks_mount_monitor_new (void)
   return UDISKS_MOUNT_MONITOR (g_object_new (UDISKS_TYPE_MOUNT_MONITOR, NULL));
 }
 
-static void
-udisks_mount_monitor_invalidate (UDisksMountMonitor *monitor)
-{
-  g_mutex_lock (&monitor->mounts_mutex);
-
-  monitor->have_data = FALSE;
-
-  g_list_free_full (monitor->mounts, g_object_unref);
-  monitor->mounts = NULL;
-
-  g_mutex_unlock (&monitor->mounts_mutex);
-}
-
 static gboolean
 have_mount (UDisksMountMonitor *monitor,
             dev_t               dev,
@@ -425,28 +434,36 @@ have_mount (UDisksMountMonitor *monitor,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
-                                    GError             **error)
+udisks_mount_monitor_read_mountinfo (gchar  **contents,
+                                     gsize   *length)
 {
-  gboolean ret;
-  gchar *contents;
+  GError *error = NULL;
+
+  if (!g_file_get_contents ("/proc/self/mountinfo", contents, length, &error))
+    {
+      udisks_warning ("Error reading /proc/self/mountinfo: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+static void
+udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
+                                      const gchar         *contents)
+{
   gchar **lines;
   guint n;
-
-  ret = FALSE;
-  contents = NULL;
-  lines = NULL;
-
-  if (!g_file_get_contents ("/proc/self/mountinfo", &contents, NULL, error))
-    {
-      g_prefix_error (error, "Error reading /proc/self/mountinfo: ");
-      goto out;
-    }
 
   /* See Documentation/filesystems/proc.txt for the format of /proc/self/mountinfo
    *
    * Note that things like space are encoded as \020.
    */
+  if (contents == NULL)
+    return;
+
   lines = g_strsplit (contents, "\n", 0);
   for (n = 0; lines[n] != NULL; n++)
     {
@@ -543,46 +560,45 @@ udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
 
       g_free (mount_point);
     }
-
-  ret = TRUE;
-
- out:
-  g_free (contents);
   g_strfreev (lines);
-
-  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
-                                GError             **error)
+udisks_mount_monitor_read_swaps (gchar  **contents,
+                                 gsize   *length)
 {
-  gboolean ret;
-  gchar *contents;
-  gchar **lines;
-  guint n;
-  GError *local_error = NULL;
+  GError *error = NULL;
 
-  ret = FALSE;
-  contents = NULL;
-  lines = NULL;
-
-  if (!g_file_get_contents ("/proc/swaps", &contents, NULL, &local_error))
+  if (!g_file_get_contents ("/proc/swaps", contents, length, &error))
     {
-      if (local_error->domain == G_FILE_ERROR && local_error->code == G_FILE_ERROR_NOENT)
+      if (g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
         {
-          g_clear_error (&local_error);
-          ret = TRUE;
-          goto out;
+          g_clear_error (&error);
+          return TRUE;
         }
       else
         {
-          g_propagate_prefixed_error (error, local_error, "Error reading /proc/swaps: ");
-          goto out;
+          udisks_warning ("Error reading /proc/swaps: %s (%s, %d)",
+                          error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+          return FALSE;
         }
     }
+
+  return TRUE;
+}
+
+static void
+udisks_mount_monitor_parse_swaps (UDisksMountMonitor  *monitor,
+                                  const gchar         *contents)
+{
+  gchar **lines;
+  guint n;
+
+  if (contents == NULL)
+    return;
 
   lines = g_strsplit (contents, "\n", 0);
   for (n = 0; lines[n] != NULL; n++)
@@ -620,14 +636,7 @@ udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
           monitor->mounts = g_list_prepend (monitor->mounts, mount);
         }
     }
-
-  ret = TRUE;
-
- out:
-  g_free (contents);
   g_strfreev (lines);
-
-  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -635,34 +644,61 @@ udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
 static void
 udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
 {
-  GError *error;
-
-  if (monitor->have_data)
-    goto out;
+  gchar *mountinfo_contents = NULL;
+  gchar *swaps_contents = NULL;
+  gsize mountinfo_length = 0;
+  gsize swaps_length = 0;
+  gchar *mountinfo_checksum = NULL;
+  gchar *swaps_checksum = NULL;
+  GSource *idle_source;
+  gboolean have_mountinfo;
+  gboolean have_swaps;
 
   g_mutex_lock (&monitor->mounts_mutex);
 
-  error = NULL;
-  if (!udisks_mount_monitor_get_mountinfo (monitor, &error))
+  have_mountinfo = udisks_mount_monitor_read_mountinfo (&mountinfo_contents, &mountinfo_length);
+  have_swaps = udisks_mount_monitor_read_swaps (&swaps_contents, &swaps_length);
+  if (have_mountinfo || have_swaps)
     {
-      udisks_warning ("Error getting mounts: %s (%s, %d)",
-                      error->message, g_quark_to_string (error->domain), error->code);
-      g_clear_error (&error);
-    }
+      /* compute contents checksums and compare them against current cache */
+      if (mountinfo_contents)
+        mountinfo_checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+                                                          (const guchar *) mountinfo_contents,
+                                                          mountinfo_length);
+      if (swaps_contents)
+        swaps_checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+                                                      (const guchar *) swaps_contents,
+                                                      swaps_length);
+      if (g_strcmp0 (mountinfo_checksum, monitor->mountinfo_checksum) != 0 ||
+          g_strcmp0 (swaps_checksum, monitor->swaps_checksum) != 0)
+        {
+          g_list_free_full (monitor->mounts, g_object_unref);
+          monitor->mounts = NULL;
 
-  error = NULL;
-  if (!udisks_mount_monitor_get_swaps (monitor, &error))
-    {
-      udisks_warning ("Error getting swaps: %s (%s, %d)",
-                      error->message, g_quark_to_string (error->domain), error->code);
-      g_clear_error (&error);
-    }
+          udisks_mount_monitor_parse_mountinfo (monitor, mountinfo_contents);
+          udisks_mount_monitor_parse_swaps (monitor, swaps_contents);
 
-  monitor->have_data = TRUE;
+          /* save current checksums */
+          g_free (monitor->mountinfo_checksum);
+          g_free (monitor->swaps_checksum);
+          monitor->mountinfo_checksum = g_strdup (mountinfo_checksum);
+          monitor->swaps_checksum = g_strdup (swaps_checksum);
+
+          /* notify about the changes */
+          idle_source = g_idle_source_new ();
+          g_source_set_priority (idle_source, G_PRIORITY_DEFAULT_IDLE);
+          g_source_set_callback (idle_source, (GSourceFunc) mounts_changed_idle_cb, monitor, NULL);
+          g_source_attach (idle_source, monitor->monitor_context);
+          g_source_unref (idle_source);
+        }
+
+        g_free (mountinfo_checksum);
+        g_free (swaps_checksum);
+    }
+  g_free (mountinfo_contents);
+  g_free (swaps_contents);
+
   g_mutex_unlock (&monitor->mounts_mutex);
-
- out:
-  ;
 }
 
 /**
