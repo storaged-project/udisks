@@ -7,10 +7,10 @@ CI status
 OVERVIEW
 ========
 
-The Udisks project provides a daemon, tools and libraries to access and
+The UDisks project provides a daemon, tools and libraries to access and
 manipulate disks, storage devices and technologies.
 
-For API stability and intended audience of Udisks, see the API STABILITY and
+For API stability and intended audience of UDisks, see the API STABILITY and
 AUDIENCE section of the `udisks(8)` man page (`doc/man/udisks.xml` in the
 tarball and git repository).
 
@@ -26,7 +26,7 @@ later).
 INSTALLATION
 ============
 
-Udisks has several dependencies listed in `packaging/udisks2.spec`.
+UDisks has several dependencies listed in `packaging/udisks2.spec`.
 
 If you run rpm based distro, install the dependencies by:
 
@@ -35,15 +35,15 @@ If you run rpm based distro, install the dependencies by:
 AUTOTOOLS
 ---------
 
-To configure and install the Udisks, perform following tasks:
+To configure and install the UDisks, perform following tasks:
 
     $ ./autogen.sh
 
-Additional functionality of Udisks for monitoring and management is split
+Additional functionality of UDisks for monitoring and management is split
 into several modules: *BCache, BTRFS, iSCSI, libStorageManagement, LVM2, LVM
 Cache and zRAM*. By default, no additional module will be built.
 
-To build Udisks with (a) chosen module(s), provide or leave these
+To build UDisks with (a) chosen module(s), provide or leave these
 configuration options for the `configure` script:
 
     $ ./configure --enable-bcache --enable-btrfs --enable-iscsi
@@ -62,7 +62,7 @@ The actual build and installation:
 RELEASES
 ========
 
-Releases of Udisks are available in compressed tarballs from
+Releases of UDisks are available in compressed tarballs from
 
  https://github.com/storaged-project/udisks/releases
 
@@ -73,31 +73,31 @@ BUGS and DEVELOPMENT
 Please report bugs via the GitHub's issues tracker at
 
  https://github.com/storaged-project/udisks/issues
- 
+
  ### Running out of development source tree
  If you would like to run out of the source tree for development without installing,
- please do the following below.  
- 
+ please do the following below.
+
  **Note: Assuming you are in the base of the source tree and
  you don't have udisks already installed**
- 
+
  * Build the source `$ ./autogen.sh --enable-modules --enable-debug && make`
  * To run the daemon and splunk around with dbus clients
    * copy the needed files, policy kit, dbus config, and udev rules
      ```
      sudo cp data/*.policy /usr/share/polkit-1/actions/
      sudo cp modules/*/data/*.policy /usr/share/polkit-1/actions/
-     
+
      sudo cp data/org.freedesktop.UDisks2.conf /usr/share/dbus-1/system.d/
-     
+
      sudo cp data/80-udisks2.rules /usr/lib/udev/rules.d/
      ```
    * Get the udev rules to run `sudo udevadm control --reload && udevadm trigger && udevadm settle`
  * Start the daemon `# ./udisksd --debug --uninstalled --force-load-modules`
  * Start a client, eg. `# d-feet`
- 
+
  ### Run the unit tests
 
  `./autogen.sh --enable-modules --enable-debug && make && make ci`
-   
- 
+
+
