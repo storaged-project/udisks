@@ -45,6 +45,10 @@ void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxB
 void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
 gboolean                  udisks_linux_block_object_contains_filesystem (UDisksObject *object);
 
+void                      udisks_linux_block_object_lock_for_cleanup     (UDisksLinuxBlockObject *object);
+gboolean                  udisks_linux_block_object_try_lock_for_cleanup (UDisksLinuxBlockObject *object);
+void                      udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_OBJECT_H__ */
