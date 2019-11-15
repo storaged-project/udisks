@@ -41,6 +41,7 @@
 #include "udiskslinuxprovider.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxencryptedhelpers.h"
+#include "udiskslinuxblockobject.h"
 
 /**
  * SECTION:udisksstate
@@ -631,6 +632,8 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   GUdevDevice *udev_device;
   guint n;
   gchar *change_sysfs_path = NULL;
+  UDisksObject *block_object = NULL;
+  gboolean locked;
 
   keep = FALSE;
   is_mounted = FALSE;
@@ -640,6 +643,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   fstab_mount_value = NULL;
   fstab_mount = FALSE;
   details = NULL;
+  locked = FALSE;
 
   monitor = udisks_daemon_get_mount_monitor (state->daemon);
   udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (state->daemon));
@@ -648,6 +652,19 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
                  "{&s@a{sv}}",
                  &mount_point_str,
                  &details);
+
+  block_object = udisks_daemon_find_block (state->daemon, block_device);
+  if (block_object != NULL)
+    {
+      if (! udisks_linux_block_object_try_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (block_object)))
+        {
+          udisks_notice ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup",
+                         udisks_linux_block_object_get_device_file (UDISKS_LINUX_BLOCK_OBJECT (block_object)));
+          keep = TRUE;
+          goto out;
+        }
+      locked = TRUE;
+    }
 
   if (realpath (mount_point_str, mount_point) == NULL)
     {
@@ -843,6 +860,9 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     g_variant_unref (block_device_value);
   if (details != NULL)
     g_variant_unref (details);
+  if (locked)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+  g_clear_object (&block_object);
 
   g_free (change_sysfs_path);
 
