@@ -393,6 +393,31 @@ udisks_linux_block_object_get_device_file (UDisksLinuxBlockObject *object)
   return device_file;
 }
 
+/**
+ * udisks_linux_block_object_get_device_number:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Gets the device number for this object.
+ *
+ * Returns: A dev_t device number or zero in case of an error.
+ */
+dev_t
+udisks_linux_block_object_get_device_number (UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  dev_t device_number;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), 0);
+
+  device = udisks_linux_block_object_get_device (object);
+  device_number = g_udev_device_get_device_number (device->udev_device);
+
+  /* Free resources. */
+  g_object_unref (device);
+
+  return device_number;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
