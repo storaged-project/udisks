@@ -226,6 +226,7 @@ udisks_state_start_cleanup
 udisks_state_stop_cleanup
 udisks_state_check
 udisks_state_check_sync
+udisks_state_check_block
 udisks_state_get_daemon
 <SUBSECTION>
 udisks_state_add_mounted_fs
