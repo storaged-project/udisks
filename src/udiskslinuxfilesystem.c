@@ -153,35 +153,42 @@ get_filesystem_size (UDisksLinuxBlockObject *object)
   dev = udisks_linux_block_object_get_device_file (object);
   type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
 
-  if (g_strcmp0 (type, "ext2") == 0) {
+  if (g_strcmp0 (type, "ext2") == 0)
+    {
       BDFSExt2Info *info = bd_fs_ext2_get_info (dev, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext2_info_free (info);
         }
-  } else if (g_strcmp0 (type, "ext3") == 0) {
+    }
+  else if (g_strcmp0 (type, "ext3") == 0)
+    {
       BDFSExt3Info *info = bd_fs_ext3_get_info (dev, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext3_info_free (info);
         }
-  } else if (g_strcmp0 (type, "ext4") == 0) {
+    }
+  else if (g_strcmp0 (type, "ext4") == 0)
+    {
       BDFSExt4Info *info = bd_fs_ext4_get_info (dev, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext4_info_free (info);
         }
-  } else if (g_strcmp0 (type, "xfs") == 0) {
+    }
+  else if (g_strcmp0 (type, "xfs") == 0)
+    {
       BDFSXfsInfo *info = bd_fs_xfs_get_info (dev, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_xfs_info_free (info);
         }
-  }
+    }
 
   g_free (dev);
   g_object_unref (device);
@@ -1065,10 +1072,11 @@ calculate_mount_point (UDisksDaemon  *daemon,
         }
     }
   /* otherwise fall back to mounting in /media */
-  if (mount_dir == NULL) {
-    mount_dir = g_strdup ("/media");
-    *persistent = TRUE;
-  }
+  if (mount_dir == NULL)
+    {
+      mount_dir = g_strdup ("/media");
+      *persistent = TRUE;
+    }
 
   /* NOTE: UTF-8 has the nice property that valid UTF-8 strings only contains
    *       the byte 0x2F if it's for the '/' character (U+002F SOLIDUS).
@@ -2254,25 +2262,25 @@ handle_resize (UDisksFilesystem      *filesystem,
 
   probed_fs_type = udisks_block_get_id_type (block);
   if (! bd_fs_can_resize (probed_fs_type, &mode, &required_utility, &error))
-  {
-    if (error != NULL)
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot resize %s filesystem on %s: %s",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             error->message);
-    else
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot resize %s filesystem on %s: executable %s not found",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             required_utility);
-    goto out;
-  }
+    {
+      if (error != NULL)
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot resize %s filesystem on %s: %s",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               error->message);
+      else
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot resize %s filesystem on %s: executable %s not found",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               required_utility);
+      goto out;
+    }
 
   /* it can't be known if it's shrinking or growing but check at least the mount state */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -2434,25 +2442,25 @@ handle_repair (UDisksFilesystem      *filesystem,
 
   probed_fs_type = udisks_block_get_id_type (block);
   if (! bd_fs_can_repair (probed_fs_type, &required_utility, &error))
-  {
-    if (error != NULL)
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot repair %s filesystem on %s: %s",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             error->message);
-    else
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot repair %s filesystem on %s: executable %s not found",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             required_utility);
-    goto out;
-  }
+    {
+      if (error != NULL)
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot repair %s filesystem on %s: %s",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               error->message);
+      else
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot repair %s filesystem on %s: executable %s not found",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               required_utility);
+      goto out;
+    }
 
   /* check the mount state */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -2600,25 +2608,25 @@ handle_check (UDisksFilesystem      *filesystem,
 
   probed_fs_type = udisks_block_get_id_type (block);
   if (! bd_fs_can_check (probed_fs_type, &required_utility, &error))
-  {
-    if (error != NULL)
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot check %s filesystem on %s: %s",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             error->message);
-    else
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot check %s filesystem on %s: executable %s not found",
-                                             probed_fs_type,
-                                             udisks_block_get_device (block),
-                                             required_utility);
-    goto out;
-  }
+    {
+      if (error != NULL)
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot check %s filesystem on %s: %s",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               error->message);
+      else
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot check %s filesystem on %s: executable %s not found",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               required_utility);
+      goto out;
+    }
 
   /* check the mount state */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
