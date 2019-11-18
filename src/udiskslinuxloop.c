@@ -201,7 +201,7 @@ handle_delete (UDisksLoop            *loop,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon = NULL;
-  UDisksState *state;
+  UDisksState *state = NULL;
   GError *error = NULL;
   uid_t caller_uid;
   uid_t setup_by_uid;
@@ -218,6 +218,9 @@ handle_delete (UDisksLoop            *loop,
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
@@ -284,6 +287,10 @@ handle_delete (UDisksLoop            *loop,
   udisks_loop_complete_delete (loop, invocation);
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (device_file);
   g_clear_object (&object);
 

@@ -2915,7 +2915,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   UDisksBlock *block_to_mkfs = NULL;
   UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
-  UDisksState *state;
+  UDisksState *state = NULL;
   UDisksConfigManager *config_manager = NULL;
   const gchar *action_id;
   const gchar *message;
@@ -2958,6 +2958,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   config_manager = udisks_daemon_get_config_manager (daemon);
   command = NULL;
   error_message = NULL;
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   udisks_variant_lookup_binary (options, "encrypt.passphrase", &encrypt_passphrase);
@@ -3460,6 +3463,10 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     complete (complete_user_data);
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (device_name);
   g_free (mapped_name);
   g_free (command);
@@ -3556,6 +3563,7 @@ handle_open_for_backup (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3570,6 +3578,10 @@ handle_open_for_backup (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3602,6 +3614,10 @@ handle_open_for_backup (UDisksBlock           *block,
   udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3617,6 +3633,7 @@ handle_open_for_restore (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3632,6 +3649,10 @@ handle_open_for_restore (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3665,6 +3686,10 @@ handle_open_for_restore (UDisksBlock           *block,
   udisks_block_complete_open_for_restore (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3680,6 +3705,7 @@ handle_open_for_benchmark (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3697,6 +3723,10 @@ handle_open_for_benchmark (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3740,6 +3770,10 @@ handle_open_for_benchmark (UDisksBlock           *block,
   udisks_block_complete_open_for_benchmark (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3756,6 +3790,7 @@ handle_open_device (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3771,6 +3806,10 @@ handle_open_device (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3805,6 +3844,10 @@ handle_open_device (UDisksBlock           *block,
   udisks_block_complete_open_device (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
