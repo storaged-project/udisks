@@ -510,7 +510,7 @@ class VFATTestCase(UdisksFSTestCase):
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
-    def _set_user_mountable(self, disk):
+    def _set_fstab_mountpoint(self, disk, options):
         # create a tempdir
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp)
@@ -518,7 +518,10 @@ class VFATTestCase(UdisksFSTestCase):
         # configuration items as arrays of dbus.Byte
         mnt = self.str_to_ay(tmp)
         fstype = self.str_to_ay(self._fs_name)
-        opts = self.str_to_ay('users,x-udisks-auth')
+        if options:
+            opts = self.str_to_ay(options)
+        else:
+            opts = self.str_to_ay('defaults')
 
         # set the new configuration
         conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
@@ -555,24 +558,6 @@ class VFATTestCase(UdisksFSTestCase):
 
         if 'uid=%s,gid=%s' % (uid, gid) not in out:
             pipe.send([False, '%s not mounted with given uid/gid.\nMount info: %s' % (device, out)])
-            pipe.close()
-            return
-
-        # and now try to unmount it
-        try:
-            safe_dbus.call_sync(self.iface_prefix,
-                                self.path_prefix + '/block_devices/' + os.path.basename(device),
-                                self.iface_prefix + '.Filesystem',
-                                'Unmount',
-                                GLib.Variant('(a{sv})', ({},)))
-        except Exception as e:
-            pipe.send([False, 'Unmount DBus call failed: %s' % str(e)])
-            pipe.close()
-            return
-
-        ret, _out = self.run_command('grep \"%s\" /proc/mounts' % device)
-        if ret == 0:
-            pipe.send([False, '%s mounted after unmount called' % device])
             pipe.close()
             return
 
@@ -616,6 +601,36 @@ class VFATTestCase(UdisksFSTestCase):
             pipe.close()
             return
 
+    def _unmount_as_user_fstab(self, pipe, uid, gid, device):
+        """ Try to unmount @device as user with given @uid and @gid.
+            @device should be listed in /etc/fstab with "users" option when running this, so
+            this is expected to succeed.
+        """
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+        # try to unmount the device
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Unmount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            pipe.send([False, 'Unmount DBus call failed: %s' % str(e)])
+            pipe.close()
+            return
+
+        ret, _out = self.run_command('grep \"%s\" /proc/mounts' % device)
+        if ret == 0:
+            pipe.send([False, 'Unmount DBus call didn\'t fail but %s seems to be still mounted.' % device])
+            pipe.close()
+            return
+        else:
+            pipe.send([True, ''])
+            pipe.close()
+            return
+
     def _unmount_as_user_fstab_fail(self, pipe, uid, gid, device):
         """ Try to unmount @device as user with given @uid and @gid.
             @device shouldn't be listed in /etc/fstab when running this, so
@@ -652,8 +667,7 @@ class VFATTestCase(UdisksFSTestCase):
             pipe.close()
             return
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
-    def test_mount_fstab_user(self):
+    def _prepare_mount_test(self, disk, fstab, fstab_options):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
 
@@ -664,50 +678,31 @@ class VFATTestCase(UdisksFSTestCase):
         fstab = self.read_file('/etc/fstab')
         self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
-        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        self.assertIsNotNone(disk)
-
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self._clean_format, self.vdevs[0])
 
-        # create user for our test
-        self.addCleanup(self._remove_user, self.username)
-        uid, gid = self._add_user(self.username)
+        if fstab:
+            # add the disk to fstab
+            self._set_fstab_mountpoint(disk, options=fstab_options)
 
-        # add the disk to fstab
-        self._set_user_mountable(disk)
-
+    def _run_as_user_with_pipes(self, fn, uid, gid, device):
         # create pipe to get error (if any)
         parent_conn, child_conn = Pipe()
 
-        proc = Process(target=self._mount_as_user_fstab, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
+        proc = Process(target=fn, args=(child_conn, int(uid), int(gid), device))
         proc.start()
         res = parent_conn.recv()
         parent_conn.close()
         proc.join()
 
-        if not res[0]:
-            self.fail(res[1])
+        return res
 
     @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
-    def test_mount_fstab_user_fail(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_name)
-
-        if not self._can_mount:
-            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
-
-        # this test will change /etc/fstab, we might want to revert the changes after it finishes
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
-
+    def test_mount_fstab_fail(self):
+        """ Test that user can't mount device not listed in /etc/fstab """
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
-
-        # create filesystem
-        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
 
         # create user for our test
         self.addCleanup(self._remove_user, self.username)
@@ -716,15 +711,11 @@ class VFATTestCase(UdisksFSTestCase):
         # add unmount cleanup now in case something wrong happens in the other process
         self.addCleanup(self._unmount, self.vdevs[0])
 
-        # create pipe to get error (if any)
-        parent_conn, child_conn = Pipe()
+        # format the disk and add it to /etc/fstab
+        self._prepare_mount_test(disk, False, None)
 
-        proc = Process(target=self._mount_as_user_fstab_fail, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
-        proc.start()
-        res = parent_conn.recv()
-        parent_conn.close()
-        proc.join()
-
+        # now try to mount the device as the user (should fail)
+        res = self._run_as_user_with_pipes(self._mount_as_user_fstab_fail, uid, gid, self.vdevs[0])
         if not res[0]:
             self.fail(res[1])
 
@@ -733,20 +724,84 @@ class VFATTestCase(UdisksFSTestCase):
         self.assertIsNotNone(mnt_path)
         self.assertTrue(os.path.ismount(mnt_path))
 
-        # create pipe to get error (if any)
-        parent_conn, child_conn = Pipe()
-
-        proc = Process(target=self._unmount_as_user_fstab_fail, args=(child_conn, int(uid), int(gid), self.vdevs[0]))
-        proc.start()
-        res = parent_conn.recv()
-        parent_conn.close()
-        proc.join()
-
+        # unmounting as the user should fail
+        res = self._run_as_user_with_pipes(self._unmount_as_user_fstab_fail, uid, gid, self.vdevs[0])
         if not res[0]:
             self.fail(res[1])
 
         self.assertTrue(os.path.ismount(mnt_path))
         self._unmount(mnt_path)
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_mount_fstab_users_option(self):
+        """ Test that user can mount and unmount device with the "users" option in /etc/fstab """
+        # users -- any user can mount the device and any user can also unmount it
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create user for our test
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
+
+        # format the disk and add it to /etc/fstab with the "users" option
+        self._prepare_mount_test(disk, True, 'users')
+
+        # mount the device as the new user which should succeed
+        res = self._run_as_user_with_pipes(self._mount_as_user_fstab, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
+
+        # same with the unmount
+        res = self._run_as_user_with_pipes(self._unmount_as_user_fstab, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
+
+        # now mount it as root and test that user can still unmount it
+        mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertIsNotNone(mnt_path)
+        self.assertTrue(os.path.ismount(mnt_path))
+
+        # unmount as the user, shoul still work thanks to the "users" option
+        res = self._run_as_user_with_pipes(self._unmount_as_user_fstab, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
+
+    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    def test_mount_fstab_user_option(self):
+        """ Test that user can mount and unmount device with the "user" option in /etc/fstab """
+        # user -- any user can mount the device, only user that mounted it (and root) can
+        # unmount it
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create user for our test
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
+
+        # format the disk and add it to /etc/fstab with the "users" option
+        self._prepare_mount_test(disk, True, 'user')
+
+        # mount the device as the new user which should succeed
+        res = self._run_as_user_with_pipes(self._mount_as_user_fstab, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
+
+        # same with the unmount
+        res = self._run_as_user_with_pipes(self._unmount_as_user_fstab, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
+
+        # now mount it as root and test that user can't unmount it
+        mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertIsNotNone(mnt_path)
+        self.assertTrue(os.path.ismount(mnt_path))
+        self.addCleanup(self._unmount, self.vdevs[0])
+
+        # unmount as the user, this should fail now, because it was mounted by root
+        res = self._run_as_user_with_pipes(self._unmount_as_user_fstab_fail, uid, gid, self.vdevs[0])
+        if not res[0]:
+            self.fail(res[1])
 
     @unstable_test
     def test_repair_resize_check(self):

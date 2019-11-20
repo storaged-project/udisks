@@ -1438,7 +1438,9 @@ handle_mount (UDisksFilesystem      *filesystem,
     {
       gboolean mount_fstab_as_root = FALSE;
 
-      if (!has_option (fstab_mount_options, "x-udisks-auth"))
+      if (!has_option (fstab_mount_options, "x-udisks-auth") &&
+          !has_option (fstab_mount_options, "user") &&
+          !has_option (fstab_mount_options, "users"))
         {
           action_id = "org.freedesktop.udisks2.filesystem-mount";
           /* Translators: Shown in authentication dialog when the user
@@ -1491,7 +1493,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                                              mount_fstab_as_root ? 0 : caller_uid,
                                              NULL /* cancellable */);
 
-      if (!mount_fstab_as_root)
+      /* XXX: using run_as_uid for root doesn't work even if the caller is already root */
+      if (!mount_fstab_as_root && caller_uid != 0)
         {
           BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
           BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
@@ -1852,10 +1855,12 @@ handle_unmount (UDisksFilesystem      *filesystem,
     }
 
   /* if system-managed (e.g. referenced in /etc/fstab or similar) and
-   * with the option x-udisks-auth, just run umount(8) as the
+   * with the option x-udisks-auth or user(s), just run umount(8) as the
    * calling user
    */
-  if (system_managed && has_option (fstab_mount_options, "x-udisks-auth"))
+  if (system_managed && (has_option (fstab_mount_options, "x-udisks-auth") ||
+                         has_option (fstab_mount_options, "users") ||
+                         has_option (fstab_mount_options, "user")))
     {
       gboolean unmount_fstab_as_root;
 
@@ -1868,7 +1873,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                              unmount_fstab_as_root ? 0 : caller_uid,
                                              NULL);
 
-      if (!unmount_fstab_as_root)
+      if (!unmount_fstab_as_root && caller_uid != 0)
         {
           BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
           BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
