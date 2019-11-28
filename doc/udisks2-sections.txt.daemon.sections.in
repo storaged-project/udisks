@@ -25,6 +25,7 @@ udisks_daemon_launch_threaded_job
 udisks_daemon_get_disable_modules
 udisks_daemon_get_force_load_modules
 udisks_daemon_get_module_manager
+udisks_daemon_get_uuid
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
 UDISKS_DAEMON

@@ -53,6 +53,7 @@ gboolean                  udisks_daemon_get_disable_modules   (UDisksDaemon    *
 gboolean                  udisks_daemon_get_force_load_modules(UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_uninstalled       (UDisksDaemon    *daemon);
 gboolean                  udisks_daemon_get_enable_tcrypt     (UDisksDaemon    *daemon);
+const gchar              *udisks_daemon_get_uuid              (UDisksDaemon    *daemon);
 
 /**
  * UDisksDaemonWaitFunc:

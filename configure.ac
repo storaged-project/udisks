@@ -185,6 +185,16 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(LIBMOUNT_CFLAGS)
   AC_SUBST(LIBMOUNT_LIBS)
 
+  PKG_CHECK_MODULES(LIBUUID, [uuid])
+  AC_SUBST(LIBUUID_CFLAGS)
+  AC_SUBST(LIBUUID_LIBS)
+
+  # UUID_STR_LEN is only available since util-linux-2.31
+  AC_CHECK_DECL([UUID_STR_LEN],
+                [],
+                [AC_DEFINE([UUID_STR_LEN], 37, [compat UUID_STR_LEN define])],
+                [[#include <uuid/uuid.h>]])
+
   PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd >= 209], [have_libsystemd_login=yes],
                     [PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd-login >= 44 libsystemd-daemon],
                     [have_libsystemd_login=yes],

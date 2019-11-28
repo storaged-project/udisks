@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <uuid.h>
 #include <blockdev/blockdev.h>
 
 #include "udiskslogging.h"
@@ -95,6 +96,7 @@ struct _UDisksDaemon
   gboolean force_load_modules;
   gboolean uninstalled;
   gboolean enable_tcrypt;
+  gchar *uuid;
 };
 
 struct _UDisksDaemonClass
@@ -116,6 +118,7 @@ enum
   PROP_FORCE_LOAD_MODULES,
   PROP_UNINSTALLED,
   PROP_ENABLE_TCRYPT,
+  PROP_UUID,
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -141,6 +144,8 @@ udisks_daemon_finalize (GObject *object)
 #ifdef HAVE_LIBMOUNT
   g_object_unref (daemon->utab_monitor);
 #endif
+
+  g_free (daemon->uuid);
 
   g_clear_object (&daemon->module_manager);
 
@@ -204,6 +209,10 @@ udisks_daemon_get_property (GObject    *object,
       g_value_set_boolean (value, udisks_daemon_get_enable_tcrypt (daemon));
       break;
 
+    case PROP_UUID:
+      g_value_set_string (value, udisks_daemon_get_uuid (daemon));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -217,6 +226,8 @@ udisks_daemon_set_property (GObject      *object,
                             GParamSpec   *pspec)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
+  const gchar *s;
+  uuid_t uu;
 
   switch (prop_id)
     {
@@ -239,6 +250,17 @@ udisks_daemon_set_property (GObject      *object,
 
     case PROP_ENABLE_TCRYPT:
       daemon->enable_tcrypt = g_value_get_boolean (value);
+      break;
+
+    case PROP_UUID:
+      s = g_value_get_string (value);
+      if (s != NULL && uuid_parse (s, uu) == 0)
+        {
+          g_free (daemon->uuid);
+          daemon->uuid = g_strdup (s);
+        }
+      else
+        g_warning ("Invalid UUID string '%s'", s);
       break;
 
     default:
@@ -267,6 +289,8 @@ udisks_daemon_constructed (GObject *object)
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
   GError *error;
   gboolean ret = FALSE;
+  gchar uuid_buf[UUID_STR_LEN] = {0};
+  uuid_t uuid;
 
   /* NULL means no specific so_name (implementation) */
   BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
@@ -314,6 +338,11 @@ udisks_daemon_constructed (GObject *object)
                             bd_get_plugin_name ((*plugin_p)->name));
       }
     }
+
+  /* Generate global UUID */
+  uuid_generate (uuid);
+  uuid_unparse (uuid, &uuid_buf[0]);
+  daemon->uuid = g_strdup (uuid_buf);
 
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
@@ -506,6 +535,20 @@ udisks_daemon_class_init (UDisksDaemonClass *klass)
                                                          G_PARAM_READABLE |
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * UDisksDaemon:uuid:
+   *
+   * The UUID specific for this daemon instance.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_UUID,
+                                   g_param_spec_string ("uuid",
+                                                        "Daemon UUID",
+                                                        "The UUID specific for this daemon instance",
+                                                         NULL,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE));
 }
 
 /**
@@ -1752,6 +1795,21 @@ udisks_daemon_get_enable_tcrypt (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
   return daemon->enable_tcrypt;
+}
+
+/**
+ * udisks_daemon_get_uuid:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the UUID string specific to this @daemon instance.
+ *
+ * Returns: the UUID string. Do not free, the string is owned by @daemon.
+ */
+const gchar *
+udisks_daemon_get_uuid (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->uuid;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
