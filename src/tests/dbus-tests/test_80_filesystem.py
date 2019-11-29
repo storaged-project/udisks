@@ -75,8 +75,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         return ret == 0
 
     @classmethod
-    def module_loaded(cls, module):
-        ret, _out = cls.run_command('lsmod | grep %s' % module)
+    def module_available(cls, module):
+        ret, _out = cls.run_command('modprobe %s' % module)
         return ret == 0
 
     def test_create_format(self):
@@ -849,7 +849,7 @@ class MinixTestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.minix')
     _can_label = False
     _can_relabel = False
-    _can_mount = True and UdisksFSTestCase.module_loaded('minix')
+    _can_mount = True and UdisksFSTestCase.module_available('minix')
 
 
 class NILFS2TestCase(UdisksFSTestCase):
@@ -857,7 +857,7 @@ class NILFS2TestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
-    _can_mount = True and UdisksFSTestCase.module_loaded('nilfs2')
+    _can_mount = True and UdisksFSTestCase.module_available('nilfs2')
 
     @unstable_test
     def test_userspace_mount_options(self):
@@ -869,14 +869,14 @@ class F2FSTestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
     _can_label = False
     _can_relabel = False
-    _can_mount = True and UdisksFSTestCase.module_loaded('f2fs')
+    _can_mount = True and UdisksFSTestCase.module_available('f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_name = 'udf'
     _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('udflabel')
-    _can_mount = True and UdisksFSTestCase.module_loaded('udf')
+    _can_mount = True and UdisksFSTestCase.module_available('udf')
 
 class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'
