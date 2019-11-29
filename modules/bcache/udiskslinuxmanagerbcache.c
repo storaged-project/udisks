@@ -311,7 +311,7 @@ handle_bcache_create (UDisksManagerBcache    *object,
                                                       wait_for_bcache_object,
                                                       bcache_file,
                                                       NULL,
-                                                      10, /* timeout_seconds */
+                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                       &error);
 
   if (bcache_object == NULL)
