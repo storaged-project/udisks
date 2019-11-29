@@ -42,6 +42,8 @@ gchar                    *udisks_linux_block_object_get_device_file (UDisksLinux
 dev_t                     udisks_linux_block_object_get_device_number (UDisksLinuxBlockObject *object);
 
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
+gboolean                  udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
+                                                                         guint                   timeout_seconds);
 void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
 gboolean                  udisks_linux_block_object_contains_filesystem (UDisksObject *object);
 
