@@ -680,7 +680,7 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                      wait_for_md_block_object,
                                                      object,
                                                      NULL,
-                                                     10, /* timeout_seconds */
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
   if (block_object == NULL)
     {

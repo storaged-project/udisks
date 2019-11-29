@@ -605,7 +605,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                                          wait_for_cleartext_object,
                                                          g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object))),
                                                          g_free,
-                                                         20, /* timeout_seconds */
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error);
   if (cleartext_object == NULL)
     {
@@ -818,7 +818,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                                                          wait_for_cleartext_object,
                                                          cleartext_path,
                                                          NULL,
-                                                         10,
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &loc_error))
     {
       g_set_error (error,

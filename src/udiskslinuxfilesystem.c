@@ -1968,7 +1968,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
                                                           wait_for_filesystem_mount_points,
                                                           &wait_data,
                                                           NULL,
-                                                          5,
+                                                          UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                           NULL);
 
   udisks_filesystem_complete_unmount (filesystem, invocation);
@@ -2174,7 +2174,8 @@ handle_set_label (UDisksFilesystem      *filesystem,
    * so just trigger the uevent again now to be sure the property
    * has been updated
   */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   if (success)
     udisks_filesystem_complete_set_label (filesystem, invocation);
@@ -2360,7 +2361,8 @@ handle_resize (UDisksFilesystem      *filesystem,
 
   /* At least resize2fs might need another uevent after it is done.
    */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_filesystem_set_size (filesystem, get_filesystem_size (UDISKS_LINUX_BLOCK_OBJECT (object)));
   udisks_filesystem_complete_resize (filesystem, invocation);

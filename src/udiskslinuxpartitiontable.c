@@ -499,7 +499,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                          wait_for_partition,
                                                          wait_data,
                                                          NULL,
-                                                         30,
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error);
   if (partition_object == NULL)
     {
@@ -544,7 +544,8 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
      the new partition without getting change event for the disks after the
      last add event and this breaks the "Partitions" property on the
      "PartitionTable" interface. */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
