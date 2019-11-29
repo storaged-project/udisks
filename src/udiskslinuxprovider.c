@@ -573,7 +573,7 @@ ensure_modules (UDisksLinuxProvider *provider)
     }
 }
 
-/**
+/*
  * The logind's PrepareForSleep D-Bus signal handler. There is one boolean
  * value in the 'parameters' GVariant tuple. When TRUE, the system is about to
  * suspend/hibernate, when FALSE the system has just woken up. Since the ATA
