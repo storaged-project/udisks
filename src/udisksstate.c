@@ -151,6 +151,13 @@
  * to the attention of the system administrator.
  */
 
+/* State file filenames */
+#define UDISKS_STATE_FILE_MOUNTED_FS             "mounted-fs"
+#define UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT  "mounted-fs-persistent"
+#define UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV    "unlocked-crypto-dev"
+#define UDISKS_STATE_FILE_LOOP                   "loop"
+#define UDISKS_STATE_FILE_MDRAID                 "mdraid"
+
 /**
  * UDisksState:
  *
@@ -510,10 +517,10 @@ udisks_state_check_in_thread (UDisksState *state)
    * devices that we intend to clean...
    */
   udisks_state_check_mounted_fs (state,
-                                 "mounted-fs",
+                                 UDISKS_STATE_FILE_MOUNTED_FS,
                                  devs_to_clean);
   udisks_state_check_mounted_fs (state,
-                                 "mounted-fs-persistent",
+                                 UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT,
                                  devs_to_clean);
 
   /* Then go through all block devices and clear them up
@@ -929,7 +936,7 @@ udisks_state_add_mounted_fs (UDisksState    *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            persistent ? "mounted-fs-persistent" : "mounted-fs",
+                            persistent ? UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT : UDISKS_STATE_FILE_MOUNTED_FS,
                             G_VARIANT_TYPE ("a{sa{sv}}"));
 
   /* start by including existing entries */
@@ -984,7 +991,7 @@ udisks_state_add_mounted_fs (UDisksState    *state,
 
   /* save new entries */
   udisks_state_set (state,
-                    persistent ? "mounted-fs-persistent" : "mounted-fs",
+                    persistent ? UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT : UDISKS_STATE_FILE_MOUNTED_FS,
                     G_VARIANT_TYPE ("a{sa{sv}}"),
                     new_value /* consumes new_value */);
 
@@ -1097,13 +1104,13 @@ udisks_state_find_mounted_fs (UDisksState   *state,
   g_mutex_lock (&state->lock);
 
   ret = find_mounted_fs_for_key (state,
-                                 "mounted-fs",
+                                 UDISKS_STATE_FILE_MOUNTED_FS,
                                  block_device,
                                  out_uid,
                                  out_fstab_mount);
   if (ret == NULL)
     ret = find_mounted_fs_for_key (state,
-                                   "mounted-fs-persistent",
+                                   UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT,
                                    block_device,
                                    out_uid,
                                    out_fstab_mount);
@@ -1290,7 +1297,7 @@ udisks_state_check_unlocked_crypto_dev (UDisksState *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-crypto-dev",
+                            UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
 
   /* check valid entries */
@@ -1317,7 +1324,7 @@ udisks_state_check_unlocked_crypto_dev (UDisksState *state,
   if (changed)
     {
       udisks_state_set (state,
-                        "unlocked-crypto-dev",
+                        UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV,
                         G_VARIANT_TYPE ("a{ta{sv}}"),
                         new_value /* consumes new_value */);
     }
@@ -1360,7 +1367,7 @@ udisks_state_add_unlocked_crypto_dev (UDisksState  *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-crypto-dev",
+                            UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
 
   /* start by including existing entries */
@@ -1415,7 +1422,7 @@ udisks_state_add_unlocked_crypto_dev (UDisksState  *state,
 
   /* save new entries */
   udisks_state_set (state,
-                    "unlocked-crypto-dev",
+                    UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV,
                     G_VARIANT_TYPE ("a{ta{sv}}"),
                     new_value /* consumes new_value */);
 
@@ -1450,7 +1457,7 @@ udisks_state_find_unlocked_crypto_dev (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "unlocked-crypto-dev",
+                            UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
 
   /* look through list */
@@ -1617,7 +1624,7 @@ udisks_state_check_loop (UDisksState *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "loop",
+                            UDISKS_STATE_FILE_LOOP,
                             G_VARIANT_TYPE ("a{sa{sv}}"));
 
   /* check valid entries */
@@ -1644,7 +1651,7 @@ udisks_state_check_loop (UDisksState *state,
   if (changed)
     {
       udisks_state_set (state,
-                        "loop",
+                        UDISKS_STATE_FILE_LOOP,
                         G_VARIANT_TYPE ("a{sa{sv}}"),
                         new_value /* consumes new_value */);
     }
@@ -1688,7 +1695,7 @@ udisks_state_add_loop (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "loop",
+                            UDISKS_STATE_FILE_LOOP,
                             G_VARIANT_TYPE ("a{sa{sv}}"));
 
   /* start by including existing entries */
@@ -1742,7 +1749,7 @@ udisks_state_add_loop (UDisksState   *state,
 
   /* save new entries */
   udisks_state_set (state,
-                    "loop",
+                    UDISKS_STATE_FILE_LOOP,
                     G_VARIANT_TYPE ("a{sa{sv}}"),
                     new_value /* consumes new_value */);
 
@@ -1851,7 +1858,7 @@ udisks_state_has_loop (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "loop",
+                            UDISKS_STATE_FILE_LOOP,
                             G_VARIANT_TYPE ("a{sa{sv}}"));
   if (value != NULL)
    {
@@ -1950,7 +1957,7 @@ udisks_state_check_mdraid (UDisksState *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "mdraid",
+                            UDISKS_STATE_FILE_MDRAID,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
 
   /* check valid entries */
@@ -1977,7 +1984,7 @@ udisks_state_check_mdraid (UDisksState *state,
   if (changed)
     {
       udisks_state_set (state,
-                        "mdraid",
+                        UDISKS_STATE_FILE_MDRAID,
                         G_VARIANT_TYPE ("a{ta{sv}}"),
                         new_value /* consumes new_value */);
     }
@@ -2013,7 +2020,7 @@ udisks_state_add_mdraid (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "mdraid",
+                            UDISKS_STATE_FILE_MDRAID,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
 
   /* start by including existing entries */
@@ -2059,7 +2066,7 @@ udisks_state_add_mdraid (UDisksState   *state,
 
   /* save new entries */
   udisks_state_set (state,
-                    "mdraid",
+                    UDISKS_STATE_FILE_MDRAID,
                     G_VARIANT_TYPE ("a{ta{sv}}"),
                     new_value /* consumes new_value */);
 
@@ -2122,7 +2129,7 @@ udisks_state_has_mdraid (UDisksState   *state,
 
   /* load existing entries */
   value = udisks_state_get (state,
-                            "mdraid",
+                            UDISKS_STATE_FILE_MDRAID,
                             G_VARIANT_TYPE ("a{ta{sv}}"));
   if (value != NULL)
     {
@@ -2141,7 +2148,7 @@ udisks_state_has_mdraid (UDisksState   *state,
 static gchar *
 get_state_file_path (const gchar *key)
 {
-  if (g_str_equal (key, "mounted-fs-persistent"))
+  if (g_str_equal (key, UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT))
     return g_strdup_printf (PACKAGE_LOCALSTATE_DIR "/lib/udisks2/%s", key);
 
   return g_strdup_printf ("/run/udisks2/%s", key);
