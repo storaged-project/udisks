@@ -956,7 +956,7 @@ add_acl (const gchar  *path,
 
 /*
  * calculate_mount_point: <internal>
- * @dameon: A #UDisksDaemon.
+ * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
  * @uid: user id of the calling user
  * @gid: group id of the calling user
@@ -1282,65 +1282,6 @@ is_system_managed (UDisksDaemon *daemon,
   return ret;
 }
 
-static void trigger_mpoint_cleanup (const gchar *mount_point)
-{
-  const gchar *service_argv[] = {"systemctl", "start", NULL, NULL};
-  const gchar *escape_argv[] = {"systemd-escape", NULL, NULL};
-  GError *error = NULL;
-  gchar *escaped_mpoint = NULL;
-  size_t len = 0;
-
-  if (g_str_has_prefix (mount_point, "/"))
-    mount_point++;
-  else
-    udisks_warning ("Invalid mount point given to trigger_mpoint_cleanup(): %s",
-                    mount_point);
-
-  /* use 'systemd-escape' to escape the mountpoint */
-  escape_argv[1] = g_strdup (mount_point);
-
-  if (!bd_utils_exec_and_capture_output (escape_argv, NULL, &escaped_mpoint, &error) && (error != NULL))
-    {
-      /* this is a best-effort mechanism, if it fails, just log warning and move
-         on */
-      udisks_warning ("Failed to setup systemd-based mount point cleanup: %s",
-                      error->message);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* remove leading/trailing whitespace */
-  g_strstrip (escaped_mpoint);
-
-  len = strlen (escaped_mpoint);
-  if (len <= 0)
-    {
-      udisks_warning ("Failed to setup systemd-based mount point cleanup");
-      goto out;
-    }
-
-  /* remove the potential trailing '-' (would happen if the given mount_point
-     has a trailing '/') */
-  if (escaped_mpoint[len - 1] == '-')
-    escaped_mpoint[len - 1] = '\0';
-
-  service_argv[2] = g_strdup_printf ("clean-mount-point@%s", escaped_mpoint);
-
-  if (!bd_utils_exec_and_report_error (service_argv, NULL, &error) && (error != NULL))
-    {
-      /* this is a best-effort mechanism, if it fails, just log warning and move
-         on */
-      udisks_warning ("Failed to setup systemd-based mount point cleanup: %s",
-                      error->message);
-      g_clear_error (&error);
-    }
-
-out:
-  g_free (escaped_mpoint);
-  g_free ((gchar *) service_argv[2]);
-  g_free ((gchar *) escape_argv[1]);
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* runs in thread dedicated to handling @invocation */
@@ -1562,7 +1503,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                                    mount_point_to_use,
                                    udisks_block_get_device_number (block),
                                    caller_uid,
-                                   TRUE); /* fstab_mounted */
+                                   TRUE,   /* fstab_mounted */
+                                   FALSE); /* persistent */
 
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
@@ -1702,15 +1644,13 @@ handle_mount (UDisksFilesystem      *filesystem,
   else
     udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
-  if (mpoint_persistent)
-    trigger_mpoint_cleanup (mount_point_to_use);
-
   /* update the mounted-fs file */
   udisks_state_add_mounted_fs (state,
                                mount_point_to_use,
                                udisks_block_get_device_number (block),
                                caller_uid,
-                               FALSE); /* fstab_mounted */
+                               FALSE,  /* fstab_mounted */
+                               mpoint_persistent);
 
   udisks_notice ("Mounted %s at %s on behalf of uid %u",
                  device,

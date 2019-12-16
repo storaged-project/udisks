@@ -796,11 +796,15 @@ class FS(UDisksTestCase):
         self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.assertProperty(fs, 'mount-points', [])
 
-        # cleans up mountpoint
+        # the mountpoint should be gone once the unmount call returns
         self.assertFalse(os.path.exists(mount_path))
 
-        # now manually create the mount point
+        # now manually create the mount point again
         os.mkdir(mount_path)
+
+        # settle down and check the mountpoint still exists
+        time.sleep(5)
+        self.assertTrue(os.path.exists(mount_path))
 
         # now this should use mount_path + '1'
         try:
