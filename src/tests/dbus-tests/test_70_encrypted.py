@@ -45,9 +45,6 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         d['erase'] = True
         device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
 
-    def _unmount(self, disk_path):
-        self.run_command('umount %s' % disk_path)
-
     def test_create(self):
         disk_name = os.path.basename(self.vdevs[0])
         disk = self.get_object('/block_devices/' + disk_name)
@@ -279,7 +276,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         mnt_path = luks.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertIsNotNone(mnt_path)
-        self.addCleanup(self._unmount, mnt_path)
+        self.addCleanup(self.try_unmount, mnt_path)
 
         # should not be possible to close mounted luks
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error locking'

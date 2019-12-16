@@ -31,12 +31,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     username = 'udisks_test_user'
 
-    def _clean_format(self, disk_path):
-        self.run_command('wipefs -a %s' % disk_path)
-
-    def _unmount(self, disk_path):
-        self.run_command('umount %s' % disk_path)
-
     def _rmtree(self, path):
         for _ in range(10):
             try:
@@ -94,7 +88,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # test dbus properties
         usage = self.get_property(disk, '.Block', 'IdUsage')
@@ -125,7 +119,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d = dbus.Dictionary(signature='sv')
         d['label'] = label
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # test dbus properties
         dbus_label = self.get_property(disk, '.Block', 'IdLabel')
@@ -147,7 +141,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem with label
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # change the label
         label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX udisks changes vfat labels to uppercase
@@ -189,7 +183,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -218,14 +212,14 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # mount
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
         mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check reported size
         size = self.get_property(disk, '.Block', 'Size').value
@@ -243,7 +237,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -254,7 +248,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
         mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # system mountpoint
         self.assertTrue(os.path.ismount(mnt_path))
@@ -288,7 +282,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # create a tempdir
         tmp = tempfile.mkdtemp()
@@ -307,7 +301,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # mount using fstab options
         disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -334,7 +328,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -345,7 +339,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
         mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -374,7 +368,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # not mounted
         mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -385,7 +379,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['fstype'] = self._fs_name
         d['options'] = 'ro,x-test.op1'
         mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check utab
         utab_opts = self.get_property(disk, '.Block', 'UserspaceMountOptions')
@@ -445,7 +439,7 @@ class Ext4TestCase(Ext2TestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # create user for our test
         self.addCleanup(self._remove_user, self.username)
@@ -453,7 +447,7 @@ class Ext4TestCase(Ext2TestCase):
 
         # mount the device
         mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # change owner of the mountpoint to our user
         os.chown(mnt_path, int(uid), int(gid))
@@ -692,7 +686,7 @@ class VFATTestCase(UdisksFSTestCase):
 
         # create filesystem
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         if fstab:
             # add the disk to fstab
@@ -721,7 +715,7 @@ class VFATTestCase(UdisksFSTestCase):
         uid, gid = self._add_user(self.username)
 
         # add unmount cleanup now in case something wrong happens in the other process
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # format the disk and add it to /etc/fstab
         self._prepare_mount_test(disk, False, None)
@@ -742,7 +736,7 @@ class VFATTestCase(UdisksFSTestCase):
             self.fail(res[1])
 
         self.assertTrue(os.path.ismount(mnt_path))
-        self._unmount(mnt_path)
+        self.try_unmount(mnt_path)
 
     @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_mount_fstab_users_option(self):
@@ -808,7 +802,7 @@ class VFATTestCase(UdisksFSTestCase):
         mnt_path = disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertIsNotNone(mnt_path)
         self.assertTrue(os.path.ismount(mnt_path))
-        self.addCleanup(self._unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # unmount as the user, this should fail now, because it was mounted by root
         res = self._run_as_user_with_pipes(self._unmount_as_user_fstab_fail, uid, gid, self.vdevs[0])
@@ -932,7 +926,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         # create minix filesystem without label and try to set it later
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: Don\'t know how to '\
               'change label on device of type filesystem:%s' % fs._fs_name
@@ -951,8 +945,8 @@ class FailsystemTestCase(UdisksFSTestCase):
         self.assertIsNotNone(disk)
 
         disk.Format(fs._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self._clean_format, self.vdevs[0])
-        self.addCleanup(self._unmount, self.vdevs[0])  # paranoid cleanup
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        self.addCleanup(self.try_unmount, self.vdevs[0])  # paranoid cleanup
 
         # wrong fstype
         d = dbus.Dictionary(signature='sv')
@@ -987,9 +981,6 @@ class FailsystemTestCase(UdisksFSTestCase):
         pass
 
 class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
-    def _unmount(self, disk_path):
-        self.run_command('umount %s' % disk_path)
-
     def _create_iso9660_on_dev(self, dev):
         if not find_executable("genisoimage"):
             self.skipTest("Cannot create an iso9660 file system")
@@ -1020,7 +1011,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
 
         # mount
         disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, dev)
+        self.addCleanup(self.try_unmount, dev)
 
         # check dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -1058,7 +1049,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
 
         # mount
         disk.Mount(extra, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, dev)
+        self.addCleanup(self.try_unmount, dev)
 
         # check dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -1095,7 +1086,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
 
         # mount
         disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, dev)
+        self.addCleanup(self.try_unmount, dev)
 
         # check dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
@@ -1135,7 +1126,7 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
 
         disk.Mount(extra, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self._unmount, dev)
+        self.addCleanup(self.try_unmount, dev)
 
         # check dbus mountpoint
         dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
