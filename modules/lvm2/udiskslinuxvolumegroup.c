@@ -804,7 +804,7 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-enum VolumeType { VOL_PLAIN, VOL_THIN_POOL, VOL_THIN_VOLUME };
+enum VolumeType { VOL_PLAIN, VOL_THIN_POOL, VOL_THIN_VOLUME, VOL_VDO_VOLUME };
 typedef void (*VolumeCompletionFunc) (UDisksVolumeGroup     *object,
                                       GDBusMethodInvocation *invocation,
                                       const gchar           *result);
@@ -816,7 +816,12 @@ handle_create_volume (UDisksVolumeGroup              *_group,
                       guint64                         arg_size,
                       GVariant                       *options,
                       enum VolumeType                 vol_creation_type,
-                      const gchar                    *arg_pool)
+                      const gchar                    *arg_pool,
+                      guint64                         arg_virtual_size,
+                      guint64                         arg_index_memory,
+                      gboolean                        arg_compression,
+                      gboolean                        arg_deduplication,
+                      const gchar                    *arg_write_policy)
 {
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
@@ -824,7 +829,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   const gchar *lv_objpath;
-  LVJobData data;
+  LVJobData data = {0};
   UDisksLinuxLogicalVolumeObject *pool_object = NULL;
   const gchar *auth_error_msg = NULL;
   UDisksThreadedJobFunc create_function = NULL;
@@ -842,11 +847,17 @@ handle_create_volume (UDisksVolumeGroup              *_group,
       create_function = lvcreate_thin_job_func;
       completion_function = udisks_volume_group_complete_create_thin_volume;
     }
-  else
+  else if (VOL_THIN_POOL == vol_creation_type)
     {
       auth_error_msg = N_("Authentication is required to create a thin pool volume");
       create_function = lvcreate_thin_pool_job_func;
       completion_function = udisks_volume_group_complete_create_thin_pool_volume;
+    }
+  else if (VOL_VDO_VOLUME == vol_creation_type)
+    {
+      auth_error_msg = N_("Authentication is required to create a VDO volume");
+      create_function = lvcreate_vdo_job_func;
+      completion_function = udisks_volume_group_complete_create_vdo_volume;
     }
 
   object = udisks_daemon_util_dup_object (group, &error);
@@ -896,6 +907,16 @@ handle_create_volume (UDisksVolumeGroup              *_group,
       data.pool_name = udisks_linux_logical_volume_object_get_name (pool_object);
     }
 
+  if (VOL_VDO_VOLUME == vol_creation_type)
+    {
+      data.pool_name = arg_pool;
+      data.virtual_size = arg_virtual_size;
+      data.index_memory = arg_index_memory;
+      data.compression = arg_compression;
+      data.deduplication = arg_deduplication;
+      data.write_policy = arg_write_policy;
+    }
+
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                UDISKS_OBJECT (object),
                                                "lvm-vg-create-volume",
@@ -941,7 +962,7 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
                             GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_PLAIN, NULL);
+                              VOL_PLAIN, NULL, 0, 0, FALSE, FALSE, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -954,7 +975,7 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
                                 GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_THIN_POOL, NULL);
+                              VOL_THIN_POOL, NULL, 0, 0, FALSE, FALSE, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -968,7 +989,25 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
                            GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_THIN_VOLUME, arg_pool);
+                              VOL_THIN_VOLUME, arg_pool, 0, 0, FALSE, FALSE, NULL);
+}
+
+static gboolean
+handle_create_vdo_volume (UDisksVolumeGroup     *_group,
+                          GDBusMethodInvocation *invocation,
+                          const gchar           *arg_name,
+                          const gchar           *arg_pool,
+                          guint64                arg_size,
+                          guint64                arg_virtual_size,
+                          guint64                arg_index_memory,
+                          gboolean               arg_compression,
+                          gboolean               arg_deduplication,
+                          const gchar           *arg_write_policy,
+                          GVariant              *options)
+{
+  return handle_create_volume (_group, invocation, arg_name, arg_size, options,
+                               VOL_VDO_VOLUME, arg_pool, arg_virtual_size, arg_index_memory,
+                               arg_compression, arg_deduplication, arg_write_policy);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -988,4 +1027,6 @@ volume_group_iface_init (UDisksVolumeGroupIface *iface)
   iface->handle_create_plain_volume = handle_create_plain_volume;
   iface->handle_create_thin_pool_volume = handle_create_thin_pool_volume;
   iface->handle_create_thin_volume = handle_create_thin_volume;
+
+  iface->handle_create_vdo_volume = handle_create_vdo_volume;
 }

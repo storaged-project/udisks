@@ -42,6 +42,8 @@ typedef struct _UDisksLinuxLogicalVolumeObject UDisksLinuxLogicalVolumeObject;
 struct _UDisksLinuxPhysicalVolume;
 typedef struct _UDisksLinuxPhysicalVolume UDisksLinuxPhysicalVolume;
 
+struct _UDisksLinuxVDOVolume;
+typedef struct _UDisksLinuxVDOVolume UDisksLinuxVDOVolume;
 
 struct _UDisksLinuxManagerLVM2;
 typedef struct _UDisksLinuxManagerLVM2 UDisksLinuxManagerLVM2;

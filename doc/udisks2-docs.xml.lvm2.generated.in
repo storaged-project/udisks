@@ -3,3 +3,4 @@
       <xi:include href="../doc/xml/UDisksPhysicalVolume.xml"/>
       <xi:include href="../doc/xml/UDisksVolumeGroup.xml"/>
       <xi:include href="../doc/xml/UDisksLogicalVolume.xml"/>
+      <xi:include href="../doc/xml/UDisksVDOVolume.xml"/>

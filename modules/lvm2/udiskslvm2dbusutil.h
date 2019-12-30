@@ -38,6 +38,9 @@ UDisksVolumeGroup *udisks_object_peek_volume_group (UDisksObject *object);
 UDisksLogicalVolume *udisks_object_get_logical_volume  (UDisksObject *object);
 UDisksLogicalVolume *udisks_object_peek_logical_volume (UDisksObject *object);
 
+UDisksVDOVolume *udisks_object_get_vdo_volume  (UDisksObject *object);
+UDisksVDOVolume *udisks_object_peek_vdo_volume (UDisksObject *object);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LVM2_DBUS_UTIL_H__ */
