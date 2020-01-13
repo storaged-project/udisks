@@ -50,6 +50,7 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
+#include "udisksconfigmanager.h"
 
 /**
  * SECTION:udiskslinuxdrive
@@ -228,18 +229,26 @@ static const VariantKeyfileMapping drive_configuration_mapping[5] = {
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gchar *
-configuration_get_path (UDisksLinuxDrive *drive)
+configuration_get_path (UDisksLinuxDrive *drive,
+                        UDisksDaemon     *daemon)
 {
+  UDisksConfigManager *config_manager;
   const gchar *id;
-  gchar *path = NULL;
+  gchar *id_config_file;
+  gchar *path;
+
+  config_manager = udisks_daemon_get_config_manager (daemon);
 
   id = udisks_drive_get_id (UDISKS_DRIVE (drive));
   if (id == NULL || strlen (id) == 0)
-    goto out;
+    return NULL;
 
-  path = g_strdup_printf (PACKAGE_SYSCONF_DIR "/udisks2/%s.conf", id);
+  id_config_file = g_strdup_printf ("%s.conf", id);
+  path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                           id_config_file,
+                           NULL);
+  g_free (id_config_file);
 
- out:
   return path;
 }
 
@@ -248,6 +257,7 @@ static gboolean
 update_configuration (UDisksLinuxDrive       *drive,
                       UDisksLinuxDriveObject *object)
 {
+  UDisksDaemon *daemon;
   GKeyFile *key_file = NULL;
   gboolean ret = FALSE;
   gchar *path = NULL;
@@ -257,7 +267,9 @@ update_configuration (UDisksLinuxDrive       *drive,
   GVariant *old_value;
   guint n;
 
-  path = configuration_get_path (drive);
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  path = configuration_get_path (drive, daemon);
   if (path == NULL)
     goto out;
 
@@ -1103,7 +1115,7 @@ handle_set_configuration (UDisksDrive           *_drive,
                                                     invocation))
     goto out;
 
-  path = configuration_get_path (drive);
+  path = configuration_get_path (drive, daemon);
   if (path == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
