@@ -237,15 +237,6 @@ configuration_get_path (UDisksLinuxDrive *drive)
   if (id == NULL || strlen (id) == 0)
     goto out;
 
-  /* if prefix is specified directories may not exist */
-  if (!g_file_test (PACKAGE_SYSCONF_DIR "/udisks2", G_FILE_TEST_IS_DIR))
-    {
-      if (g_mkdir_with_parents (PACKAGE_SYSCONF_DIR "/udisks2", 0700) != 0)
-        {
-          udisks_critical ("Error creating directory %s: %m", PACKAGE_SYSCONF_DIR "/udisks2");
-        }
-    }
-
   path = g_strdup_printf (PACKAGE_SYSCONF_DIR "/udisks2/%s.conf", id);
 
  out:

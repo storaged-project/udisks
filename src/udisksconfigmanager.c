@@ -157,6 +157,13 @@ udisks_config_manager_constructed (GObject *object)
                                       manager->uninstalled ? "udisks" : PROJECT_SYSCONF_DIR,
                                       NULL);
 
+  /* Make sure the config dir exists, UDisksLinuxDrive may store some data there */
+  if (g_mkdir_with_parents (manager->config_dir, 0755) != 0)
+    {
+      /* don't abort the daemon, the config dir may point to a readonly filesystem */
+      udisks_warning ("Error creating directory %s: %m", manager->config_dir);
+    }
+
   /* Get modules and means of loading */
   conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
                                     manager->config_dir,
