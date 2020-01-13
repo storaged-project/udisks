@@ -61,6 +61,8 @@ UDisksModuleLoadPreference
                       udisks_config_manager_get_load_preference (UDisksConfigManager *manager);
 const gchar          *udisks_config_manager_get_encryption (UDisksConfigManager *manager);
 
+const gchar          *udisks_config_manager_get_config_dir  (UDisksConfigManager *manager);
+
 G_END_DECLS
 
 #endif /* __UDISKS_CONFIG_MANAGER_H__ */
