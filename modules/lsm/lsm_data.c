@@ -27,6 +27,7 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemontypes.h>
 #include <src/udiskslogging.h>
+#include <src/udisksconfigmanager.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <libconfig.h>
@@ -36,8 +37,7 @@
 #define _STD_LSM_SIM_URI "sim://"
 #define _STD_LSM_HPSA_URI "hpsa://"
 
-#define _STD_LSM_CONF_PATH_PREFIX PACKAGE_SYSCONF_DIR
-#define _STD_LSM_CONF_PATH "udisks/modules.conf.d/"
+#define _STD_LSM_CONF_PATH "modules.conf.d"
 #define _STD_LSM_CONF_FILE "udisks2_lsm.conf"
 #define _STD_LSM_CONF_REFRESH_KEYNAME "refresh_interval"
 #define _STD_LSM_CONF_SIM_KEYNAME "enable_sim"
@@ -101,7 +101,6 @@ static GHashTable *_supported_sys_id_hash = NULL;
 static GHashTable *_vpd83_2_lsm_conn_data_hash = NULL;
 static GHashTable *_pl_id_2_lsm_pl_data_hash = NULL;
 static GHashTable *_vpd83_2_lsm_vri_data_hash = NULL;
-static char *_std_lsm_conf_file_abs_path = NULL;
 
 static struct _LsmUriSet *_lsm_uri_set_new (const char *uri, const char *pass);
 static void _handle_lsm_error (const char *msg, lsm_connect *lsm_conn);
@@ -122,7 +121,7 @@ _refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data, const char *vpd83);
 static struct _LsmPlData *_lsm_pl_data_lookup (const char *vpd83);
 static struct _LsmVriData *_lsm_vri_data_lookup (const char *vpd83);
 
-static const gchar *_lsm_get_conf_path (UDisksDaemon *daemon);
+static gchar *_lsm_get_conf_path (UDisksDaemon *daemon);
 
 static void _free_lsm_connect (gpointer data);
 static void _free_lsm_uri_set (gpointer data);
@@ -214,7 +213,7 @@ _load_module_conf (UDisksDaemon *daemon)
   config_setting_t *ext_pass = NULL;
   const char *uri = NULL;
   const char *password = NULL;
-  const char *conf_path = NULL;
+  char *conf_path;
   int i;
 
   udisks_debug ("LSM: loading configure");
@@ -319,6 +318,7 @@ out:
   }
   config_destroy (cfg);
   g_free ((gpointer) cfg);
+  g_free (conf_path);
 }
 
 static lsm_connect *
@@ -886,18 +886,18 @@ _lsm_vri_data_lookup (const char *vpd83)
   return _refresh_lsm_vri_data (lsm_conn_data, vpd83);
 }
 
-static const char *
+static char *
 _lsm_get_conf_path (UDisksDaemon *daemon)
 {
-  gboolean uninstalled = udisks_daemon_get_uninstalled (daemon);
+  UDisksConfigManager *config_manager;
 
-  _std_lsm_conf_file_abs_path = g_build_path (G_DIR_SEPARATOR_S,
-                                              uninstalled ? BUILD_DIR : _STD_LSM_CONF_PATH_PREFIX,
-                                              _STD_LSM_CONF_PATH,
-                                              _STD_LSM_CONF_FILE,
-                                              NULL);
+  config_manager = udisks_daemon_get_config_manager (daemon);
 
-  return (const char *) _std_lsm_conf_file_abs_path;
+  /* This should give us '/etc/udisks2/modules.conf.d/udisks2_lsm.conf' */
+  return g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                           _STD_LSM_CONF_PATH,
+                           _STD_LSM_CONF_FILE,
+                           NULL);
 }
 
 static void
@@ -964,12 +964,15 @@ std_lsm_data_init (UDisksDaemon *daemon)
   GPtrArray *lsm_pl_array = NULL;
   guint i = 0;
   gboolean rc = FALSE;
+  gchar *conf_path;
 
   _load_module_conf (daemon);
   if (_conf_lsm_uri_sets == NULL)
     {
+      conf_path = _lsm_get_conf_path (daemon);
       udisks_warning ("LSM: No URI found in config file %s",
-                      _lsm_get_conf_path (daemon));
+                      conf_path);
+      g_free (conf_path);
       return;
     }
 
@@ -1102,9 +1105,6 @@ std_lsm_data_teardown (void)
 
   g_hash_table_unref (_pl_id_2_lsm_pl_data_hash);
   _pl_id_2_lsm_pl_data_hash = NULL;
-
-  g_free ((gpointer) _std_lsm_conf_file_abs_path);
-  _std_lsm_conf_file_abs_path = NULL;
 }
 
 void
