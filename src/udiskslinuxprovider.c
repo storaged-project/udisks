@@ -36,6 +36,7 @@
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
 #include "udisksdaemonutil.h"
+#include "udisksconfigmanager.h"
 
 #include <modules/udisksmoduleifacetypes.h>
 #include <modules/udisksmoduleobject.h>
@@ -319,9 +320,21 @@ on_uevent (GUdevClient  *client,
 static void
 udisks_linux_provider_init (UDisksLinuxProvider *provider)
 {
+  provider->module_ifaces = NULL;
+}
+
+static void
+udisks_linux_provider_constructed (GObject *object)
+{
   const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", NULL};
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
+  UDisksDaemon *daemon;
+  UDisksConfigManager *config_manager;
   GFile *file;
   GError *error = NULL;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  config_manager = udisks_daemon_get_config_manager (daemon);
 
   /* get ourselves an udev client */
   provider->gudev_client = g_udev_client_new (subsystems);
@@ -338,7 +351,7 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
 
   provider->mount_monitor = g_unix_mount_monitor_get ();
 
-  file = g_file_new_for_path (PACKAGE_SYSCONF_DIR "/udisks2");
+  file = g_file_new_for_path (udisks_config_manager_get_config_dir (config_manager));
   provider->etc_udisks2_dir_monitor = g_file_monitor_directory (file,
                                                                 G_FILE_MONITOR_NONE,
                                                                 NULL,
@@ -353,13 +366,11 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
   else
     {
       udisks_warning ("Error monitoring directory %s: %s (%s, %d)",
-                      PACKAGE_SYSCONF_DIR "/udisks2",
+                      udisks_config_manager_get_config_dir (config_manager),
                       error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
   g_object_unref (file);
-
-  provider->module_ifaces = NULL;
 }
 
 static void
@@ -588,11 +599,16 @@ on_system_sleep_signal (GDBusConnection *connection,
                          gpointer user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  UDisksDaemon *daemon;
+  UDisksConfigManager *config_manager;
   GDir *etc_dir;
   GError *error;
   const gchar *filename;
   GVariant *tmp_bool;
   gboolean suspending;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  config_manager = udisks_daemon_get_config_manager (daemon);
 
   if (g_variant_n_children(parameters) != 1)
     {
@@ -611,11 +627,11 @@ on_system_sleep_signal (GDBusConnection *connection,
   if (suspending)
     return;
 
-  etc_dir = g_dir_open (PACKAGE_SYSCONF_DIR "/udisks2", 0, &error);
+  etc_dir = g_dir_open (udisks_config_manager_get_config_dir (config_manager), 0, &error);
   if (!etc_dir)
     {
       udisks_warning ("Error reading directory %s: %s (%s, %d)",
-                      PACKAGE_SYSCONF_DIR "/udisks2",
+                      udisks_config_manager_get_config_dir (config_manager),
                       error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       return;
@@ -758,6 +774,7 @@ udisks_linux_provider_class_init (UDisksLinuxProviderClass *klass)
   UDisksProviderClass *provider_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->constructed  = udisks_linux_provider_constructed;
   gobject_class->finalize     = udisks_linux_provider_finalize;
 
   provider_class        = UDISKS_PROVIDER_CLASS (klass);
