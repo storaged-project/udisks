@@ -127,75 +127,46 @@ find_mount_options_for_fs (const gchar *fstype)
   return NULL;
 }
 
-static gid_t
-find_primary_gid (uid_t uid)
-{
-  struct passwd *pw = NULL;
-  struct passwd pwstruct;
-  gchar pwbuf[8192];
-  int rc;
-  gid_t gid;
-
-  gid = (gid_t) - 1;
-
-  rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
-  if (rc != 0 || pw == NULL)
-    {
-      udisks_warning ("Error looking up uid %u: %m", uid);
-      goto out;
-    }
-  gid = pw->pw_gid;
-
- out:
-  return gid;
-}
-
 static gboolean
 is_uid_in_gid (uid_t uid,
                gid_t gid)
 {
-  gboolean ret;
-  struct passwd *pw = NULL;
-  struct passwd pwstruct;
-  gchar pwbuf[8192];
-  int rc;
+  GError *error = NULL;
+  gid_t primary_gid = -1;
+  gchar *user_name = NULL;
   static gid_t supplementary_groups[128];
   int num_supplementary_groups = 128;
   int n;
 
   /* TODO: use some #define instead of harcoding some random number like 128 */
 
-  ret = FALSE;
-
-  rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
-  if (rc != 0 || pw == NULL)
+  if (! udisks_daemon_util_get_user_info (uid, &primary_gid, &user_name, &error))
     {
-      udisks_warning ("Error looking up uid %u: %m", uid);
-      goto out;
+      udisks_warning ("%s", error->message);
+      g_error_free (error);
+      return FALSE;
     }
-  if (pw->pw_gid == gid)
+  if (primary_gid == gid)
     {
-      ret = TRUE;
-      goto out;
+      g_free (user_name);
+      return TRUE;
     }
 
-  if (getgrouplist (pw->pw_name, pw->pw_gid, supplementary_groups, &num_supplementary_groups) < 0)
+  if (getgrouplist (user_name, primary_gid, supplementary_groups, &num_supplementary_groups) < 0)
     {
       udisks_warning ("Error getting supplementary groups for uid %u: %m", uid);
-      goto out;
+      g_free (user_name);
+      return FALSE;
     }
+  g_free (user_name);
 
   for (n = 0; n < num_supplementary_groups; n++)
     {
       if (supplementary_groups[n] == gid)
-        {
-          ret = TRUE;
-          goto out;
-        }
+        return TRUE;
     }
 
- out:
-  return ret;
+  return FALSE;
 }
 
 static gboolean
@@ -311,8 +282,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                 }
               else if (strncmp (option, "gid", opt_len) == 0)
                 {
-                  gid = find_primary_gid (caller_uid);
-                  if (gid != (gid_t) - 1)
+                  if (udisks_daemon_util_get_user_info (caller_uid, &gid, NULL, NULL))
                     {
                       s = g_strdup_printf ("%u", gid);
                       g_hash_table_insert (options, g_strdup ("gid"), s);
