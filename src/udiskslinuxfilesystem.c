@@ -938,7 +938,7 @@ handle_mount (UDisksFilesystem      *filesystem,
       if (!mount_fstab_as_root && caller_uid != 0)
         {
           BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
-          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
+          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", caller_gid)};
           const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
 
           success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, extra_args, &error);
@@ -1240,6 +1240,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
   GError *error = NULL;
   uid_t mounted_by_uid;
   uid_t caller_uid;
+  gid_t caller_gid;
   const gchar *const *mount_points;
   gboolean opt_force = FALSE;
   gboolean system_managed = FALSE;
@@ -1295,6 +1296,11 @@ handle_unmount (UDisksFilesystem      *filesystem,
       g_clear_error (&error);
       goto out;
     }
+  if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, NULL, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
   if (is_system_managed (daemon, block, &mount_point, &fstab_mount_options))
@@ -1324,7 +1330,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
       if (!unmount_fstab_as_root && caller_uid != 0)
         {
           BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
-          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", find_primary_gid (caller_uid))};
+          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", caller_gid)};
           const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
 
           success = bd_fs_unmount (mount_point, opt_force, FALSE, extra_args, &error);
