@@ -31,6 +31,7 @@ src/udiskslinuxfilesystem.c
 src/udiskslinuxloop.c
 src/udiskslinuxmanager.c
 src/udiskslinuxmdraid.c
+src/udiskslinuxmountoptions.c
 src/udiskslinuxpartition.c
 src/udiskslinuxpartitiontable.c
 src/udiskslinuxswapspace.c
