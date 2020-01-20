@@ -47,6 +47,7 @@ completions_DATA =                                                             \
 EXTRA_DIST =                                                                   \
 	80-udisks2.rules                                                       \
 	org.freedesktop.UDisks2.xml                                            \
+	builtin_mount_options.conf                                             \
 	$(systemdservice_in_files)                                             \
 	$(dbusservice_in_files)                                                \
 	$(dbusconf_in_files)                                                   \

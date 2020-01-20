@@ -67,6 +67,7 @@ m4/
 po/POTFILES
 po/Makefile.in.in
 src/*-marshal.*
+src/udisks-daemon-resources.*
 src/tests/udisks-test
 src/tests/udisks-test-helper
 src/udisksd

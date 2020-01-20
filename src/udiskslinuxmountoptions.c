@@ -39,6 +39,7 @@
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
+#include "udisks-daemon-resources.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -358,6 +359,62 @@ mount_options_parse_config_file (const gchar *filename, GError **error)
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                            "Failed to parse mount options: No global defaults section found.");
       return NULL;
+    }
+
+  return mount_options;
+}
+
+/*
+ * udisks_linux_mount_options_get_builtin: <internal>
+ *
+ * Get built-in set of default mount options. This function will never
+ * fail, the process is aborted in case of a parse error.
+ *
+ * Returns: (transfer full) A #GHashTable with mount options.
+ */
+GHashTable *
+udisks_linux_mount_options_get_builtin (void)
+{
+  GResource *daemon_resource;
+  GBytes *builtin_opts_bytes;
+  GKeyFile *key_file;
+  GHashTable *mount_options;
+  GError *error = NULL;
+
+  daemon_resource = udisks_daemon_resources_get_resource ();
+  builtin_opts_bytes = g_resource_lookup_data (daemon_resource,
+                                               "/org/freedesktop/UDisks2/data/builtin_mount_options.conf",
+                                               G_RESOURCE_LOOKUP_FLAGS_NONE,
+                                               &error);
+  g_resource_unref (daemon_resource);
+
+  if (builtin_opts_bytes == NULL)
+    {
+      udisks_error ("Failed to read built-in mount options resource: %s", error->message);
+      g_error_free (error);
+      return NULL;
+    }
+
+  key_file = g_key_file_new ();
+  if (! g_key_file_load_from_bytes (key_file, builtin_opts_bytes, G_KEY_FILE_NONE, &error))
+    {
+      /* should never happen */
+      udisks_error ("Failed to read built-in mount options: %s", error->message);
+      g_error_free (error);
+      g_key_file_free (key_file);
+      g_bytes_unref (builtin_opts_bytes);
+      return NULL;
+    }
+
+  mount_options = mount_options_parse_key_file (key_file, &error);
+  g_key_file_free (key_file);
+  g_bytes_unref (builtin_opts_bytes);
+
+  if (mount_options == NULL)
+    {
+      /* should never happen either */
+      udisks_error ("Failed to parse built-in mount options: %s", error->message);
+      g_error_free (error);
     }
 
   return mount_options;
