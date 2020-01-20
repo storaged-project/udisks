@@ -30,6 +30,8 @@
 
 #include <glib/gstdio.h>
 
+#include <libmount/libmount.h>
+
 #include "udiskslogging.h"
 #include "udiskslinuxmountoptions.h"
 #include "udiskslinuxblockobject.h"
@@ -42,12 +44,26 @@
 
 typedef struct
 {
-  const gchar *fstype;
-  const gchar * const *defaults;
-  const gchar * const *allow;
-  const gchar * const *allow_uid_self;
-  const gchar * const *allow_gid_self;
+  gchar  *fstype;
+  gchar **defaults;
+  gchar **allow;
+  gchar **allow_uid_self;
+  gchar **allow_gid_self;
 } FSMountOptions;
+
+static void
+free_fs_mount_options (FSMountOptions *options)
+{
+  if (options)
+    {
+      g_strfreev (options->defaults);
+      g_strfreev (options->allow);
+      g_strfreev (options->allow_uid_self);
+      g_strfreev (options->allow_gid_self);
+      g_free (options->fstype);
+      g_free (options);
+    }
+}
 
 /* ---------------------- vfat -------------------- */
 
@@ -126,6 +142,228 @@ find_mount_options_for_fs (const gchar *fstype)
 
   return NULL;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+#define MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS  "defaults"
+#define MOUNT_OPTIONS_KEY_DEFAULTS           "defaults"
+#define MOUNT_OPTIONS_KEY_ALLOW              "allow"
+#define MOUNT_OPTIONS_KEY_ALLOW_UID_SELF     "allow_uid_self"
+#define MOUNT_OPTIONS_KEY_ALLOW_GID_SELF     "allow_gid_self"
+
+/* transfer-full */
+static gchar **
+parse_mount_options_string (const gchar *str)
+{
+  GPtrArray *opts;
+  char *optstr;
+  char *name;
+  size_t namesz;
+  char *value;
+  size_t valuesz;
+  int ret;
+
+  if (!str)
+    return NULL;
+
+  opts = g_ptr_array_new_with_free_func (g_free);
+  optstr = (char *)str;
+
+  while ((ret = mnt_optstr_next_option (&optstr, &name, &namesz, &value, &valuesz)) == 0)
+    {
+      gchar *opt;
+
+      if (value == NULL)
+        {
+          opt = g_strndup (name, namesz);
+        }
+      else
+        {
+          opt = g_strdup_printf ("%.*s=%.*s", (int) namesz, name, (int) valuesz, value);
+        }
+      g_ptr_array_add (opts, opt);
+    }
+  if (ret < 0)
+    {
+      udisks_warning ("Malformed mount options string '%s' at position %zd, ignoring",
+                      str, optstr - str + 1);
+      g_ptr_array_free (opts, TRUE);
+      return NULL;
+    }
+
+  g_ptr_array_add (opts, NULL);
+  return (gchar **) g_ptr_array_free (opts, FALSE);
+}
+
+/* transfer-full */
+static gchar *
+extract_fs_type (const gchar *key, const gchar **group)
+{
+  if (g_str_equal (key, MOUNT_OPTIONS_KEY_DEFAULTS) ||
+      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW) ||
+      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW_UID_SELF) ||
+      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW_GID_SELF))
+    {
+      *group = key;
+      return g_strdup (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+    }
+
+#define TEST_AND_RETURN_GROUP(g) \
+  if (g_str_has_suffix (key, "_" g)) \
+    { \
+      *group = g; \
+      return g_strndup (key, strlen (key) - strlen (g) - 1); \
+    }
+
+  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF);
+  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF);
+  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW);
+  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_DEFAULTS);
+
+  /* invalid key name */
+  *group = NULL;
+  return NULL;
+}
+
+static GHashTable *
+mount_options_parse_group (GKeyFile *key_file, const gchar *group_name, GError **error)
+{
+  GHashTable *mount_options;
+  gchar **keys;
+  gsize keys_len = 0;
+
+  keys = g_key_file_get_keys (key_file, group_name, &keys_len, error);
+  g_warn_if_fail (keys != NULL);
+
+  mount_options = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) free_fs_mount_options);
+  for (; keys_len > 0; keys_len--)
+    {
+      FSMountOptions *ent;
+      gchar *key = keys[keys_len - 1];
+      gchar *fs_type;
+      const gchar *group = NULL;
+      gchar *value;
+      gchar **opts;
+
+      fs_type = extract_fs_type (key, &group);
+      if (!fs_type)
+        {
+          /* invalid or malformed key detected, do not parse and ignore */
+          udisks_debug ("mount_options_parse_group: garbage key found: %s", key);
+          continue;
+        }
+      g_warn_if_fail (group != NULL);
+
+      ent = g_hash_table_lookup (mount_options, fs_type);
+      if (!ent)
+        {
+          ent = g_malloc0 (sizeof (FSMountOptions));
+          g_hash_table_replace (mount_options, g_strdup (fs_type), ent);
+        }
+
+      value = g_key_file_get_string (key_file, group_name, key, NULL);
+      g_warn_if_fail (value != NULL);
+      opts = parse_mount_options_string (value);
+      g_free (value);
+
+#define ASSIGN_OPTS(g,p) \
+      if (g_str_equal (group, g)) \
+        { \
+          if (ent->p) \
+            { \
+              g_warning ("mount_options_parse_group: Duplicate key '%s' detected", key); \
+              g_strfreev (ent->p); \
+            } \
+          ent->p = opts; \
+        } \
+     else
+
+     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF, allow_uid_self)
+     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF, allow_gid_self)
+     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW, allow)
+     ASSIGN_OPTS (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS, defaults)
+       {
+         /* should be caught by extract_fs_type() already */
+         g_warning ("mount_options_parse_group: Unmatched key '%s' found, ignoring", key);
+       }
+
+      g_free (fs_type);
+    }
+
+  g_strfreev (keys);
+
+  return mount_options;
+}
+
+static GHashTable *
+mount_options_parse_key_file (GKeyFile *key_file, GError **error)
+{
+  GHashTable *mount_options = NULL;
+  gchar **groups;
+  gsize groups_len = 0;
+
+  groups = g_key_file_get_groups (key_file, &groups_len);
+  if (groups == NULL || groups_len == 0)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "Failed to parse mount options: No sections found.");
+      g_strfreev (groups);
+      return NULL;
+    }
+
+  mount_options = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_destroy);
+  for (; groups_len > 0; groups_len--)
+    {
+      GHashTable *opts;
+      GError *local_error = NULL;
+      gchar *group = groups[groups_len - 1];
+
+      opts = mount_options_parse_group (key_file, group, &local_error);
+      if (! opts)
+        {
+          udisks_warning ("Failed to parse mount options section %s: %s",
+                          group, local_error->message);
+          g_error_free (local_error);
+          /* ignore the whole section, continue with the rest */
+        }
+      else
+        {
+          g_hash_table_replace (mount_options, g_strdup (group), opts);
+        }
+    }
+  g_strfreev (groups);
+
+  return mount_options;
+}
+
+static GHashTable *
+mount_options_parse_config_file (const gchar *filename, GError **error)
+{
+  GKeyFile *key_file;
+  GHashTable *mount_options;
+
+  key_file = g_key_file_new ();
+  if (! g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, error))
+    {
+      g_key_file_free (key_file);
+      return NULL;
+    }
+
+  mount_options = mount_options_parse_key_file (key_file, error);
+  g_key_file_free (key_file);
+
+  if (!g_hash_table_contains (mount_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+    {
+      g_hash_table_destroy (mount_options);
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "Failed to parse mount options: No global defaults section found.");
+      return NULL;
+    }
+
+  return mount_options;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
 is_uid_in_gid (uid_t uid,
