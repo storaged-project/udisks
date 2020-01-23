@@ -45,7 +45,6 @@
 
 typedef struct
 {
-  gchar  *fstype;
   gchar **defaults;
   gchar **allow;
   gchar **allow_uid_self;
@@ -61,88 +60,60 @@ free_fs_mount_options (FSMountOptions *options)
       g_strfreev (options->allow);
       g_strfreev (options->allow_uid_self);
       g_strfreev (options->allow_gid_self);
-      g_free (options->fstype);
       g_free (options);
     }
 }
 
-/* ---------------------- vfat -------------------- */
-
-static const gchar *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "utf8=1", "showexec", "flush", NULL };
-static const gchar *vfat_allow[] = { "flush", "utf8", "shortname", "umask", "dmask", "fmask", "codepage", "iocharset", "usefree", "showexec", NULL };
-static const gchar *vfat_allow_uid_self[] = { "uid", NULL };
-static const gchar *vfat_allow_gid_self[] = { "gid", NULL };
-
-/* ---------------------- ntfs -------------------- */
-/* this is assuming that ntfs-3g is used */
-
-static const gchar *ntfs_defaults[] = { "uid=", "gid=", "windows_names", NULL };
-static const gchar *ntfs_allow[] = { "umask", "dmask", "fmask", "locale", "norecover", "ignore_case", "windows_names", "compression", "nocompression", "big_writes", NULL };
-static const gchar *ntfs_allow_uid_self[] = { "uid", NULL };
-static const gchar *ntfs_allow_gid_self[] = { "gid", NULL };
-
-/* ---------------------- iso9660 -------------------- */
-
-static const gchar *iso9660_defaults[] = { "uid=", "gid=", "iocharset=utf8", "mode=0400", "dmode=0500", NULL };
-static const gchar *iso9660_allow[] = { "norock", "nojoliet", "iocharset", "mode", "dmode", NULL };
-static const gchar *iso9660_allow_uid_self[] = { "uid", NULL };
-static const gchar *iso9660_allow_gid_self[] = { "gid", NULL };
-
-/* ---------------------- udf -------------------- */
-
-static const gchar *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", NULL };
-static const gchar *udf_allow[] = { "iocharset", "umask", NULL };
-static const gchar *udf_allow_uid_self[] = { "uid", NULL };
-static const gchar *udf_allow_gid_self[] = { "gid", NULL };
-
-/* ---------------------- exfat -------------------- */
-
-static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", NULL };
-static const gchar *exfat_allow[] = { "dmask", "errors", "fmask", "iocharset", "namecase", "umask", NULL };
-static const gchar *exfat_allow_uid_self[] = { "uid", NULL };
-static const gchar *exfat_allow_gid_self[] = { "gid", NULL };
-
-/* ---------------------- hfs+ -------------------- */
-
-static const gchar *hfsplus_defaults[] = { "uid=", "gid=", "nls=utf8", NULL };
-static const gchar *hfsplus_allow[] = { "creator", "type", "umask", "session", "part", "decompose", "nodecompose", "force", "nls", NULL };
-static const gchar *hfsplus_allow_uid_self[] = { "uid", NULL };
-static const gchar *hfsplus_allow_gid_self[] = { "gid", NULL };
-
-/* ------------------------------------------------ */
-/* TODO: support context= */
-
-static const gchar *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", "noload", NULL };
-
-static const FSMountOptions fs_mount_options[] =
-  {
-    { "vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self },
-    { "ntfs", ntfs_defaults, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self },
-    { "iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
-    { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
-    { "exfat", exfat_defaults, exfat_allow, exfat_allow_uid_self, exfat_allow_gid_self },
-    { "hfsplus", hfsplus_defaults, hfsplus_allow, hfsplus_allow_uid_self, hfsplus_allow_gid_self },
-  };
-
-/* ------------------------------------------------ */
-
-static int num_fs_mount_options = sizeof(fs_mount_options) / sizeof(FSMountOptions);
-
-static const FSMountOptions *
-find_mount_options_for_fs (const gchar *fstype)
+static void
+strv_append_unique (gchar **src, gchar ***dest)
 {
-  int n;
-  const FSMountOptions *fsmo;
+  guint src_len;
+  guint dest_len;
+  gchar **s;
+  gchar **l;
+  guint l_len = 0;
 
-  for (n = 0; n < num_fs_mount_options; n++)
+  g_warn_if_fail (dest != NULL);
+
+  if (!src || g_strv_length (src) == 0)
+    return;
+
+  if (!*dest)
     {
-      fsmo = fs_mount_options + n;
-      if (g_strcmp0 (fsmo->fstype, fstype) == 0)
-        return fsmo;
+      *dest = g_strdupv (src);
+      return;
     }
 
-  return NULL;
+  src_len = g_strv_length (src);
+  dest_len = g_strv_length (*dest);
+
+  l = g_malloc (src_len * sizeof (gpointer));
+  for (s = src; *s; s++)
+    if (!g_strv_contains ((const gchar * const *) *dest, *s))
+      l[l_len++] = g_strdup (*s);
+
+  if (l_len > 0)
+    {
+      *dest = g_realloc (*dest, (dest_len + l_len + 1) * sizeof (gpointer));
+      memcpy (*dest + dest_len, l, l_len * sizeof (gpointer));
+      (*dest)[dest_len + l_len] = NULL;
+    }
+
+  g_free (l);
 }
+
+static void
+append_fs_mount_options (FSMountOptions *src, FSMountOptions *dest)
+{
+  if (!src)
+    return;
+
+  strv_append_unique (src->defaults, &dest->defaults);
+  strv_append_unique (src->allow, &dest->allow);
+  strv_append_unique (src->allow_uid_self, &dest->allow_uid_self);
+  strv_append_unique (src->allow_gid_self, &dest->allow_gid_self);
+}
+
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -151,6 +122,105 @@ find_mount_options_for_fs (const gchar *fstype)
 #define MOUNT_OPTIONS_KEY_ALLOW              "allow"
 #define MOUNT_OPTIONS_KEY_ALLOW_UID_SELF     "allow_uid_self"
 #define MOUNT_OPTIONS_KEY_ALLOW_GID_SELF     "allow_gid_self"
+
+
+/*
+ * compute_fs_level_mount_options: <internal>
+ * @opts: A #GHashTable of fs-level mount options.
+ * @fstype: The filesystem type to match or %NULL.
+ * @fsmo: A #FSMountOptions structure to merge calculated mount options onto.
+ *
+ * Calculate mount options on the filesystem level. Matches non- filesystem-specific ("any")
+ * along with filesystem-specific mount options.
+ */
+static void
+compute_fs_level_mount_options (GHashTable     *opts,
+                                const gchar    *fstype,
+                                FSMountOptions *fsmo)
+{
+  FSMountOptions *defaults_opts;
+  FSMountOptions *fs_opts;
+
+  defaults_opts = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+  append_fs_mount_options (defaults_opts, fsmo);
+
+  if (fstype)
+    {
+      fs_opts = g_hash_table_lookup (opts, fstype);
+      append_fs_mount_options (fs_opts, fsmo);
+    }
+}
+
+/*
+ * compute_block_level_mount_options: <internal>
+ * @daemon: A #UDisksDaemon.
+ * @block: A #UDisksBlock.
+ * @fstype: The filesystem type to match or %NULL.
+ *
+ * Calculate mount options for the given level of overrides. Matches the block
+ * device-specific options on top of the defaults.
+ *
+ * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
+ */
+static FSMountOptions *
+compute_block_level_mount_options (GHashTable  *opts,
+                                   UDisksBlock *block,
+                                   const gchar *fstype)
+{
+  FSMountOptions *fsmo;
+  GHashTable *general_options;
+  GHashTable *block_options;
+
+  fsmo = g_malloc0 (sizeof (FSMountOptions));
+
+  /* Compute general defaults first */
+  general_options = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+  if (general_options)
+    {
+      compute_fs_level_mount_options (general_options, fstype, fsmo);
+    }
+
+  /* TODO: match specific block device options */
+  block_options = NULL;
+  if (block_options)
+    {
+      compute_fs_level_mount_options (block_options, fstype, fsmo);
+    }
+
+  return fsmo;
+}
+
+/*
+ * compute_mount_options_for_fs_type: <internal>
+ * @daemon: A #UDisksDaemon.
+ * @block: A #UDisksBlock.
+ * @fstype: The filesystem type to use or %NULL.
+ *
+ * Calculate mount options across different levels of overrides
+ * (builtin, global config, local user config).
+ *
+ * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
+ */
+static FSMountOptions *
+compute_mount_options_for_fs_type (UDisksDaemon *daemon,
+                                   UDisksBlock  *block,
+                                   const gchar  *fstype)
+{
+  GHashTable *builtin_opts;
+  FSMountOptions *fsmo;
+
+  /* TODO: use cached value and take reference to it */
+  builtin_opts = udisks_linux_mount_options_get_builtin ();
+  g_return_val_if_fail (builtin_opts != NULL, NULL);
+
+  fsmo = compute_block_level_mount_options (builtin_opts, block, fstype);
+
+  g_hash_table_unref (builtin_opts);
+
+  return fsmo;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 /* transfer-full */
 static gchar **
@@ -486,18 +556,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
             }
         }
     }
-  for (n = 0; any_allow[n] != NULL; n++)
-    {
-      if (strcmp (any_allow[n], option) == 0)
-        {
-          return TRUE;
-        }
-    }
 
   /* .. then check for mount options where the caller is allowed to pass
    * in his own uid
    */
-  if (fsmo != NULL)
+  if (fsmo != NULL && value != NULL)
     {
       for (n = 0; fsmo->allow_uid_self != NULL && fsmo->allow_uid_self[n] != NULL; n++)
         {
@@ -517,7 +580,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 
   /* .. ditto for gid
    */
-  if (fsmo != NULL)
+  if (fsmo != NULL && value != NULL)
     {
       for (n = 0; fsmo->allow_gid_self != NULL && fsmo->allow_gid_self[n] != NULL; n++)
         {
@@ -559,7 +622,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                                    g_free, g_free);
   if (fsmo != NULL)
     {
-      const gchar *const *defaults = fsmo->defaults;
+      gchar **defaults = fsmo->defaults;
 
       for (n = 0; defaults != NULL && defaults[n] != NULL; n++)
         {
@@ -666,7 +729,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
                                       GVariant      *options,
                                       GError       **error)
 {
-  const FSMountOptions *fsmo;
+  FSMountOptions *fsmo;
   GHashTable *options_to_use = NULL;
   GHashTableIter iter;
   UDisksLinuxBlockObject *object = NULL;
@@ -678,7 +741,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
 
   options_to_use_str = NULL;
 
-  fsmo = find_mount_options_for_fs (fs_type);
+  fsmo = compute_mount_options_for_fs_type (daemon, block, fs_type);
 
   object = udisks_daemon_util_dup_object (block, NULL);
   device = udisks_linux_block_object_get_device (object);
@@ -744,6 +807,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
 
  out:
   g_hash_table_destroy (options_to_use);
+  free_fs_mount_options (fsmo);
 
   g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
 
