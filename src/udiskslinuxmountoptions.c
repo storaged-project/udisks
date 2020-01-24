@@ -546,14 +546,14 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
   gid_t gid;
 
   /* first run through the allowed mount options */
-  if (fsmo != NULL)
+  if (fsmo && fsmo->allow)
     {
-      for (n = 0; fsmo->allow != NULL && fsmo->allow[n] != NULL; n++)
+      if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
         {
-          if (strcmp (fsmo->allow[n], option) == 0)
-            {
-              return TRUE;
-            }
+          /* make sure it's not in allow_uid_self[] or allow_gid_self[] */
+          if ((!fsmo->allow_uid_self || !g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option)) &&
+              (!fsmo->allow_gid_self || !g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option)))
+            return TRUE;
         }
     }
 
