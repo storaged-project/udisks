@@ -170,6 +170,10 @@ compute_block_level_mount_options (GHashTable  *opts,
   FSMountOptions *fsmo;
   GHashTable *general_options;
   GHashTable *block_options;
+  GList *keys;
+  GList *l;
+  const gchar *block_device;
+  const gchar * const *block_symlinks;
 
   fsmo = g_malloc0 (sizeof (FSMountOptions));
 
@@ -180,8 +184,26 @@ compute_block_level_mount_options (GHashTable  *opts,
       compute_fs_level_mount_options (general_options, fstype, fsmo);
     }
 
-  /* TODO: match specific block device options */
+  /* Match specific block device */
   block_options = NULL;
+  block_device = udisks_block_get_device (block);
+  block_symlinks = udisks_block_get_symlinks (block);
+
+  keys = g_hash_table_get_keys (opts);
+  g_warn_if_fail (keys != NULL);
+  for (l = keys; l != NULL; l = l->next)
+    {
+      if (!l->data || g_str_equal (l->data, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+        continue;
+      if (g_str_equal (l->data, block_device) ||
+          (block_symlinks && g_strv_contains (block_symlinks, l->data)))
+        {
+          block_options = g_hash_table_lookup (opts, l->data);
+          break;
+        }
+    }
+  g_list_free (keys);
+
   if (block_options)
     {
       compute_fs_level_mount_options (block_options, fstype, fsmo);
