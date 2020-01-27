@@ -232,6 +232,9 @@ class UdisksLVMTest(UDisksLVMTestBase):
         blocksize = self.get_property(lv_block, '.Block', 'Size')
         blocksize.assertGreater(vgsize)
 
+        tv_tp = self.get_property(tv, '.LogicalVolume', 'ThinPool')
+        tv_tp.assertEqual(tp_path)
+
     def test_30_snapshot(self):
         '''Test LVM snapshoting'''
 
@@ -478,6 +481,10 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
 
         dbus_dedup = self.get_property(lv, '.VDOVolume', 'Deduplication')
         dbus_dedup.assertTrue()
+
+        # ThinPool property should not be set
+        dbus_tp = self.get_property(lv, '.LogicalVolume', 'ThinPool')
+        dbus_tp.assertEqual('/')
 
     def test_enable_disable_compression_deduplication(self):
         vgname = 'udisks_test_vdo_vg'
