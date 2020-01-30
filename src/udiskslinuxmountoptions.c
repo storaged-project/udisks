@@ -39,7 +39,13 @@
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
+#include "udisksconfigmanager.h"
 #include "udisks-daemon-resources.h"
+
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static GHashTable * mount_options_parse_config_file (const gchar *filename, GError **error);
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -103,7 +109,7 @@ strv_append_unique (gchar **src, gchar ***dest)
 }
 
 static void
-append_fs_mount_options (FSMountOptions *src, FSMountOptions *dest)
+append_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
 {
   if (!src)
     return;
@@ -114,42 +120,35 @@ append_fs_mount_options (FSMountOptions *src, FSMountOptions *dest)
   strv_append_unique (src->allow_gid_self, &dest->allow_gid_self);
 }
 
+/* Similar to append_fs_mount_options() but replaces the member data instead of appending */
+static void
+override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
+{
+  if (!src)
+    return;
+
+#define OVERRIDE_MEMBER(m) \
+  if (src->m) \
+    { \
+      g_strfreev (dest->m); \
+      dest->m = g_strdupv (src->m); \
+    }
+
+  OVERRIDE_MEMBER (defaults);
+  OVERRIDE_MEMBER (allow);
+  OVERRIDE_MEMBER (allow_uid_self);
+  OVERRIDE_MEMBER (allow_gid_self);
+}
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+#define MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME "mount_options.conf"
 
 #define MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS  "defaults"
 #define MOUNT_OPTIONS_KEY_DEFAULTS           "defaults"
 #define MOUNT_OPTIONS_KEY_ALLOW              "allow"
 #define MOUNT_OPTIONS_KEY_ALLOW_UID_SELF     "allow_uid_self"
 #define MOUNT_OPTIONS_KEY_ALLOW_GID_SELF     "allow_gid_self"
-
-
-/*
- * compute_fs_level_mount_options: <internal>
- * @opts: A #GHashTable of fs-level mount options.
- * @fstype: The filesystem type to match or %NULL.
- * @fsmo: A #FSMountOptions structure to merge calculated mount options onto.
- *
- * Calculate mount options on the filesystem level. Matches non- filesystem-specific ("any")
- * along with filesystem-specific mount options.
- */
-static void
-compute_fs_level_mount_options (GHashTable     *opts,
-                                const gchar    *fstype,
-                                FSMountOptions *fsmo)
-{
-  FSMountOptions *defaults_opts;
-  FSMountOptions *fs_opts;
-
-  defaults_opts = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
-  append_fs_mount_options (defaults_opts, fsmo);
-
-  if (fstype)
-    {
-      fs_opts = g_hash_table_lookup (opts, fstype);
-      append_fs_mount_options (fs_opts, fsmo);
-    }
-}
 
 /*
  * compute_block_level_mount_options: <internal>
@@ -162,11 +161,14 @@ compute_fs_level_mount_options (GHashTable     *opts,
  *
  * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
  */
-static FSMountOptions *
-compute_block_level_mount_options (GHashTable  *opts,
-                                   UDisksBlock *block,
-                                   const gchar *fstype)
+static void
+compute_block_level_mount_options (GHashTable      *opts,
+                                   UDisksBlock     *block,
+                                   const gchar     *fstype,
+                                   FSMountOptions **any_options,
+                                   FSMountOptions **fstype_options)
 {
+  FSMountOptions *fsmo_any;
   FSMountOptions *fsmo;
   GHashTable *general_options;
   GHashTable *block_options;
@@ -176,12 +178,18 @@ compute_block_level_mount_options (GHashTable  *opts,
   const gchar * const *block_symlinks;
 
   fsmo = g_malloc0 (sizeof (FSMountOptions));
+  fsmo_any = g_malloc0 (sizeof (FSMountOptions));
 
   /* Compute general defaults first */
   general_options = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
   if (general_options)
     {
-      compute_fs_level_mount_options (general_options, fstype, fsmo);
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (general_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+      override_fs_mount_options (o, fsmo_any);
+      o = fstype ? g_hash_table_lookup (general_options, fstype) : NULL;
+      override_fs_mount_options (o, fsmo);
     }
 
   /* Match specific block device */
@@ -204,12 +212,38 @@ compute_block_level_mount_options (GHashTable  *opts,
     }
   g_list_free (keys);
 
+  /* Block device specific options should fully override "general" options per-member basis */
   if (block_options)
     {
-      compute_fs_level_mount_options (block_options, fstype, fsmo);
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (block_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+      override_fs_mount_options (o, fsmo_any);
+      o = fstype ? g_hash_table_lookup (block_options, fstype) : NULL;
+      override_fs_mount_options (o, fsmo);
     }
 
-  return fsmo;
+  *any_options = fsmo_any;
+  *fstype_options = fsmo;
+}
+
+static void
+layer_mount_options (GHashTable     *overrides,
+                     UDisksBlock    *block,
+                     const gchar    *fstype,
+                     FSMountOptions *fsmo_any,
+                     FSMountOptions *fsmo)
+{
+  FSMountOptions *overrides_fsmo;
+  FSMountOptions *overrides_fsmo_any;
+
+  compute_block_level_mount_options (overrides, block, fstype, &overrides_fsmo_any, &overrides_fsmo);
+
+  /* Layer options on per-member basis */
+  override_fs_mount_options (overrides_fsmo_any /* src */, fsmo_any /* dest */);
+  override_fs_mount_options (overrides_fsmo, fsmo);
+  free_fs_mount_options (overrides_fsmo_any);
+  free_fs_mount_options (overrides_fsmo);
 }
 
 /*
@@ -228,16 +262,48 @@ compute_mount_options_for_fs_type (UDisksDaemon *daemon,
                                    UDisksBlock  *block,
                                    const gchar  *fstype)
 {
+  UDisksConfigManager *config_manager;
   GHashTable *builtin_opts;
+  GHashTable *overrides;
   FSMountOptions *fsmo;
+  FSMountOptions *fsmo_any;
+  gchar *config_file_path;
+  GError *error = NULL;
+
+  config_manager = udisks_daemon_get_config_manager (daemon);
 
   /* TODO: use cached value and take reference to it */
   builtin_opts = udisks_linux_mount_options_get_builtin ();
   g_return_val_if_fail (builtin_opts != NULL, NULL);
 
-  fsmo = compute_block_level_mount_options (builtin_opts, block, fstype);
-
+  compute_block_level_mount_options (builtin_opts, block, fstype, &fsmo_any, &fsmo);
   g_hash_table_unref (builtin_opts);
+
+  /* Global config file overrides */
+  config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                                       MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
+  overrides = mount_options_parse_config_file (config_file_path, &error);
+  if (overrides)
+    {
+      layer_mount_options (overrides, block, fstype, fsmo_any, fsmo);
+      g_hash_table_unref (overrides);
+    }
+  else
+    {
+      if (! g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT) /* not found */ &&
+          ! g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED) /* empty file */ )
+        {
+          udisks_warning ("Error reading global mount options config file %s: %s",
+                          config_file_path, error->message);
+        }
+      g_clear_error (&error);
+    }
+  g_free (config_file_path);
+
+  /* Merge "any" and fstype-specific options */
+  append_fs_mount_options (fsmo_any, fsmo);
+  free_fs_mount_options (fsmo_any);
+  fsmo_any = NULL;
 
   return fsmo;
 }
@@ -398,7 +464,7 @@ mount_options_parse_key_file (GKeyFile *key_file, GError **error)
   groups = g_key_file_get_groups (key_file, &groups_len);
   if (groups == NULL || groups_len == 0)
     {
-      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
                            "Failed to parse mount options: No sections found.");
       g_strfreev (groups);
       return NULL;
@@ -445,7 +511,7 @@ mount_options_parse_config_file (const gchar *filename, GError **error)
   mount_options = mount_options_parse_key_file (key_file, error);
   g_key_file_free (key_file);
 
-  if (!g_hash_table_contains (mount_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+  if (mount_options && !g_hash_table_contains (mount_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
     {
       g_hash_table_destroy (mount_options);
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
