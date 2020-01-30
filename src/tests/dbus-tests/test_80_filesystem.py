@@ -68,6 +68,12 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             raise RuntimeError('Failed to determine libmount version from: %s' % out)
         return LooseVersion(m.groups()[0])
 
+    def _get_mount_options_conf_path(self):
+        if os.environ["UDISKS_TESTS_ARG_SYSTEM"] == "1":
+            return "/etc/udisks2/mount_options.conf"
+        else:
+            return os.path.join(os.environ["UDISKS_TESTS_PROJDIR"], 'udisks/mount_options.conf')
+
     @classmethod
     def command_exists(cls, command):
         ret, _out = cls.run_command('type %s' % command)
@@ -308,6 +314,174 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_auto_configurable_mount_options(self):
+        def test_readonly(self, should_be_readonly, config_file_contents, udev_rules_content=None):
+            try:
+                self.write_file(conf_file_path, config_file_contents);
+                if udev_rules_content is not None:
+                    self.set_udev_properties(block_fs_dev, udev_rules_content)
+                dd = dbus.Dictionary(signature='sv')
+                dd['fstype'] = self._fs_name
+                mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
+                self.assertTrue(os.path.ismount(mnt_path))
+                if should_be_readonly:
+                    with six.assertRaisesRegex(self, OSError, "Read-only file system"):
+                        fd, _tmpfile = tempfile.mkstemp(dir=mnt_path)
+                        os.close(fd)
+                else:
+                    fd, _tmpfile = tempfile.mkstemp(dir=mnt_path)
+                    os.close(fd)
+                block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+                self.assertFalse(os.path.ismount(mnt_path))
+            finally:
+                if udev_rules_content is not None:
+                    self.set_udev_properties(block_fs_dev, None)
+
+        def test_custom_option(self, should_fail, dbus_option, should_be_present, config_file_contents, udev_rules_content=None, match_mount_option=None):
+            try:
+                self.write_file(conf_file_path, config_file_contents);
+                if udev_rules_content is not None:
+                    self.set_udev_properties(block_fs_dev, udev_rules_content)
+                dd = dbus.Dictionary(signature='sv')
+                dd['fstype'] = self._fs_name
+                if dbus_option is not None:
+                    dd['options'] = dbus_option
+                if should_fail:
+                    if dbus_option is not None:
+                        msg="org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option `%s' is not allowed" % dbus_option
+                    else:
+                        msg="org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option `.*' is not allowed"
+                    with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                        mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
+                else:
+                    mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
+                    self.assertTrue(os.path.ismount(mnt_path))
+                    _ret, out = self.run_command('mount | grep %s | sed "s/.*(\(.*\))/\\1/"' % block_fs_dev)
+                    if dbus_option is not None:
+                        if should_be_present:
+                            self.assertIn(dbus_option, out)
+                        else:
+                            self.assertNotIn(dbus_option, out)
+                    if match_mount_option is not None:
+                        if should_be_present:
+                            self.assertIn(match_mount_option, out)
+                        else:
+                            self.assertNotIn(match_mount_option, out)
+                    block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+                    self.assertFalse(os.path.ismount(mnt_path))
+            finally:
+                if udev_rules_content is not None:
+                    self.set_udev_properties(block_fs_dev, None)
+
+
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        # changing `mount_options.conf`, make a backup and restore on cleanup
+        try:
+            conf_file_path = self._get_mount_options_conf_path()
+            conf_file_backup = self.read_file(conf_file_path)
+            self.addCleanup(self.write_file, conf_file_path, conf_file_backup)
+        except FileNotFoundError as e:
+            # no existing mount_options.conf, simply remove the file once finished
+            self.addCleanup(self.remove_file, conf_file_path, True)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
+        # not mounted
+        mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
+        mounts.assertLen(0)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
+        self.addCleanup(self.try_unmount, block_fs_dev)
+
+        # read-write mount
+        test_readonly(self, False, "")
+        # read-only mount by global defaults
+        test_readonly(self, True, "[defaults]\ndefaults=ro\n")
+        # read-only mount by global filesystem type specific options
+        test_readonly(self, True, "[defaults]\ndefaults=\n%s_defaults=ro\n" % self._fs_name);
+        # false positive of the previous one
+        test_readonly(self, False, "[defaults]\n%sx_defaults=ro\n" % self._fs_name);
+        # block device defaults and overrides
+        test_readonly(self, False, "[defaults]\ndefaults=ro\n\n[%s]\ndefaults=\n" % block_fs_dev);
+        test_readonly(self, False, "[defaults]\ndefaults=ro\n\n[%s]\ndefaults=rw\n" % block_fs_dev);
+        test_readonly(self, True, "[defaults]\ndefaults=ro\n\n[%sx]\ndefaults=\n" % block_fs_dev)
+        test_readonly(self, True, "[defaults]\ndefaults=ro\n\n[%sx]\ndefaults=rw\n" % block_fs_dev)
+        test_readonly(self, True, "[%s]\ndefaults=ro\n" % block_fs_dev);
+        # block device fs-specific options
+        test_readonly(self, True, "[defaults]\ndefaults=ro\n%s_defaults=ro\n\n[%s]\ndefaults=\n" % (self._fs_name, block_fs_dev));
+        test_readonly(self, True, "[defaults]\ndefaults=ro\n{0}_defaults=ro\n\n[{1}]\n{0}_defaults=\n".format(self._fs_name, block_fs_dev));
+        test_readonly(self, False, "[defaults]\ndefaults=ro\n{0}_defaults=ro\n\n[{1}]\ndefaults=\n{0}_defaults=\n".format(self._fs_name, block_fs_dev));
+
+        # standalone custom option presence
+        test_custom_option(self, False, None, False, "")
+        test_custom_option(self, True, "nonsense", False, "")
+        # config file custom option presence
+        test_custom_option(self, True, None, False, "[defaults]\ndefaults=nonsense\n")
+        # disallow rw
+        test_custom_option(self, True, None, False, "[defaults]\ndefaults=rw\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload\n")
+        test_custom_option(self, True, None, False, "[defaults]\ndefaults=ro\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,rw,sync,dirsync,noload\n")
+        test_custom_option(self, False, "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload\n")
+        test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload\n")
+        test_custom_option(self, False, "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[%s]\nallow=ro,rw\n" % block_fs_dev)
+        test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[%s]\nallow=ro\n" % block_fs_dev)
+        test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[%s]\nallow=dfkjhdsjkfhsdjkfhsdahf\n" % block_fs_dev)
+        test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[{1}]\n{0}_allow=\n{0}_defaults=\n".format(self._fs_name, block_fs_dev));
+        test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[{1}]\n{0}_allow=\n{0}_defaults=rw\n".format(self._fs_name, block_fs_dev));
+        test_custom_option(self, False, "rw", True, "[defaults]\n\n[{1}]\n{0}_allow=rw\n{0}_defaults=rw\n".format(self._fs_name, block_fs_dev));
+        # uid and gid passing
+        if self._fs_name in ["vfat", "ntfs"]:
+            test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=\n")
+            test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=,gid=\n")
+            test_custom_option(self, True,  None, False, "[defaults]\ndefaults=xuid=\n")
+            test_custom_option(self, True,  None, False, "[defaults]\ndefaults=uid=,xuid=,gid=\n")
+            test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=596\n")
+        if self._fs_name in ["vfat", "udf"]:
+            test_custom_option(self, True, "uid=10", True, "[defaults]\nallow=uid=$UID,gid=$GID,exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore\n")
+            test_custom_option(self, False, "uid=10", True, "[defaults]\nallow=uid=$UID,gid=$GID,exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore,uid=10\n")
+        # fs-specific mount options
+        if self._fs_name == "vfat":
+            test_custom_option(self, False, None, True, "", match_mount_option="flush")
+            test_custom_option(self, False, None, False, "[defaults]\nvfat_defaults=uid=,gid=,shortname=mixed,utf8=1,showexec\n", match_mount_option="flush")
+        if self._fs_name == "udf":
+            test_custom_option(self, False, None, False, "[defaults]\ndefaults=\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore,uid=forget\n")
+            test_custom_option(self, True, "uid=notallowed", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore\n")
+
+        # udev rules overrides
+        test_readonly(self, False, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "rw" })
+        test_readonly(self, True,  "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "ro" })
+        test_readonly(self, True,  "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_%s_DEFAULTS" % self._fs_name.upper(): "ro" })
+        test_readonly(self, False, "[defaults]\ndefaults=ro\n", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "rw" })
+        test_readonly(self, True,  "[defaults]\n%s_defaults=nonsense\n" % self._fs_name, udev_rules_content = { "UDISKS_MOUNT_OPTIONS_%s_DEFAULTS" % self._fs_name.upper(): "ro" })
+        test_readonly(self, False, "[defaults]\ndefaults=ro\n\n[%s]\ndefaults=nonsense\n" % block_fs_dev, udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "rw" })
+        test_custom_option(self, True,  None, False, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "nonsense" })
+        # disallow rw
+        test_custom_option(self, True, None, False, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "rw", "UDISKS_MOUNT_OPTIONS_ALLOW": "exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload" })
+        test_custom_option(self, True, None, False, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "ro", "UDISKS_MOUNT_OPTIONS_ALLOW": "exec,noexec,nodev,nosuid,atime,noatime,nodiratime,rw,sync,dirsync,noload" })
+        test_custom_option(self, False, "rw", True, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_ALLOW": "exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload" })
+        test_custom_option(self, True,  "rw", True, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_ALLOW": "exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload" })
+        # fs-specific mount options
+        if self._fs_name == "vfat":
+            test_custom_option(self, False, None, True, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
+            test_custom_option(self, False, None, False, "[defaults]\nvfat_defaults=uid=,gid=,shortname=mixed,utf8=1,showexec,flush\n", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec" }, match_mount_option="flush")
+            test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=uid=,gid=,shortname=mixed,utf8=1,showexec\n", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
+            test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=xxxxx\n\n[%s]\nvfat_defaults=yyyyyy\n" % block_fs_dev, udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab(self):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
