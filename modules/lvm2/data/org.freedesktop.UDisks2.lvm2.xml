@@ -717,6 +717,34 @@
       <arg name="options" direction="in" type="a{sv}" />
     </method>
 
+     <!--
+        ResizeLogical:
+        @size: The new logical size for the VDO volume in bytes.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Resizes the logical size of a VDO volume to the size specified by the @size argument.
+        This is only a convenience method and it's equivalent to using the
+        #org.freedesktop.UDisks2.LogicalVolume:Resize method.
+    -->
+    <method name="ResizeLogical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        ResizePhysical:
+        @size: The new physical size for the VDO volume in bytes.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Resizes the physical size of a VDO volume to the size specified by the @size argument.
+        This is only a convenience method and it's equivalent to using the
+        #org.freedesktop.UDisks2.LogicalVolume:Resize method on the #VDOPool.
+    -->
+    <method name="ResizePhysical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

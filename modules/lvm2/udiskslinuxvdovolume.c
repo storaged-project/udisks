@@ -33,6 +33,7 @@
 #include <src/udiskslinuxblock.h>
 
 #include "udiskslinuxvdovolume.h"
+#include "udiskslinuxlogicalvolume.h"
 #include "udiskslinuxlogicalvolumeobject.h"
 #include "udiskslinuxvolumegroup.h"
 #include "udiskslinuxvolumegroupobject.h"
@@ -181,6 +182,44 @@ udisks_linux_vdo_volume_update (UDisksLinuxVDOVolume         *vdo_volume,
   udisks_vdo_volume_set_deduplication (iface, vdo_info->deduplication);
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+common_setup (UDisksLinuxLogicalVolumeObject *object,
+              GDBusMethodInvocation          *invocation,
+              GVariant                       *options,
+              const gchar                    *auth_err_msg,
+              UDisksDaemon                   **daemon,
+              uid_t                          *out_uid)
+{
+  gboolean rc = FALSE;
+  GError *error = NULL;
+
+  *daemon = udisks_linux_logical_volume_object_get_daemon (object);
+
+  if (!udisks_daemon_util_get_caller_uid_sync (*daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               out_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (*daemon,
+                                     UDISKS_OBJECT (object),
+                                     lvm2_policy_action_id,
+                                     options,
+                                     auth_err_msg,
+                                     invocation);
+  rc = TRUE;
+ out:
+  return rc;
+}
+
 static gboolean _set_compression_deduplication (UDisksVDOVolume       *_volume,
                                                 GDBusMethodInvocation *invocation,
                                                 gboolean               enable,
@@ -203,26 +242,10 @@ static gboolean _set_compression_deduplication (UDisksVDOVolume       *_volume,
         goto out;
       }
 
-    daemon = udisks_linux_logical_volume_object_get_daemon (object);
-
-    if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_uid,
-                                                 &error))
-      {
-        g_dbus_method_invocation_return_gerror (invocation, error);
-        g_clear_error (&error);
-        goto out;
-      }
-
-    /* Policy check. */
-    UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       UDISKS_OBJECT (object),
-                                       lvm2_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to set deduplication/compression on a VDO volume"),
-                                       invocation);
+    if (!common_setup (object, invocation, options,
+                       N_("Authentication is required to set deduplication/compression on a VDO volume"),
+                       &daemon, &caller_uid))
+      goto out;
 
     group_object = udisks_linux_logical_volume_object_get_volume_group (object);
     data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
@@ -281,6 +304,132 @@ handle_enable_deduplication (UDisksVDOVolume       *_volume,
                                            FALSE /* compression */, TRUE /* deduplication */, options);
 }
 
+static gboolean _vdo_resize (UDisksLinuxLogicalVolumeObject *object,
+                             GDBusMethodInvocation          *invocation,
+                             guint64                         new_size,
+                             GVariant                       *options)
+{
+  GError *error = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksLinuxVolumeGroupObject *group_object = NULL;
+  uid_t caller_uid;
+  LVJobData data;
+  gboolean success = FALSE;
+
+  if (!common_setup (object, invocation, options,
+                     N_("Authentication is required to resize a VDO volume"),
+                     &daemon, &caller_uid))
+    goto out;
+
+  group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  data.new_lv_size = new_size;
+
+  data.resize_fs = FALSE;
+  data.force = FALSE;
+  g_variant_lookup (options, "resize_fsys", "b", &(data.resize_fs));
+  g_variant_lookup (options, "force", "b", &(data.force));
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-resize",
+                                               caller_uid,
+                                               lvresize_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error resizing VDO volume: %s",
+                                             error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  success = TRUE;
+
+ out:
+  return success;
+}
+
+static gboolean
+handle_resize_logical (UDisksVDOVolume       *_volume,
+                       GDBusMethodInvocation *invocation,
+                       guint64                new_size,
+                       GVariant              *options)
+{
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (_volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (_vdo_resize (object, invocation, new_size, options))
+    udisks_vdo_volume_complete_resize_logical (_volume, invocation);
+
+out:
+  g_clear_object (&object);
+  return TRUE;
+}
+
+static gboolean
+handle_resize_physical (UDisksVDOVolume       *_volume,
+                        GDBusMethodInvocation *invocation,
+                        guint64                new_size,
+                        GVariant              *options)
+{
+  const gchar *pool_path = NULL;
+  UDisksObject *pool_object = NULL;
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  GError *error = NULL;
+  UDisksDaemon *daemon = NULL;
+
+  object = udisks_daemon_util_dup_object (_volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  pool_path = udisks_vdo_volume_get_vdo_pool (_volume);
+  if (pool_path == NULL || g_strcmp0 (pool_path, "/") == 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Failed to get VDO pool path.");
+      goto out;
+    }
+
+  daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  pool_object = udisks_daemon_find_object (daemon, pool_path);
+  if (pool_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Failed to get VDO pool object.");
+      goto out;
+    }
+
+  if (_vdo_resize (UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (pool_object),
+                   invocation, new_size, options))
+    udisks_vdo_volume_complete_resize_physical (_volume, invocation);
+
+out:
+  g_clear_object (&object);
+  g_clear_object (&pool_object);
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -288,4 +437,6 @@ vdo_volume_iface_init (UDisksVDOVolumeIface *iface)
 {
   iface->handle_enable_compression = handle_enable_compression;
   iface->handle_enable_deduplication = handle_enable_deduplication;
+  iface->handle_resize_logical = handle_resize_logical;
+  iface->handle_resize_physical = handle_resize_physical;
 }
