@@ -405,10 +405,12 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         UDisksLVMTestBase.setUpClass()
 
         if not BlockDev.utils_have_kernel_module('kvdo'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('VDO kernel module not available, skipping.')
 
         lvm_version = cls._get_lvm_version()
         if lvm_version < LooseVersion('2.3.07'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('LVM >= 2.3.07 is needed for LVM VDO, skipping.')
 
     def setUp(self):
