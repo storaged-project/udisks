@@ -53,8 +53,6 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if cls.distro[1:] == ("fedora", "27"):
-            raise unittest.SkipTest('zram module (un)loading causes kernel panics on rawhide')
         if not cls.check_module_loaded('ZRAM'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for zram tests not loaded, skipping.')
