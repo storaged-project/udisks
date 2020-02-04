@@ -1,0 +1,333 @@
+<chapter id="mount_options">
+  <title>Configurable mount options</title>
+
+    <para>
+    UDisks comes with a set of predefined mount options for common filesystem types used for dynamic mountpoints (excluding <filename>/etc/fstab</filename> records).
+    This selection has been made with focus on the primary project target: end users, consumers and workstations mostly working with removable media.
+    </para>
+
+    <para>
+    Typically acting as a storage management backend for desktop environments running on user level, the selection comes with a security and data consistency in mind.
+    In other words, user must not be able to access or alter other user's data by allowing insecure mount options or damage the filesystem by experimental filesystem options.
+    For removable media it usually involves synchronous writes to prevent data loss by accidental physical removal of the device while background filesystem sync is running yet the user interface provided no indication of such process.
+    </para>
+
+    <para>
+    Technically UDisks carries a set of allowed mount options for well known filesystem types and related set of default options that are subset of the allowed ones and are always passed to the mount command.
+    Additional mount options can be specified via the <parameter>options</parameter> parameter of the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">org.freedesktop.UDisks2.Filesystem.Mount()</link> method call.
+    These options however need to be subset of allowed mount options for the given filesystem type. It is a client (caller) responsibility to always append desired extra mount options.
+    </para>
+
+    <para>
+    Since the 2.9.0 UDisks release a new way of overriding builtin set of mount options is supported. This is primarily targeted to sysadmins with system-wide write access (e.g. <filename>/etc/udisks2</filename> or udev rules) and essentially transfers responsibility for security and data consistency to their side.
+    Please keep in mind that wrong combination of options or bad understanding of override levels may lead to inability to mount or false sense of security.
+    Also note that block devices having corresponding records in <filename>/etc/fstab</filename> are excluded from the overrides as the mount options are fully taken from such records just like before.
+    </para>
+
+    <para>
+    No public API has changed, overrides can be defined either via config files or via specific udev rules. UDisks computes mount options on every <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call, no need to restart or poke the daemon.
+    </para>
+
+  <simplesect><title>Basic definitions</title>
+    <para>
+    For the reference this is what the builtin set of options looks like:
+
+      <informalexample>
+        <programlisting>
+           <xi:include href="../data/builtin_mount_options.conf" parse="text" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </programlisting>
+      </informalexample>
+    </para>
+
+    <para>
+    For each filesystem type a pair of two sets are defined: <literal>_allow</literal> and <literal>_defaults</literal>.
+    </para>
+
+    <para>
+    The <literal>_allow</literal> set define mount options ever allowed and considered, the <literal>_defaults</literal> are the target options to use that are then finally passed to the <command>mount</command> command.
+    </para>
+
+    <para>
+    The <literal>_defaults</literal> always need to be a subset of <literal>_allow</literal>. The <literal>_defaults</literal> options are also merged with any extra options passed via the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call.
+    </para>
+
+    <para>
+    Other than the filesystem specific options there's also a group of general options that are always merged with fs-specific ones. These include general options like <literal>rw</literal>, <literal>ro</literal>, etc.
+    Let's refer to them as <literal><emphasis>any</emphasis></literal> filesystem type options for simplicity in the further text. The result of option set stacking, overrides and merging is referred to as <emphasis>(resulting) computed set of options</emphasis>.
+    </para>
+
+    <para>
+    Apart from the final computed options UDisks always adds the following options: <literal>nodev</literal>, <literal>nosuid</literal>, <literal>uhelper=udisks2</literal> no matter if included in <literal>_allow</literal> or not. These are hardcoded and can't be changed.
+    </para>
+
+    <para>
+    Options that are not allowed in the computed <literal>_allow</literal> set will fail the mount operation with an error.
+    </para>
+  </simplesect>
+
+  <simplesect><title>Unprivileged mounts, UID and GID passing</title>
+    <para>
+    UDisks daemon typically runs as root and spawns the <command>mount</command> command with root privileges while processing requests from unprivileged clients and it needs a way to set proper permissions for the mounted filesystem.
+    This is usually done by passing the <literal>uid</literal> and <literal>gid</literal> mount options that common filesystems honour. UDisks take the D-Bus method caller effective UID and finds its corresponding primary GID.
+    </para>
+
+    <para>
+    Also a <literal>uhelper=udisks2</literal> mount option is added automatically to indicate the <command>umount</command> command to use UDisks again for unmounting when called by an unprivileged user.
+    </para>
+
+    <para>
+    To allow flexibility in mount option naming, two special values are defined as placeholders for aforementioned IDs: <literal>$UID</literal> and <literal>$GID</literal>.
+    These are supposed to be defined as values for specific mount options (typically <literal>uid</literal> and <literal>gid</literal>) within the <literal>_allow</literal> set and are then replaced with numerical values in the late phase of mount option computation.
+    </para>
+
+    <para>
+    It's worth noting that there are few more options whose arguments are being replaced by computed values: <literal>mode</literal> and <literal>dmode</literal>.
+    These options are hardcoded at the moment and its values depend on the udev <literal>UDISKS_FILESYSTEM_SHARED</literal> attribute presence on the block device.
+    </para>
+  </simplesect>
+
+  <simplesect><title>Option set specifics</title>
+    <para>
+    Option sets are composite strings of mount options with or without arguments separated by commas. There's generally no difference from an option string commonly used with the <command>mount</command> command. However UDisks brings a couple of specifics for greater flexibility.
+    </para>
+
+    <para>
+    As explained above any particular mount option either defined in the <literal>_defaults</literal> set or passed as an extra argument via the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call need to be allowed by the <literal>_allow</literal> set of mount options.
+    There's however a difference in how the option is allowed and what arguments are valid.
+    </para>
+
+    <para>
+    When a considered option is defined with either of the <literal>$UID</literal> or <literal>$GID</literal> values within the <literal>_allow</literal> set (see previous chapter), special rules apply.
+    In case the value of a considered option is the <literal>$UID</literal>/<literal>$GID</literal> placeholder (as is the case of builtin set of options) or no value is specified at all (e.g. the <literal>uid=</literal> string),
+    the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method caller UID or GID is automatically added.
+    In case a particular value is present (e.g. <literal>uid=1001</literal>) it is only allowed when the caller UID matches the option value.
+    </para>
+
+    <para>
+    In case a considered option is specified explicitly with a value within the <literal>_allow</literal> set no other checks are performed and this <literal>option=value</literal> pair is always allowed.
+    This even bypasses UID and GID checks, except of the <literal>$UID</literal> or <literal>$GID</literal> strings.
+    </para>
+
+    <para>
+    This permits various combinations of caller mount options such as <literal>uid=$UID,uid=ignore</literal> for UDF filesystem where the <literal>uid=ignore</literal> mount options is always allowed yet standard checks (<literal>uid=$UID</literal>) for numerical UID values are still preserved.
+    Similarly, certain numeric UID/GID values may be explicitly allowed this way, allowing non-privileged callers to use predefined IDs (e.g. <literal>uid=1000,uid=1500,uid=ignore</literal> within <literal>_allow</literal>).
+    This also allows to specify arbitrary values permitted, where each pair needs to be specified separately, i.e. <literal>iocharset=utf8,iocharset=iso8859-1,iocharset=iso8859-2</literal>.
+    </para>
+
+    <para>
+    Allowed option defined with no value is treated as any value is permitted but only if passed all checks described above. There's generally no difference between <literal>option</literal> and <literal>option=</literal> (i.e. an empty value) in such definitions.
+    </para>
+  </simplesect>
+
+  <simplesect><title>The config file syntax</title>
+    <para>
+      A sample config file showing rich syntax:
+<programlisting>
+[defaults]
+# common options, applied to any filesystem, always merged with specific filesystem type options
+defaults=ro
+allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload
+
+# specific filesystem type options
+vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec,flush
+vfat_allow=uid=$UID,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec
+ntfs_defaults=uid=$UID,gid=$GID,windows_names
+ntfs_allow=uid=$UID,gid=$GID,umask,dmask,fmask,locale,norecover,ignore_case,windows_names
+
+[/dev/disk/by-uuid/18afd8f0-0d86-4d96-8de0-5f92d2ee9800]
+vfat_defaults=uid=$UID,gid=$GID,noexec
+
+[/dev/disk/by-label/EFI]
+vfat_defaults=noexec,umask=111,dmask=000
+</programlisting>
+    </para>
+
+    <para>
+    The format of the configuration file is an INI-style key-value file parseable by <ulink url="https://developer.gnome.org/glib/stable/glib-Key-value-file-parser.html"><type>GKeyFile</type></ulink>.
+    The default location of the file unless specified otherwise during build time is <filename>/etc/udisks2/mount_options.conf</filename>. Sample config file is shipped along the source code.
+    </para>
+
+    <para>
+    The config file may contain multiple groups with a common <code>[defaults]</code> group. One of the new features is an ability to override mount options for particular block device, matched by the block device path. In such case the name of the group is the block device path.
+    It's strongly encouraged to use stable block device identifiers (that is e.g. <filename>/dev/disk/by-*</filename>). No wildcards or glob expansion is performed, for fine-grained matching please use overrides through the custom udev rules.
+    This shouldn't be abused to weaken security requirements though, it's quite easy to fake storage identifiers, more so on removable media.
+    </para>
+  </simplesect>
+
+  <simplesect><title>udev rules overrides</title>
+    <para>
+    Another possibility of overriding mount options is from the udev rules. This brings the flexibility of fine-grained matching by various identifiers and even using external helpers for identification. It's also a less error-prone way than matching by block device symlinks at the config file level.
+    </para>
+
+    <para>
+    This is a separate level of overrides that is positioned on top of the config file level, i.e. definitions coming from udev rules will override respective keys from both the config file level and the base builtin mount options.
+    The override mechanism and rules are no different from the config file level <literal>[defaults]</literal> group. There's just a slight syntactic difference to align with usual udev <literal>ENV</literal> naming conventions, consisting of the <literal>UDISKS_MOUNT_OPTIONS_</literal> key prefix.
+    </para>
+
+    <para>
+    Depending on your distribution specifics there are usually several paths designated for placing custom udev rules, with <filename>/etc/udev/rules.d/</filename> and <filename>/lib/udev/rules.d</filename> being the common ones. It's strongly recommended to make the rules run last, by the <filename>99-</filename> filename prefix.
+    </para>
+
+    <para>
+    Sample udev rules may look as follows:
+<programlisting>
+# This file contains custom mount options for udisks 2.x
+#
+
+# Skip if not a block device or if requested by other rules
+#
+SUBSYSTEM!="block", GOTO="udisks_mount_options_end"
+ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="udisks_mount_options_end"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="udisks_mount_options_end"
+
+
+# Additional mount options passed to udisksd to allow sysadmins to restrict mount to read-only or "noexec"
+# for example:
+#
+# ENV{UDISKS_MOUNT_OPTIONS_DEFAULTS}="ro,noexec"
+# ENV{UDISKS_MOUNT_OPTIONS_ALLOW}="exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload"
+
+#
+# Use specific charset for FAT filesystems
+#
+# ENV{ID_FS_TYPE}=="vfat", \
+# ENV{UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS}="uid=$UID,gid=$GID,shortname=mixed,utf8=0,iocharset=iso8859-15,showexec,flush"
+
+#
+# Mount all USB devices read-only
+#
+# SUBSYSTEMS="usb", ENV{ID_FS_USAGE}=="filesystem", ENV{UDISKS_MOUNT_OPTIONS_DEFAULTS}="ro"
+
+LABEL="udisks_mount_options_end"
+</programlisting>
+    </para>
+  </simplesect>
+
+  <simplesect><title>Levels of overrides</title>
+    <para>
+    Levels from lower to higher:
+    <itemizedlist>
+      <listitem>builtin options</listitem>
+      <listitem>global config file (i.e. <filename>/etc/udisks2/mount_options.conf</filename>)</listitem>
+      <listitem>udev rules</listitem>
+    </itemizedlist>
+    </para>
+
+    <para>
+    Higher level options always fully override lower levels.
+    </para>
+
+    <para>
+    While the builtin options are always present, upper levels are optional.
+    </para>
+
+    <para>
+    Each level may consist of a common group and block device specific groups.
+    </para>
+  </simplesect>
+
+  <simplesect><title>Rules computation</title>
+    <para>
+    This is the most important part to understand as badly formulated options may lead to unforeseen consequences.
+    </para>
+
+    <para>
+    As a general rule, set of options from higher levels always fully replace (<emphasis>cover</emphasis>, <emphasis>override</emphasis>) options from lower levels.
+    This works on per-set basis, i.e. separately for each of the <literal>_allow</literal> and <literal>_defaults</literal> sets.
+    Please pay attention to allowance of the mount options overriden in the <literal>_defaults</literal> set at a given level without overriding the <literal>_allow</literal> set at the same place - lower levels may not allow all the options.
+    </para>
+
+    <para>
+    First, overrides are computed within each level. At a given level, block device specific options take higher priority over the common options (the <code>[defaults]</code> group) and fully override them.
+    </para>
+
+    <para>
+    As a second step, overrides are computed vertically across all levels, from higher down to lower ones, again separately per-set basis. At this point, there are no block device specific options as they have been computed in the previous step.
+    </para>
+
+    <para>
+    The filesystem type specific options and common options (<literal><emphasis>any</emphasis></literal>) are computed separately across all levels per-set basis.
+    </para>
+
+    <para>
+    As a final step, when all sets are layered and computed onto a flat level, filesystem specific options and common options are merged together.
+    </para>
+
+    <para>
+    See the examples for further illustration.
+    </para>
+  </simplesect>
+
+  <simplesect><title>Examples</title>
+    <para>
+    <example>
+      <title>Disable <literal>flush</literal> on vfat and <literal>windows_names</literal> on ntfs</title>
+<programlisting>
+[defaults]
+vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec
+ntfs_defaults=uid=$UID,gid=$GID
+</programlisting>
+    <note>There's no way to specify subset addition or subtraction, particular sets need to be overriden fully. I.e. take the builtin mount options and remove/add options as you like.</note>
+    </example>
+
+    <example>
+      <title>Force all mounts read only</title>
+<programlisting>
+[defaults]
+defaults=ro
+allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload
+</programlisting>
+    <note>Note that this doesn't apply to fstab mounts where mount options are fully respected.</note>
+    </example>
+
+    <example>
+      <title>Force all mounts read only except of my trusty USB drive</title>
+<programlisting>
+[defaults]
+defaults=ro
+allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload
+
+[/dev/disk/by-uuid/18afd8f0-0d86-4d96-8de0-5f92d2ee9800]
+defaults=
+allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload
+</programlisting>
+    <note>Note that this possesses a security risk as it's rather easy to fake commonly used identifiers like UUIDs, labels, etc.</note>
+    </example>
+
+    <example>
+      <title>Much safer way of matching my trusty USB drive</title>
+<programlisting>
+[defaults]
+defaults=ro
+allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,sync,dirsync,noload
+</programlisting>
+
+<programlisting>
+SUBSYSTEM!="block", GOTO="udisks_mount_options_end"
+ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="udisks_mount_options_end"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="udisks_mount_options_end"
+
+ENV{ID_VENDOR}=="TrustyQualityInc", ENV{ID_MODEL}=="Unbreakable USB Stick", \
+    ENV{ID_SERIAL}=="360014055282611e2e7440198ca5d8ceb", \
+    ENV{UDISKS_MOUNT_OPTIONS_DEFAULTS}="rw", \
+    ENV{UDISKS_MOUNT_OPTIONS_ALLOW}="exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload"
+
+LABEL="udisks_mount_options_end"
+</programlisting>
+    </example>
+
+    <example>
+      <title>Allow fine-grained control over UIDs</title>
+<programlisting>
+[defaults]
+vfat_allow=uid=1001,uid=1005,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec
+</programlisting>
+    <note>Notice that the usual <literal>uid=$UID</literal> option is missing from the <literal>vfat_allow</literal> set and specific allowed UIDs are the only ones defined.
+          As the <literal>vfat_defaults</literal> set is not being overriden here and still carries the <literal>uid=$UID</literal> mount option that gets automatically replaced by caller effective UID, the computed option value must match any of the <literal>vfat_allow</literal> options,
+          thus the whole mount operation will be denied if the UIDs don't match.</note>
+    </example>
+
+    </para>
+  </simplesect>
+
+</chapter>
