@@ -234,7 +234,8 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
         udisks_block_set_id_type (block, "crypto_TCRYPT");
     }
 
-  update_metadata_size (encrypted, object);
+  if (udisks_linux_block_is_luks (block))
+    update_metadata_size (encrypted, object);
 
   udisks_linux_block_encrypted_unlock (block);
 }
