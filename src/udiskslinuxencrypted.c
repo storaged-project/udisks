@@ -332,7 +332,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksState *state;
+  UDisksState *state = NULL;
   gchar *name = NULL;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block;
@@ -372,6 +372,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
   state = udisks_daemon_get_state (daemon);
   is_luks = udisks_linux_block_is_luks (block);
   handle_as_tcrypt = udisks_linux_block_is_tcrypt (block) || udisks_linux_block_is_unknown_crypto (block);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   /* get TCRYPT options */
   if (handle_as_tcrypt)
@@ -616,6 +619,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (device);
   g_free (crypttab_name);
   g_free (crypttab_passphrase);
@@ -827,11 +834,29 @@ handle_lock (UDisksEncrypted        *encrypted,
              GVariant               *options)
 {
   GError *error = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksState *state = NULL;
+
+  object = udisks_daemon_util_dup_object (encrypted, NULL);
+  if (object != NULL)
+    {
+      daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+      state = udisks_daemon_get_state (daemon);
+      udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+      udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
+    }
 
   if (!udisks_linux_encrypted_lock (UDISKS_LINUX_ENCRYPTED (encrypted), invocation, options, &error))
     g_dbus_method_invocation_take_error (invocation, error);
   else
     udisks_encrypted_complete_lock (encrypted, invocation);
+
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -849,6 +874,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   uid_t caller_uid;
   const gchar *action_id;
   GError *error = NULL;
@@ -864,6 +890,10 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
    *
@@ -948,6 +978,10 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   udisks_encrypted_complete_change_passphrase (encrypted, invocation);
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (device);
   udisks_string_wipe_and_free (data.passphrase);
   udisks_string_wipe_and_free (data.new_passphrase);
@@ -970,6 +1004,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   uid_t caller_uid;
   const gchar *action_id = NULL;
   const gchar *message = NULL;
@@ -986,6 +1021,10 @@ handle_resize (UDisksEncrypted       *encrypted,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   /* Fail if the device is not a LUKS device */
   if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
@@ -1098,6 +1137,10 @@ handle_resize (UDisksEncrypted       *encrypted,
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&cleartext_object);
   g_clear_object (&object);
   g_clear_error (&error);

@@ -11,9 +11,6 @@ import udiskstestcase
 class UdisksBlockTest(udiskstestcase.UdisksTestCase):
     '''This is a basic block device test suite'''
 
-    def _clean_format(self, disk_path):
-        self.run_command('wipefs -a %s' % disk_path)
-
     def _close_luks(self, disk):
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -90,7 +87,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # OpenForBackup
         dbus_fd = disk.OpenForBackup(self.no_options, dbus_interface=self.iface_prefix + '.Block')
@@ -153,7 +150,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- remove format
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         # configuration items as arrays of dbus.Byte
         mnt = self.str_to_ay('/mnt/test')
@@ -207,7 +204,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
         self.addCleanup(self._close_luks, disk)
 
         # configuration items as arrays of dbus.Byte
@@ -260,7 +257,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
-        self.addCleanup(self._clean_format, self.vdevs[0])
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
         self.addCleanup(self._close_luks, disk)
 
         # write configuration to crypttab

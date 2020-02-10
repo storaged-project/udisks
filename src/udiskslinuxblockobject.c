@@ -88,6 +88,8 @@ struct _UDisksLinuxBlockObject
   UDisksLinuxDevice *device;
   GMutex device_mutex;
 
+  GMutex cleanup_mutex;
+
   /* interface */
   UDisksBlock *iface_block_device;
   UDisksPartition *iface_partition;
@@ -139,6 +141,8 @@ udisks_linux_block_object_finalize (GObject *_object)
 
   g_object_unref (object->device);
   g_mutex_clear (&object->device_mutex);
+
+  g_mutex_clear (&object->cleanup_mutex);
 
   if (object->iface_block_device != NULL)
     g_object_unref (object->iface_block_device);
@@ -227,6 +231,7 @@ udisks_linux_block_object_constructed (GObject *_object)
   UDisksPartition *partition = NULL;
 
   g_mutex_init (&object->device_mutex);
+  g_mutex_init (&object->cleanup_mutex);
 
   object->mount_monitor = udisks_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -391,6 +396,31 @@ udisks_linux_block_object_get_device_file (UDisksLinuxBlockObject *object)
   g_object_unref (device);
 
   return device_file;
+}
+
+/**
+ * udisks_linux_block_object_get_device_number:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Gets the device number for this object.
+ *
+ * Returns: A dev_t device number or zero in case of an error.
+ */
+dev_t
+udisks_linux_block_object_get_device_number (UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  dev_t device_number;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), 0);
+
+  device = udisks_linux_block_object_get_device (object);
+  device_number = g_udev_device_get_device_number (device->udev_device);
+
+  /* Free resources. */
+  g_object_unref (device);
+
+  return device_number;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1020,4 +1050,52 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
     }
 
   g_object_unref (device);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_block_object_try_lock_for_cleanup:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Attempts to lock the block device @object for cleanup. Typically used by the cleanup
+ * thread to check whether the block device is busy and cleanup can be performed.
+ *
+ * Returns: %TRUE if lock has been acquired, %FALSE when the block device is busy.
+ */
+gboolean
+udisks_linux_block_object_try_lock_for_cleanup (UDisksLinuxBlockObject *object)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
+
+  return g_mutex_trylock (&object->cleanup_mutex);
+}
+
+/**
+ * udisks_linux_block_object_lock_for_cleanup:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Acquires the "cleanup" lock of the block device @object. Typically used to signal
+ * the cleanup thread that the block device is busy.
+ */
+void
+udisks_linux_block_object_lock_for_cleanup (UDisksLinuxBlockObject *object)
+{
+  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+
+  g_mutex_lock (&object->cleanup_mutex);
+}
+
+/**
+ * udisks_linux_block_object_release_cleanup_lock:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Releases a lock previously acquired by udisks_linux_block_object_lock_for_cleanup().
+ */
+void
+udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object)
+{
+  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+
+  g_mutex_unlock (&object->cleanup_mutex);
 }

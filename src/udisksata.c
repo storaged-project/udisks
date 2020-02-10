@@ -263,7 +263,7 @@ udisks_ata_send_command_sync (gint                       fd,
           else
             io_hdr.timeout = timeout_msec;
 
-          rc = ioctl(fd, SG_IO, &io_hdr);
+          rc = ioctl (fd, SG_IO, &io_hdr);
           if (rc != 0)
             {
               g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),

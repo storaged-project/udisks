@@ -41,6 +41,7 @@
 #include "udiskslinuxprovider.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxencryptedhelpers.h"
+#include "udiskslinuxblockobject.h"
 
 /**
  * SECTION:udisksstate
@@ -196,7 +197,8 @@ enum
 static void      udisks_state_check_in_thread     (UDisksState          *state);
 static void      udisks_state_check_mounted_fs    (UDisksState          *state,
                                                    const gchar          *key,
-                                                   GArray               *devs_to_clean);
+                                                   GArray               *devs_to_clean,
+                                                   dev_t                 match_block_device);
 static void      udisks_state_check_unlocked_crypto_dev (UDisksState          *state,
                                                          gboolean              check_only,
                                                          GArray               *devs_to_clean);
@@ -468,6 +470,37 @@ udisks_state_check_sync (UDisksState *state)
 }
 
 /**
+ * udisks_state_check_block:
+ * @state: A #UDisksState.
+ * @block_device: Device number of the block device to check.
+ *
+ * Performs cleanup of a mounted filesystem over a single block device. In case
+ * the clean-up thread is busy, waits until the current iteration is finished.
+ *
+ * This can be called from any thread and will block the calling thread until
+ * cleanup is finished. Note that this ignores #UDisksLinuxBlockObject cleanup lock
+ * that is supposed to be held by the caller.
+ */
+void
+udisks_state_check_block (UDisksState   *state,
+                          dev_t          block_device)
+{
+
+  g_mutex_lock (&state->lock);
+
+  udisks_state_check_mounted_fs (state,
+                                 UDISKS_STATE_FILE_MOUNTED_FS,
+                                 NULL,
+                                 block_device);
+  udisks_state_check_mounted_fs (state,
+                                 UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT,
+                                 NULL,
+                                 block_device);
+
+  g_mutex_unlock (&state->lock);
+}
+
+/**
  * udisks_state_get_daemon:
  * @state: A #UDisksState.
  *
@@ -518,10 +551,12 @@ udisks_state_check_in_thread (UDisksState *state)
    */
   udisks_state_check_mounted_fs (state,
                                  UDISKS_STATE_FILE_MOUNTED_FS,
-                                 devs_to_clean);
+                                 devs_to_clean,
+                                 0);
   udisks_state_check_mounted_fs (state,
                                  UDISKS_STATE_FILE_MOUNTED_FS_PERSISTENT,
-                                 devs_to_clean);
+                                 devs_to_clean,
+                                 0);
 
   /* Then go through all block devices and clear them up
    * ... for real this time
@@ -610,7 +645,8 @@ trigger_change_uevent (const gchar *sysfs_path)
 static gboolean
 udisks_state_check_mounted_fs_entry (UDisksState  *state,
                                      GVariant     *value,
-                                     GArray       *devs_to_clean)
+                                     GArray       *devs_to_clean,
+                                     dev_t         match_block_device)
 {
   const gchar *mount_point_str;
   gchar mount_point[PATH_MAX] = { '\0', };
@@ -631,6 +667,8 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   GUdevDevice *udev_device;
   guint n;
   gchar *change_sysfs_path = NULL;
+  UDisksObject *block_object = NULL;
+  gboolean locked;
 
   keep = FALSE;
   is_mounted = FALSE;
@@ -640,19 +678,14 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   fstab_mount_value = NULL;
   fstab_mount = FALSE;
   details = NULL;
+  locked = FALSE;
 
   monitor = udisks_daemon_get_mount_monitor (state->daemon);
-  udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (state->daemon));
 
   g_variant_get (value,
                  "{&s@a{sv}}",
                  &mount_point_str,
                  &details);
-
-  if (realpath (mount_point_str, mount_point) == NULL)
-    {
-      udisks_critical ("udisks_state_check_mounted_fs_entry: mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
-    }
 
   block_device_value = lookup_asv (details, "block-device");
   if (block_device_value == NULL)
@@ -663,6 +696,32 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
       goto out;
     }
   block_device = g_variant_get_uint64 (block_device_value);
+
+  if (match_block_device != 0 && match_block_device != block_device)
+    {
+      /* not intended for this block device, continue with parent iteration */
+      keep = TRUE;
+      goto out;
+    }
+
+  block_object = udisks_daemon_find_block (state->daemon, block_device);
+  /* skip locking if called from udisks_state_check_block() */
+  if (block_object != NULL && match_block_device == 0)
+    {
+      if (! udisks_linux_block_object_try_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (block_object)))
+        {
+          udisks_notice ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup",
+                         udisks_linux_block_object_get_device_file (UDISKS_LINUX_BLOCK_OBJECT (block_object)));
+          keep = TRUE;
+          goto out;
+        }
+      locked = TRUE;
+    }
+
+  if (realpath (mount_point_str, mount_point) == NULL)
+    {
+      udisks_critical ("udisks_state_check_mounted_fs_entry: mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
+    }
 
   fstab_mount_value = lookup_asv (details, "fstab-mount");
   if (fstab_mount_value == NULL)
@@ -691,6 +750,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   g_list_free_full (mounts, g_object_unref);
 
   /* Figure out if block device still exists */
+  udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (state->daemon));
   udev_device = g_udev_client_query_by_device_number (udev_client,
                                                       G_UDEV_DEVICE_TYPE_BLOCK,
                                                       block_device);
@@ -746,15 +806,16 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     }
 
   /* Figure out if the device is about to be cleaned up */
-  for (n = 0; n < devs_to_clean->len; n++)
-    {
-      dev_t dev_to_clean = g_array_index (devs_to_clean, dev_t, n);
-      if (dev_to_clean == block_device)
-        {
-          device_to_be_cleaned = TRUE;
-          break;
-        }
-    }
+  if (devs_to_clean != NULL)
+    for (n = 0; n < devs_to_clean->len; n++)
+      {
+        dev_t dev_to_clean = g_array_index (devs_to_clean, dev_t, n);
+        if (dev_to_clean == block_device)
+          {
+            device_to_be_cleaned = TRUE;
+            break;
+          }
+      }
 
   if (is_mounted && device_exists && !device_to_be_cleaned)
     keep = TRUE;
@@ -843,6 +904,9 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     g_variant_unref (block_device_value);
   if (details != NULL)
     g_variant_unref (details);
+  if (locked)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+  g_clear_object (&block_object);
 
   g_free (change_sysfs_path);
 
@@ -853,7 +917,8 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
 static void
 udisks_state_check_mounted_fs (UDisksState *state,
                                const gchar *key,
-                               GArray      *devs_to_clean)
+                               GArray      *devs_to_clean,
+                               dev_t        match_block_device)
 {
   gboolean changed;
   GVariant *value;
@@ -876,7 +941,7 @@ udisks_state_check_mounted_fs (UDisksState *state,
       g_variant_iter_init (&iter, value);
       while ((child = g_variant_iter_next_value (&iter)) != NULL)
         {
-          if (udisks_state_check_mounted_fs_entry (state, child, devs_to_clean))
+          if (udisks_state_check_mounted_fs_entry (state, child, devs_to_clean, match_block_device))
             g_variant_builder_add_value (&builder, child);
           else
             changed = TRUE;

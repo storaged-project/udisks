@@ -39,10 +39,15 @@ void                      udisks_linux_block_object_uevent     (UDisksLinuxBlock
 UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject  *object);
 UDisksLinuxDevice        *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
 gchar                    *udisks_linux_block_object_get_device_file (UDisksLinuxBlockObject *object);
+dev_t                     udisks_linux_block_object_get_device_number (UDisksLinuxBlockObject *object);
 
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
 void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
 gboolean                  udisks_linux_block_object_contains_filesystem (UDisksObject *object);
+
+void                      udisks_linux_block_object_lock_for_cleanup     (UDisksLinuxBlockObject *object);
+gboolean                  udisks_linux_block_object_try_lock_for_cleanup (UDisksLinuxBlockObject *object);
+void                      udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

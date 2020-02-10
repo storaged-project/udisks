@@ -2857,7 +2857,7 @@ add_blocksize (gchar        **command,
       return FALSE;
     }
 
-  if (ioctl(fd, BLKSSZGET, &blksize) < 0)
+  if (ioctl (fd, BLKSSZGET, &blksize) < 0)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Failed to get block size of the device '%s'", device);
@@ -2915,7 +2915,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   UDisksBlock *block_to_mkfs = NULL;
   UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
-  UDisksState *state;
+  UDisksState *state = NULL;
   UDisksConfigManager *config_manager = NULL;
   const gchar *action_id;
   const gchar *message;
@@ -2958,6 +2958,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   config_manager = udisks_daemon_get_config_manager (daemon);
   command = NULL;
   error_message = NULL;
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   udisks_variant_lookup_binary (options, "encrypt.passphrase", &encrypt_passphrase);
@@ -3103,21 +3106,22 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   device_name = udisks_block_dup_device (block);
 
   /* First wipe the device... */
-  if (! bd_fs_wipe (device_name, TRUE, &error)) {
-    if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-      /* no signature to remove, ignore */
-      g_clear_error (&error);
-    else
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_FAILED,
-                                               "Error wiping device: %s",
-                                               error->message);
+  if (! bd_fs_wipe (device_name, TRUE, &error))
+    {
+      if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+        /* no signature to remove, ignore */
         g_clear_error (&error);
-        goto out;
-      }
-  }
+      else
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error wiping device: %s",
+                                                 error->message);
+          g_clear_error (&error);
+          goto out;
+        }
+    }
 
   /* ...then wait until this change has taken effect */
   wait_data = g_new0 (FormatWaitData, 1);
@@ -3150,21 +3154,22 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     {
       const gchar *device = udisks_block_get_device (block);
       command = build_command (fs_info->command_validate_create_fs, device, label, command_options, &error);
-      if (command == NULL) {
-            handle_format_failure (invocation, error);
-            goto out;
-      }
+      if (command == NULL)
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
 
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                    object,
-                                                    "format-mkfs", caller_uid,
-                                                    NULL, /* cancellable */
-                                                    0,    /* uid_t run_as_uid */
-                                                    0,    /* uid_t run_as_euid */
-                                                    &status,
-                                                    &error_message,
-                                                    NULL, /* input_string */
-                                                    "%s", command))
+                                                  object,
+                                                  "format-mkfs", caller_uid,
+                                                  NULL, /* cancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  &status,
+                                                  &error_message,
+                                                  NULL, /* input_string */
+                                                  "%s", command))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -3190,9 +3195,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       data.passphrase = encrypt_passphrase;
 
       if (encrypt_type != NULL)
-          data.type = encrypt_type;
+        data.type = encrypt_type;
       else
-          data.type = udisks_config_manager_get_encryption (config_manager);
+        data.type = udisks_config_manager_get_encryption (config_manager);
 
       udisks_linux_block_encrypted_lock (block);
 
@@ -3330,48 +3335,49 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-    if (g_strcmp0 (type, "dos") == 0)
-      part_table_type = BD_PART_TABLE_MSDOS;
-    else if (g_strcmp0 (type, "gpt") == 0)
-      part_table_type = BD_PART_TABLE_GPT;
-    if (part_table_type == BD_PART_TABLE_UNDEF)
-      {
-        /* Build and run mkfs shell command */
-        const gchar *device = udisks_block_get_device (block_to_mkfs);
-        command = build_command (fs_info->command_create_fs, device, label, command_options, &error);
-        if (command == NULL)
-          {
-            handle_format_failure (invocation, error);
-            goto out;
-          }
+  if (g_strcmp0 (type, "dos") == 0)
+    part_table_type = BD_PART_TABLE_MSDOS;
+  else if (g_strcmp0 (type, "gpt") == 0)
+    part_table_type = BD_PART_TABLE_GPT;
 
-        if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                      object_to_mkfs,
-                                                      "format-mkfs", caller_uid,
-                                                      NULL, /* cancellable */
-                                                      0,    /* uid_t run_as_uid */
-                                                      0,    /* uid_t run_as_euid */
-                                                      &status,
-                                                      &error_message,
-                                                      NULL, /* input_string */
-                                                      "%s", command))
-          {
-            handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                   "Error creating file system: %s", error_message));
-            g_free (error_message);
-            goto out;
-          }
-        g_free (error_message);
-      }
-    else
-      {
-        /* Create the partition table. */
-        if (! bd_part_create_table (device_name, part_table_type, TRUE, &error))
-          {
-            handle_format_failure (invocation, error);
-            goto out;
-          }
-      }
+  if (part_table_type == BD_PART_TABLE_UNDEF)
+    {
+      /* Build and run mkfs shell command */
+      const gchar *device = udisks_block_get_device (block_to_mkfs);
+      command = build_command (fs_info->command_create_fs, device, label, command_options, &error);
+      if (command == NULL)
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object_to_mkfs,
+                                                  "format-mkfs", caller_uid,
+                                                  NULL, /* cancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  &status,
+                                                  &error_message,
+                                                  NULL, /* input_string */
+                                                  "%s", command))
+        {
+          handle_format_failure (invocation, g_error_new (UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                 "Error creating file system: %s", error_message));
+          g_free (error_message);
+          goto out;
+        }
+      g_free (error_message);
+    }
+  else
+    {
+      /* Create the partition table. */
+      if (! bd_part_create_table (device_name, part_table_type, TRUE, &error))
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+    }
 
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
@@ -3394,7 +3400,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
   g_object_unref (filesystem_object);
 
-  /* Change overship, if requested and supported */
+  /* Change ownership, if requested and supported */
   if (take_ownership && fs_info->supports_owners)
     {
       if (!take_filesystem_ownership (udisks_block_get_device (block_to_mkfs),
@@ -3460,6 +3466,10 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     complete (complete_user_data);
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (device_name);
   g_free (mapped_name);
   g_free (command);
@@ -3556,6 +3566,7 @@ handle_open_for_backup (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3570,6 +3581,10 @@ handle_open_for_backup (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3602,6 +3617,10 @@ handle_open_for_backup (UDisksBlock           *block,
   udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3617,6 +3636,7 @@ handle_open_for_restore (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3632,6 +3652,10 @@ handle_open_for_restore (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3665,6 +3689,10 @@ handle_open_for_restore (UDisksBlock           *block,
   udisks_block_complete_open_for_restore (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3680,6 +3708,7 @@ handle_open_for_benchmark (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3697,6 +3726,10 @@ handle_open_for_benchmark (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3740,6 +3773,10 @@ handle_open_for_benchmark (UDisksBlock           *block,
   udisks_block_complete_open_for_benchmark (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
@@ -3756,6 +3793,7 @@ handle_open_device (UDisksBlock           *block,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
+  UDisksState *state = NULL;
   const gchar *action_id;
   const gchar *device;
   GUnixFDList *out_fd_list = NULL;
@@ -3771,6 +3809,10 @@ handle_open_device (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   action_id = "org.freedesktop.udisks2.open-device";
   if (udisks_block_get_hint_system (block))
@@ -3805,6 +3847,10 @@ handle_open_device (UDisksBlock           *block,
   udisks_block_complete_open_device (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_clear_object (&out_fd_list);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
