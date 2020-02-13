@@ -46,6 +46,7 @@
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GHashTable * mount_options_parse_config_file (const gchar *filename, GError **error);
+static GHashTable * mount_options_get_from_udev (UDisksLinuxDevice *device, GError **error);
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -149,36 +150,28 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
 #define MOUNT_OPTIONS_KEY_ALLOW              "allow"
 #define MOUNT_OPTIONS_KEY_ALLOW_UID_SELF     "allow_uid_self"
 #define MOUNT_OPTIONS_KEY_ALLOW_GID_SELF     "allow_gid_self"
+#define UDEV_MOUNT_OPTIONS_PREFIX            "UDISKS_MOUNT_OPTIONS_"
 
 /*
  * compute_block_level_mount_options: <internal>
  * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
  * @fstype: The filesystem type to match or %NULL.
+ * @fsmo: Filesystem type specific #FSMountOptions.
+ * @fsmo_any: General ("any") #FSMountOptions.
  *
  * Calculate mount options for the given level of overrides. Matches the block
  * device-specific options on top of the defaults.
- *
- * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
  */
 static void
 compute_block_level_mount_options (GHashTable      *opts,
                                    UDisksBlock     *block,
                                    const gchar     *fstype,
-                                   FSMountOptions **any_options,
-                                   FSMountOptions **fstype_options)
+                                   FSMountOptions  *fsmo,
+                                   FSMountOptions  *fsmo_any)
 {
-  FSMountOptions *fsmo_any;
-  FSMountOptions *fsmo;
   GHashTable *general_options;
   GHashTable *block_options;
-  GList *keys;
-  GList *l;
-  const gchar *block_device;
-  const gchar * const *block_symlinks;
-
-  fsmo = g_malloc0 (sizeof (FSMountOptions));
-  fsmo_any = g_malloc0 (sizeof (FSMountOptions));
 
   /* Compute general defaults first */
   general_options = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
@@ -188,29 +181,38 @@ compute_block_level_mount_options (GHashTable      *opts,
 
       o = g_hash_table_lookup (general_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
+
       o = fstype ? g_hash_table_lookup (general_options, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
     }
 
   /* Match specific block device */
   block_options = NULL;
-  block_device = udisks_block_get_device (block);
-  block_symlinks = udisks_block_get_symlinks (block);
-
-  keys = g_hash_table_get_keys (opts);
-  g_warn_if_fail (keys != NULL);
-  for (l = keys; l != NULL; l = l->next)
+  if (block)
     {
-      if (!l->data || g_str_equal (l->data, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
-        continue;
-      if (g_str_equal (l->data, block_device) ||
-          (block_symlinks && g_strv_contains (block_symlinks, l->data)))
+      const gchar *block_device;
+      const gchar * const *block_symlinks;
+      GList *keys;
+      GList *l;
+
+      block_device = udisks_block_get_device (block);
+      block_symlinks = udisks_block_get_symlinks (block);
+
+      keys = g_hash_table_get_keys (opts);
+      g_warn_if_fail (keys != NULL);
+      for (l = keys; l != NULL; l = l->next)
         {
-          block_options = g_hash_table_lookup (opts, l->data);
-          break;
+          if (!l->data || g_str_equal (l->data, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+            continue;
+          if (g_str_equal (l->data, block_device) ||
+              (block_symlinks && g_strv_contains (block_symlinks, l->data)))
+            {
+              block_options = g_hash_table_lookup (opts, l->data);
+              break;
+            }
         }
+      g_list_free (keys);
     }
-  g_list_free (keys);
 
   /* Block device specific options should fully override "general" options per-member basis */
   if (block_options)
@@ -219,37 +221,17 @@ compute_block_level_mount_options (GHashTable      *opts,
 
       o = g_hash_table_lookup (block_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
+
       o = fstype ? g_hash_table_lookup (block_options, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
     }
-
-  *any_options = fsmo_any;
-  *fstype_options = fsmo;
-}
-
-static void
-layer_mount_options (GHashTable     *overrides,
-                     UDisksBlock    *block,
-                     const gchar    *fstype,
-                     FSMountOptions *fsmo_any,
-                     FSMountOptions *fsmo)
-{
-  FSMountOptions *overrides_fsmo;
-  FSMountOptions *overrides_fsmo_any;
-
-  compute_block_level_mount_options (overrides, block, fstype, &overrides_fsmo_any, &overrides_fsmo);
-
-  /* Layer options on per-member basis */
-  override_fs_mount_options (overrides_fsmo_any /* src */, fsmo_any /* dest */);
-  override_fs_mount_options (overrides_fsmo, fsmo);
-  free_fs_mount_options (overrides_fsmo_any);
-  free_fs_mount_options (overrides_fsmo);
 }
 
 /*
  * compute_mount_options_for_fs_type: <internal>
  * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
+ * @object: A #UDisksLinuxBlockObject.
  * @fstype: The filesystem type to use or %NULL.
  *
  * Calculate mount options across different levels of overrides
@@ -258,11 +240,13 @@ layer_mount_options (GHashTable     *overrides,
  * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
  */
 static FSMountOptions *
-compute_mount_options_for_fs_type (UDisksDaemon *daemon,
-                                   UDisksBlock  *block,
-                                   const gchar  *fstype)
+compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
+                                   UDisksBlock            *block,
+                                   UDisksLinuxBlockObject *object,
+                                   const gchar            *fstype)
 {
   UDisksConfigManager *config_manager;
+  UDisksLinuxDevice *device;
   GHashTable *builtin_opts;
   GHashTable *overrides;
   FSMountOptions *fsmo;
@@ -272,20 +256,24 @@ compute_mount_options_for_fs_type (UDisksDaemon *daemon,
 
   config_manager = udisks_daemon_get_config_manager (daemon);
 
+  fsmo = g_malloc0 (sizeof (FSMountOptions));
+  fsmo_any = g_malloc0 (sizeof (FSMountOptions));
+
+  /* Builtin options, two-level hashtable */
   /* TODO: use cached value and take reference to it */
   builtin_opts = udisks_linux_mount_options_get_builtin ();
   g_return_val_if_fail (builtin_opts != NULL, NULL);
 
-  compute_block_level_mount_options (builtin_opts, block, fstype, &fsmo_any, &fsmo);
+  compute_block_level_mount_options (builtin_opts, block, fstype, fsmo, fsmo_any);
   g_hash_table_unref (builtin_opts);
 
-  /* Global config file overrides */
+  /* Global config file overrides, two-level hashtable */
   config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
                                        MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
   overrides = mount_options_parse_config_file (config_file_path, &error);
   if (overrides)
     {
-      layer_mount_options (overrides, block, fstype, fsmo_any, fsmo);
+      compute_block_level_mount_options (overrides, block, fstype, fsmo, fsmo_any);
       g_hash_table_unref (overrides);
     }
   else
@@ -299,6 +287,29 @@ compute_mount_options_for_fs_type (UDisksDaemon *daemon,
       g_clear_error (&error);
     }
   g_free (config_file_path);
+
+  /* udev properties, single-level hashtable */
+  device = udisks_linux_block_object_get_device (object);
+  overrides = mount_options_get_from_udev (device, &error);
+  if (overrides)
+    {
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (overrides, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+      override_fs_mount_options (o, fsmo_any);
+
+      o = fstype ? g_hash_table_lookup (overrides, fstype) : NULL;
+      override_fs_mount_options (o, fsmo);
+
+      g_hash_table_unref (overrides);
+    }
+  else
+    {
+      udisks_warning ("Error getting udev mount options: %s",
+                      error->message);
+      g_clear_error (&error);
+    }
+  g_object_unref (device);
 
   /* Merge "any" and fstype-specific options */
   append_fs_mount_options (fsmo_any, fsmo);
@@ -384,6 +395,56 @@ extract_fs_type (const gchar *key, const gchar **group)
   return NULL;
 }
 
+static void
+parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *value)
+{
+  FSMountOptions *ent;
+  gchar *fs_type;
+  const gchar *group = NULL;
+  gchar **opts;
+
+  fs_type = extract_fs_type (key, &group);
+  if (!fs_type)
+    {
+      /* invalid or malformed key detected, do not parse and ignore */
+      udisks_debug ("parse_key_value_pair: garbage key found: %s", key);
+      return;
+    }
+  g_warn_if_fail (group != NULL);
+
+  ent = g_hash_table_lookup (mount_options, fs_type);
+  if (!ent)
+    {
+      ent = g_malloc0 (sizeof (FSMountOptions));
+      g_hash_table_replace (mount_options, g_strdup (fs_type), ent);
+    }
+
+  opts = parse_mount_options_string (value);
+
+#define ASSIGN_OPTS(g,p) \
+  if (g_str_equal (group, g)) \
+    { \
+      if (ent->p) \
+        { \
+          g_warning ("mount_options_parse_group: Duplicate key '%s' detected", key); \
+          g_strfreev (ent->p); \
+        } \
+      ent->p = opts; \
+    } \
+  else
+
+  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF, allow_uid_self)
+  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF, allow_gid_self)
+  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW, allow)
+  ASSIGN_OPTS (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS, defaults)
+    {
+      /* should be caught by extract_fs_type() already */
+      g_warning ("parse_key_value_pair: Unmatched key '%s' found, ignoring", key);
+    }
+
+  g_free (fs_type);
+}
+
 static GHashTable *
 mount_options_parse_group (GKeyFile *key_file, const gchar *group_name, GError **error)
 {
@@ -397,56 +458,24 @@ mount_options_parse_group (GKeyFile *key_file, const gchar *group_name, GError *
   mount_options = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) free_fs_mount_options);
   for (; keys_len > 0; keys_len--)
     {
-      FSMountOptions *ent;
-      gchar *key = keys[keys_len - 1];
-      gchar *fs_type;
-      const gchar *group = NULL;
+      gchar *key;
       gchar *value;
-      gchar **opts;
+      GError *e = NULL;
 
-      fs_type = extract_fs_type (key, &group);
-      if (!fs_type)
+      key = g_ascii_strdown (keys[keys_len - 1], -1);
+      value = g_key_file_get_string (key_file, group_name, keys[keys_len - 1], &e);
+      if (!value)
         {
-          /* invalid or malformed key detected, do not parse and ignore */
-          udisks_debug ("mount_options_parse_group: garbage key found: %s", key);
-          continue;
+          udisks_warning ("mount_options_parse_group: cannot retrieve value for key '%s': %s",
+                          key, e->message);
+          g_error_free (e);
         }
-      g_warn_if_fail (group != NULL);
-
-      ent = g_hash_table_lookup (mount_options, fs_type);
-      if (!ent)
+      else
         {
-          ent = g_malloc0 (sizeof (FSMountOptions));
-          g_hash_table_replace (mount_options, g_strdup (fs_type), ent);
+          parse_key_value_pair (mount_options, key, value);
         }
-
-      value = g_key_file_get_string (key_file, group_name, key, NULL);
-      g_warn_if_fail (value != NULL);
-      opts = parse_mount_options_string (value);
       g_free (value);
-
-#define ASSIGN_OPTS(g,p) \
-      if (g_str_equal (group, g)) \
-        { \
-          if (ent->p) \
-            { \
-              g_warning ("mount_options_parse_group: Duplicate key '%s' detected", key); \
-              g_strfreev (ent->p); \
-            } \
-          ent->p = opts; \
-        } \
-     else
-
-     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF, allow_uid_self)
-     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF, allow_gid_self)
-     ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW, allow)
-     ASSIGN_OPTS (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS, defaults)
-       {
-         /* should be caught by extract_fs_type() already */
-         g_warning ("mount_options_parse_group: Unmatched key '%s' found, ignoring", key);
-       }
-
-      g_free (fs_type);
+      g_free (key);
     }
 
   g_strfreev (keys);
@@ -495,6 +524,7 @@ mount_options_parse_key_file (GKeyFile *key_file, GError **error)
   return mount_options;
 }
 
+/* returns two-level hashtable with block specifics at the first level */
 static GHashTable *
 mount_options_parse_config_file (const gchar *filename, GError **error)
 {
@@ -514,6 +544,47 @@ mount_options_parse_config_file (const gchar *filename, GError **error)
   return mount_options;
 }
 
+/* returns second level of mount options (not block-specific) */
+static GHashTable *
+mount_options_get_from_udev (UDisksLinuxDevice *device, GError **error)
+{
+  GHashTable *mount_options;
+  const gchar * const *keys;
+
+  g_warn_if_fail (device != NULL);
+  if (!device->udev_device)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "'device' is not a valid UDisksLinuxDevice");
+      return NULL;
+    }
+
+  mount_options = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) free_fs_mount_options);
+
+  keys = g_udev_device_get_property_keys (device->udev_device);
+  for (; *keys; keys++)
+    if (g_str_has_prefix (*keys, UDEV_MOUNT_OPTIONS_PREFIX))
+      {
+        gchar *key;
+        const gchar *value;
+
+        key = g_ascii_strdown (*keys + strlen (UDEV_MOUNT_OPTIONS_PREFIX), -1);
+        value = g_udev_device_get_property (device->udev_device, *keys);
+        if (!value)
+          {
+            udisks_warning ("mount_options_get_from_udev: cannot retrieve value for udev property %s",
+                            *keys);
+          }
+        else
+          {
+            parse_key_value_pair (mount_options, key, value);
+          }
+        g_free (key);
+      }
+
+  return mount_options;
+}
+
 /*
  * udisks_linux_mount_options_get_builtin: <internal>
  *
@@ -522,6 +593,7 @@ mount_options_parse_config_file (const gchar *filename, GError **error)
  *
  * Returns: (transfer full) A #GHashTable with mount options.
  */
+/* returns two-level hashtable */
 GHashTable *
 udisks_linux_mount_options_get_builtin (void)
 {
@@ -823,17 +895,20 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   gboolean shared_fs = FALSE;
   gchar *options_to_use_str;
   gchar *key, *value;
+  gchar *fs_type_l;
   GString *str;
 
   options_to_use_str = NULL;
-
-  fsmo = compute_mount_options_for_fs_type (daemon, block, fs_type);
 
   object = udisks_daemon_util_dup_object (block, NULL);
   device = udisks_linux_block_object_get_device (object);
   if (device != NULL && device->udev_device != NULL &&
       g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
     shared_fs = TRUE;
+
+  fs_type_l = g_ascii_strdown (fs_type, -1);
+  fsmo = compute_mount_options_for_fs_type (daemon, block, object, fs_type_l);
+  g_free (fs_type_l);
 
   g_clear_object (&device);
   g_clear_object (&object);
