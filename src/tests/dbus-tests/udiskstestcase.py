@@ -484,7 +484,15 @@ class UdisksTestCase(unittest.TestCase):
                           signature=dbus.Signature('y'), variant_level=1)
 
     @classmethod
-    def set_udev_property(self, device, prop, value):
+    def set_udev_properties(self, device, props):
+        """Sets one or more udev properties for the 'device' identified by its serial number.
+           Note that this overwrites previously set properties. Pass props=None to remove
+           the rules.
+
+        :type props: dict
+        """
+        UDISKS_UDEV_RULES = "/run/udev/rules.d/99-udisks_test.rules"
+
         udev = GUdev.Client()
         dev = udev.query_by_device_file(device)
         serial = dev.get_property("ID_SERIAL")
@@ -495,14 +503,18 @@ class UdisksTestCase(unittest.TestCase):
             # already exists
             pass
 
-        self.write_file("/run/udev/rules.d/99-udisks_test.rules",
-                        'ENV{ID_SERIAL}=="%s", ENV{%s}="%s"\n' % (serial, prop, value))
+        if props:
+            rules = ""
+            for i in props:
+                rules += ', ENV{%s}="%s"' % (i, props[i])
+            self.write_file(UDISKS_UDEV_RULES,
+                            'ENV{ID_SERIAL}=="%s"%s\n' % (serial, rules))
+        else:
+            self.remove_file(UDISKS_UDEV_RULES, ignore_nonexistent=True)
         self.run_command("udevadm control --reload")
         uevent_path = os.path.join(dev.get_sysfs_path(), "uevent")
         self.write_file(uevent_path, "change\n")
         self.udev_settle()
-        os.unlink("/run/udev/rules.d/99-udisks_test.rules")
-        self.run_command("udevadm control --reload")
 
     @classmethod
     def assertHasIface(self, obj, iface):
