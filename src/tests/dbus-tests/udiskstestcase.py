@@ -515,6 +515,8 @@ class UdisksTestCase(unittest.TestCase):
         uevent_path = os.path.join(dev.get_sysfs_path(), "uevent")
         self.write_file(uevent_path, "change\n")
         self.udev_settle()
+        # FIXME: need to give udisksd some time to process the uevent
+        time.sleep(1)
 
     @classmethod
     def assertHasIface(self, obj, iface):
