@@ -162,8 +162,10 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
  *
  * Calculate mount options for the given level of overrides. Matches the block
  * device-specific options on top of the defaults.
+ *
+ * Returns: %TRUE when mount options were overriden, %FALSE otherwise.
  */
-static void
+static gboolean
 compute_block_level_mount_options (GHashTable      *opts,
                                    UDisksBlock     *block,
                                    const gchar     *fstype,
@@ -172,6 +174,7 @@ compute_block_level_mount_options (GHashTable      *opts,
 {
   GHashTable *general_options;
   GHashTable *block_options;
+  gboolean changed = FALSE;
 
   /* Compute general defaults first */
   general_options = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
@@ -181,9 +184,11 @@ compute_block_level_mount_options (GHashTable      *opts,
 
       o = g_hash_table_lookup (general_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
+      changed = changed || o != NULL;
 
       o = fstype ? g_hash_table_lookup (general_options, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
+      changed = changed || o != NULL;
     }
 
   /* Match specific block device */
@@ -221,10 +226,14 @@ compute_block_level_mount_options (GHashTable      *opts,
 
       o = g_hash_table_lookup (block_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
+      changed = changed || o != NULL;
 
       o = fstype ? g_hash_table_lookup (block_options, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
+      changed = changed || o != NULL;
     }
+
+  return changed;
 }
 
 /*
@@ -253,6 +262,7 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   FSMountOptions *fsmo_any;
   gchar *config_file_path;
   GError *error = NULL;
+  gboolean changed = FALSE;
 
   config_manager = udisks_daemon_get_config_manager (daemon);
 
@@ -273,7 +283,7 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   overrides = mount_options_parse_config_file (config_file_path, &error);
   if (overrides)
     {
-      compute_block_level_mount_options (overrides, block, fstype, fsmo, fsmo_any);
+      changed = compute_block_level_mount_options (overrides, block, fstype, fsmo, fsmo_any);
       g_hash_table_unref (overrides);
     }
   else
@@ -297,9 +307,11 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
 
       o = g_hash_table_lookup (overrides, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
+      changed = changed || o != NULL;
 
       o = fstype ? g_hash_table_lookup (overrides, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
+      changed = changed || o != NULL;
 
       g_hash_table_unref (overrides);
     }
@@ -315,6 +327,13 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   append_fs_mount_options (fsmo_any, fsmo);
   free_fs_mount_options (fsmo_any);
   fsmo_any = NULL;
+
+  if (changed && fsmo->defaults)
+    {
+      gchar *opts = g_strjoinv (",", fsmo->defaults);
+      udisks_notice ("Using overriden mount options: %s", opts);
+      g_free (opts);
+    }
 
   return fsmo;
 }
