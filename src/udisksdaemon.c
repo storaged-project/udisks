@@ -1788,10 +1788,21 @@ udisks_daemon_get_uuid (UDisksDaemon *daemon)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_daemon_get_parent_for_tracking:
+ * @daemon: A #UDisksDaemon.
+ * @path: object path of a child to find parent of
+ * @uuid: a pointer to return parent UUID string
+ *
+ * Finds parent block device and returns its object path and UUID.
+ * If the return value is %NULL, the value of @uuid has not been changed.
+ *
+ * Returns: (transfer full): object path of the parent device. Free with g_free().
+ */
 gchar *
 udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
                                        const gchar   *path,
-                                       gchar        **uuid_ret)
+                                       gchar        **uuid)
 {
   const gchar *parent_path = NULL;
   const gchar *parent_uuid = NULL;
@@ -1868,8 +1879,8 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
 
   if (parent_path)
     {
-      if (uuid_ret)
-        *uuid_ret = g_strdup (parent_uuid);
+      if (uuid)
+        *uuid = g_strdup (parent_uuid);
       return g_strdup (parent_path);
     }
 
@@ -1877,7 +1888,7 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
   while (track_parent_funcs)
     {
       UDisksTrackParentFunc func = track_parent_funcs->data;
-      gchar *path_ret = func (daemon, path, uuid_ret);
+      gchar *path_ret = func (daemon, path, uuid);
       if (path_ret)
         return path_ret;
 
