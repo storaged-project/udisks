@@ -310,6 +310,53 @@
       <arg name="result" type="o" direction="out"/>
     </method>
 
+     <!-- CreateVDOVolume:
+         @lv_name: The name of the to-be-created VDO LV.
+         @pool_name: The name of the to-be-created VDO pool LV.
+         @data_size: The size of the data VDO LV (physical size of the @pool_name VDO pool LV).
+         @virtual_size: The virtual_size of the @lv_name VDO LV or 0 for default (@data_size minus metadata).
+         @index_memory: Amount of index memory in bytes or 0 for default.
+         @compression: Enables or disables compression when creating the VDO volume.
+         @deduplication: Enables or disables deduplication when creating the VDO volume.
+         @write_policy: Specifies the write policy.
+         @options: Additional options.
+         @result: The object path of the new VDO logical volume.
+
+         @since: 2.9.0
+
+         Create a new VDO logical volume that is backed by a newly created
+         VDO pool. The VDO data logical volume and VDO pool logical volume
+         are created together, VDO pool supports only a single VDO LV.
+         The @data_size parameter is the total amount of space
+         taken out of the volume group and it's the size of the @pool_name
+         VDO pool logical volume.
+         The @virtual_size is the size of the @lv_name VDO logical volume
+         and represents expected amount of the data that can be stored
+         after deduplication and compression.
+
+         No additional options are currently defined.
+
+         Known @write_policy values include:
+         <variablelist>
+           <varlistentry><term>sync</term><listitem><para>Writes are acknowledged only after data is on stable storage. 'sync' policy is not supported if the underlying storage is not also synchronous.</para></listitem></varlistentry>
+           <varlistentry><term>async</term><listitem><para>Writes are acknowledged when data has been cached for writing to stable storage; data which has not been flushed is not guaranteed to persist in this mode.</para></listitem></varlistentry>
+           <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <method name="CreateVDOVolume">
+      <arg name="lv_name" type="s" direction="in"/>
+      <arg name="pool_name" type="s" direction="in"/>
+      <arg name="data_size" type="t" direction="in"/>
+      <arg name="virtual_size" type="t" direction="in"/>
+      <arg name="index_memory" type="t" direction="in" />
+      <arg name="compression" type="b" direction="in" />
+      <arg name="deduplication" type="b" direction="in" />
+      <arg name="write_policy" type="s" direction="in" />
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+      <annotation name="org.gtk.GDBus.C.Name" value="Create_VDO_Volume"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -572,6 +619,130 @@
     -->
     <method name="CacheDetach">
         <arg name="options" type= "a{sv}" direction="in"/>
+    </method>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.VDOVolume:
+      @short_description: A VDO logical volume
+      @since: 2.9.0
+
+      Objects with this interface represent VDO logical volumes in a
+      volume group.
+
+      VDO logical volume objects are children of their VDO pool
+      object, and also link to it via the #VDOPool property.
+  -->
+  <interface name="org.freedesktop.UDisks2.VDOVolume">
+     <annotation name="org.gtk.GDBus.C.Name" value="VDO_Volume"/>
+
+     <!-- VDOPool:
+
+         Object path of the VDO pool for this volume.
+    -->
+
+    <property name="VDOPool" type="o" access="read">
+        <annotation name="org.gtk.GDBus.C.Name" value="VDO_Pool"/>
+    </property>
+
+    <!-- OperatingMode:
+
+         Operating mode of the VDO volume.
+
+         One of "normal", "read-only" or "recovering".
+    -->
+    <property name="OperatingMode" type="s" access="read"/>
+
+    <!-- CompressionState:
+
+         Compression state of the VDO volume.
+
+         One of "online" or "offline".
+    -->
+    <property name="CompressionState" type="s" access="read"/>
+
+    <!-- IndexState:
+
+         State of the VDO index of the volume.
+
+         One of "online", "offline", "opening", "closing", "closed"
+         or "error".
+    -->
+    <property name="IndexState" type="s" access="read"/>
+
+    <!-- UsedSize:
+
+         The total physical size used by this VDO volume.
+    -->
+    <property name="UsedSize" type="t" access="read"/>
+
+    <!-- Compression:
+
+         Indicates whether compression is enabled.
+    -->
+    <property name="Compression" type="b" access="read" />
+
+    <!-- Deduplication:
+
+         Indicates whether deduplication is enabled.
+    -->
+    <property name="Deduplication" type="b" access="read" />
+
+    <!--
+        EnableCompression:
+        @enable: A boolean value indicating whether compression should be enabled.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Enables or disables compression on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
+    -->
+    <method name="EnableCompression">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        EnableDeduplication:
+        @enable: A boolean value indicating whether deduplication should be enabled.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Enables or disables deduplication on the VDO volume. If the VDO volume
+        is running, takes effect immediately.
+    -->
+    <method name="EnableDeduplication">
+      <arg name="enable" direction="in" type="b" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+     <!--
+        ResizeLogical:
+        @size: The new logical size for the VDO volume in bytes.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Resizes the logical size of a VDO volume to the size specified by the @size argument.
+        This is only a convenience method and it's equivalent to using the
+        #org.freedesktop.UDisks2.LogicalVolume:Resize method.
+    -->
+    <method name="ResizeLogical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
+    </method>
+
+    <!--
+        ResizePhysical:
+        @size: The new physical size for the VDO volume in bytes.
+        @options: Additional options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Resizes the physical size of a VDO volume to the size specified by the @size argument.
+        This is only a convenience method and it's equivalent to using the
+        #org.freedesktop.UDisks2.LogicalVolume:Resize method on the #VDOPool.
+    -->
+    <method name="ResizePhysical">
+      <arg name="size" direction="in" type="t" />
+      <arg name="options" direction="in" type="a{sv}" />
     </method>
 
   </interface>

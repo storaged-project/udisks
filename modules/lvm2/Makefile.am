@@ -70,6 +70,7 @@ libudisks2_lvm2_la_SOURCES =                                                   \
 	udiskslinuxphysicalvolume.h         udiskslinuxphysicalvolume.c        \
 	udiskslinuxvolumegroup.h            udiskslinuxvolumegroup.c           \
 	udiskslinuxvolumegroupobject.h      udiskslinuxvolumegroupobject.c     \
+	udiskslinuxvdovolume.h              udiskslinuxvdovolume.c             \
 	udiskslinuxblocklvm2.h              udiskslinuxblocklvm2.c             \
 	udiskslvm2daemonutil.h              udiskslvm2daemonutil.c             \
 	udiskslvm2dbusutil.h                udiskslvm2dbusutil.c               \

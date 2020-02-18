@@ -1,12 +1,19 @@
 import dbus
 import os
+import re
+import time
 import unittest
+
+from distutils.version import LooseVersion
 
 import udiskstestcase
 
+import gi
+gi.require_version('BlockDev', '2.0')
+from gi.repository import BlockDev
 
-class UdisksLVMTest(udiskstestcase.UdisksTestCase):
-    '''This is a basic LVM test suite'''
+
+class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -14,6 +21,14 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         if not cls.check_module_loaded('LVM2'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for LVM tests not loaded, skipping.')
+
+    @classmethod
+    def _get_lvm_version(cls):
+        _ret, out = cls.run_command('lvm version')
+        m = re.search(r'LVM version:.* ([\d\.]+)', out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError('Failed to determine LVM version from: %s' % out)
+        return LooseVersion(m.groups()[0])
 
     def _create_vg(self, vgname, devices):
         manager = self.get_object('/Manager')
@@ -33,6 +48,10 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
         ret, _out = self.run_command('vgs %s' % vgname)
         self.assertNotEqual(ret, 0)
+
+
+class UdisksLVMTest(UDisksLVMTestBase):
+    '''This is a basic LVM test suite'''
 
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''
@@ -213,6 +232,9 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
         blocksize = self.get_property(lv_block, '.Block', 'Size')
         blocksize.assertGreater(vgsize)
 
+        tv_tp = self.get_property(tv, '.LogicalVolume', 'ThinPool')
+        tv_tp.assertEqual(tp_path)
+
     def test_30_snapshot(self):
         '''Test LVM snapshoting'''
 
@@ -371,3 +393,204 @@ class UdisksLVMTest(udiskstestcase.UdisksTestCase):
 
         _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[0])
         self.assertEqual(out, '')
+
+
+class UdisksLVMVDOTest(UDisksLVMTestBase):
+    '''This is a basic LVM VDO test suite'''
+
+    LOOP_DEVICE_PATH = '/var/tmp/udisks_test_disk_lvmvdo'
+
+    @classmethod
+    def setUpClass(cls):
+        UDisksLVMTestBase.setUpClass()
+
+        if not BlockDev.utils_have_kernel_module('kvdo'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            raise unittest.SkipTest('VDO kernel module not available, skipping.')
+
+        lvm_version = cls._get_lvm_version()
+        if lvm_version < LooseVersion('2.3.07'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            raise unittest.SkipTest('LVM >= 2.3.07 is needed for LVM VDO, skipping.')
+
+    def setUp(self):
+        # create backing sparse file
+        # VDO needs at least 5G of space and we need some room for the grow test
+        # ...rumors go that vdo internally operates on 2G extents...
+        self.run_command('truncate -s 8G %s' % self.LOOP_DEVICE_PATH)
+        ret_code, self.dev_name = self.run_command('losetup --find --show %s' % self.LOOP_DEVICE_PATH)
+        self.assertEqual(ret_code, 0)
+        time.sleep(0.5)
+        self.device = self.get_device(self.dev_name)
+        self.assertIsNotNone(self.device)
+        super(UdisksLVMVDOTest, self).setUp()
+
+    def tearDown(self):
+        # need to process scheduled cleanup before the backing device is torn down
+        self.doCleanups()
+        # tear down loop device
+        self.run_command('losetup --detach %s' % self.dev_name)
+        os.remove(self.LOOP_DEVICE_PATH)
+        super(UdisksLVMVDOTest, self).tearDown()
+
+    def test_create(self):
+        vgname = 'udisks_test_vdo_vg'
+
+        # create vg on our testing device
+        vg = self._create_vg(vgname, [self.device])
+        self.addCleanup(self._remove_vg, vg)
+
+        vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        lv_name = 'udisks_test_vdovlv'
+        pool_name = 'udisks_test_vdopool'
+        psize = vg_free.value
+        vsize = psize * 5
+        lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
+                                     dbus.UInt64(0), True, True, "auto", self.no_options,
+                                     dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.assertIsNotNone(lv_path)
+
+        ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lv_name))
+        self.assertEqual(ret, 0)
+
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(lv)
+        self.assertHasIface(lv, self.iface_prefix + '.VDOVolume')
+
+        dbus_name = self.get_property(lv, '.LogicalVolume', 'Name')
+        dbus_name.assertEqual(lv_name)
+
+        # lv size -> original 'virtual' size
+        dbus_size = self.get_property(lv, '.LogicalVolume', 'Size')
+        dbus_size.assertEqual(vsize)
+
+        # VDO pool properties
+        pool_path = self.get_property(lv, '.VDOVolume', 'VDOPool')
+        pool_path.assertNotEqual('/')
+        pool = self.bus.get_object(self.iface_prefix, pool_path.value)
+        self.assertIsNotNone(pool)
+
+        dbus_name = self.get_property(pool, '.LogicalVolume', 'Name')
+        dbus_name.assertEqual(pool_name)
+
+        # pool size -> original 'physical' size
+        dbus_size = self.get_property(pool, '.LogicalVolume', 'Size')
+        dbus_size.assertEqual(psize)
+
+        # VDO properties
+        dbus_comp = self.get_property(lv, '.VDOVolume', 'Compression')
+        dbus_comp.assertTrue()
+
+        dbus_dedup = self.get_property(lv, '.VDOVolume', 'Deduplication')
+        dbus_dedup.assertTrue()
+
+        # ThinPool property should not be set
+        dbus_tp = self.get_property(lv, '.LogicalVolume', 'ThinPool')
+        dbus_tp.assertEqual('/')
+
+    def test_enable_disable_compression_deduplication(self):
+        vgname = 'udisks_test_vdo_vg'
+
+        # create vg on our testing device
+        vg = self._create_vg(vgname, [self.device])
+        self.addCleanup(self._remove_vg, vg)
+
+        vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        lv_name = 'udisks_test_vdovlv'
+        pool_name = 'udisks_test_vdopool'
+        psize = vg_free.value
+        vsize = psize * 5
+        lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
+                                     dbus.UInt64(0), True, True, "auto", self.no_options,
+                                     dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.assertIsNotNone(lv_path)
+
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(lv)
+
+        # initial state: both compression and deduplication should be enabled
+        dbus_comp = self.get_property(lv, '.VDOVolume', 'Compression')
+        dbus_comp.assertTrue()
+
+        dbus_dedup = self.get_property(lv, '.VDOVolume', 'Deduplication')
+        dbus_dedup.assertTrue()
+
+        # disable deduplication
+        lv.EnableDeduplication(False, self.no_options,
+                               dbus_interface=self.iface_prefix + '.VDOVolume')
+        dbus_dedup = self.get_property(lv, '.VDOVolume', 'Deduplication')
+        dbus_dedup.assertFalse()
+
+        # disable compression
+        lv.EnableCompression(False, self.no_options,
+                             dbus_interface=self.iface_prefix + '.VDOVolume')
+        dbus_comp = self.get_property(lv, '.VDOVolume', 'Compression')
+        dbus_comp.assertFalse()
+
+        # enable both again
+        lv.EnableDeduplication(True, self.no_options,
+                               dbus_interface=self.iface_prefix + '.VDOVolume')
+        dbus_dedup = self.get_property(lv, '.VDOVolume', 'Deduplication')
+        dbus_dedup.assertTrue()
+
+        # disable compression
+        lv.EnableCompression(True, self.no_options,
+                             dbus_interface=self.iface_prefix + '.VDOVolume')
+        dbus_comp = self.get_property(lv, '.VDOVolume', 'Compression')
+        dbus_comp.assertTrue()
+
+    def test_resize_logical(self):
+        vgname = 'udisks_test_vdo_vg'
+
+        # create vg on our testing device
+        vg = self._create_vg(vgname, [self.device])
+        self.addCleanup(self._remove_vg, vg)
+
+        vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        lv_name = 'udisks_test_vdovlv'
+        pool_name = 'udisks_test_vdopool'
+        psize = vg_free.value
+        vsize = psize
+        lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
+                                     dbus.UInt64(0), True, True, "auto", self.no_options,
+                                     dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.assertIsNotNone(lv_path)
+
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(lv)
+
+        lv.ResizeLogical(vsize * 5, self.no_options,
+                         dbus_interface=self.iface_prefix + '.VDOVolume')
+        dbus_size = self.get_property(lv, '.LogicalVolume', 'Size')
+        dbus_size.assertEqual(vsize * 5)
+
+    def test_resize_physical(self):
+        vgname = 'udisks_test_vdo_vg'
+
+        # create vg on our testing device
+        vg = self._create_vg(vgname, [self.device])
+        self.addCleanup(self._remove_vg, vg)
+
+        vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        lv_name = 'udisks_test_vdovlv'
+        pool_name = 'udisks_test_vdopool'
+        psize = vg_free.value - 1 * 1024**3
+        vsize = psize * 5
+        lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
+                                     dbus.UInt64(0), True, True, "auto", self.no_options,
+                                     dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.assertIsNotNone(lv_path)
+
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(lv)
+
+        lv.ResizePhysical(vg_free.value, self.no_options,
+                          dbus_interface=self.iface_prefix + '.VDOVolume')
+
+        pool_path = self.get_property(lv, '.VDOVolume', 'VDOPool')
+        pool_path.assertNotEqual('/')
+        pool = self.bus.get_object(self.iface_prefix, pool_path.value)
+        self.assertIsNotNone(pool)
+
+        dbus_size = self.get_property(pool, '.LogicalVolume', 'Size')
+        dbus_size.assertEqual(vg_free.value)

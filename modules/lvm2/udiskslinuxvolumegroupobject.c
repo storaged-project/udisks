@@ -598,6 +598,7 @@ update_vg (GObject      *source_obj,
       BDLVMLVdata *lv_info = *lvs_p;
       const gchar *lv_name = lv_info->lv_name;
       BDLVMLVdata *meta_lv_info = NULL;
+      BDLVMVDOPooldata *vdo_info = NULL;
 
       update_operations (daemon, lv_name, lv_info, &needs_polling);
 
@@ -610,17 +611,29 @@ update_vg (GObject      *source_obj,
           if (cmp_int_lv_name ((*lvs_p2)->lv_name, lv_info->metadata_lv))
             meta_lv_info = *lvs_p2;
 
+      if (lv_info->pool_lv && g_strcmp0 (lv_info->segtype, "vdo") == 0)
+        {
+          vdo_info = bd_lvm_vdo_info (lv_info->vg_name, lv_info->pool_lv, &error);
+          if (!vdo_info)
+            {
+              udisks_warning ("Failed to get information about VDO volume %s: %s",
+                              lv_info->lv_name, error->message);
+              g_clear_error (&error);
+            }
+        }
+
+
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume == NULL)
         {
           volume = udisks_linux_logical_volume_object_new (daemon, object, lv_name);
-          udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
+          udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
           udisks_linux_logical_volume_object_update_etctabs (volume);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
           g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), volume);
         }
       else
-        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
 
       g_hash_table_insert (new_lvs, (gchar *)lv_name, volume);
     }
@@ -740,6 +753,7 @@ poll_vg_update (GObject      *source_obj,
       BDLVMLVdata *lv_info = *lvs_p;
       BDLVMLVdata *meta_lv_info = NULL;
       const gchar *lv_name = lv_info->lv_name;
+      BDLVMVDOPooldata *vdo_info = NULL;
 
       if (lv_info->metadata_lv && *(lv_info->metadata_lv) != '\0')
         /* this is not cheap to do, but not many LVs have a metadata LV */
@@ -747,10 +761,22 @@ poll_vg_update (GObject      *source_obj,
           if (cmp_int_lv_name ((*lvs_np)->lv_name, lv_info->metadata_lv))
             meta_lv_info = *lvs_np;
 
+      if (lv_info->pool_lv && g_strcmp0 (lv_info->segtype, "vdo") == 0)
+        {
+          vdo_info = bd_lvm_vdo_info (lv_info->vg_name, lv_info->pool_lv, &error);
+          if (!vdo_info)
+            {
+              udisks_warning ("Failed to get information about VDO volume %s: %s",
+                              lv_info->lv_name, error->message);
+              g_clear_error (&error);
+            }
+        }
+
+
       update_operations (daemon, lv_name, lv_info, &needs_polling);
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume)
-        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
     }
 
   lv_list_free (lvs);

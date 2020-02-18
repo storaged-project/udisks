@@ -30,9 +30,11 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
             raise unittest.SkipTest('Udisks module for VDO tests not loaded, skipping.')
 
         if not find_executable('vdo'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('vdo executable not foundin $PATH, skipping.')
 
         if not BlockDev.utils_have_kernel_module('kvdo'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('VDO kernel module not available, skipping.')
 
     def setUp(self):

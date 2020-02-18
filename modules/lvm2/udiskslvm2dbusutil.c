@@ -177,3 +177,42 @@ udisks_object_peek_logical_volume (UDisksObject *object)
   g_object_unref (ret);
   return UDISKS_LOGICAL_VOLUME (ret);
 }
+
+/**
+ * udisks_object_get_vdo_volume:
+ * @object: A #UDisksObject.
+ *
+ * Gets the #UDisksVDOVolume instance for the D-Bus interface <link linkend="gdbus-interface-org-freedesktop-UDisks2-LogicalVolume.top_of_page">org.freedesktop.UDisks2.LogicalVolume</link> on @object, if any.
+ *
+ * Returns: (transfer full): A #UDisksVDOVolume that must be freed with g_object_unref() or %NULL if @object does not implement the interface.
+ */
+UDisksVDOVolume *
+udisks_object_get_vdo_volume (UDisksObject *object)
+{
+  GDBusInterface *ret;
+  ret = g_dbus_object_get_interface (G_DBUS_OBJECT (object), "org.freedesktop.UDisks2.VDOVolume");
+  if (ret == NULL)
+    return NULL;
+  return UDISKS_VDO_VOLUME (ret);
+}
+
+/**
+ * udisks_object_peek_vdo_volume: (skip)
+ * @object: A #UDisksObject.
+ *
+ * Like udisks_object_get_vdo_volume() but doesn't increase the reference count on the returned object.
+ *
+ * <warning>It is not safe to use the returned object if you are on another thread than the one where the #GDBusObjectManagerClient or #GDBusObjectManagerServer for @object is running.</warning>
+ *
+ * Returns: (transfer none): A #UDisksVDOVolume or %NULL if @object does not implement the interface. Do not free the returned object, it is owned by @object.
+ */
+UDisksVDOVolume *
+udisks_object_peek_vdo_volume (UDisksObject *object)
+{
+  GDBusInterface *ret;
+  ret = g_dbus_object_get_interface (G_DBUS_OBJECT (object), "org.freedesktop.UDisks2.VDOVolume");
+  if (ret == NULL)
+    return NULL;
+  g_object_unref (ret);
+  return UDISKS_VDO_VOLUME (ret);
+}

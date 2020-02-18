@@ -199,7 +199,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
   udisks_logical_volume_set_metadata_allocated_ratio (iface, lv_info->metadata_percent / 100.0);
 
   pool_objpath = "/";
-  if (lv_info->pool_lv)
+  if (lv_info->pool_lv && g_strcmp0 (lv_info->segtype, "thin") == 0)
     {
       UDisksLinuxLogicalVolumeObject *pool_object = udisks_linux_volume_group_object_find_logical_volume_object (group_object, lv_info->pool_lv);
       if (pool_object)

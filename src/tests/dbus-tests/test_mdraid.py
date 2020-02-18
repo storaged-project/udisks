@@ -33,9 +33,6 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
     chunk_size = 0
 
     def setUp(self):
-        if self.distro == ("fedora", "25"):
-            self.skipTest("Skipping hanging MD RAID tests on Fedora 25")
-
         if len(self.vdevs) < self.min_members:
             raise ValueError('Not enough members for %s' % self.level)
 

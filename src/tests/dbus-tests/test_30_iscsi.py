@@ -30,6 +30,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
         if not cls.check_module_loaded('ISCSI.Initiator'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for iscsi tests not loaded, skipping.')
 
     def _force_lougout(self, target):

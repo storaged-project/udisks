@@ -72,6 +72,24 @@ gboolean lvcreate_thin_job_func (UDisksThreadedJob  *job,
     return bd_lvm_thlvcreate (data->vg_name, data->pool_name, data->new_lv_name, data->new_lv_size, NULL /* extra_args */, error);
 }
 
+gboolean lvcreate_vdo_job_func (UDisksThreadedJob  *job,
+                                 GCancellable       *cancellable,
+                                 gpointer            user_data,
+                                 GError            **error)
+{
+    LVJobData *data = user_data;
+    BDLVMVDOWritePolicy policy;
+
+    policy = bd_lvm_get_vdo_write_policy_from_str (data->write_policy, error);
+    if (policy == BD_LVM_VDO_WRITE_POLICY_UNKNOWN)
+        return FALSE;
+
+    return bd_lvm_vdo_pool_create (data->vg_name, data->new_lv_name, data->pool_name, data->new_lv_size,
+                                   data->virtual_size, data->index_memory, data->compression, data->deduplication,
+                                   policy, NULL /* extra_args */, error);
+
+}
+
 gboolean lvremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -163,6 +181,30 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
 {
     LVJobData *data = user_data;
     return bd_lvm_cache_detach (data->vg_name, data->lv_name, data->destroy, NULL /* extra_args */, error);
+}
+
+gboolean lv_vdo_compression_job_func (UDisksThreadedJob  *job,
+                                      GCancellable       *cancellable,
+                                      gpointer            user_data,
+                                      GError            **error)
+{
+    LVJobData *data = user_data;
+    if (data->compression)
+        return bd_lvm_vdo_enable_compression (data->vg_name, data->lv_name, NULL /* extra_args */, error);
+    else
+        return bd_lvm_vdo_disable_compression (data->vg_name, data->lv_name, NULL /* extra_args */, error);
+}
+
+gboolean lv_vdo_deduplication_job_func (UDisksThreadedJob  *job,
+                                        GCancellable       *cancellable,
+                                        gpointer            user_data,
+                                        GError            **error)
+{
+    LVJobData *data = user_data;
+    if (data->deduplication)
+        return bd_lvm_vdo_enable_deduplication (data->vg_name, data->lv_name, NULL /* extra_args */, error);
+    else
+        return bd_lvm_vdo_disable_deduplication (data->vg_name, data->lv_name, NULL /* extra_args */, error);
 }
 
 gboolean vgcreate_job_func (UDisksThreadedJob  *job,

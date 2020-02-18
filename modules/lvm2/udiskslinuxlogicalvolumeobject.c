@@ -39,6 +39,7 @@
 #include "udiskslinuxvolumegroupobject.h"
 #include "udiskslinuxlogicalvolumeobject.h"
 #include "udiskslinuxlogicalvolume.h"
+#include "udiskslinuxvdovolume.h"
 
 #include "udisks-lvm2-generated.h"
 
@@ -66,6 +67,7 @@ struct _UDisksLinuxLogicalVolumeObject
   UDisksLinuxVolumeGroupObject *volume_group;
 
   UDisksLogicalVolume *iface_logical_volume;
+  UDisksVDOVolume *iface_vdo_volume;
 };
 
 struct _UDisksLinuxLogicalVolumeObjectClass
@@ -92,6 +94,9 @@ udisks_linux_logical_volume_object_finalize (GObject *_object)
 
   if (object->iface_logical_volume != NULL)
     g_object_unref (object->iface_logical_volume);
+
+  if (object->iface_vdo_volume != NULL)
+    g_object_unref (object->iface_vdo_volume);
 
   g_free (object->name);
 
@@ -180,6 +185,8 @@ udisks_linux_logical_volume_object_constructed (GObject *_object)
   object->iface_logical_volume = udisks_linux_logical_volume_new ();
   g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object),
                                         G_DBUS_INTERFACE_SKELETON (object->iface_logical_volume));
+
+  object->iface_vdo_volume = NULL;
 }
 
 static void
@@ -296,6 +303,7 @@ void
 udisks_linux_logical_volume_object_update (UDisksLinuxLogicalVolumeObject *object,
                                            BDLVMLVdata *lv_info,
                                            BDLVMLVdata *meta_lv_info,
+                                           BDLVMVDOPooldata *vdo_info,
                                            gboolean *needs_polling_ret)
 {
   g_return_if_fail (UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT (object));
@@ -304,6 +312,20 @@ udisks_linux_logical_volume_object_update (UDisksLinuxLogicalVolumeObject *objec
                                       object->volume_group,
                                       lv_info, meta_lv_info,
                                       needs_polling_ret);
+
+  if (vdo_info)
+    {
+      if (object->iface_vdo_volume == NULL)
+        {
+          object->iface_vdo_volume = udisks_linux_vdo_volume_new ();
+          g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object),
+                                                G_DBUS_INTERFACE_SKELETON (object->iface_vdo_volume));
+        }
+      udisks_linux_vdo_volume_update (UDISKS_LINUX_VDO_VOLUME (object->iface_vdo_volume),
+                                      object->volume_group,
+                                      lv_info,
+                                      vdo_info);
+    }
 }
 
 void

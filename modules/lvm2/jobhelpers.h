@@ -36,10 +36,15 @@ typedef struct {
   const gchar *new_lv_name;
   const gchar *pool_name;
   guint64 new_lv_size;
+  guint64 virtual_size;
   guint64 extent_size;
   gboolean resize_fs;
   gboolean force;
   gboolean destroy;
+  gboolean deduplication;
+  gboolean compression;
+  guint64 index_memory;
+  const gchar *write_policy;
 } LVJobData;
 
 typedef struct {
@@ -72,6 +77,11 @@ gboolean lvcreate_thin_job_func (UDisksThreadedJob  *job,
                                  GCancellable       *cancellable,
                                  gpointer            user_data,
                                  GError            **error);
+
+gboolean lvcreate_vdo_job_func (UDisksThreadedJob  *job,
+                                GCancellable       *cancellable,
+                                gpointer            user_data,
+                                GError            **error);
 
 gboolean lvremove_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
@@ -113,6 +123,15 @@ gboolean lvcache_detach_job_func (UDisksThreadedJob  *job,
                                   gpointer            user_data,
                                   GError            **error);
 
+gboolean lv_vdo_compression_job_func (UDisksThreadedJob  *job,
+                                      GCancellable       *cancellable,
+                                      gpointer            user_data,
+                                      GError            **error);
+
+gboolean lv_vdo_deduplication_job_func (UDisksThreadedJob  *job,
+                                        GCancellable       *cancellable,
+                                        gpointer            user_data,
+                                        GError            **error);
 
 gboolean vgcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
