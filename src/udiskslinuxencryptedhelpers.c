@@ -95,8 +95,7 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
 
-  // We always use the veracrypt option, because it can
-  // unlock both VeraCrypt and legacy TrueCrypt volumes
+  /* We always use the veracrypt option, because it can unlock both VeraCrypt and legacy TrueCrypt volumes */
   gboolean  veracrypt = TRUE;
 
   return bd_crypto_tc_open_full (data->device, data->map_name,

@@ -126,7 +126,7 @@ gboolean take_filesystem_ownership (const gchar *device,
               goto out;
             }
           else
-            unmount = TRUE;  // unmount during cleanup
+            unmount = TRUE;  /* unmount during cleanup */
         }
     }
 

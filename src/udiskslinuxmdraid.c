@@ -477,8 +477,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                 }
               else
                 {
-                  // g_variant_new() doesn't like NULL pointers for empty
-                  // arrays
+                  /* g_variant_new() doesn't like NULL pointers for empty arrays */
                   member_state_elements = g_new0 (gchar*, 1);
                 }
 

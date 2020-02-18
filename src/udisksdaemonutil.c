@@ -1129,7 +1129,7 @@ udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
                                         pid_t                   *out_pid,
                                         GError                 **error)
 {
-  // "GetConnectionUnixProcessID"
+  /* "GetConnectionUnixProcessID" */
 
   /* TODO: cache this on @daemon */
   /* NOTE: pid_t is a signed 32 bit, but the

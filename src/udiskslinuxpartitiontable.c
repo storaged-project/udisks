@@ -418,12 +418,12 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   overlapping_part = bd_part_get_part_by_pos (device_name, offset, &error);
   if (overlapping_part != NULL && ! (overlapping_part->type & BD_PART_TYPE_FREESPACE))
     {
-      // extended partition or metadata of the extended partition
+      /* extended partition or metadata of the extended partition */
       if (overlapping_part->type & BD_PART_TYPE_EXTENDED || overlapping_part->type & (BD_PART_TYPE_LOGICAL | BD_PART_TYPE_METADATA))
         {
           if (overlapping_part->start == offset)
             {
-              // just add 1 byte, libblockdev will adjust it
+              /* just add 1 byte, libblockdev will adjust it */
               offset += 1;
               udisks_warning ("Requested start of the logical partition overlaps "
                               "with extended partition metadata. Start of the "
@@ -432,7 +432,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
       else
         {
-          // overlapping partition is not a free space nor an extended part -> error
+          /* overlapping partition is not a free space nor an extended part -> error */
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Requested start for the new partition %"G_GUINT64_FORMAT" "
                                                  "overlaps with existing partition %s.",

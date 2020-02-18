@@ -289,7 +289,7 @@ udisks_utab_monitor_constructed (GObject *object)
   UDisksUtabMonitor *monitor = UDISKS_UTAB_MONITOR (object);
 
   monitor->mn = mnt_new_monitor();
-  // Monitor only changes in /run/mount/utab
+  /* Monitor only changes in /run/mount/utab */
   mnt_monitor_enable_userspace (monitor->mn, TRUE, NULL);
 
   monitor->utab_channel = g_io_channel_unix_new (mnt_monitor_get_fd (monitor->mn));
