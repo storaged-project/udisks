@@ -42,6 +42,7 @@
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
 #include "udisksconfigmanager.h"
+#include "udiskslinuxmountoptions.h"
 
 #ifdef HAVE_LIBMOUNT_UTAB
 #include "udisksutabmonitor.h"
@@ -388,6 +389,12 @@ udisks_daemon_constructed (GObject *object)
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
+
+  /* fill in default mount options */
+  g_object_set_data_full (object,
+                          "mount-options",
+                          udisks_linux_mount_options_get_builtin (),
+                          (GDestroyNotify) g_hash_table_destroy);
 
   if (daemon->force_load_modules
       || (udisks_config_manager_get_load_preference (daemon->config_manager)

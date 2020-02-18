@@ -270,12 +270,9 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   fsmo_any = g_malloc0 (sizeof (FSMountOptions));
 
   /* Builtin options, two-level hashtable */
-  /* TODO: use cached value and take reference to it */
-  builtin_opts = udisks_linux_mount_options_get_builtin ();
+  builtin_opts = g_object_get_data (G_OBJECT (daemon), "mount-options");
   g_return_val_if_fail (builtin_opts != NULL, NULL);
-
   compute_block_level_mount_options (builtin_opts, block, fstype, fsmo, fsmo_any);
-  g_hash_table_unref (builtin_opts);
 
   /* Global config file overrides, two-level hashtable */
   config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
