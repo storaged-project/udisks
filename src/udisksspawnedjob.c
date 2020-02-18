@@ -1032,6 +1032,8 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
     }
 
   job->child_stdout_channel = g_io_channel_unix_new (job->child_stdout_fd);
+  /* we want to read binary, suppress checking the encoding: */
+  g_io_channel_set_encoding (job->child_stdout_channel, NULL, NULL);
   g_io_channel_set_flags (job->child_stdout_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stdout_source = g_io_create_watch (job->child_stdout_channel, G_IO_IN);
 #if __GNUC__ >= 8
@@ -1050,6 +1052,8 @@ void udisks_spawned_job_start (UDisksSpawnedJob *job)
   g_source_unref (job->child_stdout_source);
 
   job->child_stderr_channel = g_io_channel_unix_new (job->child_stderr_fd);
+  /* we want to read binary, suppress checking the encoding: */
+  g_io_channel_set_encoding (job->child_stderr_channel, NULL, NULL);
   g_io_channel_set_flags (job->child_stderr_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stderr_source = g_io_create_watch (job->child_stderr_channel, G_IO_IN);
 #if __GNUC__ >= 8
