@@ -46,7 +46,6 @@ static GMainLoop *loop = NULL;
  * inspect this file
  */
 /* #define COMPLETION_DEBUG */
-//#define COMPLETION_DEBUG
 
 /* ---------------------------------------------------------------------------------------------------- */
 

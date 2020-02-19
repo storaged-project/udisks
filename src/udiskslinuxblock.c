@@ -2635,9 +2635,9 @@ walk_block (UDisksDaemon  *daemon,
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
   if (object != NULL)
     {
-      // Recurse for all primary and extended partitions if this is a
-      // partition table, or for all logical partitions if this is a
-      // extended partition.
+      /* Recurse for all primary and extended partitions if this is a
+       * partition table, or for all logical partitions if this is a
+       * extended partition. */
 
       UDisksPartitionTable *table;
       gboolean is_container;

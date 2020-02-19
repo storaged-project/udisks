@@ -457,7 +457,7 @@ update_block (UDisksLinuxBlockObject       *block_object,
   if (block == NULL)
     return;
 
-  // XXX - move this elsewhere?
+  /* XXX - move this elsewhere? */
   {
     UDisksLinuxDevice *device;
     UDisksLinuxLogicalVolumeObject *lv_object;
