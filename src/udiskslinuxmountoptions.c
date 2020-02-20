@@ -708,6 +708,8 @@ is_uid_in_gid (uid_t uid,
   return FALSE;
 }
 
+#define VARIANT_NULL_STRING  "\1"
+
 static gboolean
 is_mount_option_allowed (const FSMountOptions *fsmo,
                          const gchar          *option,
@@ -780,20 +782,19 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
   return FALSE;
 }
 
-static GHashTable *
+static GVariant *
 prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t                 caller_uid,
                                GVariant             *given_options,
                                gboolean              shared_fs)
 {
-  GHashTable *options;
+  GVariantBuilder builder;
   gint n;
   gchar *s;
   gid_t gid;
   const gchar *option_string;
 
-  options = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                   g_free, g_free);
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ss}"));
   if (fsmo != NULL)
     {
       gchar **defaults = fsmo->defaults;
@@ -810,14 +811,16 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
               if (strncmp (option, "uid", opt_len) == 0)
                 {
                   s = g_strdup_printf ("%u", caller_uid);
-                  g_hash_table_insert (options, g_strdup ("uid"), s);
+                  g_variant_builder_add (&builder, "{ss}", "uid", s);
+                  g_free (s);
                 }
               else if (strncmp (option, "gid", opt_len) == 0)
                 {
                   if (udisks_daemon_util_get_user_info (caller_uid, &gid, NULL, NULL))
                     {
                       s = g_strdup_printf ("%u", gid);
-                      g_hash_table_insert (options, g_strdup ("gid"), s);
+                      g_variant_builder_add (&builder, "{ss}", "gid", s);
+                      g_free (s);
                     }
                 }
               else if (shared_fs && strncmp (option, "mode", opt_len) == 0)
@@ -833,22 +836,25 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                      digits are ordered naturally in the ASCII table) */
                   shared_mode[2] = MAX(shared_mode[1] - 2, '4');
                   shared_mode[3] = MAX(shared_mode[1] - 2, '4');
-                  g_hash_table_insert (options, g_strdup("mode"), shared_mode);
+                  g_variant_builder_add (&builder, "{ss}", "mode", shared_mode);
+                  g_free (shared_mode);
                 }
               else if (shared_fs && strncmp (option, "dmode", opt_len) == 0)
                 {
                   /* see right above */
                   /* Does any other dmode than 0555 make sense for a FS mounted
                      at a shared location?  */
-                  g_hash_table_insert (options, g_strdup("dmode"), g_strdup ("0555"));
+                  g_variant_builder_add (&builder, "{ss}", "dmode", "0555");
                 }
               else
                 {
-                  g_hash_table_insert (options, g_strndup (option, opt_len), g_strdup (value));
+                  s = g_strndup (option, opt_len);
+                  g_variant_builder_add (&builder, "{ss}", s, value);
+                  g_free (s);
                 }
             }
           else
-            g_hash_table_insert (options, g_strdup (option), NULL);
+            g_variant_builder_add (&builder, "{ss}", option, VARIANT_NULL_STRING);
         }
     }
 
@@ -867,16 +873,20 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
             {
               const gchar *value = eq + 1;
               gsize opt_len = eq - option;
-              g_hash_table_insert (options, g_strndup (option, opt_len), g_strdup (value));
-              g_free (option);
+
+              s = g_strndup (option, opt_len);
+              g_variant_builder_add (&builder, "{ss}", s, value);
+              g_free (s);
             }
           else
-            g_hash_table_insert (options, option, NULL); /* steals 'option' */
+            g_variant_builder_add (&builder, "{ss}", option, VARIANT_NULL_STRING);
+
+          g_free (option);
         }
       g_free (split_option_string);
     }
 
-  return options;
+  return g_variant_builder_end (&builder);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -904,8 +914,8 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
                                       GError       **error)
 {
   FSMountOptions *fsmo;
-  GHashTable *options_to_use = NULL;
-  GHashTableIter iter;
+  GVariant *options_to_use;
+  GVariantIter iter;
   UDisksLinuxBlockObject *object = NULL;
   UDisksLinuxDevice *device = NULL;
   gboolean shared_fs = FALSE;
@@ -936,9 +946,12 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
 
   /* validate mount options */
   str = g_string_new ("uhelper=udisks2,nodev,nosuid");
-  g_hash_table_iter_init (&iter, options_to_use);
-  while (g_hash_table_iter_next (&iter, (gpointer*) &key, (gpointer*) &value))
+  g_variant_iter_init (&iter, options_to_use);
+  while (g_variant_iter_next (&iter, "{&s&s}", &key, &value))
     {
+      /* GVariant doesn't handle NULL strings gracefully */
+      if (g_str_equal (value, VARIANT_NULL_STRING))
+        value = NULL;
       /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
       if (strstr (key, ",") != NULL)
         {
@@ -983,7 +996,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   options_to_use_str = g_string_free (str, FALSE);
 
  out:
-  g_hash_table_destroy (options_to_use);
+  g_variant_unref (options_to_use);
   free_fs_mount_options (fsmo);
 
   g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
