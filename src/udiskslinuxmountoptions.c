@@ -716,62 +716,80 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                          const gchar          *value,
                          uid_t                 caller_uid)
 {
-  int n;
   gchar *endp;
   uid_t uid;
   gid_t gid;
+  gchar *s;
 
-  /* first run through the allowed mount options */
-  if (fsmo && fsmo->allow)
+  /* match the exact option=value string within allowed options */
+  if (fsmo && fsmo->allow && value && strlen (value) > 0)
     {
-      if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
+      s = g_strdup_printf ("%s=%s", option, value);
+      if (g_strv_contains ((const gchar * const *) fsmo->allow, s))
         {
-          /* make sure it's not in allow_uid_self[] or allow_gid_self[] */
-          if ((!fsmo->allow_uid_self || !g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option)) &&
-              (!fsmo->allow_gid_self || !g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option)))
-            return TRUE;
+          g_free (s);
+          /* not checking whether the option is in UID/GID_self as
+           * this is what was explicitly allowed by sysadmin (overrides) */
+          return TRUE;
         }
+      g_free (s);
     }
 
   /* .. then check for mount options where the caller is allowed to pass
    * in his own uid
    */
-  if (fsmo != NULL && value != NULL)
+  if (fsmo && fsmo->allow_uid_self &&
+      g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option))
     {
-      for (n = 0; fsmo->allow_uid_self != NULL && fsmo->allow_uid_self[n] != NULL; n++)
+      if (value == NULL || strlen (value) == 0)
         {
-          const gchar *r_mount_option = fsmo->allow_uid_self[n];
-          if (g_strcmp0 (option, r_mount_option) == 0)
-            {
-              uid = strtol (value, &endp, 10);
-              if (*endp != '\0')
-                continue;
-              if (uid == caller_uid)
-                {
-                  return TRUE;
-                }
-            }
+          udisks_warning ("is_mount_option_allowed: option '%s' is listed within allow_uid_self but has no value",
+                          option);
+          return FALSE;
         }
+      uid = strtol (value, &endp, 10);
+      if (*endp != '\0')
+        /* malformed value string */
+        return FALSE;
+      return (uid == caller_uid);
     }
 
   /* .. ditto for gid
    */
-  if (fsmo != NULL && value != NULL)
+  if (fsmo && fsmo->allow_gid_self &&
+      g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option))
     {
-      for (n = 0; fsmo->allow_gid_self != NULL && fsmo->allow_gid_self[n] != NULL; n++)
+      if (value == NULL || strlen (value) == 0)
         {
-          const gchar *r_mount_option = fsmo->allow_gid_self[n];
-          if (g_strcmp0 (option, r_mount_option) == 0)
-            {
-              gid = strtol (value, &endp, 10);
-              if (*endp != '\0')
-                continue;
-              if (is_uid_in_gid (caller_uid, gid))
-                {
-                  return TRUE;
-                }
-            }
+          udisks_warning ("is_mount_option_allowed: option '%s' is listed within allow_gid_self but has no value",
+                          option);
+          return FALSE;
         }
+      gid = strtol (value, &endp, 10);
+      if (*endp != '\0')
+        /* malformed value string */
+        return FALSE;
+      return is_uid_in_gid (caller_uid, gid);
+    }
+
+  /* the above UID/GID checks also assure that none of the options
+   * would be checked again against the _allow array */
+
+  /* match within allowed mount options */
+  if (fsmo && fsmo->allow)
+    {
+      /* check for 'option=' */
+      s = g_strdup_printf ("%s=", option);
+      if (g_strv_contains ((const gchar * const *) fsmo->allow, s))
+        {
+          g_free (s);
+          return TRUE;
+        }
+      g_free (s);
+
+      /* simple 'option' match */
+      if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
+        return TRUE;
     }
 
   if (g_str_has_prefix (option, "x-"))
@@ -808,8 +826,22 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
             {
               const gchar *value = eq + 1;
               gsize opt_len = eq - option;
+
+              if (value && strlen (value) > 0 && fsmo->allow)
+                {
+                  /* check that 'option=value' is explicitly allowed */
+                  if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
+                    {
+                      s = g_strndup (option, opt_len);
+                      g_variant_builder_add (&builder, "{ss}", s, value);
+                      g_free (s);
+                      continue;
+                    }
+                }
+
               if (strncmp (option, "uid", opt_len) == 0)
                 {
+                  /* append caller UID */
                   s = g_strdup_printf ("%u", caller_uid);
                   g_variant_builder_add (&builder, "{ss}", "uid", s);
                   g_free (s);
