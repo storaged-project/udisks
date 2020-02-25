@@ -234,7 +234,8 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
         udisks_block_set_id_type (block, "crypto_TCRYPT");
     }
 
-  update_metadata_size (encrypted, object);
+  if (udisks_linux_block_is_luks (block))
+    update_metadata_size (encrypted, object);
 
   udisks_linux_block_encrypted_unlock (block);
 }
@@ -357,8 +358,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
   const gchar *keyfiles[MAX_TCRYPT_KEYFILES] = {};
   CryptoJobData data;
   gboolean is_luks;
+  gboolean is_bitlk;
   gboolean handle_as_tcrypt;
   void *open_func;
+  const gchar *uuid = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -371,6 +374,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
   is_luks = udisks_linux_block_is_luks (block);
+  is_bitlk = udisks_linux_block_is_bitlk (block);
   handle_as_tcrypt = udisks_linux_block_is_tcrypt (block) || udisks_linux_block_is_unknown_crypto (block);
 
   udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -406,12 +410,12 @@ handle_unlock (UDisksEncrypted        *encrypted,
    */
 
   /* Fail if the device is not a LUKS or possible TCRYPT device */
-  if (!(is_luks || handle_as_tcrypt))
+  if (!(is_luks || is_bitlk || handle_as_tcrypt))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Device %s does not appear to be a LUKS or TCRYPT device",
+                                             "Device %s does not appear to be a LUKS, BITLK or TCRYPT device",
                                              udisks_block_get_device (block));
       goto out;
     }
@@ -519,6 +523,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
   else {
     if (is_luks)
       name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
+    else if (is_bitlk)
+      {
+        uuid = udisks_block_get_id_uuid (block);
+        if (uuid && g_strcmp0 (uuid, "") != 0)
+          name = g_strdup_printf ("bitlk-%s", uuid);
+        else
+          name = g_strdup_printf ("bitlk-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
+      }
     else
       /* TCRYPT devices don't have a UUID, so we use the device number instead */
       name = g_strdup_printf ("tcrypt-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
@@ -532,6 +544,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
    * update triggered by the unlock. */
   if (is_luks)
     udisks_encrypted_set_hint_encryption_type (encrypted, "LUKS");
+  else if (is_bitlk)
+    udisks_encrypted_set_hint_encryption_type (encrypted, "BITLK");
   else
     udisks_encrypted_set_hint_encryption_type (encrypted, "TCRYPT");
 
@@ -552,6 +566,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   if (is_luks)
     open_func = luks_open_job_func;
+  else if (is_bitlk)
+    open_func = bitlk_open_job_func;
   else
     open_func = tcrypt_open_job_func;
 
@@ -663,6 +679,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
   gchar *cleartext_path = NULL;
   void *close_func;
   gboolean is_luks;
+  gboolean is_bitlk;
   gboolean handle_as_tcrypt;
 
   object = udisks_daemon_util_dup_object (encrypted, error);
@@ -676,6 +693,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
   is_luks = udisks_linux_block_is_luks (block);
+  is_bitlk = udisks_linux_block_is_bitlk (block);
   handle_as_tcrypt = udisks_linux_block_is_tcrypt (block) || udisks_linux_block_is_unknown_crypto (block);
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
@@ -684,12 +702,12 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
    */
 
   /* Fail if the device is not a LUKS or possible TCRYPT device */
-  if (!(is_luks || handle_as_tcrypt))
+  if (!(is_luks || is_bitlk || handle_as_tcrypt))
     {
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
-                   "Device %s does not appear to be a LUKS or TCRYPT device",
+                   "Device %s does not appear to be a LUKS, BITLK or TCRYPT device",
                    udisks_block_get_device (block));
       ret = FALSE;
       goto out;
@@ -764,6 +782,8 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
 
   if (is_luks)
     close_func = luks_close_job_func;
+  else if (is_bitlk)
+    close_func = bitlk_close_job_func;
   else
     close_func = tcrypt_close_job_func;
 

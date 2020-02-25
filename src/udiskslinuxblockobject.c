@@ -801,6 +801,7 @@ encrypted_check (UDisksObject *object)
 
   return udisks_linux_block_is_luks (block) ||
          udisks_linux_block_is_tcrypt (block) ||
+         udisks_linux_block_is_bitlk (block) ||
          udisks_linux_block_is_unknown_crypto (block);
 }
 
