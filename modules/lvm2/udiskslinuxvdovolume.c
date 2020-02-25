@@ -430,6 +430,85 @@ out:
   return TRUE;
 }
 
+static void
+stats_add_element (const gchar *key, const gchar *value, GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{ss}", key, value);
+}
+
+static gboolean
+handle_get_statistics (UDisksVDOVolume       *_volume,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *options)
+{
+  const gchar *pool_path = NULL;
+  UDisksObject *pool_object = NULL;
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  UDisksLinuxVolumeGroupObject *group_object = NULL;
+  GError *error = NULL;
+  UDisksDaemon *daemon = NULL;
+  GHashTable *stats = NULL;
+  GVariantBuilder builder;
+  const gchar *pool_name = NULL;
+  const gchar *vg_name = NULL;
+
+  object = udisks_daemon_util_dup_object (_volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  vg_name = udisks_linux_volume_group_object_get_name (group_object);
+
+  pool_path = udisks_vdo_volume_get_vdo_pool (_volume);
+  if (pool_path == NULL || g_strcmp0 (pool_path, "/") == 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Failed to get VDO pool path.");
+      goto out;
+    }
+
+  daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  pool_object = udisks_daemon_find_object (daemon, pool_path);
+  if (pool_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Failed to get VDO pool object.");
+      goto out;
+    }
+
+  pool_name = udisks_linux_logical_volume_object_get_name (UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (pool_object));
+
+  stats = bd_lvm_vdo_get_stats_full (vg_name, pool_name, &error);
+  if (stats == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error retrieving volume statistics: %s",
+                                             error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ss}"));
+  g_hash_table_foreach (stats, (GHFunc) stats_add_element, &builder);
+
+  udisks_vdo_volume_complete_get_statistics (_volume, invocation, g_variant_builder_end (&builder));
+  g_hash_table_destroy (stats);
+
+out:
+  g_clear_object (&object);
+  g_clear_object (&pool_object);
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -439,4 +518,5 @@ vdo_volume_iface_init (UDisksVDOVolumeIface *iface)
   iface->handle_enable_deduplication = handle_enable_deduplication;
   iface->handle_resize_logical = handle_resize_logical;
   iface->handle_resize_physical = handle_resize_physical;
+  iface->handle_get_statistics = handle_get_statistics;
 }
