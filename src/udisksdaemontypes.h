@@ -210,6 +210,13 @@ struct _UDisksLinuxDevice;
 typedef struct _UDisksLinuxDevice UDisksLinuxDevice;
 
 /**
+ * UDISKS_DEFAULT_WAIT_TIMEOUT:
+ *
+ * Default timeout in seconds to wait for an object or uevent.
+ */
+#define UDISKS_DEFAULT_WAIT_TIMEOUT 20  /* seconds */
+
+/**
  * UDisksObjectHasInterfaceFunc:
  * @object: A #UDisksObject to consider.
  *
