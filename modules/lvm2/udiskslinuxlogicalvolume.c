@@ -483,7 +483,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
                                                          wait_for_logical_volume_object,
                                                          &wait_data,
                                                          NULL,
-                                                         10, /* timeout_seconds */
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error))
     {
       g_prefix_error (&error,
@@ -533,7 +533,7 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
                                                       wait_for_logical_volume_object,
                                                       &data,
                                                       NULL,
-                                                      10, /* timeout_seconds */
+                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                       error);
   if (volume_object == NULL)
     return NULL;
@@ -748,7 +748,7 @@ handle_activate (UDisksLogicalVolume *_volume,
                                                      wait_for_logical_volume_block_object,
                                                      object,
                                                      NULL,
-                                                     10, /* timeout_seconds */
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
   if (block_object == NULL)
     {
@@ -815,7 +815,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
                                                          wait_for_logical_volume_block_object,
                                                          object,
                                                          NULL,
-                                                         10, /* timeout_seconds */
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error))
     {
       g_prefix_error (&error,

@@ -376,7 +376,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                                                      wait_for_volume_group_object,
                                                      (gpointer) arg_name,
                                                      NULL,
-                                                     10, /* timeout_seconds */
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
   if (group_object == NULL)
     {

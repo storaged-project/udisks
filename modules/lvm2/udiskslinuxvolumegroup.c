@@ -433,7 +433,7 @@ handle_rename (UDisksVolumeGroup     *_group,
                                                      wait_for_volume_group_object,
                                                      (gpointer) new_name,
                                                      NULL,
-                                                     10, /* timeout_seconds */
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
   if (group_object == NULL)
     {
@@ -791,7 +791,7 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
                                                       wait_for_logical_volume_object,
                                                       &data,
                                                       NULL,
-                                                      10, /* timeout_seconds */
+                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                       error);
   if (volume_object == NULL)
     return NULL;
