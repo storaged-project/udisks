@@ -176,7 +176,7 @@ handle_logout_interface (UDisksISCSISession    *session,
                                                         wait_for_iscsi_object,
                                                         g_strdup (name),
                                                         g_free,
-                                                        15, /* timeout_seconds */
+                                                        UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                         &error))
     {
       g_prefix_error (&error, "Error waiting for iSCSI device to disappear: ");
@@ -188,7 +188,7 @@ handle_logout_interface (UDisksISCSISession    *session,
                                                         wait_for_iscsi_session_object,
                                                         g_strdup (name),
                                                         g_free,
-                                                        15, /* timeout_seconds */
+                                                        UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                         &error))
     {
       g_prefix_error (&error, "Error waiting for iSCSI session object to disappear: ");
