@@ -322,7 +322,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
                                                    wait_for_vdo_object,
                                                    (gpointer) arg_name,
                                                    NULL,
-                                                   10, /* timeout_seconds */
+                                                   UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                    &error);
   if (vdo_object == NULL)
     {
@@ -438,7 +438,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
                                                wait_for_vdo_object,
                                                (gpointer) arg_name,
                                                NULL,
-                                               10, /* timeout_seconds */
+                                               UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                &error);
   if (object == NULL)
     {
