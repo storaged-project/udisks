@@ -175,8 +175,11 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         dbus_cont = self.get_property(log_part, '.Partition', 'IsContained')
         dbus_cont.assertTrue()
 
+        dbus_offset = self.get_property(log_part, '.Partition', 'Offset')
+        dbus_size = self.get_property(log_part, '.Partition', 'Size')
+
         # create one more logical partition
-        log_path2 = disk.CreatePartition(dbus.UInt64(51 * 1024**2), dbus.UInt64(50 * 1024**2), '', '',
+        log_path2 = disk.CreatePartition(dbus.UInt64(dbus_offset.value + dbus_size.value), dbus.UInt64(50 * 1024**2), '', '',
                                          log_options, dbus_interface=self.iface_prefix + '.PartitionTable')
         self.udev_settle()
 
