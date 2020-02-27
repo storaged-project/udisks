@@ -339,7 +339,7 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
 
 /* transfer-full */
 static gchar **
-parse_mount_options_string (const gchar *str)
+parse_mount_options_string (const gchar *str, gboolean strip_empty_values)
 {
   GPtrArray *opts;
   char *optstr;
@@ -359,7 +359,7 @@ parse_mount_options_string (const gchar *str)
     {
       gchar *opt;
 
-      if (value == NULL)
+      if (value == NULL || (strip_empty_values && valuesz == 0))
         {
           opt = g_strndup (name, namesz);
         }
@@ -435,7 +435,9 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
       g_hash_table_replace (mount_options, g_strdup (fs_type), ent);
     }
 
-  opts = parse_mount_options_string (value);
+  opts = parse_mount_options_string (value,
+                                     /* strip empty values for _allow groups for easier matching */
+                                     !g_str_equal (group, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS));
 
 #define ASSIGN_OPTS(g,p) \
   if (g_str_equal (group, g)) \
@@ -778,15 +780,6 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
   /* match within allowed mount options */
   if (fsmo && fsmo->allow)
     {
-      /* check for 'option=' */
-      s = g_strdup_printf ("%s=", option);
-      if (g_strv_contains ((const gchar * const *) fsmo->allow, s))
-        {
-          g_free (s);
-          return TRUE;
-        }
-      g_free (s);
-
       /* simple 'option' match */
       if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
         return TRUE;
@@ -825,37 +818,31 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
           if (eq != NULL)
             {
               const gchar *value = eq + 1;
-              gsize opt_len = eq - option;
+              gchar *option_name = g_strndup (option, eq - option);
 
-              if (value && strlen (value) > 0 && fsmo->allow)
+              /* check that 'option=value' is explicitly allowed */
+              if (value && strlen (value) > 0 && fsmo->allow &&
+                  g_strv_contains ((const gchar * const *) fsmo->allow, option))
                 {
-                  /* check that 'option=value' is explicitly allowed */
-                  if (g_strv_contains ((const gchar * const *) fsmo->allow, option))
-                    {
-                      s = g_strndup (option, opt_len);
-                      g_variant_builder_add (&builder, "{ss}", s, value);
-                      g_free (s);
-                      continue;
-                    }
+                  g_variant_builder_add (&builder, "{ss}", option_name, value);
                 }
-
-              if (strncmp (option, "uid", opt_len) == 0)
+              else if (fsmo->allow_uid_self && g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option_name))
                 {
                   /* append caller UID */
                   s = g_strdup_printf ("%u", caller_uid);
-                  g_variant_builder_add (&builder, "{ss}", "uid", s);
+                  g_variant_builder_add (&builder, "{ss}", option_name, s);
                   g_free (s);
                 }
-              else if (strncmp (option, "gid", opt_len) == 0)
+              else if (fsmo->allow_gid_self && g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option_name))
                 {
                   if (udisks_daemon_util_get_user_info (caller_uid, &gid, NULL, NULL))
                     {
                       s = g_strdup_printf ("%u", gid);
-                      g_variant_builder_add (&builder, "{ss}", "gid", s);
+                      g_variant_builder_add (&builder, "{ss}", option_name, s);
                       g_free (s);
                     }
                 }
-              else if (shared_fs && strncmp (option, "mode", opt_len) == 0)
+              else if (shared_fs && g_str_equal (option_name, "mode"))
                 {
                   /* set different 'mode' and 'dmode' options for file systems mounted at shared
                      location (otherwise they cannot be used by anybody else so mounting them at
@@ -868,22 +855,21 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                      digits are ordered naturally in the ASCII table) */
                   shared_mode[2] = MAX(shared_mode[1] - 2, '4');
                   shared_mode[3] = MAX(shared_mode[1] - 2, '4');
-                  g_variant_builder_add (&builder, "{ss}", "mode", shared_mode);
+                  g_variant_builder_add (&builder, "{ss}", option_name, shared_mode);
                   g_free (shared_mode);
                 }
-              else if (shared_fs && strncmp (option, "dmode", opt_len) == 0)
+              else if (shared_fs && g_str_equal (option_name, "dmode"))
                 {
                   /* see right above */
                   /* Does any other dmode than 0555 make sense for a FS mounted
                      at a shared location?  */
-                  g_variant_builder_add (&builder, "{ss}", "dmode", "0555");
+                  g_variant_builder_add (&builder, "{ss}", option_name, "0555");
                 }
               else
                 {
-                  s = g_strndup (option, opt_len);
-                  g_variant_builder_add (&builder, "{ss}", s, value);
-                  g_free (s);
+                  g_variant_builder_add (&builder, "{ss}", option_name, value);
                 }
+              g_free (option_name);
             }
           else
             g_variant_builder_add (&builder, "{ss}", option, VARIANT_NULL_STRING);
