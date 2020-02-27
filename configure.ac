@@ -175,15 +175,17 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(LIBATASMART_CFLAGS)
   AC_SUBST(LIBATASMART_LIBS)
 
-  PKG_CHECK_MODULES(LIBMOUNT, [mount >= 2.30],
+  PKG_CHECK_MODULES(LIBMOUNT, [mount >= 2.18])
+  AC_SUBST(LIBMOUNT_CFLAGS)
+  AC_SUBST(LIBMOUNT_LIBS)
+
+  PKG_CHECK_MODULES(LIBMOUNT_UTAB, [mount >= 2.30],
                     [have_libmount_utab=yes],
                     [have_libmount_utab=no])
   if test "x$have_libmount_utab" = "xyes"; then
     AC_DEFINE([HAVE_LIBMOUNT_UTAB], 1, [Define to 1 if libmount utab functionality is available])
   fi
   AC_SUBST(HAVE_LIBMOUNT_UTAB)
-  AC_SUBST(LIBMOUNT_CFLAGS)
-  AC_SUBST(LIBMOUNT_LIBS)
 
   PKG_CHECK_MODULES(LIBUUID, [uuid])
   AC_SUBST(LIBUUID_CFLAGS)
