@@ -40,7 +40,7 @@ GDBusConnection          *udisks_daemon_get_connection        (UDisksDaemon    *
 GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
 UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
 UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *daemon);
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 UDisksUtabMonitor        *udisks_daemon_get_utab_monitor      (UDisksDaemon    *daemon);
 #endif
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);

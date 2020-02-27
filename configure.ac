@@ -176,12 +176,12 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(LIBATASMART_LIBS)
 
   PKG_CHECK_MODULES(LIBMOUNT, [mount >= 2.30],
-                    [have_libmount=yes],
-                    [have_libmount=no])
-  if test "x$have_libmount" = "xyes"; then
-    AC_DEFINE([HAVE_LIBMOUNT], 1, [Define to 1 if libmount >= 2.30 is available])
+                    [have_libmount_utab=yes],
+                    [have_libmount_utab=no])
+  if test "x$have_libmount_utab" = "xyes"; then
+    AC_DEFINE([HAVE_LIBMOUNT_UTAB], 1, [Define to 1 if libmount utab functionality is available])
   fi
-  AC_SUBST(HAVE_LIBMOUNT)
+  AC_SUBST(HAVE_LIBMOUNT_UTAB)
   AC_SUBST(LIBMOUNT_CFLAGS)
   AC_SUBST(LIBMOUNT_LIBS)
 
@@ -216,11 +216,11 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(LIBELOGIND_CFLAGS)
   AC_SUBST(LIBELOGIND_LIBS)
 else
-  have_libmount=no
+  have_libmount_utab=no
   have_libsystemd_login=no
   have_libelogind=no
 fi
-AM_CONDITIONAL(HAVE_LIBMOUNT, test x$have_libmount = xyes)
+AM_CONDITIONAL(HAVE_LIBMOUNT_UTAB, test x$have_libmount_utab = xyes)
 AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)
 AM_CONDITIONAL(HAVE_LIBELOGIND, test x$have_libelogind = xyes)
 
@@ -809,7 +809,7 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
-        using libmount:             ${have_libmount}
+        using libmount/utab:        ${have_libmount_utab}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

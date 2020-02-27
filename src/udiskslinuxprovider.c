@@ -128,7 +128,7 @@ static void crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
                                                UDisksCrypttabEntry   *entry,
                                                gpointer               user_data);
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 static void utab_monitor_on_entry_added (UDisksUtabMonitor *monitor,
                                          UDisksUtabEntry   *entry,
                                          gpointer           user_data);
@@ -742,7 +742,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                     "entry-removed",
                     G_CALLBACK (crypttab_monitor_on_entry_removed),
                     provider);
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
   g_signal_connect (udisks_daemon_get_utab_monitor (daemon),
                     "entry-added",
                     G_CALLBACK (utab_monitor_on_entry_added),
@@ -1596,7 +1596,7 @@ crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
   update_all_block_objects (provider);
 }
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 static void
 utab_monitor_on_entry_added (UDisksUtabMonitor *monitor,
                              UDisksUtabEntry   *entry,
