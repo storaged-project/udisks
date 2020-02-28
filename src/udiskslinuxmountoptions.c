@@ -971,7 +971,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
       if (g_str_equal (value, VARIANT_NULL_STRING))
         value = NULL;
       /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
-      if (strstr (key, ",") != NULL)
+      if (strstr (key, ",") != NULL || (value && strstr (value, ",") != NULL))
         {
           g_set_error (error,
                        UDISKS_ERROR,
