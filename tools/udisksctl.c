@@ -981,6 +981,7 @@ static gchar   *opt_unlock_lock_object_path = NULL;
 static gchar   *opt_unlock_lock_device = NULL;
 static gboolean opt_unlock_lock_no_user_interaction = FALSE;
 static gchar   *opt_unlock_keyfile = NULL;
+static gboolean opt_unlock_read_only = FALSE;
 
 static const GOptionEntry command_unlock_entries[] =
 {
@@ -1018,6 +1019,15 @@ static const GOptionEntry command_unlock_entries[] =
     G_OPTION_ARG_STRING,
     &opt_unlock_keyfile,
     "Keyfile for unlocking",
+    NULL
+  },
+  {
+    "read-only",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_unlock_read_only,
+    "Unlock the device as read-only",
     NULL
   },
   {
@@ -1279,6 +1289,10 @@ handle_command_unlock_lock (gint        *argc,
                              "keyfile_contents",
                              pack_binary_blob (keyfile_contents, keyfile_size));
     }
+  if (opt_unlock_read_only)
+    g_variant_builder_add (&builder,
+                           "{sv}",
+                           "read-only", g_variant_new_boolean (TRUE));
   options = g_variant_builder_end (&builder);
   g_variant_ref_sink (options);
 

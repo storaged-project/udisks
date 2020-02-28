@@ -551,7 +551,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   device = udisks_block_dup_device (block);
 
-  /* TODO: support reading a 'readonly' option from @options */
+  /* unlock as read-only if specified in @options or if the device itself is read-only */
+  g_variant_lookup (options, "read-only", "b", &read_only);
   if (udisks_block_get_read_only (block))
     read_only = TRUE;
 
