@@ -416,8 +416,8 @@ static const gchar *udf_allow_gid_self[] = { "gid", NULL };
 
 /* ---------------------- exfat -------------------- */
 
-static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", NULL };
-static const gchar *exfat_allow[] = { "dmask", "errors", "fmask", "iocharset", "namecase", "umask", NULL };
+static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "errors=remount-ro", NULL };
+static const gchar *exfat_allow[] = { "dmask", "errors", "fmask", "iocharset", "umask", NULL };
 static const gchar *exfat_allow_uid_self[] = { "uid", NULL };
 static const gchar *exfat_allow_gid_self[] = { "gid", NULL };
 
