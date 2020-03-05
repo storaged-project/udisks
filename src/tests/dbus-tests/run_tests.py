@@ -142,6 +142,9 @@ if __name__ == '__main__':
     argparser.add_argument('-s', '--system', dest='system',
                            help='run the test against the system installed instance',
                            action='store_true')
+    argparser.add_argument('-f', '--failfast', dest='failfast',
+                           help='stop the test run on a first error',
+                           action='store_true')
     args = argparser.parse_args()
 
     setup_vdevs()
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     with open(udiskstestcase.FLIGHT_RECORD_FILE, "w"):
         pass
 
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=2, failfast=args.failfast).run(suite)
 
     if not args.system:
         daemon.terminate()
