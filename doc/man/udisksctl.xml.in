@@ -72,6 +72,7 @@
       </group>
       <arg choice="opt">--no-user-interaction</arg>
       <arg choice="opt">--key-file <replaceable>PATH</replaceable></arg>
+      <arg choice="opt">--read-only</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>

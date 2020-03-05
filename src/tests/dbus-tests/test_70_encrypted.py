@@ -164,6 +164,24 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         dbus_cleartext = self.get_property(disk, '.Encrypted', 'CleartextDevice')
         dbus_cleartext.assertEqual(luks)
 
+        disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertFalse(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+        dbus_cleartext = self.get_property(disk, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual('/')
+
+        # read-only
+        ro_opts = dbus.Dictionary({'read-only': dbus.Boolean(True)}, signature=dbus.Signature('sv'))
+        luks = disk.Unlock('test', ro_opts,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks)
+        self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+
+        luks_obj = self.get_object(luks)
+        self.assertIsNotNone(luks_obj)
+        luks_ro = self.get_property(luks_obj, '.Block', 'ReadOnly')
+        luks_ro.assertTrue()
+
     @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
     def test_open_crypttab(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
