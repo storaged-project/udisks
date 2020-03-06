@@ -79,6 +79,11 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         ret, _out = cls.run_command('modprobe %s' % module)
         return ret == 0
 
+    def _get_formatted_block_object(self, dev_path):
+        """ Get the real block object and its device path for a given filesystem type after formatting. """
+        block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
+        return (block_object, dev_path)
+
     def test_create_format(self):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
@@ -90,15 +95,20 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # test dbus properties
-        usage = self.get_property(disk, '.Block', 'IdUsage')
+        usage = self.get_property(block_fs, '.Block', 'IdUsage')
         usage.assertEqual('filesystem')
 
-        fstype = self.get_property(disk, '.Block', 'IdType')
+        fstype = self.get_property(block_fs, '.Block', 'IdType')
         fstype.assertEqual(self._fs_name)
 
         # test system values
-        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
+        _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % block_fs_dev)
         self.assertEqual(sys_fstype, self._fs_name)
 
     def _invalid_label(self, disk):
@@ -121,12 +131,17 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # test dbus properties
-        dbus_label = self.get_property(disk, '.Block', 'IdLabel')
+        dbus_label = self.get_property(block_fs, '.Block', 'IdLabel')
         dbus_label.assertEqual(label)
 
         # test system values
-        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % block_fs_dev)
         self.assertEqual(sys_label, label)
 
     def test_relabel(self):
@@ -143,20 +158,25 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # change the label
         label = 'AAAA' if self._fs_name == 'vfat' else 'aaaa'  # XXX udisks changes vfat labels to uppercase
-        disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        block_fs.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
         # test dbus properties
-        dbus_label = self.get_property(disk, '.Block', 'IdLabel')
+        dbus_label = self.get_property(block_fs, '.Block', 'IdLabel')
         dbus_label.assertEqual(label)
 
         # test system values
-        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
+        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % block_fs_dev)
         self.assertEqual(sys_label, label)
 
         # test invalid label behaviour
-        self._invalid_label(disk)
+        self._invalid_label(block_fs)
 
     def test_repair_resize_check(self):
         if not self._can_create:
@@ -185,17 +205,22 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # not mounted
-        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         mounts.assertLen(0)
 
         # repair before resizing to half size, then check
-        self.assertTrue(disk.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
-        size = self.get_property(disk, '.Block', 'Size').value
-        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size)
-        disk.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.assertTrue(disk.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
-        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size // 2)
+        self.assertTrue(block_fs.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
+        size = self.get_property(block_fs, '.Block', 'Size').value
+        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size)
+        block_fs.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.assertTrue(block_fs.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
+        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size // 2)
 
     def test_size(self):
         if not self._can_create:
@@ -214,16 +239,21 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # mount
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
-        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
 
         # check reported size
-        size = self.get_property(disk, '.Block', 'Size').value
-        self.get_property(disk, '.Filesystem', 'Size').assertEqual(size)
+        size = self.get_property(block_fs, '.Block', 'Size').value
+        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size)
 
     def test_mount_auto(self):
         if not self._can_create:
@@ -239,31 +269,36 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # not mounted
-        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         mounts.assertLen(0)
 
         # mount
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
-        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
 
         # system mountpoint
         self.assertTrue(os.path.ismount(mnt_path))
-        _ret, out = self.run_command('mount | grep %s' % self.vdevs[0])
+        _ret, out = self.run_command('mount | grep %s' % block_fs_dev)
         self.assertIn(mnt_path, out)
         self.assertIn('ro', out)
 
         # dbus mountpoint
-        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, mnt_path)
 
         # umount
-        disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
 
     def test_mount_fstab(self):
@@ -284,6 +319,11 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # create a tempdir
         tmp = tempfile.mkdtemp()
         self.addCleanup(self._rmtree, tmp)
@@ -296,15 +336,16 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # set the new configuration
         conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
                                signature=dbus.Signature('sv'))
-        disk.AddConfigurationItem(('fstab', conf), self.no_options,
-                                  dbus_interface=self.iface_prefix + '.Block')
+        block_fs.AddConfigurationItem(('fstab', conf), self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Block')
+
 
         # mount using fstab options
-        disk.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
 
         # dbus mountpoint
-        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, tmp)
@@ -312,7 +353,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # system mountpoint
         self.assertTrue(os.path.ismount(tmp))
 
-        _ret, out = self.run_command('mount | grep %s' % self.vdevs[0])
+        _ret, out = self.run_command('mount | grep %s' % block_fs_dev)
         self.assertIn(tmp, out)
         self.assertIn('ro', out)
 
@@ -330,26 +371,31 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # not mounted
-        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         mounts.assertLen(0)
 
         # mount
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = self._fs_name
         d['options'] = 'ro'
-        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
 
         # dbus mountpoint
-        dbus_mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, mnt_path)
 
         # umount and check that mount-points is immediately empty
-        disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        mounts_after_unmount = self.get_property_raw(disk, '.Filesystem', 'MountPoints')
+        block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        mounts_after_unmount = self.get_property_raw(block_fs, '.Filesystem', 'MountPoints')
         self.assertEqual(len(mounts_after_unmount), 0)
 
     def test_userspace_mount_options(self):
@@ -370,24 +416,29 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
         # not mounted
-        mounts = self.get_property(disk, '.Filesystem', 'MountPoints')
+        mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         mounts.assertLen(0)
 
         # mount
         d = dbus.Dictionary(signature='sv')
         d['fstype'] = self._fs_name
         d['options'] = 'ro,x-test.op1'
-        mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
 
         # check utab
-        utab_opts = self.get_property(disk, '.Block', 'UserspaceMountOptions')
+        utab_opts = self.get_property(block_fs, '.Block', 'UserspaceMountOptions')
         self.assertEqual({str(o) for o in utab_opts.value},
                          {'uhelper=udisks2', 'x-test.op1'})
 
         # umount
-        disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
 
 
@@ -877,6 +928,22 @@ class UDFTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('udflabel')
     _can_mount = True and UdisksFSTestCase.module_available('udf')
+
+    def _get_mkudffs_version(self):
+        """ Detect mkudffs version, fall back to zero in case of failure. """
+        _ret, out = self.run_command('mkudffs 2>&1 | grep "mkudffs from udftools"')
+        m = re.search(r'from udftools ([\d\.]+)', out)
+        if not m or len(m.groups()) != 1:
+            return LooseVersion("0")
+        return LooseVersion(m.groups()[0])
+
+    def _get_formatted_block_object(self, dev_path):
+        """ udftools >= 2.0 create fake MBR partition table, need to test the partitioned volume. """
+        if self._get_mkudffs_version() >= LooseVersion('2.0'):
+            dev_path += "1"
+        block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
+        return (block_object, dev_path)
+
 
 class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'
