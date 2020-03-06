@@ -84,16 +84,9 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
         return (block_object, dev_path)
 
-    def test_create_format(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_name)
-
-        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        self.assertIsNotNone(disk)
-
+    def _create_format(self, block_object):
         # create filesystem
-        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        block_object.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         # get real block object for the newly created filesystem
         block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
@@ -110,6 +103,19 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # test system values
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % block_fs_dev)
         self.assertEqual(sys_fstype, self._fs_name)
+
+    def test_create_format(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # create filesystem for the first time
+        self._create_format(disk)
+        # and now create it again, let the daemon handle wiping
+        self._create_format(disk)
 
     def _invalid_label(self, disk):
         pass
