@@ -2601,20 +2601,16 @@ handle_command_dump (gint        *argc,
 static void
 monitor_print_timestamp (void)
 {
-  GTimeVal now;
-  time_t now_time;
-  struct tm *now_tm;
-  gchar time_buf[128];
-
-  g_get_current_time (&now);
-  now_time = (time_t) now.tv_sec;
-  now_tm = localtime (&now_time);
-  strftime (time_buf, sizeof time_buf, "%H:%M:%S", now_tm);
+  GDateTime *now = g_date_time_new_now_local ();
+  gchar *time_str = g_date_time_format (now, "%H:%M:%S");
 
   g_print ("%s%s%s.%03d:%s ",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_YELLOW),
-           time_buf, (gint) now.tv_usec / 1000,
+           time_str, (gint) g_date_time_get_microsecond (now) / 1000,
            _color_get (_COLOR_RESET));
+
+  g_free (time_str);
+  g_date_time_unref (now);
 }
 
 static gboolean
