@@ -1963,6 +1963,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
   waiting:
   /* wait for mount-points update before returning from method */
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data.mount_point = g_strdup (mount_point);
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem_mount_points,
