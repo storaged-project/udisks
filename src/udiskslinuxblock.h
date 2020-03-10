@@ -41,10 +41,6 @@ void         udisks_linux_block_handle_format (UDisksBlock            *block,
                                                void                  (*complete)(gpointer user_data),
                                                gpointer                complete_user_data);
 
-gchar       *udisks_linux_get_parent_for_tracking (UDisksDaemon *daemon,
-                                                   const gchar    *path,
-                                                   const gchar   **uuid_ret);
-
 GVariant    *udisks_linux_find_child_configuration (UDisksDaemon *daemon,
                                                     const gchar    *uuid);
 
