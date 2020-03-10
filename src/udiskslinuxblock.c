@@ -487,6 +487,98 @@ process_device_symlinks (const gchar      *device,
     }
 }
 
+/**
+ * udisks_linux_block_matches_id:
+ * @block: A #UDisksLinuxBlock.
+ * @device_path: A device path string.
+ *
+ * Compares block device identifiers and returns %TRUE if match is found. The @device_path
+ * argument may be a device file or a common KEY=VALUE identifier as used e.g. in /etc/fstab.
+ *
+ * Returns: %TRUE when identifiers do match, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_block_matches_id (UDisksLinuxBlock *block,
+                               const gchar      *device_path)
+{
+  const gchar *device = NULL;
+  const gchar *label = NULL;
+  const gchar *uuid = NULL;
+  const gchar *partuuid = NULL;
+  const gchar *partlabel = NULL;
+  const gchar *const *symlinks;
+
+  if (device_path == NULL || strlen (device_path) < 1)
+    {
+      return FALSE;
+    }
+  if (g_str_has_prefix (device_path, "UUID="))
+    {
+      uuid = device_path + 5;
+    }
+  else if (g_str_has_prefix (device_path, "LABEL="))
+    {
+      label = device_path + 6;
+    }
+  else if (g_str_has_prefix (device_path, "PARTUUID="))
+    {
+      partuuid = device_path + 9;
+    }
+  else if (g_str_has_prefix (device_path, "PARTLABEL="))
+    {
+      partlabel = device_path + 10;
+    }
+  else if (g_str_has_prefix (device_path, "/dev"))
+    {
+      device = device_path;
+    }
+  else
+    {
+      /* ignore non-device entry */
+      return FALSE;
+    }
+
+  if (device != NULL)
+    {
+      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+        return TRUE;
+
+      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+      if (symlinks && g_strv_contains (symlinks, device))
+        return TRUE;
+    }
+  if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
+    {
+      return TRUE;
+    }
+  if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
+    {
+      return TRUE;
+    }
+  if (partlabel != NULL || partuuid != NULL)
+    {
+      UDisksLinuxBlockObject *object;
+      UDisksLinuxDevice *linux_device;
+
+      object = udisks_daemon_util_dup_object (block, NULL);
+      if (object != NULL)
+        {
+          linux_device = udisks_linux_block_object_get_device (object);
+          g_clear_object (&object);
+          if (linux_device != NULL && linux_device->udev_device != NULL &&
+              ((partuuid != NULL  && g_strcmp0 (partuuid,  g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
+               (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0)))
+            {
+              g_object_unref (linux_device);
+              return TRUE;
+            }
+          g_clear_object (&linux_device);
+        }
+    }
+
+  return FALSE;
+}
+
 static GList *
 find_fstab_entries_for_device (UDisksLinuxBlock *block,
                                UDisksDaemon     *daemon)

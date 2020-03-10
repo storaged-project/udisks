@@ -41,6 +41,9 @@ void         udisks_linux_block_handle_format (UDisksBlock            *block,
                                                void                  (*complete)(gpointer user_data),
                                                gpointer                complete_user_data);
 
+gboolean     udisks_linux_block_matches_id (UDisksLinuxBlock *block,
+                                            const gchar      *device_path);
+
 GVariant    *udisks_linux_find_child_configuration (UDisksDaemon *daemon,
                                                     const gchar    *uuid);
 

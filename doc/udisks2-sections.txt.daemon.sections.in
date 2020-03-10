@@ -325,6 +325,7 @@ udisks_linux_block_object_get_type
 UDisksLinuxBlock
 udisks_linux_block_new
 udisks_linux_block_update
+udisks_linux_block_matches_id
 <SUBSECTION Standard>
 UDISKS_LINUX_BLOCK
 UDISKS_IS_LINUX_BLOCK
