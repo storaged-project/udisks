@@ -37,12 +37,15 @@
 #include <blockdev/fs.h>
 #include <blockdev/utils.h>
 
+#include <libmount/libmount.h>
+
 #include <glib/gstdio.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxfilesystemhelpers.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxblock.h"
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
@@ -1169,106 +1172,7 @@ has_option (const gchar *options,
   return ret;
 }
 
-static gboolean
-is_in_fstab (UDisksDaemon *daemon,
-             UDisksBlock  *block,
-             const gchar  *fstab_path,
-             gchar       **out_mount_point,
-             gchar       **out_mount_options)
-{
-  UDisksMountMonitor *mount_monitor = udisks_daemon_get_mount_monitor (daemon);
-  gboolean ret;
-  FILE *f;
-  char buf[8192];
-  struct mntent mbuf;
-  struct mntent *m;
-
-  ret = FALSE;
-  f = fopen (fstab_path, "r");
-  if (f == NULL)
-    {
-      udisks_warning ("Error opening fstab file %s: %m", fstab_path);
-      goto out;
-    }
-
-  while ((m = getmntent_r (f, &mbuf, buf, sizeof (buf))) != NULL && !ret)
-    {
-      gchar *device;
-      struct stat sb;
-
-      device = NULL;
-      if (g_str_has_prefix (m->mnt_fsname, "UUID="))
-        {
-          device = g_strdup_printf ("/dev/disk/by-uuid/%s", m->mnt_fsname + 5);
-        }
-      else if (g_str_has_prefix (m->mnt_fsname, "LABEL="))
-        {
-          device = g_strdup_printf ("/dev/disk/by-label/%s", m->mnt_fsname + 6);
-        }
-      else if (g_str_has_prefix (m->mnt_fsname, "PARTUUID="))
-        {
-          device = g_strdup_printf ("/dev/disk/by-partuuid/%s", m->mnt_fsname + 9);
-        }
-      else if (g_str_has_prefix (m->mnt_fsname, "PARTLABEL="))
-        {
-          device = g_strdup_printf ("/dev/disk/by-partlabel/%s", m->mnt_fsname + 10);
-        }
-      else if (g_str_has_prefix (m->mnt_fsname, "/dev"))
-        {
-          device = g_strdup (m->mnt_fsname);
-        }
-      else
-        {
-          /* ignore non-device entries */
-          goto continue_loop;
-        }
-
-      if (stat (device, &sb) != 0)
-        {
-          udisks_debug ("Error statting %s (for entry %s): %m", device, m->mnt_fsname);
-          goto continue_loop;
-        }
-      if (!S_ISBLK (sb.st_mode))
-        {
-          udisks_debug ("Device %s (for entry %s) is not a block device", device, m->mnt_fsname);
-          goto continue_loop;
-        }
-
-      /* udisks_debug ("device %d:%d for entry %s", major (sb.st_rdev), minor (sb.st_rdev), m->mnt_fsname); */
-
-      if (udisks_block_get_device_number (block) == sb.st_rdev)
-        {
-          /* If this block device is found in fstab, but something else is already
-           * mounted on that mount point, ignore the fstab entry.
-           */
-          UDisksMount *mount = udisks_mount_monitor_get_mount_for_path (mount_monitor,
-                                                                        m->mnt_dir);
-          if (mount == NULL || sb.st_rdev == udisks_mount_get_dev (mount))
-            {
-              ret = TRUE;
-              if (out_mount_point != NULL)
-                *out_mount_point = g_strdup (m->mnt_dir);
-              if (out_mount_options != NULL)
-                *out_mount_options = g_strdup (m->mnt_opts);
-            }
-
-          g_clear_object (&mount);
-        }
-
-    continue_loop:
-      g_free (device);
-    }
-
- out:
-  if (f != NULL)
-    fclose (f);
-  return ret;
-}
-
 /* returns TRUE if, and only if, device is referenced in e.g. /etc/fstab
- *
- * TODO: check all files in /etc/fstab.d (it's a non-standard Linux extension)
- * TODO: check if systemd has a specific "unit" for the device
  */
 static gboolean
 is_system_managed (UDisksDaemon *daemon,
@@ -1276,17 +1180,45 @@ is_system_managed (UDisksDaemon *daemon,
                    gchar       **out_mount_point,
                    gchar       **out_mount_options)
 {
+  UDisksMountMonitor *mount_monitor = udisks_daemon_get_mount_monitor (daemon);
   gboolean ret;
+  struct libmnt_table *table;
+  struct libmnt_iter* iter;
+  struct libmnt_fs *fs = NULL;
 
-  ret = TRUE;
+  table = mnt_new_table ();
+  if (mnt_table_parse_fstab (table, NULL) < 0)
+    {
+      mnt_free_table (table);
+      return FALSE;
+    }
 
-  /* First, check /etc/fstab */
-  if (is_in_fstab (daemon, block, "/etc/fstab", out_mount_point, out_mount_options))
-    goto out;
+  iter = mnt_new_iter (MNT_ITER_FORWARD);
+  while (mnt_table_next_fs (table, iter, &fs) == 0)
+    {
+      if (udisks_linux_block_matches_id (UDISKS_LINUX_BLOCK (block), mnt_fs_get_source (fs)))
+        {
+          /* If this block device is found in fstab, but something else is already
+           * mounted on that mount point, ignore the fstab entry.
+           */
+          UDisksMount *mount = udisks_mount_monitor_get_mount_for_path (mount_monitor, mnt_fs_get_target (fs));
+          if (mount == NULL || udisks_block_get_device_number (block) == udisks_mount_get_dev (mount))
+            {
+              ret = TRUE;
+              if (out_mount_point != NULL)
+                *out_mount_point = g_strdup (mnt_fs_get_target (fs));
+              if (out_mount_options != NULL)
+                *out_mount_options = mnt_fs_strdup_options (fs);
+            }
 
-  ret = FALSE;
+          g_clear_object (&mount);
+          if (ret)
+            break;
+        }
+    }
+  mnt_free_iter (iter);
+  mnt_free_table (table);
 
- out:
   return ret;
 }
 
