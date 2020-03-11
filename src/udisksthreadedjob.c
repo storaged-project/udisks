@@ -226,8 +226,6 @@ udisks_threaded_job_constructed (GObject *object)
 {
   if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed (object);
-
-  g_assert (g_thread_supported ());
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
