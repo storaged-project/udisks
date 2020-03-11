@@ -205,6 +205,7 @@ udisks_variant_get_binary (GVariant  *value,
 /**
  * udisks_decode_udev_string:
  * @str: An udev-encoded string or %NULL.
+ * @fallback_str: String to use when @str can't be converted to a valid UTF-8 string.
  *
  * Unescapes sequences like \x20 to " " and ensures the returned string is valid UTF-8.
  *
@@ -218,7 +219,7 @@ udisks_variant_get_binary (GVariant  *value,
  * Returns: A valid UTF-8 string that must be freed with g_free().
  */
 gchar *
-udisks_decode_udev_string (const gchar *str)
+udisks_decode_udev_string (const gchar *str, const gchar *fallback_str)
 {
   GString *s;
   gchar *ret;
@@ -259,8 +260,17 @@ udisks_decode_udev_string (const gchar *str)
   if (!g_utf8_validate (s->str, -1, &end_valid))
     {
       udisks_warning ("The string `%s' is not valid UTF-8. Invalid characters begins at `%s'", s->str, end_valid);
-      ret = g_strndup (s->str, end_valid - s->str);
-      g_string_free (s, TRUE);
+      if (fallback_str)
+        {
+          udisks_info ("Invalid string `%s' replaced by `%s'", s->str, fallback_str);
+          ret = g_strdup (fallback_str);
+          g_string_free (s, TRUE);
+        }
+      else
+        {
+          ret = g_strndup (s->str, end_valid - s->str);
+          g_string_free (s, TRUE);
+        }
     }
   else
     {

@@ -740,7 +740,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       if (model != NULL)
         {
           gchar *s;
-          s = udisks_decode_udev_string (model);
+          s = udisks_decode_udev_string (model,
+                                         g_udev_device_get_property (device->udev_device, "ID_MODEL"));
           g_strstrip (s);
           udisks_drive_set_model (iface, s);
           g_free (s);
@@ -759,7 +760,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       if (vendor != NULL)
         {
           gchar *s;
-          s = udisks_decode_udev_string (vendor);
+          s = udisks_decode_udev_string (vendor,
+                                         g_udev_device_get_property (device->udev_device, "ID_VENDOR"));
           g_strstrip (s);
           udisks_drive_set_vendor (iface, s);
           g_free (s);
@@ -769,7 +771,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       if (model != NULL)
         {
           gchar *s;
-          s = udisks_decode_udev_string (model);
+          s = udisks_decode_udev_string (model,
+                                         g_udev_device_get_property (device->udev_device, "ID_MODEL"));
           g_strstrip (s);
           udisks_drive_set_model (iface, s);
           g_free (s);
@@ -801,7 +804,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       if (vendor != NULL)
         {
           gchar *s;
-          s = udisks_decode_udev_string (vendor);
+          s = udisks_decode_udev_string (vendor,
+                                         g_udev_device_get_property (device->udev_device, "ID_VENDOR"));
           g_strstrip (s);
           udisks_drive_set_vendor (iface, s);
           g_free (s);
@@ -830,7 +834,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       if (model != NULL)
         {
           gchar *s;
-          s = udisks_decode_udev_string (model);
+          s = udisks_decode_udev_string (model,
+                                         g_udev_device_get_property (device->udev_device, "ID_MODEL"));
           g_strstrip (s);
           udisks_drive_set_model (iface, s);
           g_free (s);
