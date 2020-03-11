@@ -107,6 +107,22 @@ _udisks_fstab_entry_new (const struct mntent *mntent)
   return entry;
 }
 
+UDisksFstabEntry *
+_udisks_fstab_entry_new_from_mnt_fs (struct libmnt_fs *fs)
+{
+  UDisksFstabEntry *entry;
+
+  entry = UDISKS_FSTAB_ENTRY (g_object_new (UDISKS_TYPE_FSTAB_ENTRY, NULL));
+  entry->fsname = g_strdup (mnt_fs_get_source (fs));
+  entry->dir = g_strdup (mnt_fs_get_target (fs));
+  entry->type = g_strdup (mnt_fs_get_fstype (fs));
+  entry->opts = mnt_fs_strdup_options (fs);
+  entry->freq = mnt_fs_get_freq (fs);
+  entry->passno = mnt_fs_get_passno (fs);
+
+  return entry;
+}
+
 /**
  * udisks_fstab_entry_compare:
  * @entry: A #UDisksFstabEntry
