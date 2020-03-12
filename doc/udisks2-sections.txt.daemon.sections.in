@@ -6,7 +6,6 @@ udisks_daemon_new
 udisks_daemon_get_connection
 udisks_daemon_get_object_manager
 udisks_daemon_get_mount_monitor
-udisks_daemon_get_fstab_monitor
 udisks_daemon_get_crypttab_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_authority
@@ -401,8 +400,8 @@ udisks_linux_manager_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udisksfstabmonitor</FILE>
-<TITLE>UDisksFstabMonitor</TITLE>
+<FILE>udisksfstabentry</FILE>
+<TITLE>UDisksFstabEntry</TITLE>
 UDisksFstabEntry
 udisks_fstab_entry_get_fsname
 udisks_fstab_entry_get_dir
@@ -411,19 +410,12 @@ udisks_fstab_entry_get_opts
 udisks_fstab_entry_get_freq
 udisks_fstab_entry_get_passno
 udisks_fstab_entry_compare
-UDisksFstabMonitor
-udisks_fstab_monitor_new
-udisks_fstab_monitor_get_entries
 <SUBSECTION Standard>
 UDISKS_TYPE_FSTAB_ENTRY
 UDISKS_FSTAB_ENTRY
 UDISKS_IS_FSTAB_ENTRY
-UDISKS_TYPE_FSTAB_MONITOR
-UDISKS_FSTAB_MONITOR
-UDISKS_IS_FSTAB_MONITOR
 <SUBSECTION Private>
 udisks_fstab_entry_get_type
-udisks_fstab_monitor_get_type
 </SECTION>
 
 <SECTION>

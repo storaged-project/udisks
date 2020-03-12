@@ -143,7 +143,7 @@ udisks_utab_monitor_class_init (UDisksUtabMonitorClass *klass)
                                               UDISKS_TYPE_UTAB_ENTRY);
 
   /**
-   * UDisksFstabMonitor::entry-removed
+   * UDisksUtabMonitor::entry-removed
    * @monitor: A #UDisksUtabMonitor.
    * @entry: The #UDisksUtabEntry that was removed.
    *

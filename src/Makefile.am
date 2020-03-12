@@ -81,7 +81,6 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udisksstate.h                  udisksstate.c                           \
 	udisksprivate.h                                                        \
 	udisksfstabentry.h             udisksfstabentry.c                      \
-	udisksfstabmonitor.h           udisksfstabmonitor.c                    \
 	udiskscrypttabentry.h          udiskscrypttabentry.c                   \
 	udiskscrypttabmonitor.h        udiskscrypttabmonitor.c                 \
 	udiskslinuxdevice.h            udiskslinuxdevice.c                     \

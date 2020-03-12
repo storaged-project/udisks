@@ -22,7 +22,6 @@ udisks_linux_loop_get_type
 udisks_linux_manager_get_type
 udisks_state_get_type
 udisks_fstab_entry_get_type
-udisks_fstab_monitor_get_type
 udisks_crypttab_entry_get_type
 udisks_crypttab_monitor_get_type
 udisks_linux_mdraid_object_get_type
