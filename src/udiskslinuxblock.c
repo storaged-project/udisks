@@ -2905,6 +2905,13 @@ build_command (const gchar *template,
   return command;
 }
 
+static inline gboolean
+need_partprobe_after_mkfs (const gchar *fs_type)
+{
+  /* udftools makes fake MBR since the 2.0 release */
+  return (g_strcmp0 (fs_type, "udf") == 0);
+}
+
 void
 udisks_linux_block_handle_format (UDisksBlock             *block,
                                   GDBusMethodInvocation   *invocation,
@@ -3132,17 +3139,18 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* ...then wait until this change has taken effect */
+  if (was_partitioned)
+    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data = g_new0 (FormatWaitData, 1);
   wait_data->object = object;
   wait_data->type = "empty";
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
-  if (was_partitioned)
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem,
                                                           wait_data,
                                                           NULL,
-                                                          15,
+                                                          UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                           &error);
   if (filesystem_object == NULL)
     {
@@ -3233,7 +3241,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                              wait_for_luks_uuid,
                                                              wait_data,
                                                              NULL,
-                                                             30,
+                                                             UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                              &error);
       if (luks_uuid_object == NULL)
         {
@@ -3279,7 +3287,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                              wait_for_luks_cleartext,
                                                              wait_data,
                                                              NULL,
-                                                             30,
+                                                             UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                              &error);
       if (cleartext_object == NULL)
         {
@@ -3390,13 +3398,16 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs));
+  if (need_partprobe_after_mkfs (type))
+    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data->object = object_to_mkfs;
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem,
                                                           wait_data,
                                                           NULL,
-                                                          30,
+                                                          UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                           &error);
   if (filesystem_object == NULL)
     {
@@ -3906,7 +3917,8 @@ handle_rescan (UDisksBlock           *block,
 
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0)
     udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
 

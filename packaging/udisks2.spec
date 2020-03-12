@@ -100,6 +100,7 @@ BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
 BuildRequires: libmount-devel
+BuildRequires: libuuid-devel
 
 Requires: libblockdev        >= %{libblockdev_version}
 Requires: libblockdev-part   >= %{libblockdev_version}

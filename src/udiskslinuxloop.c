@@ -362,9 +362,8 @@ handle_set_autoclear (UDisksLoop             *loop,
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (loop));
 
   /* ... but make sure we update the property value from sysfs */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
-
-  /* TODO: would be better to have something like trigger_uevent_and_wait_for_it_sync() */
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_loop_complete_set_autoclear (loop, invocation);
 

@@ -283,7 +283,7 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
                                                          wait_for_bcache,
                                                          (gpointer) object_path,
                                                          NULL,
-                                                         10,
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error))
     {
       g_prefix_error (&error, "Error waiting for bcache to disappear: ");
@@ -341,7 +341,8 @@ handle_set_mode (UDisksBlockBcache      *block_,
     }
 
   /* update the property value -- there is no change event from bcache */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_block_bcache_complete_set_mode (block_, invocation);
 
 out:

@@ -434,7 +434,7 @@ handle_loop_setup (UDisksManager          *object,
                                                     wait_for_loop_object,
                                                     &wait_data,
                                                     NULL,
-                                                    10, /* timeout_seconds */
+                                                    UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                     &error);
   if (loop_object == NULL)
     {
@@ -768,7 +768,7 @@ handle_mdraid_create (UDisksManager         *_object,
                                                      wait_for_array_object,
                                                      raid_device_file,
                                                      NULL,
-                                                     10, /* timeout_seconds */
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
   if (array_object == NULL)
     {

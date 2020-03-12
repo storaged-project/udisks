@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include <glib-unix.h>
 
+#include <blockdev/blockdev.h>
+
 #include "udiskslogging.h"
 #include "udisksdaemontypes.h"
 #include "udisksdaemon.h"
@@ -146,6 +148,12 @@ main (int    argc,
     g_setenv ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin", TRUE);
 
   udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);
+
+  if (! bd_utils_get_linux_version (&error))
+    {
+      udisks_warning ("Failed to retrieve kernel version: %s", error->message);
+      g_clear_error (&error);
+    }
 
   loop = g_main_loop_new (NULL, FALSE);
 

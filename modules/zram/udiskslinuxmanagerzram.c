@@ -420,7 +420,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
                                                       wait_for_zram_objects,
                                                       zram_paths,
                                                       NULL,
-                                                      10, /* timeout_seconds */
+                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                       &error);
 
   if (zram_objects == NULL)
@@ -502,7 +502,7 @@ handle_destroy_devices (UDisksManagerZRAM     *object,
                                                          wait_for_any_zram_object,
                                                          NULL,
                                                          NULL,
-                                                         10,
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          &error))
     {
       g_prefix_error (&error, "Error waiting for zram objects to disappear: ");

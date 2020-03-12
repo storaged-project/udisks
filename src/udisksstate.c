@@ -1900,7 +1900,6 @@ _udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
  * @state: A #UDisksState
  * @device_file: A loop device file.
  * @out_uid: Return location for the user id who setup the loop device or %NULL.
- * @error: Return location for error or %NULL.
  *
  * Checks if @device_file is set up via udisks.
  *
@@ -2174,7 +2173,6 @@ _udisks_state_has_mdraid_list_visitor (GVariant *child, gpointer compare_data,
  * @state: A #UDisksState
  * @raid_device: A #dev_t for the RAID device.
  * @out_uid: Return location for the user id who setup the loop device or %NULL.
- * @error: Return location for error or %NULL.
  *
  * Checks if @raid_device is set up via udisks.
  *

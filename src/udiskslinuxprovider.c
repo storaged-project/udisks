@@ -101,6 +101,11 @@ G_LOCK_DEFINE_STATIC (provider_lock);
 struct _UDisksLinuxProviderClass
 {
   UDisksProviderClass parent_class;
+
+  /* Signals */
+  void (*uevent_probed) (UDisksLinuxProvider *provider,
+                         const gchar         *action,
+                         UDisksLinuxDevice   *device);
 };
 
 static void udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
@@ -142,6 +147,14 @@ static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
                                                 gpointer          user_data);
 
 gpointer probe_request_thread_func (gpointer user_data);
+
+enum
+  {
+    UEVENT_PROBED_SIGNAL,
+    LAST_SIGNAL,
+  };
+
+static guint signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
@@ -228,6 +241,11 @@ on_idle_with_probed_uevent (gpointer user_data)
   udisks_linux_provider_handle_uevent (request->provider,
                                        g_udev_device_get_action (request->udev_device),
                                        request->udisks_device);
+  g_signal_emit (request->provider,
+                 signals[UEVENT_PROBED_SIGNAL],
+                 0,
+                 g_udev_device_get_action (request->udev_device),
+                 request->udisks_device);
   probe_request_free (request);
   return FALSE; /* remove source */
 }
@@ -555,7 +573,7 @@ ensure_modules (UDisksLinuxProvider *provider)
     }
 }
 
-/**
+/*
  * The logind's PrepareForSleep D-Bus signal handler. There is one boolean
  * value in the 'parameters' GVariant tuple. When TRUE, the system is about to
  * suspend/hibernate, when FALSE the system has just woken up. Since the ATA
@@ -750,6 +768,28 @@ udisks_linux_provider_class_init (UDisksLinuxProviderClass *klass)
 
   provider_class        = UDISKS_PROVIDER_CLASS (klass);
   provider_class->start = udisks_linux_provider_start;
+
+  /**
+   * UDisksLinuxProvider::uevent-probed
+   * @provider: A #UDisksProvider.
+   * @action: The action for the uevent e.g. "add", "remove", "change", "move", "online" or "offline".
+   * @device: The #UDisksLinuxDevice that was probed.
+   *
+   * Emitted after the @device is probed.
+   *
+   * This signal is emitted in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread that @provider was created in.
+   */
+  signals[UEVENT_PROBED_SIGNAL] = g_signal_new ("uevent-probed",
+                                                G_TYPE_FROM_CLASS (klass),
+                                                G_SIGNAL_RUN_LAST,
+                                                G_STRUCT_OFFSET (UDisksLinuxProviderClass, uevent_probed),
+                                                NULL,
+                                                NULL,
+                                                g_cclosure_marshal_generic,
+                                                G_TYPE_NONE,
+                                                2,
+                                                G_TYPE_STRING,
+                                                UDISKS_TYPE_LINUX_DEVICE);
 }
 
 /**

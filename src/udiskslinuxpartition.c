@@ -442,7 +442,8 @@ handle_set_flags (UDisksPartition       *partition,
         goto out;
       }
 
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_partition_complete_set_flags (partition, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
@@ -568,7 +569,8 @@ handle_set_name (UDisksPartition       *partition,
       goto out;
     }
 
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_partition_complete_set_name (partition, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
@@ -933,7 +935,7 @@ handle_resize (UDisksPartition       *partition,
                                                          wait_for_partition_resize,
                                                          &wait_data,
                                                          NULL,
-                                                         10,
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                          NULL);
 
   udisks_partition_complete_resize (partition, invocation);
@@ -1039,7 +1041,8 @@ handle_delete (UDisksPartition       *partition,
       goto out;
     }
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
-  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_table_object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (partition_table_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_partition_complete_delete (partition, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
