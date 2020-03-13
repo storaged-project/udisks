@@ -342,11 +342,13 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         opts = self.str_to_ay('ro')
 
         # set the new configuration
-        conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
-                               signature=dbus.Signature('sv'))
+        conf_items = {'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0}
+        if self.vdevs[0] != block_fs_dev:
+            # avoid using IDs for partitioned block devices
+            conf_items['fsname'] = self.str_to_ay(block_fs_dev)
+        conf = dbus.Dictionary(conf_items, signature=dbus.Signature('sv'))
         block_fs.AddConfigurationItem(('fstab', conf), self.no_options,
                                       dbus_interface=self.iface_prefix + '.Block')
-
 
         # mount using fstab options
         block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
