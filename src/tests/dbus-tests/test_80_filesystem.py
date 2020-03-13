@@ -256,6 +256,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check reported size
         size = self.get_property(block_fs, '.Block', 'Size').value
@@ -290,6 +291,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # system mountpoint
         self.assertTrue(os.path.ismount(mnt_path))
@@ -349,6 +351,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # mount using fstab options
         block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -392,6 +395,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -437,6 +441,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro,x-test.op1'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check utab
         utab_opts = self.get_property(block_fs, '.Block', 'UserspaceMountOptions')
