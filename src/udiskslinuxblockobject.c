@@ -31,6 +31,7 @@
 #include <mntent.h>
 
 #include <sys/ioctl.h>
+#include <sys/file.h>
 #include <linux/fs.h>
 
 #include <string.h>
@@ -1199,6 +1200,18 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
     }
   else
     {
+      gint num_tries = 0;
+
+      /* acquire an exclusive BSD lock to prevent udev probes.
+       * See also https://systemd.io/BLOCK_DEVICE_LOCKING
+       */
+      while (flock (fd, LOCK_EX | LOCK_NB) != 0)
+        {
+          g_usleep (100 * 1000); /* microseconds */
+          if (num_tries++ > 5)
+            break;
+        }
+
       if (ioctl (fd, BLKRRPART) != 0)
         {
           udisks_warning ("Error issuing BLKRRPART to %s: %m", device_file);
