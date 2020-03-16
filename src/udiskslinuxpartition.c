@@ -244,7 +244,7 @@ udisks_linux_partition_update (UDisksLinuxPartition   *partition,
       type = g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_TYPE");
       offset = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_OFFSET") * G_GUINT64_CONSTANT (512);
       size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_SIZE") * G_GUINT64_CONSTANT (512);
-      name = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_NAME"));
+      name = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_NAME"), NULL);
       uuid = g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_UUID");
       flags = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_FLAGS");
 

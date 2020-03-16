@@ -35,7 +35,8 @@ gboolean udisks_variant_lookup_binary (GVariant     *dict,
 gboolean udisks_variant_get_binary (GVariant  *variant,
                                     GString  **contents);
 
-gchar *udisks_decode_udev_string (const gchar *str);
+gchar *udisks_decode_udev_string (const gchar *str,
+                                  const gchar *fallback_str);
 
 void udisks_safe_append_to_object_path (GString      *str,
                                         const gchar  *s);

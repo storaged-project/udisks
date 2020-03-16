@@ -1276,13 +1276,15 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
       udisks_block_set_id_type (iface, g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
     }
 
-  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_VERSION"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_VERSION"), NULL);
   udisks_block_set_id_version (iface, s);
   g_free (s);
-  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_LABEL_ENC"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_LABEL_ENC"),
+                                 g_udev_device_get_property (device->udev_device, "ID_FS_LABEL"));
   udisks_block_set_id_label (iface, s);
   g_free (s);
-  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_UUID_ENC"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_UUID_ENC"),
+                                 g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
