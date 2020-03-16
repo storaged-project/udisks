@@ -2027,6 +2027,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2045,6 +2046,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
@@ -2104,6 +2106,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2122,6 +2125,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
@@ -2194,6 +2198,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (old_type, "crypttab") == 0)
@@ -2212,6 +2217,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
