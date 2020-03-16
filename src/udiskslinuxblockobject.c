@@ -55,8 +55,6 @@
 #include "udiskslinuxswapspace.h"
 #include "udiskslinuxloop.h"
 #include "udiskslinuxprovider.h"
-#include "udisksfstabmonitor.h"
-#include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
 #include "udiskslinuxdevice.h"

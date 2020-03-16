@@ -41,7 +41,6 @@
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
 #include "udisksfstabentry.h"
-#include "udisksfstabmonitor.h"
 #include "udiskscrypttabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udisksspawnedjob.h"

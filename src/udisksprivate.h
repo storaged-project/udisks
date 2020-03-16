@@ -24,10 +24,7 @@
 #include "config.h"
 #include "udisksdaemontypes.h"
 #include <mntent.h>
-
-#ifdef HAVE_LIBMOUNT
 #include <libmount/libmount.h>
-#endif
 
 G_BEGIN_DECLS
 
@@ -36,6 +33,8 @@ UDisksMount *_udisks_mount_new (dev_t dev,
                                 UDisksMountType type);
 
 UDisksFstabEntry *_udisks_fstab_entry_new (const struct mntent *mntent);
+
+UDisksFstabEntry *_udisks_fstab_entry_new_from_mnt_fs (struct libmnt_fs *fs);
 
 UDisksCrypttabEntry *_udisks_crypttab_entry_new (const gchar *name,
                                                  const gchar *device,

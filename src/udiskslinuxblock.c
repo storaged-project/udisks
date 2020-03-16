@@ -37,6 +37,8 @@
 #include <glib/gstdio.h>
 #include <gio/gunixfdlist.h>
 
+#include <libmount/libmount.h>
+
 #include <blockdev/part.h>
 #include <blockdev/fs.h>
 #include <blockdev/crypto.h>
@@ -48,10 +50,10 @@
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
+#include "udisksprivate.h"
 #include "udisksconfigmanager.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
-#include "udisksfstabmonitor.h"
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
@@ -487,97 +489,138 @@ process_device_symlinks (const gchar      *device,
     }
 }
 
-static GList *
-find_fstab_entries_for_device (UDisksLinuxBlock *block,
-                               UDisksDaemon     *daemon)
+/**
+ * udisks_linux_block_matches_id:
+ * @block: A #UDisksLinuxBlock.
+ * @device_path: A device path string.
+ *
+ * Compares block device identifiers and returns %TRUE if match is found. The @device_path
+ * argument may be a device file or a common KEY=VALUE identifier as used e.g. in /etc/fstab.
+ *
+ * Returns: %TRUE when identifiers do match, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_block_matches_id (UDisksLinuxBlock *block,
+                               const gchar      *device_path)
 {
-  GList *entries;
-  GList *l;
-  GList *ret;
+  const gchar *device = NULL;
+  const gchar *label = NULL;
+  const gchar *uuid = NULL;
+  const gchar *partuuid = NULL;
+  const gchar *partlabel = NULL;
+  const gchar *const *symlinks;
 
-  ret = NULL;
-
-  /* if this is too slow, we could add lookup methods to UDisksFstabMonitor... */
-  entries = udisks_fstab_monitor_get_entries (udisks_daemon_get_fstab_monitor (daemon));
-  for (l = entries; l != NULL; l = l->next)
+  if (device_path == NULL || strlen (device_path) < 1)
     {
-      UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
-      const gchar *fsname;
-      const gchar *device = NULL;
-      const gchar *label = NULL;
-      const gchar *uuid = NULL;
-      const gchar *partuuid = NULL;
-      const gchar *partlabel = NULL;
-
-      fsname = udisks_fstab_entry_get_fsname (entry);
-      device = NULL;
-      if (g_str_has_prefix (fsname, "UUID="))
-        {
-          uuid = fsname + 5;
-        }
-      else if (g_str_has_prefix (fsname, "LABEL="))
-        {
-          label = fsname + 6;
-        }
-      else if (g_str_has_prefix (fsname, "PARTUUID="))
-        {
-          partuuid = fsname + 9;
-        }
-      else if (g_str_has_prefix (fsname, "PARTLABEL="))
-        {
-          partlabel = fsname + 10;
-        }
-      else if (g_str_has_prefix (fsname, "/dev"))
-        {
-          device = fsname;
-        }
-      else
-        {
-          /* ignore non-device entries */
-          goto continue_loop;
-        }
-
-      if (device != NULL)
-        {
-          process_device_symlinks (device, block, entry, &ret);
-        }
-      else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
-        {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-      else if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
-        {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-      else if (partlabel != NULL || partuuid != NULL)
-        {
-          UDisksLinuxBlockObject *object;
-          UDisksLinuxDevice *linux_device;
-
-          object = udisks_daemon_util_dup_object (block, NULL);
-          if (object == NULL)
-            goto continue_loop;
-          linux_device = udisks_linux_block_object_get_device (object);
-          g_clear_object (&object);
-          if (linux_device == NULL)
-            goto continue_loop;
-          if (linux_device->udev_device == NULL)
-            {
-              g_object_unref (linux_device);
-              goto continue_loop;
-            }
-          if ((partuuid != NULL && g_strcmp0 (partuuid, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
-              (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0))
-            ret = g_list_prepend (ret, g_object_ref (entry));
-          g_object_unref (linux_device);
-        }
-
-    continue_loop:
-      ;
+      return FALSE;
+    }
+  if (g_str_has_prefix (device_path, "UUID="))
+    {
+      uuid = device_path + 5;
+    }
+  else if (g_str_has_prefix (device_path, "LABEL="))
+    {
+      label = device_path + 6;
+    }
+  else if (g_str_has_prefix (device_path, "PARTUUID="))
+    {
+      partuuid = device_path + 9;
+    }
+  else if (g_str_has_prefix (device_path, "PARTLABEL="))
+    {
+      partlabel = device_path + 10;
+    }
+  else if (g_str_has_prefix (device_path, "/dev"))
+    {
+      device = device_path;
+    }
+  else
+    {
+      /* ignore non-device entry */
+      return FALSE;
     }
 
-  g_list_free_full (entries, g_object_unref);
-  return ret;
+  if (device != NULL)
+    {
+      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+        return TRUE;
+
+      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+      if (symlinks && g_strv_contains (symlinks, device))
+        return TRUE;
+    }
+  if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
+    {
+      return TRUE;
+    }
+  if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
+    {
+      return TRUE;
+    }
+  if (partlabel != NULL || partuuid != NULL)
+    {
+      UDisksLinuxBlockObject *object;
+      UDisksLinuxDevice *linux_device;
+
+      object = udisks_daemon_util_dup_object (block, NULL);
+      if (object != NULL)
+        {
+          linux_device = udisks_linux_block_object_get_device (object);
+          g_clear_object (&object);
+          if (linux_device != NULL && linux_device->udev_device != NULL &&
+              ((partuuid != NULL  && g_strcmp0 (partuuid,  g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
+               (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0)))
+            {
+              g_object_unref (linux_device);
+              return TRUE;
+            }
+          g_clear_object (&linux_device);
+        }
+    }
+
+  return FALSE;
+}
+
+static GList *
+find_fstab_entries (UDisksDaemon     *daemon,
+                    UDisksLinuxBlock *block,
+                    const gchar      *needle)
+{
+  struct libmnt_table *table;
+  struct libmnt_iter* iter;
+  struct libmnt_fs *fs = NULL;
+  GList *ret = NULL;
+
+  table = mnt_new_table ();
+  if (mnt_table_parse_fstab (table, NULL) < 0)
+    {
+      mnt_free_table (table);
+      return NULL;
+    }
+
+  iter = mnt_new_iter (MNT_ITER_FORWARD);
+  while (mnt_table_next_fs (table, iter, &fs) == 0)
+    {
+      UDisksFstabEntry *entry;
+
+      if (block != NULL)
+        {
+          if (! udisks_linux_block_matches_id (block, mnt_fs_get_source (fs)))
+            continue;
+        }
+      else if (needle != NULL)
+        {
+          if (mnt_fs_match_options (fs, needle) == 0)
+            continue;
+        }
+
+      entry = _udisks_fstab_entry_new_from_mnt_fs (fs);
+      ret = g_list_prepend (ret, entry);
+    }
+  mnt_free_iter (iter);
+  mnt_free_table (table);
+
+  return g_list_reverse (ret);
 }
 
 static GList *
@@ -634,6 +677,31 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
 
     continue_loop:
       ;
+    }
+
+  g_list_free_full (entries, g_object_unref);
+  return ret;
+}
+
+static GList *
+find_crypttab_entries_for_needle (gchar        *needle,
+                                  UDisksDaemon *daemon)
+{
+  GList *entries;
+  GList *l;
+  GList *ret;
+
+  ret = NULL;
+
+  entries = udisks_crypttab_monitor_get_entries (udisks_daemon_get_crypttab_monitor (daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
+      const gchar *opts = NULL;
+
+      opts = udisks_crypttab_entry_get_options (entry);
+      if (opts && strstr(opts, needle))
+        ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
   g_list_free_full (entries, g_object_unref);
@@ -772,7 +840,7 @@ calculate_configuration (UDisksLinuxBlock  *block,
 
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(sa{sv})"));
   /* First the /etc/fstab entries */
-  entries = find_fstab_entries_for_device (block, daemon);
+  entries = find_fstab_entries (daemon, block, NULL);
   for (l = entries; l != NULL; l = l->next)
     add_fstab_entry (&builder, UDISKS_FSTAB_ENTRY (l->data));
   g_list_free_full (entries, g_object_unref);
@@ -859,56 +927,6 @@ update_userspace_mount_options (UDisksLinuxBlock *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static GList *
-find_fstab_entries_for_needle (const gchar  *needle,
-                               UDisksDaemon *daemon)
-{
-  GList *entries;
-  GList *l;
-  GList *ret;
-
-  ret = NULL;
-
-  entries = udisks_fstab_monitor_get_entries (udisks_daemon_get_fstab_monitor (daemon));
-  for (l = entries; l != NULL; l = l->next)
-    {
-      UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
-      const gchar *opts = NULL;
-
-      opts = udisks_fstab_entry_get_opts (entry);
-      if (opts && strstr(opts, needle))
-        ret = g_list_prepend (ret, g_object_ref (entry));
-    }
-
-  g_list_free_full (entries, g_object_unref);
-  return ret;
-}
-
-static GList *
-find_crypttab_entries_for_needle (gchar        *needle,
-                                  UDisksDaemon *daemon)
-{
-  GList *entries;
-  GList *l;
-  GList *ret;
-
-  ret = NULL;
-
-  entries = udisks_crypttab_monitor_get_entries (udisks_daemon_get_crypttab_monitor (daemon));
-  for (l = entries; l != NULL; l = l->next)
-    {
-      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      const gchar *opts = NULL;
-
-      opts = udisks_crypttab_entry_get_options (entry);
-      if (opts && strstr(opts, needle))
-        ret = g_list_prepend (ret, g_object_ref (entry));
-    }
-
-  g_list_free_full (entries, g_object_unref);
-  return ret;
-}
-
 /* returns a floating GVariant */
 static GVariant *
 find_configurations (gchar         *needle,
@@ -929,7 +947,7 @@ find_configurations (gchar         *needle,
 
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(sa{sv})"));
   /* First the /etc/fstab entries */
-  entries = find_fstab_entries_for_needle (needle, daemon);
+  entries = find_fstab_entries (daemon, NULL, needle);
   for (l = entries; l != NULL; l = l->next)
     add_fstab_entry (&builder, UDISKS_FSTAB_ENTRY (l->data));
   g_list_free_full (entries, g_object_unref);

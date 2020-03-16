@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <gio/gunixmounts.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -71,6 +72,8 @@ struct _UDisksLinuxVolumeGroupObject
   guint poll_timeout_id;
   gboolean poll_requested;
 
+  GUnixMountMonitor *mount_monitor;
+
   /* interface */
   UDisksVolumeGroup *iface_volume_group;
 };
@@ -89,9 +92,11 @@ enum
 
 G_DEFINE_TYPE (UDisksLinuxVolumeGroupObject, udisks_linux_volume_group_object, UDISKS_TYPE_OBJECT_SKELETON);
 
-static void etctabs_changed (UDisksFstabMonitor *monitor,
-                             UDisksFstabEntry   *entry,
-                             gpointer            user_data);
+static void fstab_changed (GUnixMountMonitor *monitor,
+                           gpointer           user_data);
+static void crypttab_changed (UDisksCrypttabMonitor  *monitor,
+                              UDisksCrypttabEntry    *entry,
+                              gpointer                user_data);
 
 typedef struct {
   BDLVMVGdata *vg_info;
@@ -111,12 +116,13 @@ udisks_linux_volume_group_object_finalize (GObject *_object)
   g_hash_table_unref (object->logical_volumes);
   g_free (object->name);
 
-  g_signal_handlers_disconnect_by_func (udisks_daemon_get_fstab_monitor (object->daemon),
-                                        G_CALLBACK (etctabs_changed),
+  g_signal_handlers_disconnect_by_func (object->mount_monitor,
+                                        G_CALLBACK (fstab_changed),
                                         object);
   g_signal_handlers_disconnect_by_func (udisks_daemon_get_crypttab_monitor (object->daemon),
-                                        G_CALLBACK (etctabs_changed),
+                                        G_CALLBACK (crypttab_changed),
                                         object);
+  g_object_unref (object->mount_monitor);
 
   if (G_OBJECT_CLASS (udisks_linux_volume_group_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_volume_group_object_parent_class)->finalize (_object);
@@ -209,21 +215,18 @@ udisks_linux_volume_group_object_constructed (GObject *_object)
 
   /* Watch fstab and crypttab for changes.
    */
-  g_signal_connect (udisks_daemon_get_fstab_monitor (object->daemon),
-                    "entry-added",
-                    G_CALLBACK (etctabs_changed),
-                    object);
-  g_signal_connect (udisks_daemon_get_fstab_monitor (object->daemon),
-                    "entry-removed",
-                    G_CALLBACK (etctabs_changed),
+  object->mount_monitor = g_unix_mount_monitor_get ();
+  g_signal_connect (object->mount_monitor,
+                    "mountpoints-changed",
+                    G_CALLBACK (fstab_changed),
                     object);
   g_signal_connect (udisks_daemon_get_crypttab_monitor (object->daemon),
                     "entry-added",
-                    G_CALLBACK (etctabs_changed),
+                    G_CALLBACK (crypttab_changed),
                     object);
   g_signal_connect (udisks_daemon_get_crypttab_monitor (object->daemon),
                     "entry-removed",
-                    G_CALLBACK (etctabs_changed),
+                    G_CALLBACK (crypttab_changed),
                     object);
 }
 
@@ -322,9 +325,16 @@ update_etctabs (UDisksLinuxVolumeGroupObject *object)
 }
 
 static void
-etctabs_changed (UDisksFstabMonitor *monitor,
-                 UDisksFstabEntry   *entry,
-                 gpointer            user_data)
+fstab_changed (GUnixMountMonitor *monitor,
+               gpointer           user_data)
+{
+  update_etctabs (UDISKS_LINUX_VOLUME_GROUP_OBJECT (user_data));
+}
+
+static void
+crypttab_changed (UDisksCrypttabMonitor  *monitor,
+                  UDisksCrypttabEntry    *entry,
+                  gpointer                user_data)
 {
   update_etctabs (UDISKS_LINUX_VOLUME_GROUP_OBJECT (user_data));
 }

@@ -36,8 +36,6 @@
 #include "udisksthreadedjob.h"
 #include "udiskssimplejob.h"
 #include "udisksstate.h"
-#include "udisksfstabmonitor.h"
-#include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
 #include "udiskslinuxblockobject.h"
@@ -80,8 +78,6 @@ struct _UDisksDaemon
 
   UDisksState *state;
 
-  UDisksFstabMonitor *fstab_monitor;
-
   UDisksCrypttabMonitor *crypttab_monitor;
 
 #ifdef HAVE_LIBMOUNT
@@ -110,7 +106,6 @@ enum
   PROP_CONNECTION,
   PROP_OBJECT_MANAGER,
   PROP_MOUNT_MONITOR,
-  PROP_FSTAB_MONITOR,
   PROP_CRYPTTAB_MONITOR,
   PROP_MODULE_MANAGER,
   PROP_CONFIG_MANAGER,
@@ -139,7 +134,6 @@ udisks_daemon_finalize (GObject *object)
   /* Modules use the monitors and try to reference them when cleaning up */
   udisks_module_manager_unload_modules (daemon->module_manager);
   g_object_unref (daemon->mount_monitor);
-  g_object_unref (daemon->fstab_monitor);
   g_object_unref (daemon->crypttab_monitor);
 #ifdef HAVE_LIBMOUNT
   g_object_unref (daemon->utab_monitor);
@@ -175,10 +169,6 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_MOUNT_MONITOR:
       g_value_set_object (value, udisks_daemon_get_mount_monitor (daemon));
-      break;
-
-    case PROP_FSTAB_MONITOR:
-      g_value_set_object (value, udisks_daemon_get_fstab_monitor (daemon));
       break;
 
     case PROP_CRYPTTAB_MONITOR:
@@ -391,7 +381,6 @@ udisks_daemon_constructed (GObject *object)
                     G_CALLBACK (mount_monitor_on_mount_removed),
                     daemon);
 
-  daemon->fstab_monitor = udisks_fstab_monitor_new ();
   daemon->crypttab_monitor = udisks_crypttab_monitor_new ();
 #ifdef HAVE_LIBMOUNT
   daemon->utab_monitor = udisks_utab_monitor_new ();
@@ -623,21 +612,6 @@ udisks_daemon_get_mount_monitor (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->mount_monitor;
-}
-
-/**
- * udisks_daemon_get_fstab_monitor:
- * @daemon: A #UDisksDaemon
- *
- * Gets the fstab monitor used by @daemon.
- *
- * Returns: A #UDisksFstabMonitor. Do not free, the object is owned by @daemon.
- */
-UDisksFstabMonitor *
-udisks_daemon_get_fstab_monitor (UDisksDaemon *daemon)
-{
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  return daemon->fstab_monitor;
 }
 
 /**

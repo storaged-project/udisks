@@ -256,6 +256,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check reported size
         size = self.get_property(block_fs, '.Block', 'Size').value
@@ -290,6 +291,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # system mountpoint
         self.assertTrue(os.path.ismount(mnt_path))
@@ -340,15 +342,18 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         opts = self.str_to_ay('ro')
 
         # set the new configuration
-        conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
-                               signature=dbus.Signature('sv'))
+        conf_items = {'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0}
+        if self.vdevs[0] != block_fs_dev:
+            # avoid using IDs for partitioned block devices
+            conf_items['fsname'] = self.str_to_ay(block_fs_dev)
+        conf = dbus.Dictionary(conf_items, signature=dbus.Signature('sv'))
         block_fs.AddConfigurationItem(('fstab', conf), self.no_options,
                                       dbus_interface=self.iface_prefix + '.Block')
-
 
         # mount using fstab options
         block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -392,6 +397,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -437,6 +443,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         d['options'] = 'ro,x-test.op1'
         mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check utab
         utab_opts = self.get_property(block_fs, '.Block', 'UserspaceMountOptions')

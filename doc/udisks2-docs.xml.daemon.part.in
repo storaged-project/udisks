@@ -13,7 +13,7 @@
     <chapter id="ref-daemon-monitoring">
       <title>State and Configuration</title>
       <xi:include href="xml/udisksmountmonitor.xml"/>
-      <xi:include href="xml/udisksfstabmonitor.xml"/>
+      <xi:include href="xml/udisksfstabentry.xml"/>
       <xi:include href="xml/udiskscrypttabmonitor.xml"/>
       <xi:include href="xml/udisksutabmonitor.xml"/>
     </chapter>
