@@ -1181,7 +1181,7 @@ is_system_managed (UDisksDaemon *daemon,
                    gchar       **out_mount_options)
 {
   UDisksMountMonitor *mount_monitor = udisks_daemon_get_mount_monitor (daemon);
-  gboolean ret;
+  gboolean ret = FALSE;
   struct libmnt_table *table;
   struct libmnt_iter* iter;
   struct libmnt_fs *fs = NULL;
