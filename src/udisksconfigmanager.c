@@ -36,6 +36,7 @@ struct _UDisksConfigManager {
   GList *modules;
 
   const gchar *encryption;
+  gchar *config_dir;
 };
 
 struct _UDisksConfigManagerClass {
@@ -150,31 +151,30 @@ udisks_config_manager_constructed (GObject *object)
   gchar **modules;
   gchar **modules_tmp;
 
-  config_file = g_key_file_new ();
-  g_key_file_set_list_separator (config_file, ',');
+  /* Build a path to the config directory */
+  manager->config_dir = g_build_path (G_DIR_SEPARATOR_S,
+                                      manager->uninstalled ? BUILD_DIR : PACKAGE_SYSCONF_DIR,
+                                      manager->uninstalled ? "udisks" : PROJECT_SYSCONF_DIR,
+                                      NULL);
+
+  /* Make sure the config dir exists, UDisksLinuxDrive may store some data there */
+  if (g_mkdir_with_parents (manager->config_dir, 0755) != 0)
+    {
+      /* don't abort the daemon, the config dir may point to a readonly filesystem */
+      udisks_warning ("Error creating directory %s: %m", manager->config_dir);
+    }
 
   /* Get modules and means of loading */
   conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
-                                    udisks_config_manager_get_uninstalled (manager) ?
-                                      BUILD_DIR :
-                                      PACKAGE_SYSCONF_DIR,
-                                    udisks_config_manager_get_uninstalled (manager) ?
-                                      "udisks" :
-                                      PROJECT_SYSCONF_DIR,
+                                    manager->config_dir,
                                     PACKAGE_NAME_UDISKS2 ".conf",
                                     NULL);
 
   udisks_debug ("Loading configuration file: %s", conf_filename);
 
-  if (manager->modules)
-    {
-      g_list_free_full (manager->modules, (GDestroyNotify) g_free);
-      manager->modules = NULL;  /* NULL == '*' */
-    }
-  manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
-  manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
-
   /* Load config */
+  config_file = g_key_file_new ();
+  g_key_file_set_list_separator (config_file, ',');
   if (g_key_file_load_from_file (config_file,
                                  conf_filename,
                                  G_KEY_FILE_NONE,
@@ -290,6 +290,7 @@ udisks_config_manager_finalize (GObject *object)
       g_list_free_full (manager->modules, (GDestroyNotify) g_free);
       manager->modules = NULL;
     }
+  g_free (manager->config_dir);
 
   if (G_OBJECT_CLASS (udisks_config_manager_parent_class))
     G_OBJECT_CLASS (udisks_config_manager_parent_class)->finalize (object);
@@ -361,6 +362,9 @@ udisks_config_manager_class_init (UDisksConfigManagerClass *klass)
 static void
 udisks_config_manager_init (UDisksConfigManager *manager)
 {
+  manager->modules = NULL;  /* NULL == '*' */
+  manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+  manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
 }
 
 UDisksConfigManager *
@@ -416,4 +420,22 @@ udisks_config_manager_get_encryption (UDisksConfigManager *manager)
   g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager),
                         UDISKS_ENCRYPTION_DEFAULT);
   return manager->encryption;
+}
+
+/**
+ * udisks_config_manager_get_config_dir:
+ * @manager: A #UDisksConfigManager.
+ *
+ * Gets path to the actual directory where global UDisks configuration files are
+ * stored. Takes in account the flag whether the UDisks daemon is running from
+ * a source code tree ("uninstalled") or whether it is a properly installed package.
+ *
+ * Returns: (transfer none): path to the global UDisks configuration directory.
+ */
+const gchar *
+udisks_config_manager_get_config_dir (UDisksConfigManager *manager)
+{
+  g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager), NULL);
+  g_warn_if_fail (manager->config_dir != NULL);
+  return manager->config_dir;
 }

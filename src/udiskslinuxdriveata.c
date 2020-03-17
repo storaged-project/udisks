@@ -50,6 +50,7 @@
 #include "udisksthreadedjob.h"
 #include "udisksata.h"
 #include "udiskslinuxdevice.h"
+#include "udisksconfigmanager.h"
 
 /**
  * SECTION:udiskslinuxdriveata
@@ -1622,15 +1623,17 @@ static gpointer
 apply_configuration_thread_func (gpointer user_data)
 {
   ApplyConfData *data = user_data;
+  UDisksDaemon *daemon;
   const gchar *device_file = NULL;
   gint fd = -1;
   GError *error = NULL;
 
+  daemon = udisks_linux_drive_object_get_daemon (data->object);
   device_file = g_udev_device_get_device_file (data->device->udev_device);
 
-  udisks_notice ("Applying configuration from %s/udisks2/%s.conf to %s",
-                 PACKAGE_SYSCONF_DIR, udisks_drive_get_id (data->drive), device_file);
-
+  udisks_notice ("Applying configuration from %s/%s.conf to %s",
+                 udisks_config_manager_get_config_dir (udisks_daemon_get_config_manager (daemon)),
+                 udisks_drive_get_id (data->drive), device_file);
 
   /* Use O_RDRW instead of O_RDONLY to force a 'change' uevent so properties are updated */
   fd = open (device_file, O_RDWR|O_NONBLOCK);

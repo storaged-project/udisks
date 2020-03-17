@@ -69,7 +69,7 @@
 #include "udiskslinuxpartitiontable.h"
 #include "udiskslinuxfilesystemhelpers.h"
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 #include "udisksutabmonitor.h"
 #include "udisksutabentry.h"
 #endif
@@ -708,7 +708,7 @@ find_crypttab_entries_for_needle (gchar        *needle,
   return ret;
 }
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 static GList *
 find_utab_entries_for_device (UDisksLinuxBlock *block,
                               UDisksDaemon     *daemon)
@@ -867,7 +867,7 @@ calculate_configuration (UDisksLinuxBlock  *block,
   return ret;
 }
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 static gchar **
 calculate_userspace_mount_options (UDisksLinuxBlock *block,
                                    UDisksDaemon     *daemon)
@@ -911,7 +911,7 @@ update_configuration (UDisksLinuxBlock  *block,
   udisks_block_set_configuration (UDISKS_BLOCK (block), configuration);
 }
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 static void
 update_userspace_mount_options (UDisksLinuxBlock *block,
                                 UDisksDaemon     *daemon)
@@ -1290,7 +1290,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
 
   update_hints (block, device, drive);
   update_configuration (block, daemon);
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
   update_userspace_mount_options (block, daemon);
 #endif
   update_mdraid (block, device, drive, object_manager);

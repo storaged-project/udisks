@@ -101,7 +101,7 @@ typedef struct _UDisksCrypttabMonitor UDisksCrypttabMonitor;
 struct _UDisksCrypttabEntry;
 typedef struct _UDisksCrypttabEntry UDisksCrypttabEntry;
 
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 struct _UDisksUtabMonitor;
 typedef struct _UDisksUtabMonitor UDisksUtabMonitor;
 

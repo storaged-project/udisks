@@ -40,7 +40,7 @@ GDBusConnection          *udisks_daemon_get_connection        (UDisksDaemon    *
 GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
 UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
 UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *daemon);
-#ifdef HAVE_LIBMOUNT
+#ifdef HAVE_LIBMOUNT_UTAB
 UDisksUtabMonitor        *udisks_daemon_get_utab_monitor      (UDisksDaemon    *daemon);
 #endif
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
@@ -163,25 +163,22 @@ UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon     
                                                                GDestroyNotify         user_data_free_func,
                                                                GCancellable          *cancellable);
 
-gboolean                 udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
-                                                                 UDisksObject          *object,
-                                                                 const gchar           *job_operation,
-                                                                 uid_t                  job_started_by_uid,
-                                                                 UDisksThreadedJobFunc  job_func,
-                                                                 gpointer               user_data,
-                                                                 GDestroyNotify         user_data_free_func,
-                                                                 GCancellable          *cancellable,
-                                                                 GError               **error);
+gboolean                  udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
+                                                                  UDisksObject          *object,
+                                                                  const gchar           *job_operation,
+                                                                  uid_t                  job_started_by_uid,
+                                                                  UDisksThreadedJobFunc  job_func,
+                                                                  gpointer               user_data,
+                                                                  GDestroyNotify         user_data_free_func,
+                                                                  GCancellable          *cancellable,
+                                                                  GError               **error);
 
-void                     udisks_bd_thread_set_progress_for_job  (UDisksJob             *job);
-void                     udisks_bd_thread_disable_progress      (void);
+void                      udisks_bd_thread_set_progress_for_job  (UDisksJob             *job);
+void                      udisks_bd_thread_disable_progress      (void);
 
-/* Return value and *uuid_ret must be freed with g_free.  If return
-   value is NULL, *uuid has not been changed.
- */
-gchar                      *udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
-                                                                   const gchar   *path,
-                                                                   gchar        **uuid_ret);
+gchar                    *udisks_daemon_get_parent_for_tracking  (UDisksDaemon          *daemon,
+                                                                  const gchar           *path,
+                                                                  gchar                **uuid);
 
 G_END_DECLS
 

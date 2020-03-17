@@ -69,6 +69,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udiskslinuxmdraidhelpers.h     udiskslinuxmdraidhelpers.c              \
 	udiskslinuxmdraid.h            udiskslinuxmdraid.c                     \
 	udiskslinuxmanager.h           udiskslinuxmanager.c                    \
+	udiskslinuxmountoptions.h      udiskslinuxmountoptions.c               \
 	udiskslinuxfsinfo.h            udiskslinuxfsinfo.c                     \
 	udisksbasejob.h                udisksbasejob.c                         \
 	udisksspawnedjob.h             udisksspawnedjob.c                      \
@@ -92,11 +93,11 @@ libudisks_daemon_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
 	$(NULL)
 
-if HAVE_LIBMOUNT
-libudisks_daemon_la_SOURCES +=                                           \
+if HAVE_LIBMOUNT_UTAB
+libudisks_daemon_la_SOURCES +=                                                 \
 	udisksutabentry.h              udisksutabentry.c                       \
 	udisksutabmonitor.h            udisksutabmonitor.c
-endif # HAVE_LIBMOUNT
+endif # HAVE_LIBMOUNT_UTAB
 
 libudisks_daemon_la_CFLAGS =                                                   \
 	-I$(top_srcdir)                                                        \

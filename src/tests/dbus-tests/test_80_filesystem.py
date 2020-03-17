@@ -1159,8 +1159,8 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         disk = self.get_object('/block_devices/' + os.path.basename(dev))
         self.assertIsNotNone(disk)
 
-        self.set_udev_property(dev, "UDISKS_FILESYSTEM_SHARED", "1")
-        self.addCleanup(self.set_udev_property, dev, "UDISKS_FILESYSTEM_SHARED", "0")
+        self.set_udev_properties(dev, { "UDISKS_FILESYSTEM_SHARED": "1" })
+        self.addCleanup(self.set_udev_properties, dev, None)
 
         self.assertHasIface(disk, self.iface_prefix + '.Filesystem')
 
@@ -1196,8 +1196,8 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
         disk = self.get_object('/block_devices/' + os.path.basename(dev))
         self.assertIsNotNone(disk)
 
-        self.set_udev_property(dev, "UDISKS_FILESYSTEM_SHARED", "1")
-        self.addCleanup(self.set_udev_property, dev, "UDISKS_FILESYSTEM_SHARED", "0")
+        self.set_udev_properties(dev, { "UDISKS_FILESYSTEM_SHARED": "1" })
+        self.addCleanup(self.set_udev_properties, dev, None)
 
         # mount with specific mode/dmode
         extra = dbus.Dictionary(signature='sv')
