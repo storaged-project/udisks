@@ -511,14 +511,6 @@ mount_options_parse_config_file (const gchar *filename, GError **error)
   mount_options = mount_options_parse_key_file (key_file, error);
   g_key_file_free (key_file);
 
-  if (mount_options && !g_hash_table_contains (mount_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
-    {
-      g_hash_table_destroy (mount_options);
-      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                           "Failed to parse mount options: No global defaults section found.");
-      return NULL;
-    }
-
   return mount_options;
 }
 
@@ -573,6 +565,12 @@ udisks_linux_mount_options_get_builtin (void)
       /* should never happen either */
       udisks_error ("Failed to parse built-in mount options: %s", error->message);
       g_error_free (error);
+    }
+  else if (!g_hash_table_contains (mount_options, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+    {
+      g_hash_table_destroy (mount_options);
+      mount_options = NULL;
+      udisks_error ("Failed to parse built-in mount options: No global `defaults` section found.");
     }
 
   return mount_options;
