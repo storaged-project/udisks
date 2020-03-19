@@ -54,8 +54,6 @@ typedef struct
 {
   gchar **defaults;
   gchar **allow;
-  gchar **allow_uid_self;
-  gchar **allow_gid_self;
 } FSMountOptions;
 
 static void
@@ -65,8 +63,6 @@ free_fs_mount_options (FSMountOptions *options)
     {
       g_strfreev (options->defaults);
       g_strfreev (options->allow);
-      g_strfreev (options->allow_uid_self);
-      g_strfreev (options->allow_gid_self);
       g_free (options);
     }
 }
@@ -117,8 +113,6 @@ append_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
 
   strv_append_unique (src->defaults, &dest->defaults);
   strv_append_unique (src->allow, &dest->allow);
-  strv_append_unique (src->allow_uid_self, &dest->allow_uid_self);
-  strv_append_unique (src->allow_gid_self, &dest->allow_gid_self);
 }
 
 /* Similar to append_fs_mount_options() but replaces the member data instead of appending */
@@ -128,17 +122,16 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
   if (!src)
     return;
 
-#define OVERRIDE_MEMBER(m) \
-  if (src->m) \
-    { \
-      g_strfreev (dest->m); \
-      dest->m = g_strdupv (src->m); \
+  if (src->defaults)
+    {
+      g_strfreev (dest->defaults);
+      dest->defaults = g_strdupv (src->defaults);
     }
-
-  OVERRIDE_MEMBER (defaults);
-  OVERRIDE_MEMBER (allow);
-  OVERRIDE_MEMBER (allow_uid_self);
-  OVERRIDE_MEMBER (allow_gid_self);
+  if (src->allow)
+    {
+      g_strfreev (dest->allow);
+      dest->allow = g_strdupv (src->allow);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -148,8 +141,8 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
 #define MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS  "defaults"
 #define MOUNT_OPTIONS_KEY_DEFAULTS           "defaults"
 #define MOUNT_OPTIONS_KEY_ALLOW              "allow"
-#define MOUNT_OPTIONS_KEY_ALLOW_UID_SELF     "allow_uid_self"
-#define MOUNT_OPTIONS_KEY_ALLOW_GID_SELF     "allow_gid_self"
+#define MOUNT_OPTIONS_ARG_UID_SELF           "$UID"
+#define MOUNT_OPTIONS_ARG_GID_SELF           "$GID"
 #define UDEV_MOUNT_OPTIONS_PREFIX            "UDISKS_MOUNT_OPTIONS_"
 
 /*
@@ -386,25 +379,22 @@ static gchar *
 extract_fs_type (const gchar *key, const gchar **group)
 {
   if (g_str_equal (key, MOUNT_OPTIONS_KEY_DEFAULTS) ||
-      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW) ||
-      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW_UID_SELF) ||
-      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW_GID_SELF))
+      g_str_equal (key, MOUNT_OPTIONS_KEY_ALLOW))
     {
       *group = key;
       return g_strdup (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
     }
 
-#define TEST_AND_RETURN_GROUP(g) \
-  if (g_str_has_suffix (key, "_" g)) \
-    { \
-      *group = g; \
-      return g_strndup (key, strlen (key) - strlen (g) - 1); \
+  if (g_str_has_suffix (key, "_" MOUNT_OPTIONS_KEY_DEFAULTS))
+    {
+      *group = MOUNT_OPTIONS_KEY_DEFAULTS;
+      return g_strndup (key, strlen (key) - strlen (MOUNT_OPTIONS_KEY_DEFAULTS) - 1);
     }
-
-  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF);
-  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF);
-  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_ALLOW);
-  TEST_AND_RETURN_GROUP (MOUNT_OPTIONS_KEY_DEFAULTS);
+  if (g_str_has_suffix (key, "_" MOUNT_OPTIONS_KEY_ALLOW))
+    {
+      *group = MOUNT_OPTIONS_KEY_ALLOW;
+      return g_strndup (key, strlen (key) - strlen (MOUNT_OPTIONS_KEY_ALLOW) - 1);
+    }
 
   /* invalid key name */
   *group = NULL;
@@ -451,8 +441,6 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
     } \
   else
 
-  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_UID_SELF, allow_uid_self)
-  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW_GID_SELF, allow_gid_self)
   ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW, allow)
   ASSIGN_OPTS (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS, defaults)
     {
@@ -710,10 +698,36 @@ is_uid_in_gid (uid_t uid,
   return FALSE;
 }
 
+/* extracts option names from @allow that carry the @arg string as an argument */
+static gchar **
+extract_opts_with_arg (gchar **allow,
+                       const gchar *arg)
+{
+  GPtrArray *opts;
+
+  if (allow == NULL)
+    return NULL;
+
+  opts = g_ptr_array_new ();
+  for (; *allow; allow++)
+    {
+      gchar *eq;
+
+      eq = g_strrstr (*allow, arg);
+      if (eq && eq != *allow && *(eq - 1) == '=')
+        g_ptr_array_add (opts, g_strndup (*allow, eq - *allow - 1));
+    }
+  g_ptr_array_add (opts, NULL);
+
+  return (gchar **) g_ptr_array_free (opts, FALSE);
+}
+
 #define VARIANT_NULL_STRING  "\1"
 
 static gboolean
 is_mount_option_allowed (const FSMountOptions *fsmo,
+                         const gchar * const  *allow_uid_self,
+                         const gchar * const  *allow_gid_self,
                          const gchar          *option,
                          const gchar          *value,
                          uid_t                 caller_uid)
@@ -740,8 +754,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
   /* .. then check for mount options where the caller is allowed to pass
    * in his own uid
    */
-  if (fsmo && fsmo->allow_uid_self &&
-      g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option))
+  if (fsmo && allow_uid_self && g_strv_contains (allow_uid_self, option))
     {
       if (value == NULL || strlen (value) == 0)
         {
@@ -758,8 +771,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 
   /* .. ditto for gid
    */
-  if (fsmo && fsmo->allow_gid_self &&
-      g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option))
+  if (fsmo && allow_gid_self && g_strv_contains (allow_gid_self, option))
     {
       if (value == NULL || strlen (value) == 0)
         {
@@ -795,6 +807,8 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 
 static GVariant *
 prepend_default_mount_options (const FSMountOptions *fsmo,
+                               const gchar * const  *allow_uid_self,
+                               const gchar * const  *allow_gid_self,
                                uid_t                 caller_uid,
                                GVariant             *given_options,
                                gboolean              shared_fs)
@@ -822,18 +836,20 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 
               /* check that 'option=value' is explicitly allowed */
               if (value && strlen (value) > 0 && fsmo->allow &&
-                  g_strv_contains ((const gchar * const *) fsmo->allow, option))
+                  g_strv_contains ((const gchar * const *) fsmo->allow, option) &&
+                  !g_str_equal (value, MOUNT_OPTIONS_ARG_UID_SELF) &&
+                  !g_str_equal (value, MOUNT_OPTIONS_ARG_GID_SELF))
                 {
                   g_variant_builder_add (&builder, "{ss}", option_name, value);
                 }
-              else if (fsmo->allow_uid_self && g_strv_contains ((const gchar * const *) fsmo->allow_uid_self, option_name))
+              else if (allow_uid_self && g_strv_contains (allow_uid_self, option_name))
                 {
                   /* append caller UID */
                   s = g_strdup_printf ("%u", caller_uid);
                   g_variant_builder_add (&builder, "{ss}", option_name, s);
                   g_free (s);
                 }
-              else if (fsmo->allow_gid_self && g_strv_contains ((const gchar * const *) fsmo->allow_gid_self, option_name))
+              else if (allow_gid_self && g_strv_contains (allow_gid_self, option_name))
                 {
                   if (udisks_daemon_util_get_user_info (caller_uid, &gid, NULL, NULL))
                     {
@@ -932,17 +948,17 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
                                       GError       **error)
 {
   FSMountOptions *fsmo;
+  gchar **allow_uid_self = NULL;
+  gchar **allow_gid_self = NULL;
   GVariant *options_to_use;
   GVariantIter iter;
   UDisksLinuxBlockObject *object = NULL;
   UDisksLinuxDevice *device = NULL;
   gboolean shared_fs = FALSE;
-  gchar *options_to_use_str;
+  gchar *options_to_use_str = NULL;
   gchar *key, *value;
   gchar *fs_type_l;
   GString *str;
-
-  options_to_use_str = NULL;
 
   object = udisks_daemon_util_dup_object (block, NULL);
   device = udisks_linux_block_object_get_device (object);
@@ -954,13 +970,21 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   fsmo = compute_mount_options_for_fs_type (daemon, block, object, fs_type_l);
   g_free (fs_type_l);
 
+  allow_uid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_UID_SELF);
+  allow_gid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_GID_SELF);
+
   g_clear_object (&device);
   g_clear_object (&object);
 
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
    */
-  options_to_use = prepend_default_mount_options (fsmo, caller_uid, options, shared_fs);
+  options_to_use = prepend_default_mount_options (fsmo,
+                                                  (const gchar * const *) allow_uid_self,
+                                                  (const gchar * const *) allow_gid_self,
+                                                  caller_uid,
+                                                  options,
+                                                  shared_fs);
 
   /* validate mount options */
   str = g_string_new ("uhelper=udisks2,nodev,nosuid");
@@ -983,7 +1007,10 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
         }
 
       /* first check if the mount option is allowed */
-      if (!is_mount_option_allowed (fsmo, key, value, caller_uid))
+      if (!is_mount_option_allowed (fsmo,
+                                    (const gchar * const *) allow_uid_self,
+                                    (const gchar * const *) allow_gid_self,
+                                    key, value, caller_uid))
         {
           if (value == NULL)
             {
@@ -1016,6 +1043,8 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
  out:
   g_variant_unref (options_to_use);
   free_fs_mount_options (fsmo);
+  g_strfreev (allow_uid_self);
+  g_strfreev (allow_gid_self);
 
   g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
 
