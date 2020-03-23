@@ -1006,6 +1006,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                                    TRUE,   /* fstab_mounted */
                                    FALSE); /* persistent */
 
+      udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT);
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
     }
@@ -1157,6 +1159,8 @@ handle_mount (UDisksFilesystem      *filesystem,
                  mount_point_to_use,
                  caller_uid);
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
  out:
@@ -1665,11 +1669,11 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                    NULL, /* input_string */
                                                    "%s", command);
 
-  /* XXX: label property is automatically updated after an udev change
+  /* Label property is automatically updated after an udev change
    * event for this device, but udev sometimes returns the old label
    * so just trigger the uevent again now to be sure the property
-   * has been updated
-  */
+   * has been updated.
+   */
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
 
@@ -2027,6 +2031,8 @@ handle_repair (UDisksFilesystem      *filesystem,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_filesystem_complete_repair (filesystem, invocation, ret);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
@@ -2193,6 +2199,8 @@ handle_check (UDisksFilesystem      *filesystem,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_filesystem_complete_check (filesystem, invocation, ret);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
