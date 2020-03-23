@@ -2311,6 +2311,8 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
     }
 
   udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (block_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
  out:
   g_clear_object (&block_object);
