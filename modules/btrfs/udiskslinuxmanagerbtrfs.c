@@ -25,6 +25,7 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
+#include <src/udiskslinuxblockobject.h>
 
 #include "udiskslinuxmanagerbtrfs.h"
 #include "udisksbtrfsstate.h"
@@ -200,6 +201,8 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
   UDisksLinuxManagerBTRFS *l_manager = UDISKS_LINUX_MANAGER_BTRFS (manager);
   GError *error = NULL;
   GPtrArray *devices = NULL;
+  GList *objects = NULL;
+  GList *l;
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_btrfs_get_daemon (l_manager),
@@ -239,7 +242,7 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
         }
 
       g_ptr_array_add (devices, udisks_block_dup_device (block));
-      g_object_unref (object);
+      objects = g_list_append (objects, object);
     }
   g_ptr_array_add (devices, NULL);
 
@@ -249,12 +252,20 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
       goto out;
     }
 
+  /* Trigger uevent on all block devices */
+  for (l = objects; l; l = g_list_next (l))
+    {
+      udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (l->data),
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT);
+    }
+
   /* Complete DBus call. */
   udisks_manager_btrfs_complete_create_volume (manager, invocation);
 
 out:
   if (devices != NULL)
     g_ptr_array_free (devices, TRUE);
+  g_list_free_full (objects, g_object_unref);
 
   /* Indicate that we handled the method invocation */
   return TRUE;
