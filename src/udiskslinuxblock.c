@@ -3461,7 +3461,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* Add configuration items */
-
   if (config_items)
     {
       GVariantIter iter;
@@ -3489,6 +3488,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             }
           g_variant_unref (details);
         }
+      update_configuration (UDISKS_LINUX_BLOCK (block), daemon);
     }
 
   if (invocation != NULL)
