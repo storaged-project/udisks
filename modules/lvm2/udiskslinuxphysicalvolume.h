@@ -27,8 +27,6 @@
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
 
-#include "udisks-lvm2-generated.h"
-
 G_BEGIN_DECLS
 
 #define UDISKS_TYPE_LINUX_PHYSICAL_VOLUME         (udisks_linux_physical_volume_get_type ())

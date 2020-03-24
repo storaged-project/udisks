@@ -28,21 +28,7 @@ CPPFLAGS =                                                                    \
 	$(WARN_CFLAGS)                                                        \
 	$(NULL)
 
-$(dbus_built_sources): $(BCACHE_MODULE_DIR)/data/org.freedesktop.UDisks2.bcache.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                             \
-	        --interface-prefix org.freedesktop.UDisks2.                   \
-	        --c-namespace UDisks                                          \
-	        --c-generate-autocleanup all                                  \
-	        --generate-c-code udisks-bcache-generated                     \
-	        --generate-docbook udisks-generated-doc                       \
-	        $<
-
-dbus_built_sources =                                                          \
-	udisks-bcache-generated.h	udisks-bcache-generated.c             \
-	$(NULL)
-
 BUILT_SOURCES =                                                               \
-	$(dbus_built_sources)                                                 \
 	$(NULL)
 
 libudisks2_bcachedir=$(libdir)/udisks2/modules
@@ -106,7 +92,7 @@ libudisks2_bcache_la_LIBADD =                                                 \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST =                                                                  \
 	$(NULL)

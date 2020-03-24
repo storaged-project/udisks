@@ -41,8 +41,6 @@
 #include "udiskslinuxlogicalvolume.h"
 #include "udiskslinuxvdovolume.h"
 
-#include "udisks-lvm2-generated.h"
-
 /**
  * SECTION:udiskslinuxlogicalvolumeobject
  * @title: UDisksLinuxLogicalVolumeObject

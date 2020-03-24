@@ -28,8 +28,6 @@
 #include <sys/types.h>
 #include <src/udiskslogging.h>
 
-#include "lsm_generated.h"
-
 G_BEGIN_DECLS
 
 #define LSM_MODULE_NAME "lsm"

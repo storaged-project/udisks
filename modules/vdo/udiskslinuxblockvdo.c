@@ -30,7 +30,6 @@
 #include <blockdev/vdo.h>
 
 #include "udiskslinuxblockvdo.h"
-#include "udisks-vdo-generated.h"
 
 /**
  * SECTION:udiskslinuxblockvdo

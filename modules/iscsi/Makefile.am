@@ -27,21 +27,7 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.freedesktop.UDisks2.iscsi.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.freedesktop.UDisks2.                    \
-	        --c-namespace UDisks                                           \
-	        --c-generate-autocleanup all                                   \
-	        --generate-c-code udisks-iscsi-generated                       \
-	        --generate-docbook udisks-generated-doc                        \
-	        $<
-
-dbus_built_sources =                                                           \
-	udisks-iscsi-generated.h        udisks-iscsi-generated.c               \
-	$(NULL)
-
 BUILT_SOURCES =                                                                \
-	$(dbus_built_sources)                                                  \
 	$(NULL)
 
 libudisks2_iscsidir=$(libdir)/udisks2/modules
@@ -69,8 +55,6 @@ libudisks2_iscsi_la_SOURCES =                                                  \
 	udisksiscsimoduleiface.c                                               \
 	udisksiscsiutil.h                                                      \
 	udisksiscsiutil.c                                                      \
-	udisksiscsidbusutil.h                                                  \
-	udisksiscsidbusutil.c                                                  \
 	$(NULL)
 
 if BUILD_ISCSI_SESSION_OBJECT
@@ -112,7 +96,7 @@ libudisks2_iscsi_la_LIBADD =                                                   \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

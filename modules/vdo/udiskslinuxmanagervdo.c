@@ -28,7 +28,6 @@
 #include <src/udiskssimplejob.h>
 
 #include "udiskslinuxmanagervdo.h"
-#include "udisks-vdo-generated.h"
 
 /**
  * SECTION:udiskslinuxmanagervdo

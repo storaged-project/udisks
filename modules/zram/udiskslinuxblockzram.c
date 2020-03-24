@@ -29,7 +29,6 @@
 
 #include "udiskslinuxblockzram.h"
 #include "udiskszramutil.h"
-#include "udisks-zram-generated.h"
 
 /**
  * SECTION:udiskslinuxblockzram

@@ -23,7 +23,6 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
-#include "udisks-lvm2-generated.h"
 
 #include <gudev/gudev.h>
 #include <blockdev/lvm.h>

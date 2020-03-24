@@ -27,7 +27,6 @@
 
 #include <modules/udisksmoduleobject.h>
 
-#include "udisks-iscsi-generated.h"
 #include "udisksiscsistate.h"
 #include "udiskslinuxiscsisession.h"
 #include "udiskslinuxiscsisessionobject.h"

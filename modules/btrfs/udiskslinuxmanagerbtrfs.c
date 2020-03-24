@@ -29,7 +29,6 @@
 #include "udiskslinuxmanagerbtrfs.h"
 #include "udisksbtrfsstate.h"
 #include "udisksbtrfsutil.h"
-#include "udisks-btrfs-generated.h"
 
 /**
  * SECTION:udiskslinuxmanagerbtrfs

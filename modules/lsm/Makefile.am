@@ -25,17 +25,6 @@ INCLUDES = \
 	$(WARN_CFLAGS) \
 	$(NULL)
 
-$(dbus_built_sources): data/org.freedesktop.UDisks2.lsm.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen \
-		--interface-prefix org.freedesktop.UDisks2. \
-		--c-namespace UDisks \
-		--c-generate-autocleanup all \
-		--generate-c-code lsm_generated \
-		--generate-docbook doc_generated \
-		$<
-	$(NULL)
-
-
 module_flags = \
 	-export_dynamic \
 	-avoid-version \
@@ -44,12 +33,7 @@ module_flags = \
 	-export-symbols-regex \
 	'^udisks_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
 
-dbus_built_sources = \
-	lsm_generated.h    lsm_generated.c \
-	$(NULL)
-
 BUILT_SOURCES = \
-	$(dbus_built_sources) \
 	$(NULL)
 
 libudisks2_lsmdir=$(libdir)/udisks2/modules
@@ -103,7 +87,7 @@ libudisks2_lsm_la_LIBADD = \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = doc_generated-*.xml lsm_generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST = \
 	$(NULL)

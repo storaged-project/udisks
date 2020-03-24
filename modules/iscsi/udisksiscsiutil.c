@@ -29,8 +29,6 @@
 #include "udisksiscsitypes.h"
 #include "udisksiscsistate.h"
 #include "udisksiscsiutil.h"
-#include "udisksiscsidbusutil.h"
-#include "udisks-iscsi-generated.h"
 
 #ifndef HAVE_LIBISCSI_ERR
 /* XXX: We need to expose these in libiscsi.h.  If we can't make it appear in

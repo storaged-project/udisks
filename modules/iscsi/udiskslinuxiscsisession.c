@@ -28,7 +28,6 @@
 #include "udisksiscsistate.h"
 #include "udisksiscsitypes.h"
 #include "udisksiscsiutil.h"
-#include "udisks-iscsi-generated.h"
 #include "udiskslinuxiscsisession.h"
 #include "udiskslinuxiscsisessionobject.h"
 

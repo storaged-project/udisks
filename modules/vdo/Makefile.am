@@ -27,21 +27,7 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(VDO_MODULE_DIR)/data/org.freedesktop.UDisks2.vdo.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.freedesktop.UDisks2.                    \
-	        --c-namespace UDisks                                           \
-	        --c-generate-autocleanup all                                   \
-	        --generate-c-code udisks-vdo-generated                         \
-	        --generate-docbook udisks-generated-doc                        \
-	        $<
-
-dbus_built_sources =                                                           \
-	udisks-vdo-generated.h        udisks-vdo-generated.c                   \
-	$(NULL)
-
 BUILT_SOURCES =                                                                \
-	$(dbus_built_sources)                                                  \
 	$(NULL)
 
 libudisks2_vdodir = $(libdir)/udisks2/modules
@@ -101,7 +87,7 @@ libudisks2_vdo_la_LIBADD =                                                     \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-vdo-generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

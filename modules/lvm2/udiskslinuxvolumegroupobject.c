@@ -41,8 +41,6 @@
 #include "udiskslinuxblocklvm2.h"
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2dbusutil.h"
-#include "udisks-lvm2-generated.h"
 #include "jobhelpers.h"
 
 /**
