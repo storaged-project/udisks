@@ -57,13 +57,14 @@ dbus_interface_files += $(top_srcdir)/modules/vdo/data/org.freedesktop.UDisks2.v
 endif
 
 $(dbus_built_sources) : Makefile.am $(dbus_interface_files)
+	mkdir -p $(top_builddir)/doc/xml &&						\
 	gdbus-codegen									\
 		--interface-prefix org.freedesktop.UDisks2.				\
 		--c-namespace UDisks							\
 		--c-generate-object-manager						\
 		--c-generate-autocleanup all						\
 		--generate-c-code udisks-generated					\
-		--generate-docbook udisks-generated-doc					\
+		--generate-docbook $(top_builddir)/doc/xml/udisks-generated-doc		\
 		$(dbus_interface_files)							\
 		$(NULL)
 
