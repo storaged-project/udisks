@@ -617,8 +617,6 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                                    UDisksLinuxDevice       *device,
                                    gboolean                 is_member)
 {
-  gboolean conf_changed = FALSE;
-
   g_return_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object));
   g_return_if_fail (UDISKS_IS_LINUX_DEVICE (device));
 
@@ -727,9 +725,8 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
   /* if we don't have any devices, no point in updating (we should get nuked soon anyway) */
   if (udisks_linux_mdraid_object_have_devices (object))
     {
-      conf_changed = FALSE;
-      conf_changed |= update_iface (object, action, mdraid_check, mdraid_connect, mdraid_update,
-                                    UDISKS_TYPE_LINUX_MDRAID, &object->iface_mdraid);
+      update_iface (object, action, mdraid_check, mdraid_connect, mdraid_update,
+                    UDISKS_TYPE_LINUX_MDRAID, &object->iface_mdraid);
     }
  out:
   ;

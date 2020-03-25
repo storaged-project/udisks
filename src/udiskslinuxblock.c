@@ -422,40 +422,24 @@ update_hints (UDisksLinuxBlock  *block,
 
   /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
 
-  /* Override from udev properties, first from UDISKS_* and than from
-     STORAGED_*. We assume that as long as the UDISKS_* properties
-     exist, they are more correct than the STORAGED_* properties.
-  */
-
+  /* Override from UDISKS_* udev properties */
   if (g_udev_device_has_property (device->udev_device, "UDISKS_SYSTEM"))
     hint_system = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_SYSTEM");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_SYSTEM"))
-    hint_system = g_udev_device_get_property_as_boolean (device->udev_device, "STORAGED_SYSTEM");
 
   if (g_udev_device_has_property (device->udev_device, "UDISKS_IGNORE"))
     hint_ignore = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_IGNORE");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_IGNORE"))
-    hint_ignore = g_udev_device_get_property_as_boolean (device->udev_device, "STORAGED_IGNORE");
 
   if (g_udev_device_has_property (device->udev_device, "UDISKS_AUTO"))
     hint_auto = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_AUTO");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_AUTO"))
-    hint_auto = g_udev_device_get_property_as_boolean (device->udev_device, "STORAGED_AUTO");
 
   if (g_udev_device_has_property (device->udev_device, "UDISKS_NAME"))
     hint_name = g_udev_device_get_property (device->udev_device, "UDISKS_NAME");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_NAME"))
-    hint_name = g_udev_device_get_property (device->udev_device, "STORAGED_NAME");
 
   if (g_udev_device_has_property (device->udev_device, "UDISKS_ICON_NAME"))
     hint_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_ICON_NAME");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_ICON_NAME"))
-    hint_icon_name = g_udev_device_get_property (device->udev_device, "STORAGED_ICON_NAME");
 
   if (g_udev_device_has_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME"))
     hint_symbolic_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME");
-  else if (g_udev_device_has_property (device->udev_device, "STORAGED_SYMBOLIC_ICON_NAME"))
-    hint_symbolic_icon_name = g_udev_device_get_property (device->udev_device, "STORAGED_SYMBOLIC_ICON_NAME");
 
   /* ... and scene! */
   udisks_block_set_hint_partitionable (iface, hint_partitionable);
@@ -2029,6 +2013,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2047,6 +2032,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
@@ -2106,6 +2092,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2124,6 +2111,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
@@ -2196,6 +2184,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (old_type, "crypttab") == 0)
@@ -2214,6 +2203,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      update_configuration (block, daemon);
       udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else

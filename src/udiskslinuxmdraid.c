@@ -269,33 +269,17 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     {
       device = UDISKS_LINUX_DEVICE (member_devices->data);
       num_devices = g_udev_device_get_property_as_int (device->udev_device, "UDISKS_MD_MEMBER_DEVICES");
-      if (! num_devices)
-          num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_MEMBER_DEVICES");
       level = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_LEVEL");
-      if (! level)
-          level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_LEVEL");
       uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_UUID");
-      if (! uuid)
-          uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_UUID");
       name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_NAME");
-      if (! name)
-          name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_NAME");
     }
   else
     {
       device = UDISKS_LINUX_DEVICE (raid_device);
       num_devices = g_udev_device_get_property_as_int (device->udev_device, "UDISKS_MD_DEVICES");
-      if (! num_devices)
-          num_devices = g_udev_device_get_property_as_int (device->udev_device, "STORAGED_MD_DEVICES");
       level = g_udev_device_get_property (device->udev_device, "UDISKS_MD_LEVEL");
-      if (! level)
-          level = g_udev_device_get_property (device->udev_device, "STORAGED_MD_LEVEL");
       uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_UUID");
-      if (! uuid)
-          uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_UUID");
       name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_NAME");
-      if (! name)
-          name = g_udev_device_get_property (device->udev_device, "STORAGED_MD_NAME");
     }
 
   /* figure out size */

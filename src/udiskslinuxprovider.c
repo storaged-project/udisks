@@ -1007,12 +1007,7 @@ handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
    * UUID.
    */
   uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_UUID");
-  if (! uuid)
-    uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_UUID");
-
   member_uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_UUID");
-  if (! member_uuid)
-    member_uuid = g_udev_device_get_property (device->udev_device, "STORAGED_MD_MEMBER_UUID");
 
   if (uuid != NULL)
     handle_block_uevent_for_mdraid_with_uuid (provider, action, device, uuid, FALSE);
