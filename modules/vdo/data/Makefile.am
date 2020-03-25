@@ -8,8 +8,12 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 $(polkit_DATA): $(polkit_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = udisks2-vdo.pc
+
 EXTRA_DIST =                                                                   \
 	org.freedesktop.UDisks2.vdo.xml                                        \
+	udisks2-vdo.pc.in                                                      \
 	$(polkit_in_files)                                                     \
 	$(NULL)
 

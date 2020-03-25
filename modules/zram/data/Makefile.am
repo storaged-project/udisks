@@ -10,9 +10,13 @@ $(polkit_DATA): $(polkit_in_files)
 
 systemdsystemunit_DATA = zram-setup@.service
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = udisks2-zram.pc
+
 EXTRA_DIST =                                                                   \
 	org.freedesktop.UDisks2.zram.xml                                       \
-        zram-setup@.service                                                    \
+	zram-setup@.service                                                    \
+	udisks2-zram.pc.in                                                     \
 	$(polkit_in_files)                                                     \
 	$(NULL)
 

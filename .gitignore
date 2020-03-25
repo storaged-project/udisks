@@ -79,6 +79,7 @@ udisks/udisks2.pc
 udisks/udisks-generated*
 udisks/udisksenumtypes.*
 udisks/udisksversion.h
+modules/*/data/*.pc
 
 data/org.freedesktop.UDisks2.conf
 data/org.freedesktop.UDisks2.policy
