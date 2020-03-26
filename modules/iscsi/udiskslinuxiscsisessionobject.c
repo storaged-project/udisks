@@ -24,8 +24,7 @@
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxdevice.h>
 #include <src/udisksmodulemanager.h>
-
-#include <modules/udisksmoduleobject.h>
+#include <src/udisksmoduleobject.h>
 
 #include "udisksiscsistate.h"
 #include "udiskslinuxiscsisession.h"

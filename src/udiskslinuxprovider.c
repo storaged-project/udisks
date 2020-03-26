@@ -39,7 +39,7 @@
 #include "udisksconfigmanager.h"
 
 #include <modules/udisksmoduleifacetypes.h>
-#include <modules/udisksmoduleobject.h>
+#include "udisksmoduleobject.h"
 
 
 /**

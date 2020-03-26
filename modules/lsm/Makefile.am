@@ -44,15 +44,11 @@ libudisks2_lsmincludedir=$(includedir)/udisks2/udisks
 libudisks2_lsminclude_HEADERS= \
 	$(top_srcdir)/modules/udisksmoduleiface.h \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h \
-	$(top_srcdir)/modules/udisksmoduleobject.h \
 	$(NULL)
 
 libudisks2_lsm_la_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(top_srcdir)/modules/udisksmoduleiface.h \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h \
-	$(top_srcdir)/modules/udisksmoduleobject.h \
-	$(top_srcdir)/modules/udisksmoduleobject.c \
 	lsm_types.h \
 	lsm_module_iface.c \
 	lsm_data.h lsm_data.c \

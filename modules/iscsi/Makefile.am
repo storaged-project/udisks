@@ -38,15 +38,11 @@ libudisks2_iscsiincludedir=$(includedir)/udisks2/udisks
 libudisks2_iscsiinclude_HEADERS =                                              \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
 libudisks2_iscsi_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	udiskslinuxmanageriscsiinitiator.h                                     \
 	udiskslinuxmanageriscsiinitiator.c                                     \
 	udisksiscsistate.h                                                     \

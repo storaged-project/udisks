@@ -24,13 +24,13 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <src/udisksdaemontypes.h>
+#include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
 
 #define UDISKS_TYPE_MODULE_OBJECT            (udisks_module_object_get_type ())
 #define UDISKS_MODULE_OBJECT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), UDISKS_TYPE_MODULE_OBJECT, UDisksModuleObject))
-#define UDISKS_IS_MODULE_OBJECT(obj)	       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UDISKS_TYPE_MODULE_OBJECT))
+#define UDISKS_IS_MODULE_OBJECT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UDISKS_TYPE_MODULE_OBJECT))
 #define UDISKS_MODULE_OBJECT_GET_IFACE(obj)  (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UDISKS_TYPE_MODULE_OBJECT, UDisksModuleObjectIface))
 
 /**

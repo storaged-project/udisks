@@ -41,7 +41,6 @@ HFILE_GLOB +=                                                                  \
 
 CFILE_GLOB +=                                                                  \
 	$(top_srcdir)/src/*.c                                                  \
-	$(top_srcdir)/modules/*.c                                              \
 	$(NULL)
 endif # ENABLE_DAEMON
 

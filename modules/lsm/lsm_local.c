@@ -41,7 +41,6 @@
 #include <src/udiskssimplejob.h>
 #include <src/udisksthreadedjob.h>
 #include <src/udiskslinuxdevice.h>
-#include <modules/udisksmoduleobject.h>
 
 #include "lsm_types.h"
 

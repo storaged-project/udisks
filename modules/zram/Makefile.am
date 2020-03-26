@@ -44,15 +44,11 @@ libudisks2_zramincludedir=$(includedir)/udisks2/udisks
 libudisks2_zraminclude_HEADERS =                                               \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
 libudisks2_zram_la_SOURCES =                                                   \
 	$(BUILT_SOURCES)                                                       \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	udiskslinuxblockzram.c                                                 \
 	udiskslinuxblockzram.h                                                 \
 	udiskslinuxmanagerzram.h                                               \

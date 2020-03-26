@@ -39,15 +39,11 @@ libudisks2_lvm2includedir=$(includedir)/udisks2/udisks
 libudisks2_lvm2include_HEADERS =                                               \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
 libudisks2_lvm2_la_SOURCES =                                                   \
 	$(BUILT_SOURCES)                                                       \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	udiskslvm2types.h                                                      \
 	udiskslvm2moduleiface.c                                                \
 	udiskslinuxlogicalvolume.h          udiskslinuxlogicalvolume.c         \

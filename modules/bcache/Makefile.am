@@ -39,15 +39,11 @@ libudisks2_bcacheincludedir=$(includedir)/udisks2/udisks
 libudisks2_bcacheinclude_HEADERS =                                            \
 	$(top_srcdir)/modules/udisksmoduleiface.h                             \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
-	$(top_srcdir)/modules/udisksmoduleobject.h                            \
 	$(NULL)
 
 libudisks2_bcache_la_SOURCES =                                                \
 	$(BUILT_SOURCES)                                                      \
 	$(top_srcdir)/modules/udisksmoduleiface.h                             \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
-	$(top_srcdir)/modules/udisksmoduleobject.h                            \
-	$(top_srcdir)/modules/udisksmoduleobject.c                            \
 	udiskslinuxblockbcache.c                                              \
 	udiskslinuxblockbcache.h                                              \
 	udiskslinuxmanagerbcache.h                                            \

@@ -39,15 +39,11 @@ libudisks2_btrfsincludedir=$(includedir)/udisks2/udisks
 libudisks2_btrfsinclude_HEADERS =                                              \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
 	$(NULL)
 
 libudisks2_btrfs_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
 	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	udiskslinuxfilesystembtrfs.h                                           \
 	udiskslinuxfilesystembtrfs.c                                           \
 	udiskslinuxmanagerbtrfs.h                                              \
