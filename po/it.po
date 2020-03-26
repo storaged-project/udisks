@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: udisks 2.8.4\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-06-17 14:38+0200\n"
-"PO-Revision-Date: 2019-03-05 08:30+0000\n"
+"PO-Revision-Date: 2019-08-09 07:01+0000\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian\n"
 "Language: it\n"
@@ -462,12 +462,14 @@ msgstr "Nome initiator vuoto"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:466
 msgid "Error parsing the iSCSI initiator name"
-msgstr ""
+msgstr "Errore nell'analizzare il nome del driver iSCSI"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:470
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
 msgstr ""
+"Errore nello scrivere su %s durante l'impostazione del nome del driver "
+"iSCSI:"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:552
 msgid "Authentication is required to discover targets"
