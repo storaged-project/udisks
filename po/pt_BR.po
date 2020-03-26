@@ -5,13 +5,14 @@
 # Translators:
 # Rafael Ferreira <rafael.f.f1@gmail.com>, 2012,2014
 # Daniel Lara <danniel@fedoraproject.org>, 2017. #zanata
+# Rafael Fontenelle <rafaelff@gnome.org>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.4\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-06-17 14:38+0200\n"
-"PO-Revision-Date: 2017-04-11 09:46+0000\n"
-"Last-Translator: Daniel Lara <danniel@fedoraproject.org>\n"
+"PO-Revision-Date: 2019-11-25 02:20+0000\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Portuguese (Brazil)\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
@@ -63,11 +64,13 @@ msgstr ""
 
 #: data/org.freedesktop.UDisks2.policy.in:76
 msgid "Take ownership of a filesystem"
-msgstr ""
+msgstr "Assumir a propriedade de um sistema de arquivos"
 
 #: data/org.freedesktop.UDisks2.policy.in:77
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr ""
+"Autenticação é necessária para assumir a propriedade de um sistema de "
+"arquivos"
 
 #: data/org.freedesktop.UDisks2.policy.in:89
 msgid "Unlock an encrypted device"
@@ -453,12 +456,12 @@ msgstr "Nome do iniciador vazia"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:466
 msgid "Error parsing the iSCSI initiator name"
-msgstr ""
+msgstr "Erro ao analisar o nome do iniciador de iSCSI"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:470
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
-msgstr ""
+msgstr "Erro ao escrever a %s enquanto define o nome do iniciador de iSCSI"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:552
 msgid "Authentication is required to discover targets"
@@ -577,72 +580,74 @@ msgstr "Autenticação é necessária para se criar um pool magro de volume"
 
 #: modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in:16
 msgid "Manage disk drive LED"
-msgstr ""
+msgstr "Gerenciar LED da unidade de disco"
 
 #: modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in:17
 msgid "Authentication is required to manage disk drive LED"
-msgstr ""
+msgstr "Autenticação é necessária para gerenciar LED da unidade de disco"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:16
 msgid "Manage VDO"
-msgstr ""
+msgstr "Gerenciar VDO"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr ""
+msgstr "Autenticação é necessária para gerenciar VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para escrever política do volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para desabilitar o volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para habilitar compressão no volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para desabilitar compressão no volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para habilitar deduplicação no volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para desabilitar deduplicação no volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
 msgstr ""
+"Autenticação é necessária para aumentar o tamanho lógico do volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
 msgstr ""
+"Autenticação é necessária para aumentar o tamanho físico do volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para remover o volume VDO"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para parar o volume VDO"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para criar um volume VDO"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para habilitar o volume VDO existente"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "Autenticação é necessária para iniciar o volume VDO"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
@@ -666,7 +671,7 @@ msgstr "Autenticação é necessária para abrir um dispositivo zRAM"
 
 #: modules/zram/udiskslinuxblockzram.c:382
 msgid "Authentication is required to disable zRAM device"
-msgstr "Autenticação é necessária para desativar um dispositivo zRAM"
+msgstr "Autenticação é necessária para desabilitar um dispositivo zRAM"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -780,7 +785,7 @@ msgstr ""
 #. * be replaced by the name of the drive/device in question
 #: src/udiskslinuxblock.c:3785
 msgid "Authentication is required to open $(drive)."
-msgstr ""
+msgstr "Autenticação é necessária para abrir $(drive)"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -932,6 +937,8 @@ msgstr ""
 #: src/udiskslinuxencrypted.c:1034
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
+"Autenticação é necessária para redimensionar o dispositivo criptografado "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1006,6 +1013,8 @@ msgstr ""
 #: src/udiskslinuxfilesystem.c:2279
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
+"Autenticação é necessária para redimensionar o sistema de arquivos em "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1015,6 +1024,7 @@ msgstr ""
 #: src/udiskslinuxfilesystem.c:2440
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
+"Autenticação é necessária para reparar o sistema de arquivos em $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1024,6 +1034,7 @@ msgstr ""
 #: src/udiskslinuxfilesystem.c:2597
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
+"Autenticação é necessária para verificar o sistema de arquivos em $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -1034,6 +1045,8 @@ msgstr ""
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
+"Autenticação é necessária para alterar a propriedade do sistema de arquivos "
+"em $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1162,7 +1175,7 @@ msgstr "Autenticação é necessária para desativar o espaço de swap em $(driv
 #. * will be replaced by the name of the drive/device in question
 #: src/udiskslinuxswapspace.c:365
 msgid "Authentication is required to set swapspace label on $(drive)"
-msgstr ""
+msgstr "Autenticação é necessária para definir o espaço de swap em $(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
@@ -1198,7 +1211,7 @@ msgstr "Somente leitura"
 #: udisks/udisksclient.c:1092
 msgctxt "gpt-part-flag"
 msgid "Hidden"
-msgstr "Escondida"
+msgstr "Oculta"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -1431,7 +1444,7 @@ msgstr "HFS+"
 #: udisks/udisksclient.c:1901
 msgctxt "fs-type"
 msgid "APFS"
-msgstr ""
+msgstr "APFS"
 
 #: udisks/udisksclient.c:1902
 #, c-format
@@ -1622,12 +1635,12 @@ msgstr "Membro RAID Intel RSTe"
 #: udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
-msgstr ""
+msgstr "Possivelmente criptografado"
 
 #: udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "Encrypted?"
-msgstr ""
+msgstr "Criptografado?"
 
 #: udisks/udisksclient.c:1931
 #, c-format
@@ -1648,12 +1661,12 @@ msgstr "Criptografia LUKS"
 #: udisks/udisksclient.c:1933
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
-msgstr ""
+msgstr "Criptografia VeraCrypt/TrueCrypt"
 
 #: udisks/udisksclient.c:1933
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
-msgstr ""
+msgstr "VeraCrypt/TrueCrypt"
 
 #: udisks/udisksclient.c:1934
 #, c-format
@@ -1872,7 +1885,7 @@ msgstr "Apple HFS/HFS+"
 #: udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Apple APFS"
-msgstr ""
+msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
@@ -2213,7 +2226,7 @@ msgstr "FAT16"
 #: udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
-msgstr ""
+msgstr "NTFS/exFAT/HPFS"
 
 #: udisks/udisksclient.c:2313
 msgctxt "part-type"
@@ -2359,7 +2372,7 @@ msgstr "Modificando dispositivo criptografado"
 #: udisks/udisksclient.c:2483
 msgctxt "job"
 msgid "Resizing Encrypted Device"
-msgstr ""
+msgstr "Redimensionando dispositivo criptografado"
 
 #: udisks/udisksclient.c:2484
 msgctxt "job"
@@ -2374,12 +2387,12 @@ msgstr "Parando dispositivo swap"
 #: udisks/udisksclient.c:2486
 msgctxt "job"
 msgid "Modifying Swap Device"
-msgstr ""
+msgstr "Modificando dispositivo swap"
 
 #: udisks/udisksclient.c:2487
 msgctxt "job"
 msgid "Checking Filesystem"
-msgstr ""
+msgstr "Verificando sistema de arquivos"
 
 #: udisks/udisksclient.c:2488
 msgctxt "job"
@@ -2399,12 +2412,12 @@ msgstr "Modificando sistema de arquivos"
 #: udisks/udisksclient.c:2491
 msgctxt "job"
 msgid "Repairing Filesystem"
-msgstr ""
+msgstr "Reparando sistema de arquivos"
 
 #: udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Resizing Filesystem"
-msgstr ""
+msgstr "Redimensionando sistema de arquivos"
 
 #: udisks/udisksclient.c:2493
 msgctxt "job"

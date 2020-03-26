@@ -9,6 +9,7 @@
 # Zdenek <chmelarz@gmail.com>, 2016. #zanata
 # Zdenek <chmelarz@gmail.com>, 2017. #zanata
 # Zdenek <chmelarz@gmail.com>, 2018. #zanata
+# Michal Konečný <michalkonec666@gmail.com>, 2019. #zanata
 # Pavel Borecki <pavel.borecki@gmail.com>, 2019. #zanata
 # Zdenek <chmelarz@gmail.com>, 2019. #zanata
 msgid ""
@@ -16,8 +17,8 @@ msgstr ""
 "Project-Id-Version: udisks 2.8.4\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-06-17 14:38+0200\n"
-"PO-Revision-Date: 2019-06-27 08:40+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"PO-Revision-Date: 2019-08-22 01:48+0000\n"
+"Last-Translator: Michal Konečný <michalkonec666@gmail.com>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
@@ -510,12 +511,12 @@ msgstr "Prázdný název iniciátoru"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:466
 msgid "Error parsing the iSCSI initiator name"
-msgstr ""
+msgstr "Chyba při parsování jména iSCSI iniciátoru"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:470
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
-msgstr ""
+msgstr "Chyba při zápisu do %s při nastavování názvu iniciátoru iSCSI:"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:552
 msgid "Authentication is required to discover targets"

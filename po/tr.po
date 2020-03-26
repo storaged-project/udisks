@@ -11,14 +11,15 @@
 # Muhammet Kara <muhammet.k@gmail.com>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # Emin Tufan Çetin <etcetin@gmail.com>, 2018. #zanata
+# Sabri Ünal <libreajans@gmail.com>, 2019. #zanata
 # Serdar Sağlam <teknomobil@msn.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.8.4\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
 "POT-Creation-Date: 2019-06-17 14:38+0200\n"
-"PO-Revision-Date: 2019-05-10 11:55+0000\n"
-"Last-Translator: Serdar Sağlam <teknomobil@msn.com>\n"
+"PO-Revision-Date: 2019-09-07 07:59+0000\n"
+"Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
 "Language-Team: Turkish\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
@@ -274,7 +275,7 @@ msgstr "Sistem genelindeki yapılandırmayı değiştir"
 msgid "Authentication is required to modify system-wide configuration"
 msgstr ""
 "Sistem genelindeki yapılandırmayı değiştirmek için kimlik doğrulaması "
-"gerekiyor"
+"gerekli"
 
 #: data/org.freedesktop.UDisks2.policy.in:394
 msgid ""
@@ -460,12 +461,12 @@ msgstr "Boş başlatıcı adı"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:466
 msgid "Error parsing the iSCSI initiator name"
-msgstr ""
+msgstr "iSCSI başlatıcı adı ayrıştırılırken hata"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:470
-#, c-format
+#, fuzzy, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
-msgstr ""
+msgstr "iSCSI başlatcı adı ayarlanırken %s'e yazma hatası"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:552
 msgid "Authentication is required to discover targets"
@@ -541,7 +542,7 @@ msgstr ""
 #: modules/lvm2/udiskslinuxlogicalvolume.c:1010
 #, c-format
 msgid "Error converting volume: %s"
-msgstr "Birim dönüştürürken hata: %s"
+msgstr "Birim dönüştürülürken hata: %s"
 
 #: modules/lvm2/udiskslinuxlogicalvolume.c:988
 msgid "Authentication is required to split cache pool LV off of a cache LV"
@@ -599,62 +600,68 @@ msgstr "VDO'i yönet"
 
 #: modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in:17
 msgid "Authentication is required to manage VDO"
-msgstr "VDO'yu yönetmek için kimlik doğrulaması gerekiyor"
+msgstr "VDO'yu yönetmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:359
 msgid ""
 "Authentication is required to change the write policy of the VDO volume"
 msgstr ""
-"VDO biriminin yazma politikasını değiştirmek için kimlik doğrulaması "
-"gerekiyor"
+"VDO biriminin yazma politikasını değiştirmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:410
 msgid "Authentication is required to deactivate the VDO volume"
-msgstr "VDO birimini devre dışı bırakmak için kimlik doğrulaması gerekiyor"
+msgstr "VDO birimini devre dışı bırakmak için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:459
 msgid "Authentication is required to enable compression on the VDO volume"
 msgstr ""
+"VDO biriminde sıkıştırmayı etkinleştirmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:460
 msgid "Authentication is required to disable compression on the VDO volume"
 msgstr ""
+"VDO biriminde sıkıştırmayı devre dışı bırakmak için kimlik doğrulaması "
+"gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:509
 msgid "Authentication is required to enable deduplication on the VDO volume"
 msgstr ""
+"VDO biriminde veri tekilleştirmeyi etkinleştirmek için kimlik doğrulaması "
+"gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:510
 msgid "Authentication is required to disable deduplication on the VDO volume"
 msgstr ""
+"VDO biriminde veri tekilleştirmeyi devre dışı bırakmak için kimlik "
+"doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:558
 msgid "Authentication is required to grow the logical VDO volume size"
-msgstr ""
+msgstr "Mantıksal VDO birimini büyütmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:605
 msgid "Authentication is required to grow the physical VDO volume size"
-msgstr ""
+msgstr "Fiziksel VDO birimini büyütmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:653
 msgid "Authentication is required to remove the VDO volume"
-msgstr ""
+msgstr "VDO birimini kaldırmak için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxblockvdo.c:688
 msgid "Authentication is required to stop the VDO volume"
-msgstr ""
+msgstr "VDO birimini durdurmak için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:247
 msgid "Authentication is required to create a new VDO volume"
-msgstr ""
+msgstr "Yeni VDO birimi oluşturmak için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:363
 msgid "Authentication is required to activate existing VDO volume"
-msgstr ""
+msgstr "Varolan VDO birimini etkinleştirmek için kimlik doğrulaması gerekli"
 
 #: modules/vdo/udiskslinuxmanagervdo.c:403
 msgid "Authentication is required to start VDO volume"
-msgstr ""
+msgstr "VDO birimini başlatmak için kimlik doğrulaması gerekli"
 
 #: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
 msgid "Manage zRAM"
