@@ -1706,7 +1706,7 @@ udisks_daemon_get_module_manager (UDisksDaemon *daemon)
  *
  * Gets the config manager used by @daemon.
  *
- * Returns: A #ConfigModuleManager. Do not free, the object is owned by @daemon.
+ * Returns: A #UDisksConfigManager. Do not free, the object is owned by @daemon.
  */
 UDisksConfigManager *
 udisks_daemon_get_config_manager (UDisksDaemon *daemon)
