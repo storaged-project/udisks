@@ -77,8 +77,6 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
 
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
-
         # check filesystem type
         usage = self.get_property(dev.obj, '.Block', 'IdUsage')
         usage.assertEqual('filesystem')
@@ -170,7 +168,6 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              'test_subvols', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
 
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
@@ -216,8 +213,6 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              'test_add_remove', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
-        with open("/sys/block/%s/uevent" % dev1.name, "w") as f:
-            f.write("change\n")
 
         fstype = self.get_property(dev1.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
@@ -233,8 +228,6 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         with self._temp_mount(dev1.path):
             dev1.obj.AddDevice(dev2.obj_path, self.no_options,
                                dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
-        with open("/sys/block/%s/uevent" % dev2.name, "w") as f:
-            f.write("change\n")
 
         # check filesystem type of the new device
         fstype = self.get_property(dev2.obj, '.Block', 'IdType')
@@ -279,7 +272,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -311,7 +304,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              'test_snapshot', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
@@ -334,15 +327,13 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
                              'test_label', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
+
         fstype = self.get_property(dev.obj, '.Block', 'IdType')
         fstype.assertEqual('btrfs')
 
         dev.obj.SetLabel('new_label', self.no_options,
                          dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 
-        self.write_file("/sys/block/%s/uevent" % dev.name, "change\n")
-        self.udev_settle()
         dbus_label = self.get_property(dev.obj, '.Filesystem.BTRFS', 'label')
         dbus_label.assertEqual('new_label')
 

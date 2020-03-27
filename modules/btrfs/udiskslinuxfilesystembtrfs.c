@@ -348,6 +348,8 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
+
   /* Complete DBus call. */
   udisks_filesystem_btrfs_complete_set_label (fs_btrfs,
                                               invocation);
@@ -409,6 +411,8 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
   udisks_filesystem_btrfs_complete_set_label (fs_btrfs,
@@ -497,6 +501,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
     }
 
   /* Update the interface. */
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_linux_filesystem_btrfs_update (l_fs_btrfs, object);
 
   /* Complete DBus call. */
@@ -741,6 +746,8 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
+
   /* Complete DBus call. */
   udisks_filesystem_btrfs_complete_repair (fs_btrfs,
                                            invocation);
@@ -793,6 +800,8 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
   udisks_filesystem_btrfs_complete_resize (fs_btrfs,

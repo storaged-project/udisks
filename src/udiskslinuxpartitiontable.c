@@ -488,6 +488,27 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
         }
     }
 
+  /* wipe the newly created partition if wanted */
+  if (part_spec->type != BD_PART_TYPE_EXTENDED)
+    {
+      if (!bd_fs_wipe (part_spec->path, TRUE, &error))
+        {
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+            g_clear_error (&error);
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error wiping newly created partition %s: %s",
+                                                     part_spec->path,
+                                                     error->message);
+              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+              goto out;
+            }
+        }
+    }
+
   wait_data->ignore_container = (part_spec->type == BD_PART_TYPE_LOGICAL);
   wait_data->pos_to_wait_for = part_spec->start + (part_spec->size / 2L);
 
@@ -516,28 +537,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       g_clear_object (&partition_object);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
       goto out;
-    }
-
-  /* wipe the newly created partition if wanted */
-  if (part_spec->type != BD_PART_TYPE_EXTENDED)
-    {
-      if (!bd_fs_wipe (part_spec->path, TRUE, &error))
-        {
-          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-            g_clear_error (&error);
-          else
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error wiping newly created partition %s: %s",
-                                                     udisks_block_get_device (partition_block),
-                                                     error->message);
-              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-              g_clear_object (&partition_object);
-              goto out;
-            }
-        }
     }
 
   /* Trigger uevent on the disk -- we sometimes get add-remove-add uevents for

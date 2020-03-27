@@ -3405,6 +3405,24 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
+  /* Set the partition type, if requested */
+  if (partition_type != NULL && partition != NULL)
+    {
+      if (g_strcmp0 (udisks_partition_get_type_ (partition), partition_type) != 0)
+        {
+          if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
+                                                     partition_type,
+                                                     caller_uid,
+                                                     NULL, /* cancellable */
+                                                     &error))
+            {
+              g_prefix_error (&error, "Error setting partition type after formatting: ");
+              handle_format_failure (invocation, error);
+              goto out;
+            }
+        }
+    }
+
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
@@ -3442,26 +3460,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-  /* Set the partition type, if requested */
-  if (partition_type != NULL && partition != NULL)
-    {
-      if (g_strcmp0 (udisks_partition_get_type_ (partition), partition_type) != 0)
-        {
-          if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
-                                                     partition_type,
-                                                     caller_uid,
-                                                     NULL, /* cancellable */
-                                                     &error))
-            {
-              g_prefix_error (&error, "Error setting partition type after formatting: ");
-              handle_format_failure (invocation, error);
-              goto out;
-            }
-        }
-    }
-
   /* Add configuration items */
-
   if (config_items)
     {
       GVariantIter iter;
@@ -3489,6 +3488,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
             }
           g_variant_unref (details);
         }
+      update_configuration (UDISKS_LINUX_BLOCK (block), daemon);
     }
 
   if (invocation != NULL)

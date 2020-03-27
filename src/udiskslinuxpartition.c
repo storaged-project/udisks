@@ -931,6 +931,8 @@ handle_resize (UDisksPartition       *partition,
     udisks_warning ("Could not open %s to query new partition size", part);
   }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (partition_table_object ? partition_table_object : object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   partition_object = udisks_daemon_wait_for_object_sync (daemon,
                                                          wait_for_partition_resize,
                                                          &wait_data,
