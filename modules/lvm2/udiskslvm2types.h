@@ -23,9 +23,10 @@
 
 
 #define LVM2_MODULE_NAME "lvm2"
+#define LVM2_POLICY_ACTION_ID "org.freedesktop.udisks2.lvm2.manage-lvm"
 
-struct _UDisksLVM2State;
-typedef struct _UDisksLVM2State UDisksLVM2State;
+struct _UDisksLinuxModuleLVM2;
+typedef struct _UDisksLinuxModuleLVM2 UDisksLinuxModuleLVM2;
 
 struct _UDisksLinuxVolumeGroupObject;
 typedef struct _UDisksLinuxVolumeGroupObject UDisksLinuxVolumeGroupObject;

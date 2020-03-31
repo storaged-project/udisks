@@ -59,7 +59,7 @@ struct _UDisksLinuxLogicalVolumeObject
 {
   UDisksObjectSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleLVM2 *module;
 
   gchar *name;
   UDisksLinuxVolumeGroupObject *volume_group;
@@ -78,7 +78,7 @@ enum
   PROP_0,
   PROP_NAME,
   PROP_VOLUME_GROUP,
-  PROP_DAEMON,
+  PROP_MODULE,
 };
 
 G_DEFINE_TYPE (UDisksLinuxLogicalVolumeObject, udisks_linux_logical_volume_object, UDISKS_TYPE_OBJECT_SKELETON);
@@ -88,7 +88,7 @@ udisks_linux_logical_volume_object_finalize (GObject *_object)
 {
   UDisksLinuxLogicalVolumeObject *object = UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (_object);
 
-  /* note: we don't hold a ref to object->daemon */
+  g_object_unref (object->module);
 
   if (object->iface_logical_volume != NULL)
     g_object_unref (object->iface_logical_volume);
@@ -112,8 +112,8 @@ udisks_linux_logical_volume_object_get_property (GObject    *__object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_logical_volume_object_get_daemon (object));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_logical_volume_object_get_module (object));
       break;
 
     case PROP_VOLUME_GROUP:
@@ -136,10 +136,9 @@ udisks_linux_logical_volume_object_set_property (GObject      *__object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_assert (object->daemon == NULL);
-      /* we don't take a reference to the daemon */
-      object->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (object->module == NULL);
+      object->module = g_value_dup_object (value);
       break;
 
     case PROP_NAME:
@@ -199,16 +198,16 @@ udisks_linux_logical_volume_object_class_init (UDisksLinuxLogicalVolumeObjectCla
   gobject_class->get_property = udisks_linux_logical_volume_object_get_property;
 
   /**
-   * UDisksLinuxLogicalVolumeObject:daemon:
+   * UDisksLinuxLogicalVolumeObject:module:
    *
-   * The #UDisksDaemon the object is for.
+   * The #UDisksLinuxModuleLVM2 the object is for.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon the object is for",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module the object is for",
+                                                        UDISKS_TYPE_LINUX_MODULE_LVM2,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -253,34 +252,34 @@ udisks_linux_logical_volume_object_class_init (UDisksLinuxLogicalVolumeObjectCla
  * Returns: A #UDisksLinuxLogicalVolumeObject object. Free with g_object_unref().
  */
 UDisksLinuxLogicalVolumeObject *
-udisks_linux_logical_volume_object_new (UDisksDaemon                 *daemon,
+udisks_linux_logical_volume_object_new (UDisksLinuxModuleLVM2        *module,
                                         UDisksLinuxVolumeGroupObject *volume_group,
                                         const gchar                  *name)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_LVM2 (module), NULL);
   g_return_val_if_fail (UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT (volume_group), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   return UDISKS_LINUX_LOGICAL_VOLUME_OBJECT (g_object_new (UDISKS_TYPE_LINUX_LOGICAL_VOLUME_OBJECT,
-                                                           "daemon", daemon,
+                                                           "module", module,
                                                            "volumegroup", volume_group,
                                                            "name", name,
                                                            NULL));
 }
 
 /**
- * udisks_linux_logical_volume_object_get_daemon:
+ * udisks_linux_logical_volume_object_get_module:
  * @object: A #UDisksLinuxLogicalVolumeObject.
  *
- * Gets the daemon used by @object.
+ * Gets the module used by @object.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @object.
+ * Returns: (transfer none): A #UDisksLinuxModuleLVM2. Do not free, the object is owned by @object.
  */
-UDisksDaemon *
-udisks_linux_logical_volume_object_get_daemon (UDisksLinuxLogicalVolumeObject *object)
+UDisksLinuxModuleLVM2 *
+udisks_linux_logical_volume_object_get_module (UDisksLinuxLogicalVolumeObject *object)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT (object), NULL);
-  return object->daemon;
+  return object->module;
 }
 
 UDisksLinuxVolumeGroupObject *

@@ -26,8 +26,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
-
-#include <gudev/gudev.h>
+#include "udiskslinuxmodulelvm2.h"
 
 G_BEGIN_DECLS
 
@@ -36,10 +35,10 @@ G_BEGIN_DECLS
 #define UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_LOGICAL_VOLUME_OBJECT))
 
 GType                           udisks_linux_logical_volume_object_get_type         (void) G_GNUC_CONST;
-UDisksLinuxLogicalVolumeObject *udisks_linux_logical_volume_object_new              (UDisksDaemon                   *daemon,
+UDisksLinuxLogicalVolumeObject *udisks_linux_logical_volume_object_new              (UDisksLinuxModuleLVM2          *module,
                                                                                      UDisksLinuxVolumeGroupObject   *vg_object,
                                                                                      const gchar                    *name);
-UDisksDaemon                   *udisks_linux_logical_volume_object_get_daemon       (UDisksLinuxLogicalVolumeObject *object);
+UDisksLinuxModuleLVM2          *udisks_linux_logical_volume_object_get_module       (UDisksLinuxLogicalVolumeObject *object);
 UDisksLinuxVolumeGroupObject   *udisks_linux_logical_volume_object_get_volume_group (UDisksLinuxLogicalVolumeObject *object);
 const gchar                    *udisks_linux_logical_volume_object_get_name         (UDisksLinuxLogicalVolumeObject *object);
 

@@ -39,7 +39,6 @@
 #include "udiskslinuxvolumegroupobject.h"
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2util.h"
 #include "jobhelpers.h"
 
 /**
@@ -236,11 +235,13 @@ void
 udisks_linux_logical_volume_update_etctabs (UDisksLinuxLogicalVolume     *logical_volume,
                                             UDisksLinuxVolumeGroupObject *group_object)
 {
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   UDisksLogicalVolume *iface;
   const gchar *uuid;
 
-  daemon = udisks_linux_volume_group_object_get_daemon (group_object);
+  module = udisks_linux_volume_group_object_get_module (group_object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   iface = UDISKS_LOGICAL_VOLUME (logical_volume);
   uuid = udisks_logical_volume_get_uuid (iface);
 
@@ -383,6 +384,7 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
               UDisksDaemon                      **daemon,
               uid_t                              *out_uid)
 {
+  UDisksLinuxModuleLVM2 *module;
   gboolean rc = FALSE;
   GError *error = NULL;
 
@@ -393,7 +395,8 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
       goto out;
     }
 
-  *daemon = udisks_linux_logical_volume_object_get_daemon (*object);
+  module = udisks_linux_logical_volume_object_get_module (*object);
+  *daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   if (!udisks_daemon_util_get_caller_uid_sync (*daemon,
                                                invocation,
@@ -409,7 +412,7 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (*daemon,
                                      UDISKS_OBJECT (*object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      auth_err_msg,
                                      invocation);
@@ -520,13 +523,15 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
                               GError                       **error)
 {
   struct WaitData data;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   UDisksObject *volume_object;
   const gchar *object_path;
 
   data.group_object = group_object;
   data.name = name;
-  daemon = udisks_linux_volume_group_object_get_daemon (group_object);
+  module = udisks_linux_volume_group_object_get_module (group_object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   volume_object = udisks_daemon_wait_for_object_sync (daemon,
                                                       wait_for_logical_volume_object,
                                                       &data,
@@ -959,10 +964,10 @@ out:
 
 
 static gboolean
-handle_cache_detach_or_split (UDisksLogicalVolume  *volume_,
+handle_cache_detach_or_split (UDisksLogicalVolume    *volume_,
                               GDBusMethodInvocation  *invocation,
                               GVariant               *options,
-                              gboolean               destroy)
+                              gboolean                destroy)
 {
 #ifndef HAVE_LVMCACHE
 

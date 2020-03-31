@@ -22,6 +22,7 @@
 #define __UDISKS_LINUX_MANAGER_LVM2_H__
 
 #include <src/udisksdaemontypes.h>
+#include <src/udisksmodule.h>
 #include "udiskslvm2types.h"
 
 G_BEGIN_DECLS
@@ -31,8 +32,8 @@ G_BEGIN_DECLS
 #define UDISKS_IS_LINUX_MANAGER_LVM2(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_MANAGER_LVM2))
 
 GType                    udisks_linux_manager_lvm2_get_type           (void) G_GNUC_CONST;
-UDisksLinuxManagerLVM2  *udisks_linux_manager_lvm2_new                (UDisksDaemon           *daemon);
-UDisksDaemon            *udisks_linux_manager_lvm2_get_daemon         (UDisksLinuxManagerLVM2 *manager);
+UDisksLinuxManagerLVM2  *udisks_linux_manager_lvm2_new                (UDisksLinuxModuleLVM2  *module);
+UDisksLinuxModuleLVM2   *udisks_linux_manager_lvm2_get_module         (UDisksLinuxManagerLVM2 *manager);
 
 G_END_DECLS
 

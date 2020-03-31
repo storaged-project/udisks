@@ -36,9 +36,9 @@
 #include <src/udiskslinuxblockobject.h>
 
 #include "udiskslvm2types.h"
+#include "udiskslinuxmodulelvm2.h"
 #include "udiskslinuxmanagerlvm2.h"
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2util.h"
 #include "jobhelpers.h"
 
 /**
@@ -62,7 +62,7 @@ struct _UDisksLinuxManagerLVM2
 {
   UDisksManagerLVM2Skeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleLVM2 *module;
 };
 
 struct _UDisksLinuxManagerLVM2Class
@@ -73,7 +73,7 @@ struct _UDisksLinuxManagerLVM2Class
 enum
 {
   PROP_0,
-  PROP_DAEMON
+  PROP_MODULE
 };
 
 static void udisks_linux_manager_lvm2_iface_init (UDisksManagerLVM2Iface *iface);
@@ -93,8 +93,8 @@ udisks_linux_manager_lvm2_get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_lvm2_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_lvm2_get_module (manager));
       break;
 
     default:
@@ -113,10 +113,9 @@ udisks_linux_manager_lvm2_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* we don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
@@ -133,25 +132,37 @@ udisks_linux_manager_lvm2_init (UDisksLinuxManagerLVM2 *manager)
 }
 
 static void
+udisks_linux_manager_lvm2_finalize (GObject *object)
+{
+  UDisksLinuxManagerLVM2 *manager = UDISKS_LINUX_MANAGER_LVM2 (object);
+
+  g_object_unref (manager->module);
+
+  if (G_OBJECT_CLASS (udisks_linux_manager_lvm2_parent_class)->finalize)
+    G_OBJECT_CLASS (udisks_linux_manager_lvm2_parent_class)->finalize (object);
+}
+
+static void
 udisks_linux_manager_lvm2_class_init (UDisksLinuxManagerLVM2Class *klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize     = udisks_linux_manager_lvm2_finalize;
   gobject_class->set_property = udisks_linux_manager_lvm2_set_property;
   gobject_class->get_property = udisks_linux_manager_lvm2_get_property;
 
   /**
-   * UDisksLinuxManager:daemon:
+   * UDisksLinuxManager:module:
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksLinuxModuleLVM2 of the manager.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_LVM2,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -160,46 +171,52 @@ udisks_linux_manager_lvm2_class_init (UDisksLinuxManagerLVM2Class *klass)
 
 /**
  * udisks_linux_manager_lvm2_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleLVM2.
  *
  * Creates a new #UDisksLinuxManagerLVM2 instance.
  *
  * Returns: A new #UDisksLinuxManagerLVM2. Free with g_object_unref().
  */
 UDisksLinuxManagerLVM2 *
-udisks_linux_manager_lvm2_new (UDisksDaemon *daemon)
+udisks_linux_manager_lvm2_new (UDisksLinuxModuleLVM2 *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_MODULE (module), NULL);
   return UDISKS_LINUX_MANAGER_LVM2 (g_object_new (UDISKS_TYPE_LINUX_MANAGER_LVM2,
-                                                  "daemon", daemon,
+                                                  "module", module,
                                                   NULL));
 }
 
 /**
- * udisks_linux_manager_lvm2_get_daemon:
+ * udisks_linux_manager_lvm2_get_module:
  * @manager: A #UDisksLinuxManagerLVM2.
  *
- * Gets the daemon used by @manager.
+ * Gets the module the @manager belongs to.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleLVM2. Do not free, the object is owned by @manager.
  */
-UDisksDaemon *
-udisks_linux_manager_lvm2_get_daemon (UDisksLinuxManagerLVM2 *manager)
+UDisksLinuxModuleLVM2 *
+udisks_linux_manager_lvm2_get_module (UDisksLinuxManagerLVM2 *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_LVM2 (manager), NULL);
-  return manager->daemon;
+  return manager->module;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+  UDisksLinuxModuleLVM2 *module;
+  const gchar *name;
+} WaitForVolumeGroupObjectData;
 
 static UDisksObject *
 wait_for_volume_group_object (UDisksDaemon *daemon,
                               gpointer      user_data)
 {
-  const gchar *name = user_data;
+  WaitForVolumeGroupObjectData *data = user_data;
   UDisksLinuxVolumeGroupObject *object;
 
-  object = udisks_daemon_util_lvm2_find_volume_group_object (daemon, name);
+  object = udisks_linux_module_lvm2_find_volume_group_object (data->module, data->name);
 
   if (object == NULL)
     return NULL;
@@ -215,6 +232,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
                             GVariant              *arg_options)
 {
   UDisksLinuxManagerLVM2 *manager = UDISKS_LINUX_MANAGER_LVM2(_object);
+  UDisksDaemon *daemon;
   uid_t caller_uid;
   GError *error = NULL;
   GList *blocks = NULL;
@@ -223,9 +241,10 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   UDisksObject *group_object = NULL;
   const gchar **pvs = NULL;
   VGJobData data;
+  WaitForVolumeGroupObjectData wait_data;
 
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_clear_error (&error);
@@ -233,9 +252,9 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     }
 
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_lvm2_get_daemon (manager),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to create a volume group"),
                                      invocation);
@@ -260,7 +279,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
       UDisksObject *object = NULL;
       UDisksBlock *block = NULL;
 
-      object = udisks_daemon_find_object (manager->daemon, arg_blocks[n]);
+      object = udisks_daemon_find_object (daemon, arg_blocks[n]);
       if (object == NULL)
         {
           g_dbus_method_invocation_return_error (invocation,
@@ -302,7 +321,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   /* wipe existing devices */
   for (l = blocks; l != NULL; l = l->next)
     {
-      if (!udisks_daemon_util_lvm2_wipe_block (manager->daemon, UDISKS_BLOCK (l->data), &error))
+      if (!udisks_daemon_util_lvm2_wipe_block (daemon, UDISKS_BLOCK (l->data), &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -316,7 +335,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
       PVJobData pv_data;
       pvs[n] = udisks_block_get_device (block);
       pv_data.path = pvs[n];
-      if (!udisks_daemon_launch_threaded_job_sync (manager->daemon,
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                    NULL,
                                                    "lvm-pv-create",
                                                    caller_uid,
@@ -341,7 +360,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   data.vg_name = arg_name;
   data.pvs = pvs;
 
-  if (!udisks_daemon_launch_threaded_job_sync (manager->daemon,
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                NULL,
                                                "lvm-vg-create",
                                                caller_uid,
@@ -371,9 +390,11 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     }
 
   /* ... then, sit and wait for the object to show up */
-  group_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+  wait_data.module = manager->module;
+  wait_data.name = arg_name;
+  group_object = udisks_daemon_wait_for_object_sync (daemon,
                                                      wait_for_volume_group_object,
-                                                     (gpointer) arg_name,
+                                                     &wait_data,
                                                      NULL,
                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
