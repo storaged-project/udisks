@@ -23,6 +23,7 @@
 #include <glib.h>
 
 #include <src/udisksdaemon.h>
+#include "udiskslinuxmoduleiscsi.h"
 
 typedef enum
 {
@@ -33,31 +34,31 @@ typedef enum
 struct libiscsi_context;
 struct libiscsi_node;
 
-gint                     iscsi_login (UDisksDaemon  *daemon,
-                                      const gchar   *name,
-                                      const gint     tpgt,
-                                      const gchar   *address,
-                                      const gint     port,
-                                      const gchar   *iface,
-                                      GVariant      *params,
-                                      gchar        **errorstr);
+gint                     iscsi_login (UDisksLinuxModuleISCSI *module,
+                                      const gchar            *name,
+                                      const gint              tpgt,
+                                      const gchar            *address,
+                                      const gint              port,
+                                      const gchar            *iface,
+                                      GVariant               *params,
+                                      gchar                 **errorstr);
 
-gint                     iscsi_logout (UDisksDaemon  *daemon,
-                                       const gchar   *name,
-                                       const gint     tpgt,
-                                       const gchar   *address,
-                                       const gint     port,
-                                       const gchar   *iface,
-                                       GVariant      *params,
-                                       gchar        **errorstr);
+gint                     iscsi_logout (UDisksLinuxModuleISCSI *module,
+                                       const gchar            *name,
+                                       const gint              tpgt,
+                                       const gchar            *address,
+                                       const gint              port,
+                                       const gchar            *iface,
+                                       GVariant               *params,
+                                       gchar                 **errorstr);
 
-gint      iscsi_discover_send_targets (UDisksDaemon   *daemon,
-                                       const gchar    *address,
-                                       const guint16   port,
-                                       GVariant       *params,
-                                       GVariant      **nodes,
-                                       gint           *nodes_cnt,
-                                       gchar         **errorstr);
+gint      iscsi_discover_send_targets (UDisksLinuxModuleISCSI *module,
+                                       const gchar            *address,
+                                       const guint16           port,
+                                       GVariant               *params,
+                                       GVariant              **nodes,
+                                       gint                   *nodes_cnt,
+                                       gchar                 **errorstr);
 
 GVariant *iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node  *nodes,
                                             const gint                   nodes_cnt);

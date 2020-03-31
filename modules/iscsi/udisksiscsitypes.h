@@ -23,7 +23,8 @@
 #define ISCSI_MODULE_NAME "iscsi"
 #define ISCSI_MODULE_POLICY_ACTION_ID "org.freedesktop.udisks2.iscsi.manage-iscsi"
 
-typedef struct _UDisksISCSIState UDisksISCSIState;
+struct _UDisksLinuxModuleISCSI;
+typedef struct _UDisksLinuxModuleISCSI UDisksLinuxModuleISCSI;
 
 typedef struct _UDisksLinuxManagerISCSIInitiator        UDisksLinuxManagerISCSIInitiator;
 typedef struct _UDisksLinuxManagerISCSIInitiatorClass   UDisksLinuxManagerISCSIInitiatorClass;

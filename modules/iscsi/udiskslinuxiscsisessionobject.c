@@ -26,14 +26,13 @@
 #include <src/udisksmodulemanager.h>
 #include <src/udisksmoduleobject.h>
 
-#include "udisksiscsistate.h"
 #include "udiskslinuxiscsisession.h"
 #include "udiskslinuxiscsisessionobject.h"
 
 /**
  * SECTION:udiskslinuxiscsisessionobject
  * @title: UDisksLinuxISCSISessionObject
- * @short_description: Object representing iSCSI sessions on Linuxu.
+ * @short_description: Object representing iSCSI sessions on Linux.
  *
  * Object corresponding to the iSCSI session on Linux.
  */
@@ -47,9 +46,8 @@
 struct _UDisksLinuxISCSISessionObject {
   UDisksObjectSkeleton parent_instance;
 
-  UDisksDaemon     *daemon;
-  UDisksISCSIState *state;
-  gchar            *session_id;
+  UDisksLinuxModuleISCSI *module;
+  gchar                  *session_id;
 
   /* Interface(s) */
   UDisksLinuxISCSISession *iface_iscsi_session;
@@ -62,20 +60,18 @@ struct _UDisksLinuxISCSISessionObjectClass {
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   PROP_SESSION_ID,
   N_PROPERTIES
 };
 
-static const gchar *iscsi_session_object_path_prefix = "/org/freedesktop/UDisks2/iscsi/";
+#define ISCSI_SESSION_OBJECT_PATH_PREFIX "/org/freedesktop/UDisks2/iscsi/"
 
 static void udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *session_object);
 static void udisks_linux_iscsi_session_object_iface_init (UDisksModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxISCSISessionObject, udisks_linux_iscsi_session_object,
-                         UDISKS_TYPE_OBJECT_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT,
-                                                udisks_linux_iscsi_session_object_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxISCSISessionObject, udisks_linux_iscsi_session_object, UDISKS_TYPE_OBJECT_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, udisks_linux_iscsi_session_object_iface_init));
 
 static void
 udisks_linux_iscsi_session_object_get_property (GObject *object, guint property_id,
@@ -85,8 +81,8 @@ udisks_linux_iscsi_session_object_get_property (GObject *object, guint property_
 
   switch (property_id)
     {
-      case PROP_DAEMON:
-        g_value_set_object (value, udisks_linux_iscsi_session_object_get_daemon (session_object));
+      case PROP_MODULE:
+        g_value_set_object (value, udisks_linux_iscsi_session_object_get_module (session_object));
         break;
 
       case PROP_SESSION_ID:
@@ -107,10 +103,9 @@ udisks_linux_iscsi_session_object_set_property (GObject *object, guint property_
 
   switch (property_id)
     {
-      case PROP_DAEMON:
-        g_assert (session_object->daemon == NULL);
-        /* We don't take a reference to daemon. */
-        session_object->daemon = g_value_get_object (value);
+      case PROP_MODULE:
+        g_assert (session_object->module == NULL);
+        session_object->module = g_value_dup_object (value);
         break;
 
       case PROP_SESSION_ID:
@@ -128,13 +123,7 @@ static void
 udisks_linux_iscsi_session_object_constructed (GObject *object)
 {
   UDisksLinuxISCSISessionObject *session_object = UDISKS_LINUX_ISCSI_SESSION_OBJECT (object);
-  UDisksModuleManager *module_manager;
   gchar *object_path;
-
-  /* Store state pointer for later usage; libiscsi_context. */
-  module_manager = udisks_daemon_get_module_manager (session_object->daemon);
-  session_object->state = udisks_module_manager_get_module_state_pointer (module_manager,
-                                                                          ISCSI_MODULE_NAME);
 
   /* Set the object path. */
   object_path = udisks_linux_iscsi_session_object_get_object_path (session_object);
@@ -154,18 +143,12 @@ udisks_linux_iscsi_session_object_constructed (GObject *object)
 }
 
 static void
-udisks_linux_iscsi_session_object_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->dispose)
-    G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_iscsi_session_object_finalize (GObject *object)
 {
   UDisksLinuxISCSISessionObject *session_object = UDISKS_LINUX_ISCSI_SESSION_OBJECT (object);
 
   g_free (session_object->session_id);
+  g_object_unref (session_object->module);
 
   if (G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->finalize)
     G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->finalize (object);
@@ -179,20 +162,19 @@ udisks_linux_iscsi_session_object_class_init (UDisksLinuxISCSISessionObjectClass
   gobject_class->get_property = udisks_linux_iscsi_session_object_get_property;
   gobject_class->set_property = udisks_linux_iscsi_session_object_set_property;
   gobject_class->constructed = udisks_linux_iscsi_session_object_constructed;
-  gobject_class->dispose = udisks_linux_iscsi_session_object_dispose;
   gobject_class->finalize = udisks_linux_iscsi_session_object_finalize;
 
   /**
-   * UDisksLinuxISCSISessionObject:daemon:
+   * UDisksLinuxISCSISessionObject:module:
    *
    * The #UDisksDaemon for the object.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_ISCSI,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -220,12 +202,12 @@ udisks_linux_iscsi_session_object_init (UDisksLinuxISCSISessionObject *session_o
 {
   g_return_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object));
 
-  session_object->daemon = NULL;
+  session_object->module = NULL;
 }
 
 /**
  * udisks_linux_iscsi_session_object_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleISCSI.
  * @session_id: A iSCSI session identifier.
  *
  * Create a new iSCSI session object.
@@ -233,29 +215,29 @@ udisks_linux_iscsi_session_object_init (UDisksLinuxISCSISessionObject *session_o
  * Returns: A #UDisksLinuxISCSISessionObject object. Free with g_object_unref().
  */
 UDisksLinuxISCSISessionObject *
-udisks_linux_iscsi_session_object_new (UDisksDaemon *daemon,
-                                       const gchar  *session_id)
+udisks_linux_iscsi_session_object_new (UDisksLinuxModuleISCSI *module,
+                                       const gchar            *session_id)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), NULL);
   g_return_val_if_fail (session_id, NULL);
 
   return g_object_new (UDISKS_TYPE_LINUX_ISCSI_SESSION_OBJECT,
-                       "daemon", daemon,
+                       "module", module,
                        "session-id", session_id,
                        NULL);
 }
 
 /**
- * udisks_linux_iscsi_session_object_get_daemon:
+ * udisks_linux_iscsi_session_object_get_module:
  * @session_object: A #UDisksLinuxISCSISessionObject.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @session_object.
+ * Returns: A #UDisksLinuxModuleISCSI. Do not free, the object is owned by @session_object.
  */
-UDisksDaemon *
-udisks_linux_iscsi_session_object_get_daemon (UDisksLinuxISCSISessionObject *session_object)
+UDisksLinuxModuleISCSI *
+udisks_linux_iscsi_session_object_get_module (UDisksLinuxISCSISessionObject *session_object)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object), NULL);
-  return session_object->daemon;
+  return session_object->module;
 }
 
 /**
@@ -272,20 +254,6 @@ udisks_linux_iscsi_session_object_get_session_id (UDisksLinuxISCSISessionObject 
 }
 
 /**
- * udisks_linux_iscsi_session_object_get_state:
- * @session_object: A #UDisksLinuxISCSISessionObject.
- *
- * Returns: A #UDisksISCSIState. Do not free, the structure is owned by
- * #UDisksModuleManager.
- */
-UDisksISCSIState *
-udisks_linux_iscsi_session_object_get_state (UDisksLinuxISCSISessionObject *session_object)
-{
-  g_return_val_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object), NULL);
-  return session_object->state;
-}
-
-/**
  * udisks_linux_iscsi_session_object_make_object_path:
  * @session_id: A string with iSCSI session id.
  *
@@ -298,7 +266,7 @@ udisks_linux_iscsi_session_object_make_object_path (const gchar *session_id)
 
   g_return_val_if_fail (session_id, NULL);
 
-  object_path = g_string_new (iscsi_session_object_path_prefix);
+  object_path = g_string_new (ISCSI_SESSION_OBJECT_PATH_PREFIX);
   object_path = g_string_append (object_path, session_id);
 
   return g_string_free (object_path, FALSE);
@@ -352,27 +320,26 @@ static void
 udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *session_object)
 {
   UDisksISCSISession *iface;
-  UDisksISCSIState *state;
   struct libiscsi_context *ctx;
   struct libiscsi_session_info session_info = {0,};
 
   g_return_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object));
 
-  state = udisks_linux_iscsi_session_object_get_state (session_object);
-  ctx = udisks_iscsi_state_get_libiscsi_context (state);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (session_object->module);
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (session_object->module);
 
   /* Get session info */
   if (libiscsi_get_session_info_by_id (ctx, &session_info, session_object->session_id) != 0)
     {
+      udisks_linux_module_iscsi_unlock_libiscsi_context (session_object->module);
       udisks_critical ("Can not retrieve session information for %s", session_object->session_id);
       return;
     }
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (session_object->module);
 
   /* Set properties */
   iface = UDISKS_ISCSI_SESSION (session_object->iface_iscsi_session);
@@ -391,7 +358,8 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
 static gboolean
 udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_object,
                                                   const gchar        *action,
-                                                  UDisksLinuxDevice  *device)
+                                                  UDisksLinuxDevice  *device,
+                                                  gboolean           *keep)
 {
   UDisksLinuxISCSISessionObject *session_object;
   gchar *session_id;
@@ -410,12 +378,12 @@ udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_obj
       g_free (session_id);
       if (g_strcmp0 (action, "remove") == 0)
         {
-          /* Returning FALSE means that the device is removed. */
-          return FALSE;
+          *keep = FALSE;
+          return TRUE;
         }
       else
         {
-          /* Returning TRUE means that the device is being kept claimed. */
+          *keep = TRUE;
           return TRUE;
         }
     }
@@ -427,9 +395,9 @@ udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_obj
 
 static gboolean
 udisks_linux_iscsi_session_object_housekeeping (UDisksModuleObject  *object,
-                                                  guint              secs_since_last,
-                                                  GCancellable      *cancellable,
-                                                  GError           **error)
+                                                guint                secs_since_last,
+                                                GCancellable        *cancellable,
+                                                GError             **error)
 {
   /* No housekeeping needed so far.  Return TRUE to indicate, we finished
    * successfully. */

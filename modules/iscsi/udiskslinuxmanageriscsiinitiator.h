@@ -22,6 +22,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udisksiscsitypes.h"
+#include "udiskslinuxmoduleiscsi.h"
 
 G_BEGIN_DECLS
 
@@ -34,8 +35,8 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_MANAGER_ISCSI_INITIATOR_GET_PRIVATE(o)  ((UDisksLinuxManagerISCSIInitiatorPrivate *)((UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (o))->priv))
 
 GType                             udisks_linux_manager_iscsi_initiator_get_type   (void) G_GNUC_CONST;
-UDisksLinuxManagerISCSIInitiator *udisks_linux_manager_iscsi_initiator_new        (UDisksDaemon *daemon);
-UDisksDaemon                     *udisks_linux_manager_iscsi_initiator_get_daemon (UDisksLinuxManagerISCSIInitiator *manager);
+UDisksLinuxManagerISCSIInitiator *udisks_linux_manager_iscsi_initiator_new        (UDisksLinuxModuleISCSI *module);
+UDisksLinuxModuleISCSI           *udisks_linux_manager_iscsi_initiator_get_module (UDisksLinuxManagerISCSIInitiator *manager);
 
 G_END_DECLS
 

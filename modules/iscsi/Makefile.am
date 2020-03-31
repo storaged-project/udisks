@@ -17,7 +17,6 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/udisks2/"\"                          \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DUDISKS_COMPILATION                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
@@ -30,25 +29,18 @@ CPPFLAGS =                                                                     \
 BUILT_SOURCES =                                                                \
 	$(NULL)
 
-libudisks2_iscsidir=$(libdir)/udisks2/modules
-libudisks2_iscsi_LTLIBRARIES=libudisks2_iscsi.la
+libudisks2_iscsidir = $(libdir)/udisks2/modules
+libudisks2_iscsi_LTLIBRARIES = libudisks2_iscsi.la
 
-libudisks2_iscsiincludedir=$(includedir)/udisks2/udisks
-
-libudisks2_iscsiinclude_HEADERS =                                              \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(NULL)
+libudisks2_iscsiincludedir = $(includedir)/udisks2/udisks
 
 libudisks2_iscsi_la_SOURCES =                                                  \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	udiskslinuxmoduleiscsi.h                                               \
+	udiskslinuxmoduleiscsi.c                                               \
 	udiskslinuxmanageriscsiinitiator.h                                     \
 	udiskslinuxmanageriscsiinitiator.c                                     \
-	udisksiscsistate.h                                                     \
-	udisksiscsistate.c                                                     \
 	udisksiscsitypes.h                                                     \
-	udisksiscsimoduleiface.c                                               \
 	udisksiscsiutil.h                                                      \
 	udisksiscsiutil.c                                                      \
 	$(NULL)
