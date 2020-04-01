@@ -24,7 +24,6 @@
 
 const gchar *btrfs_subvolume_fmt = "(tts)";
 const gchar *btrfs_subvolumes_fmt = "a(tts)";
-const gchar *btrfs_policy_action_id = "org.freedesktop.udisks2.btrfs.manage-btrfs";
 
 GVariant *
 btrfs_subvolumes_to_gvariant (BDBtrfsSubvolumeInfo **subvolumes_info,

@@ -21,8 +21,10 @@
 #define __UDISKS_BTRFS_TYPES_H__
 
 #define BTRFS_MODULE_NAME "btrfs"
+#define BTRFS_POLICY_ACTION_ID "org.freedesktop.udisks2.btrfs.manage-btrfs"
 
-typedef struct _UDisksBTRFSState UDisksBTRFSState;
+struct _UDisksLinuxModuleBTRFS;
+typedef struct _UDisksLinuxModuleBTRFS UDisksLinuxModuleBTRFS;
 
 typedef struct _UDisksLinuxManagerBTRFS        UDisksLinuxManagerBTRFS;
 typedef struct _UDisksLinuxManagerBTRFSClass   UDisksLinuxManagerBTRFSClass;

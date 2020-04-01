@@ -26,8 +26,11 @@
 #include <src/udiskslinuxblockobject.h>
 #include <src/udiskslinuxdevice.h>
 #include <src/udiskslogging.h>
+#include <src/udisksmodule.h>
+#include <src/udisksmoduleobject.h>
 #include <blockdev/btrfs.h>
 
+#include "udiskslinuxmodulebtrfs.h"
 #include "udiskslinuxfilesystembtrfs.h"
 #include "udisksbtrfsutil.h"
 
@@ -46,10 +49,11 @@
  * The #UDisksLinuxFilesystemBTRFS structure contains only private data and
  * should be only accessed using provided API.
  */
-struct _UDisksLinuxFilesystemBTRFS{
+struct _UDisksLinuxFilesystemBTRFS {
   UDisksFilesystemBTRFSSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleBTRFS *module;
+  UDisksLinuxBlockObject *block_object;
 };
 
 struct _UDisksLinuxFilesystemBTRFSClass {
@@ -62,16 +66,17 @@ typedef gboolean (*btrfs_device_func)(const gchar *mountpoint, const gchar *devi
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
+  PROP_BLOCK_OBJECT,
   N_PROPERTIES
 };
 
 static void udisks_linux_filesystem_btrfs_iface_init (UDisksFilesystemBTRFSIface *iface);
+static void udisks_linux_filesystem_btrfs_module_object_iface_init (UDisksModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystemBTRFS, udisks_linux_filesystem_btrfs,
-                         UDISKS_TYPE_FILESYSTEM_BTRFS_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_FILESYSTEM_BTRFS,
-                         udisks_linux_filesystem_btrfs_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystemBTRFS, udisks_linux_filesystem_btrfs, UDISKS_TYPE_FILESYSTEM_BTRFS_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_FILESYSTEM_BTRFS, udisks_linux_filesystem_btrfs_iface_init)
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, udisks_linux_filesystem_btrfs_module_object_iface_init));
 
 static void
 udisks_linux_filesystem_btrfs_get_property (GObject    *object,
@@ -83,8 +88,12 @@ udisks_linux_filesystem_btrfs_get_property (GObject    *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs));
+    case PROP_MODULE:
+      g_value_set_object (value, UDISKS_MODULE (udisks_linux_filesystem_btrfs_get_module (l_fs_btrfs)));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_value_set_object (value, l_fs_btrfs->block_object);
       break;
 
     default:
@@ -103,10 +112,15 @@ udisks_linux_filesystem_btrfs_set_property (GObject      *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (l_fs_btrfs->daemon == NULL);
-      /* We don't take a reference to the daemon. */
-      l_fs_btrfs->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (l_fs_btrfs->module == NULL);
+      l_fs_btrfs->module = UDISKS_LINUX_MODULE_BTRFS (g_value_dup_object (value));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_assert (l_fs_btrfs->block_object == NULL);
+      /* we don't take reference to block_object */
+      l_fs_btrfs->block_object = g_value_get_object (value);
       break;
 
     default:
@@ -116,15 +130,13 @@ udisks_linux_filesystem_btrfs_set_property (GObject      *object,
 }
 
 static void
-udisks_linux_filesystem_btrfs_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_filesystem_btrfs_parent_class))
-    G_OBJECT_CLASS (udisks_linux_filesystem_btrfs_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_filesystem_btrfs_finalize (GObject *object)
 {
+  UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (object);
+
+  /* we don't take reference to block_object */
+  g_object_unref (l_fs_btrfs->module);
+
   if (G_OBJECT_CLASS (udisks_linux_filesystem_btrfs_parent_class))
     G_OBJECT_CLASS (udisks_linux_filesystem_btrfs_parent_class)->finalize (object);
 }
@@ -136,20 +148,34 @@ udisks_linux_filesystem_btrfs_class_init (UDisksLinuxFilesystemBTRFSClass *klass
 
   gobject_class->get_property = udisks_linux_filesystem_btrfs_get_property;
   gobject_class->set_property = udisks_linux_filesystem_btrfs_set_property;
-  gobject_class->dispose = udisks_linux_filesystem_btrfs_dispose;
   gobject_class->finalize = udisks_linux_filesystem_btrfs_finalize;
 
   /**
-   * UDisksLinuxManager:daemon
+   * UDisksLinuxFilesystemBTRFS:module:
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksModule for the object.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_MODULE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+  /**
+   * UDisksLinuxFilesystemBTRFS:blockobject:
+   *
+   * The #UDisksLinuxBlockObject for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_BLOCK_OBJECT,
+                                   g_param_spec_object ("blockobject",
+                                                        "Block object",
+                                                        "The block object for the interface",
+                                                        UDISKS_TYPE_LINUX_BLOCK_OBJECT,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -165,48 +191,38 @@ udisks_linux_filesystem_btrfs_init (UDisksLinuxFilesystemBTRFS *l_fs_btrfs)
 
 /**
  * udisks_linux_filesystem_btrfs_new:
+ * @module: A #UDisksLinuxModuleBTRFS.
+ * @block_object: A #UDisksLinuxBlockObject.
  *
  * Creates a new #UDisksLinuxFilesystemBTRFS instance.
  *
  * Returns: A new #UDisksLinuxFilesystemBTRFS. Free with g_object_unref().
  */
 UDisksLinuxFilesystemBTRFS *
-udisks_linux_filesystem_btrfs_new (void)
+udisks_linux_filesystem_btrfs_new (UDisksLinuxModuleBTRFS *module,
+                                   UDisksLinuxBlockObject *block_object)
 {
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_BTRFS (module), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (block_object), NULL);
   return UDISKS_LINUX_FILESYSTEM_BTRFS (g_object_new (UDISKS_TYPE_LINUX_FILESYSTEM_BTRFS,
+                                                      "module", UDISKS_MODULE (module),
+                                                      "blockobject", block_object,
                                                       NULL));
 }
 
 /**
- * udisks_linux_filesystem_btrfs_get_daemon:
+ * udisks_linux_filesystem_btrfs_get_module:
  * @fs: A #UDisksLinuxFilesystemBTRFS.
  *
- * Gets the daemon used by @l_fs_btrfs.
+ * Gets the module used by @l_fs_btrfs.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @l_fs_btrfs.
+ * Returns: A #UDisksLinuxModuleBTRFS. Do not free, the object is owned by @l_fs_btrfs.
  */
-UDisksDaemon *
-udisks_linux_filesystem_btrfs_get_daemon (UDisksLinuxFilesystemBTRFS *l_fs_btrfs)
+UDisksLinuxModuleBTRFS *
+udisks_linux_filesystem_btrfs_get_module (UDisksLinuxFilesystemBTRFS *l_fs_btrfs)
 {
-  GError *error = NULL;
-  UDisksLinuxBlockObject *object;
-  UDisksDaemon *daemon = NULL;
-
   g_return_val_if_fail (UDISKS_IS_LINUX_FILESYSTEM_BTRFS (l_fs_btrfs), NULL);
-
-  object = udisks_daemon_util_dup_object (l_fs_btrfs, &error);
-  if (object)
-    {
-      daemon = udisks_linux_block_object_get_daemon (object);
-      g_clear_object (&object);
-    }
-  else
-    {
-      udisks_critical ("%s", error->message);
-      g_clear_error (&error);
-    }
-
-  return daemon;
+  return l_fs_btrfs->module;
 }
 
 /**
@@ -313,6 +329,7 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gchar *dev_file = NULL;
 
@@ -323,10 +340,12 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to change label for BTRFS volume"),
                                      invocation);
@@ -350,8 +369,7 @@ handle_set_label (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_set_label (fs_btrfs,
-                                              invocation);
+  udisks_filesystem_btrfs_complete_set_label (fs_btrfs, invocation);
 out:
   g_clear_object (&object);
   g_free (dev_file);
@@ -368,6 +386,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gchar *mount_point = NULL;
 
@@ -378,10 +397,12 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_(polkit_message),
                                      invocation);
@@ -414,8 +435,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_set_label (fs_btrfs,
-                                              invocation);
+  udisks_filesystem_btrfs_complete_set_label (fs_btrfs, invocation);
 
 out:
   /* Release the resources */
@@ -438,7 +458,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   GError *error = NULL;
   gchar *mount_point = NULL;
   const gchar *device;
-  UDisksDaemon *daemon = NULL;
+  UDisksDaemon *daemon;
   UDisksObject *new_device_object = NULL;
   UDisksBlock *new_device_block = NULL;
 
@@ -449,15 +469,14 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
-  daemon = udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
-                                     N_("Authentication is required to add "
-                                        "the device to the volume"),
+                                     N_("Authentication is required to add the device to the volume"),
                                      invocation);
 
   /* Get the mount point for this volume. */
@@ -554,8 +573,7 @@ handle_create_subvolume (UDisksFilesystemBTRFS *fs_btrfs,
                                          bd_btrfs_create_subvolume,
                                          arg_name,
                                          arg_options,
-                                         "Authentication is required to add "
-                                         "a new subvolume for the given BTRFS volume");
+                                         "Authentication is required to add a new subvolume for the given BTRFS volume");
 }
 
 static gboolean
@@ -569,8 +587,7 @@ handle_remove_subvolume (UDisksFilesystemBTRFS *fs_btrfs,
                                          bd_btrfs_delete_subvolume,
                                          arg_name,
                                          arg_options,
-                                         "Authentication is required to remove "
-                                         "the subvolume for the given BTRFS volume");
+                                         "Authentication is required to remove the subvolume for the given BTRFS volume");
 }
 
 static gboolean
@@ -581,6 +598,7 @@ handle_get_subvolumes (UDisksFilesystemBTRFS *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   BDBtrfsSubvolumeInfo **subvolumes_info = NULL;
   GVariant *subvolumes = NULL;
   GError *error = NULL;
@@ -594,13 +612,14 @@ handle_get_subvolumes (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
-                                     N_("Authentication is required to change label "
-                                        "for BTRFS volume"),
+                                     N_("Authentication is required to change label for BTRFS volume"),
                                      invocation);
 
   /* Get the mount point for this volume. */
@@ -650,6 +669,7 @@ handle_create_snapshot (UDisksFilesystemBTRFS  *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gchar *source = NULL;
   gchar *dest = NULL;
@@ -662,10 +682,12 @@ handle_create_snapshot (UDisksFilesystemBTRFS  *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to create a new snapshot"),
                                      invocation);
@@ -690,8 +712,7 @@ handle_create_snapshot (UDisksFilesystemBTRFS  *fs_btrfs,
     }
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_create_snapshot (fs_btrfs,
-                                                    invocation);
+  udisks_filesystem_btrfs_complete_create_snapshot (fs_btrfs, invocation);
 
 out:
   /* Release the resources */
@@ -711,6 +732,7 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gchar *dev_file = NULL;
 
@@ -721,10 +743,12 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to check and repair the volume"),
                                      invocation);
@@ -748,8 +772,7 @@ handle_repair (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_repair (fs_btrfs,
-                                           invocation);
+  udisks_filesystem_btrfs_complete_repair (fs_btrfs, invocation);
 
 out:
   g_clear_object (&object);
@@ -767,6 +790,7 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
 {
   UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gchar *mount_point = NULL;
 
@@ -777,10 +801,12 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_fs_btrfs->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to resize the volume"),
                                      invocation);
@@ -803,8 +829,7 @@ handle_resize (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_resize (fs_btrfs,
-                                           invocation);
+  udisks_filesystem_btrfs_complete_resize (fs_btrfs, invocation);
 
 out:
   g_clear_object (&object);
@@ -826,4 +851,37 @@ udisks_linux_filesystem_btrfs_iface_init (UDisksFilesystemBTRFSIface *iface)
   iface->handle_create_snapshot = handle_create_snapshot;
   iface->handle_repair = handle_repair;
   iface->handle_resize = handle_resize;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static gboolean
+udisks_linux_filesystem_btrfs_module_object_process_uevent (UDisksModuleObject *module_object,
+                                                            const gchar        *action,
+                                                            UDisksLinuxDevice  *device,
+                                                            gboolean           *keep)
+{
+  UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (module_object);
+  const gchar *fs_type = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_FILESYSTEM_BTRFS (module_object), FALSE);
+
+  if (device == NULL)
+    return FALSE;
+
+  /* Check filesystem type from udev property. */
+  fs_type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
+  *keep = g_strcmp0 (fs_type, "btrfs") == 0;
+  if (*keep)
+    {
+      udisks_linux_filesystem_btrfs_update (l_fs_btrfs, l_fs_btrfs->block_object);
+    }
+
+  return TRUE;
+}
+
+static void
+udisks_linux_filesystem_btrfs_module_object_iface_init (UDisksModuleObjectIface *iface)
+{
+  iface->process_uevent = udisks_linux_filesystem_btrfs_module_object_process_uevent;
 }

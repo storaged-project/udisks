@@ -34,10 +34,11 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_FILESYSTEM_BTRFS_GET_PRIVATE(o)  ((UDisksLinuxFilesystemBTRFSPrivate *)((UDISKS_LINUX_FILESYSTEM_BTRFS (o))->priv))
 
 GType                       udisks_linux_filesystem_btrfs_get_type   (void) G_GNUC_CONST;
-UDisksLinuxFilesystemBTRFS *udisks_linux_filesystem_btrfs_new        (void);
+UDisksLinuxFilesystemBTRFS *udisks_linux_filesystem_btrfs_new        (UDisksLinuxModuleBTRFS     *module,
+                                                                      UDisksLinuxBlockObject     *block_object);
 gboolean                    udisks_linux_filesystem_btrfs_update     (UDisksLinuxFilesystemBTRFS *l_fs_btrfs,
                                                                       UDisksLinuxBlockObject     *object);
-UDisksDaemon               *udisks_linux_filesystem_btrfs_get_daemon (UDisksLinuxFilesystemBTRFS *l_fs_btrfs);
+UDisksLinuxModuleBTRFS     *udisks_linux_filesystem_btrfs_get_module (UDisksLinuxFilesystemBTRFS *l_fs_btrfs);
 
 G_END_DECLS
 

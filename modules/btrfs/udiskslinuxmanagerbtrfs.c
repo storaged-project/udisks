@@ -28,7 +28,7 @@
 #include <src/udiskslinuxblockobject.h>
 
 #include "udiskslinuxmanagerbtrfs.h"
-#include "udisksbtrfsstate.h"
+#include "udiskslinuxmodulebtrfs.h"
 #include "udisksbtrfsutil.h"
 
 /**
@@ -49,7 +49,7 @@
 struct _UDisksLinuxManagerBTRFS{
   UDisksManagerBTRFSSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleBTRFS *module;
 };
 
 struct _UDisksLinuxManagerBTRFSClass {
@@ -58,15 +58,13 @@ struct _UDisksLinuxManagerBTRFSClass {
 
 static void udisks_linux_manager_btrfs_iface_init (UDisksManagerBTRFSIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerBTRFS, udisks_linux_manager_btrfs,
-                         UDISKS_TYPE_MANAGER_BTRFS_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_BTRFS,
-                                                udisks_linux_manager_btrfs_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerBTRFS, udisks_linux_manager_btrfs, UDISKS_TYPE_MANAGER_BTRFS_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_BTRFS, udisks_linux_manager_btrfs_iface_init));
 
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   N_PROPERTIES
 };
 
@@ -78,8 +76,8 @@ udisks_linux_manager_btrfs_get_property (GObject *object, guint property_id,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_btrfs_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_btrfs_get_module (manager));
       break;
 
     default:
@@ -96,10 +94,9 @@ udisks_linux_manager_btrfs_set_property (GObject *object, guint property_id,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* We don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
@@ -109,15 +106,12 @@ udisks_linux_manager_btrfs_set_property (GObject *object, guint property_id,
 }
 
 static void
-udisks_linux_manager_btrfs_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_manager_btrfs_parent_class))
-    G_OBJECT_CLASS (udisks_linux_manager_btrfs_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_manager_btrfs_finalize (GObject *object)
 {
+  UDisksLinuxManagerBTRFS *manager = UDISKS_LINUX_MANAGER_BTRFS (object);
+
+  g_object_unref (manager->module);
+
   if (G_OBJECT_CLASS (udisks_linux_manager_btrfs_parent_class))
     G_OBJECT_CLASS (udisks_linux_manager_btrfs_parent_class)->finalize (object);
 }
@@ -129,20 +123,19 @@ udisks_linux_manager_btrfs_class_init (UDisksLinuxManagerBTRFSClass *klass)
 
   gobject_class->get_property = udisks_linux_manager_btrfs_get_property;
   gobject_class->set_property = udisks_linux_manager_btrfs_set_property;
-  gobject_class->dispose = udisks_linux_manager_btrfs_dispose;
   gobject_class->finalize = udisks_linux_manager_btrfs_finalize;
 
   /**
-   * UDisksLinuxManager:daemon
+   * UDisksLinuxManager:module
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksLinuxModuleBTRFS for the object.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_BTRFS,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -158,34 +151,34 @@ udisks_linux_manager_btrfs_init (UDisksLinuxManagerBTRFS *self)
 
 /**
  * udisks_linux_manager_btrfs_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleBTRFS.
  *
  * Creates a new #UDisksLinuxManagerBTRFS instance.
  *
  * Returns: A new #UDisksLinuxManagerBTRFS. Free with g_object_unref().
  */
 UDisksLinuxManagerBTRFS *
-udisks_linux_manager_btrfs_new (UDisksDaemon *daemon)
+udisks_linux_manager_btrfs_new (UDisksLinuxModuleBTRFS *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  return UDISKS_LINUX_MANAGER_BTRFS(g_object_new (UDISKS_TYPE_LINUX_MANAGER_BTRFS,
-                                                  "daemon", daemon,
-                                                  NULL));
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_BTRFS (module), NULL);
+  return UDISKS_LINUX_MANAGER_BTRFS (g_object_new (UDISKS_TYPE_LINUX_MANAGER_BTRFS,
+                                                   "module", module,
+                                                   NULL));
 }
 
 /**
- * udisks_linux_manager_btrfs_get_daemon:
+ * udisks_linux_manager_btrfs_get_module:
  * @manager: A #UDisksLinuxManagerBTRFS.
  *
- * Gets the daemon used by @manager.
+ * Gets the module used by @manager.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleBTRFS. Do not free, the object is owned by @manager.
  */
-UDisksDaemon *
-udisks_linux_manager_btrfs_get_daemon (UDisksLinuxManagerBTRFS *manager)
+UDisksLinuxModuleBTRFS *
+udisks_linux_manager_btrfs_get_module (UDisksLinuxManagerBTRFS *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_BTRFS (manager), NULL);
-  return manager->daemon;
+  return manager->module;
 }
 
 static gboolean
@@ -198,15 +191,18 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
                       GVariant              *arg_options)
 {
   UDisksLinuxManagerBTRFS *l_manager = UDISKS_LINUX_MANAGER_BTRFS (manager);
+  UDisksDaemon *daemon;
   GError *error = NULL;
   GPtrArray *devices = NULL;
   GList *objects = NULL;
   GList *l;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_manager->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_btrfs_get_daemon (l_manager),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     btrfs_policy_action_id,
+                                     BTRFS_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to create a new volume"),
                                      invocation);
@@ -217,7 +213,7 @@ handle_create_volume (UDisksManagerBTRFS    *manager,
       UDisksObject *object;
       UDisksBlock *block;
 
-      object = udisks_daemon_find_object (l_manager->daemon, arg_blocks[n]);
+      object = udisks_daemon_find_object (daemon, arg_blocks[n]);
       if (object == NULL)
         {
           g_dbus_method_invocation_return_error (invocation,
