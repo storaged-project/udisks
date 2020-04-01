@@ -28,8 +28,6 @@
 
 #define BUFLEN 256
 
-const gchar *zram_policy_action_id = "org.freedesktop.udisks2.zram.manage-zram";
-
 gboolean
 set_conf_property (char *filename,
                    const char *key,

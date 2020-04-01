@@ -22,6 +22,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udiskszramtypes.h"
+#include "udiskslinuxmodulezram.h"
 
 G_BEGIN_DECLS
 
@@ -37,10 +38,10 @@ typedef struct _UDisksLinuxBlockZRAM       UDisksLinuxBlockZRAM;
 typedef struct _UDisksLinuxBlockZRAMClass  UDisksLinuxBlockZRAMClass;
 
 GType                  udisks_linux_block_zram_get_type    (void) G_GNUC_CONST;
-UDisksLinuxBlockZRAM  *udisks_linux_block_zram_new         (void);
+UDisksLinuxBlockZRAM  *udisks_linux_block_zram_new         (UDisksLinuxModuleZRAM   *module,
+                                                            UDisksLinuxBlockObject  *block_object);
 gboolean               udisks_linux_block_zram_update      (UDisksLinuxBlockZRAM    *zramblock,
                                                             UDisksLinuxBlockObject  *object);
-UDisksDaemon          *udisks_linux_block_zram_get_daemon  (UDisksLinuxBlockZRAM    *zramblock);
 
 G_END_DECLS
 

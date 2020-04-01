@@ -21,8 +21,10 @@
 #define __UDISKS_ZRAM_TYPES_H__
 
 #define ZRAM_MODULE_NAME "zram"
+#define ZRAM_POLICY_ACTION_ID "org.freedesktop.udisks2.zram.manage-zram"
 
-typedef struct _UDisksZRAMState UDisksZRAMState;
+struct _UDisksLinuxModuleZRAM;
+typedef struct _UDisksLinuxModuleZRAM UDisksLinuxModuleZRAM;
 
 typedef struct _UDisksLinuxManagerZRAM UDisksLinuxManagerZRAM;
 typedef struct _UDisksLinuxManagerZRAMClass UDisksLinuxManagerZRAMClass;

@@ -22,8 +22,6 @@
 
 #include <glib.h>
 
-extern const gchar  *zram_policy_action_id;
-
 gboolean set_conf_property (char *filename, const char *key, const char *value, GError **error);
 
 #endif /* __UDISKS_ZRAM_UTIL_H__ */

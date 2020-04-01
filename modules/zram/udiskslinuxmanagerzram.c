@@ -54,7 +54,7 @@
 struct _UDisksLinuxManagerZRAM {
   UDisksManagerZRAMSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleZRAM *module;
 };
 
 struct _UDisksLinuxManagerZRAMClass {
@@ -63,17 +63,15 @@ struct _UDisksLinuxManagerZRAMClass {
 
 static void udisks_linux_manager_zram_iface_init (UDisksManagerZRAMIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerZRAM, udisks_linux_manager_zram,
-                         UDISKS_TYPE_MANAGER_ZRAM_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_ZRAM,
-                                                udisks_linux_manager_zram_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerZRAM, udisks_linux_manager_zram, UDISKS_TYPE_MANAGER_ZRAM_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_ZRAM, udisks_linux_manager_zram_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   N_PROPERTIES
 };
 
@@ -87,8 +85,8 @@ udisks_linux_manager_zram_get_property (GObject     *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_zram_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_zram_get_module (manager));
       break;
 
     default:
@@ -107,23 +105,15 @@ udisks_linux_manager_zram_set_property (GObject       *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* We don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
     }
-}
-
-static void
-udisks_linux_manager_zram_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_manager_zram_parent_class))
-    G_OBJECT_CLASS (udisks_linux_manager_zram_parent_class)->dispose (object);
 }
 
 static void
@@ -140,20 +130,19 @@ udisks_linux_manager_zram_class_init (UDisksLinuxManagerZRAMClass *klass)
 
   gobject_class->get_property = udisks_linux_manager_zram_get_property;
   gobject_class->set_property = udisks_linux_manager_zram_set_property;
-  gobject_class->dispose = udisks_linux_manager_zram_dispose;
   gobject_class->finalize = udisks_linux_manager_zram_finalize;
 
-/**
- * UDisksLinuxManager:daemon
- *
- * The #UDisksDaemon for the object.
- */
+  /**
+   * UDisksLinuxManagerZRAM:daemon:
+   *
+   * The #UDisksLinuxModuleZRAM for the object.
+   */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_ZRAM,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -169,18 +158,18 @@ udisks_linux_manager_zram_init (UDisksLinuxManagerZRAM *self)
 
 /**
  * udisks_linux_manager_zram_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleZRAM.
  *
  * Creates a new #UDisksLinuxManagerZRAM instance.
  *
  * Returns: A new #UDisksLinuxManagerZRAM. Free with g_object_unref ().
  */
 UDisksLinuxManagerZRAM *
-udisks_linux_manager_zram_new (UDisksDaemon *daemon)
+udisks_linux_manager_zram_new (UDisksLinuxModuleZRAM *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ZRAM (module), NULL);
   return UDISKS_LINUX_MANAGER_ZRAM (g_object_new (UDISKS_TYPE_LINUX_MANAGER_ZRAM,
-                                                  "daemon", daemon,
+                                                  "module", module,
                                                   NULL));
 }
 
@@ -188,15 +177,16 @@ udisks_linux_manager_zram_new (UDisksDaemon *daemon)
  * udisks_linux_manager_zram_get_daemon:
  * @manager: A #UDisksLinuxManagerZRAM.
  *
- * Gets the daemon used by @manager.
+ * Gets the module used by @manager.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleZRAM. Do not free, the object is owned by @manager.
  */
 
-UDisksDaemon *udisks_linux_manager_zram_get_daemon (UDisksLinuxManagerZRAM* manager)
+UDisksLinuxModuleZRAM *
+udisks_linux_manager_zram_get_module (UDisksLinuxManagerZRAM *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_ZRAM (manager), NULL);
-  return manager->daemon;
+  return manager->module;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -373,6 +363,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
                        GVariant              *options)
 {
   UDisksLinuxManagerZRAM *manager = UDISKS_LINUX_MANAGER_ZRAM (object);
+  UDisksDaemon *daemon;
   GError *error = NULL;
   gsize sizes_len;
   gsize streams_len;
@@ -382,10 +373,12 @@ handle_create_devices (UDisksManagerZRAM     *object,
   UDisksObject **zram_objects = NULL;
   gchar **zram_object_paths = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     zram_policy_action_id,
+                                     ZRAM_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to add zRAM kernel module"),
                                      invocation);
@@ -415,7 +408,7 @@ handle_create_devices (UDisksManagerZRAM     *object,
     zram_paths[i] = g_strdup_printf ("/dev/zram%" G_GSIZE_FORMAT, i);
 
   /* sit and wait for the zram objects to show up */
-  zram_objects = udisks_daemon_wait_for_objects_sync (manager->daemon,
+  zram_objects = udisks_daemon_wait_for_objects_sync (daemon,
                                                       wait_for_zram_objects,
                                                       zram_paths,
                                                       NULL,
@@ -472,15 +465,16 @@ handle_destroy_devices (UDisksManagerZRAM     *object,
                         GDBusMethodInvocation *invocation,
                         GVariant              *options)
 {
-
-  GError *error = NULL;
   UDisksLinuxManagerZRAM *manager = UDISKS_LINUX_MANAGER_ZRAM (object);
-  UDisksDaemon *u_daemon = udisks_linux_manager_zram_get_daemon (manager);
+  GError *error = NULL;
+  UDisksDaemon *daemon;
+
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
 
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_zram_get_daemon (manager),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     zram_policy_action_id,
+                                     ZRAM_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to remove zRAM kernel module"),
                                      invocation);
@@ -497,7 +491,7 @@ handle_destroy_devices (UDisksManagerZRAM     *object,
       goto out;
     }
 
-  if (! udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
                                                          wait_for_any_zram_object,
                                                          NULL,
                                                          NULL,

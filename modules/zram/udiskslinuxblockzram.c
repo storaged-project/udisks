@@ -20,12 +20,15 @@
 
 #include <glib/gi18n.h>
 
-#include <src/udisksdaemonutil.h>
-#include <src/udiskslinuxblockobject.h>
-#include <src/udiskslogging.h>
-#include <src/udisksdaemon.h>
 #include <blockdev/kbd.h>
 #include <blockdev/swap.h>
+
+#include <src/udisksdaemonutil.h>
+#include <src/udiskslinuxblockobject.h>
+#include <src/udiskslinuxdevice.h>
+#include <src/udiskslogging.h>
+#include <src/udisksdaemon.h>
+#include <src/udisksmoduleobject.h>
 
 #include "udiskslinuxblockzram.h"
 #include "udiskszramutil.h"
@@ -47,6 +50,9 @@
 
 struct _UDisksLinuxBlockZRAM {
   UDisksBlockZRAMSkeleton parent_instance;
+
+  UDisksLinuxModuleZRAM  *module;
+  UDisksLinuxBlockObject *block_object;
 };
 
 struct _UDisksLinuxBlockZRAMClass {
@@ -54,11 +60,19 @@ struct _UDisksLinuxBlockZRAMClass {
 };
 
 static void udisks_linux_block_zram_iface_init (UDisksBlockZRAMIface *iface);
+static void udisks_linux_block_zram_module_object_iface_init (UDisksModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockZRAM, udisks_linux_block_zram,
-                         UDISKS_TYPE_BLOCK_ZRAM_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_ZRAM,
-                                                udisks_linux_block_zram_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockZRAM, udisks_linux_block_zram, UDISKS_TYPE_BLOCK_ZRAM_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_ZRAM, udisks_linux_block_zram_iface_init)
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, udisks_linux_block_zram_module_object_iface_init));
+
+enum
+{
+  PROP_0,
+  PROP_MODULE,
+  PROP_BLOCK_OBJECT,
+  N_PROPERTIES
+};
 
 static void
 udisks_linux_block_zram_get_property (GObject     *object,
@@ -66,8 +80,18 @@ udisks_linux_block_zram_get_property (GObject     *object,
                                       GValue      *value,
                                       GParamSpec  *pspec)
 {
+  UDisksLinuxBlockZRAM *block_zram = UDISKS_LINUX_BLOCK_ZRAM (object);
+
   switch (property_id)
     {
+    case PROP_MODULE:
+      g_value_set_object (value, UDISKS_MODULE (block_zram->module));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_value_set_object (value, block_zram->block_object);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -80,8 +104,21 @@ udisks_linux_block_zram_set_property (GObject       *object,
                                       const GValue  *value,
                                       GParamSpec    *pspec)
 {
+  UDisksLinuxBlockZRAM *block_zram = UDISKS_LINUX_BLOCK_ZRAM (object);
+
   switch (property_id)
     {
+    case PROP_MODULE:
+      g_assert (block_zram->module == NULL);
+      block_zram->module = UDISKS_LINUX_MODULE_ZRAM (g_value_dup_object (value));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_assert (block_zram->block_object == NULL);
+      /* we don't take reference to block_object */
+      block_zram->block_object = g_value_get_object (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -89,15 +126,13 @@ udisks_linux_block_zram_set_property (GObject       *object,
 }
 
 static void
-udisks_linux_block_zram_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_block_zram_parent_class))
-    G_OBJECT_CLASS (udisks_linux_block_zram_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_block_zram_finalize (GObject *object)
 {
+  UDisksLinuxBlockZRAM *block_zram = UDISKS_LINUX_BLOCK_ZRAM (object);
+
+  /* we don't take reference to block_object */
+  g_object_unref (block_zram->module);
+
   if (G_OBJECT_CLASS (udisks_linux_block_zram_parent_class))
     G_OBJECT_CLASS (udisks_linux_block_zram_parent_class)->finalize (object);
 }
@@ -109,8 +144,38 @@ udisks_linux_block_zram_class_init (UDisksLinuxBlockZRAMClass *klass)
 
   gobject_class->get_property = udisks_linux_block_zram_get_property;
   gobject_class->set_property = udisks_linux_block_zram_set_property;
-  gobject_class->dispose = udisks_linux_block_zram_dispose;
   gobject_class->finalize = udisks_linux_block_zram_finalize;
+
+  /**
+   * UDisksLinuxBlockZRAM:module:
+   *
+   * The #UDisksModule for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_MODULE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+  /**
+   * UDisksLinuxBlockZRAM:blockobject:
+   *
+   * The #UDisksLinuxBlockObject for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_BLOCK_OBJECT,
+                                   g_param_spec_object ("blockobject",
+                                                        "Block object",
+                                                        "The block object for the interface",
+                                                        UDISKS_TYPE_LINUX_BLOCK_OBJECT,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -122,49 +187,23 @@ udisks_linux_block_zram_init (UDisksLinuxBlockZRAM *zramblock)
 
 /**
  * udisks_linux_block_zram_new:
+ * @module: A #UDisksLinuxModuleZRAM.
+ * @block_object: A #UDisksLinuxBlockObject.
  *
  * Creates a new #UDisksLinuxBlockZRAM instance.
  *
  * Returns: A new #UDisksLinuxBlockZRAM. Free with g_object_unref().
  */
-
-UDisksLinuxBlockZRAM*
-udisks_linux_block_zram_new (void)
+UDisksLinuxBlockZRAM *
+udisks_linux_block_zram_new (UDisksLinuxModuleZRAM  *module,
+                             UDisksLinuxBlockObject *block_object)
 {
-  return g_object_new (UDISKS_TYPE_LINUX_BLOCK_ZRAM, NULL);
-}
-
-/**
- * udisks_linux_block_zram_get_daemon:
- * @zramblock: A #UDisksLinuxBlockZRAM.
- *
- * Gets the daemon used by @zramblock.
- *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @zramblock.
- */
-
-UDisksDaemon *
-udisks_linux_block_zram_get_daemon (UDisksLinuxBlockZRAM *zramblock)
-{
-  GError *error = NULL;
-  UDisksLinuxBlockObject *object;
-  UDisksDaemon *daemon = NULL;
-
-  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_ZRAM (zramblock), NULL);
-
-  object = udisks_daemon_util_dup_object (zramblock, &error);
-  if (object)
-    {
-      daemon = udisks_linux_block_object_get_daemon (object);
-      g_clear_object (&object);
-    }
-  else
-    {
-      udisks_critical ("%s", error->message);
-      g_clear_error (&error);
-    }
-
-  return daemon;
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ZRAM (module), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (block_object), NULL);
+  return g_object_new (UDISKS_TYPE_LINUX_BLOCK_ZRAM,
+                       "module", UDISKS_MODULE (module),
+                       "blockobject", block_object,
+                       NULL);
 }
 
 static gchar *
@@ -191,7 +230,6 @@ extract_comp_algorithm (const gchar *alg_str)
  *
  * Returns: %TRUE if configuration has changed, %FALSE otherwise.
  */
-
 gboolean
 udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
                                 UDisksLinuxBlockObject  *object)
@@ -258,6 +296,7 @@ zram_device_activate (UDisksBlockZRAM       *zramblock_,
 {
   UDisksLinuxBlockZRAM *zramblock = UDISKS_LINUX_BLOCK_ZRAM (zramblock_);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   gchar *dev_file = NULL;
   gchar *filename = NULL;
   gchar *label;
@@ -272,10 +311,12 @@ zram_device_activate (UDisksBlockZRAM       *zramblock_,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (zramblock->module));
+
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_block_zram_get_daemon(zramblock),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     zram_policy_action_id,
+                                     ZRAM_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to enable zRAM device"),
                                      invocation);
@@ -294,7 +335,7 @@ zram_device_activate (UDisksBlockZRAM       *zramblock_,
     goto out;
   }
 
-  filename = g_build_filename(PACKAGE_ZRAMCONF_DIR, g_path_get_basename(dev_file), NULL);
+  filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, g_path_get_basename (dev_file), NULL);
   if (! set_conf_property (filename, "SWAP", "y", &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -302,7 +343,7 @@ zram_device_activate (UDisksBlockZRAM       *zramblock_,
     }
 
   udisks_block_zram_set_active (zramblock_, TRUE);
-  udisks_block_zram_complete_activate(zramblock_,invocation);
+  udisks_block_zram_complete_activate (zramblock_, invocation);
 
 out:
   g_clear_object (&object);
@@ -329,7 +370,7 @@ handle_refresh (UDisksBlockZRAM       *zramblock_,
     }
 
   udisks_linux_block_zram_update (zramblock, UDISKS_LINUX_BLOCK_OBJECT (object));
-  udisks_block_zram_complete_refresh(zramblock_,invocation);
+  udisks_block_zram_complete_refresh (zramblock_, invocation);
 
 out:
   g_clear_object (&object);
@@ -343,7 +384,7 @@ handle_activate_labeled (UDisksBlockZRAM       *zramblock_,
                          const gchar           *label,
                          GVariant              *options)
 {
-  return zram_device_activate(zramblock_, invocation, priority, label, options);
+  return zram_device_activate (zramblock_, invocation, priority, label, options);
 }
 
 static gboolean
@@ -352,7 +393,7 @@ handle_activate (UDisksBlockZRAM       *zramblock_,
                  const gint             priority,
                  GVariant              *options)
 {
-  return zram_device_activate(zramblock_, invocation, priority, NULL, options);
+  return zram_device_activate (zramblock_, invocation, priority, NULL, options);
 }
 
 static gboolean
@@ -362,6 +403,7 @@ handle_deactivate (UDisksBlockZRAM       *zramblock_,
 {
   UDisksLinuxBlockZRAM *zramblock = UDISKS_LINUX_BLOCK_ZRAM (zramblock_);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
   gchar *dev_file = NULL;
   gchar *filename = NULL;
   GError *error = NULL;
@@ -373,10 +415,12 @@ handle_deactivate (UDisksBlockZRAM       *zramblock_,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (zramblock->module));
+
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_block_zram_get_daemon(zramblock),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     zram_policy_action_id,
+                                     ZRAM_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to disable zRAM device"),
                                      invocation);
@@ -394,7 +438,7 @@ handle_deactivate (UDisksBlockZRAM       *zramblock_,
     goto out;
   }
 
-  filename = g_build_filename(PACKAGE_ZRAMCONF_DIR, g_path_get_basename(dev_file), NULL);
+  filename = g_build_filename (PACKAGE_ZRAMCONF_DIR, g_path_get_basename (dev_file), NULL);
   if (! set_conf_property (filename, "SWAP", "n", &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -402,7 +446,7 @@ handle_deactivate (UDisksBlockZRAM       *zramblock_,
     }
 
   udisks_block_zram_set_active (zramblock_, FALSE);
-  udisks_block_zram_complete_deactivate(zramblock_,invocation);
+  udisks_block_zram_complete_deactivate (zramblock_, invocation);
 
 out:
   g_clear_object (&object);
@@ -419,4 +463,35 @@ udisks_linux_block_zram_iface_init (UDisksBlockZRAMIface *iface)
   iface->handle_activate = handle_activate;
   iface->handle_activate_labeled = handle_activate_labeled;
   iface->handle_deactivate = handle_deactivate;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static gboolean
+udisks_linux_block_zram_module_object_process_uevent (UDisksModuleObject *module_object,
+                                                      const gchar        *action,
+                                                      UDisksLinuxDevice  *device,
+                                                      gboolean           *keep)
+{
+  UDisksLinuxBlockZRAM *block_zram = UDISKS_LINUX_BLOCK_ZRAM (module_object);
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_ZRAM (module_object), FALSE);
+
+  if (device == NULL)
+    return FALSE;
+
+  /* Check device name */
+  *keep = g_str_has_prefix (g_udev_device_get_device_file (device->udev_device), "/dev/zram");
+  if (*keep)
+    {
+      udisks_linux_block_zram_update (block_zram, block_zram->block_object);
+    }
+
+  return TRUE;
+}
+
+static void
+udisks_linux_block_zram_module_object_iface_init (UDisksModuleObjectIface *iface)
+{
+  iface->process_uevent = udisks_linux_block_zram_module_object_process_uevent;
 }
