@@ -35,12 +35,10 @@
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
+#include "udisksmodule.h"
+#include "udisksmoduleobject.h"
 #include "udisksdaemonutil.h"
 #include "udisksconfigmanager.h"
-
-#include <modules/udisksmoduleifacetypes.h>
-#include "udisksmoduleobject.h"
-
 
 /**
  * SECTION:udiskslinuxprovider
@@ -81,9 +79,8 @@ struct _UDisksLinuxProvider
   GHashTable *sysfs_path_to_mdraid;
   GHashTable *sysfs_path_to_mdraid_members;
 
-  /* maps from UDisksModuleObjectNewFuncs to nested hashtables containing object
-   * skeleton instances as keys and GLists of consumed sysfs path as values */
-  GHashTable *module_funcs_to_instances;
+  /* maps from UDisksModule to nested hashtables containing object skeleton instances */
+  GHashTable *module_objects;
 
   GUnixMountMonitor *mount_monitor;
   GFileMonitor *etc_udisks2_dir_monitor;
@@ -183,7 +180,7 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->uuid_to_mdraid);
   g_hash_table_unref (provider->sysfs_path_to_mdraid);
   g_hash_table_unref (provider->sysfs_path_to_mdraid_members);
-  g_hash_table_unref (provider->module_funcs_to_instances);
+  g_hash_table_unref (provider->module_objects);
   g_object_unref (provider->gudev_client);
 
   g_list_free (provider->module_ifaces);
@@ -515,28 +512,27 @@ ensure_modules (UDisksLinuxProvider *provider)
 {
   UDisksDaemon *daemon;
   UDisksModuleManager *module_manager;
-  GDBusInterfaceSkeleton *iface;
-  UDisksModuleNewManagerIfaceFunc new_manager_iface_func;
   GList *udisks_devices;
   GList *l;
   gboolean do_refresh = FALSE;
-  gboolean loaded;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
 
-  loaded = udisks_module_manager_get_modules_available (module_manager);
-
-  if (loaded)
+  if (udisks_module_manager_get_modules_available (module_manager))
     {
+      GList *modules;
+
       /* Attach additional interfaces from modules. */
       udisks_debug ("Modules loaded, attaching interfaces...");
 
-      l = udisks_module_manager_get_new_manager_iface_funcs (module_manager);
-      for (; l != NULL; l = l->next)
+      modules = udisks_module_manager_get_modules (module_manager);
+      for (l = modules; l != NULL; l = l->next)
         {
-          new_manager_iface_func = l->data;
-          iface = new_manager_iface_func (daemon);
+          UDisksModule *module = l->data;
+          GDBusInterfaceSkeleton *iface;
+
+          iface = udisks_module_new_manager (module);
           if (iface != NULL)
             {
               g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
@@ -546,19 +542,18 @@ ensure_modules (UDisksLinuxProvider *provider)
               provider->module_ifaces = g_list_append (provider->module_ifaces, iface);
             }
         }
+      g_list_free_full (modules, g_object_unref);
     }
   else
     {
       /* Detach additional interfaces from modules. */
       udisks_debug ("Modules unloading, detaching interfaces...");
 
-      l = provider->module_ifaces;
-      for (; l != NULL; l = l->next)
+      for (l = provider->module_ifaces; l != NULL; l = l->next)
         {
-          iface = l->data;
-          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+          GDBusInterfaceSkeleton *iface = l->data;
 
-          udisks_debug ("Interface removed");
+          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
         }
       g_list_free (provider->module_ifaces);
       provider->module_ifaces = NULL;
@@ -688,10 +683,10 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                                   g_str_equal,
                                                                   g_free,
                                                                   NULL);
-  provider->module_funcs_to_instances = g_hash_table_new_full (g_direct_hash,
-                                                               g_direct_equal,
-                                                               NULL,
-                                                               (GDestroyNotify) g_hash_table_unref);
+  provider->module_objects = g_hash_table_new_full (g_direct_hash,
+                                                    g_direct_equal,
+                                                    NULL,
+                                                    (GDestroyNotify) g_hash_table_unref);
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
 
@@ -1197,94 +1192,66 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
                                  const gchar         *action,
                                  UDisksLinuxDevice   *device)
 {
-  const gchar *sysfs_path;
   GDBusObjectSkeleton *object;
   UDisksDaemon *daemon;
   UDisksModuleManager *module_manager;
-  GList *new_funcs, *l, *ll;
-  UDisksModuleObjectNewFunc module_object_new_func;
-  GHashTable *inst_table;
-  GHashTableIter iter;
-  gboolean handled;
-  GHashTable *inst_sysfs_paths;
-  GList *instances_to_remove;
-  GList *funcs_to_remove = NULL;
+  GList *modules;
+  GList *l;
+  GList *modules_to_remove = NULL;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
   if (! udisks_module_manager_get_modules_available (module_manager))
     return;
 
-  new_funcs = udisks_module_manager_get_module_object_new_funcs (module_manager);
-
   /* The object hierarchy is as follows:
    *
-   *   provider->module_funcs_to_instances:
-   *      key: a UDisksModuleObjectNewFunc (pointer)
+   *   provider->module_objects
+   *      key: pointer to #UDisksModule
    *      value: nested hashtable
-   *          key: a UDisksObjectSkeleton instance implementing the UDisksModuleObject interface
-   *          value: nested hashtable
-   *              key: sysfs path attached to the UDisksObjectSkeleton instance
-   *              value: -- no values, just keys
+   *          key: a #UDisksObjectSkeleton instance implementing the #UDisksModuleObject interface
+   *          value: -- unused
    */
-
-  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
 
   /* The following algorithm brings some guarantees to existing instances:
-   *  - every instance can claim one or more devices (sysfs paths)
+   *  - every instance can claim one or more devices
    *  - existing instances are asked first and only when none is interested in claiming the device
-   *    a new instance for the current UDisksModuleObjectNewFunc is attempted to be created
+   *    a new instance for the current UDisksModule is attempted to be created
    */
-
-  for (l = new_funcs; l; l = l->next)
+  modules = udisks_module_manager_get_modules (module_manager);
+  for (l = modules; l; l = l->next)
     {
-      handled = FALSE;
-      instances_to_remove = NULL;
-      module_object_new_func = l->data;
-      inst_table = g_hash_table_lookup (provider->module_funcs_to_instances, module_object_new_func);
+      UDisksModule *module = l->data;
+      gboolean handled = FALSE;
+      GList *instances_to_remove = NULL;
+      GHashTable *inst_table;
+
+      inst_table = g_hash_table_lookup (provider->module_objects, module);
       if (inst_table)
         {
-          /* First try existing instances and ask them to process the uevent */
+          GHashTableIter iter;
+
+          /* First try existing objects and ask them to process the uevent. */
           g_hash_table_iter_init (&iter, inst_table);
-          while (g_hash_table_iter_next (&iter, (gpointer *) &object, (gpointer *) &inst_sysfs_paths))
+          while (g_hash_table_iter_next (&iter, (gpointer *) &object, NULL))
             {
-              if (udisks_module_object_process_uevent (UDISKS_MODULE_OBJECT (object), action, device))
+              gboolean keep = TRUE;
+              if (udisks_module_object_process_uevent (UDISKS_MODULE_OBJECT (object), action, device, &keep))
                 {
                   handled = TRUE;
-                  if (g_hash_table_contains (inst_sysfs_paths, sysfs_path))
+                  if (!keep)
                     {
-                      /* sysfs paths match, the object has processed the event just fine */
-                    }
-                  else
-                    {
-                      /* sysfs paths don't match yet the foreign instance is interested in claiming the device */
-                      g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path));
-                    }
-                }
-              else
-                {
-                  if (g_hash_table_contains (inst_sysfs_paths, sysfs_path))
-                    {
-                      /* sysfs paths match, the object has indicated it's no longer interested in the current sysfs path */
-                      g_warn_if_fail (g_hash_table_remove (inst_sysfs_paths, sysfs_path));
-                      if (g_hash_table_size (inst_sysfs_paths) == 0)
-                        {
-                          /* no more sysfs paths, queue for removal */
-                          instances_to_remove = g_list_append (instances_to_remove, object);
-                        }
-                      handled = TRUE;
-                     }
-                  else
-                    {
-                      /* the instance is not interested in claiming this device */
-                      ;
+                      /* Queue for removal. */
+                      instances_to_remove = g_list_append (instances_to_remove, object);
                     }
                 }
             }
 
-          /* Remove empty instances */
+          /* Batch remove instances to prevent uevent storm. */
           if (instances_to_remove != NULL)
             {
+              GList *ll;
+
               for (ll = instances_to_remove; ll; ll = ll->next)
                 {
                   object = ll->data;
@@ -1294,47 +1261,50 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
                 }
               if (g_hash_table_size (inst_table) == 0)
                 {
-                  /* no more instances, queue for removal */
-                  funcs_to_remove = g_list_append (funcs_to_remove, module_object_new_func);
+                  /* No more instances, queue for removal. */
+                  modules_to_remove = g_list_append (modules_to_remove, module);
                   inst_table = NULL;
                 }
               g_list_free (instances_to_remove);
             }
         }
 
-      /* no instance claimed or no instance was interested in this sysfs path, try creating new instance for the current UDisksModuleObjectNewFunc */
+      /* No module object claimed or was interested in this device, try creating new instance for the current module. */
       if (! handled)
         {
-          object = module_object_new_func (daemon, device);
-          if (object != NULL)
+          GDBusObjectSkeleton **objects, **ll;
+
+          objects = udisks_module_new_object (module, device);
+          for (ll = objects; ll && *ll; ll++)
             {
               g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                            G_DBUS_OBJECT_SKELETON (object));
-              inst_sysfs_paths = g_hash_table_new_full (g_str_hash,
-                                                        g_str_equal,
-                                                        (GDestroyNotify) g_free,
-                                                        NULL);
-              g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path));
+                                                            G_DBUS_OBJECT_SKELETON (*ll));
               if (inst_table == NULL)
                 {
                   inst_table = g_hash_table_new_full (g_direct_hash,
                                                       g_direct_equal,
                                                       (GDestroyNotify) g_object_unref,
-                                                      (GDestroyNotify) g_hash_table_unref);
-                  g_hash_table_insert (provider->module_funcs_to_instances, module_object_new_func, inst_table);
+                                                      NULL);
+                  g_hash_table_insert (provider->module_objects, module, inst_table);
                 }
-              g_hash_table_insert (inst_table, object, inst_sysfs_paths);
+              g_hash_table_add (inst_table, *ll);
             }
+          g_free (objects);
         }
     }
 
-  /* Remove empty funcs */
-  if (funcs_to_remove != NULL)
+  /* Remove empty module instance tables. */
+  if (modules_to_remove != NULL)
     {
-      for (ll = funcs_to_remove; ll; ll = ll->next)
-        g_warn_if_fail (g_hash_table_remove (provider->module_funcs_to_instances, ll->data));
-      g_list_free (funcs_to_remove);
+      for (l = modules_to_remove; l; l = l->next)
+        {
+          g_warn_if_fail (g_hash_table_size (l->data) == 0);
+          g_warn_if_fail (g_hash_table_remove (provider->module_objects, l->data));
+        }
+      g_list_free (modules_to_remove);
     }
+
+  g_list_free_full (modules, g_object_unref);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1457,12 +1427,12 @@ housekeeping_all_modules (UDisksLinuxProvider *provider,
   GList *objects = NULL;
   GList *l;
   GHashTable *inst_table;
-  GHashTableIter iter_funcs, iter_inst;
+  GHashTableIter iter_modules, iter_inst;
   GDBusObjectSkeleton *inst;
 
   G_LOCK (provider_lock);
-  g_hash_table_iter_init (&iter_funcs, provider->module_funcs_to_instances);
-  while (g_hash_table_iter_next (&iter_funcs, NULL, (gpointer *) &inst_table))
+  g_hash_table_iter_init (&iter_modules, provider->module_objects);
+  while (g_hash_table_iter_next (&iter_modules, NULL, (gpointer *) &inst_table))
     {
       g_hash_table_iter_init (&iter_inst, inst_table);
       while (g_hash_table_iter_next (&iter_inst, (gpointer *) &inst, NULL))

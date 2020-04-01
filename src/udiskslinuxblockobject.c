@@ -60,8 +60,8 @@
 #include "udiskscrypttabentry.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
-
-#include <modules/udisksmoduleifacetypes.h>
+#include "udisksmodule.h"
+#include "udisksmoduleobject.h"
 
 /**
  * SECTION:udiskslinuxblockobject
@@ -106,14 +106,6 @@ struct _UDisksLinuxBlockObjectClass
 {
   UDisksObjectSkeletonClass parent_class;
 };
-
-typedef struct
-{
-  UDisksObject *interface;
-  UDisksObjectHasInterfaceFunc has_func;
-  UDisksObjectConnectInterfaceFunc connect_func;
-  UDisksObjectUpdateInterfaceFunc update_func;
-} ModuleInterfaceEntry;
 
 enum
 {
@@ -233,6 +225,8 @@ udisks_linux_block_object_constructed (GObject *_object)
 
   g_mutex_init (&object->device_mutex);
   g_mutex_init (&object->cleanup_mutex);
+
+  object->module_ifaces = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
 
   object->mount_monitor = udisks_daemon_get_mount_monitor (object->daemon);
   g_signal_connect (object->mount_monitor,
@@ -852,40 +846,6 @@ loop_update (UDisksObject   *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-free_module_interface_entry (ModuleInterfaceEntry *entry)
-{
-  if (entry->interface != NULL)
-    g_object_unref (entry->interface);
-  g_free (entry);
-}
-
-static void
-ensure_module_ifaces (UDisksLinuxBlockObject *object,
-                      UDisksModuleManager    *module_manager)
-{
-  GList *l;
-  ModuleInterfaceEntry *entry;
-  UDisksModuleInterfaceInfo *ii;
-
-  /* Assume all modules are either unloaded or loaded at the same time, so don't regenerate entries */
-  if (object->module_ifaces == NULL)
-    {
-      object->module_ifaces = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free_module_interface_entry);
-
-      l = udisks_module_manager_get_block_object_iface_infos (module_manager);
-      for (; l; l = l->next)
-        {
-          ii = l->data;
-          entry = g_new0 (ModuleInterfaceEntry, 1);
-          entry->has_func = ii->has_func;
-          entry->connect_func = ii->connect_func;
-          entry->update_func = ii->update_func;
-          g_hash_table_replace (object->module_ifaces, GSIZE_TO_POINTER (ii->skeleton_type), entry);
-        }
-    }
-}
-
 /**
  * udisks_linux_block_object_uevent:
  * @object: A #UDisksLinuxBlockObject.
@@ -900,9 +860,8 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
                                   UDisksLinuxDevice      *device)
 {
   UDisksModuleManager *module_manager;
-  GHashTableIter iter;
-  gpointer key;
-  ModuleInterfaceEntry *entry;
+  GList *modules;
+  GList *l;
 
   g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
   g_return_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device));
@@ -933,16 +892,47 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
 
   /* Attach interfaces from modules */
   module_manager = udisks_daemon_get_module_manager (object->daemon);
-  if (udisks_module_manager_get_modules_available (module_manager))
+  modules = udisks_module_manager_get_modules (module_manager);
+  for (l = modules; l; l = g_list_next (l))
     {
-      ensure_module_ifaces (object, module_manager);
-      g_hash_table_iter_init (&iter, object->module_ifaces);
-      while (g_hash_table_iter_next (&iter, &key, (gpointer *) &entry))
+      UDisksModule *module = l->data;
+      GType *types;
+
+      types = udisks_module_get_block_object_interface_types (module);
+      for (; types && *types; types++)
         {
-          update_iface (UDISKS_OBJECT (object), action, entry->has_func, entry->connect_func, entry->update_func,
-                        (GType) key, &entry->interface);
+          GDBusInterfaceSkeleton *interface;
+          gboolean keep = TRUE;
+
+          interface = g_hash_table_lookup (object->module_ifaces, GSIZE_TO_POINTER (*types));
+          if (interface != NULL)
+            {
+              /* ask the existing instance to process the uevent */
+              if (udisks_module_object_process_uevent (UDISKS_MODULE_OBJECT (interface),
+                                                       action, object->device, &keep))
+                {
+                  if (! keep)
+                    {
+                      g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (object), interface);
+                      g_hash_table_remove (object->module_ifaces, GSIZE_TO_POINTER (*types));
+                    }
+                }
+            }
+          else
+            {
+              /* try create new interface and see if the module is interested in this object */
+              interface = udisks_module_new_block_object_interface (module, object, *types);
+              if (interface)
+                {
+                  /* do coldplug after creation */
+                  udisks_module_object_process_uevent (UDISKS_MODULE_OBJECT (interface), action, object->device, &keep);
+                  g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object), interface);
+                  g_warn_if_fail (g_hash_table_replace (object->module_ifaces, GSIZE_TO_POINTER (*types), interface));
+                }
+            }
         }
     }
+  g_list_free_full (modules, g_object_unref);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -34,12 +34,12 @@
 #include <gmodule.h>
 
 #include "udisksdaemon.h"
+#include "udisksdaemonutil.h"
 #include "udisksmodulemanager.h"
 #include "udisksconfigmanager.h"
 #include "udisksprivate.h"
 #include "udiskslogging.h"
-#include <modules/udisksmoduleifacetypes.h>
-
+#include "udisksmodule.h"
 
 /**
  * SECTION:UDisksModuleManager
@@ -141,10 +141,6 @@
  * each kind of UDisks way of extension. Such lists are then used in the daemon
  * code at appropriate places, sequentially calling elements from the lists to
  * obtain data or objects that are then typically exported on D-Bus.
- *
- * In short, have a look at the #UDisksModuleInterfaceInfo,
- * #UDisksModuleObjectNewFunc and #UDisksModuleNewManagerIfaceFunc definitions
- * to learn more about particular ways of extending UDisks.
  */
 
 
@@ -161,18 +157,10 @@ struct _UDisksModuleManager
   UDisksDaemon *daemon;
 
   GList *modules;
-  GList *block_object_interface_infos;
-  GList *drive_object_interface_infos;
-  GList *module_object_new_funcs;
-  GList *new_manager_iface_funcs;
-  GList *module_track_parent_funcs;
-  GList *teardown_funcs;
 
   GMutex modules_ready_lock;
   gboolean modules_ready;
   gboolean uninstalled;
-
-  GHashTable *state_pointers;
 };
 
 typedef struct _UDisksModuleManagerClass UDisksModuleManagerClass;
@@ -181,12 +169,6 @@ struct _UDisksModuleManagerClass
 {
   GObjectClass parent_class;
 };
-
-typedef struct
-{
-  GModule *handle;
-} ModuleData;
-
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -200,16 +182,6 @@ enum
 
 G_DEFINE_TYPE (UDisksModuleManager, udisks_module_manager, G_TYPE_OBJECT)
 
-static void udisks_module_manager_free_modules (UDisksModuleManager *manager);
-
-static void
-free_module_data (gpointer data)
-{
-  if (! g_module_close ( ((ModuleData*) data)->handle))
-    udisks_critical ("Unloading failed: %s", g_module_error ());
-  g_free (data);
-}
-
 static void
 udisks_module_manager_finalize (GObject *object)
 {
@@ -218,7 +190,6 @@ udisks_module_manager_finalize (GObject *object)
   udisks_module_manager_unload_modules (manager);
 
   g_mutex_clear (&manager->modules_ready_lock);
-  g_hash_table_destroy (manager->state_pointers);
 
   if (G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize (object);
@@ -231,65 +202,22 @@ udisks_module_manager_init (UDisksModuleManager *manager)
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
   g_mutex_init (&manager->modules_ready_lock);
-  manager->state_pointers = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
-udisks_module_manager_free_modules (UDisksModuleManager *manager)
+free_modules (UDisksModuleManager *manager)
 {
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
-  if (manager->block_object_interface_infos != NULL)
-    {
-      g_list_free_full (manager->block_object_interface_infos, g_free);
-      manager->block_object_interface_infos = NULL;
-    }
-
-  if (manager->drive_object_interface_infos != NULL)
-    {
-      g_list_free_full (manager->drive_object_interface_infos, g_free);
-      manager->drive_object_interface_infos = NULL;
-    }
-
-  if (manager->module_object_new_funcs != NULL)
-    {
-      g_list_free (manager->module_object_new_funcs);
-      manager->module_object_new_funcs = NULL;
-    }
-
-  if (manager->new_manager_iface_funcs != NULL)
-    {
-      g_list_free (manager->new_manager_iface_funcs);
-      manager->new_manager_iface_funcs = NULL;
-    }
-
-  if (manager->module_track_parent_funcs != NULL)
-    {
-      g_list_free (manager->module_track_parent_funcs);
-      manager->module_track_parent_funcs = NULL;
-    }
-
-  if (manager->teardown_funcs != NULL)
-    {
-      g_list_free (manager->teardown_funcs);
-      manager->teardown_funcs = NULL;
-    }
-
-  if (manager->state_pointers != NULL)
-    {
-      g_hash_table_remove_all (manager->state_pointers);
-    }
-
   if (manager->modules != NULL)
     {
-      g_list_free_full (manager->modules, free_module_data);
-
+      g_list_free_full (manager->modules, g_object_unref);
       manager->modules = NULL;
     }
 }
 
 static GList *
-udisks_module_manager_get_modules_list (UDisksModuleManager *manager)
+get_modules_list (UDisksModuleManager *manager)
 {
   UDisksConfigManager *config_manager;
   GDir *dir;
@@ -367,25 +295,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 {
   GList *modules_to_load;
   GList *modules_to_load_tmp;
-  GModule *module;
-  ModuleData *module_data;
-  gchar *pth;
-
-  UDisksModuleIfaceSetupFunc block_object_iface_setup_func;
-  UDisksModuleIfaceSetupFunc drive_object_iface_setup_func;
-  UDisksModuleObjectNewSetupFunc module_object_new_setup_func;
-  UDisksModuleNewManagerIfaceSetupFunc module_new_manager_iface_setup_func;
-  UDisksModuleIDFunc module_id_func;
-  UDisksModuleInitFunc module_init_func;
-  UDisksModuleTeardownFunc module_teardown_func;
-
-  /* Module API */
-  gchar *module_id;
-  gpointer module_state_pointer;
-  UDisksModuleInterfaceInfo **infos, **infos_i;
-  UDisksModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
-  UDisksModuleNewManagerIfaceFunc *module_new_manager_iface_funcs, *module_new_manager_iface_funcs_i;
-  gpointer track_parent_func;
+  GError *error = NULL;
 
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
@@ -398,80 +308,73 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
     }
 
   /* Load the modules */
-  modules_to_load = udisks_module_manager_get_modules_list (manager);
+  modules_to_load = get_modules_list (manager);
   for (modules_to_load_tmp = modules_to_load;
        modules_to_load_tmp;
        modules_to_load_tmp = modules_to_load_tmp->next)
     {
-      pth = (gchar *) modules_to_load_tmp->data;
-      module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
+      GModule *handle;
+      gchar *path;
+      gchar *path_basename;
+      gchar *module_id;
+      gchar *module_new_func_name;
+      UDisksModuleIDFunc module_id_func;
+      UDisksModuleNewFunc module_new_func;
+      UDisksModule *module;
 
-      if (module != NULL)
+      path = (gchar *) modules_to_load_tmp->data;
+      handle = g_module_open (path, 0);
+
+      path_basename = g_path_get_basename (path);
+      udisks_notice ("Loading module %s ...", path_basename);
+      g_free (path_basename);
+
+      if (handle == NULL)
         {
-          gchar *path_basename = g_path_get_basename (pth);
-          module_data = g_new0 (ModuleData, 1);
-          module_data->handle = module;
-          udisks_notice ("Loading module %s...", path_basename);
-          g_free (path_basename);
-          if (! g_module_symbol (module_data->handle, "udisks_module_id", (gpointer *) &module_id_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_init", (gpointer *) &module_init_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_teardown", (gpointer *) &module_teardown_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_new_manager_iface_funcs", (gpointer *) &module_new_manager_iface_setup_func))
-            {
-              udisks_warning ("  Error importing required symbols from module '%s'", pth);
-              free_module_data (module_data);
-            }
-          else
-            {
-              /* Module name */
-              module_id = module_id_func ();
-
-              /* Initialize the module and store its state pointer. */
-              module_state_pointer = module_init_func (udisks_module_manager_get_daemon (manager));
-
-              /* Module tear down function */
-              manager->teardown_funcs = g_list_append (manager->teardown_funcs,  module_teardown_func);
-
-              infos = block_object_iface_setup_func ();
-              for (infos_i = infos; infos_i && *infos_i; infos_i++)
-                manager->block_object_interface_infos = g_list_append (manager->block_object_interface_infos, *infos_i);
-              g_free (infos);
-
-              infos = drive_object_iface_setup_func ();
-              for (infos_i = infos; infos_i && *infos_i; infos_i++)
-                manager->drive_object_interface_infos = g_list_append (manager->drive_object_interface_infos, *infos_i);
-              g_free (infos);
-
-              module_object_new_funcs = module_object_new_setup_func ();
-              for (module_object_new_funcs_i = module_object_new_funcs; module_object_new_funcs_i && *module_object_new_funcs_i; module_object_new_funcs_i++)
-                manager->module_object_new_funcs = g_list_append (manager->module_object_new_funcs, *module_object_new_funcs_i);
-              g_free (module_object_new_funcs);
-
-              module_new_manager_iface_funcs = module_new_manager_iface_setup_func ();
-              for (module_new_manager_iface_funcs_i = module_new_manager_iface_funcs; module_new_manager_iface_funcs_i && *module_new_manager_iface_funcs_i; module_new_manager_iface_funcs_i++)
-                manager->new_manager_iface_funcs = g_list_append (manager->new_manager_iface_funcs, *module_new_manager_iface_funcs_i);
-              g_free (module_new_manager_iface_funcs);
-
-              if (g_module_symbol (module_data->handle, "udisks_module_track_parent", &track_parent_func))
-                {
-                  udisks_debug("ADDING TRACK");
-                  manager->module_track_parent_funcs = g_list_append (manager->module_track_parent_funcs,
-                                                                      track_parent_func);
-                }
-
-              manager->modules = g_list_append (manager->modules, module_data);
-              if (module_state_pointer != NULL && module_id != NULL)
-                udisks_module_manager_set_module_state_pointer (manager, module_id, module_state_pointer);
-              g_free (module_id);
-            }
+          udisks_critical ("Failed to load module: %s", g_module_error ());
+          continue;
         }
-      else
+
+      if (! g_module_symbol (handle, "udisks_module_id", (gpointer *) &module_id_func))
         {
-          udisks_critical ("Module loading failed: %s", g_module_error ());
+          udisks_critical ("%s", g_module_error ());
+          g_module_close (handle);
+          continue;
         }
+
+      module_id = module_id_func ();
+      module_new_func_name = g_strdup_printf ("udisks_module_%s_new", module_id);
+      if (! g_module_symbol (handle, module_new_func_name, (gpointer *) &module_new_func))
+        {
+          udisks_critical ("%s", g_module_error ());
+          g_module_close (handle);
+          g_free (module_new_func_name);
+          g_free (module_id);
+          continue;
+        }
+      g_free (module_new_func_name);
+
+      /* The following calls will initialize new GType's from the module,
+       * making it uneligible for unload.
+       */
+      g_module_make_resident (handle);
+
+      module = module_new_func (manager->daemon,
+                                NULL /* cancellable */,
+                                &error);
+      if (module == NULL)
+        {
+          udisks_critical ("Error initializing module '%s': %s",
+                           module_id,
+                           error ? error->message : "unknown error");
+          g_clear_error (&error);
+          g_free (module_id);
+          g_module_close (handle);
+          continue;
+        }
+
+      manager->modules = g_list_append (manager->modules, module);
+      g_free (module_id);
     }
 
   manager->modules_ready = TRUE;
@@ -493,9 +396,6 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 void
 udisks_module_manager_unload_modules (UDisksModuleManager *manager)
 {
-  GList *i;
-  UDisksModuleTeardownFunc teardown_func;
-
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
   g_mutex_lock (&manager->modules_ready_lock);
@@ -505,17 +405,8 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
       return;
     }
 
-  /* Call teardown functions first. */
-  for (i = manager->teardown_funcs; i; i = i->next)
-    {
-      teardown_func = (UDisksModuleTeardownFunc) i->data;
-      teardown_func (udisks_module_manager_get_daemon (manager));
-    }
-
   manager->modules_ready = FALSE;
-
-  /* Free all the lists containing modules' API lists. */
-  udisks_module_manager_free_modules (manager);
+  free_modules (manager);
 
   g_mutex_unlock (&manager->modules_ready_lock);
 }
@@ -715,7 +606,7 @@ udisks_module_manager_get_modules_available (UDisksModuleManager *manager)
 }
 
 gboolean
-udisks_module_manager_get_uninstalled(UDisksModuleManager *manager)
+udisks_module_manager_get_uninstalled (UDisksModuleManager *manager)
 {
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), FALSE);
   return manager->uninstalled;
@@ -723,131 +614,24 @@ udisks_module_manager_get_uninstalled(UDisksModuleManager *manager)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-
 /**
- * udisks_module_manager_get_block_object_iface_infos:
+ * udisks_module_manager_get_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Returns a list of block object interface info structs that can be plugged in #UDisksLinuxBlockObject instances. See #UDisksModuleIfaceSetupFunc for details.
+ * Gets list of active modules. Can be called from different threads.
  *
- * Returns: (element-type UDisksModuleIfaceSetupFunc) (transfer full): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
+ * Returns: (transfer full) (nullable) (element-type UDisksModule) : A list of #UDisksModule
+ *          or %NULL if no modules are presently loaded.  Free the elements
+ *          with g_object_unref().
  */
 GList *
-udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager)
+udisks_module_manager_get_modules (UDisksModuleManager *manager)
 {
+  GList *l;
+
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  if (! manager->modules_ready)
-    return NULL;
-  return manager->block_object_interface_infos;
+  /* TODO: locking */
+  l = g_list_copy_deep (manager->modules, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+
+  return l;
 }
-
-/**
- * udisks_module_manager_get_drive_object_iface_infos:
- * @manager: A #UDisksModuleManager instance.
- *
- * Returns a list of drive object interface info structs that can be plugged in #UDisksLinuxDriveObject instances. See #UDisksModuleIfaceSetupFunc for details.
- *
- * Returns: (element-type UDisksModuleIfaceSetupFunc) (transfer full): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
- */
-GList *
-udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager)
-{
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  if (! manager->modules_ready)
-    return NULL;
-  return manager->drive_object_interface_infos;
-}
-
-/**
- * udisks_module_manager_get_module_object_new_funcs:
- * @manager: A #UDisksModuleManager instance.
- *
- * Returns a list of all module object new functions. See #UDisksModuleObjectNewFunc for details.
- *
- * Returns: (element-type UDisksModuleObjectNewFunc) (transfer full): A list of #UDisksModuleObjectNewFunc function pointers that belongs to the manager and must not be freed.
- */
-GList *
-udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
-{
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  if (! manager->modules_ready)
-    return NULL;
-  return manager->module_object_new_funcs;
-}
-
-/**
- * udisks_module_manager_get_new_manager_iface_funcs:
- * @manager: A #UDisksModuleManager instance.
- *
- * Returns a list of all module new manager interface functions. See #UDisksModuleNewManagerIfaceFunc for details.
- *
- * Returns: (element-type UDisksModuleNewManagerIfaceFunc) (transfer full): A list of #UDisksModuleNewManagerIfaceFunc function pointers that belongs to the manager and must not be freed.
- */
-GList *
-udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
-{
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  if (! manager->modules_ready)
-    return NULL;
-  return manager->new_manager_iface_funcs;
-}
-
-/**
- * udisks_module_manager_get_parent_tracking_funcs:
- * @manager: A #UDisksModuleManager instance.
- *
- * Returns a list of all module parent tracking functions. See
- * #UDisksTrackParentFunc for details.
- *
- * Returns: (element-type UDisksTrackParentFunc) (transfer none): A
- * list of #UDisksTrackParentFunc function pointers that belongs to
- * the manager and must not be freed.
- */
-GList *
-udisks_module_manager_get_track_parent_funcs (UDisksModuleManager *manager)
-{
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  if (! manager->modules_ready)
-    return NULL;
-  return manager->module_track_parent_funcs;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-/**
- * udisks_module_manager_set_module_state_pointer:
- * @manager: A #UDisksModuleManager instance.
- * @module_name: A module name.
- * @state: Pointer to a private data.
- *
- * Stores the @state pointer for the given @module_name.
- */
-void
-udisks_module_manager_set_module_state_pointer (UDisksModuleManager *manager,
-                                                const gchar         *module_name,
-                                                gpointer             state)
-{
-  g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
-
-  g_hash_table_insert (manager->state_pointers, g_strdup (module_name), state);
-}
-
-/**
- * udisks_module_manager_get_module_state_pointer:
- * @manager: A #UDisksModuleManager instance.
- * @module_name: A module name.
- *
- * Retrieves the stored module state pointer for the given @module_name.
- *
- * Returns: A stored pointer to the private data or %NULL if there is no state pointer for the given @module_name.
- */
-gpointer
-udisks_module_manager_get_module_state_pointer (UDisksModuleManager *manager,
-                                                const gchar         *module_name)
-{
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-
-  return g_hash_table_lookup (manager->state_pointers, module_name);
-}
-
-/* ---------------------------------------------------------------------------------------------------- */

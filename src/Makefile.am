@@ -102,6 +102,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udisksata.h                    udisksata.c                             \
 	udisksmodulemanager.h          udisksmodulemanager.c                   \
 	udisksmoduleobject.h           udisksmoduleobject.c                    \
+	udisksmodule.h                 udisksmodule.c                          \
 	udisksconfigmanager.h          udisksconfigmanager.c                   \
 	$(BUILT_SOURCES)                                                       \
 	$(NULL)

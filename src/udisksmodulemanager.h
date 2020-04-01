@@ -39,17 +39,7 @@ gboolean                udisks_module_manager_get_uninstalled       (UDisksModul
 void                    udisks_module_manager_load_modules          (UDisksModuleManager *manager);
 void                    udisks_module_manager_unload_modules        (UDisksModuleManager *manager);
 
-GList                  *udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager  *manager);
-GList                  *udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager  *manager);
-GList                  *udisks_module_manager_get_module_object_new_funcs  (UDisksModuleManager  *manager);
-GList                  *udisks_module_manager_get_new_manager_iface_funcs  (UDisksModuleManager  *manager);
-GList                  *udisks_module_manager_get_track_parent_funcs       (UDisksModuleManager  *manager);
-
-void                    udisks_module_manager_set_module_state_pointer (UDisksModuleManager  *manager,
-                                                                        const gchar          *module_name,
-                                                                        gpointer              state);
-gpointer                udisks_module_manager_get_module_state_pointer (UDisksModuleManager  *manager,
-                                                                        const gchar          *module_name);
+GList                  *udisks_module_manager_get_modules           (UDisksModuleManager *manager);
 
 G_END_DECLS
 

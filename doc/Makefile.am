@@ -36,7 +36,6 @@ CFILE_GLOB =                                                                   \
 if ENABLE_DAEMON
 HFILE_GLOB +=                                                                  \
 	$(top_srcdir)/src/*.h                                                  \
-	$(top_srcdir)/modules/*.h                                              \
 	$(NULL)
 
 CFILE_GLOB +=                                                                  \

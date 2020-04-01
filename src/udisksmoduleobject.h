@@ -43,13 +43,22 @@ struct _UDisksModuleObject;
 typedef struct _UDisksModuleObject         UDisksModuleObject;
 typedef struct _UDisksModuleObjectIface    UDisksModuleObjectIface;
 
+/**
+ * UDisksModuleObjectIface:
+ * @parent_iface: The parent interface.
+ * @process_uevent: Virtual function for udisks_module_object_process_uevent().
+ * @housekeeping: Virtual function for udisks_module_object_housekeeping().
+ *
+ * Object interface structure for #UDisksModuleObject.
+ */
 struct _UDisksModuleObjectIface
 {
   GTypeInterface parent_iface;
 
   gboolean (*process_uevent) (UDisksModuleObject  *object,
                               const gchar         *action,
-                              UDisksLinuxDevice   *device);
+                              UDisksLinuxDevice   *device,
+                              gboolean            *keep);
 
   gboolean (*housekeeping) (UDisksModuleObject  *object,
                             guint                secs_since_last,
@@ -61,7 +70,9 @@ GType udisks_module_object_get_type (void) G_GNUC_CONST;
 
 gboolean udisks_module_object_process_uevent (UDisksModuleObject  *object,
                                               const gchar         *action,
-                                              UDisksLinuxDevice   *device);
+                                              UDisksLinuxDevice   *device,
+                                              gboolean            *keep);
+
 gboolean udisks_module_object_housekeeping   (UDisksModuleObject  *object,
                                               guint                secs_since_last,
                                               GCancellable        *cancellable,

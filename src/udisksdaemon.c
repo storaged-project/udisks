@@ -41,6 +41,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
+#include "udisksmodule.h"
 #include "udisksconfigmanager.h"
 #include "udiskslinuxmountoptions.h"
 
@@ -1818,7 +1819,6 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
   UDisksObject *crypto_object = NULL;
   UDisksObject *mdraid_object = NULL;
   UDisksObject *table_object = NULL;
-  GList *track_parent_funcs;
 
   UDisksBlock *block;
   UDisksBlock *crypto_block;
@@ -1891,15 +1891,26 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
       return g_strdup (parent_path);
     }
 
-  track_parent_funcs = udisks_module_manager_get_track_parent_funcs (daemon->module_manager);
-  while (track_parent_funcs)
+
+  if (udisks_module_manager_get_modules_available (daemon->module_manager))
     {
-      UDisksTrackParentFunc func = track_parent_funcs->data;
-      gchar *path_ret = func (daemon, path, uuid);
+      GList *modules;
+      GList *l;
+      gchar *path_ret = NULL;
+
+      modules = udisks_module_manager_get_modules (daemon->module_manager);
+      for (l = modules; l != NULL; l = l->next)
+        {
+          UDisksModule *module = l->data;
+
+          path_ret = udisks_module_track_parent (module, path, uuid);
+          if (path_ret)
+            break;
+        }
+      g_list_free_full (modules, g_object_unref);
+
       if (path_ret)
         return path_ret;
-
-      track_parent_funcs = track_parent_funcs->next;
     }
 
   return NULL;
