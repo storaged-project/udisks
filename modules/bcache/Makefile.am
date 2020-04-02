@@ -17,7 +17,6 @@ CPPFLAGS =                                                                    \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                       \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                               \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                     \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/udisks2/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                               \
 	-DUDISKS_COMPILATION                                                  \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                            \
@@ -31,29 +30,20 @@ CPPFLAGS =                                                                    \
 BUILT_SOURCES =                                                               \
 	$(NULL)
 
-libudisks2_bcachedir=$(libdir)/udisks2/modules
-libudisks2_bcache_LTLIBRARIES=libudisks2_bcache.la
+libudisks2_bcachedir = $(libdir)/udisks2/modules
+libudisks2_bcache_LTLIBRARIES = libudisks2_bcache.la
 
-libudisks2_bcacheincludedir=$(includedir)/udisks2/udisks
-
-libudisks2_bcacheinclude_HEADERS =                                            \
-	$(top_srcdir)/modules/udisksmoduleiface.h                             \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                        \
-	$(NULL)
+libudisks2_bcacheincludedir = $(includedir)/udisks2/udisks
 
 libudisks2_bcache_la_SOURCES =                                                \
 	$(BUILT_SOURCES)                                                      \
-	$(top_srcdir)/modules/udisksmoduleiface.h                             \
+	udiskslinuxmodulebcache.h                                             \
+	udiskslinuxmodulebcache.c                                             \
 	udiskslinuxblockbcache.c                                              \
 	udiskslinuxblockbcache.h                                              \
 	udiskslinuxmanagerbcache.h                                            \
 	udiskslinuxmanagerbcache.c                                            \
-	udisksbcachemoduleiface.c                                             \
-	udisksbcachestate.h                                                   \
-	udisksbcachestate.c                                                   \
 	udisksbcachetypes.h                                                   \
-	udisksbcacheutil.c                                                    \
-	udisksbcacheutil.h                                                    \
 	$(NULL)
 
 libudisks2_bcache_la_CPPFLAGS =                                               \

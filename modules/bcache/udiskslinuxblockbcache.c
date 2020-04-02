@@ -24,14 +24,17 @@
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxblockobject.h>
+#include <src/udiskslinuxdevice.h>
+#include <src/udisksmodule.h>
+#include <src/udisksmoduleobject.h>
 
 #include "udiskslinuxblockbcache.h"
-#include "udisksbcacheutil.h"
+#include "udiskslinuxmodulebcache.h"
 
 /**
  * SECTION:udiskslinuxblockbcache
  * @title: UDisksLinuxBlockBcache
- * @short_description: Object representing bCache device.
+ * @short_description: Object representing Bcache device.
  *
  * Object corresponding to the Bcache device.
  */
@@ -45,6 +48,9 @@
 
 struct _UDisksLinuxBlockBcache {
   UDisksBlockBcacheSkeleton parent_instance;
+
+  UDisksLinuxModuleBcache *module;
+  UDisksLinuxBlockObject  *block_object;
 };
 
 struct _UDisksLinuxBlockBcacheClass {
@@ -52,20 +58,38 @@ struct _UDisksLinuxBlockBcacheClass {
 };
 
 static void udisks_linux_block_bcache_iface_init (UDisksBlockBcacheIface *iface);
+static void udisks_linux_block_bcache_module_object_iface_init (UDisksModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockBcache, udisks_linux_block_bcache,
-                         UDISKS_TYPE_BLOCK_BCACHE_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_BCACHE,
-                                                udisks_linux_block_bcache_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockBcache, udisks_linux_block_bcache, UDISKS_TYPE_BLOCK_BCACHE_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_BCACHE, udisks_linux_block_bcache_iface_init)
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, udisks_linux_block_bcache_module_object_iface_init));
+
+enum
+{
+  PROP_0,
+  PROP_MODULE,
+  PROP_BLOCK_OBJECT,
+  N_PROPERTIES
+};
 
 static void
-udisks_linux_block_bcache_get_property (GObject       *object,
-                                          guint        property_id,
-                                          GValue      *value,
-                                          GParamSpec  *pspec)
+udisks_linux_block_bcache_get_property (GObject     *object,
+                                        guint        property_id,
+                                        GValue      *value,
+                                        GParamSpec  *pspec)
 {
+  UDisksLinuxBlockBcache *block_bcache = UDISKS_LINUX_BLOCK_BCACHE (object);
+
   switch (property_id)
     {
+    case PROP_MODULE:
+      g_value_set_object (value, UDISKS_MODULE (block_bcache->module));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_value_set_object (value, block_bcache->block_object);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -73,29 +97,40 @@ udisks_linux_block_bcache_get_property (GObject       *object,
 }
 
 static void
-udisks_linux_block_bcache_set_property (GObject         *object,
-                                          guint          property_id,
-                                          const GValue  *value,
-                                          GParamSpec    *pspec)
+udisks_linux_block_bcache_set_property (GObject       *object,
+                                        guint          property_id,
+                                        const GValue  *value,
+                                        GParamSpec    *pspec)
 {
+  UDisksLinuxBlockBcache *block_bcache = UDISKS_LINUX_BLOCK_BCACHE (object);
+
   switch (property_id)
     {
+    case PROP_MODULE:
+      g_assert (block_bcache->module == NULL);
+      block_bcache->module = UDISKS_LINUX_MODULE_BCACHE (g_value_dup_object (value));
+      break;
+
+    case PROP_BLOCK_OBJECT:
+      g_assert (block_bcache->block_object == NULL);
+      /* we don't take reference to block_object */
+      block_bcache->block_object = g_value_get_object (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
     }
-}
-
-static void
-udisks_linux_block_bcache_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_block_bcache_parent_class))
-    G_OBJECT_CLASS (udisks_linux_block_bcache_parent_class)->dispose (object);
 }
 
 static void
 udisks_linux_block_bcache_finalize (GObject *object)
 {
+  UDisksLinuxBlockBcache *block_bcache = UDISKS_LINUX_BLOCK_BCACHE (object);
+
+  /* we don't take reference to block_object */
+  g_object_unref (block_bcache->module);
+
   if (G_OBJECT_CLASS (udisks_linux_block_bcache_parent_class))
     G_OBJECT_CLASS (udisks_linux_block_bcache_parent_class)->finalize (object);
 }
@@ -107,63 +142,66 @@ udisks_linux_block_bcache_class_init (UDisksLinuxBlockBcacheClass *klass)
 
   gobject_class->get_property = udisks_linux_block_bcache_get_property;
   gobject_class->set_property = udisks_linux_block_bcache_set_property;
-  gobject_class->dispose = udisks_linux_block_bcache_dispose;
   gobject_class->finalize = udisks_linux_block_bcache_finalize;
+
+  /**
+   * UDisksLinuxBlockBcache:module:
+   *
+   * The #UDisksModule for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_MODULE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+  /**
+   * UDisksLinuxBlockBcache:blockobject:
+   *
+   * The #UDisksLinuxBlockObject for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_BLOCK_OBJECT,
+                                   g_param_spec_object ("blockobject",
+                                                        "Block object",
+                                                        "The block object for the interface",
+                                                        UDISKS_TYPE_LINUX_BLOCK_OBJECT,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 static void
 udisks_linux_block_bcache_init (UDisksLinuxBlockBcache *self)
 {
-    g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
-                                         G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
-
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (self),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 /**
  * udisks_linux_block_bcache_new:
+ * @module: A #UDisksLinuxModuleBcache.
+ * @block_object: A #UDisksLinuxBlockObject.
  *
  * Creates a new #UDisksLinuxBlockBcache instance.
  *
  * Returns: A new #UDisksLinuxBlockBcache. Free with g_object_unref().
  */
-
 UDisksLinuxBlockBcache *
-udisks_linux_block_bcache_new (void)
+udisks_linux_block_bcache_new (UDisksLinuxModuleBcache *module,
+                               UDisksLinuxBlockObject  *block_object)
 {
-  return g_object_new (UDISKS_TYPE_LINUX_BLOCK_BCACHE, NULL);
-}
-
-/**
- * udisks_linux_block_bcache_get_daemon:
- * @block: A #UDisksLinuxBlockBcache.
- *
- * Gets the daemon used by @block.
- *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @block.
- */
-
-UDisksDaemon *
-udisks_linux_block_bcache_get_daemon (UDisksLinuxBlockBcache *block)
-{
-  GError *error = NULL;
-  UDisksLinuxBlockObject *object;
-  UDisksDaemon *daemon = NULL;
-
-  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_BCACHE (block), NULL);
-
-  object = udisks_daemon_util_dup_object (block, &error);
-  if (object)
-    {
-      daemon = udisks_linux_block_object_get_daemon (object);
-      g_clear_object (&object);
-    }
-  else
-    {
-      udisks_critical ("%s", error->message);
-      g_clear_error (&error);
-    }
-
-  return daemon;
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_BCACHE (module), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (block_object), NULL);
+  return g_object_new (UDISKS_TYPE_LINUX_BLOCK_BCACHE,
+                       "module", UDISKS_MODULE (module),
+                       "blockobject", block_object,
+                       NULL);
 }
 
 /**
@@ -175,7 +213,6 @@ udisks_linux_block_bcache_get_daemon (UDisksLinuxBlockBcache *block)
  *
  * Returns: %TRUE if configuration has changed, %FALSE otherwise.
  */
-
 gboolean
 udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
                                   UDisksLinuxBlockObject  *object)
@@ -224,6 +261,7 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
   udisks_block_bcache_set_misses (iface, stats->misses);
   udisks_block_bcache_set_bypass_hits (iface, stats->bypass_hits);
   udisks_block_bcache_set_bypass_misses (iface, stats->bypass_misses);
+
 out:
   if (stats)
     bd_kbd_bcache_stats_free (stats);
@@ -246,10 +284,10 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
                        GDBusMethodInvocation  *invocation,
                        GVariant               *options)
 {
-  GError *error = NULL;
   UDisksLinuxBlockBcache *block = UDISKS_LINUX_BLOCK_BCACHE (block_);
   UDisksLinuxBlockObject *object = NULL;
-  UDisksDaemon *u_daemon = NULL;
+  UDisksDaemon *daemon;
+  GError *error = NULL;
   gchar *devname = NULL;
   const gchar *object_path;
 
@@ -260,10 +298,12 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (block->module));
+
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_block_bcache_get_daemon (block),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     bcache_policy_action_id,
+                                     BCACHE_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to destroy bcache device."),
                                      invocation);
@@ -276,9 +316,8 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
       goto out;
     }
 
-  u_daemon = udisks_linux_block_bcache_get_daemon (block);
   object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-  if (! udisks_daemon_wait_for_object_to_disappear_sync (u_daemon,
+  if (! udisks_daemon_wait_for_object_to_disappear_sync (daemon,
                                                          wait_for_bcache,
                                                          (gpointer) object_path,
                                                          NULL,
@@ -291,6 +330,7 @@ handle_bcache_destroy (UDisksBlockBcache      *block_,
     }
 
   udisks_block_bcache_complete_bcache_destroy (block_, invocation);
+
 out:
   g_free (devname);
   g_clear_object (&object);
@@ -303,9 +343,10 @@ handle_set_mode (UDisksBlockBcache      *block_,
                  const gchar            *arg_mode,
                  GVariant               *options)
 {
-  GError *error = NULL;
   UDisksLinuxBlockBcache *block = UDISKS_LINUX_BLOCK_BCACHE (block_);
   UDisksLinuxBlockObject *object = NULL;
+  UDisksDaemon *daemon;
+  GError *error = NULL;
   gchar *devname = NULL;
   BDKBDBcacheMode mode;
 
@@ -316,10 +357,12 @@ handle_set_mode (UDisksBlockBcache      *block_,
       goto out;
     }
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (block->module));
+
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_block_bcache_get_daemon (block),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     bcache_policy_action_id,
+                                     BCACHE_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to set mode of bcache device."),
                                      invocation);
@@ -355,4 +398,35 @@ udisks_linux_block_bcache_iface_init (UDisksBlockBcacheIface *iface)
 {
   iface->handle_bcache_destroy = handle_bcache_destroy;
   iface->handle_set_mode = handle_set_mode;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static gboolean
+udisks_linux_block_bcache_module_object_process_uevent (UDisksModuleObject *module_object,
+                                                        const gchar        *action,
+                                                        UDisksLinuxDevice  *device,
+                                                        gboolean           *keep)
+{
+  UDisksLinuxBlockBcache *block_bcache = UDISKS_LINUX_BLOCK_BCACHE (module_object);
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_BCACHE (module_object), FALSE);
+
+  if (device == NULL)
+    return FALSE;
+
+  /* Check device name */
+  *keep = g_str_has_prefix (g_udev_device_get_device_file (device->udev_device), "/dev/bcache");
+  if (*keep)
+    {
+      udisks_linux_block_bcache_update (block_bcache, block_bcache->block_object);
+    }
+
+  return TRUE;
+}
+
+static void
+udisks_linux_block_bcache_module_object_iface_init (UDisksModuleObjectIface *iface)
+{
+  iface->process_uevent = udisks_linux_block_bcache_module_object_process_uevent;
 }

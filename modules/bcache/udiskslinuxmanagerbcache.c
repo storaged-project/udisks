@@ -29,9 +29,7 @@
 #include <src/udiskslinuxblockobject.h>
 #include "udiskslinuxblockbcache.h"
 #include "udiskslinuxmanagerbcache.h"
-#include "udisksbcacheutil.h"
-
-#include "udiskslinuxmanagerbcache.h"
+#include "udiskslinuxmodulebcache.h"
 
 /**
  * SECTION: udiskslinuxmanagerbcache
@@ -52,7 +50,7 @@
 struct _UDisksLinuxManagerBcache {
   UDisksManagerBcacheSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleBcache *module;
 };
 
 struct _UDisksLinuxManagerBcacheClass {
@@ -61,15 +59,13 @@ struct _UDisksLinuxManagerBcacheClass {
 
 static void udisks_linux_manager_bcache_iface_init (UDisksManagerBcacheIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerBcache, udisks_linux_manager_bcache,
-                         UDISKS_TYPE_MANAGER_BCACHE_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_BCACHE,
-                                                udisks_linux_manager_bcache_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerBcache, udisks_linux_manager_bcache, UDISKS_TYPE_MANAGER_BCACHE_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_BCACHE, udisks_linux_manager_bcache_iface_init));
 
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   N_PROPERTIES
 };
 
@@ -83,8 +79,8 @@ udisks_linux_manager_bcache_get_property (GObject     *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_bcache_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_bcache_get_module (manager));
       break;
 
     default:
@@ -103,10 +99,9 @@ udisks_linux_manager_bcache_set_property (GObject       *object,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* We don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
@@ -116,15 +111,12 @@ udisks_linux_manager_bcache_set_property (GObject       *object,
 }
 
 static void
-udisks_linux_manager_bcache_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_manager_bcache_parent_class))
-    G_OBJECT_CLASS (udisks_linux_manager_bcache_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_manager_bcache_finalize (GObject *object)
 {
+  UDisksLinuxManagerBcache *manager = UDISKS_LINUX_MANAGER_BCACHE (object);
+
+  g_object_unref (manager->module);
+
   if (G_OBJECT_CLASS (udisks_linux_manager_bcache_parent_class))
     G_OBJECT_CLASS (udisks_linux_manager_bcache_parent_class)->finalize (object);
 }
@@ -136,20 +128,19 @@ udisks_linux_manager_bcache_class_init (UDisksLinuxManagerBcacheClass *klass)
 
   gobject_class->get_property = udisks_linux_manager_bcache_get_property;
   gobject_class->set_property = udisks_linux_manager_bcache_set_property;
-  gobject_class->dispose = udisks_linux_manager_bcache_dispose;
   gobject_class->finalize = udisks_linux_manager_bcache_finalize;
 
-/**
- * UDisksLinuxManager:daemon
- *
- * The #UDisksDaemon for the object.
- */
+  /**
+   * UDisksLinuxManagerBcache:module:
+   *
+   * The #UDisksModule for the object.
+   */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_BCACHE,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -165,36 +156,34 @@ udisks_linux_manager_bcache_init (UDisksLinuxManagerBcache *self)
 
 /**
  * udisks_linux_manager_bcache_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleBcache.
  *
  * Creates a new #UDisksLinuxManagerBcache instance.
  *
  * Returns: A new #UDisksLinuxManagerBcache. Free with g_object_unref ().
  */
-
 UDisksLinuxManagerBcache *
-udisks_linux_manager_bcache_new (UDisksDaemon *daemon)
+udisks_linux_manager_bcache_new (UDisksLinuxModuleBcache *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_BCACHE (module), NULL);
   return UDISKS_LINUX_MANAGER_BCACHE (g_object_new (UDISKS_TYPE_LINUX_MANAGER_BCACHE,
-                                                    "daemon", daemon,
+                                                    "module", module,
                                                     NULL));
 }
 
 /**
- * udisks_linux_manager_bcache_get_daemon:
+ * udisks_linux_manager_bcache_get_module:
  * @manager: A #UDisksLinuxManagerBcache.
  *
- * Gets the daemon used by @manager.
+ * Gets the module used by @manager.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleBcache. Do not free, the object is owned by @manager.
  */
-
-UDisksDaemon *
-udisks_linux_manager_bcache_get_daemon (UDisksLinuxManagerBcache* manager)
+UDisksLinuxModuleBcache *
+udisks_linux_manager_bcache_get_module (UDisksLinuxManagerBcache *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_BCACHE (manager), NULL);
-  return manager->daemon;
+  return manager->module;
 }
 
 static UDisksObject *
@@ -215,8 +204,8 @@ wait_for_bcache_object (UDisksDaemon *daemon,
       goto out;
     }
 
-  out:
-    return object;
+out:
+  return object;
 }
 
 static gboolean
@@ -226,9 +215,8 @@ handle_bcache_create (UDisksManagerBcache    *object,
                       const gchar            *arg_cache_dev,
                       GVariant               *options)
 {
-  GError *error = NULL;
   UDisksLinuxManagerBcache *manager = UDISKS_LINUX_MANAGER_BCACHE (object);
-
+  UDisksDaemon *daemon;
   UDisksObject *backing_dev_object = NULL;
   UDisksBlock *backing_dev_block = NULL;
   gchar *backing_dev_path = NULL;
@@ -238,17 +226,20 @@ handle_bcache_create (UDisksManagerBcache    *object,
   gchar *bcache_name = NULL;
   gchar *bcache_file = NULL;
   UDisksObject *bcache_object = NULL;
+  GError *error = NULL;
+
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
 
   /* Policy check */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (udisks_linux_manager_bcache_get_daemon (manager),
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
-                                     bcache_policy_action_id,
+                                     BCACHE_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to create bcache device."),
                                      invocation);
 
   /* get path for the backing device */
-  backing_dev_object = udisks_daemon_find_object (manager->daemon, arg_backing_dev);
+  backing_dev_object = udisks_daemon_find_object (daemon, arg_backing_dev);
   if (backing_dev_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -273,7 +264,7 @@ handle_bcache_create (UDisksManagerBcache    *object,
   backing_dev_path = udisks_block_dup_device (backing_dev_block);
 
   /* get path for the cache device */
-  cache_dev_object = udisks_daemon_find_object (manager->daemon, arg_cache_dev);
+  cache_dev_object = udisks_daemon_find_object (daemon, arg_cache_dev);
   if (cache_dev_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -306,7 +297,7 @@ handle_bcache_create (UDisksManagerBcache    *object,
 
   bcache_file = g_strdup_printf ("/dev/%s", bcache_name);
   /* sit and wait for the bcache object to show up */
-  bcache_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+  bcache_object = udisks_daemon_wait_for_object_sync (daemon,
                                                       wait_for_bcache_object,
                                                       bcache_file,
                                                       NULL,
@@ -338,7 +329,6 @@ out:
 
   return TRUE;
 }
-
 
 static void
 udisks_linux_manager_bcache_iface_init (UDisksManagerBcacheIface *iface)

@@ -21,8 +21,10 @@
 #define __UDISKS_BCACHE_TYPES_H__
 
 #define BCACHE_MODULE_NAME "bcache"
+#define BCACHE_POLICY_ACTION_ID "org.freedesktop.udisks2.bcache.manage-bcache"
 
-typedef struct _UDisksBcacheState UDisksBcacheState;
+struct _UDisksLinuxModuleBcache;
+typedef struct _UDisksLinuxModuleBcache UDisksLinuxModuleBcache;
 
 typedef struct _UDisksLinuxManagerBcache UDisksLinuxManagerBcache;
 typedef struct _UDisksLinuxManagerBcacheClass UDisksLinuxManagerBcacheClass;
