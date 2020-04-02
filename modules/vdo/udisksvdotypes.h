@@ -22,7 +22,8 @@
 
 #define VDO_MODULE_NAME "vdo"
 
-typedef struct _UDisksVDOState               UDisksVDOState;
+struct _UDisksLinuxModuleVDO;
+typedef struct _UDisksLinuxModuleVDO         UDisksLinuxModuleVDO;
 
 typedef struct _UDisksLinuxManagerVDO        UDisksLinuxManagerVDO;
 typedef struct _UDisksLinuxManagerVDOClass   UDisksLinuxManagerVDOClass;

@@ -35,20 +35,15 @@ libudisks2_vdo_LTLIBRARIES = libudisks2_vdo.la
 
 libudisks2_vdoincludedir = $(includedir)/udisks2/udisks
 
-libudisks2_vdoinclude_HEADERS =                                                \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(NULL)
-
 libudisks2_vdo_la_SOURCES =                                                    \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
+	udiskslinuxmodulevdo.h                                                 \
+	udiskslinuxmodulevdo.c                                                 \
 	udiskslinuxblockvdo.h                                                  \
 	udiskslinuxblockvdo.c                                                  \
 	udiskslinuxmanagervdo.h                                                \
 	udiskslinuxmanagervdo.c                                                \
 	udisksvdotypes.h                                                       \
-	udisksvdomoduleiface.c                                                 \
 	$(NULL)
 
 libudisks2_vdo_la_CPPFLAGS =                                                   \
