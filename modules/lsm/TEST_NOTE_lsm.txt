@@ -1,6 +1,6 @@
 ## NetApp ONTAP iSCSI Test
 
- * New LUN attached after udisksd(with module loaded) started.
+ * New LUN attached after udisksd (with module loaded) started.
    `iscsiadm -m session -R`
 
  * Exiting LUN removed from storage array. LSM dbus interface should be purged.

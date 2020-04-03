@@ -114,13 +114,6 @@
     <property name="RaidDiskCount" type="u" access="read"/>
 
   </interface>
-  <!--
-    org.freedesktop.UDisks2.Manager.LSM:
-    @short_description: LSM add-on to the manager singleton
-    @since: 2.3.0
-  -->
-  <interface name="org.freedesktop.UDisks2.Manager.LSM">
-  </interface>
 
   <!--
     org.freedesktop.UDisks2.Drive.LsmLocal:

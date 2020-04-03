@@ -18,27 +18,26 @@
  *
  */
 
-#ifndef __LSM_TYPES_H__
-#define __LSM_TYPES_H__
+#ifndef __LSM_LINUX_DRIVE_H__
+#define __LSM_LINUX_DRIVE_H__
 
 #include <gio/gio.h>
 #include <udisks/udisks.h>
-#include <sys/types.h>
+#include "lsm_types.h"
+#include "udiskslinuxmodulelsm.h"
 
 G_BEGIN_DECLS
 
-#define LSM_MODULE_NAME "lsm"
-#define LSM_POLICY_ACTION_ID "org.freedesktop.udisks2.lsm.manage-led"
+#define UDISKS_TYPE_LINUX_DRIVE_LSM   (udisks_linux_drive_lsm_get_type ())
+#define UDISKS_LINUX_DRIVE_LSM(o)     (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_LSM, UDisksLinuxDriveLSM))
+#define UDISKS_IS_LINUX_DRIVE_LSM(o)  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_LSM))
 
-struct _UDisksLinuxModuleLSM;
-typedef struct _UDisksLinuxModuleLSM UDisksLinuxModuleLSM;
-
-struct _UDisksLinuxDriveLSM;
-typedef struct _UDisksLinuxDriveLSM UDisksLinuxDriveLSM;
-
-struct _UDisksLinuxDriveLSMLocal;
-typedef struct _UDisksLinuxDriveLSMLocal UDisksLinuxDriveLSMLocal;
+GType                 udisks_linux_drive_lsm_get_type (void) G_GNUC_CONST;
+UDisksLinuxDriveLSM  *udisks_linux_drive_lsm_new      (UDisksLinuxModuleLSM   *module,
+                                                       UDisksLinuxDriveObject *drive_object);
+gboolean              udisks_linux_drive_lsm_update   (UDisksLinuxDriveLSM    *drive_lsm,
+                                                       UDisksLinuxDriveObject *drive_object);
 
 G_END_DECLS
 
-#endif /* __LSM_TYPES_H__ */
+#endif /* __LSM_LINUX_DRIVE_H__ */

@@ -36,8 +36,6 @@
 #include <stdint.h>
 #include <glib.h>
 
-//#include <libconfig.h>
-
 G_BEGIN_DECLS
 
 #define _MAX_RAID_TYPE_LEN 10
@@ -80,4 +78,5 @@ uint32_t std_lsm_refresh_time_get (void);
 gboolean std_lsm_vpd83_is_managed (const char *vpd83);
 
 G_END_DECLS
+
 #endif /* __LSM_DATA_H__ */
