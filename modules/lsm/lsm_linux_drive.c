@@ -56,7 +56,7 @@ struct _UDisksLinuxDriveLSM
   UDisksLinuxDriveObject *drive_object;
   struct StdLsmVolData   *old_lsm_data;
   gchar                  *vpd83;
-  GSource                *loop_source;
+  guint                   timeout_id;
 };
 
 struct _UDisksLinuxDriveLSMClass
@@ -79,39 +79,6 @@ enum
   N_PROPERTIES
 };
 
-static void
-_free_drive_lsm_content (UDisksLinuxDriveLSM *drive_lsm)
-{
-  if (drive_lsm == NULL)
-    return;
-
-  if (drive_lsm->loop_source != NULL)
-    {
-      udisks_debug ("LSM: _free_drive_lsm_content (): destroying loop source");
-
-      g_free (drive_lsm->vpd83);
-      std_lsm_vol_data_free (drive_lsm->old_lsm_data);
-      g_object_remove_weak_pointer ((GObject *) drive_lsm->drive_object,
-                                    (gpointer *) &drive_lsm->drive_object);
-      g_source_destroy (drive_lsm->loop_source);
-      g_source_unref (drive_lsm->loop_source);
-      /* Setting loop_source as NULL here just in case this method
-       * is call by _on_refresh_data ().
-       * As g_dbus_object_skeleton_add_interface () still hold reference
-       * to drive_lsm, it might possible
-       * udisks_linux_drive_lsm_update () add every thing back again.
-       */
-      drive_lsm->loop_source = NULL;
-
-      /* TODO: WTF?! */
-      if (G_IS_DBUS_OBJECT_SKELETON (drive_lsm->drive_object) && G_IS_DBUS_INTERFACE_SKELETON (drive_lsm) &&
-          g_dbus_object_get_interface ((GDBusObject *) drive_lsm->drive_object,
-           "org.freedesktop.UDisks2.Drive.LSM"))
-        {
-          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (drive_lsm->drive_object), G_DBUS_INTERFACE_SKELETON (drive_lsm));
-        }
-    }
-}
 
 static void
 udisks_linux_drive_lsm_get_property (GObject     *object,
@@ -171,10 +138,14 @@ udisks_linux_drive_lsm_finalize (GObject *object)
 
   udisks_debug ("LSM: udisks_linux_drive_lsm_finalize ()");
 
+  if (drive_lsm->timeout_id)
+    g_source_remove (drive_lsm->timeout_id);
+
   /* we don't take reference to drive_object */
   g_object_unref (drive_lsm->module);
+  g_free (drive_lsm->vpd83);
 
-  _free_drive_lsm_content (drive_lsm);
+  std_lsm_vol_data_free (drive_lsm->old_lsm_data);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_lsm_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_lsm_parent_class)->finalize (object);
@@ -257,14 +228,10 @@ _fill_drive_lsm (UDisksLinuxDriveLSM  *drive_lsm,
  */
 static gboolean
 _is_std_lsm_vol_data_changed (struct StdLsmVolData *old_lsm_data,
-                              struct StdLsmVolData *new_lsm_data,
-                              UDisksLinuxDriveLSM  *drive_lsm)
+                              struct StdLsmVolData *new_lsm_data)
 {
   if (old_lsm_data == NULL || new_lsm_data == NULL)
-    {
-      udisks_warning ("LSM: BUG: _is_std_lsm_vol_data_changed () got NULL old_lsm_data or NULL new_lsm_data which should not happen");
-      return TRUE;
-    }
+    return TRUE;
 
   if (strcmp (old_lsm_data->status_info, new_lsm_data->status_info) != 0 ||
       strcmp (old_lsm_data->raid_type, new_lsm_data->raid_type) != 0 ||
@@ -284,25 +251,20 @@ _is_std_lsm_vol_data_changed (struct StdLsmVolData *old_lsm_data,
 static gboolean
 _on_refresh_data (UDisksLinuxDriveLSM *drive_lsm)
 {
-  struct StdLsmVolData *new_lsm_data = NULL;
+  struct StdLsmVolData *new_lsm_data;
 
-  if (drive_lsm == NULL ||
-      drive_lsm->drive_object == NULL ||
-      ! UDISKS_IS_LINUX_DRIVE_LSM (drive_lsm) ||
-      ! UDISKS_IS_LINUX_DRIVE_OBJECT (drive_lsm->drive_object))
-    goto remove_out;
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_LSM (drive_lsm), G_SOURCE_REMOVE);
 
   udisks_debug ("LSM: Refreshing LSM RAID info for VPD83/WWN %s", drive_lsm->vpd83);
 
   new_lsm_data = std_lsm_vol_data_get (drive_lsm->vpd83);
-
   if (new_lsm_data == NULL)
     {
       udisks_debug ("LSM: Disk drive VPD83/WWN %s is not LSM managed any more", drive_lsm->vpd83);
-      goto remove_out;
+      return G_SOURCE_REMOVE;
     }
 
-  if (_is_std_lsm_vol_data_changed (drive_lsm->old_lsm_data, new_lsm_data, drive_lsm))
+  if (_is_std_lsm_vol_data_changed (drive_lsm->old_lsm_data, new_lsm_data))
     {
       _fill_drive_lsm (drive_lsm, new_lsm_data);
       std_lsm_vol_data_free (drive_lsm->old_lsm_data);
@@ -311,23 +273,7 @@ _on_refresh_data (UDisksLinuxDriveLSM *drive_lsm)
   else
     std_lsm_vol_data_free (new_lsm_data);
 
-  return TRUE;
-
-remove_out:
-  /* As g_dbus_object_skeleton_add_interface () in update_iface () of
-   * src/udiskslinuxdriveobject.c take its own reference to drive_lsm,
-   * g_object_unref (std_drv_Lsm) here does not cause trigger
-   * udisks_linux_drive_lsm_finalize () to remove dbus interface.
-   * Hence we have to remove dbus interface and loop related resources here.
-   */
-  /* TODO: WTF? */
-  if UDISKS_IS_LINUX_DRIVE_LSM (drive_lsm)
-    {
-      _free_drive_lsm_content (drive_lsm);
-      g_object_unref (drive_lsm);
-    }
-
-  return FALSE;
+  return G_SOURCE_CONTINUE;
 }
 
 /**
@@ -358,64 +304,44 @@ gboolean
 udisks_linux_drive_lsm_update (UDisksLinuxDriveLSM    *drive_lsm,
                                UDisksLinuxDriveObject *drive_object)
 {
-  struct StdLsmVolData *lsm_vol_data = NULL;
-  UDisksLinuxDevice *st_lx_dev;
+  UDisksLinuxDevice *device;
   const gchar *wwn = NULL;
   gboolean rc = FALSE;
 
   udisks_debug ("LSM: udisks_linux_drive_lsm_update");
 
-  if (drive_lsm->loop_source != NULL)
-    {
-      udisks_debug ("LSM: Already in refresh loop");
-      return FALSE;
-    }
-
-  st_lx_dev = udisks_linux_drive_object_get_device (drive_object, TRUE);
-  if (st_lx_dev == NULL)
+  device = udisks_linux_drive_object_get_device (drive_object, TRUE);
+  if (device == NULL)
     {
       udisks_debug ("LSM: udisks_linux_drive_lsm_update (): Got NULL udisks_linux_drive_object_get_device () return");
       goto out;
     }
 
-  wwn = g_udev_device_get_property (st_lx_dev->udev_device, "ID_WWN_WITH_EXTENSION");
+  wwn = g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION");
   if (! wwn || strlen (wwn) < 2)
     {
       udisks_debug ("LSM: udisks_linux_drive_lsm_update (): Got empty ID_WWN_WITH_EXTENSION dbus property");
       goto out;
     }
 
-  /* Udev ID_WWN is started with 0x */
-  lsm_vol_data = std_lsm_vol_data_get (wwn + 2);
-
-  if (lsm_vol_data == NULL)
-    {
-      udisks_debug ("LSM: VPD %s is not managed by LibstorageMgmt", wwn + 2);
-      goto out;
-    }
-
-  udisks_debug ("LSM: VPD %s is managed by LibstorageMgmt", wwn + 2);
-
-  _fill_drive_lsm (drive_lsm, lsm_vol_data);
-
-  /* Don't free lsm_vol_data, it is managed by udisks_linux_drive_lsm_finalize (). */
-  drive_lsm->old_lsm_data = lsm_vol_data;
+  g_free (drive_lsm->vpd83);
   drive_lsm->vpd83 = g_strdup (wwn + 2);
-  g_object_add_weak_pointer ((GObject *) drive_object, (gpointer *) &drive_lsm->drive_object);
-  drive_lsm->loop_source = g_timeout_source_new_seconds (std_lsm_refresh_time_get ());
-  g_source_set_callback (drive_lsm->loop_source, (GSourceFunc) _on_refresh_data, drive_lsm, NULL);
-  g_source_attach (drive_lsm->loop_source, NULL);
 
-  udisks_debug ("LSM: VPD83 %s added to refresh event loop", wwn + 2);
+  _on_refresh_data (drive_lsm);
+
+  /* Start polling */
+  if (drive_lsm->timeout_id == 0)
+    {
+      drive_lsm->timeout_id = g_timeout_add_seconds (std_lsm_refresh_time_get (),
+                                                     (GSourceFunc) _on_refresh_data,
+                                                     drive_lsm);
+      udisks_debug ("LSM: VPD83 %s added to refresh event loop", wwn + 2);
+    }
 
   rc = TRUE;
 
 out:
-  if (st_lx_dev != NULL)
-    g_object_unref (st_lx_dev);
-
-  if (rc == FALSE)
-    g_object_unref (drive_lsm);
+  g_clear_object (&device);
 
   return rc;
 }
@@ -442,6 +368,15 @@ udisks_linux_drive_lsm_module_object_process_uevent (UDisksModuleObject *module_
   if (*keep)
     {
       udisks_linux_drive_lsm_update (drive_lsm, drive_lsm->drive_object);
+    }
+  else
+    {
+      /* Stop polling */
+      if (drive_lsm->timeout_id)
+        {
+          g_source_remove (drive_lsm->timeout_id);
+          drive_lsm->timeout_id = 0;
+        }
     }
 
   return TRUE;
