@@ -137,7 +137,8 @@ initable_init (GInitable     *initable,
   UDisksDaemon *daemon;
 
   daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
-  std_lsm_data_init (daemon);
+  if (! std_lsm_data_init (daemon, error))
+    return FALSE;
 
   return TRUE;
 }

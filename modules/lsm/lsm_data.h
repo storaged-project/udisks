@@ -57,7 +57,7 @@ struct StdLsmVolData
   uint32_t raid_disk_count;
 };
 
-void std_lsm_data_init (UDisksDaemon *daemon);
+gboolean std_lsm_data_init (UDisksDaemon *daemon, GError **error);
 
 /*
  * The cached lsm volume/vpd83 list will not refresh automatically. This is
