@@ -27,7 +27,6 @@
 
 #include "udiskslinuxblockbcache.h"
 #include "udisksbcacheutil.h"
-#include "udisks-bcache-generated.h"
 
 /**
  * SECTION:udiskslinuxblockbcache

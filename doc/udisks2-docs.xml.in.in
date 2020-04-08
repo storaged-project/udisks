@@ -360,18 +360,18 @@
 
     <chapter>
       <title>D-Bus Interfaces</title>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.MDRaid.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Block.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Partition.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.PartitionTable.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Loop.xml"/>
-      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.MDRaid.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Block.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Partition.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.PartitionTable.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Loop.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
       <!-- LSM_DBUS_INTERFACE -->
       <!-- LVM2_DBUS_INTERFACE -->
       <!-- ISCSI_DBUS_INTERFACE -->

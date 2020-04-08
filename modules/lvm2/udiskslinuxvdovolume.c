@@ -39,10 +39,8 @@
 #include "udiskslinuxvolumegroupobject.h"
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2dbusutil.h"
 #include "udiskslvm2util.h"
 #include "jobhelpers.h"
-#include "udisks-lvm2-generated.h"
 
 /**
  * SECTION:udisklinuxvdovolume

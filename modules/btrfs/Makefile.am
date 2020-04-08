@@ -28,21 +28,7 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(BTRFS_MODULE_DIR)/data/org.freedesktop.UDisks2.btrfs.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.freedesktop.UDisks2.                    \
-	        --c-namespace UDisks                                           \
-	        --c-generate-autocleanup all                                   \
-	        --generate-c-code udisks-btrfs-generated                       \
-	        --generate-docbook udisks-generated-doc                        \
-	        $<
-
-dbus_built_sources =                                                           \
-	udisks-btrfs-generated.h        udisks-btrfs-generated.c               \
-	$(NULL)
-
 BUILT_SOURCES =                                                                \
-	$(dbus_built_sources)                                                  \
 	$(NULL)
 
 libudisks2_btrfsdir=$(libdir)/udisks2/modules
@@ -106,7 +92,7 @@ libudisks2_btrfs_la_LIBADD =                                                   \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-btrfs-generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

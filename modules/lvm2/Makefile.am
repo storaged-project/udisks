@@ -28,21 +28,7 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.freedesktop.UDisks2.lvm2.xml Makefile.am
-	$(AM_V_GEN) gdbus-codegen                                              \
-	        --interface-prefix org.freedesktop.UDisks2.                    \
-	        --c-namespace UDisks                                           \
-	        --c-generate-autocleanup all                                   \
-	        --generate-c-code udisks-lvm2-generated                        \
-	        --generate-docbook udisks-generated-doc                        \
-	        $<
-
-dbus_built_sources =                                                           \
-	udisks-lvm2-generated.h    udisks-lvm2-generated.c                     \
-	$(NULL)
-
 BUILT_SOURCES =                                                                \
-	$(dbus_built_sources)                                                  \
 	$(NULL)
 
 libudisks2_lvm2dir=$(libdir)/udisks2/modules
@@ -73,7 +59,6 @@ libudisks2_lvm2_la_SOURCES =                                                   \
 	udiskslinuxvdovolume.h              udiskslinuxvdovolume.c             \
 	udiskslinuxblocklvm2.h              udiskslinuxblocklvm2.c             \
 	udiskslvm2daemonutil.h              udiskslvm2daemonutil.c             \
-	udiskslvm2dbusutil.h                udiskslvm2dbusutil.c               \
 	udiskslvm2util.h                    udiskslvm2util.c                   \
 	udiskslinuxmanagerlvm2.h            udiskslinuxmanagerlvm2.c           \
 	udiskslvm2state.h                   udiskslvm2state.c                  \
@@ -110,7 +95,7 @@ libudisks2_lvm2_la_LIBADD =                                                    \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch]
+CLEANFILES =
 
 EXTRA_DIST =                                                                   \
 	$(NULL)

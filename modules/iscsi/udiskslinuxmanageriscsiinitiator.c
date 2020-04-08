@@ -32,11 +32,9 @@
 #include <src/udiskslogging.h>
 #include <src/udisksmodulemanager.h>
 
-#include "udisks-iscsi-generated.h"
 #include "udisksiscsistate.h"
 #include "udisksiscsiutil.h"
 #include "udiskslinuxmanageriscsiinitiator.h"
-#include "udisksiscsidbusutil.h"
 
 /**
  * SECTION:udiskslinuxmanageriscsiinitiator

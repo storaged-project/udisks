@@ -31,7 +31,6 @@
 #include <src/udisksdaemonutil.h>
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxblockobject.h>
-#include "udisks-zram-generated.h"
 #include "udiskslinuxblockzram.h"
 #include "udiskslinuxmanagerzram.h"
 #include "udiskszramutil.h"

@@ -49,9 +49,7 @@
 #include <src/udisksmodulemanager.h>
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2dbusutil.h"
 #include "udiskslvm2state.h"
-#include "udisks-lvm2-generated.h"
 
 /**
  * SECTION:udiskslvm2daemonutil

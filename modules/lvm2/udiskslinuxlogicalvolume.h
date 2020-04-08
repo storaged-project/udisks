@@ -26,7 +26,6 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
-#include "udisks-lvm2-generated.h"
 
 G_BEGIN_DECLS
 

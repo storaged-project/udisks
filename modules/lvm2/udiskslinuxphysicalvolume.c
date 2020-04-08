@@ -36,9 +36,6 @@
 #include "udiskslinuxvolumegroup.h"
 #include "udiskslinuxvolumegroupobject.h"
 
-#include "udiskslvm2dbusutil.h"
-#include "udisks-lvm2-generated.h"
-
 /**
  * SECTION:udiskslinuxphysicalvolume
  * @title: UDisksLinuxPhysicalVolume

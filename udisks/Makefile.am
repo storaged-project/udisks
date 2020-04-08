@@ -26,15 +26,46 @@ AM_CPPFLAGS = \
 	$(WARN_CFLAGS)						\
 	$(NULL)
 
-$(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks2.xml
-	gdbus-codegen							                \
-		--interface-prefix org.freedesktop.UDisks2.                          	\
+dbus_interface_files = $(top_srcdir)/data/org.freedesktop.UDisks2.xml
+
+if HAVE_BTRFS
+dbus_interface_files += $(top_srcdir)/modules/btrfs/data/org.freedesktop.UDisks2.btrfs.xml
+endif
+
+if HAVE_ISCSI
+dbus_interface_files += $(top_srcdir)/modules/iscsi/data/org.freedesktop.UDisks2.iscsi.xml
+endif
+
+if HAVE_LVM2
+dbus_interface_files += $(top_srcdir)/modules/lvm2/data/org.freedesktop.UDisks2.lvm2.xml
+endif
+
+if HAVE_ZRAM
+dbus_interface_files += $(top_srcdir)/modules/zram/data/org.freedesktop.UDisks2.zram.xml
+endif
+
+if HAVE_LSM
+dbus_interface_files += $(top_srcdir)/modules/lsm/data/org.freedesktop.UDisks2.lsm.xml
+endif
+
+if HAVE_BCACHE
+dbus_interface_files += $(top_srcdir)/modules/bcache/data/org.freedesktop.UDisks2.bcache.xml
+endif
+
+if HAVE_VDO
+dbus_interface_files += $(top_srcdir)/modules/vdo/data/org.freedesktop.UDisks2.vdo.xml
+endif
+
+$(dbus_built_sources) : Makefile.am $(dbus_interface_files)
+	mkdir -p $(top_builddir)/doc/xml &&						\
+	gdbus-codegen									\
+		--interface-prefix org.freedesktop.UDisks2.				\
 		--c-namespace UDisks							\
 		--c-generate-object-manager						\
 		--c-generate-autocleanup all						\
-		--generate-c-code udisks-generated                             		\
-		--generate-docbook udisks-generated-doc					\
-		$(top_srcdir)/data/org.freedesktop.UDisks2.xml         			\
+		--generate-c-code udisks-generated					\
+		--generate-docbook $(top_builddir)/doc/xml/udisks-generated-doc		\
+		$(dbus_interface_files)							\
 		$(NULL)
 
 udisksenumtypes.h: udisksenums.h udisksenumtypes.h.template

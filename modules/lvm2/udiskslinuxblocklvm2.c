@@ -33,7 +33,6 @@
 #include <src/udiskslinuxdevice.h>
 
 #include "udiskslinuxblocklvm2.h"
-#include "udisks-lvm2-generated.h"
 
 /**
  * SECTION:udiskslinuxblocklvm2

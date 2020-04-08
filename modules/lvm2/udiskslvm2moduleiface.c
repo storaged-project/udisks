@@ -38,9 +38,7 @@
 #include <src/udisksmodulemanager.h>
 #include <src/udiskslogging.h>
 
-#include "udisks-lvm2-generated.h"
 #include "udiskslvm2types.h"
-#include "udiskslvm2dbusutil.h"
 #include "udiskslvm2daemonutil.h"
 #include "udiskslvm2state.h"
 #include "jobhelpers.h"

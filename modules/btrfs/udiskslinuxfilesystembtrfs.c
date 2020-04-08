@@ -29,7 +29,6 @@
 #include <blockdev/btrfs.h>
 
 #include "udiskslinuxfilesystembtrfs.h"
-#include "udisks-btrfs-generated.h"
 #include "udisksbtrfsutil.h"
 
 /**

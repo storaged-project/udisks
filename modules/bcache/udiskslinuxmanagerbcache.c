@@ -27,7 +27,6 @@
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxblock.h>
 #include <src/udiskslinuxblockobject.h>
-#include "udisks-bcache-generated.h"
 #include "udiskslinuxblockbcache.h"
 #include "udiskslinuxmanagerbcache.h"
 #include "udisksbcacheutil.h"

@@ -410,6 +410,23 @@ fi
 %{_datadir}/gtk-doc/html/udisks2/*
 %endif
 %{_libdir}/pkgconfig/udisks2.pc
+%{_libdir}/pkgconfig/udisks2-lvm2.pc
+%{_libdir}/pkgconfig/udisks2-iscsi.pc
+%if 0%{?with_bcache}
+%{_libdir}/pkgconfig/udisks2-bcache.pc
+%endif
+%if 0%{?with_btrfs}
+%{_libdir}/pkgconfig/udisks2-btrfs.pc
+%endif
+%if 0%{?with_lsm}
+%{_libdir}/pkgconfig/udisks2-lsm.pc
+%endif
+%if 0%{?with_zram}
+%{_libdir}/pkgconfig/udisks2-zram.pc
+%endif
+%if 0%{?with_vdo}
+%{_libdir}/pkgconfig/udisks2-vdo.pc
+%endif
 
 %if 0%{?with_bcache}
 %files -n %{name}-bcache
