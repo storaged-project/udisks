@@ -12,9 +12,11 @@ import udiskstestcase
 import glob
 import shutil
 import tempfile
+import pdb
 import re
 import six
 import atexit
+import traceback
 import yaml
 from datetime import datetime
 
@@ -238,6 +240,19 @@ def _print_skip_message(test, skip_tags, missing):
               file=sys.stderr)
 
 
+class DebugTestResult(unittest.TextTestResult):
+
+    def addError(self, test, err):
+        traceback.print_exception(*err)
+        pdb.post_mortem(err[2])
+        super(DebugTestResult, self).addError(test, err)
+
+    def addFailure(self, test, err):
+        traceback.print_exception(*err)
+        pdb.post_mortem(err[2])
+        super(DebugTestResult, self).addFailure(test, err)
+
+
 def parse_args():
     """ Parse cmdline arguments """
 
@@ -251,6 +266,9 @@ def parse_args():
                            action='store_true')
     argparser.add_argument('-f', '--failfast', dest='failfast',
                            help='stop the test run on a first error',
+                           action='store_true')
+    argparser.add_argument('-p', '--pdb', dest='pdb',
+                           help='run pdb after a failed test',
                            action='store_true')
     argparser.add_argument('--exclude-tags', nargs='+', dest='exclude_tags',
                            help='skip tests tagged with (at least one of) the provided tags')
@@ -394,7 +412,11 @@ if __name__ == '__main__':
         # finally add the test to the suite
         suite.addTest(test)
 
-    runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast)
+    if args.pdb:
+        runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast, resultclass=DebugTestResult)
+    else:
+        runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast)
+
     result = runner.run(suite)
 
     if not args.system:
