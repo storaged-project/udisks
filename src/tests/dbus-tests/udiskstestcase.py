@@ -8,6 +8,7 @@ import time
 import re
 import sys
 from datetime import datetime
+from enum import Enum
 from systemd import journal
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 3:
@@ -639,3 +640,37 @@ class JournalRecorder(FlightRecorder):
             entry = j.get_next()
         rec = '<<<<< ' + self._desc + ' >>>>>' + '\n' + journal_data + '\n\n\n'
         self._store.append(rec)
+
+
+class TestTags(Enum):
+    SLOW = "slow"             # slow tests
+    UNSTABLE = "unstable"     # randomly failing tests
+    UNSAFE = "unsafe"         # tests that change system configuration
+    NOSTORAGE = "nostorage"   # tests that don't work with storage
+    EXTRADEPS = "extradeps"   # tests that require special configuration and/or device to run
+
+    @classmethod
+    def get_tags(cls):
+        return [t.value for t in cls.__members__.values()]
+
+    @classmethod
+    def get_tag_by_value(cls, value):
+        tag = next((t for t in cls.__members__.values() if t.value == value), None)
+
+        if not tag:
+            raise ValueError('Unknown value "%s"' % value)
+
+        return tag
+
+
+def tag_test(*tags):
+    def decorator(func):
+        func.slow = TestTags.SLOW in tags
+        func.unstable = TestTags.UNSTABLE in tags
+        func.unsafe = TestTags.UNSAFE in tags
+        func.nostorage = TestTags.NOSTORAGE in tags
+        func.extradeps = TestTags.EXTRADEPS in tags
+
+        return func
+
+    return decorator

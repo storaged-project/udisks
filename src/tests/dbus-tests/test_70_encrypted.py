@@ -182,7 +182,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks_ro = self.get_property(luks_obj, '.Block', 'ReadOnly')
         luks_ro.assertTrue()
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
         crypttab = self.read_file('/etc/crypttab')
@@ -228,7 +228,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks_path = self.get_property(luks_obj, '.Block', 'PreferredDevice')
         luks_path.assertEqual(self.str_to_ay(dm_path))
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab_keyfile(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
         crypttab = self.read_file('/etc/crypttab')
@@ -543,7 +543,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         default_encryption_type = self.get_property(manager, '.Manager', 'DefaultEncryptionType')
         default_encryption_type.assertEqual(config['defaults']['encryption'])
 
-    @udiskstestcase.unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_integrity(self):
         passwd = 'test'
 

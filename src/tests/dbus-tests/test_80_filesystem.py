@@ -18,7 +18,6 @@ from gi.repository import GLib
 
 import safe_dbus
 import udiskstestcase
-from udiskstestcase import unstable_test
 
 
 class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
@@ -768,7 +767,7 @@ class VFATTestCase(UdisksFSTestCase):
 
         return res
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab_fail(self):
         """ Test that user can't mount device not listed in /etc/fstab """
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -802,7 +801,7 @@ class VFATTestCase(UdisksFSTestCase):
         self.assertTrue(os.path.ismount(mnt_path))
         self.try_unmount(mnt_path)
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab_users_option(self):
         """ Test that user can mount and unmount device with the "users" option in /etc/fstab """
         # users -- any user can mount the device and any user can also unmount it
@@ -836,7 +835,7 @@ class VFATTestCase(UdisksFSTestCase):
         if not res[0]:
             self.fail(res[1])
 
-    @unittest.skipUnless("JENKINS_HOME" in os.environ, "skipping test that modifies system configuration")
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab_user_option(self):
         """ Test that user can mount and unmount device with the "user" option in /etc/fstab """
         # user -- any user can mount the device, only user that mounted it (and root) can
@@ -873,7 +872,7 @@ class VFATTestCase(UdisksFSTestCase):
         if not res[0]:
             self.fail(res[1])
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_repair_resize_check(self):
         super(VFATTestCase, self).test_repair_resize_check()
 
@@ -884,11 +883,11 @@ class NTFSTestCase(UdisksFSTestCase):
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_repair_resize_check(self):
         super(NTFSTestCase, self).test_repair_resize_check()
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_userspace_mount_options(self):
         super(NTFSTestCase, self).test_userspace_mount_options()
 
@@ -923,7 +922,7 @@ class NILFS2TestCase(UdisksFSTestCase):
     _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
     _can_mount = True and UdisksFSTestCase.module_available('nilfs2')
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_userspace_mount_options(self):
         super(NILFS2TestCase, self).test_userspace_mount_options()
 
