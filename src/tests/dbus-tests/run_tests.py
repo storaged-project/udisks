@@ -15,7 +15,12 @@ import tempfile
 import re
 import six
 import atexit
+import yaml
 from datetime import datetime
+
+
+SKIP_CONFIG = 'skip.yml'
+
 
 def find_daemon(projdir, system):
     if not system:
@@ -171,6 +176,41 @@ def _get_test_tags(test):
     return tags
 
 
+def _should_skip(distro=None, version=None, arch=None, reason=None):
+    # all these can be lists or a single value, so covert everything to list
+    if distro is not None and type(distro) is not list:
+        distro = [distro]
+    if version is not None and type(version) is not list:
+        version = [version]
+    if arch is not None and type(arch) is not list:
+        arch = [arch]
+
+    # DISTRO, VERSION and ARCH variables are set in main, we don't need to
+    # call hostnamectl etc. for every test run
+    if (distro is None or DISTRO in distro) and (version is None or VERSION in version) and \
+       (arch is None or ARCH in arch):
+        return True
+
+
+def _parse_skip_config(config):
+    skipped_tests = dict()
+
+    if not os.path.isfile(config):
+        print("File with list of tests to skip not found.")
+        return skipped_tests
+
+    with open(config) as f:
+        data = f.read()
+    parsed = yaml.load(data, Loader=yaml.SafeLoader)
+
+    for entry in parsed:
+        for skip in entry["skip_on"]:
+            if _should_skip(**skip):
+                skipped_tests[entry["test"]] = skip["reason"]
+
+    return skipped_tests
+
+
 def _split_test_id(test_id):
     # test.id() looks like 'crypto_test.CryptoTestResize.test_luks2_resize'
     # and we want to print 'test_luks2_resize (crypto_test.CryptoTestResize)'
@@ -318,6 +358,13 @@ if __name__ == '__main__':
     include_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.include_tags)
     exclude_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.exclude_tags)
 
+    # get distro and arch here so we don't have to do this for every test
+    DISTRO, VERSION = udiskstestcase.get_version()
+    ARCH = os.uname()[-1]
+
+    # get list of tests to skip from the config file
+    skipping = _parse_skip_config(os.path.join(testdir, SKIP_CONFIG))
+
     for test in tests:
         test_id = test.id()
 
@@ -332,6 +379,16 @@ if __name__ == '__main__':
         # if user specified exclude_tags, test can't have any of these
         if exclude_tags and (exclude_tags & tags):
             _print_skip_message(test, exclude_tags & tags, missing=False)
+            continue
+
+        # check if the test is in the list of tests to skip
+        skip_id = next((test_pattern for test_pattern in skipping.keys() if re.search(test_pattern, test_id)), None)
+        if skip_id:
+            test_name, test_module = _split_test_id(test_id)
+            reason = "not supported on this distribution in this version and arch: %s" % skipping[skip_id]
+            print("%s (%s)\n%s ... skipped '%s'" % (test_name, test_module,
+                                                    test._testMethodDoc, reason),
+                  file=sys.stderr)
             continue
 
         # finally add the test to the suite

@@ -1,0 +1,31 @@
+# List of tests to be skipped
+#
+# Example:
+# This will skip the 'test_mount_ntfs' test case on Debian 10
+# and on all 32bit machines
+#
+###################################
+# - test: fs_test.MountTest.test_mount_ntfs
+#   skip_on:
+#     - distro: "debian"
+#       version: "10"
+#       reason: "NTFS mounting is broken on Debian testing"
+#
+#     - arch: "i686"
+#       reason: "testing skipping from config file"
+###################################
+#
+# Notes:
+# - multiple combinations of reasons are supported.
+# - 'reason' and at least one of 'distro', 'version' and 'arch' is required
+# - 'test' (ID of the test case) can be specified as a regular expression
+#   for example 'kbd_test.KbdBcacheTestCase.*' to skip all kbd tests
+# - all "skips" can specified as a list, for example 'version: [10, 11]'
+
+---
+
+- test: test_40_drive.UdisksDriveTest.*
+  skip_on:
+    - distro: ["centos", "enterprise_linux"]
+      version: "7"
+      reason: "SCSI debug bug causing kernel panic on CentOS/RHEL 7"
