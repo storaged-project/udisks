@@ -85,8 +85,8 @@ struct _UDisksLinuxProvider
   GUnixMountMonitor *mount_monitor;
   GFileMonitor *etc_udisks2_dir_monitor;
 
-  /* Module interfaces list */
-  GList *module_ifaces;
+  /* Module interfaces hashtable */
+  GHashTable *module_ifaces;
 
   /* set to TRUE only in the coldplug phase */
   gboolean coldplug;
@@ -143,6 +143,8 @@ static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
 
 gpointer probe_request_thread_func (gpointer user_data);
 
+static void detach_module_interfaces (UDisksLinuxProvider *provider);
+
 enum
   {
     UEVENT_PROBED_SIGNAL,
@@ -183,7 +185,8 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->module_objects);
   g_object_unref (provider->gudev_client);
 
-  g_list_free (provider->module_ifaces);
+  detach_module_interfaces (provider);
+  g_hash_table_unref (provider->module_ifaces);
 
   udisks_object_skeleton_set_manager (provider->manager_object, NULL);
   g_object_unref (provider->manager_object);
@@ -317,7 +320,6 @@ on_uevent (GUdevClient  *client,
 static void
 udisks_linux_provider_init (UDisksLinuxProvider *provider)
 {
-  provider->module_ifaces = NULL;
 }
 
 static void
@@ -347,6 +349,8 @@ udisks_linux_provider_constructed (GObject *object)
                                                  provider);
 
   provider->mount_monitor = g_unix_mount_monitor_get ();
+
+  provider->module_ifaces = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 
   file = g_file_new_for_path (udisks_config_manager_get_config_dir (config_manager));
   provider->etc_udisks2_dir_monitor = g_file_monitor_directory (file,
@@ -508,12 +512,25 @@ do_coldplug (UDisksLinuxProvider *provider,
 }
 
 static void
+detach_module_interfaces (UDisksLinuxProvider *provider)
+{
+  GHashTableIter iter;
+  GDBusInterfaceSkeleton *iface;
+
+  g_hash_table_iter_init (&iter, provider->module_ifaces);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer) &iface))
+    {
+      g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+    }
+  g_hash_table_remove_all (provider->module_ifaces);
+}
+
+static void
 ensure_modules (UDisksLinuxProvider *provider)
 {
   UDisksDaemon *daemon;
   UDisksModuleManager *module_manager;
   GList *udisks_devices;
-  GList *l;
   gboolean do_refresh = FALSE;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
@@ -522,6 +539,7 @@ ensure_modules (UDisksLinuxProvider *provider)
   if (udisks_module_manager_get_modules_available (module_manager))
     {
       GList *modules;
+      GList *l;
 
       /* Attach additional interfaces from modules. */
       udisks_debug ("Modules loaded, attaching interfaces...");
@@ -532,14 +550,16 @@ ensure_modules (UDisksLinuxProvider *provider)
           UDisksModule *module = l->data;
           GDBusInterfaceSkeleton *iface;
 
-          iface = udisks_module_new_manager (module);
-          if (iface != NULL)
+          /* skip modules that already have their manager interface exported */
+          if (! g_hash_table_contains (provider->module_ifaces, udisks_module_get_name (module)))
             {
-              g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
-              g_object_unref (iface);
-              do_refresh = TRUE;
-
-              provider->module_ifaces = g_list_append (provider->module_ifaces, iface);
+              iface = udisks_module_new_manager (module);
+              if (iface != NULL)
+                {
+                  g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+                  g_hash_table_replace (provider->module_ifaces, g_strdup (udisks_module_get_name (module)), iface);
+                  do_refresh = TRUE;
+                }
             }
         }
       g_list_free_full (modules, g_object_unref);
@@ -548,20 +568,7 @@ ensure_modules (UDisksLinuxProvider *provider)
     {
       /* Detach additional interfaces from modules. */
       udisks_debug ("Modules unloading, detaching interfaces...");
-
-      for (l = provider->module_ifaces; l != NULL; l = l->next)
-        {
-          GDBusInterfaceSkeleton *iface = l->data;
-
-          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
-        }
-      g_list_free (provider->module_ifaces);
-      provider->module_ifaces = NULL;
-
-      /* Finish module unloading. */
-      udisks_module_manager_unload_modules (module_manager);
-
-      do_refresh = TRUE;
+      detach_module_interfaces (provider);
     }
 
   if (do_refresh)
@@ -697,7 +704,6 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   module_manager = udisks_daemon_get_module_manager (daemon);
   g_signal_connect_swapped (module_manager, "notify::modules-ready", G_CALLBACK (ensure_modules), provider);
-  ensure_modules (provider);
 
   g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
                                        G_DBUS_OBJECT_SKELETON (provider->manager_object));
