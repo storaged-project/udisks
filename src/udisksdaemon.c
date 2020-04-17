@@ -275,6 +275,16 @@ mount_monitor_on_mount_removed (UDisksMountMonitor *monitor,
   udisks_state_check (daemon->state);
 }
 
+static gboolean
+load_modules_in_idle_cb (gpointer user_data)
+{
+  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+
+  udisks_module_manager_load_modules (daemon->module_manager);
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 udisks_daemon_constructed (GObject *object)
 {
@@ -390,6 +400,7 @@ udisks_daemon_constructed (GObject *object)
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
+  udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
 
   /* fill in default mount options */
   g_object_set_data_full (object,
@@ -397,14 +408,14 @@ udisks_daemon_constructed (GObject *object)
                           udisks_linux_mount_options_get_builtin (),
                           (GDestroyNotify) g_hash_table_destroy);
 
-  if (daemon->force_load_modules
-      || (udisks_config_manager_get_load_preference (daemon->config_manager)
-          == UDISKS_MODULE_LOAD_ONSTARTUP))
+  /* Load modules if requested but only once providers have started and
+   * have connected on the UDisksModuleManager::modules-ready signal.
+   */
+  if (daemon->force_load_modules ||
+      udisks_config_manager_get_load_preference (daemon->config_manager) == UDISKS_MODULE_LOAD_ONSTARTUP)
     {
-      udisks_module_manager_load_modules (daemon->module_manager);
+      g_idle_add (load_modules_in_idle_cb, daemon);
     }
-
-  udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
 
   /* Export the ObjectManager */
   g_dbus_object_manager_server_set_connection (daemon->object_manager, daemon->connection);

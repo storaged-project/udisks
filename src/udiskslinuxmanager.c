@@ -868,23 +868,37 @@ handle_mdraid_create (UDisksManager         *_object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-load_modules (UDisksDaemon *daemon)
+typedef struct
 {
+  UDisksManager         *object;
+  GDBusMethodInvocation *invocation;
+} EnableModulesData;
+
+static gboolean
+load_modules_in_idle_cb (gpointer user_data)
+{
+  EnableModulesData *data = user_data;
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (data->object);
   UDisksModuleManager *module_manager;
 
-  g_return_if_fail (UDISKS_IS_DAEMON (daemon));
-
-  module_manager = udisks_daemon_get_module_manager (daemon);
+  module_manager = udisks_daemon_get_module_manager (manager->daemon);
   udisks_module_manager_load_modules (module_manager);
+
+  udisks_manager_complete_enable_modules (data->object, data->invocation);
+  g_object_unref (data->object);
+  g_object_unref (data->invocation);
+  g_free (data);
+
+  return G_SOURCE_REMOVE;
 }
 
 static gboolean
-handle_enable_modules (UDisksManager *object,
+handle_enable_modules (UDisksManager         *object,
                        GDBusMethodInvocation *invocation,
-                       gboolean arg_enable)
+                       gboolean               arg_enable)
 {
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
+  EnableModulesData *data;
 
   if (! arg_enable)
     {
@@ -896,9 +910,13 @@ handle_enable_modules (UDisksManager *object,
     }
 
   if (! udisks_daemon_get_disable_modules (manager->daemon))
-    load_modules (manager->daemon);
-
-  udisks_manager_complete_enable_modules (object, invocation);
+    {
+      data = g_new0 (EnableModulesData, 1);
+      data->object = g_object_ref (object);
+      data->invocation = g_object_ref (invocation);
+      /* push to idle, process in main thread */
+      g_idle_add (load_modules_in_idle_cb, data);
+    }
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
