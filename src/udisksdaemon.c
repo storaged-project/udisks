@@ -409,7 +409,7 @@ udisks_daemon_constructed (GObject *object)
                           (GDestroyNotify) g_hash_table_destroy);
 
   /* Load modules if requested but only once providers have started and
-   * have connected on the UDisksModuleManager::modules-ready signal.
+   * have connected on the UDisksModuleManager::modules-activated signal.
    */
   if (daemon->force_load_modules ||
       udisks_config_manager_get_load_preference (daemon->config_manager) == UDISKS_MODULE_LOAD_ONSTARTUP)

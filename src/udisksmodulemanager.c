@@ -87,8 +87,8 @@
  * --force-load-modules and --disable-modules commandline switches that makes
  * modules loaded right on startup or never loaded respectively.
  *
- * Upon successful activation, the "modules-ready" property on the #UDisksModuleManager
- * instance is set to %TRUE. Any daemon objects watching this property are
+ * Upon successful activation, a "modules-activated" signal is emitted on the
+ * #UDisksModuleManager object. Any daemon objects connected to this signal are
  * responsible for performing "coldplug" on their exported objects to assure
  * modules would pick up the devices they're interested in. See e.g.
  * UDisksModuleObjectNewFunc() to see how device binding works for
@@ -168,6 +168,9 @@ typedef struct _UDisksModuleManagerClass UDisksModuleManagerClass;
 struct _UDisksModuleManagerClass
 {
   GObjectClass parent_class;
+
+  /* Signals */
+  void (*modules_activated) (UDisksModuleManager *manager);
 };
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -176,9 +179,16 @@ enum
 {
   PROP_0,
   PROP_DAEMON,
-  PROP_MODULES_READY,
   PROP_UNINSTALLED,
 };
+
+enum
+{
+  MODULES_ACTIVATED_SIGNAL,
+  LAST_SIGNAL,
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (UDisksModuleManager, udisks_module_manager, G_TYPE_OBJECT)
 
@@ -287,7 +297,7 @@ get_modules_list (UDisksModuleManager *manager)
  * udisks_module_manager_load_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Loads all modules at a time and emits the "modules-ready" signal.
+ * Loads all modules at a time and emits the "modules-activated" signal.
  * Does nothing when called multiple times.
  */
 void
@@ -382,8 +392,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
   g_list_free_full (modules_to_load, (GDestroyNotify) g_free);
 
-  /* Ensured to fire only once */
-  g_object_notify (G_OBJECT (manager), "modules-ready");
+  g_signal_emit (manager, signals[MODULES_ACTIVATED_SIGNAL], 0);
 }
 
 /**
@@ -442,10 +451,6 @@ udisks_module_manager_get_property (GObject    *object,
       g_value_set_object (value, udisks_module_manager_get_daemon (manager));
       break;
 
-    case PROP_MODULES_READY:
-      g_value_set_boolean (value, udisks_module_manager_get_modules_available (manager));
-      break;
-
     case PROP_UNINSTALLED:
       g_value_set_boolean (value, manager->uninstalled);
       break;
@@ -493,19 +498,6 @@ udisks_module_manager_class_init (UDisksModuleManagerClass *klass)
   gobject_class->set_property = udisks_module_manager_set_property;
 
   /**
-   * UDisksModuleManager:modules-ready:
-   *
-   * Indicates whether modules have been loaded.
-   */
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODULES_READY,
-                                   g_param_spec_boolean ("modules-ready",
-                                                         "Modules ready",
-                                                         "Indicates whether the modules have been loaded",
-                                                         FALSE,
-                                                         G_PARAM_READABLE |
-                                                         G_PARAM_STATIC_STRINGS));
-  /**
    * UDisksModuleManager:daemon:
    *
    * The #UDisksDaemon for the object.
@@ -535,6 +527,24 @@ udisks_module_manager_class_init (UDisksModuleManagerClass *klass)
                                                          G_PARAM_READABLE |
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * UDisksModuleManager:modules-activated:
+   * @manager: A #UDisksModuleManager.
+   *
+   * Emitted after new modules have been activated.
+   *
+   * This signal is emitted in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread that @manager was created in.
+   */
+  signals[MODULES_ACTIVATED_SIGNAL] = g_signal_new ("modules-activated",
+                                                    G_TYPE_FROM_CLASS (klass),
+                                                    G_SIGNAL_RUN_LAST,
+                                                    G_STRUCT_OFFSET (UDisksModuleManagerClass, modules_activated),
+                                                    NULL,
+                                                    NULL,
+                                                    g_cclosure_marshal_generic,
+                                                    G_TYPE_NONE,
+                                                    0);
 }
 
 /**

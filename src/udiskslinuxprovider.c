@@ -703,7 +703,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   g_object_unref (manager);
 
   module_manager = udisks_daemon_get_module_manager (daemon);
-  g_signal_connect_swapped (module_manager, "notify::modules-ready", G_CALLBACK (ensure_modules), provider);
+  g_signal_connect_swapped (module_manager, "modules-activated", G_CALLBACK (ensure_modules), provider);
 
   g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
                                        G_DBUS_OBJECT_SKELETON (provider->manager_object));
