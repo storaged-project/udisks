@@ -1837,6 +1837,10 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
   UDisksPartition *partition;
   UDisksBlock *table_block;
 
+  GList *modules;
+  GList *l;
+  gchar *path_ret = NULL;
+
   object = udisks_daemon_find_object (daemon, path);
   if (object == NULL)
     goto out;
@@ -1902,27 +1906,19 @@ udisks_daemon_get_parent_for_tracking (UDisksDaemon  *daemon,
       return g_strdup (parent_path);
     }
 
-
-  if (udisks_module_manager_get_modules_available (daemon->module_manager))
+  modules = udisks_module_manager_get_modules (daemon->module_manager);
+  for (l = modules; l != NULL; l = l->next)
     {
-      GList *modules;
-      GList *l;
-      gchar *path_ret = NULL;
+      UDisksModule *module = l->data;
 
-      modules = udisks_module_manager_get_modules (daemon->module_manager);
-      for (l = modules; l != NULL; l = l->next)
-        {
-          UDisksModule *module = l->data;
-
-          path_ret = udisks_module_track_parent (module, path, uuid);
-          if (path_ret)
-            break;
-        }
-      g_list_free_full (modules, g_object_unref);
-
+      path_ret = udisks_module_track_parent (module, path, uuid);
       if (path_ret)
-        return path_ret;
+        break;
     }
+  g_list_free_full (modules, g_object_unref);
+
+  if (path_ret)
+    return path_ret;
 
   return NULL;
 }

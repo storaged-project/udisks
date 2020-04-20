@@ -144,6 +144,7 @@ static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
 gpointer probe_request_thread_func (gpointer user_data);
 
 static void detach_module_interfaces (UDisksLinuxProvider *provider);
+static void ensure_modules (UDisksLinuxProvider *provider);
 
 enum
   {
@@ -160,6 +161,7 @@ udisks_linux_provider_finalize (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
   UDisksDaemon *daemon;
+  UDisksModuleManager *module_manager;
 
   /* stop the request thread and wait for it */
   g_async_queue_push (provider->probe_request_queue, (gpointer) 0xdeadbeef);
@@ -167,6 +169,10 @@ udisks_linux_provider_finalize (GObject *object)
   g_async_queue_unref (provider->probe_request_queue);
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
+  module_manager = udisks_daemon_get_module_manager (daemon);
+  g_signal_handlers_disconnect_by_func (module_manager, ensure_modules, provider);
+  detach_module_interfaces (provider);
 
   if (provider->etc_udisks2_dir_monitor != NULL)
     {
@@ -185,7 +191,6 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->module_objects);
   g_object_unref (provider->gudev_client);
 
-  detach_module_interfaces (provider);
   g_hash_table_unref (provider->module_ifaces);
 
   udisks_object_skeleton_set_manager (provider->manager_object, NULL);
@@ -531,20 +536,21 @@ ensure_modules (UDisksLinuxProvider *provider)
   UDisksDaemon *daemon;
   UDisksModuleManager *module_manager;
   GList *udisks_devices;
+  GList *modules;
   gboolean do_refresh = FALSE;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
 
-  if (udisks_module_manager_get_modules_available (module_manager))
+  modules = udisks_module_manager_get_modules (module_manager);
+
+  if (modules)
     {
-      GList *modules;
       GList *l;
 
       /* Attach additional interfaces from modules. */
       udisks_debug ("Modules loaded, attaching interfaces...");
 
-      modules = udisks_module_manager_get_modules (module_manager);
       for (l = modules; l != NULL; l = l->next)
         {
           UDisksModule *module = l->data;
@@ -1207,8 +1213,6 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
-  if (! udisks_module_manager_get_modules_available (module_manager))
-    return;
 
   /* The object hierarchy is as follows:
    *

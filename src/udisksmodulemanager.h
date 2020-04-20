@@ -34,7 +34,6 @@ UDisksModuleManager    *udisks_module_manager_new             (UDisksDaemon *dae
 UDisksModuleManager    *udisks_module_manager_new_uninstalled (UDisksDaemon *daemon);
 
 UDisksDaemon           *udisks_module_manager_get_daemon            (UDisksModuleManager *manager);
-gboolean                udisks_module_manager_get_modules_available (UDisksModuleManager *manager);
 gboolean                udisks_module_manager_get_uninstalled       (UDisksModuleManager *manager);
 void                    udisks_module_manager_load_modules          (UDisksModuleManager *manager);
 void                    udisks_module_manager_unload_modules        (UDisksModuleManager *manager);

@@ -157,9 +157,8 @@ struct _UDisksModuleManager
   UDisksDaemon *daemon;
 
   GList *modules;
+  GMutex modules_lock;
 
-  GMutex modules_ready_lock;
-  gboolean modules_ready;
   gboolean uninstalled;
 };
 
@@ -199,7 +198,7 @@ udisks_module_manager_finalize (GObject *object)
 
   udisks_module_manager_unload_modules (manager);
 
-  g_mutex_clear (&manager->modules_ready_lock);
+  g_mutex_clear (&manager->modules_lock);
 
   if (G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize (object);
@@ -211,19 +210,7 @@ udisks_module_manager_init (UDisksModuleManager *manager)
 {
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
-  g_mutex_init (&manager->modules_ready_lock);
-}
-
-static void
-free_modules (UDisksModuleManager *manager)
-{
-  g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
-
-  if (manager->modules != NULL)
-    {
-      g_list_free_full (manager->modules, g_object_unref);
-      manager->modules = NULL;
-    }
+  g_mutex_init (&manager->modules_lock);
 }
 
 static GList *
@@ -309,13 +296,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
-  /* Repetitive loading guard */
-  g_mutex_lock (&manager->modules_ready_lock);
-  if (manager->modules_ready)
-    {
-      g_mutex_unlock (&manager->modules_ready_lock);
-      return;
-    }
+  g_mutex_lock (&manager->modules_lock);
 
   /* Load the modules */
   modules_to_load = get_modules_list (manager);
@@ -387,8 +368,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
       g_free (module_id);
     }
 
-  manager->modules_ready = TRUE;
-  g_mutex_unlock (&manager->modules_ready_lock);
+  g_mutex_unlock (&manager->modules_lock);
 
   g_list_free_full (modules_to_load, (GDestroyNotify) g_free);
 
@@ -399,34 +379,36 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
  * udisks_module_manager_unload_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Unloads all modules at a time.
- * Does nothing when called multiple times.
+ * Unloads all modules at a time. A "modules-activated" signal is emitted if
+ * there are any modules active to give listeners room to unexport all module
+ * interfaces and objects. The udisks_module_manager_get_modules() would
+ * return NULL at that time. Note that proper module unload is not fully
+ * supported, this is just a convenience call for cleanup.
  */
 void
 udisks_module_manager_unload_modules (UDisksModuleManager *manager)
 {
+  GList *l;
+
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
-  g_mutex_lock (&manager->modules_ready_lock);
-  if (! manager->modules_ready)
+  g_mutex_lock (&manager->modules_lock);
+
+  l = g_steal_pointer (&manager->modules);
+  if (l)
     {
-      g_mutex_unlock (&manager->modules_ready_lock);
-      return;
+      /* notify listeners that the list of active modules has changed */
+      g_signal_emit (manager, signals[MODULES_ACTIVATED_SIGNAL], 0);
     }
+  /* only unref module objects after all listeners have performed cleanup */
+  g_list_free_full (l, g_object_unref);
 
-  manager->modules_ready = FALSE;
-  free_modules (manager);
-
-  g_mutex_unlock (&manager->modules_ready_lock);
+  g_mutex_unlock (&manager->modules_lock);
 }
 
 static void
 udisks_module_manager_constructed (GObject *object)
 {
-  UDisksModuleManager *manager = UDISKS_MODULE_MANAGER (object);
-
-  manager->modules_ready = FALSE;
-
   if (! g_module_supported ())
     {
       udisks_warning ("Modules are unsupported on the current platform");
@@ -593,28 +575,6 @@ udisks_module_manager_get_daemon (UDisksModuleManager *manager)
   return manager->daemon;
 }
 
-/**
- * udisks_module_manager_get_modules_available:
- * @manager: A #UDisksModuleManager instance.
- *
- * Indicates whether modules have been loaded.
- *
- * Returns: %TRUE if modules have been loaded, %FALSE otherwise.
- */
-gboolean
-udisks_module_manager_get_modules_available (UDisksModuleManager *manager)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), FALSE);
-
-  g_mutex_lock (&manager->modules_ready_lock);
-  ret = manager->modules_ready;
-  g_mutex_unlock (&manager->modules_ready_lock);
-
-  return ret;
-}
-
 gboolean
 udisks_module_manager_get_uninstalled (UDisksModuleManager *manager)
 {
@@ -640,8 +600,16 @@ udisks_module_manager_get_modules (UDisksModuleManager *manager)
   GList *l;
 
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-  /* TODO: locking */
+
+  /* Return fast to avoid bottleneck over locking, expecting
+   * a simple pointer check whould be atomic.
+   */
+  if (manager->modules == NULL)
+    return NULL;
+
+  g_mutex_lock (&manager->modules_lock);
   l = g_list_copy_deep (manager->modules, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  g_mutex_unlock (&manager->modules_lock);
 
   return l;
 }
