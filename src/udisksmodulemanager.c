@@ -280,12 +280,30 @@ get_modules_list (UDisksModuleManager *manager)
   return modules_list;
 }
 
+static gboolean
+have_module (UDisksModuleManager *manager,
+             const gchar         *module_name)
+{
+  GList *l;
+
+  for (l = manager->modules; l != NULL; l = g_list_next (l))
+    {
+      UDisksModule *module = l->data;
+
+      if (g_strcmp0 (udisks_module_get_name (module), module_name) == 0)
+        return TRUE;
+    }
+
+  return FALSE;
+}
+
 /**
  * udisks_module_manager_load_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Loads all modules at a time and emits the "modules-activated" signal.
- * Does nothing when called multiple times.
+ * Loads all modules at a time and emits the "modules-activated" signal in case
+ * any new module has been activated. Modules that are already loaded are skipped
+ * on subsequent calls to this method.
  */
 void
 udisks_module_manager_load_modules (UDisksModuleManager *manager)
@@ -293,6 +311,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
   GList *modules_to_load;
   GList *modules_to_load_tmp;
   GError *error = NULL;
+  gboolean do_notify = FALSE;
 
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
@@ -306,7 +325,6 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
     {
       GModule *handle;
       gchar *path;
-      gchar *path_basename;
       gchar *module_id;
       gchar *module_new_func_name;
       UDisksModuleIDFunc module_id_func;
@@ -315,11 +333,6 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
       path = (gchar *) modules_to_load_tmp->data;
       handle = g_module_open (path, 0);
-
-      path_basename = g_path_get_basename (path);
-      udisks_notice ("Loading module %s ...", path_basename);
-      g_free (path_basename);
-
       if (handle == NULL)
         {
           udisks_critical ("Failed to load module: %s", g_module_error ());
@@ -328,12 +341,23 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
       if (! g_module_symbol (handle, "udisks_module_id", (gpointer *) &module_id_func))
         {
-          udisks_critical ("%s", g_module_error ());
+          udisks_critical ("%s: %s", path, g_module_error ());
           g_module_close (handle);
           continue;
         }
 
       module_id = module_id_func ();
+      if (have_module (manager, module_id))
+        {
+          /* module with the same name already loaded, skip */
+          udisks_debug ("Module '%s' already loaded, skipping", module_id);
+          g_free (module_id);
+          g_module_close (handle);
+          continue;
+        }
+
+      udisks_notice ("Loading module %s ...", module_id);
+
       module_new_func_name = g_strdup_printf ("udisks_module_%s_new", module_id);
       if (! g_module_symbol (handle, module_new_func_name, (gpointer *) &module_new_func))
         {
@@ -365,6 +389,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
         }
 
       manager->modules = g_list_append (manager->modules, module);
+      do_notify = TRUE;
       g_free (module_id);
     }
 
@@ -372,7 +397,9 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
   g_list_free_full (modules_to_load, (GDestroyNotify) g_free);
 
-  g_signal_emit (manager, signals[MODULES_ACTIVATED_SIGNAL], 0);
+  /* Emit 'modules-activated' in case new modules have been loaded. */
+  if (do_notify)
+    g_signal_emit (manager, signals[MODULES_ACTIVATED_SIGNAL], 0);
 }
 
 /**

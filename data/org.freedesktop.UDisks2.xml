@@ -158,9 +158,10 @@
         EnableModules:
         @enable: A boolean value indicating whether modules should be enabled. Currently only the %TRUE value is permitted.
 
-        Loads and activates modules. This action also causes all objects to receive "add" uevent that triggers additional module interfaces activation.
+        Loads and activates modules. Modules that are already loaded are skipped and not reinitialized on subsequent calls to this method.
+        This action also causes all objects to receive "add" uevent that triggers additional module interfaces activation.
 
-        Modules cannot be deactivated for the moment. Any consecutive calls with modules already enabled equals to noop.
+        Modules cannot be deactivated for the moment.
     -->
     <method name="EnableModules">
       <arg name="enable" direction="in" type="b"/>
