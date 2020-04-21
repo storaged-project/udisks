@@ -213,6 +213,32 @@ udisks_module_manager_init (UDisksModuleManager *manager)
   g_mutex_init (&manager->modules_lock);
 }
 
+static gchar *
+get_module_sopath_for_name (UDisksModuleManager *manager,
+                            const gchar         *module_name)
+{
+  gchar *module_dir;
+  gchar *module_path;
+  gchar *lib_filename;
+
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
+
+  if (! udisks_module_manager_get_uninstalled (manager))
+    module_dir = g_build_path (G_DIR_SEPARATOR_S, UDISKS_MODULE_DIR, NULL);
+  else
+    module_dir = g_build_path (G_DIR_SEPARATOR_S, BUILD_DIR, "modules", NULL);
+
+  lib_filename = g_strdup_printf ("lib" PACKAGE_NAME_UDISKS2 "_%s.so", module_name);
+  module_path = g_build_filename (G_DIR_SEPARATOR_S,
+                                  module_dir,
+                                  lib_filename,
+                                  NULL);
+  g_free (lib_filename);
+  g_free (module_dir);
+
+  return module_path;
+}
+
 static GList *
 get_modules_list (UDisksModuleManager *manager)
 {
@@ -222,7 +248,6 @@ get_modules_list (UDisksModuleManager *manager)
   const GList *modules_i = NULL;
   GList *modules_list = NULL;
   const gchar *dent;
-  gchar *lib_filename;
   gchar *module_dir;
   gchar *pth;
 
@@ -262,14 +287,7 @@ get_modules_list (UDisksModuleManager *manager)
            modules_i;
            modules_i = modules_i->next)
         {
-          lib_filename = g_strdup_printf ("lib" PACKAGE_NAME_UDISKS2 "_%s.so",
-                                          (gchar *) modules_i->data);
-          pth = g_build_filename (G_DIR_SEPARATOR_S,
-                                  module_dir,
-                                  lib_filename,
-                                  NULL);
-          g_free (lib_filename);
-
+          pth = get_module_sopath_for_name (manager, modules_i->data);
           modules_list = g_list_append (modules_list, pth);
         }
     }
@@ -295,6 +313,138 @@ have_module (UDisksModuleManager *manager,
     }
 
   return FALSE;
+}
+
+static gboolean
+load_single_module_unlocked (UDisksModuleManager *manager,
+                             const gchar         *sopath,
+                             gboolean            *do_notify,
+                             GError             **error)
+{
+  GModule *handle;
+  gchar *module_id;
+  gchar *module_new_func_name;
+  UDisksModuleIDFunc module_id_func;
+  UDisksModuleNewFunc module_new_func;
+  UDisksModule *module;
+
+  handle = g_module_open (sopath, 0);
+  if (handle == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "%s",
+                   g_module_error ());
+      return FALSE;
+    }
+
+  if (! g_module_symbol (handle, "udisks_module_id", (gpointer *) &module_id_func))
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "%s: %s", sopath, g_module_error ());
+      g_module_close (handle);
+      return FALSE;
+    }
+
+  module_id = module_id_func ();
+  if (have_module (manager, module_id))
+    {
+      /* module with the same name already loaded, skip */
+      udisks_debug ("Module '%s' already loaded, skipping", module_id);
+      g_free (module_id);
+      g_module_close (handle);
+      return TRUE;
+    }
+
+  udisks_notice ("Loading module %s ...", module_id);
+
+  module_new_func_name = g_strdup_printf ("udisks_module_%s_new", module_id);
+  if (! g_module_symbol (handle, module_new_func_name, (gpointer *) &module_new_func))
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "%s", g_module_error ());
+      g_module_close (handle);
+      g_free (module_new_func_name);
+      g_free (module_id);
+      return FALSE;
+    }
+  g_free (module_new_func_name);
+
+  /* The following calls will initialize new GType's from the module,
+   * making it uneligible for unload.
+   */
+  g_module_make_resident (handle);
+
+  module = module_new_func (manager->daemon,
+                            NULL /* cancellable */,
+                            error);
+  if (module == NULL)
+    {
+      /* Workaround for broken modules to avoid segfault */
+      if (error == NULL)
+        {
+          g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                               "unknown fatal error");
+        }
+      g_free (module_id);
+      g_module_close (handle);
+      return FALSE;
+    }
+
+  manager->modules = g_list_append (manager->modules, module);
+  g_free (module_id);
+
+  *do_notify = TRUE;
+  return TRUE;
+}
+
+/**
+ * udisks_module_manager_load_single_module:
+ * @manager: A #UDisksModuleManager instance.
+ * @name: Module name.
+ * @error: Return location for error or %NULL.
+ *
+ * Loads single module and emits the "modules-activated" signal in case
+ * the module activation was successful. Already active module is not being
+ * reinitialized on subsequent calls to this method and %TRUE is returned
+ * immediately.
+ *
+ * Returns: %TRUE if module was activated successfully, %FALSE otherwise with @error being set.
+ */
+gboolean
+udisks_module_manager_load_single_module (UDisksModuleManager *manager,
+                                          const gchar         *name,
+                                          GError             **error)
+{
+  gchar *module_path;
+  gboolean do_notify = FALSE;
+  gboolean ret;
+
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), FALSE);
+
+  module_path = get_module_sopath_for_name (manager, name);
+  if (module_path == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Cannot determine module path for '%s'",
+                   name);
+      return FALSE;
+    }
+
+  g_mutex_lock (&manager->modules_lock);
+  ret = load_single_module_unlocked (manager, module_path, &do_notify, error);
+  g_mutex_unlock (&manager->modules_lock);
+
+  g_free (module_path);
+
+  if (do_notify)
+    {
+      /* This will run connected signal handlers synchronously, i.e.
+       * performs coldplug on all existing objects within #UDisksLinuxProvider.
+       */
+      g_signal_emit (manager, signals[MODULES_ACTIVATED_SIGNAL], 0);
+    }
+
+  return ret;
 }
 
 /**
@@ -323,74 +473,17 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
        modules_to_load_tmp;
        modules_to_load_tmp = modules_to_load_tmp->next)
     {
-      GModule *handle;
-      gchar *path;
-      gchar *module_id;
-      gchar *module_new_func_name;
-      UDisksModuleIDFunc module_id_func;
-      UDisksModuleNewFunc module_new_func;
-      UDisksModule *module;
 
-      path = (gchar *) modules_to_load_tmp->data;
-      handle = g_module_open (path, 0);
-      if (handle == NULL)
+      if (! load_single_module_unlocked (manager,
+                                         modules_to_load_tmp->data,
+                                         &do_notify,
+                                         &error))
         {
-          udisks_critical ("Failed to load module: %s", g_module_error ());
-          continue;
-        }
-
-      if (! g_module_symbol (handle, "udisks_module_id", (gpointer *) &module_id_func))
-        {
-          udisks_critical ("%s: %s", path, g_module_error ());
-          g_module_close (handle);
-          continue;
-        }
-
-      module_id = module_id_func ();
-      if (have_module (manager, module_id))
-        {
-          /* module with the same name already loaded, skip */
-          udisks_debug ("Module '%s' already loaded, skipping", module_id);
-          g_free (module_id);
-          g_module_close (handle);
-          continue;
-        }
-
-      udisks_notice ("Loading module %s ...", module_id);
-
-      module_new_func_name = g_strdup_printf ("udisks_module_%s_new", module_id);
-      if (! g_module_symbol (handle, module_new_func_name, (gpointer *) &module_new_func))
-        {
-          udisks_critical ("%s", g_module_error ());
-          g_module_close (handle);
-          g_free (module_new_func_name);
-          g_free (module_id);
-          continue;
-        }
-      g_free (module_new_func_name);
-
-      /* The following calls will initialize new GType's from the module,
-       * making it uneligible for unload.
-       */
-      g_module_make_resident (handle);
-
-      module = module_new_func (manager->daemon,
-                                NULL /* cancellable */,
-                                &error);
-      if (module == NULL)
-        {
-          udisks_critical ("Error initializing module '%s': %s",
-                           module_id,
-                           error ? error->message : "unknown error");
+          udisks_critical ("Error loading module: %s",
+                           error->message);
           g_clear_error (&error);
-          g_free (module_id);
-          g_module_close (handle);
           continue;
         }
-
-      manager->modules = g_list_append (manager->modules, module);
-      do_notify = TRUE;
-      g_free (module_id);
     }
 
   g_mutex_unlock (&manager->modules_lock);

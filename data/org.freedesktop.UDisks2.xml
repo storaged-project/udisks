@@ -158,12 +158,39 @@
         EnableModules:
         @enable: A boolean value indicating whether modules should be enabled. Currently only the %TRUE value is permitted.
 
-        Loads and activates modules. Modules that are already loaded are skipped and not reinitialized on subsequent calls to this method.
-        This action also causes all objects to receive "add" uevent that triggers additional module interfaces activation.
+        Loads and activates modules. Modules that have been already loaded are not reinitialized on subsequent calls to this method and are skipped.
+        In case any new module is getting activated by this method call a <literal>add</literal> uevent is trigerred on all exported objects.
 
-        Modules cannot be deactivated for the moment.
+        Modules cannot be deactivated at the moment. This method call never fails even if no module has been activated
+        and by nature it cannot report any particular module initialization failures. Clients have no way of finding that
+        a particular module is available.
+
+        <note>
+        <emphasis>This method is deprecated since 2.9.0.</emphasis>
+        Use org.freedesktop.UDisks2.Manager.EnableModule() instead.
+        </note>
     -->
     <method name="EnableModules">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+      <arg name="enable" direction="in" type="b"/>
+    </method>
+
+    <!--
+        EnableModule:
+        @name: Name of the module.
+        @enable: A boolean value indicating whether modules should be enabled. Currently only the %TRUE value is permitted.
+        @since: 2.9.0
+
+        Loads and activates single module identified by @name. In case the module is already active no reinitialization
+        is done and this call has no effect. Clients are supposed to call this method before using any of the particular module API.
+        In case no such module is available or its initialization fails a proper error is returned. This action also causes
+        all objects to receive <literal>add</literal> uevent that allows the module to attach extra interfaces before
+        this method call returns.
+
+        Modules cannot be deactivated at the moment.
+    -->
+    <method name="EnableModule">
+      <arg name="name" direction="in" type="s"/>
       <arg name="enable" direction="in" type="b"/>
     </method>
 

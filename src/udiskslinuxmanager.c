@@ -872,6 +872,7 @@ typedef struct
 {
   UDisksManager         *object;
   GDBusMethodInvocation *invocation;
+  gchar                 *module_name;
 } EnableModulesData;
 
 static gboolean
@@ -882,11 +883,32 @@ load_modules_in_idle_cb (gpointer user_data)
   UDisksModuleManager *module_manager;
 
   module_manager = udisks_daemon_get_module_manager (manager->daemon);
-  udisks_module_manager_load_modules (module_manager);
+  if (data->module_name == NULL)
+    {
+      /* Load all modules */
+      udisks_module_manager_load_modules (module_manager);
+      /* Avoid deprecation warning from udisks_manager_complete_enable_modules() */
+      g_dbus_method_invocation_return_value (data->invocation, g_variant_new ("()"));
+    }
+  else
+    {
+      GError *error = NULL;
 
-  udisks_manager_complete_enable_modules (data->object, data->invocation);
+      /* Load single requested module */
+      if (! udisks_module_manager_load_single_module (module_manager, data->module_name, &error))
+        {
+          g_prefix_error (&error, "Error initializing module '%s': ", data->module_name);
+          g_warning ("%s", error->message);
+          g_dbus_method_invocation_take_error (data->invocation, error);
+        }
+      else
+        {
+          udisks_manager_complete_enable_module (data->object, data->invocation);
+        }
+    }
   g_object_unref (data->object);
   g_object_unref (data->invocation);
+  g_free (data->module_name);
   g_free (data);
 
   return G_SOURCE_REMOVE;
@@ -905,7 +927,7 @@ handle_enable_modules (UDisksManager         *object,
       /* TODO: implement proper module unloading */
       g_dbus_method_invocation_return_error_literal (invocation,
                                                      G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
-                                                     "Invalid value \"FALSE\"");
+                                                     "Module unloading is not currently supported.");
       return TRUE;
     }
 
@@ -914,6 +936,37 @@ handle_enable_modules (UDisksManager         *object,
       data = g_new0 (EnableModulesData, 1);
       data->object = g_object_ref (object);
       data->invocation = g_object_ref (invocation);
+      /* push to idle, process in main thread */
+      g_idle_add (load_modules_in_idle_cb, data);
+    }
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+handle_enable_module (UDisksManager         *object,
+                      GDBusMethodInvocation *invocation,
+                      const gchar           *arg_name,
+                      gboolean               arg_enable)
+{
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
+  EnableModulesData *data;
+
+  if (! arg_enable)
+    {
+      /* TODO: implement proper module unloading */
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                                     "Module unloading is not currently supported.");
+      return TRUE;
+    }
+
+  if (! udisks_daemon_get_disable_modules (manager->daemon))
+    {
+      data = g_new0 (EnableModulesData, 1);
+      data->object = g_object_ref (object);
+      data->invocation = g_object_ref (invocation);
+      data->module_name = g_strdup (arg_name);
       /* push to idle, process in main thread */
       g_idle_add (load_modules_in_idle_cb, data);
     }
@@ -1199,6 +1252,7 @@ manager_iface_init (UDisksManagerIface *iface)
   iface->handle_loop_setup = handle_loop_setup;
   iface->handle_mdraid_create = handle_mdraid_create;
   iface->handle_enable_modules = handle_enable_modules;
+  iface->handle_enable_module = handle_enable_module;
   iface->handle_can_format = handle_can_format;
   iface->handle_can_resize = handle_can_resize;
   iface->handle_can_check = handle_can_check;
