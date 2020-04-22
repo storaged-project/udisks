@@ -6,21 +6,27 @@ from distutils.spawn import find_executable
 class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
-    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM', 'VDO'])
+    udisks_modules = {'bcache': 'Bcache',
+                      'btrfs': 'BTRFS',
+                      'iscsi': 'ISCSI.Initiator',
+                      'lvm2': 'LVM2',
+                      'zram': 'ZRAM',
+                      'vdo': 'VDO'}
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
 
     def _get_modules(self):
         distro, version = self.distro
-        modules = self.udisks_modules
+        modules = self.udisks_modules.copy()
         if distro in ('enterprise_linux', 'centos') and version == '7':
-            modules = modules - {'Bcache'}
+            modules.pop('bcache')
         elif distro in ('enterprise_linux', 'centos') and int(version) > 7:
-            modules = modules - {'Bcache', 'BTRFS'}
+            modules.pop('bcache')
+            modules.pop('btrfs')
         # assuming the kvdo module is typically pulled in as a vdo tool dependency
         if not find_executable("vdo"):
-            modules = modules - {'VDO'}
+            modules.pop('vdo')
         return modules
 
     def test_10_manager(self):
@@ -33,7 +39,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         manager = self.get_interface(self.manager_obj, '.Manager')
         manager_intro = dbus.Interface(self.manager_obj, "org.freedesktop.DBus.Introspectable")
         intro_data = manager_intro.Introspect()
-        modules = self._get_modules()
+        modules = set(self._get_modules().values())
         modules_loaded = any('interface name="%s.Manager.%s"' % (self.iface_prefix, module)
                              in intro_data for module in modules)
 
@@ -45,6 +51,18 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
 
             for module in modules:
                 self.assertIn('interface name="%s.Manager.%s"' % (self.iface_prefix, module), intro_data)
+
+    def test_21_enable_single_module(self):
+        manager = self.get_interface(self.manager_obj, '.Manager')
+        # Test that no error is returned for already loaded modules
+        for module in self._get_modules().keys():
+            with self.assertRaises(dbus.exceptions.DBusException):
+                manager.EnableModule(module, dbus.Boolean(False))
+            manager.EnableModule(module, dbus.Boolean(True))
+        with self.assertRaises(dbus.exceptions.DBusException):
+            manager.EnableModule("nonexistent", dbus.Boolean(True))
+        with self.assertRaises(dbus.exceptions.DBusException):
+            manager.EnableModule("nonexistent", dbus.Boolean(False))
 
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')

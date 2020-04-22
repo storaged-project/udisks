@@ -447,19 +447,21 @@ class UdisksTestCase(unittest.TestCase):
 
     @classmethod
     def check_module_loaded(self, module):
+        """Tries to load specified module. No checks for extra Manager interface are done.
+           Returns False when module is not available, True when the module initialized
+           successfully, raises an exception otherwise.
+        """
         manager_obj = self.get_object('/Manager')
         manager = self.get_interface(manager_obj, '.Manager')
-        manager_intro = dbus.Interface(manager_obj, "org.freedesktop.DBus.Introspectable")
-        intro_data = manager_intro.Introspect()
-        modules_loaded = 'interface name="org.freedesktop.UDisks2.Manager.%s"' % module in intro_data
-
-        if not modules_loaded:
-            manager.EnableModules(dbus.Boolean(True))
-            intro_data = manager_intro.Introspect()
-            return 'interface name="org.freedesktop.UDisks2.Manager.%s"' % module in intro_data
-        else:
+        try:
+            manager.EnableModule(module, dbus.Boolean(True))
             return True
-
+        except dbus.exceptions.DBusException as e:
+            msg = r"Error initializing module '%s': .*\.so: cannot open shared object file: No such file or directory" % module
+            if re.search(msg, e.get_dbus_message()):
+                return False
+            else:
+                raise
 
     @classmethod
     def ay_to_str(self, ay):

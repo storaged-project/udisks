@@ -1,4 +1,5 @@
 import os
+import re
 import dbus
 import unittest
 
@@ -15,9 +16,16 @@ class UdisksLsmLocalTestCase(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('LSM'):
-            udiskstestcase.UdisksTestCase.tearDownClass()
-            raise unittest.SkipTest('Udisks module for LSM tests not loaded, skipping.')
+        try:
+            if not cls.check_module_loaded('lsm'):
+                udiskstestcase.UdisksTestCase.tearDownClass()
+                raise unittest.SkipTest('Udisks module for LSM tests not loaded, skipping.')
+        except dbus.exceptions.DBusException as e:
+            msg = r"Error initializing module 'lsm': LSM: Failed to connect plugin via URI"
+            if re.search(msg, e.get_dbus_message()):
+                udiskstestcase.UdisksTestCase.tearDownClass()
+                raise unittest.SkipTest('Udisks module for LSM unconfigured, skipping.')
+            raise
 
     def _get_dbus_drv_obj(self, dbus_blk_obj):
         obj_path = self.get_property_raw(dbus_blk_obj, '.Block', 'Drive')

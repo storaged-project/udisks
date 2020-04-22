@@ -15,7 +15,7 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('Bcache'):
+        if not cls.check_module_loaded('bcache'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for bcache tests not loaded, skipping.')
 
@@ -64,6 +64,13 @@ class UdisksBcacheTest(udiskstestcase.UdisksTestCase):
 
     def _obj_path_from_path(self, device_path):
         return self.path_prefix + '/block_devices/' + os.path.basename(device_path)
+
+    def test__manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.Bcache"' % self.iface_prefix, intro_data)
 
     def test_create_destroy(self):
         '''Test creating a new bcache and its properties'''

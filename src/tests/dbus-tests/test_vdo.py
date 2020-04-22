@@ -25,7 +25,7 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('VDO'):
+        if not cls.check_module_loaded('vdo'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for VDO tests not loaded, skipping.')
 
@@ -72,6 +72,13 @@ class UdisksVDOTest(udiskstestcase.UdisksTestCase):
              ret, out = self.run_command('vdo remove --force --name %s' % vdo_name)
              if ret != 0:
                  self.fail('Failed to remove vdo volume %s: %s' % (vdo_name, out))
+
+    def test__manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.VDO"' % self.iface_prefix, intro_data)
 
     def test_create_and_attributes(self):
         '''Test creating a new vdo volume and verify its properties'''

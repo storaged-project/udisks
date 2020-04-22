@@ -52,7 +52,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('ZRAM'):
+        if not cls.check_module_loaded('zram'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for zram tests not loaded, skipping.')
 
@@ -79,6 +79,13 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
     def _swapoff(self, swap):
         self.run_command('swapoff %s' % swap)
+
+    def test__manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.ZRAM"' % self.iface_prefix, intro_data)
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_create_destroy(self):
