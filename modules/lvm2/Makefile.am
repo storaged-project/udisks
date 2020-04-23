@@ -2,10 +2,6 @@
 
 SUBDIRS = data
 
-LVM2_MODULE_DIR = $(top_srcdir)/modules/lvm2
-
-MODULE_SO = libudisks2_lvm2.so
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -27,6 +23,12 @@ CPPFLAGS =                                                                     \
 	$(GUDEV_CFLAGS)                                                        \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
+
+if ENABLE_DAEMON
+
+LVM2_MODULE_DIR = $(top_srcdir)/modules/lvm2
+
+MODULE_SO = libudisks2_lvm2.so
 
 BUILT_SOURCES =                                                                \
 	$(NULL)
@@ -80,6 +82,10 @@ libudisks2_lvm2_la_LIBADD =                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -88,8 +94,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)

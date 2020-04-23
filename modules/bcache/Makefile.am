@@ -2,10 +2,6 @@
 
 SUBDIRS = data
 
-BCACHE_MODULE_DIR = $(top_srcdir)/modules/bcache
-
-MODULE_SO = libudisks2_bcache.so
-
 NULL =
 
 CPPFLAGS =                                                                    \
@@ -26,6 +22,12 @@ CPPFLAGS =                                                                    \
 	$(BLOCKDEV_CFLAGS)                                                    \
 	$(WARN_CFLAGS)                                                        \
 	$(NULL)
+
+if ENABLE_DAEMON
+
+BCACHE_MODULE_DIR = $(top_srcdir)/modules/bcache
+
+MODULE_SO = libudisks2_bcache.so
 
 BUILT_SOURCES =                                                               \
 	$(NULL)
@@ -76,6 +78,10 @@ libudisks2_bcache_la_LIBADD =                                                 \
 	$(BLOCKDEV_LIBS)                                                      \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -84,8 +90,6 @@ EXTRA_DIST =                                                                  \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)

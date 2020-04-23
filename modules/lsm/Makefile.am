@@ -2,8 +2,6 @@
 
 SUBDIRS = data
 
-MODULE_SO = libudisks2_lsm.so
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -24,6 +22,10 @@ CPPFLAGS =                                                                     \
 	$(BLOCKDEV_CFLAGS)                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
+
+if ENABLE_DAEMON
+
+MODULE_SO = libudisks2_lsm.so
 
 BUILT_SOURCES =                                                                \
 	$(NULL)
@@ -77,6 +79,10 @@ libudisks2_lsm_la_LIBADD =                                                     \
 	$(LIBCONFIG_LIBS)                                                      \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -85,8 +91,6 @@ EXTRA_DIST = \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)

@@ -2,10 +2,6 @@
 
 SUBDIRS = data
 
-ISCSI_MODULE_DIR = $(top_srcdir)/modules/iscsi
-
-MODULE_SO = libudisks2_iscsi.so
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -25,6 +21,12 @@ CPPFLAGS =                                                                     \
 	$(GUDEV_CFLAGS)                                                        \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
+
+if ENABLE_DAEMON
+
+ISCSI_MODULE_DIR = $(top_srcdir)/modules/iscsi
+
+MODULE_SO = libudisks2_iscsi.so
 
 BUILT_SOURCES =                                                                \
 	$(NULL)
@@ -82,6 +84,10 @@ libudisks2_iscsi_la_LIBADD =                                                   \
 	$(ISCSI_LIBS)                                                          \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -90,8 +96,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)

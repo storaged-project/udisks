@@ -2,13 +2,6 @@
 
 SUBDIRS = data
 
-ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
-
-MODULE_SO = libudisks2_zram.so
-
-zramconfdir = $(libdir)/zram.conf.d
-zramconf_DATA =
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -32,6 +25,15 @@ CPPFLAGS =                                                                     \
 	$(BLOCKDEV_CFLAGS)                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
+
+if ENABLE_DAEMON
+
+ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
+
+MODULE_SO = libudisks2_zram.so
+
+zramconfdir = $(libdir)/zram.conf.d
+zramconf_DATA =
 
 BUILT_SOURCES =                                                                \
 	$(NULL)
@@ -84,6 +86,10 @@ libudisks2_zram_la_LIBADD =                                                    \
 	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -92,8 +98,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)
