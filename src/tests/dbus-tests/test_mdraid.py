@@ -6,7 +6,6 @@ from collections import namedtuple
 from contextlib import contextmanager
 
 import udiskstestcase
-from udiskstestcase import unstable_test
 
 
 Member = namedtuple('Member', ['obj', 'path', 'name', 'size'])
@@ -110,7 +109,7 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
 
         return data
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_create(self):
         if self.level is None:
             self.skipTest('Abstract class for RAID tests.')
@@ -205,7 +204,7 @@ class RAID0TestCase(RAIDLevel):
     def size(self):
         return len(self.members) * self.smallest_member.size
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_create_noname(self):
         array = self._array_create("")
 
@@ -226,7 +225,7 @@ class RAID0TestCase(RAIDLevel):
         else:
             dbus_name.assertEqual(md_name[2:])
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_start_stop(self):
         name = 'udisks_test_start_stop'
         array = self._array_create(name)
@@ -252,7 +251,7 @@ class RAID0TestCase(RAIDLevel):
         ret, _out = self.run_command('mdadm /dev/md/%s' % name)
         self.assertEqual(ret, 0)
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_delete(self):
         name = 'udisks_test_delete'
         array = self._array_create(name)
@@ -285,7 +284,7 @@ class RAID1TestCase(RAIDLevel):
     def size(self):
         return self.smallest_member.size
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_add_remove_device(self):
         name = 'udisks_delete'
         array = self._array_create(name)
@@ -349,7 +348,7 @@ class RAID1TestCase(RAIDLevel):
         _ret, out = self.run_command('lsblk -d -no FSTYPE %s' % new_dev)
         self.assertEqual(out, '')
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_bitmap_location(self):
         array_name = 'udisks_test_bitmap'
         array = self._array_create(array_name)
@@ -375,7 +374,7 @@ class RAID1TestCase(RAIDLevel):
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
 
-    @unstable_test
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_request_action(self):
 
         array_name = 'udisks_test_request'

@@ -12,9 +12,17 @@ import udiskstestcase
 import glob
 import shutil
 import tempfile
+import pdb
 import re
+import six
 import atexit
+import traceback
+import yaml
 from datetime import datetime
+
+
+SKIP_CONFIG = 'skip.yml'
+
 
 def find_daemon(projdir, system):
     if not system:
@@ -125,14 +133,128 @@ def udev_shake():
     assert subprocess.call(['udevadm', 'settle']) == 0
 
 
-if __name__ == '__main__':
-    tmpdir = None
-    daemon = None
-    suite = unittest.TestSuite()
-    daemon_log = sys.stdout
+def _get_tests_from_suite(suite, tests):
+    """ Extract tests from the test suite """
+    # 'tests' we get from 'unittest.defaultTestLoader.discover' are "wrapped"
+    # in multiple 'unittest.suite.TestSuite' classes/lists so we need to "unpack"
+    # the indivudual test cases
+    for test in suite:
+        if isinstance(test, unittest.suite.TestSuite):
+            _get_tests_from_suite(test, tests)
 
-    # store time when tests started (needed for journal cropping)
-    start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(test, unittest.TestCase):
+            tests.append(test)
+
+    return tests
+
+
+def _get_test_tags(test):
+    """ Get test tags for single test case """
+
+    tags = set()
+
+    # test failed to load, usually some ImportError or something really broken
+    # in the test file, just return empty list and let it fail
+    # with python2 the loader will raise an exception directly without returning
+    # a "fake" FailedTest test case
+    if six.PY3 and isinstance(test, unittest.loader._FailedTest):
+        return tags
+
+    test_fn = getattr(test, test._testMethodName)
+
+    # it is possible to either tag a test funcion or the class so we need to
+    # check both for the tag
+    if getattr(test_fn, "slow", False) or getattr(test_fn.__self__, "slow", False):
+        tags.add(udiskstestcase.TestTags.SLOW)
+    if getattr(test_fn, "unstable", False) or getattr(test_fn.__self__, "unstable", False):
+        tags.add(udiskstestcase.TestTags.UNSTABLE)
+    if getattr(test_fn, "unsafe", False) or getattr(test_fn.__self__, "unsafe", False):
+        tags.add(udiskstestcase.TestTags.UNSAFE)
+    if getattr(test_fn, "nostorage", False) or getattr(test_fn.__self__, "nostorage", False):
+        tags.add(udiskstestcase.TestTags.NOSTORAGE)
+    if getattr(test_fn, "extradeps", False) or getattr(test_fn.__self__, "extradeps", False):
+        tags.add(udiskstestcase.TestTags.EXTRADEPS)
+
+    return tags
+
+
+def _should_skip(distro=None, version=None, arch=None, reason=None):
+    # all these can be lists or a single value, so covert everything to list
+    if distro is not None and type(distro) is not list:
+        distro = [distro]
+    if version is not None and type(version) is not list:
+        version = [version]
+    if arch is not None and type(arch) is not list:
+        arch = [arch]
+
+    # DISTRO, VERSION and ARCH variables are set in main, we don't need to
+    # call hostnamectl etc. for every test run
+    if (distro is None or DISTRO in distro) and (version is None or VERSION in version) and \
+       (arch is None or ARCH in arch):
+        return True
+
+
+def _parse_skip_config(config):
+    skipped_tests = dict()
+
+    if not os.path.isfile(config):
+        print("File with list of tests to skip not found.")
+        return skipped_tests
+
+    with open(config) as f:
+        data = f.read()
+    parsed = yaml.load(data, Loader=yaml.SafeLoader)
+
+    for entry in parsed:
+        for skip in entry["skip_on"]:
+            if _should_skip(**skip):
+                skipped_tests[entry["test"]] = skip["reason"]
+
+    return skipped_tests
+
+
+def _split_test_id(test_id):
+    # test.id() looks like 'crypto_test.CryptoTestResize.test_luks2_resize'
+    # and we want to print 'test_luks2_resize (crypto_test.CryptoTestResize)'
+    test_desc = test.id().split(".")
+    test_name = test_desc[-1]
+    test_module = ".".join(test_desc[:-1])
+
+    return test_name, test_module
+
+
+def _print_skip_message(test, skip_tags, missing):
+    test_id = test.id()
+    test_module, test_name = _split_test_id(test_id)
+
+    if missing:
+        reason = 'skipping test because it is not tagged as one of: ' + ', '.join((t.value for t in skip_tags))
+    else:
+        reason = 'skipping test because it is tagged as: ' + ', '.join((t.value for t in skip_tags))
+
+    if test._testMethodDoc:
+        print("%s (%s)\n%s ... skipped '%s'" % (test_name, test_module, test._testMethodDoc, reason),
+              file=sys.stderr)
+    else:
+        print("%s (%s) ... skipped '%s'" % (test_name, test_module, reason),
+              file=sys.stderr)
+
+
+class DebugTestResult(unittest.TextTestResult):
+
+    def addError(self, test, err):
+        traceback.print_exception(*err)
+        pdb.post_mortem(err[2])
+        super(DebugTestResult, self).addError(test, err)
+
+    def addFailure(self, test, err):
+        traceback.print_exception(*err)
+        pdb.post_mortem(err[2])
+        super(DebugTestResult, self).addFailure(test, err)
+
+
+def parse_args():
+    """ Parse cmdline arguments """
 
     argparser = argparse.ArgumentParser(description='udisks D-Bus test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
@@ -145,7 +267,54 @@ if __name__ == '__main__':
     argparser.add_argument('-f', '--failfast', dest='failfast',
                            help='stop the test run on a first error',
                            action='store_true')
+    argparser.add_argument('-p', '--pdb', dest='pdb',
+                           help='run pdb after a failed test',
+                           action='store_true')
+    argparser.add_argument('--exclude-tags', nargs='+', dest='exclude_tags',
+                           help='skip tests tagged with (at least one of) the provided tags')
+    argparser.add_argument('--include-tags', nargs='+', dest='include_tags',
+                           help='run only tests tagged with (at least one of) the provided tags')
+    argparser.add_argument('--list-tags', dest='list_tags', help='print available tags and exit',
+                           action='store_true')
     args = argparser.parse_args()
+
+    all_tags = set(udiskstestcase.TestTags.get_tags())
+
+    if args.list_tags:
+        print('Available tags:', ', '.join(all_tags))
+        sys.exit(0)
+
+    # lets convert these to sets now to make argument checks easier
+    args.include_tags = set(args.include_tags) if args.include_tags else set()
+    args.exclude_tags = set(args.exclude_tags) if args.exclude_tags else set()
+
+    # make sure user provided only valid tags
+    if not all_tags.issuperset(args.include_tags):
+        print('Unknown tag(s) specified:', ', '.join(args.include_tags - all_tags), file=sys.stderr)
+        sys.exit(1)
+    if not all_tags.issuperset(args.exclude_tags):
+        print('Unknown tag(s) specified:', ', '.join(args.exclude_tags - all_tags), file=sys.stderr)
+        sys.exit(1)
+
+    # for backwards compatibility we want to exclude unsafe and unstable by default
+    if not 'JENKINS_HOME' in os.environ and udiskstestcase.TestTags.UNSAFE.value not in args.include_tags:
+        args.exclude_tags.add(udiskstestcase.TestTags.UNSAFE.value)
+    if udiskstestcase.TestTags.UNSTABLE.value not in args.include_tags:
+        args.exclude_tags.add(udiskstestcase.TestTags.UNSTABLE.value)
+
+    return args
+
+
+if __name__ == '__main__':
+    tmpdir = None
+    daemon = None
+    suite = unittest.TestSuite()
+    daemon_log = sys.stdout
+
+    # store time when tests started (needed for journal cropping)
+    start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    args = parse_args()
 
     setup_vdevs()
 
@@ -187,19 +356,68 @@ if __name__ == '__main__':
         print("Not spawning own process: testing the system installed instance.")
         time.sleep(3)
 
-    # Load all files in this directory whose name starts with 'test'
+    loader = unittest.defaultTestLoader
+    suite = unittest.TestSuite()
+
     if args.testname:
-        for n in args.testname:
-            suite.addTests(unittest.TestLoader().loadTestsFromName(n))
+        test_cases = loader.loadTestsFromNames(args.testname)
     else:
-        for test_cases in unittest.defaultTestLoader.discover(testdir):
-            suite.addTest(test_cases)
+        test_cases = loader.discover(start_dir=testdir)
 
     # truncate the flight record file and make sure it exists
     with open(udiskstestcase.FLIGHT_RECORD_FILE, "w"):
         pass
 
-    result = unittest.TextTestRunner(verbosity=2, failfast=args.failfast).run(suite)
+    # extract list of test classes so we can check/run them manually one by one
+    tests = []
+    tests = _get_tests_from_suite(test_cases, tests)
+
+    # get sets of include/exclude tags as tags not strings from arguments
+    include_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.include_tags)
+    exclude_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.exclude_tags)
+
+    # get distro and arch here so we don't have to do this for every test
+    DISTRO, VERSION = udiskstestcase.get_version()
+    ARCH = os.uname()[-1]
+
+    # get list of tests to skip from the config file
+    skipping = _parse_skip_config(os.path.join(testdir, SKIP_CONFIG))
+
+    for test in tests:
+        test_id = test.id()
+
+        # get tags and (possibly) skip the test
+        tags = _get_test_tags(test)
+
+        # if user specified include_tags, test must have at least one of these to run
+        if include_tags and not (include_tags & tags):
+            _print_skip_message(test, include_tags - tags, missing=True)
+            continue
+
+        # if user specified exclude_tags, test can't have any of these
+        if exclude_tags and (exclude_tags & tags):
+            _print_skip_message(test, exclude_tags & tags, missing=False)
+            continue
+
+        # check if the test is in the list of tests to skip
+        skip_id = next((test_pattern for test_pattern in skipping.keys() if re.search(test_pattern, test_id)), None)
+        if skip_id:
+            test_name, test_module = _split_test_id(test_id)
+            reason = "not supported on this distribution in this version and arch: %s" % skipping[skip_id]
+            print("%s (%s)\n%s ... skipped '%s'" % (test_name, test_module,
+                                                    test._testMethodDoc, reason),
+                  file=sys.stderr)
+            continue
+
+        # finally add the test to the suite
+        suite.addTest(test)
+
+    if args.pdb:
+        runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast, resultclass=DebugTestResult)
+    else:
+        runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast)
+
+    result = runner.run(suite)
 
     if not args.system:
         daemon.terminate()
