@@ -150,53 +150,20 @@ get_filesystem_size (UDisksLinuxBlockObject *object)
   guint64 size = 0;
   UDisksLinuxDevice *device;
   gchar *dev;
-  const gchar *type;
   GError *error = NULL;
 
   device = udisks_linux_block_object_get_device (object);
   dev = udisks_linux_block_object_get_device_file (object);
-  type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
 
-  if (g_strcmp0 (type, "ext2") == 0)
+  size = bd_fs_get_size (dev, &error);
+  if (error != NULL)
     {
-      BDFSExt2Info *info = bd_fs_ext2_get_info (dev, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext2_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (type, "ext3") == 0)
-    {
-      BDFSExt3Info *info = bd_fs_ext3_get_info (dev, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext3_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (type, "ext4") == 0)
-    {
-      BDFSExt4Info *info = bd_fs_ext4_get_info (dev, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext4_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (type, "xfs") == 0)
-    {
-      BDFSXfsInfo *info = bd_fs_xfs_get_info (dev, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_xfs_info_free (info);
-        }
+      udisks_debug ("Failed to get filesystem size information for '%s': %s", dev, error->message);
+      g_clear_error (&error);
     }
 
   g_free (dev);
   g_object_unref (device);
-  g_clear_error (&error);
 
   return size;
 }

@@ -249,17 +249,18 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(block_fs)
         self.assertIsNotNone(block_fs_dev)
 
-        # mount
-        d = dbus.Dictionary(signature='sv')
-        d['fstype'] = self._fs_name
-        d['options'] = 'ro'
-        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, block_fs_dev)
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        # mount, except for ntfs which can't tell us size when mounted...
+        if self._fs_name != "ntfs":
+            d = dbus.Dictionary(signature='sv')
+            d['fstype'] = self._fs_name
+            d['options'] = 'ro'
+            mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+            self.addCleanup(self.try_unmount, block_fs_dev)
+            self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check reported size
         size = self.get_property(block_fs, '.Block', 'Size').value
-        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size)
+        self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size, delta=1024**2)
 
     def test_mount_auto(self):
         if not self._can_create:
@@ -572,6 +573,7 @@ class VFATTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
 
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
@@ -882,6 +884,7 @@ class NTFSTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_repair_resize_check(self):
@@ -905,6 +908,7 @@ class ReiserFSTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('reiserfstune')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('debugreiserfs')
 
 
 class MinixTestCase(UdisksFSTestCase):
@@ -933,6 +937,7 @@ class F2FSTestCase(UdisksFSTestCase):
     _can_label = False
     _can_relabel = False
     _can_mount = True and UdisksFSTestCase.module_available('f2fs')
+    _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_name = 'udf'
