@@ -83,9 +83,12 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
         return (block_object, dev_path)
 
-    def _create_format(self, block_object):
+    def _create_format(self, block_object, options=None):
+        if not options:
+            options = self.no_options
+
         # create filesystem
-        block_object.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        block_object.Format(self._fs_name, options, dbus_interface=self.iface_prefix + '.Block')
 
         # get real block object for the newly created filesystem
         block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
@@ -115,6 +118,20 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self._create_format(disk)
         # and now create it again, let the daemon handle wiping
         self._create_format(disk)
+
+    def test_create_format_nodiscard(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # unfortunately no way to check if the option was really passed to the
+        # mkfs command, so just a "sanity" test here
+        options = dbus.Dictionary(signature='sv')
+        options['no-discard'] = True
+        self._create_format(disk, options=options)
 
     def _invalid_label(self, disk):
         pass
