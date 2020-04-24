@@ -32,8 +32,8 @@
     </para>
 
     <para>
-      Some storage system requires extra configuration in
-      <emphasis>@sysconfdir@/udisks2/modules.conf.d/udisks2.conf</emphasis>.
+      Some storage systems require extra configuration in
+      <emphasis>@sysconfdir@/udisks2/modules.conf.d/udisks2_lsm.conf</emphasis>.
     </para>
   </refsect1>
 
@@ -44,18 +44,17 @@
         <varlistentry>
           <term><option>refresh_interval = &lt;integer&gt;</option></term>
           <para>
-            The  option  controls  how  many  seconds should this module
-            refresh the RAID information cache. If not defined, the default
-            value is 30 (seconds).
+            This option controls how often the RAID information cache should be
+            refreshed. If not defined, the default value is 30 (seconds).
           </para>
         </varlistentry>
 
         <varlistentry>
           <term><option>enable_sim = true|false</option></term>
           <para>
-            This option indicates whether lsm module should try simulator  of
-            LibStorageMgmt.  This  is  only  for developer.  If  not defined,
-            the default value is false(do not enable simulator of
+            This option indicates whether the lsm module should try simulator of
+            LibStorageMgmt. This is only for developers. If not defined,
+            the default value is false (do not enable simulator of
             LibStorageMgmt).  If enabled, the
             <emphasis role="bold">sim://</emphasis> URI will be
             used to query LibStorageMgmt simulator plugin.
@@ -65,14 +64,14 @@
         <varlistentry>
           <term><option>enable_hpsa = true|false</option></term>
           <para>
-            This option indicates whether lsm module should check HP
-            SmartArray.  If not defined, the default value is true(check HP
+            This option indicates whether the lsm module should check HP
+            SmartArray.  If not defined, the default value is true (check HP
             SmartArray).
           </para>
           <para>
-            To be functional, also requires
+            To be functional this also requires the
             <emphasis role="bold">libstoragemgmt-hpsa-plugin</emphasis>
-            package be installed and well configured. Please refer to the
+            package to be installed and configured properly. Please refer to the
             <emphasis>hpsa_lsmplugin(1)</emphasis> manpage for detail.
           </para>
           <para>
@@ -85,17 +84,17 @@
           <term><option>extra_uris= ["uri_string_1", "uri_string_2"]</option></term>
           <para>
             This option defines extra LibStorageMgmt URI list here. Please
-            refer to <emphasis>LibStorageMgmt User Guide[3]</emphasis> for URI
+            refer to <emphasis>LibStorageMgmt User Guide[3]</emphasis> for the URI
             format.
           </para>
           <para>
-            Require double quoted string and separated by comma, example:
+            Requires double quoted string separated by comma, for example:
 
             <programlisting>
               extra_uris = ["ontap+ssl://root@ontap.a.ip", "ontap+ssl://root@ontap.b.ip"]
             </programlisting>
 
-            If not defined, empty list(no extra URI loaded) will be used.
+            If not defined, empty list (no extra URI loaded) will be used.
           </para>
         </varlistentry>
 
@@ -103,7 +102,7 @@
           <term><option>extra_passwords = ["password_string_1", "password_string_2"]</option></term>
           <para>
             This options defines the passwords of above URI list. Please use
-            double quoted string and separated by comma, example:
+            double quoted string separated by comma, for example:
 
             <programlisting>
               extra_paasswords = ["password1", "password2"]
@@ -117,14 +116,14 @@
   <refsect1>
     <title>HARDWARE SUPPORT STATUS</title>
     <para>
-      Any hardwares which are supported in LibStorageMgmt with these capabilities
-      will get fully support by UDisks2 LSM module:
+      Any hardware which is supported in LibStorageMgmt with these capabilities
+      will get fully supported by the UDisks2 LSM module:
     </para>
 
     <variablelist>
       <varlistentry>
         <term>
-          * <option>VOLUMES capabilityes</option>
+          * <option>VOLUMES capabilities</option>
           with valid VPD83 information,
         </term>
       </varlistentry>
@@ -139,7 +138,7 @@
       Please refer to LibStorageMgmt document website[2] for support status.
     </para>
     <para>
-      Tested hardwares are:
+      Tested hardware:
     </para>
     <variablelist>
       <varlistentry>
