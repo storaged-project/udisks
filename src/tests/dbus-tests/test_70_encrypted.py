@@ -359,6 +359,70 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         clear_size3 = self.get_block_size(clear_dev)
         self.assertEqual(clear_size3, clear_size)
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_configuration_track_parents(self):
+        # this test will change /etc/crypttab and /etc/fstab, we might want to revert the changes
+        # in case something goes wrong
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        passphrase = 'test'
+
+        disk_name = os.path.basename(self.vdevs[0])
+        disk = self.get_object('/block_devices/' + disk_name)
+
+        disk.Format('dos', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                    self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+
+        # create LUKS on the partition and add it to crypttab
+        self._create_luks(part, passphrase)
+        self.udev_settle()
+
+        conf = dbus.Dictionary({'name': self.str_to_ay('udisks_luks_test'),
+                                'device': self.str_to_ay(self.vdevs[0] + '1'),
+                                'passphrase-contents': self.str_to_ay(''),
+                                'options': self.str_to_ay('')},
+                               signature=dbus.Signature('sv'))
+        part.AddConfigurationItem(('crypttab', conf), self.no_options,
+                                  dbus_interface=self.iface_prefix + '.Block')
+
+        luks_path = self.get_property(part, '.Encrypted', 'CleartextDevice')
+        luks_dev = self.bus.get_object(self.iface_prefix, luks_path.value)
+        self.assertIsNotNone(luks_dev)
+
+        # format the LUKS device to ext4 and add it to fstab
+        conf_items = dbus.Dictionary({'dir': self.str_to_ay('fakemountpoint'),
+                                      'type': self.str_to_ay('ext4'),
+                                      'opts': self.str_to_ay('defaults'),
+                                      'freq': 0, 'passno': 0,
+                                      'track-parents': True},
+                                     signature=dbus.Signature('sv'))
+        options = dbus.Dictionary({'config-items': dbus.Array([('fstab', conf_items)])}, signature=dbus.Signature('sv'))
+        luks_dev.Format('ext4', options, dbus_interface=self.iface_prefix + '.Block')
+
+        luks_uuid = self.get_property_raw(luks_dev, '.Block', 'IdUUID')
+
+        # fstab configuration should be written to the ChildConfiguration of the partition device
+        child_conf = self.get_property(part, '.Encrypted', 'ChildConfiguration')
+        child_conf.assertTrue()
+        self.assertEqual(child_conf.value[0][0], 'fstab')
+
+        # wipe the LUKS partition
+        # with tear-down this should close the LUKS and remove enries from fstab and crypttab
+        options = dbus.Dictionary({'tear-down': True}, signature=dbus.Signature('sv'))
+        part.Format('empty', options, dbus_interface=self.iface_prefix + '.Block')
+
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertNotIn('udisks_luks_test', crypttab)
+
+        fstab = self.read_file('/etc/fstab')
+        self.assertNotIn(luks_uuid, fstab)
+
 
 class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
     '''This is a LUKS1 encrypted device test suite'''
