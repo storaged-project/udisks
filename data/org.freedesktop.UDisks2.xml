@@ -1182,7 +1182,7 @@
            method.</para></listitem>
          </varlistentry>
          <varlistentry>
-           <term>opts (type <literal>'ay'</literal>)</term>
+           <term>options (type <literal>'ay'</literal>)</term>
            <listitem><para>Options</para></listitem>
          </varlistentry>
          </variablelist>
