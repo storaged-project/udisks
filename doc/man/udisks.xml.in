@@ -358,7 +358,7 @@
           <para>
             Low-level APIs and commands such as e.g.
             <ulink url="http://en.wikipedia.org/wiki/Sysfs">sysfs</ulink>,
-            <ulink url="http://www.freedesktop.org/software/systemd/libudev/">libudev</ulink>,
+            <ulink url="https://www.freedesktop.org/software/systemd/man/libudev.html">libudev</ulink>,
             <ulink url="http://www.kernel.org/doc/Documentation/filesystems/proc.txt">/proc/self/mountinfo</ulink> and
             <ulink url="http://en.wikipedia.org/wiki/Util-linux">util-linux</ulink>.
           </para>
