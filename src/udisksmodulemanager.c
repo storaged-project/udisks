@@ -44,103 +44,67 @@
 /**
  * SECTION:UDisksModuleManager
  * @title: UDisksModuleManager
- * @short_description: Manages daemon modules
+ * @short_description: Manage daemon modules
  *
  * ## UDisks modular approach # {#udisks-modular-design}
  *
- * UDisks functionality can be extended by modules. It's not a fully
- * pluggable system as we know it, in this case modules are almost integral
- * parts of the source tree. Meaning that modules are free to use whatever
- * internal objects they need as there is no universal module API (or a
- * translation layer).
+ * UDisks functionality can be extended by modules. It's not that traditional
+ * fully pluggable system as we all know it, modules are essentially just
+ * carved-out parts of the daemon code and are free to access whatever internal
+ * daemon objects they need. There's no universal module API other than a couple
+ * of module initialization functions and a stateful module object. Out-of-tree
+ * modules are not supported either and no ABI guarantee exists at all.
  *
- * This fact allows us to stay code-wise simple and transparent. It also means
- * that there's no support for out-of-the-tree modules and care must be taken
- * when changing UDisks internals. As a design decision, for sake of simplicity,
- * once modules are loaded they stay active until the daemon exits (this may be
- * a subject to change in the future).
+ * This fact allows us to stay code-wise simple and transparent. It's also easier
+ * to adapt modules for any change done to the core daemon. As a design decision
+ * and leading from #GType system limitation modules can't be unloaded once
+ * initialized. This may be a subject to change in the future, though unlikely.
  *
- * The primary motivation for this was to keep the daemon low on resource
- * footprint for basic usage (typically desktop environments) and only
- * activating the extended functionality when needed (e.g. enterprise storage
+ * The primary motivation for introducing the modular system was to keep the daemon
+ * low on resource footprint for basic usage (typically desktop environments) and
+ * activating extended functionality only as needed (e.g. enterprise storage
  * applications). As the extra information comes in form of additional D-Bus
- * objects and interfaces, no difference should be observed by legacy clients.
- *
- * ## D-Bus interface extensibility # {#udisks-modular-design-dbus}
- *
- * The modular approach is fairly simple, there are basically two primary ways
- * of extending the D-Bus API:
- *  * by attaching custom interfaces to existing objects (limited to block and
- *    drive objects for the moment)
- *  * by exporting objects of its own type directly in the object manager root
- *
- * Besides that there are several other ways of extensibility such as attaching
- * custom interfaces on the master /org/freedesktop/UDisks2/Manager object.
+ * objects and interfaces, no difference should be observed by ordinary clients.
  *
  * ## Modules activation # {#udisks-modular-activation}
  *
  * The UDisks daemon constructs a #UDisksModuleManager singleton acting as
- * a manager. This object tracks module usage and takes care of its activation.
+ * a module manager. This object tracks module usage and takes care of their
+ * activation.
  *
- * By default, module manager is constructed on daemon startup but module
- * loading is delayed until requested. This can be overriden by the
- * --force-load-modules and --disable-modules commandline switches that makes
- * modules loaded right on startup or never loaded respectively.
+ * By default #UDisksModuleManager is constructed on daemon startup with module
+ * loading delayed until requested. This can be overriden by the
+ * <literal>--force-load-modules</literal> and <literal>--disable-modules</literal>
+ * commandline switches that makes modules loaded right on startup or never loaded
+ * respectively.
  *
- * Upon successful activation, a "modules-activated" signal is emitted on the
- * #UDisksModuleManager object. Any daemon objects connected to this signal are
- * responsible for performing "coldplug" on their exported objects to assure
- * modules would pick up the devices they're interested in. See e.g.
- * UDisksModuleObjectNewFunc() to see how device binding works for
- * #UDisksModuleObject.
+ * Clients are supposed to call the <link linkend="gdbus-method-org-freedesktop-UDisks2-Manager.EnableModule">org.freedesktop.UDisks2.Manager.EnableModule()</link>
+ * D-Bus method as a <emphasis>"greeter"</emphasis> call for each module requested.
+ * Proper error is reported should the module initialization fail or the module
+ * is not available. Clients are supposed to act accordingly and make sure that all
+ * requested modules are available and loaded prior to using any of the extra API.
  *
- * Modules are in fact separate shared objects (.so) that are loaded from the
- * "$(libdir)/udisks2/modules" path (usually "/usr/lib/udisks2/modules"). No
- * extra or service files are needed, the directory is enumerated and all files
- * are attempted to be loaded.
+ * Upon successful activation, a <literal>modules-activated</literal> signal is
+ * emitted internally on the #UDisksModuleManager object. Any daemon objects
+ * connected to this signal are responsible for performing <emphasis>"coldplug"</emphasis>
+ * on exported objects to assure modules would pick up the devices they're
+ * interested in.
  *
- * Clients are supposed to call the org.freedesktop.UDisks2.Manager.EnableModules()
- * D-Bus method as a "greeter" call. Please note that from asynchronous nature
- * of uevents and the way modules are processing them the extra D-Bus interfaces
- * may not be available right after this method call returns.
+ * ## D-Bus interface extensibility # {#udisks-modular-design-dbus}
  *
- * ## Module API # {#udisks-modular-api}
+ * The modular approach is fairly simple, there are basically three primary ways
+ * of extending the D-Bus API:
+ *  * by attaching custom interfaces to existing block and drive objects - see
+ *    udisks_module_new_block_object_interface() and
+ *    udisks_module_new_drive_object_interface().
+ *  * by exporting objects of its own type (socalled <emphasis>"module objects"</emphasis>)
+ *    directly on the object manager root - see udisks_module_new_object().
+ *  * attaching a common manager interface on the master <filename>/org/freedesktop/UDisks2/Manager</filename>
+ *    object - see udisks_module_new_manager().
  *
- * The (strictly internal) module API is simple - only a couple of functions
- * are needed. The following text contains brief description of individual
- * parts of the module API with further links to detailed description within
- * this API reference book.
- *
- * The #UDisksModuleManager first loads all module entry functions, i.e.
- * symbols defined in the public facing header "udisksmoduleiface.h". Only
- * those symbols should be exported from each module. The header file is only
- * meant to be compiled in modules, not the daemon. If any of the symbols is
- * missing in the module library, the whole module is skipped.
- *
- * Once module symbols are resolved, module manager activates each module by
- * calling udisks_module_init() on it. The returned so-called "state" pointer
- * is stored in the #UDisksModuleManager and can be later retrieved by calling
- * the udisks_module_manager_get_module_state_pointer() method. This is typically
- * used further in the module code to retrieve and store module-specific runtime
- * data.
- *
- * Every one of the "udisksmoduleiface.h" header file symbols has its counterpart
- * defined in the "udisksmoduleifacetypes.h" header file in form of function
- * pointers. Those are used internally for symbol resolving purposes. However,
- * they also carry detailed documentation. For illustration purposes, let's
- * call these symbol pairs the "module setup entry functions". See
- * #UDisksModuleIfaceSetupFunc, #UDisksModuleObjectNewSetupFunc and
- * #UDisksModuleNewManagerIfaceSetupFunc for reference. These however are
- * essentially auxiliary symbols only described for demonstrating the big
- * picture; for the useful part of the module API please read on.
- *
- * Every module setup entry function (besides the very simple udisks_module_init())
- * returns an array of setup structures or functions, containing either none
- * (NULL result), one or more elements. The result is then mixed by
- * #UDisksModuleManager from all modules and separate lists are created for
- * each kind of UDisks way of extension. Such lists are then used in the daemon
- * code at appropriate places, sequentially calling elements from the lists to
- * obtain data or objects that are then typically exported on D-Bus.
+ * All these ways of extensibility are implemented as #UDisksModule methods and
+ * it is a #UDisksModuleManager task to provide interconnection between #UDisksModule
+ * instances and daemon objects representing drives and block devices.
  */
 
 
@@ -403,9 +367,9 @@ load_single_module_unlocked (UDisksModuleManager *manager,
  * @name: Module name.
  * @error: Return location for error or %NULL.
  *
- * Loads single module and emits the "modules-activated" signal in case
- * the module activation was successful. Already active module is not being
- * reinitialized on subsequent calls to this method and %TRUE is returned
+ * Loads single module and emits the <literal>modules-activated</literal> signal
+ * in case the module activation was successful. Already active module is not
+ * being reinitialized on subsequent calls to this method and %TRUE is returned
  * immediately.
  *
  * Returns: %TRUE if module was activated successfully, %FALSE otherwise with @error being set.
@@ -451,9 +415,9 @@ udisks_module_manager_load_single_module (UDisksModuleManager *manager,
  * udisks_module_manager_load_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Loads all modules at a time and emits the "modules-activated" signal in case
- * any new module has been activated. Modules that are already loaded are skipped
- * on subsequent calls to this method.
+ * Loads all modules at a time and emits the <literal>modules-activated</literal>
+ * signal in case any new module has been activated. Modules that are already loaded
+ * are skipped on subsequent calls to this method.
  */
 void
 udisks_module_manager_load_modules (UDisksModuleManager *manager)
@@ -499,10 +463,10 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
  * udisks_module_manager_unload_modules:
  * @manager: A #UDisksModuleManager instance.
  *
- * Unloads all modules at a time. A "modules-activated" signal is emitted if
- * there are any modules active to give listeners room to unexport all module
- * interfaces and objects. The udisks_module_manager_get_modules() would
- * return NULL at that time. Note that proper module unload is not fully
+ * Unloads all modules at a time. A <literal>modules-activated</literal> signal
+ * is emitted if there are any modules staged for unload to give listeners room
+ * to unexport all module interfaces and objects. The udisks_module_manager_get_modules()
+ * would return %NULL at that time. Note that proper module unload is not fully
  * supported, this is just a convenience call for cleanup.
  */
 void
@@ -668,7 +632,8 @@ udisks_module_manager_new (UDisksDaemon *daemon)
  * udisks_module_manager_new_uninstalled:
  * @daemon: A #UDisksDaemon instance.
  *
- * Creates a new #UDisksModuleManager object.
+ * Creates a new #UDisksModuleManager object with indication that
+ * the daemon runs from a source tree.
  *
  * Returns: A #UDisksModuleManager. Free with g_object_notify().
  */
@@ -695,6 +660,15 @@ udisks_module_manager_get_daemon (UDisksModuleManager *manager)
   return manager->daemon;
 }
 
+/**
+ * udisks_module_manager_get_uninstalled:
+ * @manager: A #UDisksModuleManager.
+ *
+ * Indicates whether the udisks daemon runs from a source tree
+ * rather than being a regular system instance.
+ *
+ * Returns: %TRUE when the daemon runs from a source tree, %FALSE otherwise.
+ */
 gboolean
 udisks_module_manager_get_uninstalled (UDisksModuleManager *manager)
 {
@@ -710,7 +684,7 @@ udisks_module_manager_get_uninstalled (UDisksModuleManager *manager)
  *
  * Gets list of active modules. Can be called from different threads.
  *
- * Returns: (transfer full) (nullable) (element-type UDisksModule) : A list of #UDisksModule
+ * Returns: (transfer full) (nullable) (element-type UDisksModule): A list of #UDisksModule
  *          or %NULL if no modules are presently loaded.  Free the elements
  *          with g_object_unref().
  */
