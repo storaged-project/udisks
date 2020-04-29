@@ -175,6 +175,8 @@ def _get_test_tags(test):
     if getattr(test_fn, "extradeps", False) or getattr(test_fn.__self__, "extradeps", False):
         tags.add(udiskstestcase.TestTags.EXTRADEPS)
 
+    tags.add(udiskstestcase.TestTags.ALL)
+
     return tags
 
 
@@ -297,9 +299,11 @@ def parse_args():
         sys.exit(1)
 
     # for backwards compatibility we want to exclude unsafe and unstable by default
-    if not 'JENKINS_HOME' in os.environ and udiskstestcase.TestTags.UNSAFE.value not in args.include_tags:
+    if not 'JENKINS_HOME' in os.environ and not (udiskstestcase.TestTags.UNSAFE.value in args.include_tags or
+                                                 udiskstestcase.TestTags.ALL.value in args.include_tags):
         args.exclude_tags.add(udiskstestcase.TestTags.UNSAFE.value)
-    if udiskstestcase.TestTags.UNSTABLE.value not in args.include_tags:
+    if not (udiskstestcase.TestTags.UNSTABLE.value in args.include_tags or
+            udiskstestcase.TestTags.ALL.value in args.include_tags):
         args.exclude_tags.add(udiskstestcase.TestTags.UNSTABLE.value)
 
     return args

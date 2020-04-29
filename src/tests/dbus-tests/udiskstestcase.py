@@ -643,6 +643,7 @@ class JournalRecorder(FlightRecorder):
 
 
 class TestTags(Enum):
+    ALL = "all"               # "default" tag for running all tests
     SLOW = "slow"             # slow tests
     UNSTABLE = "unstable"     # randomly failing tests
     UNSAFE = "unsafe"         # tests that change system configuration
