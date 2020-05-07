@@ -6,6 +6,8 @@ NULL =
 
 EXTRA_DIST =
 
+CLEANFILES =
+
 CPPFLAGS =                                                                     \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \
@@ -32,6 +34,7 @@ CPPFLAGS =                                                                     \
 
 BUILT_SOURCES =                                                                \
 	udisks-daemon-marshal.h    udisks-daemon-marshal.c                     \
+	udisks-daemon-resources.h  udisks-daemon-resources.c                   \
 	$(NULL)
 
 udisks-daemon-marshal.h: udisks-daemon-marshal.list
@@ -41,7 +44,18 @@ udisks-daemon-marshal.c: udisks-daemon-marshal.list
 	echo "#include \"udisks-daemon-marshal.h\"" > $@ &&                    \
 	        glib-genmarshal $< --prefix=udisks_daemon_marshal --body >> $@
 
-EXTRA_DIST += udisks-daemon-marshal.list
+udisks-daemon-resources.h: udisks-daemon-resources.xml $(top_srcdir)/data/builtin_mount_options.conf
+	glib-compile-resources --target=$@ --generate-header --sourcedir=$(top_srcdir) udisks-daemon-resources.xml
+
+udisks-daemon-resources.c: udisks-daemon-resources.xml $(top_srcdir)/data/builtin_mount_options.conf
+	glib-compile-resources --target=$@ --generate-source --sourcedir=$(top_srcdir) udisks-daemon-resources.xml
+
+EXTRA_DIST +=                                                                  \
+	udisks-daemon-marshal.list                                             \
+	udisks-daemon-resources.xml                                            \
+	$(NULL)
+
+CLEANFILES += $(BUILT_SOURCES)
 
 # ------------------------------------------------------------------------------
 

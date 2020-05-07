@@ -67,6 +67,7 @@ m4/
 po/POTFILES
 po/Makefile.in.in
 src/*-marshal.*
+src/udisks-daemon-resources.*
 src/tests/udisks-test
 src/tests/udisks-test-helper
 src/udisksd
@@ -76,6 +77,7 @@ tools/umount.udisks2
 udisks/modules.conf.d/udisks2_lsm.conf
 udisks/udisks2.conf
 udisks/udisks2.pc
+udisks/mount_options.conf
 udisks/udisks-generated*
 udisks/udisksenumtypes.*
 udisks/udisksversion.h

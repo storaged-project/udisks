@@ -19,6 +19,7 @@
     <!-- DAEMON_MAN_PAGE -->
     <!-- LVM2_MAN_PAGE -->
     <!-- LSM_MAN_PAGE -->
+    <xi:include href="configurable_mount_options.xml"/>
   </part>
 
   <part id="ref-dbus">

@@ -7,7 +7,7 @@ NULL =
 if ENABLE_DAEMON
 moduleconfdir = $(sysconfdir)/udisks2/
 
-moduleconf_DATA = udisks2.conf
+moduleconf_DATA = udisks2.conf mount_options.conf
 endif
 
 AM_CPPFLAGS = \
@@ -91,10 +91,16 @@ dbus_built_sources =									\
 udisksversion.h: $(top_srcdir)/udisks/udisksversion.h.in
 	   sed -e 's/@MAJOR_VERSION@/$(UDISKS_MAJOR_VERSION)/' -e 's/@MINOR_VERSION@/$(UDISKS_MINOR_VERSION)/' -e 's/@MICRO_VERSION@/$(UDISKS_MICRO_VERSION)/' $(top_srcdir)/udisks/udisksversion.h.in > udisksversion.h.tmp && mv -f udisksversion.h.tmp udisksversion.h
 
+mount_options.conf: $(top_srcdir)/udisks/mount_options.conf.in $(top_srcdir)/data/builtin_mount_options.conf
+	cat $(top_srcdir)/udisks/mount_options.conf.in > $@.tmp && \
+	cat $(top_srcdir)/data/builtin_mount_options.conf | sed 's/^/# /' >> $@.tmp && \
+	mv -f $@.tmp $@
+
 BUILT_SOURCES =										\
 	$(enum_built_sources)								\
 	$(dbus_built_sources)								\
 	udisksversion.h									\
+	mount_options.conf								\
 	$(NULL)
 
 lib_LTLIBRARIES=libudisks2.la
@@ -182,7 +188,7 @@ endif # HAVE_INTROSPECTION
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch] $(gir_DATA) $(typelibs_DATA)
+CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch] mount_options.conf $(gir_DATA) $(typelibs_DATA)
 
 EXTRA_DIST = 						\
 	udisks2.conf.in                                 \
@@ -190,10 +196,19 @@ EXTRA_DIST = 						\
 	udisksversion.h.in				\
 	udisksenumtypes.h.template			\
 	udisksenumtypes.c.template			\
+	mount_options.conf.in				\
 	$(NULL)
 
 dist-hook :
 	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)
+
+if ENABLE_DAEMON
+install-data-hook:
+	mv -f $(DESTDIR)$(moduleconfdir)mount_options.conf $(DESTDIR)$(moduleconfdir)mount_options.conf.example
+
+uninstall-hook:
+	-rm -f $(DESTDIR)$(moduleconfdir)mount_options.conf.example
+endif
 
 clean-local :
 	rm -f *~ $(BUILT_SOURCES)

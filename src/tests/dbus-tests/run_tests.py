@@ -115,6 +115,8 @@ def install_config_files(projdir, tmpdir):
         os.mkdir('/etc/udisks2', 0o755)
     copied.extend(_copy_files((os.path.join(projdir, 'udisks/udisks2.conf'),),
                               '/etc/udisks2/', tmpdir))
+    copied.extend(_copy_files((os.path.join(projdir, 'udisks/mount_options.conf'),),
+                              '/etc/udisks2/', tmpdir))
 
     return copied
 
@@ -362,6 +364,9 @@ if __name__ == '__main__':
 
     loader = unittest.defaultTestLoader
     suite = unittest.TestSuite()
+
+    os.environ["UDISKS_TESTS_ARG_SYSTEM"] = str(int(args.system))
+    os.environ["UDISKS_TESTS_PROJDIR"] = projdir
 
     if args.testname:
         test_cases = loader.loadTestsFromNames(args.testname)

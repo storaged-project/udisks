@@ -358,6 +358,7 @@ fi
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %endif
 %{_sysconfdir}/udisks2/udisks2.conf
+%{_sysconfdir}/udisks2/mount_options.conf.example
 
 %{_datadir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl

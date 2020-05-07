@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/freedesktop/UDisks2">
+    <file>data/builtin_mount_options.conf</file>
+  </gresource>
+</gresources>

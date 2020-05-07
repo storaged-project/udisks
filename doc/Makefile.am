@@ -75,13 +75,20 @@ endif # ENABLE_DAEMON
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=udisks
 
-# Images to copy into HTML directory
+# Images to copy into HTML directory.
+# e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png
 HTML_IMAGES =                                                                  \
 	$(NULL)
 
+# Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
+# e.g. content_files=running.sgml building.sgml changes-2.0.sgml
 content_files =                                                                \
+	configurable_mount_options.xml                                         \
 	$(NULL)
 
+# SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
+# These files must be listed here *and* in content_files
+# e.g. expand_content_files=running.sgml
 expand_content_files =                                                         \
 	$(NULL)
 
@@ -300,6 +307,7 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_SECTIONS).zram.sections.in                                    \
 	$(UDISKS_SECTIONS).zram.sed                                            \
 	$(UDISKS_SECTIONS).lsm.sections.in                                     \
+	configurable_mount_options.xml                                         \
 	version.xml.in                                                         \
 	TODO-ISCSI
 
