@@ -537,7 +537,6 @@ ensure_modules (UDisksLinuxProvider *provider)
   UDisksModuleManager *module_manager;
   GList *udisks_devices;
   GList *modules;
-  gboolean do_refresh = FALSE;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
@@ -564,7 +563,6 @@ ensure_modules (UDisksLinuxProvider *provider)
                 {
                   g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
                   g_hash_table_replace (provider->module_ifaces, g_strdup (udisks_module_get_name (module)), iface);
-                  do_refresh = TRUE;
                 }
             }
         }
@@ -577,17 +575,12 @@ ensure_modules (UDisksLinuxProvider *provider)
       detach_module_interfaces (provider);
     }
 
-  if (do_refresh)
-    {
-      /* Perform coldplug */
-      udisks_debug ("Performing coldplug...");
-
-      udisks_devices = get_udisks_devices (provider);
-      do_coldplug (provider, udisks_devices);
-      g_list_free_full (udisks_devices, g_object_unref);
-
-      udisks_debug ("Coldplug complete");
-    }
+  /* Perform coldplug */
+  udisks_debug ("Performing coldplug...");
+  udisks_devices = get_udisks_devices (provider);
+  do_coldplug (provider, udisks_devices);
+  g_list_free_full (udisks_devices, g_object_unref);
+  udisks_debug ("Coldplug complete");
 }
 
 /*
