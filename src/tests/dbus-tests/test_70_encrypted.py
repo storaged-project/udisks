@@ -29,6 +29,14 @@ def _get_cryptsetup_version():
     return LooseVersion(m.groups()[0])
 
 
+def _get_blkid_version():
+    _ret, out = udiskstestcase.UdisksTestCase.run_command('blkid --version')
+    m = re.search(r'blkid from util-linux ([\d\.]+)', out)
+    if not m or len(m.groups()) != 1:
+        raise RuntimeError('Failed to determine blkid version from: %s' % out)
+    return LooseVersion(m.groups()[0])
+
+
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     '''This is an encrypted device test suite'''
 
@@ -671,7 +679,11 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
     def setUp(self):
         cryptsetup_version = _get_cryptsetup_version()
         if cryptsetup_version < LooseVersion('2.3.0'):
-            self.skipTest('BITLK not supported')
+            self.skipTest('BITLK not supported by cryptsetup')
+
+        blkid_version = _get_blkid_version()
+        if blkid_version < LooseVersion('2.33'):
+            self.skipTest('BITLK not supported by blkid')
 
         self.manager = self.get_interface('/Manager', '.Manager')
         self.tempdir = tempfile.mkdtemp(prefix='udisks_test_bitlk')
