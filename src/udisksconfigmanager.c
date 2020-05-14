@@ -33,7 +33,6 @@ struct _UDisksConfigManager {
   gboolean uninstalled;
 
   UDisksModuleLoadPreference load_preference;
-  GList *modules;
 
   const gchar *encryption;
   gchar *config_dir;
@@ -90,10 +89,8 @@ udisks_config_manager_get_property (GObject    *object,
 }
 
 static const gchar *
-get_encryption_config (const GValue *value)
+get_encryption_config (const gchar *encryption)
 {
-  const gchar *encryption = g_value_get_string (value);
-
   if (g_strcmp0 (encryption, UDISKS_ENCRYPTION_LUKS1) == 0)
     {
       return UDISKS_ENCRYPTION_LUKS1;
@@ -104,8 +101,7 @@ get_encryption_config (const GValue *value)
     }
   else
     {
-      udisks_warning ("Unknown value used for 'encryption': %s"
-                      "; defaulting to '%s'",
+      udisks_warning ("Unknown value used for 'encryption': %s; defaulting to '%s'",
                       encryption, UDISKS_ENCRYPTION_DEFAULT);
       return UDISKS_ENCRYPTION_DEFAULT;
     }
@@ -130,7 +126,7 @@ udisks_config_manager_set_property (GObject      *object,
       break;
 
     case PROP_ENCRYPTION:
-      manager->encryption = get_encryption_config (value);
+      manager->encryption = get_encryption_config (g_value_get_string (value));
       break;
 
     default:
@@ -140,9 +136,11 @@ udisks_config_manager_set_property (GObject      *object,
 }
 
 static void
-udisks_config_manager_constructed (GObject *object)
+parse_config_file (UDisksConfigManager         *manager,
+                   UDisksModuleLoadPreference  *out_load_preference,
+                   const gchar                **out_encryption,
+                   GList                      **out_modules)
 {
-  UDisksConfigManager *manager = UDISKS_CONFIG_MANAGER (object);
   GKeyFile *config_file;
   gchar *conf_filename;
   gchar *load_preference;
@@ -150,6 +148,82 @@ udisks_config_manager_constructed (GObject *object)
   gchar *module_i;
   gchar **modules;
   gchar **modules_tmp;
+
+  /* Get modules and means of loading */
+  conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
+                                    manager->config_dir,
+                                    PACKAGE_NAME_UDISKS2 ".conf",
+                                    NULL);
+
+  udisks_debug ("Loading configuration file: %s", conf_filename);
+
+  /* Load config */
+  config_file = g_key_file_new ();
+  g_key_file_set_list_separator (config_file, ',');
+  if (g_key_file_load_from_file (config_file, conf_filename, G_KEY_FILE_NONE, NULL))
+    {
+      if (out_modules != NULL)
+        {
+          modules = g_key_file_get_string_list (config_file, MODULES_GROUP_NAME, MODULES_KEY, NULL, NULL);
+          /* Read the list of modules to load. */
+          if (modules)
+            {
+              modules_tmp = modules;
+              for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
+                *out_modules = g_list_append (*out_modules, g_strdup (g_strstrip (module_i)));
+              g_strfreev (modules);
+            }
+        }
+
+      if (out_load_preference != NULL)
+        {
+          /* Read the load preference configuration option. */
+          load_preference = g_key_file_get_string (config_file, MODULES_GROUP_NAME, MODULES_LOAD_PREFERENCE_KEY, NULL);
+          if (load_preference)
+            {
+              /* Check the key value */
+              if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
+                {
+                  *out_load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+                }
+              else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
+                {
+                  *out_load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
+                }
+              else
+                {
+                  udisks_warning ("Unknown value used for 'modules_load_preference': %s; defaulting to 'ondemand'",
+                                  load_preference);
+                }
+
+              g_free (load_preference);
+            }
+        }
+
+      if (out_encryption != NULL)
+        {
+          /* Read the load preference configuration option. */
+          encryption = g_key_file_get_string (config_file, DEFAULTS_GROUP_NAME, DEFAULTS_ENCRYPTION_KEY, NULL);
+          if (encryption)
+            {
+              *out_encryption = get_encryption_config (encryption);
+              g_free (encryption);
+            }
+        }
+    }
+  else
+    {
+      udisks_warning ("Can't load configuration file %s", conf_filename);
+    }
+
+  g_key_file_free (config_file);
+  g_free (conf_filename);
+}
+
+static void
+udisks_config_manager_constructed (GObject *object)
+{
+  UDisksConfigManager *manager = UDISKS_CONFIG_MANAGER (object);
 
   /* Build a path to the config directory */
   manager->config_dir = g_build_path (G_DIR_SEPARATOR_S,
@@ -164,110 +238,7 @@ udisks_config_manager_constructed (GObject *object)
       udisks_warning ("Error creating directory %s: %m", manager->config_dir);
     }
 
-  /* Get modules and means of loading */
-  conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
-                                    manager->config_dir,
-                                    PACKAGE_NAME_UDISKS2 ".conf",
-                                    NULL);
-
-  udisks_debug ("Loading configuration file: %s", conf_filename);
-
-  /* Load config */
-  config_file = g_key_file_new ();
-  g_key_file_set_list_separator (config_file, ',');
-  if (g_key_file_load_from_file (config_file,
-                                 conf_filename,
-                                 G_KEY_FILE_NONE,
-                                 NULL))
-    {
-      modules = g_key_file_get_string_list (config_file,
-                                            MODULES_GROUP_NAME,
-                                            MODULES_KEY,
-                                            NULL,
-                                            NULL);
-      /* Read the list of modules to load. */
-      if (modules)
-        {
-          modules_tmp = modules;
-          for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
-              manager->modules = g_list_append (manager->modules,
-                                                g_strdup (g_strstrip (module_i)));
-          g_strfreev (modules);
-        }
-      else
-        {
-          udisks_debug ("No 'modules' found in configuration file");
-        }
-
-      /* Read the load preference configuration option. */
-      load_preference = g_key_file_get_string (config_file,
-                                               MODULES_GROUP_NAME,
-                                               MODULES_LOAD_PREFERENCE_KEY,
-                                               NULL);
-      if (load_preference)
-        {
-          /* Check the key value */
-          if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
-            {
-              manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
-            }
-          else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
-            {
-              manager->load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
-            }
-          else
-            {
-              udisks_warning ("Unknown value used for 'modules_load_preference': %s"
-                              "; defaulting to 'ondemand'",
-                              load_preference);
-            }
-
-          g_free (load_preference);
-        }
-      else
-        {
-          udisks_debug ("No 'modules_load_preference' found in configuration file");
-        }
-
-      /* Read the load preference configuration option. */
-      encryption = g_key_file_get_string (config_file,
-                                          DEFAULTS_GROUP_NAME,
-                                          DEFAULTS_ENCRYPTION_KEY,
-                                          NULL);
-      if (encryption)
-        {
-          /* Check the key value */
-          if (g_ascii_strcasecmp (encryption, UDISKS_ENCRYPTION_LUKS1) == 0)
-            {
-              manager->encryption = UDISKS_ENCRYPTION_LUKS1;
-            }
-          else if (g_ascii_strcasecmp (encryption, UDISKS_ENCRYPTION_LUKS2) == 0)
-            {
-              manager->encryption = UDISKS_ENCRYPTION_LUKS2;
-            }
-          else
-            {
-              udisks_warning ("Unknown value used for 'encryption': %s"
-                              "; defaulting to '%s'",
-                              encryption, manager->encryption);
-            }
-
-          g_free (encryption);
-        }
-      else
-        {
-          udisks_debug ("No 'encryption' found in configuration file");
-        }
-
-    }
-  else
-    {
-      udisks_warning ("Can't load configuration file %s", conf_filename);
-    }
-
-
-  g_key_file_free (config_file);
-  g_free (conf_filename);
+  parse_config_file (manager, &manager->load_preference, &manager->encryption, NULL);
 
   if (G_OBJECT_CLASS (udisks_config_manager_parent_class))
     G_OBJECT_CLASS (udisks_config_manager_parent_class)->constructed (object);
@@ -285,11 +256,6 @@ udisks_config_manager_finalize (GObject *object)
 {
   UDisksConfigManager *manager = UDISKS_CONFIG_MANAGER (object);
 
-  if (manager->modules)
-    {
-      g_list_free_full (manager->modules, (GDestroyNotify) g_free);
-      manager->modules = NULL;
-    }
   g_free (manager->config_dir);
 
   if (G_OBJECT_CLASS (udisks_config_manager_parent_class))
@@ -362,7 +328,6 @@ udisks_config_manager_class_init (UDisksConfigManagerClass *klass)
 static void
 udisks_config_manager_init (UDisksConfigManager *manager)
 {
-  manager->modules = NULL;  /* NULL == '*' */
   manager->load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
   manager->encryption = UDISKS_ENCRYPTION_DEFAULT;
 }
@@ -390,20 +355,53 @@ udisks_config_manager_get_uninstalled (UDisksConfigManager *manager)
   return manager->uninstalled;
 }
 
-const GList *
+/**
+ * udisks_config_manager_get_modules:
+ * @manager: A #UDisksConfigManager.
+ *
+ * Reads the udisks2.conf file and retrieves a list of module names to load.
+ * A special '*' placeholder may be present as a first item as specified
+ * in the config file.
+ *
+ * Returns: (transfer full) (nullable) (element-type gchar*): A list of strings
+ *          or %NULL if no specific configuration has been found in the config file.
+ *          Free the elements with g_free().
+ */
+GList *
 udisks_config_manager_get_modules (UDisksConfigManager *manager)
 {
+  GList *modules = NULL;
+
   g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager), NULL);
-  return manager->modules;
+
+  parse_config_file (manager, NULL, NULL, &modules);
+  return modules;
 }
 
+/**
+ * udisks_config_manager_get_modules_all:
+ * @manager: A #UDisksConfigManager.
+ *
+ * Reads the udisks2.conf file and returns whether to load all modules or not.
+ * This corresponds to a special '*' placeholder in the config file.
+ *
+ * Returns: %TRUE when the daemon runs from a source tree, %FALSE otherwise.
+ */
 gboolean
 udisks_config_manager_get_modules_all (UDisksConfigManager *manager)
 {
+  GList *modules = NULL;
+  gboolean ret;
+
   g_return_val_if_fail (UDISKS_IS_CONFIG_MANAGER (manager), FALSE);
-  return ! manager->modules
-         || (g_strcmp0 (manager->modules->data, "*") == 0
-             && g_list_length (manager->modules) == 1);
+
+  parse_config_file (manager, NULL, NULL, &modules);
+
+  ret = !modules || (g_strcmp0 (modules->data, "*") == 0 && g_list_length (modules) == 1);
+
+  g_list_free_full (modules, (GDestroyNotify) g_free);
+
+  return ret;
 }
 
 UDisksModuleLoadPreference

@@ -209,7 +209,6 @@ get_modules_list (UDisksModuleManager *manager)
   UDisksConfigManager *config_manager;
   GDir *dir;
   GError *error = NULL;
-  const GList *modules_i = NULL;
   GList *modules_list = NULL;
   const gchar *dent;
   gchar *module_dir;
@@ -246,14 +245,18 @@ get_modules_list (UDisksModuleManager *manager)
     }
   else
     {
+      GList *configured_modules;
+      GList *modules_i;
+
       /* Load only those modules which are specified in config file. */
-      for (modules_i = udisks_config_manager_get_modules (config_manager);
-           modules_i;
-           modules_i = modules_i->next)
+      configured_modules = udisks_config_manager_get_modules (config_manager);
+      for (modules_i = configured_modules; modules_i; modules_i = modules_i->next)
         {
           pth = get_module_sopath_for_name (manager, modules_i->data);
           modules_list = g_list_append (modules_list, pth);
         }
+
+      g_list_free_full (configured_modules, (GDestroyNotify) g_free);
     }
 
   g_dir_close (dir);

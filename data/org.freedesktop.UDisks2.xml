@@ -161,6 +161,9 @@
         Loads and activates modules. Modules that have been already loaded are not reinitialized on subsequent calls to this method and are skipped.
         In case any new module is getting activated by this method call a <literal>add</literal> uevent is trigerred on all exported objects.
 
+        This takes in account an optional explicit list of modules to load as specified in the <filename>/etc/udisks2/udisks2.conf</filename>
+        config file. If unspecified all available modules will be loaded.
+
         Modules cannot be deactivated at the moment. This method call never fails even if no module has been activated
         and by nature it cannot report any particular module initialization failures. Clients have no way of finding that
         a particular module is available.
