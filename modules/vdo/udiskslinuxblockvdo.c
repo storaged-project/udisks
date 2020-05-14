@@ -214,10 +214,14 @@ do_refresh (UDisksBlockVDO *block_vdo,
             GError        **error)
 {
   BDVDOInfo *bd_info;
+  GError *local_error = NULL;
+  const gchar *write_policy_str;
 
-  bd_info = bd_vdo_info (vdo_name, error);
+  bd_info = bd_vdo_info (vdo_name, error ? error : &local_error);
   if (bd_info == NULL)
     {
+      /* libblockdev always needs non-NULL error */
+      g_clear_error (&local_error);
       return FALSE;
     }
 
@@ -229,8 +233,15 @@ do_refresh (UDisksBlockVDO *block_vdo,
   udisks_block_vdo_set_logical_size (block_vdo, bd_info->logical_size);
   udisks_block_vdo_set_name (block_vdo, bd_info->name);
   udisks_block_vdo_set_physical_size (block_vdo, bd_info->physical_size);
-  udisks_block_vdo_set_write_policy (block_vdo,
-                                     bd_vdo_get_write_policy_str (bd_info->write_policy, NULL));
+
+  write_policy_str = bd_vdo_get_write_policy_str (bd_info->write_policy, &local_error);
+  if (! write_policy_str)
+    {
+      g_warning ("Failed to get VDO write policy string: %s", local_error->message);
+      g_clear_error (&local_error);
+      write_policy_str = "";
+    }
+  udisks_block_vdo_set_write_policy (block_vdo, write_policy_str);
 
   bd_vdo_info_free (bd_info);
 

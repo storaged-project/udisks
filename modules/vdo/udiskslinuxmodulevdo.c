@@ -184,6 +184,7 @@ udisks_linux_module_vdo_check_block (UDisksLinuxModuleVDO *module,
   const gchar *dm_uuid;
   const gchar *dm_name;
   BDVDOInfo *bd_info;
+  GError *local_error = NULL;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_VDO (module), FALSE);
   g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), FALSE);
@@ -198,7 +199,9 @@ udisks_linux_module_vdo_check_block (UDisksLinuxModuleVDO *module,
   if (dm_uuid != NULL && dm_name != NULL && g_str_has_prefix (dm_uuid, "VDO-"))
     {
       /* Test if we can get VDO info */
-      bd_info = bd_vdo_info (dm_name, NULL);
+      bd_info = bd_vdo_info (dm_name, &local_error);
+      /* libblockdev always needs non-NULL error */
+      g_clear_error (&local_error);
       ret = bd_info != NULL;
       if (bd_info != NULL)
         bd_vdo_info_free (bd_info);
