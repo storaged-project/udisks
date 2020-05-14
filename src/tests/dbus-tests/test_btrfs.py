@@ -1,4 +1,5 @@
 import dbus
+import os
 import six
 import shutil
 import re
@@ -338,3 +339,38 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % dev.path)
         self.assertEqual(sys_label, 'new_label')
+
+    def test_subvolume_mount(self):
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.obj_path],
+                             'test_snapshot', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+
+        fstype = self.get_property(dev.obj, '.Block', 'IdType')
+        fstype.assertEqual('btrfs')
+
+        with self._temp_mount(dev.path):
+            # create a subvolume
+            dev.obj.CreateSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+        self.addCleanup(self.try_unmount, dev.path)
+        opts = dbus.Dictionary({'options': 'subvol=/test_sub1'},
+                               signature=dbus.Signature('sv'))
+        mnt_path = dev.obj.Mount(opts, dbus_interface=self.iface_prefix + '.Filesystem')
+
+        # system mountpoint
+        self.assertTrue(os.path.ismount(mnt_path))
+        _ret, out = self.run_command('mount | grep %s' % dev.path)
+        self.assertIn(mnt_path, out)
+        self.assertIn('subvol=/test_sub1', out)
+
+        # dbus mountpoint
+        dbus_mounts = self.get_property(dev.obj, '.Filesystem', 'MountPoints')
+        dbus_mounts.assertLen(1)  # just one mountpoint
+        dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
+        self.assertEqual(dbus_mnt, mnt_path)
