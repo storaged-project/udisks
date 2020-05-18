@@ -572,7 +572,7 @@ udisks_state_check_in_thread (UDisksState *state)
                              FALSE, /* check_only */
                              NULL);
 
-  g_array_unref (devs_to_clean);
+  g_array_free (devs_to_clean, TRUE);
 
   udisks_info ("Cleanup check end");
 
@@ -710,8 +710,12 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     {
       if (! udisks_linux_block_object_try_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (block_object)))
         {
-          udisks_notice ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup",
-                         udisks_linux_block_object_get_device_file (UDISKS_LINUX_BLOCK_OBJECT (block_object)));
+          gchar *device_file;
+
+          device_file = udisks_linux_block_object_get_device_file (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+          udisks_notice ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup", device_file);
+          g_free (device_file);
+
           keep = TRUE;
           goto out;
         }
