@@ -147,6 +147,8 @@ udisks_linux_iscsi_session_object_finalize (GObject *object)
 {
   UDisksLinuxISCSISessionObject *session_object = UDISKS_LINUX_ISCSI_SESSION_OBJECT (object);
 
+  g_clear_object (&session_object->iface_iscsi_session);
+
   g_free (session_object->session_id);
   g_object_unref (session_object->module);
 
