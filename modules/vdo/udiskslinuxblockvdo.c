@@ -151,6 +151,8 @@ udisks_linux_block_vdo_class_init (UDisksLinuxBlockVDOClass *klass)
    * UDisksLinuxBlockVDO:module:
    *
    * The #UDisksModule for the object.
+   *
+   * Deprecated: 2.9
    */
   g_object_class_install_property (gobject_class,
                                    PROP_MODULE,
@@ -166,6 +168,8 @@ udisks_linux_block_vdo_class_init (UDisksLinuxBlockVDOClass *klass)
    * UDisksLinuxBlockVDO:blockobject:
    *
    * The #UDisksLinuxBlockObject for the object.
+   *
+   * Deprecated: 2.9
    */
   g_object_class_install_property (gobject_class,
                                    PROP_BLOCK_OBJECT,
@@ -194,6 +198,8 @@ udisks_linux_block_vdo_init (UDisksLinuxBlockVDO *l_block_vdo)
  * Creates a new #UDisksLinuxBlockVDO instance.
  *
  * Returns: A new #UDisksLinuxBlockVDO. Free with g_object_unref().
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksLinuxBlockVDO *
 udisks_linux_block_vdo_new (UDisksLinuxModuleVDO   *module,
@@ -256,6 +262,8 @@ do_refresh (UDisksBlockVDO *block_vdo,
  * Updates the interface.
  *
  * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 gboolean
 udisks_linux_block_vdo_update (UDisksLinuxBlockVDO    *l_block_vdo,

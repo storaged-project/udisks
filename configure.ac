@@ -538,9 +538,7 @@ AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 # VDO module
 have_vdo=no
 AC_ARG_ENABLE(vdo, AS_HELP_STRING([--enable-vdo], [enable VDO support]))
-if test "x$enable_vdo" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_available_modules" = "xyes"; then
+if test "x$enable_vdo" = "xyes"; then
     # libblockdev
     SAVE_CFLAGS=$CFLAGS
     SAVE_LDFLAGS=$LDFLAGS
@@ -838,5 +836,5 @@ echo "
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
         Bcache module:              ${have_bcache}
-        VDO module:                 ${have_vdo}
+        VDO module (deprecated):    ${have_vdo}
 "

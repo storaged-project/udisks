@@ -43,6 +43,8 @@
  *
  * The #UDisksLinuxManagerVDO structure contains only private data and
  * should only be accessed using the provided API.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 struct _UDisksLinuxManagerVDO{
   UDisksManagerVDOSkeleton parent_instance;
@@ -123,6 +125,8 @@ udisks_linux_manager_vdo_class_init (UDisksLinuxManagerVDOClass *klass)
    * UDisksLinuxManagerVDO:module:
    *
    * The #UDisksLinuxModuleVDO for the object.
+   *
+   * Deprecated: 2.9
    */
   g_object_class_install_property (gobject_class,
                                    PROP_MODULE,
@@ -150,6 +154,8 @@ udisks_linux_manager_vdo_init (UDisksLinuxManagerVDO *self)
  * Creates a new #UDisksLinuxManagerVDO instance.
  *
  * Returns: A new #UDisksLinuxManagerVDO. Free with g_object_unref().
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksLinuxManagerVDO *
 udisks_linux_manager_vdo_new (UDisksLinuxModuleVDO *module)
@@ -167,6 +173,8 @@ udisks_linux_manager_vdo_new (UDisksLinuxModuleVDO *module)
  * Gets the module used by @manager.
  *
  * Returns: A #UDisksLinuxModuleVDO. Do not free, the object is owned by @manager.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksLinuxModuleVDO *
 udisks_linux_manager_vdo_get_module (UDisksLinuxManagerVDO *manager)

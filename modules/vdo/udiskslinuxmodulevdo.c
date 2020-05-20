@@ -48,6 +48,8 @@
  *
  * The #UDisksLinuxModuleVDO structure contains only private data
  * and should only be accessed using the provided API.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 struct _UDisksLinuxModuleVDO {
   UDisksModule parent_instance;
@@ -101,6 +103,8 @@ udisks_module_id (void)
  * Returns: (transfer full) (type UDisksLinuxModuleVDO): A
  *   #UDisksLinuxModuleVDO object or %NULL if @error is set. Free
  *   with g_object_unref().
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksModule *
 udisks_module_vdo_new (UDisksDaemon  *daemon,
@@ -175,6 +179,8 @@ udisks_linux_module_vdo_new_manager (UDisksModule *module)
  * Checks whether the block device contains VDO signature.
  *
  * Returns: %TRUE when VDO signature is present, %FALSE otherwise.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 gboolean
 udisks_linux_module_vdo_check_block (UDisksLinuxModuleVDO *module,
