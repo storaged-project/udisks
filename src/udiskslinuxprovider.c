@@ -1166,6 +1166,13 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
       object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (object != NULL)
         {
+          /* TODO: consider sending the 'remove' uevent to block objects and propagate
+           *       it to module interfaces so that proper cleanup could be done. Modules
+           *       are still liable to perform cleanup within their object destructors.
+           *       It is equally important for modules to avoid taking reference to
+           *       #UDisksLinuxBlockObject as it creates recursive references and
+           *       the block object may never get freed.
+           */
           block_pre_remove (provider, object);
           g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
                                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
