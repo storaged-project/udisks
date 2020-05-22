@@ -117,7 +117,7 @@ udisks_provider_set_property (GObject      *object,
 static void
 udisks_provider_init (UDisksProvider *provider)
 {
-  provider->priv = G_TYPE_INSTANCE_GET_PRIVATE (provider, UDISKS_TYPE_PROVIDER, UDisksProviderPrivate);
+  provider->priv = udisks_provider_get_instance_private (provider);
 }
 
 static void

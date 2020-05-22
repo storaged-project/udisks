@@ -169,7 +169,7 @@ udisks_base_job_init (UDisksBaseJob *job)
 {
   gint64 now_usec;
 
-  job->priv = G_TYPE_INSTANCE_GET_PRIVATE (job, UDISKS_TYPE_BASE_JOB, UDisksBaseJobPrivate);
+  job->priv = udisks_base_job_get_instance_private (job);
 
   now_usec = g_get_real_time ();
   udisks_job_set_start_time (UDISKS_JOB (job), now_usec);
