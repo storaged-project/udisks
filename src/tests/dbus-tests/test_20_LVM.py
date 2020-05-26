@@ -18,7 +18,7 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('LVM2'):
+        if not cls.check_module_loaded('lvm2'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for LVM tests not loaded, skipping.')
 
@@ -52,6 +52,13 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 
 class UdisksLVMTest(UDisksLVMTestBase):
     '''This is a basic LVM test suite'''
+
+    def test_01_manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.LVM2"' % self.iface_prefix, intro_data)
 
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''

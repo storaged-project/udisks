@@ -27,9 +27,12 @@
 #include <src/udiskslinuxdevice.h>
 #include <src/udiskslogging.h>
 #include <src/udiskssimplejob.h>
+#include <src/udisksmodule.h>
+#include <src/udisksmoduleobject.h>
 #include <blockdev/vdo.h>
 
 #include "udiskslinuxblockvdo.h"
+#include "udiskslinuxmodulevdo.h"
 
 /**
  * SECTION:udiskslinuxblockvdo
@@ -49,7 +52,8 @@
 struct _UDisksLinuxBlockVDO {
   UDisksBlockVDOSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleVDO   *module;
+  UDisksLinuxBlockObject *block_object;
 };
 
 struct _UDisksLinuxBlockVDOClass {
@@ -59,16 +63,17 @@ struct _UDisksLinuxBlockVDOClass {
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
+  PROP_BLOCK_OBJECT,
   N_PROPERTIES
 };
 
 static void udisks_linux_block_vdo_iface_init (UDisksBlockVDOIface *iface);
+static void udisks_linux_block_vdo_module_object_iface_init (UDisksModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockVDO, udisks_linux_block_vdo,
-                         UDISKS_TYPE_BLOCK_VDO_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_VDO,
-                                                udisks_linux_block_vdo_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlockVDO, udisks_linux_block_vdo, UDISKS_TYPE_BLOCK_VDO_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_VDO, udisks_linux_block_vdo_iface_init)
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, udisks_linux_block_vdo_module_object_iface_init));
 
 static void
 udisks_linux_block_vdo_get_property (GObject    *object,
@@ -80,8 +85,12 @@ udisks_linux_block_vdo_get_property (GObject    *object,
 
   switch (property_id)
     {
-      case PROP_DAEMON:
-        g_value_set_object (value, udisks_linux_block_vdo_get_daemon (l_block_vdo));
+      case PROP_MODULE:
+        g_value_set_object (value, UDISKS_MODULE (l_block_vdo->module));
+        break;
+
+      case PROP_BLOCK_OBJECT:
+        g_value_set_object (value, l_block_vdo->block_object);
         break;
 
       default:
@@ -100,10 +109,15 @@ udisks_linux_block_vdo_set_property (GObject      *object,
 
   switch (property_id)
     {
-      case PROP_DAEMON:
-        g_assert (l_block_vdo->daemon == NULL);
-        /* We don't take a reference to the daemon. */
-        l_block_vdo->daemon = g_value_get_object (value);
+      case PROP_MODULE:
+        g_assert (l_block_vdo->module == NULL);
+        l_block_vdo->module = UDISKS_LINUX_MODULE_VDO (g_value_dup_object (value));
+        break;
+
+      case PROP_BLOCK_OBJECT:
+        g_assert (l_block_vdo->block_object == NULL);
+        /* we don't take reference to block_object */
+        l_block_vdo->block_object = g_value_get_object (value);
         break;
 
       default:
@@ -113,15 +127,13 @@ udisks_linux_block_vdo_set_property (GObject      *object,
 }
 
 static void
-udisks_linux_block_vdo_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_block_vdo_parent_class))
-    G_OBJECT_CLASS (udisks_linux_block_vdo_parent_class)->dispose (object);
-}
-
-static void
 udisks_linux_block_vdo_finalize (GObject *object)
 {
+  UDisksLinuxBlockVDO *l_block_vdo = UDISKS_LINUX_BLOCK_VDO (object);
+
+  /* we don't take reference to block_object */
+  g_object_unref (l_block_vdo->module);
+
   if (G_OBJECT_CLASS (udisks_linux_block_vdo_parent_class))
     G_OBJECT_CLASS (udisks_linux_block_vdo_parent_class)->finalize (object);
 }
@@ -133,20 +145,38 @@ udisks_linux_block_vdo_class_init (UDisksLinuxBlockVDOClass *klass)
 
   gobject_class->get_property = udisks_linux_block_vdo_get_property;
   gobject_class->set_property = udisks_linux_block_vdo_set_property;
-  gobject_class->dispose = udisks_linux_block_vdo_dispose;
   gobject_class->finalize = udisks_linux_block_vdo_finalize;
 
   /**
-   * UDisksLinuxManager:daemon
+   * UDisksLinuxBlockVDO:module:
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksModule for the object.
+   *
+   * Deprecated: 2.9
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_MODULE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+  /**
+   * UDisksLinuxBlockVDO:blockobject:
+   *
+   * The #UDisksLinuxBlockObject for the object.
+   *
+   * Deprecated: 2.9
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_BLOCK_OBJECT,
+                                   g_param_spec_object ("blockobject",
+                                                        "Block object",
+                                                        "The block object for the interface",
+                                                        UDISKS_TYPE_LINUX_BLOCK_OBJECT,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -162,47 +192,25 @@ udisks_linux_block_vdo_init (UDisksLinuxBlockVDO *l_block_vdo)
 
 /**
  * udisks_linux_block_vdo_new:
+ * @module: A #UDisksLinuxModuleVDO.
+ * @block_object: A #UDisksLinuxBlockObject.
  *
  * Creates a new #UDisksLinuxBlockVDO instance.
  *
  * Returns: A new #UDisksLinuxBlockVDO. Free with g_object_unref().
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksLinuxBlockVDO *
-udisks_linux_block_vdo_new (void)
+udisks_linux_block_vdo_new (UDisksLinuxModuleVDO   *module,
+                            UDisksLinuxBlockObject *block_object)
 {
-  return UDISKS_LINUX_BLOCK_VDO (g_object_new (UDISKS_TYPE_LINUX_BLOCK_VDO, NULL));
-}
-
-/**
- * udisks_linux_block_vdo_get_daemon:
- * @vdo_block: A #UDisksLinuxBlockVDO.
- *
- * Gets the daemon used by @vdo_block.
- *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @vdo_block.
- */
-UDisksDaemon *
-udisks_linux_block_vdo_get_daemon (UDisksLinuxBlockVDO *vdo_block)
-{
-  GError *error = NULL;
-  UDisksLinuxBlockObject *object;
-  UDisksDaemon *daemon = NULL;
-
-  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_VDO (vdo_block), NULL);
-
-  object = udisks_daemon_util_dup_object (vdo_block, &error);
-  if (object)
-    {
-      daemon = udisks_linux_block_object_get_daemon (object);
-      g_clear_object (&object);
-    }
-  else
-    {
-      udisks_critical ("%s", error->message);
-      g_clear_error (&error);
-    }
-
-  return daemon;
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_VDO (module), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (block_object), NULL);
+  return g_object_new (UDISKS_TYPE_LINUX_BLOCK_VDO,
+                       "module", UDISKS_MODULE (module),
+                       "blockobject", block_object,
+                       NULL);
 }
 
 /* Get info of the volume and set object properties */
@@ -212,10 +220,14 @@ do_refresh (UDisksBlockVDO *block_vdo,
             GError        **error)
 {
   BDVDOInfo *bd_info;
+  GError *local_error = NULL;
+  const gchar *write_policy_str;
 
-  bd_info = bd_vdo_info (vdo_name, error);
+  bd_info = bd_vdo_info (vdo_name, error ? error : &local_error);
   if (bd_info == NULL)
     {
+      /* libblockdev always needs non-NULL error */
+      g_clear_error (&local_error);
       return FALSE;
     }
 
@@ -227,8 +239,15 @@ do_refresh (UDisksBlockVDO *block_vdo,
   udisks_block_vdo_set_logical_size (block_vdo, bd_info->logical_size);
   udisks_block_vdo_set_name (block_vdo, bd_info->name);
   udisks_block_vdo_set_physical_size (block_vdo, bd_info->physical_size);
-  udisks_block_vdo_set_write_policy (block_vdo,
-                                     bd_vdo_get_write_policy_str (bd_info->write_policy, NULL));
+
+  write_policy_str = bd_vdo_get_write_policy_str (bd_info->write_policy, &local_error);
+  if (! write_policy_str)
+    {
+      g_warning ("Failed to get VDO write policy string: %s", local_error->message);
+      g_clear_error (&local_error);
+      write_policy_str = "";
+    }
+  udisks_block_vdo_set_write_policy (block_vdo, write_policy_str);
 
   bd_vdo_info_free (bd_info);
 
@@ -243,6 +262,8 @@ do_refresh (UDisksBlockVDO *block_vdo,
  * Updates the interface.
  *
  * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 gboolean
 udisks_linux_block_vdo_update (UDisksLinuxBlockVDO    *l_block_vdo,
@@ -295,7 +316,7 @@ check_pk_auth (UDisksBlockVDO        *block_vdo,
   GError *error = NULL;
   uid_t caller_uid;
 
-  daemon = udisks_linux_block_vdo_get_daemon (l_block_vdo);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_block_vdo->module));
 
   if (! udisks_daemon_util_get_caller_uid_sync (daemon,
                                                 invocation,
@@ -757,4 +778,35 @@ udisks_linux_block_vdo_iface_init (UDisksBlockVDOIface *iface)
   iface->handle_remove = handle_remove;
   iface->handle_stop = handle_stop;
   iface->handle_get_statistics = handle_get_statistics;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static gboolean
+udisks_linux_block_vdo_module_object_process_uevent (UDisksModuleObject *module_object,
+                                                     const gchar        *action,
+                                                     UDisksLinuxDevice  *device,
+                                                     gboolean           *keep)
+{
+  UDisksLinuxBlockVDO *l_block_vdo = UDISKS_LINUX_BLOCK_VDO (module_object);
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_VDO (module_object), FALSE);
+
+  if (device == NULL)
+    return FALSE;
+
+  /* Check device name */
+  *keep = udisks_linux_module_vdo_check_block (UDISKS_LINUX_MODULE_VDO (l_block_vdo->module), device);
+  if (*keep)
+    {
+      udisks_linux_block_vdo_update (l_block_vdo, l_block_vdo->block_object);
+    }
+
+  return TRUE;
+}
+
+static void
+udisks_linux_block_vdo_module_object_iface_init (UDisksModuleObjectIface *iface)
+{
+  iface->process_uevent = udisks_linux_block_vdo_module_object_process_uevent;
 }

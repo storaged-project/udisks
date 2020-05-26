@@ -22,6 +22,7 @@
 #define __UDISKS_LINUX_MANAGER_BCACHE_H__
 
 #include <src/udisksdaemontypes.h>
+#include "udisksbcachetypes.h"
 
 G_BEGIN_DECLS
 
@@ -35,9 +36,9 @@ G_BEGIN_DECLS
 typedef struct _UDisksLinuxManagerBcache        UDisksLinuxManagerBcache;
 typedef struct _UDisksLinuxManagerBcacheClass   UDisksLinuxManagerBcacheClass;
 
-GType                      udisks_linux_manager_bcache_get_type     (void) G_GNUC_CONST;
-UDisksLinuxManagerBcache  *udisks_linux_manager_bcache_new          (UDisksDaemon              *daemon);
-UDisksDaemon              *udisks_linux_manager_bcache_get_daemon   (UDisksLinuxManagerBcache  *manager);
+GType                      udisks_linux_manager_bcache_get_type    (void) G_GNUC_CONST;
+UDisksLinuxManagerBcache  *udisks_linux_manager_bcache_new         (UDisksLinuxModuleBcache  *module);
+UDisksLinuxModuleBcache   *udisks_linux_manager_bcache_get_module  (UDisksLinuxManagerBcache *manager);
 
 G_END_DECLS
 

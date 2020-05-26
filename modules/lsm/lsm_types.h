@@ -22,64 +22,22 @@
 #define __LSM_TYPES_H__
 
 #include <gio/gio.h>
-#include <polkit/polkit.h>
 #include <udisks/udisks.h>
-#include <gudev/gudev.h>
 #include <sys/types.h>
-#include <src/udiskslogging.h>
 
 G_BEGIN_DECLS
 
 #define LSM_MODULE_NAME "lsm"
+#define LSM_POLICY_ACTION_ID "org.freedesktop.udisks2.lsm.manage-led"
+
+struct _UDisksLinuxModuleLSM;
+typedef struct _UDisksLinuxModuleLSM UDisksLinuxModuleLSM;
 
 struct _UDisksLinuxDriveLSM;
 typedef struct _UDisksLinuxDriveLSM UDisksLinuxDriveLSM;
 
-#define UDISKS_TYPE_LINUX_DRIVE_LSM (udisks_linux_drive_lsm_get_type ())
-#define UDISKS_LINUX_DRIVE_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_LSM, \
-                               UDisksLinuxDriveLSM))
-#define UDISKS_IS_LINUX_DRIVE_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_LSM))
-
-GType udisks_linux_drive_lsm_get_type (void) G_GNUC_CONST;
-UDisksLinuxDriveLSM *udisks_linux_drive_lsm_new (void);
-gboolean
-udisks_linux_drive_lsm_update (UDisksLinuxDriveLSM *std_lx_drv_lsm,
-                               UDisksLinuxDriveObject *st_lx_drv_obj);
-
-struct _UDisksLinuxManagerLSM;
-typedef struct _UDisksLinuxManagerLSM UDisksLinuxManagerLSM;
-
-#define UDISKS_TYPE_LINUX_MANAGER_LSM \
-  (udisks_linux_manager_lsm_get_type ())
-#define UDISKS_LINUX_MANAGER_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_MANAGER_LSM, \
-                               UDisksLinuxManagerLSM))
-#define UDISKS_IS_LINUX_MANAGER_LSM(o) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_MANAGER))
-
-GType udisks_linux_manager_lsm_get_type (void) G_GNUC_CONST;
-UDisksLinuxManagerLSM *udisks_linux_manager_lsm_new (void);
-
-struct _UDisksLinuxDriveLsmLocal;
-typedef struct _UDisksLinuxDriveLsmLocal UDisksLinuxDriveLsmLocal;
-
-GType udisks_linux_drive_lsm_local_get_type (void) G_GNUC_CONST;
-#define UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL \
-  (udisks_linux_drive_lsm_local_get_type ())
-#define UDISKS_LINUX_DRIVE_LSM_LOCAL(o) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL, \
-                               UDisksLinuxDriveLsmLocal))
-#define UDISKS_IS_LINUX_DRIVE_LSM_LOCAL(o) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE_LSM_LOCAL))
-
-UDisksLinuxDriveLsmLocal *
-udisks_linux_drive_lsm_local_new (void);
-
-gboolean
-udisks_linux_drive_lsm_local_update (UDisksLinuxDriveLsmLocal *lsm_local,
-                                     UDisksLinuxDriveObject *ud_lx_drv_obj);
+struct _UDisksLinuxDriveLSMLocal;
+typedef struct _UDisksLinuxDriveLSMLocal UDisksLinuxDriveLSMLocal;
 
 G_END_DECLS
 

@@ -22,6 +22,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udisksvdotypes.h"
+#include "udiskslinuxmodulevdo.h"
 
 G_BEGIN_DECLS
 
@@ -33,8 +34,8 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_MANAGER_VDO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), UDISKS_TYPE_LINUX_MANAGER_VDO, UDisksLinuxManagerVDOClass))
 
 GType                    udisks_linux_manager_vdo_get_type   (void) G_GNUC_CONST;
-UDisksLinuxManagerVDO   *udisks_linux_manager_vdo_new        (UDisksDaemon *daemon);
-UDisksDaemon            *udisks_linux_manager_vdo_get_daemon (UDisksLinuxManagerVDO *manager);
+UDisksLinuxManagerVDO   *udisks_linux_manager_vdo_new        (UDisksLinuxModuleVDO  *module);
+UDisksLinuxModuleVDO    *udisks_linux_manager_vdo_get_module (UDisksLinuxManagerVDO *manager);
 
 G_END_DECLS
 

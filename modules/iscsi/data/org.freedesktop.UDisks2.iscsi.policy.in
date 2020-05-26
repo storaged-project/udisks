@@ -10,7 +10,7 @@
   <icon_name>drive-removable-media</icon_name>
 
   <!-- ###################################################################### -->
-  <!-- Manage LVM -->
+  <!-- Manage iSCSI -->
 
   <action id="org.freedesktop.udisks2.iscsi.manage-iscsi">
     <description>Manage iSCSI</description>

@@ -2,10 +2,6 @@
 
 SUBDIRS = data
 
-LVM2_MODULE_DIR = $(top_srcdir)/modules/lvm2
-
-MODULE_SO = libudisks2_lvm2.so
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -28,40 +24,33 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
+if ENABLE_DAEMON
+
+LVM2_MODULE_DIR = $(top_srcdir)/modules/lvm2
+
+MODULE_SO = libudisks2_lvm2.so
+
 BUILT_SOURCES =                                                                \
 	$(NULL)
 
-libudisks2_lvm2dir=$(libdir)/udisks2/modules
-libudisks2_lvm2_LTLIBRARIES=libudisks2_lvm2.la
+libudisks2_lvm2dir = $(libdir)/udisks2/modules
+libudisks2_lvm2_LTLIBRARIES = libudisks2_lvm2.la
 
-libudisks2_lvm2includedir=$(includedir)/udisks2/udisks
-
-libudisks2_lvm2include_HEADERS =                                               \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(NULL)
+libudisks2_lvm2includedir = $(includedir)/udisks2/udisks
 
 libudisks2_lvm2_la_SOURCES =                                                   \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
 	udiskslvm2types.h                                                      \
-	udiskslvm2moduleiface.c                                                \
+	udiskslinuxmodulelvm2.h             udiskslinuxmodulelvm2.c            \
 	udiskslinuxlogicalvolume.h          udiskslinuxlogicalvolume.c         \
-	udiskslinuxlogicalvolumeobject.h                                       \
-	udiskslinuxlogicalvolumeobject.c                                       \
+	udiskslinuxlogicalvolumeobject.h    udiskslinuxlogicalvolumeobject.c   \
 	udiskslinuxphysicalvolume.h         udiskslinuxphysicalvolume.c        \
 	udiskslinuxvolumegroup.h            udiskslinuxvolumegroup.c           \
 	udiskslinuxvolumegroupobject.h      udiskslinuxvolumegroupobject.c     \
 	udiskslinuxvdovolume.h              udiskslinuxvdovolume.c             \
 	udiskslinuxblocklvm2.h              udiskslinuxblocklvm2.c             \
 	udiskslvm2daemonutil.h              udiskslvm2daemonutil.c             \
-	udiskslvm2util.h                    udiskslvm2util.c                   \
 	udiskslinuxmanagerlvm2.h            udiskslinuxmanagerlvm2.c           \
-	udiskslvm2state.h                   udiskslvm2state.c                  \
 	jobhelpers.h                        jobhelpers.c                       \
 	$(NULL)
 
@@ -93,6 +82,10 @@ libudisks2_lvm2_la_LIBADD =                                                    \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -101,8 +94,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)

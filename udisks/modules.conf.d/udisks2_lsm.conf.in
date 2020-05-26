@@ -1,15 +1,19 @@
-## Interval in seconds between every LibStorageMgmt data refresh. It define how
-## long will the monitor thread noticed state change before it happened.  Only
-## unsigned integer is supported.  If not define, then 30.
+## UDisks libstoragemgmt module configuration
+## See udisks2_lsm.conf(5) manpage for details
+
+## Polling interval on supported libstoragemgmt drives in seconds.
+## unsigned integer (default = 30)
 refresh_interval = 30
 
-## Only for developers; Valid values are true or false.  If not defined, then
-## false is assumed.
+## [Developers only]
+## Valid values: "true", "false" (default = false)
 enable_sim = false
 
-## Load LibStorageMgmt HP Smart Array plugin. Valid values are true or false.
-## If not defined, then true is assumed.
+## Defines whether to load the libstoragemgmt HP Smart Array plugin.
+## Valid values: "true", "false" (default = true)
 enable_hpsa = true
 
-## Extra URI and password to load.  Should be quoted and be splited by ','
+## Extra URIs and passwords to load.  Should be quoted (") and be separated by comma (,)
 ## By default, no extra URIs will be loaded.
+#extra_uris = ["ontap+ssl://root@na-sim"]
+#extra_passwords = ["password"]

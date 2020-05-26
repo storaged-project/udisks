@@ -23,7 +23,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('BTRFS'):
+        if not cls.check_module_loaded('btrfs'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for btrfs tests not loaded, skipping.')
 
@@ -66,6 +66,13 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         if not m or len(m.groups()) != 1:
             raise RuntimeError('Failed to determine btrfs version from: %s' % out)
         return LooseVersion(m.groups()[0])
+
+    def test__manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.BTRFS"' % self.iface_prefix, intro_data)
 
     def test_create(self):
         dev = self._get_devices(1)[0]

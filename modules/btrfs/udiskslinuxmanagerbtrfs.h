@@ -33,8 +33,8 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_MANAGER_BTRFS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), UDISKS_TYPE_LINUX_MANAGER_BTRFS, UDisksLinuxManagerBTRFSClass))
 
 GType                    udisks_linux_manager_btrfs_get_type   (void) G_GNUC_CONST;
-UDisksLinuxManagerBTRFS *udisks_linux_manager_btrfs_new        (UDisksDaemon *daemon);
-UDisksDaemon            *udisks_linux_manager_btrfs_get_daemon (UDisksLinuxManagerBTRFS *manager);
+UDisksLinuxManagerBTRFS *udisks_linux_manager_btrfs_new        (UDisksLinuxModuleBTRFS  *module);
+UDisksLinuxModuleBTRFS  *udisks_linux_manager_btrfs_get_module (UDisksLinuxManagerBTRFS *manager);
 
 G_END_DECLS
 

@@ -36,12 +36,10 @@ CFILE_GLOB =                                                                   \
 if ENABLE_DAEMON
 HFILE_GLOB +=                                                                  \
 	$(top_srcdir)/src/*.h                                                  \
-	$(top_srcdir)/modules/*.h                                              \
 	$(NULL)
 
 CFILE_GLOB +=                                                                  \
 	$(top_srcdir)/src/*.c                                                  \
-	$(top_srcdir)/modules/*.c                                              \
 	$(NULL)
 endif # ENABLE_DAEMON
 
@@ -176,6 +174,9 @@ else
 	$(AM_V_at) $(SED) "/\# VDO_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_VDO
 
+
+if ENABLE_DAEMON
+
 # GTKDOC for LVM2
 if HAVE_LVM2
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lvm2
@@ -238,6 +239,9 @@ CFILE_GLOB += $(top_srcdir)/modules/vdo/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/vdo
 GTKDOC_LIBS += $(top_builddir)/modules/vdo/libudisks2_vdo.la
 endif # HAVE_VDO
+
+endif # ENABLE_DAEMON
+
 
 # ------------------------------------------------------------------------------
 

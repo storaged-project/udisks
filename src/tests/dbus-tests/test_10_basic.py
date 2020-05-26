@@ -6,22 +6,37 @@ from distutils.spawn import find_executable
 class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
-    udisks_modules = set(['Bcache', 'BTRFS', 'ISCSI.Initiator', 'LVM2', 'ZRAM', 'VDO'])
+    # The 'lsm' module is intentionally not tested here to avoid its initialization
+    # at this point. It's tested thoroughly in test_91_lsm.
+    udisks_modules = {'bcache': 'Bcache',
+                      'btrfs': 'BTRFS',
+                      'iscsi': 'ISCSI.Initiator',
+                      'lvm2': 'LVM2',
+                      'zram': 'ZRAM',
+                      'vdo': 'VDO'}
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')
 
     def _get_modules(self):
         distro, version = self.distro
-        modules = self.udisks_modules
+        modules = self.udisks_modules.copy()
         if distro in ('enterprise_linux', 'centos') and version == '7':
-            modules = modules - {'Bcache'}
+            modules.pop('bcache')
         elif distro in ('enterprise_linux', 'centos') and int(version) > 7:
-            modules = modules - {'Bcache', 'BTRFS'}
+            modules.pop('bcache')
+            modules.pop('btrfs')
         # assuming the kvdo module is typically pulled in as a vdo tool dependency
         if not find_executable("vdo"):
-            modules = modules - {'VDO'}
+            modules.pop('vdo')
         return modules
+
+    def _get_udisks2_conf_path(self):
+        _CONF_FILE = 'udisks2.conf'
+        if os.environ['UDISKS_TESTS_ARG_SYSTEM'] == '1':
+            return os.path.join('/etc/udisks2/', _CONF_FILE)
+        else:
+            return os.path.join(os.environ['UDISKS_TESTS_PROJDIR'], 'udisks', _CONF_FILE)
 
     def test_10_manager(self):
         '''Testing the manager object presence'''
@@ -29,22 +44,47 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         version = self.get_property(self.manager_obj, '.Manager', 'Version')
         version.assertIsNotNone()
 
+    def _restore_udisks2_conf(self):
+        if self.udisks2_conf_contents:
+            self.write_file(self._get_udisks2_conf_path(), self.udisks2_conf_contents)
+        else:
+            self.remove_file(self._get_udisks2_conf_path(), ignore_nonexistent=True)
+
     def test_20_enable_modules(self):
+        modules = set(self._get_modules().values())
         manager = self.get_interface(self.manager_obj, '.Manager')
+
+        # make a backup of udisks2.conf
+        self.udisks2_conf_contents = None
+        try:
+            self.udisks2_conf_contents = self.read_file(self._get_udisks2_conf_path())
+        except FileNotFoundError as e:
+            # no existing udisks2.conf, simply remove the file once finished
+            pass
+
+        # mock the udisks2.conf to load only tested modules
+        contents = '[udisks2]\nmodules=%s\n' % ','.join(self._get_modules().keys())
+        self.write_file(self._get_udisks2_conf_path(), contents)
+        self.addCleanup(self._restore_udisks2_conf)
+
+        manager.EnableModules(dbus.Boolean(True))
+
         manager_intro = dbus.Interface(self.manager_obj, "org.freedesktop.DBus.Introspectable")
         intro_data = manager_intro.Introspect()
-        modules = self._get_modules()
-        modules_loaded = any('interface name="%s.Manager.%s"' % (self.iface_prefix, module)
-                             in intro_data for module in modules)
+        for module in modules:
+            self.assertIn('interface name="%s.Manager.%s"' % (self.iface_prefix, module), intro_data)
 
-        if modules_loaded:
-            self.skipTest("Modules already loaded, nothing to test")
-        else:
-            manager.EnableModules(dbus.Boolean(True))
-            intro_data = manager_intro.Introspect()
-
-            for module in modules:
-                self.assertIn('interface name="%s.Manager.%s"' % (self.iface_prefix, module), intro_data)
+    def test_21_enable_single_module(self):
+        manager = self.get_interface(self.manager_obj, '.Manager')
+        # Test that no error is returned for already loaded modules
+        for module in self._get_modules().keys():
+            with self.assertRaises(dbus.exceptions.DBusException):
+                manager.EnableModule(module, dbus.Boolean(False))
+            manager.EnableModule(module, dbus.Boolean(True))
+        with self.assertRaises(dbus.exceptions.DBusException):
+            manager.EnableModule("nonexistent", dbus.Boolean(True))
+        with self.assertRaises(dbus.exceptions.DBusException):
+            manager.EnableModule("nonexistent", dbus.Boolean(False))
 
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')

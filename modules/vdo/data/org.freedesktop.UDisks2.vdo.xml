@@ -47,6 +47,7 @@
   -->
   <interface name="org.freedesktop.UDisks2.Manager.VDO">
     <!-- prereq: org.freedesktop.UDisks2.Manager -->
+    <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
 
     <!--
         CreateVolume:
@@ -70,6 +71,7 @@
         </variablelist>
     -->
     <method name="CreateVolume">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="name" type="s" direction="in" />
       <arg name="device" type="o" direction="in" />
       <arg name="logical_size" type="t" direction="in" />
@@ -90,6 +92,7 @@
         org.freedesktop.UDisks2.Manager.VDO.StartVolumeByName() method call.
     -->
     <method name="ActivateVolumeByName">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="name" type="s" direction="in" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -107,6 +110,7 @@
         a job object will be exposed for this operation.
     -->
     <method name="StartVolumeByName">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="name" type="s" direction="in" />
       <arg name="force_rebuild" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
@@ -132,42 +136,56 @@
   -->
   <interface name="org.freedesktop.UDisks2.Block.VDO">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
-
+    <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
 
     <!-- Name:
          The name of the VDO device.
     -->
-    <property name="Name" type="s" access="read" />
+    <property name="Name" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- Active:
          Indicates whether the device is active.
     -->
-    <property name="Active" type="b" access="read" />
+    <property name="Active" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- Compression:
          Indicates whether compression is enabled.
     -->
-    <property name="Compression" type="b" access="read" />
+    <property name="Compression" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- Deduplication:
          Indicates whether deduplication is enabled.
     -->
-    <property name="Deduplication" type="b" access="read" />
+    <property name="Deduplication" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- LogicalSize:
          The logical size of the VDO volume.
     -->
-    <property name="LogicalSize" type="t" access="read" />
+    <property name="LogicalSize" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- PhysicalSize:
          The physical size of the VDO volume.
     -->
-    <property name="PhysicalSize" type="t" access="read" />
+    <property name="PhysicalSize" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- IndexMemory:
          The index memory size of the VDO volume.
     -->
-    <property name="IndexMemory" type="t" access="read" />
+    <property name="IndexMemory" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
     <!-- WritePolicy:
          The current write policy of the VDO volume.
@@ -179,7 +197,9 @@
           <varlistentry><term>auto</term><listitem><para>VDO will check the storage device and determine whether it supports flushes. If it does, VDO will run in async mode, otherwise it will run in sync mode.</para></listitem></varlistentry>
         </variablelist>
     -->
-    <property name="WritePolicy" type="s" access="read" />
+    <property name="WritePolicy" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
+    </property>
 
 
     <!--
@@ -192,6 +212,7 @@
         on the manager object.
     -->
     <method name="Deactivate">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="options" direction="in" type="a{sv}" />
     </method>
 
@@ -204,6 +225,7 @@
         is running, takes effect immediately.
     -->
     <method name="EnableCompression">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="enable" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -217,6 +239,7 @@
         is running, takes effect immediately.
     -->
     <method name="EnableDeduplication">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="enable" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -235,6 +258,7 @@
         </variablelist>
     -->
     <method name="ChangeWritePolicy">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="write_policy" direction="in" type="s" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -247,6 +271,7 @@
         Removes the VDO volume and associated indexes.
     -->
     <method name="Remove">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="force" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -261,6 +286,7 @@
         method call on the manager object.
     -->
     <method name="Stop">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="force" direction="in" type="b" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -273,6 +299,7 @@
         Grows the logical size of a VDO volume to a size specified by the @size argument. The volume must be running.
     -->
     <method name="GrowLogical">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="size" direction="in" type="t" />
       <arg name="options" direction="in" type="a{sv}" />
     </method>
@@ -284,6 +311,7 @@
         Grows the physical size of a VDO volume to the size of underlying block device. The volume must be running.
     -->
     <method name="GrowPhysical">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="options" direction="in" type="a{sv}" />
     </method>
 
@@ -406,6 +434,7 @@
         </variablelist>
     -->
     <method name="GetStatistics">
+      <annotation name="org.freedesktop.DBus.Deprecated" value="true"/>
       <arg name="options" direction="in" type="a{sv}" />
       <arg name="stats" direction="out" type="a{ss}" />
     </method>

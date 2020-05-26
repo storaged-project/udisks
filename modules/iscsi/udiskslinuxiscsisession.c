@@ -25,7 +25,6 @@
 #include <src/udisksdaemon.h>
 #include <src/udisksdaemonutil.h>
 
-#include "udisksiscsistate.h"
 #include "udisksiscsitypes.h"
 #include "udisksiscsiutil.h"
 #include "udiskslinuxiscsisession.h"
@@ -108,9 +107,9 @@ handle_logout_interface (UDisksISCSISession    *session,
                          const gchar           *arg_iface,
                          GVariant              *arg_options)
 {
-  UDisksDaemon *daemon = NULL;
-  UDisksISCSIState *state = NULL;
-  UDisksLinuxISCSISessionObject *object = NULL;
+  UDisksLinuxModuleISCSI *module;
+  UDisksDaemon *daemon;
+  UDisksLinuxISCSISessionObject *object;
   GError *error = NULL;
   gchar *errorstr = NULL;
   gint err;
@@ -125,7 +124,9 @@ handle_logout_interface (UDisksISCSISession    *session,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  daemon = udisks_linux_iscsi_session_object_get_daemon (object);
+
+  module = udisks_linux_iscsi_session_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
@@ -135,8 +136,6 @@ handle_logout_interface (UDisksISCSISession    *session,
                                      N_("Authentication is required to perform iSCSI logout"),
                                      invocation);
 
-  state = udisks_linux_iscsi_session_object_get_state (object);
-
   /* Parameters */
   name = udisks_iscsi_session_get_target_name (session);
   address = udisks_iscsi_session_get_address (session);
@@ -144,20 +143,13 @@ handle_logout_interface (UDisksISCSISession    *session,
   port = udisks_iscsi_session_get_persistent_port (session);
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (module);
 
   /* Logout */
-  err = iscsi_logout (daemon,
-                      name,
-                      tpgt,
-                      address,
-                      port,
-                      arg_iface,
-                      arg_options,
-                      &errorstr);
+  err = iscsi_logout (module, name, tpgt, address, port, arg_iface, arg_options, &errorstr);
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (module);
 
   if (err != 0)
     {
@@ -201,7 +193,7 @@ handle_logout_interface (UDisksISCSISession    *session,
 
 out:
   g_clear_object (&object);
-  g_free ((gpointer) errorstr);
+  g_free (errorstr);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;

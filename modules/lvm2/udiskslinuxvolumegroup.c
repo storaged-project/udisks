@@ -50,8 +50,6 @@
 #include "udiskslinuxlogicalvolumeobject.h"
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2util.h"
-
 #include "jobhelpers.h"
 
 /**
@@ -190,7 +188,7 @@ udisks_linux_volume_group_get_logical_volumes (UDisksVolumeGroup *group,
   objects = udisks_daemon_get_objects (daemon);
   for (l = objects; l != NULL; l = l->next)
     {
-      volume = udisks_object_peek_logical_volume (UDISKS_OBJECT(l->data));
+      volume = udisks_object_peek_logical_volume (UDISKS_OBJECT (l->data));
       if (volume &&
           g_strcmp0 (udisks_logical_volume_get_volume_group (volume),
                      g_dbus_object_get_object_path (object)) == 0)
@@ -246,6 +244,7 @@ handle_delete (UDisksVolumeGroup     *_group,
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
   UDisksLinuxVolumeGroupObject *object = NULL;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   uid_t caller_uid;
   gboolean teardown_flag = FALSE;
@@ -262,7 +261,8 @@ handle_delete (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   /* Find physical volumes to wipe. */
   if (arg_wipe)
@@ -294,7 +294,7 @@ handle_delete (UDisksVolumeGroup     *_group,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      arg_options,
                                      N_("Authentication is required to delete a volume group"),
                                      invocation);
@@ -348,14 +348,20 @@ handle_delete (UDisksVolumeGroup     *_group,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  UDisksLinuxModuleLVM2 *module;
+  const gchar *name;
+} WaitForVolumeGroupObjectData;
+
 static UDisksObject *
 wait_for_volume_group_object (UDisksDaemon *daemon,
                               gpointer      user_data)
 {
-  const gchar *name = user_data;
+  WaitForVolumeGroupObjectData *data = user_data;
   UDisksLinuxVolumeGroupObject *object;
 
-  object = udisks_daemon_util_lvm2_find_volume_group_object (daemon, name);
+  object = udisks_linux_module_lvm2_find_volume_group_object (data->module, data->name);
 
   if (object == NULL)
     return NULL;
@@ -372,10 +378,12 @@ handle_rename (UDisksVolumeGroup     *_group,
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
   UDisksLinuxVolumeGroupObject *object = NULL;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksObject *group_object = NULL;
   VGJobData data;
+  WaitForVolumeGroupObjectData wait_data;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -384,7 +392,8 @@ handle_rename (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
@@ -400,7 +409,7 @@ handle_rename (UDisksVolumeGroup     *_group,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to rename a volume group"),
                                      invocation);
@@ -427,9 +436,11 @@ handle_rename (UDisksVolumeGroup     *_group,
       goto out;
     }
 
+  wait_data.module = module;
+  wait_data.name = new_name;
   group_object = udisks_daemon_wait_for_object_sync (daemon,
                                                      wait_for_volume_group_object,
-                                                     (gpointer) new_name,
+                                                     &wait_data,
                                                      NULL,
                                                      UDISKS_DEFAULT_WAIT_TIMEOUT,
                                                      &error);
@@ -461,6 +472,7 @@ handle_add_device (UDisksVolumeGroup     *_group,
                    GVariant              *options)
 {
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
@@ -477,7 +489,8 @@ handle_add_device (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -510,7 +523,7 @@ handle_add_device (UDisksVolumeGroup     *_group,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      N_("Authentication is required to add a device to a volume group"),
                                      invocation);
@@ -596,6 +609,7 @@ handle_remove_common (UDisksVolumeGroup     *_group,
                       gboolean               arg_wipe)
 {
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   UDisksLinuxVolumeGroupObject *object;
   uid_t caller_uid;
@@ -631,7 +645,8 @@ handle_remove_common (UDisksVolumeGroup     *_group,
       goto out;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -664,7 +679,7 @@ handle_remove_common (UDisksVolumeGroup     *_group,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      authentication_error_msg,
                                      invocation);
@@ -778,13 +793,15 @@ wait_for_logical_volume_path (UDisksLinuxVolumeGroupObject  *group_object,
                               GError                       **error)
 {
   struct WaitData data;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   UDisksObject *volume_object;
   const gchar *object_path;
 
   data.group_object = group_object;
   data.name = name;
-  daemon = udisks_linux_volume_group_object_get_daemon (group_object);
+  module = udisks_linux_volume_group_object_get_module (group_object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   volume_object = udisks_daemon_wait_for_object_sync (daemon,
                                                       wait_for_logical_volume_object,
                                                       &data,
@@ -824,6 +841,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
   UDisksLinuxVolumeGroupObject *object = NULL;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon;
   uid_t caller_uid;
   const gchar *lv_objpath;
@@ -865,8 +883,8 @@ handle_create_volume (UDisksVolumeGroup              *_group,
       goto out;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -881,7 +899,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      auth_error_msg,
                                      invocation);

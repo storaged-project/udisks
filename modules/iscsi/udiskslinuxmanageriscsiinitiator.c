@@ -32,7 +32,6 @@
 #include <src/udiskslogging.h>
 #include <src/udisksmodulemanager.h>
 
-#include "udisksiscsistate.h"
 #include "udisksiscsiutil.h"
 #include "udiskslinuxmanageriscsiinitiator.h"
 
@@ -52,11 +51,10 @@
  * The #UDisksLinuxManagerISCSIInitiator structure contains only private data
  * and should only be accessed using the provided API.
  */
-struct _UDisksLinuxManagerISCSIInitiator{
+struct _UDisksLinuxManagerISCSIInitiator {
   UDisksManagerISCSIInitiatorSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
-  UDisksISCSIState *state;
+  UDisksLinuxModuleISCSI *module;
   GMutex initiator_config_mutex;  /* We use separate mutex for configuration
                                      file because libiscsi doesn't provide us
                                      any API for this. */
@@ -69,7 +67,7 @@ struct _UDisksLinuxManagerISCSIInitiatorClass {
 enum
 {
   PROP_0,
-  PROP_DAEMON
+  PROP_MODULE
 };
 
 static void udisks_linux_manager_iscsi_initiator_iface_init (UDisksManagerISCSIInitiatorIface *iface);
@@ -92,8 +90,8 @@ udisks_linux_manager_iscsi_initiator_get_property (GObject *object, guint proper
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_iscsi_initiator_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_iscsi_initiator_get_module (manager));
       break;
 
     default:
@@ -110,36 +108,15 @@ udisks_linux_manager_iscsi_initiator_set_property (GObject *object, guint proper
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* We don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
     }
-}
-
-static void
-udisks_linux_manager_iscsi_initiator_constructed (GObject *object)
-{
-  UDisksLinuxManagerISCSIInitiator *manager;
-  UDisksModuleManager *module_manager;
-
-  /* Store state pointer for later usage; libiscsi_context. */
-  manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  module_manager = udisks_daemon_get_module_manager (manager->daemon);
-  manager->state = udisks_module_manager_get_module_state_pointer (module_manager,
-                                                                   ISCSI_MODULE_NAME);
-}
-
-static void
-udisks_linux_manager_iscsi_initiator_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class))
-    G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class)->dispose (object);
 }
 
 static void
@@ -156,20 +133,18 @@ udisks_linux_manager_iscsi_initiator_class_init (UDisksLinuxManagerISCSIInitiato
 
   gobject_class->get_property = udisks_linux_manager_iscsi_initiator_get_property;
   gobject_class->set_property = udisks_linux_manager_iscsi_initiator_set_property;
-  gobject_class->constructed = udisks_linux_manager_iscsi_initiator_constructed;
-  gobject_class->dispose = udisks_linux_manager_iscsi_initiator_dispose;
   gobject_class->finalize = udisks_linux_manager_iscsi_initiator_finalize;
 
-  /** UDisksLinuxManager:daemon
+  /** UDisksLinuxManager:module
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksLinuxModuleISCSI for the object.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_ISCSI,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -179,8 +154,6 @@ udisks_linux_manager_iscsi_initiator_class_init (UDisksLinuxManagerISCSIInitiato
 static void
 udisks_linux_manager_iscsi_initiator_init (UDisksLinuxManagerISCSIInitiator *manager)
 {
-  manager->daemon = NULL;
-
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 #ifdef HAVE_LIBISCSI_GET_SESSION_INFOS
@@ -191,65 +164,34 @@ udisks_linux_manager_iscsi_initiator_init (UDisksLinuxManagerISCSIInitiator *man
 
 /**
  * udisks_linux_manager_iscsi_initiator_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleISCSI.
  *
  * Creates a new #UDisksLinuxManagerISCSIInitiator instance.
  *
  * Returns: A new #UDisksLinuxManagerISCSIInitiator. Free with g_object_unref().
  */
 UDisksLinuxManagerISCSIInitiator *
-udisks_linux_manager_iscsi_initiator_new (UDisksDaemon *daemon)
+udisks_linux_manager_iscsi_initiator_new (UDisksLinuxModuleISCSI *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), NULL);
   return UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (g_object_new (UDISKS_TYPE_LINUX_MANAGER_ISCSI_INITIATOR,
-                                                             "daemon", daemon,
+                                                             "module", module,
                                                              NULL));
 }
 
 /**
- * udisks_linux_manager_iscsi_initiator_get_daemon:
+ * udisks_linux_manager_iscsi_initiator_get_module:
  * @manager: A #UDisksLinuxManagerISCSIInitiator.
  *
- * Gets the daemon used by @manager.
+ * Gets the module used by @manager.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleISCSI. Do not free, the object is owned by @manager.
  */
-UDisksDaemon *
-udisks_linux_manager_iscsi_initiator_get_daemon (UDisksLinuxManagerISCSIInitiator *manager)
+UDisksLinuxModuleISCSI *
+udisks_linux_manager_iscsi_initiator_get_module (UDisksLinuxManagerISCSIInitiator *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
-  return manager->daemon;
-}
-
-/**
- * udisks_linux_manager_iscsi_initiator_get_state:
- * @manager: A #UDisksLinuxManagerISCSIInitiator.
- *
- * Gets the state pointer for iSCSI module.
- *
- * Returns: A #UDisksISCSIState. Do not free, the structure is owned by
- * #UDisksModuleManager.
- */
-static UDisksISCSIState *
-udisks_linux_manager_iscsi_initiator_get_state (UDisksLinuxManagerISCSIInitiator *manager)
-{
-  g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
-  return manager->state;
-}
-
-static struct libiscsi_context *
-udisks_linux_manager_iscsi_initiator_get_iscsi_context (UDisksLinuxManagerISCSIInitiator *manager)
-{
-  UDisksModuleManager *module_manager;
-  UDisksISCSIState *state;
-
-  g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
-
-  module_manager = udisks_daemon_get_module_manager (manager->daemon);
-  state = udisks_module_manager_get_module_state_pointer (module_manager,
-                                                          ISCSI_MODULE_NAME);
-
-  return udisks_iscsi_state_get_libiscsi_context (state);
+  return manager->module;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -399,14 +341,17 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
                            GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  UDisksDaemon *daemon;
   gchar *contents = NULL;
   gchar *contents_group;
   gchar *initiator_name;
   GKeyFile *key_file;
   GError *error = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (manager->daemon,
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
                                                      NULL,
                                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                                      arg_options,
@@ -499,20 +444,16 @@ discover_firmware (UDisksManagerISCSIInitiator  *object,
                    gchar                       **errorstr)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
-
-  gint rval;
   struct libiscsi_context *ctx;
   struct libiscsi_node *found_nodes;
+  gint rval;
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (manager->module);
 
   /* Discovery */
-  ctx = udisks_linux_manager_iscsi_initiator_get_iscsi_context (manager);
-  rval = libiscsi_discover_firmware (ctx,
-                                     nodes_cnt,
-                                     &found_nodes);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (manager->module);
+  rval = libiscsi_discover_firmware (ctx, nodes_cnt, &found_nodes);
 
   if (rval == 0)
     *nodes = iscsi_libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
@@ -520,7 +461,7 @@ discover_firmware (UDisksManagerISCSIInitiator  *object,
     *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (manager->module);
 
   /* Release the resources */
   iscsi_libiscsi_nodes_free (found_nodes);
@@ -536,14 +477,16 @@ handle_discover_send_targets (UDisksManagerISCSIInitiator *object,
                               GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
+  UDisksDaemon *daemon;
   GVariant *nodes = NULL;
   gchar *errorstr = NULL;
   gint err = 0;
   gint nodes_cnt = 0;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
@@ -551,19 +494,13 @@ handle_discover_send_targets (UDisksManagerISCSIInitiator *object,
                                      invocation);
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (manager->module);
 
   /* Perform the discovery. */
-  err = iscsi_discover_send_targets (manager->daemon,
-                                     arg_address,
-                                     arg_port,
-                                     arg_options,
-                                     &nodes,
-                                     &nodes_cnt,
-                                     &errorstr);
+  err = iscsi_discover_send_targets (manager->module, arg_address, arg_port, arg_options, &nodes, &nodes_cnt, &errorstr);
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (manager->module);
 
   if (err != 0)
     {
@@ -577,13 +514,10 @@ handle_discover_send_targets (UDisksManagerISCSIInitiator *object,
     }
 
   /* Return discovered portals. */
-  udisks_manager_iscsi_initiator_complete_discover_send_targets (object,
-                                                                 invocation,
-                                                                 nodes,
-                                                                 nodes_cnt);
+  udisks_manager_iscsi_initiator_complete_discover_send_targets (object, invocation, nodes, nodes_cnt);
 
 out:
-  g_free ((gpointer) errorstr);
+  g_free (errorstr);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;
@@ -595,13 +529,16 @@ handle_discover_firmware (UDisksManagerISCSIInitiator *object,
                           GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  UDisksDaemon *daemon;
   GVariant *nodes = NULL;
   gint err = 0;
   gint nodes_cnt = 0;
   gchar *errorstr = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
@@ -609,10 +546,7 @@ handle_discover_firmware (UDisksManagerISCSIInitiator *object,
                                      invocation);
 
   /* Perform the discovery. */
-  err = discover_firmware (object,
-                           &nodes,
-                           &nodes_cnt,
-                           &errorstr);
+  err = discover_firmware (object, &nodes, &nodes_cnt, &errorstr);
 
   if (err != 0)
     {
@@ -622,15 +556,12 @@ handle_discover_firmware (UDisksManagerISCSIInitiator *object,
                                              iscsi_error_to_udisks_error (err),
                                              N_("Discovery failed: %s"),
                                              errorstr);
-      g_free ((gpointer) errorstr);
+      g_free (errorstr);
       goto out;
     }
 
   /* Return discovered portals. */
-  udisks_manager_iscsi_initiator_complete_discover_firmware (object,
-                                                             invocation,
-                                                             nodes,
-                                                             nodes_cnt);
+  udisks_manager_iscsi_initiator_complete_discover_firmware (object, invocation, nodes, nodes_cnt);
 
 out:
   /* Indicate that we handled the method invocation. */
@@ -648,15 +579,17 @@ handle_login (UDisksManagerISCSIInitiator *object,
               GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
+  UDisksDaemon *daemon;
   gint err = 0;
   gchar *errorstr = NULL;
   GError *error = NULL;
   UDisksObject *iscsi_object = NULL;
   UDisksObject *iscsi_session_object = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
@@ -664,20 +597,13 @@ handle_login (UDisksManagerISCSIInitiator *object,
                                      invocation);
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (manager->module);
 
   /* Login */
-  err = iscsi_login (manager->daemon,
-                     arg_name,
-                     arg_tpgt,
-                     arg_address,
-                     arg_port,
-                     arg_iface,
-                     arg_options,
-                     &errorstr);
+  err = iscsi_login (manager->module, arg_name, arg_tpgt, arg_address, arg_port, arg_iface, arg_options, &errorstr);
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (manager->module);
 
   if (err != 0)
     {
@@ -691,7 +617,7 @@ handle_login (UDisksManagerISCSIInitiator *object,
     }
 
   /* sit and wait until the device appears on dbus */
-  iscsi_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+  iscsi_object = udisks_daemon_wait_for_object_sync (daemon,
                                                      wait_for_iscsi_object,
                                                      g_strdup (arg_name),
                                                      g_free,
@@ -706,7 +632,7 @@ handle_login (UDisksManagerISCSIInitiator *object,
 
   if (udisks_manager_iscsi_initiator_get_sessions_supported (UDISKS_MANAGER_ISCSI_INITIATOR (manager)))
     {
-      iscsi_session_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+      iscsi_session_object = udisks_daemon_wait_for_object_sync (daemon,
                                                                  wait_for_iscsi_session_object,
                                                                  g_strdup (arg_name),
                                                                  g_free,
@@ -721,13 +647,12 @@ handle_login (UDisksManagerISCSIInitiator *object,
     }
 
   /* Complete DBus call. */
-  udisks_manager_iscsi_initiator_complete_login (object,
-                                                 invocation);
+  udisks_manager_iscsi_initiator_complete_login (object, invocation);
 
 out:
   g_clear_object (&iscsi_object);
   g_clear_object (&iscsi_session_object);
-  g_free ((gpointer) errorstr);
+  g_free (errorstr);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;
@@ -744,13 +669,15 @@ handle_logout(UDisksManagerISCSIInitiator *object,
               GVariant                    *arg_options)
 {
   UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  UDisksISCSIState *state = udisks_linux_manager_iscsi_initiator_get_state (manager);
+  UDisksDaemon *daemon;
   gint err = 0;
   gchar *errorstr = NULL;
   GError *error = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (manager->module));
+
   /* Policy check. */
-  UDISKS_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
                                      NULL,
                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                      arg_options,
@@ -758,20 +685,13 @@ handle_logout(UDisksManagerISCSIInitiator *object,
                                      invocation);
 
   /* Enter a critical section. */
-  udisks_iscsi_state_lock_libiscsi_context (state);
+  udisks_linux_module_iscsi_lock_libiscsi_context (manager->module);
 
   /* Logout */
-  err = iscsi_logout (manager->daemon,
-                      arg_name,
-                      arg_tpgt,
-                      arg_address,
-                      arg_port,
-                      arg_iface,
-                      arg_options,
-                      &errorstr);
+  err = iscsi_logout (manager->module, arg_name, arg_tpgt, arg_address, arg_port, arg_iface, arg_options, &errorstr);
 
   /* Leave the critical section. */
-  udisks_iscsi_state_unlock_libiscsi_context (state);
+  udisks_linux_module_iscsi_unlock_libiscsi_context (manager->module);
 
   if (err != 0)
     {
@@ -785,7 +705,7 @@ handle_logout(UDisksManagerISCSIInitiator *object,
     }
 
   /* now sit and wait until the device and session disappear on dbus */
-  if (!udisks_daemon_wait_for_object_to_disappear_sync (manager->daemon,
+  if (!udisks_daemon_wait_for_object_to_disappear_sync (daemon,
                                                         wait_for_iscsi_object,
                                                         g_strdup (arg_name),
                                                         g_free,
@@ -799,7 +719,7 @@ handle_logout(UDisksManagerISCSIInitiator *object,
 
   if (udisks_manager_iscsi_initiator_get_sessions_supported (UDISKS_MANAGER_ISCSI_INITIATOR (manager)))
     {
-      if (!udisks_daemon_wait_for_object_to_disappear_sync (manager->daemon,
+      if (!udisks_daemon_wait_for_object_to_disappear_sync (daemon,
                                                             wait_for_iscsi_session_object,
                                                             g_strdup (arg_name),
                                                             g_free,
@@ -813,11 +733,10 @@ handle_logout(UDisksManagerISCSIInitiator *object,
     }
 
   /* Complete DBus call. */
-  udisks_manager_iscsi_initiator_complete_logout (object,
-                                                  invocation);
+  udisks_manager_iscsi_initiator_complete_logout (object, invocation);
 
 out:
-  g_free ((gpointer) errorstr);
+  g_free (errorstr);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;

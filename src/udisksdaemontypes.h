@@ -257,16 +257,4 @@ typedef gboolean (*UDisksObjectUpdateInterfaceFunc)  (UDisksObject   *object,
                                                       const gchar    *uevent_action,
                                                       GDBusInterface *interface);
 
-/**
- * UDisksTrackParentFunc:
- * @daemon: The #UDisksDaemon.
- * @path: The object path of the object to examine.
- * @uuid_ret: Place to return the UUID of the parent.
- *
- * Type of functions that hook into #udisks_daemon_get_parent_for_tracking.
- */
-typedef gchar *(*UDisksTrackParentFunc) (UDisksDaemon  *daemon,
-                                         const gchar   *path,
-                                         gchar        **uuid_ret);
-
 #endif /* __UDISKS_DAEMON_TYPES_H__ */

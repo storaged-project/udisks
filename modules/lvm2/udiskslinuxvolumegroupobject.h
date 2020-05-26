@@ -23,8 +23,8 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udiskslvm2types.h"
+#include "udiskslinuxmodulelvm2.h"
 
-#include <gudev/gudev.h>
 #include <blockdev/lvm.h>
 
 G_BEGIN_DECLS
@@ -34,13 +34,13 @@ G_BEGIN_DECLS
 #define UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_VOLUME_GROUP_OBJECT))
 
 GType                           udisks_linux_volume_group_object_get_type      (void) G_GNUC_CONST;
-UDisksLinuxVolumeGroupObject   *udisks_linux_volume_group_object_new           (UDisksDaemon                 *daemon,
+UDisksLinuxVolumeGroupObject   *udisks_linux_volume_group_object_new           (UDisksLinuxModuleLVM2        *module,
                                                                                 const gchar                  *name);
 const gchar                    *udisks_linux_volume_group_object_get_name      (UDisksLinuxVolumeGroupObject *object);
-UDisksDaemon                   *udisks_linux_volume_group_object_get_daemon    (UDisksLinuxVolumeGroupObject *object);
+UDisksLinuxModuleLVM2          *udisks_linux_volume_group_object_get_module    (UDisksLinuxVolumeGroupObject *object);
 void                            udisks_linux_volume_group_object_update        (UDisksLinuxVolumeGroupObject *object,
-                                                                                BDLVMVGdata *vginfo,
-                                                                                GSList *pvs);
+                                                                                BDLVMVGdata                  *vginfo,
+                                                                                GSList                       *pvs);
 
 void                            udisks_linux_volume_group_object_poll          (UDisksLinuxVolumeGroupObject *object);
 

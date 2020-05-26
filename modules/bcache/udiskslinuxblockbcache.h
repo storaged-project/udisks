@@ -22,6 +22,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udisksbcachetypes.h"
+#include "udiskslinuxmodulebcache.h"
 
 G_BEGIN_DECLS
 
@@ -37,10 +38,10 @@ typedef struct _UDisksLinuxBlockBcache        UDisksLinuxBlockBcache;
 typedef struct _UDisksLinuxBlockBcacheClass   UDisksLinuxBlockBcacheClass;
 
 GType                    udisks_linux_block_bcache_get_type    (void) G_GNUC_CONST;
-UDisksLinuxBlockBcache  *udisks_linux_block_bcache_new         (void);
+UDisksLinuxBlockBcache  *udisks_linux_block_bcache_new         (UDisksLinuxModuleBcache *module,
+                                                                UDisksLinuxBlockObject  *block_object);
 gboolean                 udisks_linux_block_bcache_update      (UDisksLinuxBlockBcache  *block,
                                                                 UDisksLinuxBlockObject  *object);
-UDisksDaemon            *udisks_linux_block_bcache_get_daemon  (UDisksLinuxBlockBcache  *block);
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_BCACHE_H__ */

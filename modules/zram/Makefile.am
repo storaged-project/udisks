@@ -2,13 +2,6 @@
 
 SUBDIRS = data
 
-ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
-
-MODULE_SO = libudisks2_zram.so
-
-zramconfdir = $(libdir)/zram.conf.d
-zramconf_DATA =
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -20,9 +13,9 @@ CPPFLAGS =                                                                     \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
-        -DPACKAGE_ZRAMCONF_DIR=\""$(zramconfdir)"\"                            \
-        -DPACKAGE_MODPROBE_DIR=\""$(modprobedir)"\"                            \
-        -DPACKAGE_MODLOAD_DIR=\""$(modloaddir)"\"                              \
+	-DPACKAGE_ZRAMCONF_DIR=\""$(zramconfdir)"\"                            \
+	-DPACKAGE_MODPROBE_DIR=\""$(modprobedir)"\"                            \
+	-DPACKAGE_MODLOAD_DIR=\""$(modloaddir)"\"                              \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DUDISKS_COMPILATION                                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
@@ -33,33 +26,31 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
+if ENABLE_DAEMON
+
+ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
+
+MODULE_SO = libudisks2_zram.so
+
+zramconfdir = $(libdir)/zram.conf.d
+zramconf_DATA =
+
 BUILT_SOURCES =                                                                \
 	$(NULL)
 
-libudisks2_zramdir=$(libdir)/udisks2/modules
-libudisks2_zram_LTLIBRARIES=libudisks2_zram.la
+libudisks2_zramdir = $(libdir)/udisks2/modules
+libudisks2_zram_LTLIBRARIES = libudisks2_zram.la
 
-libudisks2_zramincludedir=$(includedir)/udisks2/udisks
-
-libudisks2_zraminclude_HEADERS =                                               \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(NULL)
+libudisks2_zramincludedir = $(includedir)/udisks2/udisks
 
 libudisks2_zram_la_SOURCES =                                                   \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	udiskslinuxmodulezram.h                                                \
+	udiskslinuxmodulezram.c                                                \
 	udiskslinuxblockzram.c                                                 \
 	udiskslinuxblockzram.h                                                 \
 	udiskslinuxmanagerzram.h                                               \
 	udiskslinuxmanagerzram.c                                               \
-	udiskszrammoduleiface.c                                                \
-	udiskszramstate.h                                                      \
-	udiskszramstate.c                                                      \
 	udiskszramtypes.h                                                      \
 	udiskszramutil.c                                                       \
 	udiskszramutil.h                                                       \
@@ -95,6 +86,10 @@ libudisks2_zram_la_LIBADD =                                                    \
 	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -103,8 +98,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)

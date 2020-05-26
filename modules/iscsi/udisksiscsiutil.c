@@ -27,7 +27,6 @@
 #include <src/udiskslogging.h>
 
 #include "udisksiscsitypes.h"
-#include "udisksiscsistate.h"
 #include "udisksiscsiutil.h"
 
 #ifndef HAVE_LIBISCSI_ERR
@@ -102,23 +101,9 @@ enum {
 };
 #endif /* HAVE_LIBISCSI_ERR */
 
+
 const gchar *iscsi_nodes_fmt = "a(sisis)";
 const gchar *iscsi_node_fmt = "(sisis)";
-
-static struct libiscsi_context *
-iscsi_get_libiscsi_context (UDisksDaemon *daemon)
-{
-  UDisksISCSIState *state;
-  UDisksModuleManager *module_manager;
-
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-
-  module_manager = udisks_daemon_get_module_manager (daemon);
-  state = udisks_module_manager_get_module_state_pointer (module_manager,
-                                                          ISCSI_MODULE_NAME);
-
-  return udisks_iscsi_state_get_libiscsi_context (state);
-}
 
 static void
 iscsi_make_auth_info (struct libiscsi_auth_info *auth_info,
@@ -172,7 +157,7 @@ iscsi_make_node (struct libiscsi_node *node,
 }
 
 static gint
-iscsi_perform_login_action (UDisksDaemon             *daemon,
+iscsi_perform_login_action (UDisksLinuxModuleISCSI     *module,
                             libiscsi_login_action       action,
                             struct libiscsi_node       *node,
                             struct libiscsi_auth_info  *auth_info,
@@ -181,10 +166,10 @@ iscsi_perform_login_action (UDisksDaemon             *daemon,
   struct libiscsi_context *ctx;
   gint err;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), 1);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), 1);
 
   /* Get a libiscsi context. */
-  ctx = iscsi_get_libiscsi_context (daemon);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (module);
 
   if (action == ACTION_LOGIN &&
       auth_info && auth_info->method == libiscsi_auth_chap)
@@ -280,14 +265,14 @@ iscsi_params_pop_chap_data (GVariant      *params,
 }
 
 gint
-iscsi_login (UDisksDaemon  *daemon,
-             const gchar   *name,
-             const gint     tpgt,
-             const gchar   *address,
-             const gint     port,
-             const gchar   *iface,
-             GVariant      *params,
-             gchar        **errorstr)
+iscsi_login (UDisksLinuxModuleISCSI *module,
+             const gchar            *name,
+             const gint              tpgt,
+             const gchar            *address,
+             const gint              port,
+             const gchar            *iface,
+             GVariant               *params,
+             gchar                 **errorstr)
 {
   struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info = {0,};
@@ -299,7 +284,7 @@ iscsi_login (UDisksDaemon  *daemon,
   const gchar *reverse_password = NULL;
   gint err;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), 1);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), 1);
 
   /* Optional data for CHAP authentication. We pop these parameters from the
    * dictionary; it then contains only iSCSI node parameters. */
@@ -320,10 +305,10 @@ iscsi_login (UDisksDaemon  *daemon,
   iscsi_make_node (&node, name, tpgt, address, port, iface);
 
   /* Get iscsi context. */
-  ctx = iscsi_get_libiscsi_context (daemon);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (module);
 
   /* Login */
-  err = iscsi_perform_login_action (daemon,
+  err = iscsi_perform_login_action (module,
                                     ACTION_LOGIN,
                                     &node,
                                     &auth_info,
@@ -341,29 +326,29 @@ iscsi_login (UDisksDaemon  *daemon,
 }
 
 gint
-iscsi_logout (UDisksDaemon  *daemon,
-              const gchar   *name,
-              const gint     tpgt,
-              const gchar   *address,
-              const gint     port,
-              const gchar   *iface,
-              GVariant      *params,
-              gchar        **errorstr)
+iscsi_logout (UDisksLinuxModuleISCSI *module,
+              const gchar            *name,
+              const gint              tpgt,
+              const gchar            *address,
+              const gint              port,
+              const gchar            *iface,
+              GVariant               *params,
+              gchar                 **errorstr)
 {
   struct libiscsi_context *ctx;
   struct libiscsi_node node = {0,};
   gint err;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), 1);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), 1);
 
   /* Create iscsi node. */
   iscsi_make_node (&node, name, tpgt, address, port, iface);
 
   /* Get iscsi context. */
-  ctx = iscsi_get_libiscsi_context (daemon);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (module);
 
   /* Logout */
-  err = iscsi_perform_login_action (daemon,
+  err = iscsi_perform_login_action (module,
                                     ACTION_LOGOUT,
                                     &node,
                                     NULL,
@@ -380,13 +365,13 @@ iscsi_logout (UDisksDaemon  *daemon,
 }
 
 gint
-iscsi_discover_send_targets (UDisksDaemon   *daemon,
-                             const gchar    *address,
-                             const guint16   port,
-                             GVariant       *params,
-                             GVariant      **nodes,
-                             gint           *nodes_cnt,
-                             gchar         **errorstr)
+iscsi_discover_send_targets (UDisksLinuxModuleISCSI *module,
+                             const gchar            *address,
+                             const guint16           port,
+                             GVariant               *params,
+                             GVariant              **nodes,
+                             gint                   *nodes_cnt,
+                             gchar                 **errorstr)
 {
   struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info = {0,};
@@ -397,9 +382,9 @@ iscsi_discover_send_targets (UDisksDaemon   *daemon,
   const gchar *reverse_password = NULL;
   gint err;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), 1);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), 1);
 
-  ctx = iscsi_get_libiscsi_context (daemon);
+  ctx = udisks_linux_module_iscsi_get_libiscsi_context (module);
 
   /* Optional data for CHAP authentication. */
   iscsi_params_get_chap_data (params,

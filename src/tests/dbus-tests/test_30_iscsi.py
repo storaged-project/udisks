@@ -29,7 +29,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
-        if not cls.check_module_loaded('ISCSI.Initiator'):
+        if not cls.check_module_loaded('iscsi'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for iscsi tests not loaded, skipping.')
 
@@ -54,6 +54,13 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # in Python 2 data is string even when opening the file as 'rb'
         initiator = bytearray(data)
         return initiator.strip().split(b"InitiatorName=")[1]
+
+    def test__manager_interface(self):
+        '''Test for module D-Bus Manager interface presence'''
+
+        manager = self.get_object('/Manager')
+        intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
+        self.assertIn('interface name="%s.Manager.ISCSI.Initiator"' % self.iface_prefix, intro_data)
 
     def test_initiator_name(self):
         manager = self.get_object('/Manager')

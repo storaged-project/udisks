@@ -24,8 +24,6 @@
 
 typedef struct BDBtrfsSubvolumeInfo BDBtrfsSubvolumeInfo;
 
-extern const gchar *btrfs_policy_action_id;
-
 GVariant           *btrfs_subvolumes_to_gvariant (BDBtrfsSubvolumeInfo **subvolumes_info,
                                                   gint                  *subvolumes_cnt);
 

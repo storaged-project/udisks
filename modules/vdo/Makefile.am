@@ -2,10 +2,6 @@
 
 SUBDIRS = data
 
-VDO_MODULE_DIR = $(top_srcdir)/modules/vdo
-
-MODULE_SO = libudisks2_vdo.so
-
 NULL =
 
 CPPFLAGS =                                                                     \
@@ -27,6 +23,12 @@ CPPFLAGS =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
+if ENABLE_DAEMON
+
+VDO_MODULE_DIR = $(top_srcdir)/modules/vdo
+
+MODULE_SO = libudisks2_vdo.so
+
 BUILT_SOURCES =                                                                \
 	$(NULL)
 
@@ -35,24 +37,15 @@ libudisks2_vdo_LTLIBRARIES = libudisks2_vdo.la
 
 libudisks2_vdoincludedir = $(includedir)/udisks2/udisks
 
-libudisks2_vdoinclude_HEADERS =                                                \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(NULL)
-
 libudisks2_vdo_la_SOURCES =                                                    \
 	$(BUILT_SOURCES)                                                       \
-	$(top_srcdir)/modules/udisksmoduleiface.h                              \
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h                         \
-	$(top_srcdir)/modules/udisksmoduleobject.h                             \
-	$(top_srcdir)/modules/udisksmoduleobject.c                             \
+	udiskslinuxmodulevdo.h                                                 \
+	udiskslinuxmodulevdo.c                                                 \
 	udiskslinuxblockvdo.h                                                  \
 	udiskslinuxblockvdo.c                                                  \
 	udiskslinuxmanagervdo.h                                                \
 	udiskslinuxmanagervdo.c                                                \
 	udisksvdotypes.h                                                       \
-	udisksvdomoduleiface.c                                                 \
 	$(NULL)
 
 libudisks2_vdo_la_CPPFLAGS =                                                   \
@@ -85,6 +78,10 @@ libudisks2_vdo_la_LIBADD =                                                     \
 	$(BLOCKDEV_LIBS)                                                       \
 	$(NULL)
 
+all-local: module_link
+
+endif # ENABLE_DAEMON
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES =
@@ -93,8 +90,6 @@ EXTRA_DIST =                                                                   \
 	$(NULL)
 
 include ../Makefile.uninstalled
-
-all-local: module_link
 
 dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)

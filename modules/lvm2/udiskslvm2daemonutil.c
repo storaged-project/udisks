@@ -49,7 +49,6 @@
 #include <src/udisksmodulemanager.h>
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2state.h"
 
 /**
  * SECTION:udiskslvm2daemonutil
@@ -243,25 +242,6 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
   g_clear_object (&volume_group_object);
   g_free (volume_group_name);
   return ret;
-}
-
-/* -------------------------------------------------------------------------------- */
-
-/*  transfer-none  */
-UDisksLinuxVolumeGroupObject *
-udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
-                                                  const gchar  *name)
-{
-  UDisksLVM2State *state;
-  UDisksModuleManager *manager;
-
-  manager = udisks_daemon_get_module_manager (daemon);
-  g_assert (manager != NULL);
-
-  state = (UDisksLVM2State *) udisks_module_manager_get_module_state_pointer (manager, LVM2_MODULE_NAME);
-  g_assert (state != NULL);
-
-  return g_hash_table_lookup (udisks_lvm2_state_get_name_to_volume_group (state), name);
 }
 
 /* -------------------------------------------------------------------------------- */

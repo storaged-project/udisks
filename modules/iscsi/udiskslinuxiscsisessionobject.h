@@ -22,6 +22,7 @@
 
 #include <src/udisksdaemontypes.h>
 #include "udisksiscsitypes.h"
+#include "udiskslinuxmoduleiscsi.h"
 
 G_BEGIN_DECLS
 
@@ -32,23 +33,19 @@ G_BEGIN_DECLS
 #define UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UDISKS_TYPE_LINUX_ISCSI_SESSION_OBJECT))
 #define UDISKS_LINUX_ISCSI_SESSION_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), UDISKS_TYPE_LINUX_ISCSI_SESSION_OBJECT, UDisksLinuxISCSISessionObjectClass))
 
-GType                          udisks_linux_iscsi_session_object_get_type
-                                                            (void) G_GNUC_CONST;
-UDisksLinuxISCSISessionObject *udisks_linux_iscsi_session_object_new
-                                                            (UDisksDaemon *daemon,
-                                                             const gchar    *session_id);
-UDisksDaemon                  *udisks_linux_iscsi_session_object_get_daemon
+GType                           udisks_linux_iscsi_session_object_get_type  (void) G_GNUC_CONST;
+UDisksLinuxISCSISessionObject  *udisks_linux_iscsi_session_object_new (UDisksLinuxModuleISCSI *module,
+                                                                       const gchar            *session_id);
+UDisksLinuxModuleISCSI         *udisks_linux_iscsi_session_object_get_module
                                                             (UDisksLinuxISCSISessionObject *session_object);
-const gchar                   *udisks_linux_iscsi_session_object_get_session_id
+const gchar                    *udisks_linux_iscsi_session_object_get_session_id
                                                             (UDisksLinuxISCSISessionObject *session_object);
-UDisksISCSIState              *udisks_linux_iscsi_session_object_get_state
-                                                            (UDisksLinuxISCSISessionObject *session_object);
-gchar                         *udisks_linux_iscsi_session_object_get_object_path
+gchar                          *udisks_linux_iscsi_session_object_get_object_path
                                                             (UDisksLinuxISCSISessionObject *session_object);
 
-gchar                         *udisks_linux_iscsi_session_object_make_object_path
+gchar                          *udisks_linux_iscsi_session_object_make_object_path
                                                             (const gchar *session_id);
-gchar                         *udisks_linux_iscsi_session_object_get_session_id_from_sysfs_path
+gchar                          *udisks_linux_iscsi_session_object_get_session_id_from_sysfs_path
                                                             (const gchar *sysfs_path);
 
 G_END_DECLS

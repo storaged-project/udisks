@@ -22,6 +22,7 @@
 #define __UDISKS_LINUX_MANAGER_ZRAM_H__
 
 #include <src/udisksdaemontypes.h>
+#include "udiskslinuxmodulezram.h"
 
 G_BEGIN_DECLS
 
@@ -36,8 +37,8 @@ typedef struct _UDisksLinuxManagerZRAM UDisksLinuxManagerZRAM;
 typedef struct _UDisksLinuxManagerZRAMClass UDisksLinuxManagerZRAMClass;
 
 GType                    udisks_linux_manager_zram_get_type    (void) G_GNUC_CONST;
-UDisksLinuxManagerZRAM  *udisks_linux_manager_zram_new         (UDisksDaemon            *daemon);
-UDisksDaemon            *udisks_linux_manager_zram_get_daemon  (UDisksLinuxManagerZRAM  *manager);
+UDisksLinuxManagerZRAM  *udisks_linux_manager_zram_new         (UDisksLinuxModuleZRAM   *module);
+UDisksLinuxModuleZRAM   *udisks_linux_manager_zram_get_module  (UDisksLinuxManagerZRAM  *manager);
 
 G_END_DECLS
 

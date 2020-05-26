@@ -43,11 +43,13 @@
  *
  * The #UDisksLinuxManagerVDO structure contains only private data and
  * should only be accessed using the provided API.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 struct _UDisksLinuxManagerVDO{
   UDisksManagerVDOSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleVDO *module;
 };
 
 struct _UDisksLinuxManagerVDOClass {
@@ -56,15 +58,13 @@ struct _UDisksLinuxManagerVDOClass {
 
 static void udisks_linux_manager_vdo_iface_init (UDisksManagerVDOIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerVDO, udisks_linux_manager_vdo,
-                         UDISKS_TYPE_MANAGER_VDO_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_VDO,
-                                                udisks_linux_manager_vdo_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManagerVDO, udisks_linux_manager_vdo, UDISKS_TYPE_MANAGER_VDO_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MANAGER_VDO, udisks_linux_manager_vdo_iface_init));
 
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   N_PROPERTIES
 };
 
@@ -76,8 +76,8 @@ udisks_linux_manager_vdo_get_property (GObject *object, guint property_id,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_manager_vdo_get_daemon (manager));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_manager_vdo_get_module (manager));
       break;
 
     default:
@@ -94,23 +94,15 @@ udisks_linux_manager_vdo_set_property (GObject *object, guint property_id,
 
   switch (property_id)
     {
-    case PROP_DAEMON:
-      g_assert (manager->daemon == NULL);
-      /* We don't take a reference to the daemon */
-      manager->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (manager->module == NULL);
+      manager->module = g_value_dup_object (value);
       break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
     }
-}
-
-static void
-udisks_linux_manager_vdo_dispose (GObject *object)
-{
-  if (G_OBJECT_CLASS (udisks_linux_manager_vdo_parent_class))
-      G_OBJECT_CLASS (udisks_linux_manager_vdo_parent_class)->dispose (object);
 }
 
 static void
@@ -127,20 +119,21 @@ udisks_linux_manager_vdo_class_init (UDisksLinuxManagerVDOClass *klass)
 
   gobject_class->get_property = udisks_linux_manager_vdo_get_property;
   gobject_class->set_property = udisks_linux_manager_vdo_set_property;
-  gobject_class->dispose = udisks_linux_manager_vdo_dispose;
   gobject_class->finalize = udisks_linux_manager_vdo_finalize;
 
   /**
-   * UDisksLinuxManager:daemon
+   * UDisksLinuxManagerVDO:module:
    *
-   * The #UDisksDaemon for the object.
+   * The #UDisksLinuxModuleVDO for the object.
+   *
+   * Deprecated: 2.9
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon for the object",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module for the object",
+                                                        UDISKS_TYPE_LINUX_MODULE_VDO,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -156,36 +149,39 @@ udisks_linux_manager_vdo_init (UDisksLinuxManagerVDO *self)
 
 /**
  * udisks_linux_manager_vdo_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleVDO.
  *
  * Creates a new #UDisksLinuxManagerVDO instance.
  *
  * Returns: A new #UDisksLinuxManagerVDO. Free with g_object_unref().
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
 UDisksLinuxManagerVDO *
-udisks_linux_manager_vdo_new (UDisksDaemon *daemon)
+udisks_linux_manager_vdo_new (UDisksLinuxModuleVDO *module)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  return UDISKS_LINUX_MANAGER_VDO(g_object_new (UDISKS_TYPE_LINUX_MANAGER_VDO,
-                                                "daemon", daemon,
-                                                NULL));
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_VDO (module), NULL);
+  return UDISKS_LINUX_MANAGER_VDO (g_object_new (UDISKS_TYPE_LINUX_MANAGER_VDO,
+                                                 "module", module,
+                                                 NULL));
 }
 
 /**
- * udisks_linux_manager_vdo_get_daemon:
+ * udisks_linux_manager_vdo_get_module:
  * @manager: A #UDisksLinuxManagerVDO.
  *
- * Gets the daemon used by @manager.
+ * Gets the module used by @manager.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @manager.
+ * Returns: A #UDisksLinuxModuleVDO. Do not free, the object is owned by @manager.
+ *
+ * Deprecated: 2.9: Use LVM-VDO integration instead.
  */
-UDisksDaemon *
-udisks_linux_manager_vdo_get_daemon (UDisksLinuxManagerVDO *manager)
+UDisksLinuxModuleVDO *
+udisks_linux_manager_vdo_get_module (UDisksLinuxManagerVDO *manager)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_MANAGER_VDO (manager), NULL);
-  return manager->daemon;
+  return manager->module;
 }
-
 
 static UDisksObject *
 wait_for_vdo_object (UDisksDaemon *daemon,
@@ -229,6 +225,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
                       GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
+  UDisksDaemon *daemon;
   UDisksObject *block_object;
   UDisksObject *vdo_object;
   UDisksBlock *block;
@@ -238,8 +235,10 @@ handle_create_volume (UDisksManagerVDO      *manager,
   gchar *dev;
   uid_t caller_uid;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_manager->module));
+
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
@@ -259,7 +258,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  if (! udisks_daemon_util_get_caller_uid_sync (l_manager->daemon,
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
@@ -269,7 +268,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  block_object = udisks_daemon_find_object (l_manager->daemon, arg_device);
+  block_object = udisks_daemon_find_object (daemon, arg_device);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -292,7 +291,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  job = udisks_daemon_launch_simple_job (l_manager->daemon,
+  job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (block_object),
                                          "vdo-create-volume",
                                          caller_uid,
@@ -317,7 +316,7 @@ handle_create_volume (UDisksManagerVDO      *manager,
   g_free (dev);
 
   /* Sit and wait for the VDO object to show up */
-  vdo_object = udisks_daemon_wait_for_object_sync (l_manager->daemon,
+  vdo_object = udisks_daemon_wait_for_object_sync (daemon,
                                                    wait_for_vdo_object,
                                                    (gpointer) arg_name,
                                                    NULL,
@@ -352,10 +351,13 @@ handle_activate_volume_by_name (UDisksManagerVDO      *manager,
                                 GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
+  UDisksDaemon *daemon;
   GError *error = NULL;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_manager->module));
+
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
@@ -389,13 +391,16 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
                              GVariant              *arg_options)
 {
   UDisksLinuxManagerVDO *l_manager = UDISKS_LINUX_MANAGER_VDO (manager);
+  UDisksDaemon *daemon;
   UDisksObject *object;
   UDisksBaseJob *job;
   GError *error = NULL;
   uid_t caller_uid;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (l_manager->module));
+
   /* Policy check. */
-  if (! udisks_daemon_util_check_authorization_sync (l_manager->daemon,
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
                                                      NULL,
                                                      "org.freedesktop.udisks2.vdo.manage-vdo",
                                                      arg_options,
@@ -403,7 +408,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
                                                      invocation))
     return TRUE;
 
-  if (! udisks_daemon_util_get_caller_uid_sync (l_manager->daemon,
+  if (! udisks_daemon_util_get_caller_uid_sync (daemon,
                                                 invocation,
                                                 NULL /* GCancellable */,
                                                 &caller_uid,
@@ -413,7 +418,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
       return TRUE;
     }
 
-  job = udisks_daemon_launch_simple_job (l_manager->daemon,
+  job = udisks_daemon_launch_simple_job (daemon,
                                          NULL,
                                          "vdo-start-volume",
                                          caller_uid,
@@ -433,7 +438,7 @@ handle_start_volume_by_name (UDisksManagerVDO      *manager,
     }
 
   /* Sit and wait for the VDO object to show up */
-  object = udisks_daemon_wait_for_object_sync (l_manager->daemon,
+  object = udisks_daemon_wait_for_object_sync (daemon,
                                                wait_for_vdo_object,
                                                (gpointer) arg_name,
                                                NULL,

@@ -266,9 +266,5 @@ _vpd83_2_lsm_vri_data_hash = {
     * Free memorys and close connections.
 
 ## TODO
-* Warnning:
-    (udisksd:12885): GLib-GObject-WARNING **: g_object_notify: object class
-    'UDisksLinuxDriveObject' has no property named 'drive-lsm'
-
 * Add extra sections to the documentation, currently we only have dbus
   interface documentation.

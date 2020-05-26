@@ -51,8 +51,8 @@
  */
 struct _LsmUriSet
 {
-  const char *uri;
-  const char *password;
+  char *uri;
+  char *password;
 };
 
 /*
@@ -63,7 +63,7 @@ struct _LsmConnData
 {
   lsm_connect *lsm_conn;
   lsm_volume *lsm_vol;
-  const char *pl_id;
+  char *pl_id;
 };
 
 /*
@@ -78,7 +78,7 @@ struct _LsmPlData
   gboolean is_raid_error;
   gboolean is_raid_verifying;
   gboolean is_raid_reconstructing;
-  const char *status_info;
+  char *status_info;
 };
 
 /*
@@ -87,7 +87,7 @@ struct _LsmPlData
 struct _LsmVriData
 {
   gint64 last_refresh_time;
-  const char *raid_type_str;
+  char *raid_type_str;
   uint32_t min_io_size;
   uint32_t opt_io_size;
   uint32_t raid_disk_count;
@@ -95,39 +95,18 @@ struct _LsmVriData
 
 static GPtrArray *_conf_lsm_uri_sets = NULL;
 static uint32_t _conf_refresh_interval = 30;
-static const gboolean _sys_id_supported = TRUE;
+static gboolean _sys_id_supported = TRUE;
 static GPtrArray *_all_lsm_conn_array = NULL;
 static GHashTable *_supported_sys_id_hash = NULL;
 static GHashTable *_vpd83_2_lsm_conn_data_hash = NULL;
 static GHashTable *_pl_id_2_lsm_pl_data_hash = NULL;
 static GHashTable *_vpd83_2_lsm_vri_data_hash = NULL;
 
-static struct _LsmUriSet *_lsm_uri_set_new (const char *uri, const char *pass);
-static void _handle_lsm_error (const char *msg, lsm_connect *lsm_conn);
-static const char *_lsm_raid_type_to_str (lsm_volume_raid_type raid_type);
-static void _load_module_conf (UDisksDaemon *daemon);
-static lsm_connect *_create_lsm_connect (struct _LsmUriSet *lsm_uri_set);
-static GPtrArray *_get_supported_lsm_volumes (lsm_connect *lsm_conn);
-static GPtrArray *_get_supported_lsm_pls (lsm_connect *lsm_conn);
-static gboolean _fill_supported_system_id_hash (lsm_connect *lsm_conn);
-static void _fill_pl_id_2_lsm_pl_data_hash (GPtrArray *lsm_pl_array,
-                                            gint64 last_refresh_time);
-static void _fill_vpd83_2_lsm_conn_data_hash (lsm_connect *lsm_conn,
-                                              GPtrArray *lsm_vol_array);
 static void _fill_lsm_pl_data (struct _LsmPlData *lsm_pl_data,
-                               lsm_pool *lsm_pl, gint64 last_refresh_time);
-static struct _LsmVriData *
-_refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data, const char *vpd83);
-static struct _LsmPlData *_lsm_pl_data_lookup (const char *vpd83);
-static struct _LsmVriData *_lsm_vri_data_lookup (const char *vpd83);
+                               lsm_pool          *lsm_pl,
+                               gint64             last_refresh_time);
 
-static gchar *_lsm_get_conf_path (UDisksDaemon *daemon);
-
-static void _free_lsm_connect (gpointer data);
 static void _free_lsm_uri_set (gpointer data);
-static void _free_lsm_conn_data (gpointer data);
-static void _free_lsm_pl_data (gpointer data);
-static void _free_lsm_vri_data (gpointer data);
 
 static struct _LsmUriSet *
 _lsm_uri_set_new (const char *uri, const char *pass)
@@ -141,28 +120,30 @@ _lsm_uri_set_new (const char *uri, const char *pass)
 }
 
 /*
- * Print lsm error via udisks_warning ()
+ * Convert LSM error to GError.
  *
  */
 static void
-_handle_lsm_error (const char *msg, lsm_connect *lsm_conn)
+_handle_lsm_error (const char   *msg,
+                   lsm_connect  *lsm_conn,
+                   GError      **error)
 {
   lsm_error *lsm_err = NULL;
 
   lsm_err = lsm_error_last_get (lsm_conn);
   if (lsm_err)
     {
-      udisks_warning ("%s. Error code: %d, error message: %s",
-                      msg, lsm_error_number_get (lsm_err),
-                      lsm_error_message_get (lsm_err));
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "%s. Error code: %d, error message: %s",
+                   msg, lsm_error_number_get (lsm_err), lsm_error_message_get (lsm_err));
       lsm_error_free (lsm_err);
     }
   else
     {
-      udisks_warning
-        ("LSM: %s. But failed to retrieve error code and message", msg);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "LSM: %s. But failed to retrieve error code and message.",
+                   msg);
     }
-  return;
 }
 
 /*
@@ -196,6 +177,20 @@ _lsm_raid_type_to_str (lsm_volume_raid_type raid_type)
     }
 }
 
+static char *
+_lsm_get_conf_path (UDisksDaemon *daemon)
+{
+  UDisksConfigManager *config_manager;
+
+  config_manager = udisks_daemon_get_config_manager (daemon);
+
+  /* This should give us '/etc/udisks2/modules.conf.d/udisks2_lsm.conf' */
+  return g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                           _STD_LSM_CONF_PATH,
+                           _STD_LSM_CONF_FILE,
+                           NULL);
+}
+
 /*
  * Use libconfig.h to read config file.
  * Set these static variables
@@ -203,11 +198,11 @@ _lsm_raid_type_to_str (lsm_volume_raid_type raid_type)
  *    gint64 _conf_refresh_interval
  * Memory should be freed by
  */
-static void
-_load_module_conf (UDisksDaemon *daemon)
+static gboolean
+_load_module_conf (UDisksDaemon *daemon, GError **error)
 {
   struct _LsmUriSet *lsm_uri_set = NULL;
-  config_t *cfg = NULL;
+  config_t cfg;
   int cfg_value_int = 0;
   config_setting_t *ext_uris = NULL;
   config_setting_t *ext_pass = NULL;
@@ -215,86 +210,92 @@ _load_module_conf (UDisksDaemon *daemon)
   const char *password = NULL;
   char *conf_path;
   int i;
+  gboolean ret = TRUE;
 
-  udisks_debug ("LSM: loading configure");
+  udisks_debug ("LSM: loading config file");
+
+  if (_conf_lsm_uri_sets)
+    {
+      g_ptr_array_unref (_conf_lsm_uri_sets);
+      _conf_lsm_uri_sets = NULL;
+    }
 
   /* Get the abs config file path. */
   conf_path = _lsm_get_conf_path (daemon);
 
-  cfg = (config_t *) g_malloc (sizeof (config_t));
-  config_init (cfg);
-  if (CONFIG_TRUE != config_read_file (cfg, conf_path))
+  config_init (&cfg);
+  if (config_read_file (&cfg, conf_path) != CONFIG_TRUE)
     {
-      udisks_warning
-        ("LSM: Failed to load config: %s, error: %s at line %d",
-         conf_path, config_error_text (cfg), config_error_line (cfg));
-      _conf_lsm_uri_sets = NULL;
-      goto out;
+      /* ignore the error and continue with defaults */
+      udisks_warning ("LSM: Failed to load config file %s, continuing with defaults. Error: %s at line %d",
+                      conf_path, config_error_text (&cfg), config_error_line (&cfg));
     }
 
-  config_lookup_int (cfg, _STD_LSM_CONF_REFRESH_KEYNAME, &cfg_value_int);
+  config_lookup_int (&cfg, _STD_LSM_CONF_REFRESH_KEYNAME, &cfg_value_int);
   if (cfg_value_int > 0)
     {
       _conf_refresh_interval = cfg_value_int & UINT32_MAX;
     }
 
-  _conf_lsm_uri_sets =
-    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_uri_set );
+  _conf_lsm_uri_sets = g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_uri_set);
 
-  cfg_value_int = 0;            // Disable simualtor by default
-  config_lookup_bool (cfg, _STD_LSM_CONF_SIM_KEYNAME, &cfg_value_int);
-
+  cfg_value_int = 0;            /* Disable simulator by default */
+  config_lookup_bool (&cfg, _STD_LSM_CONF_SIM_KEYNAME, &cfg_value_int);
   if (cfg_value_int)
     {
       lsm_uri_set = _lsm_uri_set_new (_STD_LSM_SIM_URI, NULL);
       g_ptr_array_add (_conf_lsm_uri_sets, lsm_uri_set);
     }
 
-  cfg_value_int = 1;            // Enable HPSA by default.
-  config_lookup_bool (cfg, _STD_LSM_CONF_HPSA_KEYNAME, &cfg_value_int);
+  cfg_value_int = 1;            /* Enable HPSA by default. */
+  config_lookup_bool (&cfg, _STD_LSM_CONF_HPSA_KEYNAME, &cfg_value_int);
   if (cfg_value_int)
     {
       lsm_uri_set = _lsm_uri_set_new (_STD_LSM_HPSA_URI, NULL);
       g_ptr_array_add (_conf_lsm_uri_sets, lsm_uri_set);
     }
 
-  // Check extra_uris and extra_passwords
-  ext_uris = config_lookup (cfg, _STD_LSM_CONF_EXT_URIS_KEYNAME);
+  /* Check extra_uris and extra_passwords */
+  ext_uris = config_lookup (&cfg, _STD_LSM_CONF_EXT_URIS_KEYNAME);
   if (ext_uris && !config_setting_is_array (ext_uris))
     {
-      udisks_warning ("LSM: Invalid setting of '%s' in %s",
-                      _STD_LSM_CONF_EXT_URIS_KEYNAME, conf_path);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "LSM: Invalid setting of '%s' in %s",
+                   _STD_LSM_CONF_EXT_URIS_KEYNAME, conf_path);
+      ret = FALSE;
       goto out;
     }
 
-  ext_pass = config_lookup (cfg, _STD_LSM_CONF_EXT_PASS_KEYNAME);
+  ext_pass = config_lookup (&cfg, _STD_LSM_CONF_EXT_PASS_KEYNAME);
   if (ext_pass && !config_setting_is_array (ext_pass))
     {
-      udisks_warning ("LSM: Invalid configure setting of '%s' in %s",
-                      _STD_LSM_CONF_EXT_PASS_KEYNAME, conf_path);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "LSM: Invalid configure setting of '%s' in %s",
+                   _STD_LSM_CONF_EXT_PASS_KEYNAME, conf_path);
+      ret = FALSE;
       goto out;
     }
 
   if (ext_uris == NULL && ext_pass == NULL)
-    {
-      goto out;
-    }
+    goto out;
 
   if ((ext_uris && !ext_pass) || (!ext_uris && ext_pass))
     {
-      udisks_warning ("LSM: Invalid configure setting: '%s' and '%s' "
-                      "should be used in pair",
-                      _STD_LSM_CONF_EXT_URIS_KEYNAME,
-                      _STD_LSM_CONF_EXT_PASS_KEYNAME);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "LSM: Invalid configure setting: '%s' and '%s' should be used in pair",
+                   _STD_LSM_CONF_EXT_URIS_KEYNAME,
+                   _STD_LSM_CONF_EXT_PASS_KEYNAME);
+      ret = FALSE;
       goto out;
     }
 
   if (config_setting_length (ext_uris) != config_setting_length (ext_pass))
     {
-      udisks_warning ("LSM: Invalid configure setting: the element "
-                      "count of '%s' and '%s' does not match.",
-                      _STD_LSM_CONF_EXT_URIS_KEYNAME,
-                      _STD_LSM_CONF_EXT_PASS_KEYNAME);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "LSM: Invalid configure setting: the element count of '%s' and '%s' does not match.",
+                   _STD_LSM_CONF_EXT_URIS_KEYNAME,
+                   _STD_LSM_CONF_EXT_PASS_KEYNAME);
+      ret = FALSE;
       goto out;
     }
 
@@ -305,24 +306,30 @@ _load_module_conf (UDisksDaemon *daemon)
 
       if (strlen (uri) <= 0)
         continue;
-      udisks_debug ("LSM: Fount extra URI: %s", uri);
+      udisks_debug ("LSM: Found extra URI: %s", uri);
 
       lsm_uri_set = _lsm_uri_set_new (uri, password);
       g_ptr_array_add (_conf_lsm_uri_sets, lsm_uri_set);
     }
 
 out:
-  if (_conf_lsm_uri_sets && _conf_lsm_uri_sets->len == 0) {
+  if (_conf_lsm_uri_sets && _conf_lsm_uri_sets->len == 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "LSM: Error parsing config file %s: No URI found", conf_path);
       g_ptr_array_unref (_conf_lsm_uri_sets);
       _conf_lsm_uri_sets = NULL;
-  }
-  config_destroy (cfg);
-  g_free ((gpointer) cfg);
+      ret = FALSE;
+    }
+  config_destroy (&cfg);
   g_free (conf_path);
+
+  return ret;
 }
 
 static lsm_connect *
-_create_lsm_connect (struct _LsmUriSet *lsm_uri_set)
+_create_lsm_connect (struct _LsmUriSet  *lsm_uri_set,
+                     GError            **error)
 {
   lsm_connect *lsm_conn = NULL;
   lsm_error *lsm_err = NULL;
@@ -332,7 +339,8 @@ _create_lsm_connect (struct _LsmUriSet *lsm_uri_set)
 
   if (lsm_uri_set == NULL)
     {
-      udisks_debug ("LSM: _create_lsm_connect (): Skip on NULL lsm_uri_set");
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "LSM: _create_lsm_connect (): Skip on NULL lsm_uri_set");
       return NULL;
     }
   uri = lsm_uri_set->uri;
@@ -344,18 +352,17 @@ _create_lsm_connect (struct _LsmUriSet *lsm_uri_set)
                                  &lsm_err, LSM_CLIENT_FLAG_RSVD);
   if (lsm_rc == LSM_ERR_DAEMON_NOT_RUNNING)
     {
-      udisks_warning ("LSM: The libStorageMgmt daemon is not running "
-                      "(process name lsmd), try "
-                      "'service libstoragemgmt start'");
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "LSM: The libStorageMgmt daemon is not running (process name lsmd), try 'service libstoragemgmt start'");
       lsm_error_free (lsm_err);
       return NULL;
     }
   if (lsm_rc != LSM_ERR_OK)
     {
-      udisks_warning ("LSM: Failed to connect plugin via URI '%s', "
-                      "error code: %d, error message: %s",
-                      uri, lsm_error_number_get (lsm_err),
-                      lsm_error_message_get (lsm_err));
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "LSM: Failed to connect plugin via URI '%s', error code: %d, error message: %s",
+                   uri, lsm_error_number_get (lsm_err),
+                   lsm_error_message_get (lsm_err));
       lsm_error_free (lsm_err);
       return NULL;
     }
@@ -372,46 +379,45 @@ _create_lsm_connect (struct _LsmUriSet *lsm_uri_set)
  * Return TRUE when provided connection has supported system, or FALSE.
  */
 static gboolean
-_fill_supported_system_id_hash (lsm_connect *lsm_conn)
+_fill_supported_system_id_hash (lsm_connect  *lsm_conn,
+                                GError      **error)
 {
   lsm_storage_capabilities *lsm_cap = NULL;
   lsm_system **lsm_syss = NULL;
   uint32_t lsm_sys_count = 0;
   int lsm_rc = 0;
   uint32_t i = 0;
-  const char *lsm_sys_id = NULL;
+  char *lsm_sys_id = NULL;
   gboolean rc = FALSE;
 
-  lsm_rc = lsm_system_list (lsm_conn, &lsm_syss, &lsm_sys_count,
-                            LSM_CLIENT_FLAG_RSVD);
+  lsm_rc = lsm_system_list (lsm_conn, &lsm_syss, &lsm_sys_count, LSM_CLIENT_FLAG_RSVD);
 
   if (lsm_rc != LSM_ERR_OK)
     {
-      _handle_lsm_error ("LSM: Failed to list systems", lsm_conn);
-      return rc;
+      _handle_lsm_error ("LSM: Failed to list systems", lsm_conn, error);
+      return FALSE;
     }
 
   if (lsm_sys_count == 0)
     {
-      udisks_debug ("LSM: No system found in this lsm connection");
-      return rc;
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "LSM: No system found in this lsm connection");
+      return FALSE;
     }
 
   for (i = 0; i < lsm_sys_count; ++i)
     {
-      lsm_sys_id = lsm_system_id_get (lsm_syss[i]);
-      if ((lsm_sys_id == NULL) || (strlen (lsm_sys_id) == 0))
+      lsm_sys_id = (char *) lsm_system_id_get (lsm_syss[i]);
+      if (lsm_sys_id == NULL || strlen (lsm_sys_id) == 0)
         {
           udisks_debug ("LSM: BUG: got NULL system ID");
           continue;
         }
       lsm_cap = NULL;
-      lsm_rc = lsm_capabilities (lsm_conn, lsm_syss[i], &lsm_cap,
-                                 LSM_CLIENT_FLAG_RSVD);
+      lsm_rc = lsm_capabilities (lsm_conn, lsm_syss[i], &lsm_cap, LSM_CLIENT_FLAG_RSVD);
       if (lsm_rc != LSM_ERR_OK)
         {
-          _handle_lsm_error ("LSM: error on lsm_capabilities () ",
-                             lsm_conn);
+          udisks_warning ("LSM: error on lsm_capabilities()");
           continue;
         }
       if (lsm_capability_supported (lsm_cap, LSM_CAP_VOLUMES) &&
@@ -419,21 +425,24 @@ _fill_supported_system_id_hash (lsm_connect *lsm_conn)
         {
           udisks_debug ("LSM: System '%s'(%s) is connected and supported.",
                         lsm_system_name_get (lsm_syss[i]), lsm_sys_id);
-          g_hash_table_insert (_supported_sys_id_hash,
-                               (gpointer) g_strdup (lsm_sys_id),
-                               (gpointer) &_sys_id_supported);
+          g_hash_table_insert (_supported_sys_id_hash, g_strdup (lsm_sys_id), &_sys_id_supported);
           rc = TRUE;
         }
       else
         {
-          udisks_debug ("LSM: System '%s'(%s) is not supporting "
-                        "LSM_CAP_VOLUMES or LSM_CAP_VOLUME_RAID_INFO.",
+          udisks_debug ("LSM: System '%s'(%s) is not supporting LSM_CAP_VOLUMES or LSM_CAP_VOLUME_RAID_INFO.",
                         lsm_system_name_get (lsm_syss[i]), lsm_sys_id);
         }
       lsm_capability_record_free (lsm_cap);
     }
 
   lsm_system_record_array_free (lsm_syss, lsm_sys_count);
+
+  if (! rc)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "LSM: Failed to get supported system id hash");
+    }
 
   return rc;
 }
@@ -449,7 +458,8 @@ _free_lsm_volume_record (gpointer data)
  * Return an array of lsm_volume which system_id is in supported_sys_id_hash.
  */
 static GPtrArray *
-_get_supported_lsm_volumes (lsm_connect *lsm_conn)
+_get_supported_lsm_volumes (lsm_connect  *lsm_conn,
+                            GError      **error)
 {
   GPtrArray *lsm_vol_array = NULL;
   lsm_volume **lsm_vols = NULL;
@@ -460,20 +470,17 @@ _get_supported_lsm_volumes (lsm_connect *lsm_conn)
   uint32_t i = 0;
   const char *lsm_vpd83;
 
-  rc = lsm_volume_list (lsm_conn, NULL, NULL, &lsm_vols, &lsm_vol_count,
-                        LSM_CLIENT_FLAG_RSVD);
+  rc = lsm_volume_list (lsm_conn, NULL, NULL, &lsm_vols, &lsm_vol_count, LSM_CLIENT_FLAG_RSVD);
   if (rc != LSM_ERR_OK)
     {
-      _handle_lsm_error ("LSM: Failed to list volumes", lsm_conn);
+      _handle_lsm_error ("LSM: Failed to list volumes", lsm_conn, error);
       return NULL;
     }
 
-  lsm_vol_array =
-    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_volume_record);
+  lsm_vol_array = g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_volume_record);
 
   for (i = 0; i < lsm_vol_count; ++i)
     {
-
       lsm_vpd83 = lsm_volume_vpd83_get (lsm_vols[i]);
       if (strlen (lsm_vpd83) == 0)
         {
@@ -486,22 +493,20 @@ _get_supported_lsm_volumes (lsm_connect *lsm_conn)
       lsm_sys_id = lsm_volume_system_id_get (lsm_vols[i]);
       if (g_hash_table_lookup (_supported_sys_id_hash, lsm_sys_id) == NULL)
         {
-          udisks_debug
-            ("LSM: Volume VPD %s been rule out as its system is not "
-             "supported", lsm_vpd83);
+          udisks_debug ("LSM: Volume VPD %s been rule out as its system is not supported", lsm_vpd83);
           continue;
         }
 
       lsm_vol_dup = lsm_volume_record_copy (lsm_vols[i]);
-      if (lsm_vol_dup == NULL)
-          // No memory, quit as g_malloc () did.
-          exit (1);
+      g_assert (lsm_vol_dup != NULL);
       g_ptr_array_add (lsm_vol_array, lsm_vol_dup);
     }
 
   lsm_volume_record_array_free (lsm_vols, lsm_vol_count);
   if (lsm_vol_array->len == 0)
     {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "LSM: Failed to get supported LSM volumes");
       g_ptr_array_unref (lsm_vol_array);
       return NULL;
     }
@@ -519,7 +524,8 @@ _free_lsm_pool_record (gpointer data)
  * Return an array of lsm_pool which system_id is in supported_sys_id_hash.
  */
 static GPtrArray *
-_get_supported_lsm_pls (lsm_connect *lsm_conn)
+_get_supported_lsm_pls (lsm_connect  *lsm_conn,
+                        GError      **error)
 {
   GPtrArray *lsm_pl_array = NULL;
   lsm_pool **lsm_pls = NULL;
@@ -534,12 +540,11 @@ _get_supported_lsm_pls (lsm_connect *lsm_conn)
 
   if (lsm_rc != LSM_ERR_OK)
     {
-      _handle_lsm_error ("LSM: Failed to list pools", lsm_conn);
+      _handle_lsm_error ("LSM: Failed to list pools", lsm_conn, error);
       return NULL;
     }
 
-  lsm_pl_array =
-    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_pool_record);
+  lsm_pl_array = g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_pool_record);
 
   for (i = 0; i < lsm_pl_count; ++i)
     {
@@ -547,24 +552,21 @@ _get_supported_lsm_pls (lsm_connect *lsm_conn)
       lsm_sys_id = lsm_pool_system_id_get (lsm_pls[i]);
       if (g_hash_table_lookup (_supported_sys_id_hash, lsm_sys_id) == NULL)
         {
-          udisks_debug
-            ("LSM: Pool %s(%s) been rule out as its system is not supported",
-             lsm_pool_name_get (lsm_pls[i]),
-             lsm_pool_id_get (lsm_pls[i]));
+          udisks_debug ("LSM: Pool %s(%s) been rule out as its system is not supported",
+                        lsm_pool_name_get (lsm_pls[i]),
+                        lsm_pool_id_get (lsm_pls[i]));
           continue;
         }
 
       lsm_pl_dup = lsm_pool_record_copy (lsm_pls[i]);
-      if (lsm_pl_dup == NULL)
-        {
-          // No memory, quit as g_malloc () did.
-          exit (1);
-        }
+      g_assert (lsm_pl_dup != NULL);
       g_ptr_array_add (lsm_pl_array, lsm_pl_dup);
     }
   lsm_pool_record_array_free (lsm_pls, lsm_pl_count);
   if (lsm_pl_array->len == 0)
     {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "LSM: Failed to get supported LSM pools");
       g_ptr_array_unref (lsm_pl_array);
       return NULL;
     }
@@ -586,7 +588,7 @@ _fill_pl_id_2_lsm_pl_data_hash (GPtrArray *lsm_pl_array,
     {
       lsm_pl = g_ptr_array_index (lsm_pl_array, i);
       pl_id = lsm_pool_id_get (lsm_pl);
-      if ((pl_id == NULL) || (strlen (pl_id) == 0))
+      if (pl_id == NULL || strlen (pl_id) == 0)
         continue;
 
       /* Overide old data  */
@@ -594,16 +596,12 @@ _fill_pl_id_2_lsm_pl_data_hash (GPtrArray *lsm_pl_array,
                                     (gpointer *) &orig_pl_id,
                                     (gpointer *) &orig_lsm_pl_data);
       if (orig_pl_id != NULL)
-        g_hash_table_remove (_pl_id_2_lsm_pl_data_hash,
-                             (gconstpointer) orig_pl_id);
+        g_hash_table_remove (_pl_id_2_lsm_pl_data_hash, (gconstpointer) orig_pl_id);
 
-      lsm_pl_data = (struct _LsmPlData *)
-        g_malloc (sizeof (struct _LsmPlData));
+      lsm_pl_data = (struct _LsmPlData *) g_malloc (sizeof (struct _LsmPlData));
 
       _fill_lsm_pl_data (lsm_pl_data, lsm_pl, last_refresh_time);
-      g_hash_table_insert (_pl_id_2_lsm_pl_data_hash,
-                           (gpointer) g_strdup (pl_id),
-                           (gpointer) lsm_pl_data);
+      g_hash_table_insert (_pl_id_2_lsm_pl_data_hash, g_strdup (pl_id), lsm_pl_data);
     }
 }
 
@@ -615,7 +613,7 @@ _fill_pl_id_2_lsm_pl_data_hash (GPtrArray *lsm_pl_array,
  */
 static void
 _fill_vpd83_2_lsm_conn_data_hash (lsm_connect *lsm_conn,
-                                  GPtrArray *lsm_vol_array)
+                                  GPtrArray   *lsm_vol_array)
 {
   struct _LsmConnData *lsm_conn_data = NULL;
   lsm_volume *lsm_vol = NULL;
@@ -630,25 +628,22 @@ _fill_vpd83_2_lsm_conn_data_hash (lsm_connect *lsm_conn,
         continue;
 
       vpd83 = lsm_volume_vpd83_get (lsm_vol);
-      if ((vpd83 == NULL) || (strlen (vpd83) == 0))
+      if (vpd83 == NULL || strlen (vpd83) == 0)
         continue;
 
       pl_id = lsm_volume_pool_id_get (lsm_vol);
 
-      if ((pl_id == NULL) || (strlen (pl_id) == 0))
+      if (pl_id == NULL || strlen (pl_id) == 0)
         continue;
 
-      lsm_conn_data = (struct _LsmConnData *)
-        g_malloc (sizeof (struct _LsmConnData));
+      lsm_conn_data = (struct _LsmConnData *) g_malloc (sizeof (struct _LsmConnData));
 
       lsm_conn_data->lsm_conn = lsm_conn;
       lsm_conn_data->lsm_vol = lsm_volume_record_copy (lsm_vol);
-      if (lsm_conn_data->lsm_vol == NULL)
-        exit (1);   // No memory
+      g_assert (lsm_conn_data->lsm_vol != NULL);
       lsm_conn_data->pl_id = g_strdup (pl_id);
 
-      g_hash_table_insert (_vpd83_2_lsm_conn_data_hash, g_strdup (vpd83),
-                           lsm_conn_data);
+      g_hash_table_insert (_vpd83_2_lsm_conn_data_hash, g_strdup (vpd83), lsm_conn_data);
     }
 }
 
@@ -724,7 +719,7 @@ _fill_lsm_pl_data (struct _LsmPlData *lsm_pl_data, lsm_pool *lsm_pl,
  */
 static struct _LsmVriData *
 _refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data,
-                       const char *vpd83)
+                       const char          *vpd83)
 {
   struct _LsmVriData *lsm_vri_data = NULL;
   const char *orig_vpd83 = NULL;
@@ -734,13 +729,12 @@ _refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data,
   uint32_t strip_size, disk_count, min_io_size, opt_io_size;
   int lsm_rc;
 
-  // Remove _vpd83_2_lsm_vri_data_hash old entry
+  /* Remove _vpd83_2_lsm_vri_data_hash old entry */
   g_hash_table_lookup_extended (_vpd83_2_lsm_vri_data_hash, vpd83,
                                 (gpointer *) &orig_vpd83,
                                 (gpointer *) &orig_lsm_vri_data);
   if (orig_vpd83 != NULL)
-    g_hash_table_remove (_vpd83_2_lsm_vri_data_hash,
-                         (gconstpointer) orig_vpd83);
+    g_hash_table_remove (_vpd83_2_lsm_vri_data_hash, orig_vpd83);
 
   lsm_rc = lsm_volume_raid_info (lsm_conn_data->lsm_conn,
                                  lsm_conn_data->lsm_vol, &raid_type,
@@ -752,31 +746,27 @@ _refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data,
       if (lsm_rc == LSM_ERR_NOT_FOUND_VOLUME)
         udisks_debug ("LSM: Volume %s deleted", vpd83);
       else
-        _handle_lsm_error ("LSM: Failed to retrieve RAID information "
-                           "of volume", lsm_conn_data->lsm_conn);
+        udisks_warning ("LSM: Failed to retrieve RAID information of volume");
 
-      // Remove _vpd83_2_lsm_conn_data_hash entry
+      /* Remove _vpd83_2_lsm_conn_data_hash entry */
       g_hash_table_lookup_extended (_vpd83_2_lsm_conn_data_hash, vpd83,
                                     (gpointer *) &orig_vpd83,
                                     (gpointer *) &orig_lsm_conn_data);
 
       if (orig_vpd83 != NULL)
-        g_hash_table_remove (_vpd83_2_lsm_conn_data_hash,
-                             (gconstpointer) orig_vpd83);
+        g_hash_table_remove (_vpd83_2_lsm_conn_data_hash, orig_vpd83);
 
       return NULL;
     }
 
   lsm_vri_data = (struct _LsmVriData *) g_malloc (sizeof (struct _LsmVriData));
-  lsm_vri_data->raid_type_str =
-    g_strdup (_lsm_raid_type_to_str (raid_type));
+  lsm_vri_data->raid_type_str = g_strdup (_lsm_raid_type_to_str (raid_type));
   lsm_vri_data->min_io_size = min_io_size;
   lsm_vri_data->opt_io_size = opt_io_size;
   lsm_vri_data->raid_disk_count = disk_count;
   lsm_vri_data->last_refresh_time = g_get_monotonic_time ();
 
-  g_hash_table_insert (_vpd83_2_lsm_vri_data_hash, g_strdup (vpd83),
-                       lsm_vri_data);
+  g_hash_table_insert (_vpd83_2_lsm_vri_data_hash, g_strdup (vpd83), lsm_vri_data);
 
   return lsm_vri_data;
 }
@@ -808,44 +798,40 @@ _lsm_pl_data_lookup (const char *vpd83)
   if ((lsm_conn_data == NULL) || (lsm_conn_data->pl_id == NULL))
     return NULL;
 
-  lsm_pl_data = g_hash_table_lookup (_pl_id_2_lsm_pl_data_hash,
-                                     lsm_conn_data->pl_id);
+  lsm_pl_data = g_hash_table_lookup (_pl_id_2_lsm_pl_data_hash, lsm_conn_data->pl_id);
 
   if (lsm_pl_data == NULL)
     return NULL;
 
   current_time = g_get_monotonic_time ();
 
-  if ((current_time - lsm_pl_data->last_refresh_time) / 1000000
-      < refresh_interval)
+  if ((current_time - lsm_pl_data->last_refresh_time) / 1000000 < refresh_interval)
     return lsm_pl_data;
 
-  // Refresh data is required.
+  /* Refresh data is required. */
   udisks_debug ("LSM: Refreshing Pool(id %s) data", lsm_conn_data->pl_id);
-  new_lsm_pl_array = _get_supported_lsm_pls (lsm_conn_data->lsm_conn);
+  new_lsm_pl_array = _get_supported_lsm_pls (lsm_conn_data->lsm_conn, NULL);
   _fill_pl_id_2_lsm_pl_data_hash (new_lsm_pl_array, current_time);
   g_ptr_array_unref (new_lsm_pl_array);
 
-  // Search again
-  lsm_pl_data = g_hash_table_lookup (_pl_id_2_lsm_pl_data_hash,
-                                     lsm_conn_data->pl_id);
+  /* Search again */
+  lsm_pl_data = g_hash_table_lookup (_pl_id_2_lsm_pl_data_hash, lsm_conn_data->pl_id);
 
   if (_pl_id_2_lsm_pl_data_hash == NULL)
-    // Normally old data should not be delete yet.
+    /* Normally old data should not be delete yet. */
     return NULL;
 
   if (lsm_pl_data->last_refresh_time != current_time)
     {
       udisks_debug ("LSM: _lsm_pl_data_lookup: pool deleted");
 
-      // Pool got deleted, we should delete the old data
+      /* Pool got deleted, we should delete the old data */
       g_hash_table_lookup_extended (_pl_id_2_lsm_pl_data_hash,
                                     lsm_conn_data->pl_id,
                                     (gpointer *) &orig_pl_id,
                                     (gpointer *) &orig_lsm_pl_data);
       if (orig_pl_id != NULL)
-        g_hash_table_remove (_pl_id_2_lsm_pl_data_hash,
-                             (gconstpointer) orig_pl_id);
+        g_hash_table_remove (_pl_id_2_lsm_pl_data_hash, orig_pl_id);
       return NULL;
     }
   return lsm_pl_data;
@@ -876,28 +862,12 @@ _lsm_vri_data_lookup (const char *vpd83)
 
   current_time = g_get_monotonic_time ();
 
-  if ((lsm_vri_data != NULL) &&
-      ((current_time - lsm_vri_data->last_refresh_time) / 1000000
-        < refresh_interval))
+  if (lsm_vri_data != NULL && (current_time - lsm_vri_data->last_refresh_time) / 1000000 < refresh_interval)
     return lsm_vri_data;
 
-  //Refresh data is required.
+  /* Refresh data is required. */
   udisks_debug ("LSM: Refreshing VRI data for %s", vpd83);
   return _refresh_lsm_vri_data (lsm_conn_data, vpd83);
-}
-
-static char *
-_lsm_get_conf_path (UDisksDaemon *daemon)
-{
-  UDisksConfigManager *config_manager;
-
-  config_manager = udisks_daemon_get_config_manager (daemon);
-
-  /* This should give us '/etc/udisks2/modules.conf.d/udisks2_lsm.conf' */
-  return g_build_filename (udisks_config_manager_get_config_dir (config_manager),
-                           _STD_LSM_CONF_PATH,
-                           _STD_LSM_CONF_FILE,
-                           NULL);
 }
 
 static void
@@ -912,10 +882,10 @@ _free_lsm_uri_set (gpointer data)
   struct _LsmUriSet *lsm_uri_set = (struct _LsmUriSet *) data;
   if (lsm_uri_set != NULL)
     {
-      g_free ((gpointer) lsm_uri_set->uri);
-      g_free ((gpointer) lsm_uri_set->password);
+      g_free (lsm_uri_set->uri);
+      g_free (lsm_uri_set->password);
     }
-  g_free ((gpointer) lsm_uri_set);
+  g_free (lsm_uri_set);
 }
 
 static void
@@ -925,9 +895,9 @@ _free_lsm_conn_data (gpointer data)
 
   if (lsm_conn_data != NULL)
     {
-        lsm_volume_record_free (lsm_conn_data->lsm_vol);
-        g_free ((gpointer) lsm_conn_data->pl_id);
-        g_free ((gpointer) lsm_conn_data);
+      lsm_volume_record_free (lsm_conn_data->lsm_vol);
+      g_free (lsm_conn_data->pl_id);
+      g_free (lsm_conn_data);
     }
 }
 
@@ -938,8 +908,8 @@ _free_lsm_pl_data (gpointer data)
 
   if (lsm_pl_data != NULL)
     {
-      g_free ((gpointer) lsm_pl_data->status_info);
-      g_free ((gpointer) lsm_pl_data);
+      g_free (lsm_pl_data->status_info);
+      g_free (lsm_pl_data);
     }
 }
 
@@ -950,81 +920,107 @@ _free_lsm_vri_data (gpointer data)
 
   if (lsm_vri_data != NULL)
     {
-      g_free ((gpointer) lsm_vri_data->raid_type_str);
-      g_free ((gpointer) lsm_vri_data);
+      g_free (lsm_vri_data->raid_type_str);
+      g_free (lsm_vri_data);
     }
 }
 
-void
-std_lsm_data_init (UDisksDaemon *daemon)
+gboolean
+std_lsm_data_init (UDisksDaemon  *daemon,
+                   GError       **error)
 {
   struct _LsmUriSet *lsm_uri_set = NULL;
   lsm_connect *lsm_conn = NULL;
   GPtrArray *lsm_vol_array = NULL;
   GPtrArray *lsm_pl_array = NULL;
   guint i = 0;
-  gboolean rc = FALSE;
-  gchar *conf_path;
+  gboolean success = FALSE;
 
-  _load_module_conf (daemon);
-  if (_conf_lsm_uri_sets == NULL)
+  if (! _load_module_conf (daemon, error))
+    return FALSE;
+
+  _all_lsm_conn_array = g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_connect);
+
+  _vpd83_2_lsm_conn_data_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                       (GDestroyNotify) g_free,
+                                                       (GDestroyNotify) _free_lsm_conn_data);
+
+  _pl_id_2_lsm_pl_data_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                     (GDestroyNotify) g_free,
+                                                     (GDestroyNotify) _free_lsm_pl_data);
+
+  _vpd83_2_lsm_vri_data_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                      (GDestroyNotify) g_free,
+                                                      (GDestroyNotify) _free_lsm_vri_data);
+
+  _supported_sys_id_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                  (GDestroyNotify) g_free,
+                                                  NULL);
+
+  /* fail globally in case none URI can be initialized */
+  for (i = 0; i < _conf_lsm_uri_sets->len; ++i)
     {
-      conf_path = _lsm_get_conf_path (daemon);
-      udisks_warning ("LSM: No URI found in config file %s",
-                      conf_path);
-      g_free (conf_path);
-      return;
-    }
+      gboolean rc = FALSE;
+      GError *local_error = NULL;
 
-  _all_lsm_conn_array =
-    g_ptr_array_new_full (0, (GDestroyNotify) _free_lsm_connect);
-
-  _vpd83_2_lsm_conn_data_hash =
-      g_hash_table_new_full (g_str_hash, g_str_equal,
-                            (GDestroyNotify) g_free,
-                            (GDestroyNotify) _free_lsm_conn_data);
-
-  _pl_id_2_lsm_pl_data_hash =
-      g_hash_table_new_full (g_str_hash, g_str_equal,
-                            (GDestroyNotify) g_free,
-                            (GDestroyNotify) _free_lsm_pl_data);
-
-  _vpd83_2_lsm_vri_data_hash =
-      g_hash_table_new_full (g_str_hash, g_str_equal,
-                             (GDestroyNotify) g_free,
-                             (GDestroyNotify) _free_lsm_vri_data);
-
-  _supported_sys_id_hash =
-      g_hash_table_new_full (g_str_hash, g_str_equal,
-                             (GDestroyNotify) g_free,
-                             NULL);
-
-  for (i =0; i < _conf_lsm_uri_sets->len; ++i)
-    {
       lsm_uri_set = g_ptr_array_index (_conf_lsm_uri_sets, i);
-      lsm_conn = _create_lsm_connect (lsm_uri_set);
+      lsm_conn = _create_lsm_connect (lsm_uri_set, &local_error);
       if (lsm_conn == NULL)
-        continue;
-      rc = _fill_supported_system_id_hash (lsm_conn);
+        {
+          if (! success && ! *error)
+            {
+              /* propagate the error */
+              g_propagate_error (error, local_error);
+              local_error = NULL;
+            }
+          else
+            g_clear_error (&local_error);
+          continue;
+        }
+      rc = _fill_supported_system_id_hash (lsm_conn, &local_error);
       if (rc != TRUE)
         {
+          if (! success && ! *error)
+            {
+              /* propagate the error */
+              g_propagate_error (error, local_error);
+              local_error = NULL;
+            }
+          else
+            g_clear_error (&local_error);
           lsm_connect_close (lsm_conn, LSM_CLIENT_FLAG_RSVD);
           continue;
         }
       g_ptr_array_add (_all_lsm_conn_array, lsm_conn);
 
-      lsm_vol_array = _get_supported_lsm_volumes (lsm_conn);
+      lsm_vol_array = _get_supported_lsm_volumes (lsm_conn, &local_error);
       if (lsm_vol_array == NULL)
         {
+          if (! success && ! *error)
+            {
+              /* propagate the error */
+              g_propagate_error (error, local_error);
+              local_error = NULL;
+            }
+          else
+            g_clear_error (&local_error);
+          lsm_connect_close (lsm_conn, LSM_CLIENT_FLAG_RSVD);
           continue;
         }
-      lsm_pl_array = _get_supported_lsm_pls (lsm_conn);
+      lsm_pl_array = _get_supported_lsm_pls (lsm_conn, NULL);
 
       _fill_pl_id_2_lsm_pl_data_hash (lsm_pl_array, g_get_monotonic_time ());
       _fill_vpd83_2_lsm_conn_data_hash (lsm_conn, lsm_vol_array);
       g_ptr_array_unref (lsm_vol_array);
       g_ptr_array_unref (lsm_pl_array);
+
+      success = TRUE;
     }
+
+  if (success)
+    g_clear_error (error);
+
+  return success;
 }
 
 uint32_t
@@ -1052,21 +1048,17 @@ std_lsm_vol_data_get (const char *vpd83)
   if (lsm_vri_data == NULL)
     goto out;
 
-  std_lsm_vol_data = (struct StdLsmVolData *) g_malloc
-    (sizeof (struct StdLsmVolData));
+  std_lsm_vol_data = (struct StdLsmVolData *) g_malloc (sizeof (struct StdLsmVolData));
 
-  strncpy (std_lsm_vol_data->raid_type, lsm_vri_data->raid_type_str,
-           _MAX_RAID_TYPE_LEN);
+  strncpy (std_lsm_vol_data->raid_type, lsm_vri_data->raid_type_str, _MAX_RAID_TYPE_LEN);
   std_lsm_vol_data->raid_type[_MAX_RAID_TYPE_LEN - 1] = '\0';
 
-  strncpy (std_lsm_vol_data->status_info, lsm_pl_data->status_info,
-           _MAX_STATUS_INFO_LEN);
+  strncpy (std_lsm_vol_data->status_info, lsm_pl_data->status_info, _MAX_STATUS_INFO_LEN);
 
   std_lsm_vol_data->status_info[_MAX_STATUS_INFO_LEN - 1] = '\0';
 
   std_lsm_vol_data->is_raid_degraded = lsm_pl_data->is_raid_degraded;
-  std_lsm_vol_data->is_raid_reconstructing =
-    lsm_pl_data->is_raid_reconstructing;
+  std_lsm_vol_data->is_raid_reconstructing = lsm_pl_data->is_raid_reconstructing;
   std_lsm_vol_data->is_raid_verifying = lsm_pl_data->is_raid_verifying;
   std_lsm_vol_data->is_raid_error = lsm_pl_data->is_raid_error;
   std_lsm_vol_data->is_ok = lsm_pl_data->is_ok;
@@ -1076,35 +1068,52 @@ std_lsm_vol_data_get (const char *vpd83)
 
 out:
   return std_lsm_vol_data;
-
 }
 
 void
 std_lsm_vol_data_free (struct StdLsmVolData *std_lsm_vol_data)
 {
-  g_free ((gpointer) std_lsm_vol_data);
+  g_free (std_lsm_vol_data);
 }
 
 void
 std_lsm_data_teardown (void)
 {
-  g_ptr_array_unref (_conf_lsm_uri_sets);
-  _conf_lsm_uri_sets = NULL;
+  if (_conf_lsm_uri_sets)
+    {
+      g_ptr_array_unref (_conf_lsm_uri_sets);
+      _conf_lsm_uri_sets = NULL;
+    }
 
-  g_hash_table_unref (_supported_sys_id_hash);
-  _supported_sys_id_hash = NULL;
+  if (_supported_sys_id_hash)
+    {
+      g_hash_table_unref (_supported_sys_id_hash);
+      _supported_sys_id_hash = NULL;
+    }
 
-  g_ptr_array_unref (_all_lsm_conn_array);
-  _all_lsm_conn_array = NULL;
+  if (_all_lsm_conn_array)
+    {
+      g_ptr_array_unref (_all_lsm_conn_array);
+      _all_lsm_conn_array = NULL;
+    }
 
-  g_hash_table_unref (_vpd83_2_lsm_conn_data_hash);
-  _vpd83_2_lsm_conn_data_hash = NULL;
+  if (_vpd83_2_lsm_conn_data_hash)
+    {
+      g_hash_table_unref (_vpd83_2_lsm_conn_data_hash);
+      _vpd83_2_lsm_conn_data_hash = NULL;
+    }
 
-  g_hash_table_unref (_vpd83_2_lsm_vri_data_hash);
-  _vpd83_2_lsm_vri_data_hash = NULL;
+  if (_vpd83_2_lsm_vri_data_hash)
+    {
+      g_hash_table_unref (_vpd83_2_lsm_vri_data_hash);
+      _vpd83_2_lsm_vri_data_hash = NULL;
+    }
 
-  g_hash_table_unref (_pl_id_2_lsm_pl_data_hash);
-  _pl_id_2_lsm_pl_data_hash = NULL;
+  if (_pl_id_2_lsm_pl_data_hash)
+    {
+      g_hash_table_unref (_pl_id_2_lsm_pl_data_hash);
+      _pl_id_2_lsm_pl_data_hash = NULL;
+    }
 }
 
 void
@@ -1133,10 +1142,10 @@ std_lsm_vpd83_list_refresh (void)
       if (lsm_conn == NULL)
         continue;
 
-      lsm_vol_array = _get_supported_lsm_volumes (lsm_conn);
+      lsm_vol_array = _get_supported_lsm_volumes (lsm_conn, NULL);
       if (lsm_vol_array == NULL)
         continue;
-      lsm_pl_array = _get_supported_lsm_pls (lsm_conn);
+      lsm_pl_array = _get_supported_lsm_pls (lsm_conn, NULL);
 
       _fill_pl_id_2_lsm_pl_data_hash (lsm_pl_array, g_get_monotonic_time ());
       _fill_vpd83_2_lsm_conn_data_hash (lsm_conn, lsm_vol_array);
@@ -1148,8 +1157,7 @@ std_lsm_vpd83_list_refresh (void)
 gboolean
 std_lsm_vpd83_is_managed (const char *vpd83)
 {
-  if ((vpd83 != NULL) &&
-      (_vpd83_2_lsm_conn_data_hash != NULL) &&
+  if (vpd83 != NULL && _vpd83_2_lsm_conn_data_hash != NULL &&
       g_hash_table_lookup (_vpd83_2_lsm_conn_data_hash, vpd83))
     return TRUE;
   return FALSE;

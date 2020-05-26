@@ -37,9 +37,9 @@
 #include "udiskslinuxlogicalvolumeobject.h"
 #include "udiskslinuxvolumegroup.h"
 #include "udiskslinuxvolumegroupobject.h"
+#include "udiskslinuxmodulelvm2.h"
 
 #include "udiskslvm2daemonutil.h"
-#include "udiskslvm2util.h"
 #include "jobhelpers.h"
 
 /**
@@ -71,8 +71,7 @@ struct _UDisksLinuxVDOVolumeClass
 
 static void vdo_volume_iface_init (UDisksVDOVolumeIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxVDOVolume, udisks_linux_vdo_volume,
-                         UDISKS_TYPE_VDO_VOLUME_SKELETON,
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxVDOVolume, udisks_linux_vdo_volume, UDISKS_TYPE_VDO_VOLUME_SKELETON,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_VDO_VOLUME, vdo_volume_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -187,13 +186,15 @@ common_setup (UDisksLinuxLogicalVolumeObject *object,
               GDBusMethodInvocation          *invocation,
               GVariant                       *options,
               const gchar                    *auth_err_msg,
-              UDisksDaemon                   **daemon,
+              UDisksLinuxModuleLVM2         **module,
+              UDisksDaemon                  **daemon,
               uid_t                          *out_uid)
 {
   gboolean rc = FALSE;
   GError *error = NULL;
 
-  *daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  *module = udisks_linux_logical_volume_object_get_module (object);
+  *daemon = udisks_module_get_daemon (UDISKS_MODULE (*module));
 
   if (!udisks_daemon_util_get_caller_uid_sync (*daemon,
                                                invocation,
@@ -209,7 +210,7 @@ common_setup (UDisksLinuxLogicalVolumeObject *object,
   /* Policy check. */
   UDISKS_DAEMON_CHECK_AUTHORIZATION (*daemon,
                                      UDISKS_OBJECT (object),
-                                     lvm2_policy_action_id,
+                                     LVM2_POLICY_ACTION_ID,
                                      options,
                                      auth_err_msg,
                                      invocation);
@@ -218,68 +219,70 @@ common_setup (UDisksLinuxLogicalVolumeObject *object,
   return rc;
 }
 
-static gboolean _set_compression_deduplication (UDisksVDOVolume       *_volume,
-                                                GDBusMethodInvocation *invocation,
-                                                gboolean               enable,
-                                                gboolean               compression,
-                                                gboolean               deduplication,
-                                                GVariant              *options)
+static gboolean
+_set_compression_deduplication (UDisksVDOVolume       *_volume,
+                                GDBusMethodInvocation *invocation,
+                                gboolean               enable,
+                                gboolean               compression,
+                                gboolean               deduplication,
+                                GVariant              *options)
 {
-    GError *error = NULL;
-    UDisksLinuxVDOVolume *volume = UDISKS_LINUX_VDO_VOLUME (_volume);
-    UDisksLinuxLogicalVolumeObject *object = NULL;
-    UDisksDaemon *daemon = NULL;
-    uid_t caller_uid;
-    UDisksLinuxVolumeGroupObject *group_object = NULL;
-    LVJobData data;
+  GError *error = NULL;
+  UDisksLinuxVDOVolume *volume = UDISKS_LINUX_VDO_VOLUME (_volume);
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  UDisksLinuxModuleLVM2 *module = NULL;
+  UDisksDaemon *daemon = NULL;
+  uid_t caller_uid;
+  UDisksLinuxVolumeGroupObject *group_object = NULL;
+  LVJobData data;
 
-    object = udisks_daemon_util_dup_object (volume, &error);
-    if (object == NULL)
-      {
-        g_dbus_method_invocation_take_error (invocation, error);
-        goto out;
-      }
-
-    if (!common_setup (object, invocation, options,
-                       N_("Authentication is required to set deduplication/compression on a VDO volume"),
-                       &daemon, &caller_uid))
+  object = udisks_daemon_util_dup_object (volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
+    }
 
-    group_object = udisks_linux_logical_volume_object_get_volume_group (object);
-    data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
-    data.lv_name = udisks_linux_logical_volume_object_get_name (object);
-    if (compression)
-        data.compression = enable;
-    else if (deduplication)
-        data.deduplication = enable;
+  if (!common_setup (object, invocation, options,
+                     N_("Authentication is required to set deduplication/compression on a VDO volume"),
+                     &module, &daemon, &caller_uid))
+    goto out;
 
-    if (!udisks_daemon_launch_threaded_job_sync (daemon,
-                                                 UDISKS_OBJECT (object),
-                                                 "lvm-vdo-dedup-comp",
-                                                 caller_uid,
-                                                 compression ? lv_vdo_compression_job_func : lv_vdo_deduplication_job_func,
-                                                 &data,
-                                                 NULL, /* user_data_free_func */
-                                                 NULL, /* GCancellable */
-                                                 &error))
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_FAILED,
-                                               "Error setting deduplication/compression on the VDO volume: %s",
-                                               error->message);
-        g_clear_error (&error);
-        goto out;
-      }
+  group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  if (compression)
+    data.compression = enable;
+  else if (deduplication)
+    data.deduplication = enable;
 
-    if (compression)
-        udisks_vdo_volume_complete_enable_compression (_volume, invocation);
-    else if (deduplication)
-        udisks_vdo_volume_complete_enable_deduplication (_volume, invocation);
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vdo-dedup-comp",
+                                               caller_uid,
+                                               compression ? lv_vdo_compression_job_func : lv_vdo_deduplication_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error setting deduplication/compression on the VDO volume: %s",
+                                             error->message);
+      g_clear_error (&error);
+      goto out;
+    }
 
-  out:
-    g_clear_object (&object);
-    return TRUE;
+  if (compression)
+    udisks_vdo_volume_complete_enable_compression (_volume, invocation);
+  else if (deduplication)
+    udisks_vdo_volume_complete_enable_deduplication (_volume, invocation);
+
+out:
+  g_clear_object (&object);
+  return TRUE;
 }
 
 static gboolean
@@ -288,8 +291,8 @@ handle_enable_compression (UDisksVDOVolume       *_volume,
                            gboolean               enable,
                            GVariant              *options)
 {
-    return _set_compression_deduplication (_volume, invocation, enable,
-                                           TRUE /* compression */, FALSE /* deduplication */, options);
+  return _set_compression_deduplication (_volume, invocation, enable,
+                                         TRUE /* compression */, FALSE /* deduplication */, options);
 }
 
 static gboolean
@@ -298,16 +301,18 @@ handle_enable_deduplication (UDisksVDOVolume       *_volume,
                              gboolean               enable,
                              GVariant              *options)
 {
-    return _set_compression_deduplication (_volume, invocation, enable,
-                                           FALSE /* compression */, TRUE /* deduplication */, options);
+  return _set_compression_deduplication (_volume, invocation, enable,
+                                         FALSE /* compression */, TRUE /* deduplication */, options);
 }
 
-static gboolean _vdo_resize (UDisksLinuxLogicalVolumeObject *object,
-                             GDBusMethodInvocation          *invocation,
-                             guint64                         new_size,
-                             GVariant                       *options)
+static gboolean
+_vdo_resize (UDisksLinuxLogicalVolumeObject *object,
+             GDBusMethodInvocation          *invocation,
+             guint64                         new_size,
+             GVariant                       *options)
 {
   GError *error = NULL;
+  UDisksLinuxModuleLVM2 *module = NULL;
   UDisksDaemon *daemon = NULL;
   UDisksLinuxVolumeGroupObject *group_object = NULL;
   uid_t caller_uid;
@@ -316,7 +321,7 @@ static gboolean _vdo_resize (UDisksLinuxLogicalVolumeObject *object,
 
   if (!common_setup (object, invocation, options,
                      N_("Authentication is required to resize a VDO volume"),
-                     &daemon, &caller_uid))
+                     &module, &daemon, &caller_uid))
     goto out;
 
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
@@ -388,6 +393,7 @@ handle_resize_physical (UDisksVDOVolume       *_volume,
   UDisksObject *pool_object = NULL;
   UDisksLinuxLogicalVolumeObject *object = NULL;
   GError *error = NULL;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon = NULL;
 
   object = udisks_daemon_util_dup_object (_volume, &error);
@@ -407,7 +413,8 @@ handle_resize_physical (UDisksVDOVolume       *_volume,
       goto out;
     }
 
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  module = udisks_linux_logical_volume_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   pool_object = udisks_daemon_find_object (daemon, pool_path);
   if (pool_object == NULL)
     {
@@ -444,6 +451,7 @@ handle_get_statistics (UDisksVDOVolume       *_volume,
   UDisksLinuxLogicalVolumeObject *object = NULL;
   UDisksLinuxVolumeGroupObject *group_object = NULL;
   GError *error = NULL;
+  UDisksLinuxModuleLVM2 *module;
   UDisksDaemon *daemon = NULL;
   GHashTable *stats = NULL;
   GVariantBuilder builder;
@@ -470,7 +478,8 @@ handle_get_statistics (UDisksVDOVolume       *_volume,
       goto out;
     }
 
-  daemon = udisks_linux_logical_volume_object_get_daemon (object);
+  module = udisks_linux_logical_volume_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
   pool_object = udisks_daemon_find_object (daemon, pool_path);
   if (pool_object == NULL)
     {

@@ -61,7 +61,7 @@ struct _UDisksLinuxVolumeGroupObject
 {
   UDisksObjectSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  UDisksLinuxModuleLVM2 *module;
 
   gchar *name;
 
@@ -84,7 +84,7 @@ struct _UDisksLinuxVolumeGroupObjectClass
 enum
 {
   PROP_0,
-  PROP_DAEMON,
+  PROP_MODULE,
   PROP_NAME,
 };
 
@@ -105,8 +105,11 @@ static void
 udisks_linux_volume_group_object_finalize (GObject *_object)
 {
   UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (_object);
+  UDisksDaemon *daemon;
 
-  /* note: we don't hold a ref to object->daemon */
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
+
+  g_object_unref (object->module);
 
   if (object->iface_volume_group != NULL)
     g_object_unref (object->iface_volume_group);
@@ -117,7 +120,7 @@ udisks_linux_volume_group_object_finalize (GObject *_object)
   g_signal_handlers_disconnect_by_func (object->mount_monitor,
                                         G_CALLBACK (fstab_changed),
                                         object);
-  g_signal_handlers_disconnect_by_func (udisks_daemon_get_crypttab_monitor (object->daemon),
+  g_signal_handlers_disconnect_by_func (udisks_daemon_get_crypttab_monitor (daemon),
                                         G_CALLBACK (crypttab_changed),
                                         object);
   g_object_unref (object->mount_monitor);
@@ -136,8 +139,8 @@ udisks_linux_volume_group_object_get_property (GObject    *__object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_volume_group_object_get_daemon (object));
+    case PROP_MODULE:
+      g_value_set_object (value, udisks_linux_volume_group_object_get_module (object));
       break;
 
     case PROP_NAME:
@@ -160,10 +163,9 @@ udisks_linux_volume_group_object_set_property (GObject      *__object,
 
   switch (prop_id)
     {
-    case PROP_DAEMON:
-      g_assert (object->daemon == NULL);
-      /* we don't take a reference to the daemon */
-      object->daemon = g_value_get_object (value);
+    case PROP_MODULE:
+      g_assert (object->module == NULL);
+      object->module = g_value_dup_object (value);
       break;
 
     case PROP_NAME:
@@ -190,10 +192,13 @@ static void
 udisks_linux_volume_group_object_constructed (GObject *_object)
 {
   UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (_object);
+  UDisksDaemon *daemon;
   GString *s;
 
   if (G_OBJECT_CLASS (udisks_linux_volume_group_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_volume_group_object_parent_class)->constructed (_object);
+
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
 
   object->logical_volumes = g_hash_table_new_full (g_str_hash,
                                                    g_str_equal,
@@ -218,11 +223,11 @@ udisks_linux_volume_group_object_constructed (GObject *_object)
                     "mountpoints-changed",
                     G_CALLBACK (fstab_changed),
                     object);
-  g_signal_connect (udisks_daemon_get_crypttab_monitor (object->daemon),
+  g_signal_connect (udisks_daemon_get_crypttab_monitor (daemon),
                     "entry-added",
                     G_CALLBACK (crypttab_changed),
                     object);
-  g_signal_connect (udisks_daemon_get_crypttab_monitor (object->daemon),
+  g_signal_connect (udisks_daemon_get_crypttab_monitor (daemon),
                     "entry-removed",
                     G_CALLBACK (crypttab_changed),
                     object);
@@ -240,16 +245,16 @@ udisks_linux_volume_group_object_class_init (UDisksLinuxVolumeGroupObjectClass *
   gobject_class->get_property = udisks_linux_volume_group_object_get_property;
 
   /**
-   * UDisksLinuxVolumeGroupObject:daemon:
+   * UDisksLinuxVolumeGroupObject:module:
    *
-   * The #UDisksDaemon the object is for.
+   * The #UDisksLinuxModuleLVM2 the object is for.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon the object is for",
-                                                        UDISKS_TYPE_DAEMON,
+                                   PROP_MODULE,
+                                   g_param_spec_object ("module",
+                                                        "Module",
+                                                        "The module the object is for",
+                                                        UDISKS_TYPE_LINUX_MODULE_LVM2,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -273,7 +278,7 @@ udisks_linux_volume_group_object_class_init (UDisksLinuxVolumeGroupObjectClass *
 
 /**
  * udisks_linux_volume_group_object_new:
- * @daemon: A #UDisksDaemon.
+ * @module: A #UDisksLinuxModuleLVM2.
  * @name: The name of the volume group.
  *
  * Create a new VolumeGroup object.
@@ -281,30 +286,30 @@ udisks_linux_volume_group_object_class_init (UDisksLinuxVolumeGroupObjectClass *
  * Returns: A #UDisksLinuxVolumeGroupObject object. Free with g_object_unref().
  */
 UDisksLinuxVolumeGroupObject *
-udisks_linux_volume_group_object_new (UDisksDaemon *daemon,
-                                      const gchar  *name)
+udisks_linux_volume_group_object_new (UDisksLinuxModuleLVM2 *module,
+                                      const gchar           *name)
 {
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_LVM2 (module), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   return UDISKS_LINUX_VOLUME_GROUP_OBJECT (g_object_new (UDISKS_TYPE_LINUX_VOLUME_GROUP_OBJECT,
-                                                         "daemon", daemon,
+                                                         "module", module,
                                                          "name", name,
                                                          NULL));
 }
 
 /**
- * udisks_linux_volume_group_object_get_daemon:
+ * udisks_linux_volume_group_object_get_module:
  * @object: A #UDisksLinuxVolumeGroupObject.
  *
- * Gets the daemon used by @object.
+ * Gets the module used by @object.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @object.
+ * Returns: A #UDisksLinuxModuleLVM2. Do not free, the object is owned by @object.
  */
-UDisksDaemon *
-udisks_linux_volume_group_object_get_daemon (UDisksLinuxVolumeGroupObject *object)
+UDisksLinuxModuleLVM2 *
+udisks_linux_volume_group_object_get_module (UDisksLinuxVolumeGroupObject *object)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT (object), NULL);
-  return object->daemon;
+  return object->module;
 }
 
 static void
@@ -344,25 +349,27 @@ lv_is_pvmove_volume (const gchar *name)
 }
 
 static void
-update_progress_for_device (UDisksDaemon *daemon,
-                            const gchar  *operation,
-                            const gchar  *dev,
-                            double        progress)
+update_progress_for_device (UDisksLinuxVolumeGroupObject *object,
+                            const gchar                  *operation,
+                            const gchar                  *dev,
+                            double                        progress)
 {
   GDBusObjectManager *object_manager;
+  UDisksDaemon *daemon;
   GList *objects, *l;
 
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
   object_manager = G_DBUS_OBJECT_MANAGER (udisks_daemon_get_object_manager (daemon));
   objects = g_dbus_object_manager_get_objects (object_manager);
 
   for (l = objects; l; l = l->next)
     {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksObject *o = UDISKS_OBJECT (l->data);
       UDisksJob *job;
       const gchar *const *job_objects;
       int i;
 
-      job = udisks_object_peek_job (object);
+      job = udisks_object_peek_job (o);
       if (job == NULL)
         continue;
 
@@ -399,16 +406,16 @@ update_progress_for_device (UDisksDaemon *daemon,
 }
 
 static void
-update_operations (UDisksDaemon *daemon,
-                   const gchar  *lv_name,
-                   BDLVMLVdata  *lv_info,
-                   gboolean     *needs_polling_ret)
+update_operations (UDisksLinuxVolumeGroupObject *object,
+                   const gchar                  *lv_name,
+                   BDLVMLVdata                  *lv_info,
+                   gboolean                     *needs_polling_ret)
 {
   if (lv_is_pvmove_volume (lv_name))
     {
       if (lv_info->move_pv && lv_info->copy_percent)
         {
-          update_progress_for_device (daemon,
+          update_progress_for_device (object,
                                       "lvm-vg-empty-device",
                                       lv_info->move_pv,
                                       lv_info->copy_percent/100.0);
@@ -419,7 +426,7 @@ update_operations (UDisksDaemon *daemon,
 
 static void
 block_object_update_lvm_iface (UDisksLinuxBlockObject *object,
-                               const gchar *lv_obj_path)
+                               const gchar            *lv_obj_path)
 {
   UDisksBlockLVM2 *iface_block_lvm2;
 
@@ -590,7 +597,7 @@ update_vg (GObject      *source_obj,
       return;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
   manager = udisks_daemon_get_object_manager (daemon);
 
   udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), vg_info, &needs_polling);
@@ -608,7 +615,7 @@ update_vg (GObject      *source_obj,
       BDLVMLVdata *meta_lv_info = NULL;
       BDLVMVDOPooldata *vdo_info = NULL;
 
-      update_operations (daemon, lv_name, lv_info, &needs_polling);
+      update_operations (object, lv_name, lv_info, &needs_polling);
 
       if (udisks_daemon_util_lvm2_name_is_reserved (lv_name))
         continue;
@@ -634,7 +641,7 @@ update_vg (GObject      *source_obj,
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume == NULL)
         {
-          volume = udisks_linux_logical_volume_object_new (daemon, object, lv_name);
+          volume = udisks_linux_logical_volume_object_new (object->module, object, lv_name);
           udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
           udisks_linux_logical_volume_object_update_etctabs (volume);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
@@ -716,7 +723,6 @@ poll_vg_update (GObject      *source_obj,
                 GAsyncResult *result,
                 gpointer      user_data)
 {
-  UDisksDaemon *daemon;
   gboolean needs_polling;
   GError *error = NULL;
   UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
@@ -750,8 +756,6 @@ poll_vg_update (GObject      *source_obj,
       return;
     }
 
-  daemon = udisks_linux_volume_group_object_get_daemon (object);
-
   /* XXX: we used to do this, but it seems to be pointless (how could a VG change without emitting a uevent on the PVs?) */
   /* udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), info, &needs_polling); */
 
@@ -780,8 +784,7 @@ poll_vg_update (GObject      *source_obj,
             }
         }
 
-
-      update_operations (daemon, lv_name, lv_info, &needs_polling);
+      update_operations (object, lv_name, lv_info, &needs_polling);
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume)
         udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
@@ -854,14 +857,17 @@ udisks_linux_volume_group_object_poll (UDisksLinuxVolumeGroupObject *object)
 void
 udisks_linux_volume_group_object_destroy (UDisksLinuxVolumeGroupObject *object)
 {
+  UDisksDaemon *daemon;
   GHashTableIter volume_iter;
   gpointer key, value;
+
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
 
   g_hash_table_iter_init (&volume_iter, object->logical_volumes);
   while (g_hash_table_iter_next (&volume_iter, &key, &value))
     {
       UDisksLinuxLogicalVolumeObject *volume = value;
-      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (object->daemon),
+      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (volume)));
     }
 }

@@ -34,10 +34,10 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_BLOCK_VDO_GET_PRIVATE(o)  ((UDisksLinuxBlockVDOPrivate *)((UDISKS_LINUX_BLOCK_VDO (o))->priv))
 
 GType                       udisks_linux_block_vdo_get_type   (void) G_GNUC_CONST;
-UDisksLinuxBlockVDO        *udisks_linux_block_vdo_new        (void);
-gboolean                    udisks_linux_block_vdo_update     (UDisksLinuxBlockVDO *l_block_vdo,
-                                                               UDisksLinuxBlockObject *object);
-UDisksDaemon               *udisks_linux_block_vdo_get_daemon (UDisksLinuxBlockVDO *vdo_block);
+UDisksLinuxBlockVDO        *udisks_linux_block_vdo_new        (UDisksLinuxModuleVDO    *module,
+                                                               UDisksLinuxBlockObject  *block_object);
+gboolean                    udisks_linux_block_vdo_update     (UDisksLinuxBlockVDO     *l_block_vdo,
+                                                               UDisksLinuxBlockObject  *object);
 
 G_END_DECLS
 

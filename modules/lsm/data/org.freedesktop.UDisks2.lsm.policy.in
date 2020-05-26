@@ -12,7 +12,7 @@
   <!-- ###################################################################### -->
   <!-- Drive LED Management -->
 
-  <action id="org.freedesktop.udisks2.manage-led">
+  <action id="org.freedesktop.udisks2.lsm.manage-led">
     <description>Manage disk drive LED</description>
     <message>Authentication is required to manage disk drive LED</message>
     <defaults>
