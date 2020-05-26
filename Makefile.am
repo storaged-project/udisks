@@ -28,6 +28,7 @@ EXTRA_DIST =                                                                   \
 DISTCHECK_CONFIGURE_FLAGS =                                                    \
 	--enable-gtk-doc                                                       \
 	--enable-modules                                                       \
+	--enable-vdo                                                           \
 	--disable-introspection                                                \
 	--with-udevdir=$$dc_install_base/$(udevdir)                            \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)  \

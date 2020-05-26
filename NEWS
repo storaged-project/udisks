@@ -1,17 +1,211 @@
 ---------------------------
-udisks 2.9.0 (unreleased)
+udisks 2.9.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.8.4:
-(TODO: make shortlog)
+
+Dick Marinus (1):
+      remove dot (.) for easier selecting the mounted folder
+
+Matthew Leeds (1):
+      udisksclient: Let the caller specify a D-Bus connection
+
+Philip Withnall (1):
+      udisksspawnedjob: Clear encoding of stdout and stderr channels
+
+Piotr Drąg (1):
+      Update POTFILES.in
+
+Ting-Wei Lan (8):
+      build: Do not hardcode the path of bash
+      udisksclient: Do not depend on __GNUC_PREREQ macro
+      Allow building without the daemon
+      build: Do not use sed -i
+      doc: Fix gtk-doc build when daemon is not built
+      doc: Fix inconsistent indentation
+      doc: Fix out-of-source build
+      udisks: Use 'mv -f' to prevent prompting
+
+Tomas Bzatek (135):
+      rpm: Don't trigger udev if socket is not accessible
+      ata: Reorder setting of APM and Standby timer flags
+      udisksstate: Prevent pointer dereferencing before its check for NULL
+      integration-test: Add test for mountpoint removal by external force
+      udisksstate: Remove unused 'attempt_no_cleanup' variable
+      udisksstate: Ignore state file read errors
+      udiskslinuxfilesystem: Fix a typo
+      udisksstate: Distinguish between persistent and non-persistent mount points
+      udisksstate: Const-ify the state file names
+      udisksstate: Prefix some warnings and error messages
+      Remove the systemd mount cleanup service
+      tests: Retry rmtree() if target is busy
+      udisksmountmonitor: Remove caching, always read and parse the data
+      tests: Handle return codes from `umount` and `wipefs` calls
+      udiskslinuxblockobject: Expose udisks_linux_block_object_get_device_number()
+      udiskslinuxblockobject: Add infrastructure for block device locking for cleanup
+      udisksstate: Skip cleanup if block device is busy
+      udisksstate: Implement udisks_state_check_block() for single device cleanup
+      block: Lock the block object for cleanup in d-bus method call handlers
+      Indentation fixes
+      Code style cleanup: comments
+      daemon: Detect linux kernel version on startup
+      udiskslinuxprovider: Add the "uevent-probed" signal
+      udisksdaemon: Generate daemon UUID on startup
+      udiskslinuxblockobject: Implement udisks_linux_block_object_trigger_uevent_sync()
+      daemon: Add UDISKS_DEFAULT_WAIT_TIMEOUT constant
+      daemon: Use udisks_linux_block_object_trigger_uevent_sync()
+      bcache: Use udisks_linux_block_object_trigger_uevent_sync()
+      lvm2: Unify timeouts using UDISKS_DEFAULT_WAIT_TIMEOUT
+      iscsi: Unify timeouts using UDISKS_DEFAULT_WAIT_TIMEOUT
+      zram: Unify timeouts using UDISKS_DEFAULT_WAIT_TIMEOUT
+      vdo: Unify timeouts using UDISKS_DEFAULT_WAIT_TIMEOUT
+      tests: Use `modprobe` to detect module availability
+      Minor docs fixes
+      udiskslinuxblock: Reread partition table after mkfs.udf
+      tests: Add --failfast test runner argument
+      tests: Run UDF filesystem tests over a partitioned device
+      tests: Test filesystem creation twice without wiping
+      udiskslinuxfilesystem: Trigger uevent after Unmount()
+      udiskslinuxblock: Remove unused udisks_linux_get_parent_for_tracking()
+      udiskslinuxblock: Add udisks_linux_block_matches_id()
+      udiskslinuxfilesystem: Use libmount for fstab enumeration
+      udiskslinuxblock: Use libmount for fstab enumeration
+      udiskslinuxprovider: Use GUnixMountMonitor for fstab monitoring
+      lvm2: Use GUnixMountMonitor for fstab monitoring
+      daemon: Ditch UDisksFstabMonitor completely
+      tests: Unmount parent block device upon cleanup for UDF
+      tests: Avoid using IDs in fstab records for partitioned block devices
+      udisksconfigmanager: Add udisks_config_manager_get_config_dir()
+      udisksconfigmanager: Make sure the global config dir exists
+      udiskslinuxdrive: Use the new udisks_config_manager_get_config_dir()
+      udiskslinuxprovider: Use the new udisks_config_manager_get_config_dir()
+      lsm: Use the new udisks_config_manager_get_config_dir()
+      udiskslinuxfilesystem: Refactor mount options computation out
+      udiskslinuxfilesystem: Use udisks_daemon_util_get_user_info()
+      udiskslinuxmountoptions: Use udisks_daemon_util_get_user_info()
+      tests: Make UdisksTestCase.set_udev_property() handle multiple properties
+      tests: Sleep for a while after installing custom udev rules
+      udisksdaemon: Minor docs and code style fixes
+      daemon: Separate the libmount checks for utab functionality
+      daemon: Require libmount >= 2.18 unconditionally
+      udiskslinuxblock: Update the Block.Configuration property after making changes
+      udiskslinuxblockobject: Acquire an exclusive BSD lock to prevent udev probes for BLKRRPART
+      daemon: Do not use STORAGED_* udev properties
+      udiskslinuxfilesystem: Fix unitialized variable
+      udiskslinuxmdraidobject: Fix harmless clang warning
+      btrfs: Use udisks_linux_block_object_trigger_uevent_sync()
+      udiskslinuxblock: Update the Configuration property after Format()
+      udiskslinuxblock: Move setting partition type before triggering uevent
+      udiskslinuxfilesystem: Use udisks_linux_block_object_trigger_uevent_sync()
+      daemon: Use udisks_linux_block_object_trigger_uevent_sync()
+      udiskslinuxpartitiontable: Wipe the newly created partition before waiting for new object
+      modules: Generate unified GDBus code for the core and all modules
+      doc: Move generated D-Bus API doc files in doc/xml/
+      doc: Fix module symbols
+      doc: Add missing symbols
+      modules: Add pkg-config files
+      lsm: Fix Makefile.am
+      Translation updates
+      udiskslinuxmountoptions: Implement config file parser
+      udiskslinuxmountoptions: Provide built-in set of mount options
+      udiskslinuxmountoptions: Port mount options computation to the new structures
+      udiskslinuxmountoptions: Exclude allow_{u,g}id_self[] options from _allow[]
+      udiskslinuxmountoptions: Add support for matching options by block device path
+      udiskslinuxmountoptions: Add support for config file overrides
+      udiskslinuxmountoptions: Allow missing [defaults] section
+      udiskslinuxmountoptions: Implement overrides from udev rules
+      udiskslinuxmountoptions: Print new mount options if overriden
+      udiskslinuxmountoptions: Cache the builtin mount options within UDisksDaemon
+      udiskslinuxmountoptions: Port final mount options computation away from GHashTable
+      udiskslinuxmountoptions: Allow explicit option=value mount options
+      udiskslinuxmountoptions: Respect all _allow_uid_self/_allow_gid_self options
+      udiskslinuxmountoptions: Handle stray comma in mount option value
+      udiskslinuxmountoptions: Use symbolic $UID and $GID placeholders for ID checks
+      Add sample mount_options.conf
+      doc: Document the configurable mount options
+      tests: Add tests for configurable mount options
+      udiskslinuxmountoptions: Add few more allowed options for UDF
+      udiskslinuxmountoptions: Make exfat options compatible with the native kernel driver
+      udisksstate: Fix a memleak
+      udiskslinuxblock: Fix leaking GError
+      daemon: Port away from G_TYPE_INSTANCE_GET_PRIVATE()
+      udisksdaemon: Fix a small doc issue
+      modules: Move UDisksModuleObject to the daemon
+      modules: Introduce UDisksModule
+      lvm2: Port to UDisksModule
+      iscsi: Port to UDisksModule
+      btrfs: Port to UDisksModule
+      zram: Port to UDisksModule
+      bcache: Port to UDisksModule
+      vdo: Port to UDisksModule
+      lsm: Port to UDisksModule
+      lsm: Fix UDisksLinuxDriveLSM polling and object ownership
+      lsm: Propagate errors from lsm calls
+      lsm: Remove duplicate udisks2_lsm.conf
+      doc: Fix LSM module docs
+      modules: Process org.freedesktop.UDisks2.Manager.EnableModules() in main thread
+      udiskslinuxprovider: Export manager interfaces for new modules
+      udisksmodulemanager: Emit `modules-activated` signal after new modules have been loaded
+      udisksmodulemanager: Remove udisks_module_manager_get_modules_available()
+      udisksmodulemanager: Scan for new modules on subsequent EnableModule() call
+      udisksmodulemanager: Implement org.freedesktop.UDisks2.Manager.EnableModule()
+      udisksmodulemanager: Docs fixes
+      tests: Use the new EnableModule() method call
+      modules: Fix build with daemon disabled
+      udiskslinuxprovider: Perform coldplug on 'modules-activated' signal unconditionally
+      lsm: Add tests based on libstoragemgmt 'sim' plugin
+      udisksconfigmanager: Always read the config file on getting list of modules
+      tests: Load only selected modules, avoid lsm
+      vdo: Fix potential NULL dereference
+      iscsi: Fix leaking UDisksLinuxISCSISession
+      vdo: Deprecate the standalone VDO module
+      udiskslinuxprovider: Add TODO about not sending a 'remove' uevent to block objects
+
+Vojtech Trefny (33):
+      dbus-tests: Try to read distro version from LSB
+      Fix converting dbus.UInt values to string with Python 3.8
+      dbus-tests: Fix decoding journal messages with non-unicode data
+      Add test for unlocking LUKS2 devices with integrity
+      Do not try to build VDO module on RHEL 7 on non-x86_64 arches
+      tests: Skip resize tests for formats without function to get size
+      Fix spelling of UDisks in README
+      (Un)mount devices with the user(s) option in fstab as the user
+      Add support for creating and managing LVM VDO volumes
+      Add tests for the LVM VDO features
+      Do not set the ThinPool property for non-thin volumes
+      Add ResizeLogical and ResizePhysical methods for VDOVolume.
+      Always run 'tearDownClass' for tests skipped in 'setUpClass'
+      Remove some obsoleted "skips" from DBus tests
+      Add support for (un)locking BitLocker devices
+      Do not try to get metadata size for non-LUKS encrypted devices
+      Add a function to get statistics for LVM VDO volumes
+      Use relative logical partition start in partitioning tests
+      Allow unlocking encrypted devices as read only
+      udisksctl: Use GDateTime instead of deprecated GTimeVal
+      udisksthreadjob: Remove deprecated g_thread_supported call
+      Fallback to safe udev values where possible for non UTF-8 strings
+      Add support for tagging tests and using tags for running tests
+      Add ability to read tests to skip from a config file
+      Add option to automatically run pdb for failed DBus tests
+      dbus-tests: Add a special tag to run all tests
+      man: Fix documentation link for libudev
+      Add a test for the no-discard option for Format
+      dbus-tests: Add test for the configuration option "track-parents"
+      Fix "options" option name for crypptab configuration item
+      Add allowed mount options for btrfs and f2fs
+      test_btrfs: Add a simple test for mounting btrfs subvolumes
+      Skip BITLK tests on systems with util-linux older than 2.33
+
+Will Thompson (1):
+      udisksctl: pretty-print 'ao' properties
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2020-05-26
 
 ---------------------------
 udisks 2.8.4

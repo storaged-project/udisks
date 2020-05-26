@@ -465,6 +465,9 @@ fi
 %endif
 
 %changelog
+* Tue May 26 2020 Tomas Bzatek <tbzatek@redhat.com> - 2.9.0-1
+- Version 2.9.0
+
 * Mon Jul 22 2019 Tomas Bzatek <tbzatek@redhat.com> - 2.8.4-1
 - Version 2.8.4
 

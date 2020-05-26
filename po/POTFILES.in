@@ -10,12 +10,15 @@ modules/btrfs/udiskslinuxmanagerbtrfs.c
 modules/iscsi/data/org.freedesktop.UDisks2.iscsi.policy.in
 modules/iscsi/udiskslinuxiscsisession.c
 modules/iscsi/udiskslinuxmanageriscsiinitiator.c
+modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in
+modules/lsm/lsm_linux_drive.c
+modules/lsm/lsm_linux_drive_local.c
 modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in
 modules/lvm2/udiskslinuxlogicalvolume.c
 modules/lvm2/udiskslinuxmanagerlvm2.c
+modules/lvm2/udiskslinuxphysicalvolume.c
 modules/lvm2/udiskslinuxvdovolume.c
 modules/lvm2/udiskslinuxvolumegroup.c
-modules/lsm/data/org.freedesktop.UDisks2.lsm.policy.in
 modules/vdo/data/org.freedesktop.UDisks2.vdo.policy.in
 modules/vdo/udiskslinuxblockvdo.c
 modules/vdo/udiskslinuxmanagervdo.c
