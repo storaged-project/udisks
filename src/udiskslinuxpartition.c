@@ -207,8 +207,7 @@ static void update_partitions_list (UDisksObject           *disk_object,
   udisks_partition_table_set_partitions (table, (const gchar**) partitions);
 
 out:
-  if (partitions)
-    g_strfreev (partitions);
+  g_strfreev (partitions);
 }
 
 /**
