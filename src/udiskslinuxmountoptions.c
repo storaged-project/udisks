@@ -259,12 +259,12 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
 
   config_manager = udisks_daemon_get_config_manager (daemon);
 
-  fsmo = g_malloc0 (sizeof (FSMountOptions));
-  fsmo_any = g_malloc0 (sizeof (FSMountOptions));
-
   /* Builtin options, two-level hashtable */
   builtin_opts = g_object_get_data (G_OBJECT (daemon), "mount-options");
   g_return_val_if_fail (builtin_opts != NULL, NULL);
+
+  fsmo = g_malloc0 (sizeof (FSMountOptions));
+  fsmo_any = g_malloc0 (sizeof (FSMountOptions));
   compute_block_level_mount_options (builtin_opts, block, fstype, fsmo, fsmo_any);
 
   /* Global config file overrides, two-level hashtable */
