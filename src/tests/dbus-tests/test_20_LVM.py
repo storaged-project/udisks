@@ -576,6 +576,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         dbus_size = self.get_property(lv, '.LogicalVolume', 'Size')
         dbus_size.assertEqual(vsize * 5)
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_resize_physical(self):
         vgname = 'udisks_test_vdo_vg'
 
@@ -586,7 +587,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
         lv_name = 'udisks_test_vdovlv'
         pool_name = 'udisks_test_vdopool'
-        psize = vg_free.value - 1 * 1024**3
+        psize = vg_free.value - 2 * 1024**3
         vsize = psize * 5
         lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
                                      dbus.UInt64(0), True, True, "auto", self.no_options,
