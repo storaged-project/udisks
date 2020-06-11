@@ -446,6 +446,11 @@ class UdisksTestCase(unittest.TestCase):
         return run_command(command)
 
     @classmethod
+    def module_available(cls, module):
+        ret, _out = cls.run_command('modprobe %s' % module)
+        return ret == 0
+
+    @classmethod
     def check_module_loaded(self, module):
         """Tries to load specified module. No checks for extra Manager interface are done.
            Returns False when module is not available, True when the module initialized

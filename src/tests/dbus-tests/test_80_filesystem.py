@@ -79,11 +79,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         ret, _out = cls.run_command('type %s' % command)
         return ret == 0
 
-    @classmethod
-    def module_available(cls, module):
-        ret, _out = cls.run_command('modprobe %s' % module)
-        return ret == 0
-
     def _get_formatted_block_object(self, dev_path):
         """ Get the real block object and its device path for a given filesystem type after formatting. """
         block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
@@ -1103,7 +1098,7 @@ class MinixTestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.minix')
     _can_label = False
     _can_relabel = False
-    _can_mount = True and UdisksFSTestCase.module_available('minix')
+    _can_mount = True and udiskstestcase.UdisksTestCase.module_available('minix')
 
 
 class NILFS2TestCase(UdisksFSTestCase):
@@ -1111,7 +1106,7 @@ class NILFS2TestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
-    _can_mount = True and UdisksFSTestCase.module_available('nilfs2')
+    _can_mount = True and udiskstestcase.UdisksTestCase.module_available('nilfs2')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_userspace_mount_options(self):
@@ -1123,14 +1118,14 @@ class F2FSTestCase(UdisksFSTestCase):
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
     _can_label = False
     _can_relabel = False
-    _can_mount = True and UdisksFSTestCase.module_available('f2fs')
+    _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_name = 'udf'
     _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('udflabel')
-    _can_mount = True and UdisksFSTestCase.module_available('udf')
+    _can_mount = True and udiskstestcase.UdisksTestCase.module_available('udf')
 
     def _get_mkudffs_version(self):
         """ Detect mkudffs version, fall back to zero in case of failure. """
