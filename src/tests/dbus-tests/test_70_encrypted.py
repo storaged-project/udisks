@@ -538,7 +538,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         # kernel keyring support and no passphrase for LUKS 2 given = fail
         if self._get_key_location('/dev/' + clear_dev) == 'keyring':
-            msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient persmissions to resize device. *'
+            msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient (permissions|persmissions) to resize device. *'
             with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
                               dbus_interface=self.iface_prefix + '.Encrypted')
