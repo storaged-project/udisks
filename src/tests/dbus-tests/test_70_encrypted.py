@@ -215,8 +215,6 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         new_crypttab = crypttab + '%s UUID=%s none\n' % (luks_name, disk_uuid)
         self.write_file('/etc/crypttab', new_crypttab)
 
-        # give udisks time to react to change of the file
-        time.sleep(5)
         dbus_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.assertIsNotNone(dbus_conf)
         self.assertEqual(self.ay_to_str(dbus_conf[0][1]['name']), luks_name)
@@ -267,8 +265,6 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         new_crypttab = crypttab + '%s UUID=%s %s\n' % (luks_name, disk_uuid, key_file)
         self.write_file('/etc/crypttab', new_crypttab)
 
-        # give udisks time to react to change of the file
-        time.sleep(5)
         dbus_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.assertIsNotNone(dbus_conf)
         self.assertEqual(self.ay_to_str(dbus_conf[0][1]['name']), luks_name)
