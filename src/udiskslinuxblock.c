@@ -575,7 +575,10 @@ find_fstab_entries (UDisksDaemon     *daemon,
         }
       else if (needle != NULL)
         {
-          if (mnt_fs_match_options (fs, needle) == 0)
+          const char *opts;
+
+          opts = mnt_fs_get_options (fs);
+          if (! opts || g_strstr_len (opts, -1, needle) == NULL)
             continue;
         }
 
