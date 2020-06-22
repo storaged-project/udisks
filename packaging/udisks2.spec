@@ -134,6 +134,12 @@ Requires: eject
 # For utab monitor
 Requires: libmount
 
+%if (0%{?rhel}) && (0%{?rhel} <= 7)
+# Not really needed but doesn't make much sense to use UDisks without polkit
+# (weak deps don't work on older versions of RHEL)
+Recommends: polkit
+%endif
+
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
 # For mkntfs (not available on rhel or on ppc/ppc64)
