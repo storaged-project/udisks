@@ -43,11 +43,20 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
         self.assertEqual(ret, 0)
         return vg
 
-    def _remove_vg(self, vg):
-        vgname = self.get_property_raw(vg, '.VolumeGroup', 'Name')
-        vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
-        ret, _out = self.run_command('vgs %s' % vgname)
-        self.assertNotEqual(ret, 0)
+    def _remove_vg(self, vg, tear_down=False, ignore_removed=False):
+        try:
+            vgname = self.get_property_raw(vg, '.VolumeGroup', 'Name')
+            if tear_down:
+                options = dbus.Dictionary(signature='sv')
+                options['tear-down'] = dbus.Boolean(True)
+            else:
+                options = self.no_options
+            vg.Delete(True, options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+            ret, _out = self.run_command('vgs %s' % vgname)
+            self.assertNotEqual(ret, 0)
+        except dbus.exceptions.DBusException as e:
+            if not ignore_removed:
+                raise e
 
 
 class UdisksLVMTest(UDisksLVMTestBase):
@@ -367,7 +376,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
 
         vgname = 'udisks_test_pv_vg'
 
-        # crete vg with one pv
+        # create vg with one pv
         old_pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(old_pv)
 
@@ -607,3 +616,205 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
 
         dbus_size = self.get_property(pool, '.LogicalVolume', 'Size')
         dbus_size.assertEqual(vg_free.value)
+
+
+class UdisksLVMTeardownTest(UDisksLVMTestBase):
+    '''Stacked LVM + LUKS automatic teardown tests'''
+
+    PASSPHRASE = 'einszweidrei'
+
+    def setUp(self):
+        super(UdisksLVMTeardownTest, self).setUp()
+
+    def tearDown(self):
+        self.doCleanups()
+        super(UdisksLVMTeardownTest, self).tearDown()
+
+    def _remove_luks(self, device, name, close=True):
+        if close:
+            try:
+                self.remove_file('/etc/luks-keys/%s' % name, ignore_nonexistent=True)
+                device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+            except dbus.exceptions.DBusException as e:
+                # ignore when luks is actually already locked
+                if not str(e).endswith('is not unlocked') and not 'No such interface' in str(e):
+                    raise e
+
+        try:
+            d = dbus.Dictionary(signature='sv')
+            d['erase'] = True
+            device.Format('empty', d, dbus_interface=self.iface_prefix + '.Block')
+        except dbus.exceptions.DBusException as e:
+            if not 'No such interface' in str(e):
+                raise e
+
+    def _init_stack(self, name):
+        vgname = name + '_vg'
+        lvname = name + '_lv'
+
+        # backup and restore
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        # create VG with one PV
+        self.pv = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(self.pv)
+
+        self.vg = self._create_vg(vgname, dbus.Array([self.pv]))
+        self.addCleanup(self._remove_vg, self.vg, tear_down=True, ignore_removed=True)
+
+        # create an LV on it
+        lv_path = self.vg.CreatePlainVolume(lvname, dbus.UInt64(200 * 1024**2), self.no_options,
+                                            dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.assertIsNotNone(self.lv)
+
+        lv_block_path = self.lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        self.assertIsNotNone(lv_block_path)
+
+        self.lv_block = self.get_object(lv_block_path)
+        self.assertIsNotNone(self.lv_block)
+
+        # create LUKS on the LV
+        options = dbus.Dictionary(signature='sv')
+        options['encrypt.type'] = 'luks2'
+        options['encrypt.passphrase'] = self.PASSPHRASE
+        options['label'] = 'COCKPITFS'
+        options['tear-down'] = dbus.Boolean(True)
+
+        crypttab_items = dbus.Dictionary({'name': self.str_to_ay(vgname),
+                                          'options': self.str_to_ay('verify,discard'),
+                                          'passphrase-contents': self.str_to_ay(self.PASSPHRASE),
+                                          'track-parents': True},
+                                          signature=dbus.Signature('sv'))
+        fstab_items = dbus.Dictionary({'dir': self.str_to_ay(vgname),
+                                       'type': self.str_to_ay('ext4'),
+                                       'opts': self.str_to_ay('defaults'),
+                                       'freq': 0, 'passno': 0,
+                                       'track-parents': True},
+                                      signature=dbus.Signature('sv'))
+        options['config-items'] = dbus.Array([('crypttab', crypttab_items),
+                                              ('fstab', fstab_items)])
+
+        self.lv_block.Format('ext4', options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self._remove_luks, self.lv_block, vgname)
+        self.luks_uuid = self.get_property_raw(self.lv_block, '.Block', 'IdUUID')
+
+        luks_block_path = self.get_property(self.lv_block, '.Encrypted', 'CleartextDevice')
+        self.luks_block = self.get_object(luks_block_path.value)
+        self.assertIsNotNone(self.luks_block)
+        self.fs_uuid = self.get_property_raw(self.luks_block, '.Block', 'IdUUID')
+
+        # check for present crypttab configuration item
+        conf = self.get_property(self.lv_block, '.Block', 'Configuration')
+        conf.assertTrue()
+        self.assertEqual(conf.value[0][0], 'crypttab')
+
+        # check for present fstab configuration item on a cleartext block device
+        conf = self.get_property(self.luks_block, '.Block', 'Configuration')
+        conf.assertTrue()
+        self.assertEqual(conf.value[0][0], 'fstab')
+
+        child_conf = self.get_property(self.lv_block, '.Encrypted', 'ChildConfiguration')
+        child_conf.assertTrue()
+        self.assertEqual(child_conf.value[0][0], 'fstab')
+        self.assertEqual(child_conf.value, conf.value)
+
+        # check that fstab and crypttab records have been added
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertIn(vgname, crypttab)
+        self.assertIn(self.luks_uuid, crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.assertIn(vgname, fstab)
+        self.assertIn(self.fs_uuid, fstab)
+
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_teardown_active_vg_unlocked(self):
+        ''' Test tear-down by removing the base VG (not deactivated, unlocked) '''
+
+        name = 'udisks_test_teardown_active_vg_unlocked'
+
+        self._init_stack(name)
+
+        self._remove_vg(self.vg, tear_down=True, ignore_removed=False)
+
+        # check that fstab and crypttab records have been removed
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertNotIn(name, crypttab)
+        self.assertNotIn(self.luks_uuid, crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.assertNotIn(name, fstab)
+        self.assertNotIn(self.fs_uuid, fstab)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_teardown_active_vg_locked(self):
+        ''' Test tear-down by removing the base VG (not deactivated, locked) '''
+
+        name = 'udisks_test_teardown_active_vg_locked'
+
+        self._init_stack(name)
+
+        self.lv_block.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+        self._remove_vg(self.vg, tear_down=True, ignore_removed=False)
+
+        # check that fstab and crypttab records have been removed
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertNotIn(name, crypttab)
+        self.assertNotIn(self.luks_uuid, crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.assertNotIn(name, fstab)
+        self.assertNotIn(self.fs_uuid, fstab)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_teardown_inactive_vg_locked(self):
+        ''' Test tear-down by removing the base VG (deactivated, locked) '''
+
+        name = 'udisks_test_teardown_inactive_locked'
+
+        self._init_stack(name)
+
+        self.lv_block.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+        self.lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        self._remove_vg(self.vg, tear_down=True, ignore_removed=False)
+
+        # check that fstab and crypttab records have been removed
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertNotIn(name, crypttab)
+        self.assertNotIn(self.luks_uuid, crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.assertNotIn(name, fstab)
+        self.assertNotIn(self.fs_uuid, fstab)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_reformat_inactive_vg_locked(self):
+        ''' Test tear-down by re-formatting the base PV (VG deactivated, locked) '''
+
+        name = 'test_reformat_inactive_vg_locked'
+
+        self._init_stack(name)
+
+        self.lv_block.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+        self.lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+
+        # now reformat the PV with tear-down flag
+        options = dbus.Dictionary(signature='sv')
+        options['label'] = 'AFTER_TEARDOWN'
+        options['tear-down'] = dbus.Boolean(True)
+
+        self.pv.Format('ext4', options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # TODO: implement proper teardown across combined LVM + LUKS stack
+        # https://github.com/storaged-project/udisks/issues/781
+
+        # check that fstab and crypttab records have been removed
+        # TODO: these checks are the opposite - record shouldn't be present, once this is fixed
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertIn(name, crypttab)
+        self.assertIn(self.luks_uuid, crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.assertIn(name, fstab)
+        self.assertIn(self.fs_uuid, fstab)
