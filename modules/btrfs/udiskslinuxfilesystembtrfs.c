@@ -270,6 +270,7 @@ udisks_linux_filesystem_btrfs_update (UDisksLinuxFilesystemBTRFS *l_fs_btrfs,
   udisks_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
 
 out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (fs_btrfs));
   if (btrfs_info)
     bd_btrfs_filesystem_info_free (btrfs_info);
   if (error)
