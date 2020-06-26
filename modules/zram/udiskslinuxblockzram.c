@@ -277,6 +277,7 @@ udisks_linux_block_zram_update (UDisksLinuxBlockZRAM    *zramblock,
 
   udisks_block_zram_set_active (iface, bd_swap_swapstatus (dev_file, &error));
 out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
   if (zram_info)
     bd_kbd_zram_stats_free (zram_info);
   if (error)
