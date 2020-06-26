@@ -893,6 +893,7 @@ update_configuration (UDisksLinuxBlock  *block,
       configuration = g_variant_new ("a(sa{sv})", NULL);
     }
   udisks_block_set_configuration (UDISKS_BLOCK (block), configuration);
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (block));
 }
 
 #ifdef HAVE_LIBMOUNT_UTAB
@@ -1280,6 +1281,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
   update_mdraid (block, device, drive, object_manager);
 
  out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (block));
   if (device != NULL)
     g_object_unref (device);
   if (drive != NULL)

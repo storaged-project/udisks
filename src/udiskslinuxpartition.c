@@ -312,6 +312,8 @@ udisks_linux_partition_update (UDisksLinuxPartition   *partition,
   udisks_partition_set_is_container (UDISKS_PARTITION (partition), is_container);
   udisks_partition_set_is_contained (UDISKS_PARTITION (partition), is_contained);
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (partition));
+
   g_free (name);
   g_clear_object (&device);
   g_clear_object (&disk_block_object);

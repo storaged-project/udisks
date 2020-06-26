@@ -187,6 +187,7 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
     }
   udisks_loop_set_setup_by_uid (UDISKS_LOOP (loop), setup_by_uid);
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (loop));
   g_object_unref (device);
 }
 

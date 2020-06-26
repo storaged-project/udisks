@@ -237,6 +237,8 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
     update_metadata_size (encrypted, object);
 
   udisks_linux_block_encrypted_unlock (block);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (encrypted));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -629,6 +631,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                         udisks_block_get_device_number (block),
                                         g_udev_device_get_sysfs_attr (cleartext_device->udev_device, "dm/uuid"),
                                         caller_uid);
+
+  /* ensure property changes are sent before the method return */
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (encrypted));
 
   udisks_encrypted_complete_unlock (encrypted,
                                     invocation,

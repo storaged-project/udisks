@@ -512,6 +512,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                                                                                 uuid));
 
  out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (mdraid));
   if (raid_data)
       bd_md_examine_data_free (raid_data);
   g_free (sync_completed);

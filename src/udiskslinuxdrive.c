@@ -950,6 +950,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   ret = update_configuration (drive, object);
 
  out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
   if (device != NULL)
     g_clear_object (&device);
 

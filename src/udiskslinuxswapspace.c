@@ -127,6 +127,7 @@ udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
     active = TRUE;
   udisks_swapspace_set_active (UDISKS_SWAPSPACE (swapspace), active);
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (swapspace));
   g_object_unref (device);
 }
 
