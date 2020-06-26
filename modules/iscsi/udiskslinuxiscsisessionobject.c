@@ -355,6 +355,8 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
   udisks_iscsi_session_set_lu_reset_timeout (iface, session_info.tmo.lu_reset_tmo);
   udisks_iscsi_session_set_recovery_timeout (iface, session_info.tmo.recovery_tmo);
   udisks_iscsi_session_set_tgt_reset_timeout (iface, session_info.tmo.tgt_reset_tmo);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 static gboolean
