@@ -442,6 +442,7 @@ block_object_update_lvm_iface (UDisksLinuxBlockObject *object,
 
   udisks_linux_block_lvm2_update (UDISKS_LINUX_BLOCK_LVM2 (iface_block_lvm2), object);
   udisks_block_lvm2_set_logical_volume (iface_block_lvm2, lv_obj_path);
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface_block_lvm2));
 }
 
 static void
@@ -456,6 +457,7 @@ lv_object_update_block_path (UDisksLinuxBlockObject       *block_object,
     {
       block_objpath = g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object));
       udisks_logical_volume_set_block_device (UDISKS_LOGICAL_VOLUME (lv), block_objpath);
+      g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (lv));
     }
 }
 
@@ -695,6 +697,7 @@ update_vg (GObject      *source_obj,
   bd_lvm_vgdata_free (vg_info);
   lv_list_free (lvs);
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (object->iface_volume_group));
   g_object_unref (object);
 }
 
