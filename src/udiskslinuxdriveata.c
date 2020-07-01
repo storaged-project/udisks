@@ -339,6 +339,8 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
   update_security (drive, device);
 
  out:
+  /* ensure property changes are sent before the method return */
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
   if (device != NULL)
     g_object_unref (device);
 
@@ -680,6 +682,9 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   ret = TRUE;
   /* update stats again to account for the IO we just did to read the SMART info */
   update_io_stats (drive, device);
+
+  /* ensure property changes are sent before the method return */
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
 
  out:
   g_clear_object (&device);

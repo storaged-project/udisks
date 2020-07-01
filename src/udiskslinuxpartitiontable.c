@@ -146,6 +146,7 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
 
   udisks_partition_table_set_partitions (UDISKS_PARTITION_TABLE (table),
                                          partition_object_paths);
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (table));
 
 
   g_free (partition_object_paths);

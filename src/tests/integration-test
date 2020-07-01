@@ -116,10 +116,14 @@ class UDisksTestCase(unittest.TestCase):
     cd_device = ""
     client = None
     manager = None
+    system = False
 
     @classmethod
-    def init(cls, logfile=None):
+    def init(cls, logfile=None, system=False):
         """start daemon and set up test environment"""
+
+        # test against running system instance
+        cls.system = system
 
         if os.geteuid() != 0:
             print('this test suite needs to run as root', file=sys.stderr)
@@ -127,7 +131,7 @@ class UDisksTestCase(unittest.TestCase):
 
         # run from local build tree if we are in one, otherwise use system instance
         cls.daemon_path = os.path.join(srcdir, 'src', '.libs', 'udisksd')
-        if (os.access(cls.daemon_path, os.X_OK)):
+        if not system and (os.access(cls.daemon_path, os.X_OK)):
             print('Testing binaries from local build tree')
             cls.check_build_tree_config()
             # copy required system files
@@ -151,10 +155,12 @@ class UDisksTestCase(unittest.TestCase):
 
         (cls.device, cls.cd_device) = cls.setup_vdev()
 
-        # start polkit and udisks on a private DBus
-        cls.dbus = Gio.TestDBus()
-        cls.dbus.up()
-        os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = cls.dbus.get_bus_address()
+        if not system:
+            # start polkit and udisks on a private DBus
+            cls.dbus = Gio.TestDBus()
+            cls.dbus.up()
+            os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = cls.dbus.get_bus_address()
+
         # do not try to communicate with the current desktop session; this will
         # confuse it, as it cannot see this D-BUS instance
         try:
@@ -167,7 +173,7 @@ class UDisksTestCase(unittest.TestCase):
             cls.daemon_log = tempfile.TemporaryFile()
         atexit.register(cls.cleanup)
 
-        cls.start_daemon()
+        cls.start_daemon(system)
 
     @classmethod
     def cleanup(cls):
@@ -182,16 +188,18 @@ class UDisksTestCase(unittest.TestCase):
         cls.teardown_vdev(cls.device)
         cls.device = None
 
-        del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
-        cls.dbus.down()
+        os.environ.pop('DBUS_SYSTEM_BUS_ADDRESS', None)
+        if cls.dbus:
+            cls.dbus.down()
 
     @classmethod
-    def start_daemon(cls):
-        assert cls.daemon is None
-        cls.daemon = subprocess.Popen([cls.daemon_path, '--replace'],
-                                      stdout=cls.daemon_log,
-                                      stderr=subprocess.STDOUT)
-        assert cls.daemon.pid, 'daemon failed to start'
+    def start_daemon(cls, system):
+        if not system:
+            assert cls.daemon is None
+            cls.daemon = subprocess.Popen([cls.daemon_path, '--replace'],
+                                          stdout=cls.daemon_log,
+                                          stderr=subprocess.STDOUT)
+            assert cls.daemon.pid, 'daemon failed to start'
 
         # wait until the daemon has started up
         timeout = 10
@@ -203,16 +211,18 @@ class UDisksTestCase(unittest.TestCase):
             cls.manager = cls.client.get_manager()
             timeout -= 1
         assert cls.manager, 'daemon failed to start'
-        assert cls.daemon.pid, 'daemon failed to start'
+
+        if not system:
+            assert cls.daemon.pid, 'daemon failed to start'
 
         cls.sync()
 
     @classmethod
     def stop_daemon(cls):
-        assert cls.daemon
-        os.kill(cls.daemon.pid, signal.SIGTERM)
-        os.wait()
-        cls.daemon = None
+        if cls.daemon:
+            os.kill(cls.daemon.pid, signal.SIGTERM)
+            os.wait()
+            cls.daemon = None
 
     @classmethod
     def sync(cls):
@@ -818,6 +828,9 @@ class FS(UDisksTestCase):
     def test_existing_udisks_mount_point(self):
         """fs: reuses existing udisks mount point"""
 
+        if self.system:
+            self.skipTest("Skipping when testing a system instance")
+
         self.mkfs('ext4', 'udiskstest')
         fs = self.udisks_filesystem()
 
@@ -834,7 +847,7 @@ class FS(UDisksTestCase):
 
         # restart daemon, mount again; this should use the same mount point as
         # before
-        UDisksTestCase.start_daemon()
+        UDisksTestCase.start_daemon(self.system)
         fs = self.udisks_filesystem()
         new_mount_path = fs.call_mount_sync(no_options, None)
         self.retry_busy(fs.call_unmount_sync, no_options, None)
@@ -1673,6 +1686,8 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
     """Check operation with polkit."""
 
     def setUp(self):
+        if self.system:
+            self.skipTest("Skipping Polkit tests when testing a system instance")
         if DISTRO_VER == ("fedora", "26"):
             self.skipTest("Skipping hanging PolicyKit tests on Fedora 26")
 
@@ -1926,13 +1941,16 @@ def restore_files(restore_list, tmpdir):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='udisks2 integration test suite')
+    argparser.add_argument('-s', '--system', dest='system',
+                           help='run the test against the system installed instance',
+                           action='store_true')
     argparser.add_argument('-l', '--log-file', dest='logfile',
                            help='write daemon log to a file')
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     cli_args = argparser.parse_args()
 
-    UDisksTestCase.init(logfile=cli_args.logfile)
+    UDisksTestCase.init(logfile=cli_args.logfile, system=cli_args.system)
     if cli_args.testname:
         tests = unittest.TestLoader().loadTestsFromNames(
             cli_args.testname, __import__('__main__'))

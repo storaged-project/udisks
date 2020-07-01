@@ -251,6 +251,8 @@ do_refresh (UDisksBlockVDO *block_vdo,
 
   bd_vdo_info_free (bd_info);
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (block_vdo));
+
   return TRUE;
 }
 

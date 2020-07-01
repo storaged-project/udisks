@@ -143,6 +143,8 @@ udisks_linux_physical_volume_update   (UDisksLinuxPhysicalVolume    *physical_vo
       udisks_physical_volume_set_size (iface, pv_info->pv_size);
       udisks_physical_volume_set_free_size (iface, pv_info->pv_free);
     }
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

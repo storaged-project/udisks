@@ -177,6 +177,8 @@ udisks_linux_vdo_volume_update (UDisksLinuxVDOVolume         *vdo_volume,
 
   udisks_vdo_volume_set_compression (iface, vdo_info->compression);
   udisks_vdo_volume_set_deduplication (iface, vdo_info->deduplication);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

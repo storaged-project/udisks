@@ -220,6 +220,8 @@ _fill_drive_lsm (UDisksLinuxDriveLSM  *drive_lsm,
   udisks_drive_lsm_set_min_io_size (std_drv_lsm, lsm_vol_data->min_io_size);
   udisks_drive_lsm_set_opt_io_size (std_drv_lsm, lsm_vol_data->opt_io_size);
   udisks_drive_lsm_set_raid_disk_count (std_drv_lsm, lsm_vol_data->raid_disk_count);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (std_drv_lsm));
 }
 
 

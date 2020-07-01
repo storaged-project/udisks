@@ -136,11 +136,14 @@ udisks_linux_volume_group_update (UDisksLinuxVolumeGroup *volume_group,
                                   gboolean               *needs_polling_ret)
 {
   UDisksVolumeGroup *iface = UDISKS_VOLUME_GROUP (volume_group);
+
   udisks_volume_group_set_name (iface, vg_info->name);
   udisks_volume_group_set_uuid (iface, vg_info->uuid);
   udisks_volume_group_set_size (iface, vg_info->size);
   udisks_volume_group_set_free_size (iface, vg_info->free);
   udisks_volume_group_set_extent_size (iface, vg_info->extent_size);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

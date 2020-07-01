@@ -263,6 +263,7 @@ udisks_linux_block_bcache_update (UDisksLinuxBlockBcache  *block,
   udisks_block_bcache_set_bypass_misses (iface, stats->bypass_misses);
 
 out:
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
   if (stats)
     bd_kbd_bcache_stats_free (stats);
   if (error)

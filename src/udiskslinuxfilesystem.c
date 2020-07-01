@@ -277,6 +277,8 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   if (! skip_fs_size)
     udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
 
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
+
   g_object_unref (device);
 }
 
@@ -1865,6 +1867,7 @@ handle_resize (UDisksFilesystem      *filesystem,
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_filesystem_set_size (filesystem, get_filesystem_size (UDISKS_LINUX_BLOCK_OBJECT (object)));
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
   udisks_filesystem_complete_resize (filesystem, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 

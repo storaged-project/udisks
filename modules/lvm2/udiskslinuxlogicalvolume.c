@@ -229,6 +229,8 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
       logical_volume->needs_udev_hack = FALSE;
       g_free (dev_file);
     }
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 void
@@ -248,6 +250,7 @@ udisks_linux_logical_volume_update_etctabs (UDisksLinuxLogicalVolume     *logica
   udisks_logical_volume_set_child_configuration (iface,
                                                  udisks_linux_find_child_configuration (daemon,
                                                                                         uuid));
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
