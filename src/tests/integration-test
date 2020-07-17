@@ -878,7 +878,7 @@ class FS(UDisksTestCase):
 
         self._do_cli_check(fs_type)
         if fs_type != 'minix':
-            self._do_cli_check(fs_type, 'test%stst' % fs_type)
+            self._do_cli_check(fs_type, 't%stst' % fs_type)
 
         # put a different fs here instead of zeroing, so that we verify that
         # udisks overrides existing FS (e. g. XFS complains then), and does not
@@ -892,7 +892,7 @@ class FS(UDisksTestCase):
         self.write_stderr('[ud] ')
         self._do_udisks_check(fs_type)
         if fs_type != 'minix':
-            self._do_udisks_check(fs_type, 'test%stst' % fs_type)
+            self._do_udisks_check(fs_type, 't%stst' % fs_type)
             # also test fs_create with an empty label
             self._do_udisks_check(fs_type, '')
             # also test fs_create with the no-discard option
@@ -1048,6 +1048,8 @@ class FS(UDisksTestCase):
             # VFAT does not support some characters
             self.assertRaises(GLib.GError, fs.call_set_label_sync, l, no_options, None)
             l = "n@a$me"
+        elif fs_type == 'exfat':
+            l = 'n"a\m\\"exft'
         try:
             fs.call_set_label_sync(l, no_options, None)
         except GLib.GError as e:
