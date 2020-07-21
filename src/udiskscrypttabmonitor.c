@@ -57,8 +57,10 @@ struct _UDisksCrypttabMonitor
 {
   GObject parent_instance;
 
-  gboolean have_data;
   GList *crypttab_entries;
+  GMutex crypttab_entries_mutex;
+
+  gchar *crypttab_checksum;
 
   GFileMonitor *file_monitor;
 };
@@ -77,6 +79,8 @@ struct _UDisksCrypttabMonitorClass
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+#define CRYPPTAB_FILENAME "/etc/crypttab"
+
 enum
   {
     ENTRY_ADDED_SIGNAL,
@@ -89,7 +93,6 @@ static guint signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (UDisksCrypttabMonitor, udisks_crypttab_monitor, G_TYPE_OBJECT)
 
 static void udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor);
-static void udisks_crypttab_monitor_invalidate (UDisksCrypttabMonitor *monitor);
 static void udisks_crypttab_monitor_constructed (GObject *object);
 
 static void
@@ -98,8 +101,11 @@ udisks_crypttab_monitor_finalize (GObject *object)
   UDisksCrypttabMonitor *monitor = UDISKS_CRYPTTAB_MONITOR (object);
 
   g_object_unref (monitor->file_monitor);
+  g_free (monitor->crypttab_checksum);
 
   g_list_free_full (monitor->crypttab_entries, g_object_unref);
+
+  g_mutex_clear (&monitor->crypttab_entries_mutex);
 
   if (G_OBJECT_CLASS (udisks_crypttab_monitor_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_crypttab_monitor_parent_class)->finalize (object);
@@ -109,6 +115,7 @@ static void
 udisks_crypttab_monitor_init (UDisksCrypttabMonitor *monitor)
 {
   monitor->crypttab_entries = NULL;
+  g_mutex_init (&monitor->crypttab_entries_mutex);
 }
 
 static void
@@ -208,46 +215,6 @@ diff_sorted_lists (GList *list1,
 }
 
 static void
-reload_crypttab_entries (UDisksCrypttabMonitor *monitor)
-{
-  GList *old_crypttab_entries;
-  GList *cur_crypttab_entries;
-  GList *added;
-  GList *removed;
-  GList *l;
-
-  udisks_crypttab_monitor_ensure (monitor);
-
-  old_crypttab_entries = g_list_copy_deep (monitor->crypttab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
-
-  udisks_crypttab_monitor_invalidate (monitor);
-  udisks_crypttab_monitor_ensure (monitor);
-
-  cur_crypttab_entries = g_list_copy (monitor->crypttab_entries);
-
-  old_crypttab_entries = g_list_sort (old_crypttab_entries, (GCompareFunc) udisks_crypttab_entry_compare);
-  cur_crypttab_entries = g_list_sort (cur_crypttab_entries, (GCompareFunc) udisks_crypttab_entry_compare);
-  diff_sorted_lists (old_crypttab_entries, cur_crypttab_entries, (GCompareFunc) udisks_crypttab_entry_compare, &added, &removed);
-
-  for (l = removed; l != NULL; l = l->next)
-    {
-      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      g_signal_emit (monitor, signals[ENTRY_REMOVED_SIGNAL], 0, entry);
-    }
-
-  for (l = added; l != NULL; l = l->next)
-    {
-      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      g_signal_emit (monitor, signals[ENTRY_ADDED_SIGNAL], 0, entry);
-    }
-
-  g_list_free_full (old_crypttab_entries, g_object_unref);
-  g_list_free (cur_crypttab_entries);
-  g_list_free (removed);
-  g_list_free (added);
-}
-
-static void
 on_file_monitor_changed (GFileMonitor      *file_monitor,
                          GFile             *file,
                          GFile             *other_file,
@@ -259,8 +226,8 @@ on_file_monitor_changed (GFileMonitor      *file_monitor,
       event_type == G_FILE_MONITOR_EVENT_CREATED ||
       event_type == G_FILE_MONITOR_EVENT_DELETED)
     {
-      udisks_debug ("/etc/crypttab changed!");
-      reload_crypttab_entries (monitor);
+      udisks_debug (CRYPPTAB_FILENAME " changed!");
+      udisks_crypttab_monitor_ensure (monitor);
     }
 }
 
@@ -271,7 +238,7 @@ udisks_crypttab_monitor_constructed (GObject *object)
   GError *error;
   GFile *file;
 
-  file = g_file_new_for_path ("/etc/crypttab");
+  file = g_file_new_for_path (CRYPPTAB_FILENAME);
   error = NULL;
   monitor->file_monitor = g_file_monitor_file (file,
                                                G_FILE_MONITOR_NONE,
@@ -279,7 +246,7 @@ udisks_crypttab_monitor_constructed (GObject *object)
                                                &error);
   if (monitor->file_monitor == NULL)
     {
-      udisks_critical ("Error monitoring /etc/crypttab: %s (%s, %d)",
+      udisks_critical ("Error monitoring " CRYPPTAB_FILENAME ": %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
@@ -313,44 +280,39 @@ udisks_crypttab_monitor_new (void)
   return UDISKS_CRYPTTAB_MONITOR (g_object_new (UDISKS_TYPE_CRYPTTAB_MONITOR, NULL));
 }
 
-static void
-udisks_crypttab_monitor_invalidate (UDisksCrypttabMonitor *monitor)
-{
-  monitor->have_data = FALSE;
-
-  g_list_free_full (monitor->crypttab_entries, g_object_unref);
-  monitor->crypttab_entries = NULL;
-}
-
-
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-have_entry (UDisksCrypttabMonitor *monitor,
-            UDisksCrypttabEntry   *entry)
+typedef struct
 {
-  GList *l;
-  gboolean ret;
+  UDisksCrypttabMonitor *monitor;
+  UDisksCrypttabEntry *entry;
+  guint signal_id;
+} CrypttabEntryChangedData;
 
-  ret = FALSE;
-  for (l = monitor->crypttab_entries; l != NULL; l = l->next)
-    {
-      UDisksCrypttabEntry *other_entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      if (udisks_crypttab_entry_compare (entry, other_entry) == 0)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
- out:
-  return ret;
+static gboolean
+crypttab_entry_changed_cb (gpointer user_data)
+{
+  CrypttabEntryChangedData *data = user_data;
+
+  g_signal_emit (data->monitor, signals[data->signal_id], 0, data->entry);
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+free_crypttab_entry_changed_data (gpointer user_data)
+{
+  CrypttabEntryChangedData *data = user_data;
+
+  g_object_unref (data->entry);
+  g_free (data);
 }
 
 /**
  * split_crypttab_line:
  *
  * Splits line from /etc/crypttab to parts (device, name, password and options).
- * This function also handles columns with multiple deliminters (tabs or spaces).
+ * This function also handles columns with multiple delimiters (tabs or spaces).
  *
  */
 static gchar **
@@ -395,34 +357,44 @@ split_crypttab_line (const gchar *line, guint *num_tokens)
 static void
 udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
 {
-  gchar *contents;
-  gchar **lines;
-  GError *error;
+  GList *entries;
+  GError *error = NULL;
+  gchar *contents = NULL;
+  gsize contents_len = 0;
+  gchar **lines = NULL;
+  gchar *contents_checksum = NULL;
   guint n;
+  GList *added;
+  GList *removed;
+  GList *l;
 
-  contents = NULL;
-  lines = NULL;
+  /* Compare cache validity by matching contents checksum */
+  g_mutex_lock (&monitor->crypttab_entries_mutex);
 
-  if (monitor->have_data)
-    goto out;
-
-  error = NULL;
-  if (!g_file_get_contents ("/etc/crypttab",
+  /* Read the contents */
+  if (!g_file_get_contents (CRYPPTAB_FILENAME,
                             &contents,
-                            NULL, /* size */
+                            &contents_len,
                             &error))
     {
-      if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+      if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
         {
-          udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
+          udisks_warning ("Error opening " CRYPPTAB_FILENAME ": %s (%s, %d)",
                           error->message, g_quark_to_string (error->domain), error->code);
         }
       g_clear_error (&error);
       goto out;
     }
 
-  lines = g_strsplit (contents, "\n", 0);
+  contents_checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, (const guchar *) contents, contents_len);
+  if (g_strcmp0 (contents_checksum, monitor->crypttab_checksum) == 0)
+    {
+      goto out;
+    }
 
+  /* Parse the contents */
+  entries = NULL;
+  lines = g_strsplit (contents, "\n", 0);
   for (n = 0; lines != NULL && lines[n] != NULL; n++)
     {
       gchar **tokens;
@@ -436,33 +408,58 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
         continue;
 
       tokens = split_crypttab_line (line, &num_tokens);
-      if (num_tokens < 2)
+      if (num_tokens > 1)
         {
-          udisks_warning ("Line %u of /etc/crypttab only contains %u tokens", n, num_tokens);
-          goto continue_loop;
-        }
-
-      entry = _udisks_crypttab_entry_new (tokens[0],
-                                          tokens[1],
-                                          num_tokens >= 3 ? tokens[2] : NULL,
-                                          num_tokens >= 4 ? tokens[3] : NULL);
-      if (!have_entry (monitor, entry))
-        {
-          monitor->crypttab_entries = g_list_prepend (monitor->crypttab_entries, entry);
+          entry = _udisks_crypttab_entry_new (tokens[0],
+                                              tokens[1],
+                                              num_tokens >= 3 ? tokens[2] : NULL,
+                                              num_tokens >= 4 ? tokens[3] : NULL);
+          entries = g_list_prepend (entries, entry);
         }
       else
         {
-          g_object_unref (entry);
+          udisks_warning ("Line %u of " CRYPPTAB_FILENAME " only contains %u tokens", n, num_tokens);
         }
-
-    continue_loop:
       g_strfreev (tokens);
     }
 
-  monitor->have_data = TRUE;
+  /* Compare and emit changes */
+  diff_sorted_lists (monitor->crypttab_entries, entries, (GCompareFunc) udisks_crypttab_entry_compare, &added, &removed);
+
+  for (l = removed; l != NULL; l = l->next)
+    {
+      CrypttabEntryChangedData *data;
+
+      data = g_new0 (CrypttabEntryChangedData, 1);
+      data->monitor = monitor;
+      data->signal_id = ENTRY_REMOVED_SIGNAL;
+      data->entry = g_object_ref (UDISKS_CRYPTTAB_ENTRY (l->data));
+      g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, crypttab_entry_changed_cb, data, free_crypttab_entry_changed_data);
+    }
+
+  for (l = added; l != NULL; l = l->next)
+    {
+      CrypttabEntryChangedData *data;
+
+      data = g_new0 (CrypttabEntryChangedData, 1);
+      data->monitor = monitor;
+      data->signal_id = ENTRY_ADDED_SIGNAL;
+      data->entry = g_object_ref (UDISKS_CRYPTTAB_ENTRY (l->data));
+      g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, crypttab_entry_changed_cb, data, free_crypttab_entry_changed_data);
+    }
+
+  g_list_free (removed);
+  g_list_free (added);
+  g_list_free_full (monitor->crypttab_entries, g_object_unref);
+
+  monitor->crypttab_entries = entries;
+  g_free (monitor->crypttab_checksum);
+  monitor->crypttab_checksum = g_steal_pointer (&contents_checksum);
 
  out:
+  g_mutex_unlock (&monitor->crypttab_entries_mutex);
   g_free (contents);
+  g_free (contents_checksum);
   g_strfreev (lines);
 }
 
@@ -483,6 +480,9 @@ udisks_crypttab_monitor_get_entries (UDisksCrypttabMonitor  *monitor)
 
   udisks_crypttab_monitor_ensure (monitor);
 
+  g_mutex_lock (&monitor->crypttab_entries_mutex);
   ret = g_list_copy_deep (monitor->crypttab_entries, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  g_mutex_unlock (&monitor->crypttab_entries_mutex);
+
   return ret;
 }

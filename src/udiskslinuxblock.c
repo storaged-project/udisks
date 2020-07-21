@@ -452,26 +452,6 @@ update_hints (UDisksLinuxBlock  *block,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-static void
-process_device_symlinks (const gchar      *device,
-                         UDisksLinuxBlock *block,
-                         gpointer          object,
-                         GList           **ret)
-{
-  const gchar *const *symlinks;
-  guint n;
-
-  if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
-    *ret = g_list_prepend (*ret, g_object_ref (object));
-  else
-    {
-      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-      if (symlinks != NULL)
-        for (n = 0; symlinks[n] != NULL; n++)
-          if (g_strcmp0 (device, symlinks[n]) == 0)
-            *ret = g_list_prepend (*ret, g_object_ref (object));
-    }
-}
 
 /**
  * udisks_linux_block_matches_id:
@@ -479,7 +459,8 @@ process_device_symlinks (const gchar      *device,
  * @device_path: A device path string.
  *
  * Compares block device identifiers and returns %TRUE if match is found. The @device_path
- * argument may be a device file or a common KEY=VALUE identifier as used e.g. in /etc/fstab.
+ * argument may be a device file or a common KEY=VALUE identifier as used e.g. in /etc/fstab
+ * or /etc/crypttab.
  *
  * Returns: %TRUE when identifiers do match, %FALSE otherwise.
  */
@@ -594,7 +575,10 @@ find_fstab_entries (UDisksDaemon     *daemon,
         }
       else if (needle != NULL)
         {
-          if (mnt_fs_match_options (fs, needle) == 0)
+          const char *opts;
+
+          opts = mnt_fs_get_options (fs);
+          if (! opts || g_strstr_len (opts, -1, needle) == NULL)
             continue;
         }
 
@@ -622,45 +606,11 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
-      const gchar *device_in_entry;
-      const gchar *device = NULL;
-      const gchar *label = NULL;
-      const gchar *uuid = NULL;
+      const gchar *device;
 
-      device_in_entry = udisks_crypttab_entry_get_device (entry);
-      if (g_str_has_prefix (device_in_entry, "UUID="))
-        {
-          uuid = device_in_entry + 5;
-        }
-      else if (g_str_has_prefix (device_in_entry, "LABEL="))
-        {
-          label = device_in_entry + 6;
-        }
-      else if (g_str_has_prefix (device_in_entry, "/dev"))
-        {
-          device = device_in_entry;
-        }
-      else
-        {
-          /* ignore non-device entries */
-          goto continue_loop;
-        }
-
-      if (device != NULL)
-        {
-          process_device_symlinks (device, block, entry, &ret);
-        }
-      else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
-        {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-      else if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
-        {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-
-    continue_loop:
-      ;
+      device = udisks_crypttab_entry_get_device (entry);
+      if (udisks_linux_block_matches_id (block, device))
+        ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
   g_list_free_full (entries, g_object_unref);
@@ -712,7 +662,8 @@ find_utab_entries_for_device (UDisksLinuxBlock *block,
       if (!g_str_has_prefix (source, "/dev"))
         continue;
 
-      process_device_symlinks (source, block, entry, &ret);
+      if (udisks_linux_block_matches_id (block, source))
+        ret = g_list_prepend (ret, g_object_ref (entry));
     }
 
   g_slist_free_full (entries, g_object_unref);
