@@ -14,8 +14,24 @@ SMART_ATA_CHECKSUM_FAIL = 1 << 2
 smart_unsupported = set()
 smart_supported = set()
 
-sata_disks = (dev for dev in os.listdir("/dev") if re.match(r'sd[a-z]+$', dev))
-for disk in sata_disks:
+
+DISK_PATH = "/dev/disk/by-path/"
+
+
+def _get_sata_disks():
+    sata_disks = []
+    by_path = os.listdir(DISK_PATH)
+    for dev in by_path:
+        if "ata" in dev and "part" not in dev:
+            path = os.path.realpath(os.path.join(DISK_PATH, dev))
+            name = os.path.basename(path)
+            if name.startswith("sd"):
+                # ignore devices like CD drives etc.
+                sata_disks.append(name)
+    return sata_disks
+
+
+for disk in _get_sata_disks():
     ret, out = UdisksTestCase.run_command("smartctl -a /dev/%s" % disk)
 
     # Only the following bits in the exit status mean the device failed to
