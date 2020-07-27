@@ -160,8 +160,6 @@ udisks_module_manager_finalize (GObject *object)
 {
   UDisksModuleManager *manager = UDISKS_MODULE_MANAGER (object);
 
-  udisks_module_manager_unload_modules (manager);
-
   g_mutex_clear (&manager->modules_lock);
 
   if (G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize != NULL)

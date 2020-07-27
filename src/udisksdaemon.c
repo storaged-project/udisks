@@ -126,24 +126,23 @@ udisks_daemon_finalize (GObject *object)
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
   udisks_state_stop_cleanup (daemon->state);
-  g_object_unref (daemon->state);
+
+  /* Modules use the monitors and try to reference them when cleaning up */
+  udisks_module_manager_unload_modules (daemon->module_manager);
 
   g_clear_object (&daemon->authority);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->connection);
-
-  /* Modules use the monitors and try to reference them when cleaning up */
-  udisks_module_manager_unload_modules (daemon->module_manager);
   g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->crypttab_monitor);
 #ifdef HAVE_LIBMOUNT_UTAB
   g_object_unref (daemon->utab_monitor);
 #endif
-
-  g_free (daemon->uuid);
-
   g_clear_object (&daemon->module_manager);
+
+  g_object_unref (daemon->state);
+  g_free (daemon->uuid);
 
   g_clear_object (&daemon->config_manager);
 
