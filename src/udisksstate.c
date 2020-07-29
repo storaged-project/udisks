@@ -32,6 +32,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "udisksdaemon.h"
 #include "udisksstate.h"
@@ -135,6 +136,17 @@
  *           of the user who started the array.
  *         </entry>
  *       </row>
+ *       <row>
+ *         <entry><filename>/run/udisks2/modules</filename></entry>
+ *         <entry>
+ *           A serialized 'a{sa{sv}}' #GVariant mapping from the
+ *           module name (e.g. <filename>lvm2</filename>) into a set of details.
+ *           No details are defined at this point, reserved for future use.
+ *
+ *           Contains currently active module names primarily for the purpose
+ *           of crash recovery upon next daemon start.
+ *         </entry>
+ *       </row>
  *     </tbody>
  *   </tgroup>
  * </table>
@@ -158,6 +170,7 @@
 #define UDISKS_STATE_FILE_UNLOCKED_CRYPTO_DEV    "unlocked-crypto-dev"
 #define UDISKS_STATE_FILE_LOOP                   "loop"
 #define UDISKS_STATE_FILE_MDRAID                 "mdraid"
+#define UDISKS_STATE_FILE_MODULES                "modules"
 
 /**
  * UDisksState:
@@ -208,6 +221,7 @@ static void      udisks_state_check_loop          (UDisksState          *state,
 static void      udisks_state_check_mdraid        (UDisksState          *state,
                                                    gboolean              check_only,
                                                    GArray               *devs_to_clean);
+static gchar    *get_state_file_path              (const gchar          *key);
 static GVariant *udisks_state_get                 (UDisksState          *state,
                                                    const gchar          *key,
                                                    const GVariantType   *type);
@@ -2208,6 +2222,151 @@ udisks_state_has_mdraid (UDisksState   *state,
   g_mutex_unlock (&state->lock);
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_state_add_module:
+ * @state: A #UDisksState.
+ * @module_name: The #UDisksModule name.
+ *
+ * Adds a new entry to the <filename>/run/udisks2/modules</filename>
+ * file. The @module_name string should be the one returned by
+ * udisks_module_get_name().
+ */
+void
+udisks_state_add_module (UDisksState *state,
+                         const gchar *module_name)
+{
+  GVariant *value;
+  GVariant *new_value;
+  GVariantBuilder builder;
+
+  g_return_if_fail (UDISKS_IS_STATE (state));
+
+  g_mutex_lock (&state->lock);
+
+  /* load existing entries */
+  value = udisks_state_get (state,
+                            UDISKS_STATE_FILE_MODULES,
+                            G_VARIANT_TYPE ("a{sa{sv}}"));
+
+  /* start by including existing entries */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          const gchar *entry_module_name;
+          g_variant_get (child, "{&s@a{sv}}", &entry_module_name, NULL);
+          /* Skip/remove stale entries */
+          if (g_strcmp0 (entry_module_name, module_name) == 0)
+            {
+              udisks_warning ("Removing stale entry for module '%s' in /run/udisks2/modules file",
+                              entry_module_name);
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  /* finally add the new entry */
+  g_variant_builder_add (&builder,
+                         "{s@a{sv}}",
+                         module_name,
+                         g_variant_new_array (G_VARIANT_TYPE ("{sv}"), NULL, 0));
+  new_value = g_variant_builder_end (&builder);
+
+  /* save new entries */
+  udisks_state_set (state,
+                    UDISKS_STATE_FILE_MODULES,
+                    G_VARIANT_TYPE ("a{sa{sv}}"),
+                    new_value /* consumes new_value */);
+
+  g_mutex_unlock (&state->lock);
+}
+
+/**
+ * udisks_state_clear_modules:
+ * @state: A #UDisksState.
+ *
+ * Removes all entries from the <filename>/run/udisks2/modules</filename>
+ * state file.
+ */
+void
+udisks_state_clear_modules (UDisksState *state)
+{
+  gchar *path;
+
+  g_return_if_fail (UDISKS_IS_STATE (state));
+
+  g_mutex_lock (&state->lock);
+
+  /* just remove the file entirely */
+  path = get_state_file_path (UDISKS_STATE_FILE_MODULES);
+  if (g_unlink (path))
+    {
+      if (errno != ENOENT)
+        g_warning ("Error removing state file %s: %m", path);
+    }
+  g_free (path);
+
+  g_mutex_unlock (&state->lock);
+}
+
+/**
+ * udisks_state_get_modules:
+ * @state: A #UDisksState
+ *
+ * Retrieves list of modules recorded in the <filename>/run/udisks2/modules</filename>
+ * state file.
+ *
+ * Returns: (transfer full) (array zero-terminated=1): A list of module names. Free with g_strfreev().
+ */
+gchar **
+udisks_state_get_modules (UDisksState *state)
+{
+  GPtrArray *list;
+  GVariant *value;
+
+  g_return_val_if_fail (UDISKS_IS_STATE (state), NULL);
+
+  g_mutex_lock (&state->lock);
+
+  list = g_ptr_array_new ();
+
+  value = udisks_state_get (state,
+                            UDISKS_STATE_FILE_MODULES,
+                            G_VARIANT_TYPE ("a{sa{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          gchar *entry_module_name;
+          g_variant_get (child, "{s@a{sv}}", &entry_module_name, NULL);
+          g_ptr_array_add (list, entry_module_name);
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  g_mutex_unlock (&state->lock);
+
+  g_ptr_array_add (list, NULL);
+
+  return (gchar **) g_ptr_array_free (list, FALSE);
+}
+
 
 /* ---------------------------------------------------------------------------------------------------- */
 

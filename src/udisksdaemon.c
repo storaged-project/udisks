@@ -279,7 +279,41 @@ load_modules_in_idle_cb (gpointer user_data)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
 
+  /* clear the state file, loading all modules anyway */
+  udisks_state_clear_modules (daemon->state);
+
   udisks_module_manager_load_modules (daemon->module_manager);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+check_modules_state_in_idle_cb (gpointer user_data)
+{
+  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  gchar **modules;
+  gchar **l;
+  GError *error = NULL;
+
+  modules = udisks_state_get_modules (daemon->state);
+
+  /* first clear the state file */
+  udisks_state_clear_modules (daemon->state);
+
+  if (modules)
+    {
+      if (*modules)
+        g_warning ("Unclean shutdown detected, reloading modules from previous session.");
+
+      for (l = modules; l && *l; l++)
+        if (! udisks_module_manager_load_single_module (daemon->module_manager, *l, &error))
+          {
+            g_warning ("Error re-initializing module %s: %s", *l, error->message);
+            g_clear_error (&error);
+          }
+
+      g_strfreev (modules);
+    }
 
   return G_SOURCE_REMOVE;
 }
@@ -413,7 +447,11 @@ udisks_daemon_constructed (GObject *object)
   if (daemon->force_load_modules ||
       udisks_config_manager_get_load_preference (daemon->config_manager) == UDISKS_MODULE_LOAD_ONSTARTUP)
     {
+      /* load all modules */
       g_idle_add (load_modules_in_idle_cb, daemon);
+    } else {
+      /* crash recovery - load active modules from previous session */
+      g_idle_add (check_modules_state_in_idle_cb, daemon);
     }
 
   /* Export the ObjectManager */

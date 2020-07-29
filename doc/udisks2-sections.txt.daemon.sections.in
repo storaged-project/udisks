@@ -252,6 +252,10 @@ udisks_state_has_loop
 <SUBSECTION>
 udisks_state_add_mdraid
 udisks_state_has_mdraid
+<SUBSECTION>
+udisks_state_add_module
+udisks_state_clear_modules
+udisks_state_get_modules
 <SUBSECTION Standard>
 UDISKS_TYPE_STATE
 UDISKS_STATE

@@ -75,6 +75,12 @@ gboolean         udisks_state_has_mdraid         (UDisksState   *state,
                                                   dev_t          raid_device,
                                                   uid_t         *out_uid);
 
+/* modules */
+void             udisks_state_add_module         (UDisksState   *state,
+                                                  const gchar   *module_name);
+void             udisks_state_clear_modules      (UDisksState   *state);
+gchar          **udisks_state_get_modules        (UDisksState   *state);
+
 G_END_DECLS
 
 #endif /* __UDISKS_STATE_H__ */
