@@ -8,9 +8,10 @@ from distutils.version import LooseVersion
 import udiskstestcase
 
 
+# TODO: pull actual configured paths from the build
 MODPROBECONF = '/usr/lib/modprobe.d/zram.conf'
 MODLOADCONF = '/usr/lib/modules-load.d/zram.conf'
-ZRAMCONFDIR = '/usr/local/lib/zram.conf.d'
+ZRAMCONFDIR = '/usr/lib/zram.conf.d'
 
 
 class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
@@ -30,7 +31,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         if os.path.exists(MODLOADCONF):
             cls.conf[MODLOADCONF] = cls.read_file(MODLOADCONF)
 
-        # /usr/local/lib/zram.conf.d
+        # /usr/lib/zram.conf.d
         if os.path.exists(ZRAMCONFDIR):
             for fname in os.listdir(ZRAMCONFDIR):
                 cls.conf[ZRAMCONFDIR][fname] = cls.read_file(ZRAMCONFDIR + '/' + fname)
@@ -45,7 +46,7 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         if cls.conf[MODLOADCONF]:
             cls.write_file(MODLOADCONF, cls.conf[MODLOADCONF])
 
-        # /usr/local/lib/zram.conf.d
+        # /usr/lib/zram.conf.d
         for fname in cls.conf[ZRAMCONFDIR].keys():
             cls.write_file(ZRAMCONFDIR + '/' + fname, cls.conf[ZRAMCONFDIR][fname])
 

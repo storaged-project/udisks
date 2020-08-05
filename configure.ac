@@ -468,6 +468,12 @@ if test "x$enable_zram" = "xyes" \
     if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
        AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
     fi
+
+    AC_ARG_WITH([zramconfdir],
+      [AS_HELP_STRING([--with-zramconfdir=DIR], [Directory for ZRAM configuration])],
+      [zramconfdir=$withval],
+      [zramconfdir="${prefix}/lib/zram.conf.d"])
+    AC_SUBST([zramconfdir], [$zramconfdir])
 fi
 AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 

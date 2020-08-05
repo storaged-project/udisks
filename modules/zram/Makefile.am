@@ -32,7 +32,6 @@ ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
 
 MODULE_SO = libudisks2_zram.so
 
-zramconfdir = $(libdir)/zram.conf.d
 zramconf_DATA =
 
 BUILT_SOURCES =                                                                \
