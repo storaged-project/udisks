@@ -463,6 +463,11 @@ if test "x$enable_zram" = "xyes" \
         fi
     fi
 
+    # needs systemd
+    if test -z "$systemdsystemunitdir"; then
+        AC_MSG_ERROR([systemd is required for ZRAM support])
+    fi
+
     have_zram="yes"
 
     if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
