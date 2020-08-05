@@ -255,7 +255,7 @@ fi
 AC_ARG_WITH([modloaddir],
   [AS_HELP_STRING([--with-modloaddir=DIR], [Directory for configuring kernel modules to load at boot])],
   [modloaddir=$withval],
-  [modloaddir="/usr/lib/modules-load.d"])
+  [modloaddir="$($PKG_CONFIG --variable=modulesloaddir systemd || echo "$prefix/lib/modules-load.d")"])
 AC_SUBST([modloaddir], [$modloaddir])
 
 AC_ARG_WITH([modprobedir],
