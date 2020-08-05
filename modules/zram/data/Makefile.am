@@ -18,6 +18,9 @@ systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 $(systemdservice_DATA): $(systemdservice_in_files) Makefile
 	@sed -e "s|\@zramconfdir\@|$(zramconfdir)|" $< > $@
 
+udevrulesdir = $(udevdir)/rules.d
+udevrules_DATA = 90-udisks2-zram.rules
+
 endif # ENABLE_DAEMON
 
 
@@ -27,6 +30,7 @@ pkgconfig_DATA = udisks2-zram.pc
 EXTRA_DIST =                                                                   \
 	org.freedesktop.UDisks2.zram.xml                                       \
 	udisks2-zram.pc.in                                                     \
+	90-udisks2-zram.rules                                                  \
 	$(systemdservice_in_files)                                             \
 	$(polkit_in_files)                                                     \
 	$(NULL)

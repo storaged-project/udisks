@@ -341,6 +341,10 @@ fi
 %if 0%{?with_zram}
 %post -n %{name}-zram
 %systemd_post udisks2-zram-setup@.service
+if [ -S /run/udev/control ]; then
+    udevadm control --reload
+    udevadm trigger
+fi
 
 %preun -n %{name}-zram
 %systemd_preun udisks2-zram-setup@.service
@@ -456,6 +460,7 @@ fi
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
 %{_unitdir}/udisks2-zram-setup@.service
+%{_udevrulesdir}/90-udisks2-zram.rules
 %endif
 
 %if 0%{?with_vdo}
