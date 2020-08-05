@@ -1,6 +1,6 @@
-#Service initializes zram devices
+# Initializes UDisks2-managed ZRAM devices
 [Unit]
-Description=Setup zram based device %i
+Description=UDisks2 managed ZRAM device %i setup
 After=dev-%i.device
 Requires=dev-%i.device
 

@@ -1,7 +1,7 @@
 
 NULL = 
 
-systemdservice_in_files = zram-setup@.service.in
+systemdservice_in_files = udisks2-zram-setup@.service.in
 
 if ENABLE_DAEMON
 
