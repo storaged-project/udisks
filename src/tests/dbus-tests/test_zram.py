@@ -59,6 +59,8 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
         cls._save_conf_files()
 
+        cls.run_command('systemctl preset udisks2-zram-setup@.service')
+
     @classmethod
     def tearDownClass(cls):
         udiskstestcase.UdisksTestCase.tearDownClass()
