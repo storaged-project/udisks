@@ -119,6 +119,13 @@ def install_config_files(projdir, tmpdir):
     copied.extend(_copy_files((os.path.join(projdir, 'udisks/mount_options.conf'),),
                               '/etc/udisks2/', tmpdir))
 
+    # ZRAM module supplemental files
+    if os.path.exists(os.path.join(projdir, 'modules/zram/data/udisks2-zram-setup@.service')):
+        copied.extend(_copy_files((os.path.join(projdir, 'modules/zram/data/90-udisks2-zram.rules'),),
+                                  tgtdir, tmpdir))
+        copied.extend(_copy_files((os.path.join(projdir, 'modules/zram/data/udisks2-zram-setup@.service'),),
+                                  '/usr/lib/systemd/system/', tmpdir))
+
     return copied
 
 def restore_files(restore_list, tmpdir):
