@@ -340,13 +340,17 @@ fi
 
 %if 0%{?with_zram}
 %post -n %{name}-zram
-%systemd_post zram-setup@.service
+%systemd_post udisks2-zram-setup@.service
+if [ -S /run/udev/control ]; then
+    udevadm control --reload
+    udevadm trigger
+fi
 
 %preun -n %{name}-zram
-%systemd_preun zram-setup@.service
+%systemd_preun udisks2-zram-setup@.service
 
 %postun -n %{name}-zram
-%systemd_postun zram-setup@.service
+%systemd_postun udisks2-zram-setup@.service
 %endif
 
 %files -f udisks2.lang
@@ -455,7 +459,8 @@ fi
 %dir %{_sysconfdir}/udisks2/modules.conf.d
 %{_libdir}/udisks2/modules/libudisks2_zram.so
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
-%{_unitdir}/zram-setup@.service
+%{_unitdir}/udisks2-zram-setup@.service
+%{_udevrulesdir}/90-udisks2-zram.rules
 %endif
 
 %if 0%{?with_vdo}

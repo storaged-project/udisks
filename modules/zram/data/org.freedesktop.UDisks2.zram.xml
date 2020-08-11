@@ -3,7 +3,7 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
-  <!--
+<!--
  Copyright (C) 2015 Dominika Hodovska <dhodovsk@redhat.com>
 
  This library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@
        singleton object located at the object path
        <literal>/org/freedesktop/UDisks2/Manager</literal>.
   -->
-  <interface name = "org.freedesktop.UDisks2.Manager.ZRAM">
+  <interface name="org.freedesktop.UDisks2.Manager.ZRAM">
     <!-- prereq: org.freedesktop.UDisks2.Manager -->
 
     <!--
@@ -50,7 +50,7 @@
 
         <emphasis>Changed in version 2.7.0.</emphasis>
     -->
-    <method name = "CreateDevices">
+    <method name="CreateDevices">
       <arg name="sizes" direction="in" type="at"/>
       <arg name="num_streams" direction="in" type="at"/>
       <arg name="options" direction="in" type="a{sv}"/>
@@ -66,7 +66,7 @@
 
         No additional options are currently defined.
     -->
-    <method name = "DestroyDevices">
+    <method name="DestroyDevices">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
@@ -81,7 +81,7 @@
 
       <emphasis>Names of the properties where changed in version 2.7.0.</emphasis>
   -->
-  <interface name = "org.freedesktop.UDisks2.Block.ZRAM">
+  <interface name="org.freedesktop.UDisks2.Block.ZRAM">
     <!-- prereq: org.freedesktop.UDisks2.Block -->
 
     <!--

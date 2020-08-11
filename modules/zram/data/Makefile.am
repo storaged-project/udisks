@@ -1,6 +1,8 @@
 
 NULL = 
 
+systemdservice_in_files = udisks2-zram-setup@.service.in
+
 if ENABLE_DAEMON
 
 polkitdir       = $(datadir)/polkit-1/actions
@@ -10,7 +12,14 @@ polkit_DATA     = $(polkit_in_files:.policy.in=.policy)
 $(polkit_DATA): $(polkit_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 
-systemdsystemunit_DATA = zram-setup@.service
+systemdservicedir   = $(systemdsystemunitdir)
+systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
+
+$(systemdservice_DATA): $(systemdservice_in_files) Makefile
+	@sed -e "s|\@zramconfdir\@|$(zramconfdir)|" $< > $@
+
+udevrulesdir = $(udevdir)/rules.d
+udevrules_DATA = 90-udisks2-zram.rules
 
 endif # ENABLE_DAEMON
 
@@ -20,11 +29,11 @@ pkgconfig_DATA = udisks2-zram.pc
 
 EXTRA_DIST =                                                                   \
 	org.freedesktop.UDisks2.zram.xml                                       \
-	zram-setup@.service                                                    \
 	udisks2-zram.pc.in                                                     \
+	90-udisks2-zram.rules                                                  \
+	$(systemdservice_in_files)                                             \
 	$(polkit_in_files)                                                     \
 	$(NULL)
 
 clean-local:
-	rm -f *~ $(polkit_DATA)
-
+	rm -f *~ $(polkit_DATA) $(systemdservice_DATA)

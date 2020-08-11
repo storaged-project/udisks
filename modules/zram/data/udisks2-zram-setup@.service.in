@@ -1,0 +1,14 @@
+# Initializes UDisks2-managed ZRAM devices
+[Unit]
+Description=UDisks2 managed ZRAM device %i setup
+After=dev-%i.device
+Requires=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+EnvironmentFile=-@zramconfdir@/%i
+ExecStart=-/bin/sh -c 'if [ -n "$ZRAM_NUM_STR" ]; then echo "$ZRAM_NUM_STR" > /sys/class/block/%i/max_comp_streams; fi'
+ExecStart=-/bin/sh -c 'if [ -n "$ZRAM_DEV_SIZE" ]; then echo "$ZRAM_DEV_SIZE" > /sys/class/block/%i/disksize; fi'
+ExecStart=-/bin/sh -c 'if [ "$SWAP" = "y" ]; then mkswap /dev/%i && swapon /dev/%i; fi'
+# ExecStop=-/bin/sh -c 'echo 1 > /sys/class/block/%i/reset'

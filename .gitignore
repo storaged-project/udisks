@@ -82,6 +82,7 @@ udisks/udisks-generated*
 udisks/udisksenumtypes.*
 udisks/udisksversion.h
 modules/*/data/*.pc
+modules/zram/data/udisks2-zram-setup@.service
 
 data/org.freedesktop.UDisks2.conf
 data/org.freedesktop.UDisks2.policy

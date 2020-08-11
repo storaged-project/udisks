@@ -255,7 +255,7 @@ fi
 AC_ARG_WITH([modloaddir],
   [AS_HELP_STRING([--with-modloaddir=DIR], [Directory for configuring kernel modules to load at boot])],
   [modloaddir=$withval],
-  [modloaddir="/usr/lib/modules-load.d"])
+  [modloaddir="$($PKG_CONFIG --variable=modulesloaddir systemd || echo "$prefix/lib/modules-load.d")"])
 AC_SUBST([modloaddir], [$modloaddir])
 
 AC_ARG_WITH([modprobedir],
@@ -463,11 +463,22 @@ if test "x$enable_zram" = "xyes" \
         fi
     fi
 
+    # needs systemd
+    if test -z "$systemdsystemunitdir"; then
+        AC_MSG_ERROR([systemd is required for ZRAM support])
+    fi
+
     have_zram="yes"
 
     if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
        AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
     fi
+
+    AC_ARG_WITH([zramconfdir],
+      [AS_HELP_STRING([--with-zramconfdir=DIR], [Directory for ZRAM configuration])],
+      [zramconfdir=$withval],
+      [zramconfdir="${prefix}/lib/zram.conf.d"])
+    AC_SUBST([zramconfdir], [$zramconfdir])
 fi
 AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 
