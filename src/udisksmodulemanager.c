@@ -40,6 +40,7 @@
 #include "udisksprivate.h"
 #include "udiskslogging.h"
 #include "udisksmodule.h"
+#include "udisksstate.h"
 
 /**
  * SECTION:UDisksModuleManager
@@ -159,8 +160,6 @@ static void
 udisks_module_manager_finalize (GObject *object)
 {
   UDisksModuleManager *manager = UDISKS_MODULE_MANAGER (object);
-
-  udisks_module_manager_unload_modules (manager);
 
   g_mutex_clear (&manager->modules_lock);
 
@@ -288,6 +287,7 @@ load_single_module_unlocked (UDisksModuleManager *manager,
                              gboolean            *do_notify,
                              GError             **error)
 {
+  UDisksState *state;
   GModule *handle;
   gchar *module_id;
   gchar *module_new_func_name;
@@ -358,6 +358,10 @@ load_single_module_unlocked (UDisksModuleManager *manager,
     }
 
   manager->modules = g_list_append (manager->modules, module);
+
+  state = udisks_daemon_get_state (manager->daemon);
+  udisks_state_add_module (state, module_id);
+
   g_free (module_id);
 
   *do_notify = TRUE;
@@ -475,6 +479,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 void
 udisks_module_manager_unload_modules (UDisksModuleManager *manager)
 {
+  UDisksState *state;
   GList *l;
 
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
@@ -489,6 +494,10 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
     }
   /* only unref module objects after all listeners have performed cleanup */
   g_list_free_full (l, g_object_unref);
+
+  /* clear the state file */
+  state = udisks_daemon_get_state (manager->daemon);
+  udisks_state_clear_modules (state);
 
   g_mutex_unlock (&manager->modules_lock);
 }

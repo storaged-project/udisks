@@ -126,24 +126,23 @@ udisks_daemon_finalize (GObject *object)
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
   udisks_state_stop_cleanup (daemon->state);
-  g_object_unref (daemon->state);
+
+  /* Modules use the monitors and try to reference them when cleaning up */
+  udisks_module_manager_unload_modules (daemon->module_manager);
 
   g_clear_object (&daemon->authority);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->connection);
-
-  /* Modules use the monitors and try to reference them when cleaning up */
-  udisks_module_manager_unload_modules (daemon->module_manager);
   g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->crypttab_monitor);
 #ifdef HAVE_LIBMOUNT_UTAB
   g_object_unref (daemon->utab_monitor);
 #endif
-
-  g_free (daemon->uuid);
-
   g_clear_object (&daemon->module_manager);
+
+  g_object_unref (daemon->state);
+  g_free (daemon->uuid);
 
   g_clear_object (&daemon->config_manager);
 
@@ -280,7 +279,41 @@ load_modules_in_idle_cb (gpointer user_data)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
 
+  /* clear the state file, loading all modules anyway */
+  udisks_state_clear_modules (daemon->state);
+
   udisks_module_manager_load_modules (daemon->module_manager);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+check_modules_state_in_idle_cb (gpointer user_data)
+{
+  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  gchar **modules;
+  gchar **l;
+  GError *error = NULL;
+
+  modules = udisks_state_get_modules (daemon->state);
+
+  /* first clear the state file */
+  udisks_state_clear_modules (daemon->state);
+
+  if (modules)
+    {
+      if (*modules)
+        g_warning ("Unclean shutdown detected, reloading modules from previous session.");
+
+      for (l = modules; l && *l; l++)
+        if (! udisks_module_manager_load_single_module (daemon->module_manager, *l, &error))
+          {
+            g_warning ("Error re-initializing module %s: %s", *l, error->message);
+            g_clear_error (&error);
+          }
+
+      g_strfreev (modules);
+    }
 
   return G_SOURCE_REMOVE;
 }
@@ -414,7 +447,11 @@ udisks_daemon_constructed (GObject *object)
   if (daemon->force_load_modules ||
       udisks_config_manager_get_load_preference (daemon->config_manager) == UDISKS_MODULE_LOAD_ONSTARTUP)
     {
+      /* load all modules */
       g_idle_add (load_modules_in_idle_cb, daemon);
+    } else {
+      /* crash recovery - load active modules from previous session */
+      g_idle_add (check_modules_state_in_idle_cb, daemon);
     }
 
   /* Export the ObjectManager */
