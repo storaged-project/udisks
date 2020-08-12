@@ -1,17 +1,63 @@
 ---------------------------
-udisks 2.9.1 (unreleased)
+udisks 2.9.1
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.9.0:
-(TODO: make shortlog)
+
+Sebastien Bacher (1):
+      integration-test: fix the exfat tests with the new util-linux
+
+Tomas Bzatek (35):
+      udiskslinuxpartition: Fix Coverity warning
+      udiskslinuxmountoptions: Prevent a memory leak
+      tests: Add integration-test --system switch
+      daemon: Always flush interface property changes
+      lvm2: Always flush interface property changes
+      bcache: Always flush interface property changes
+      btrfs: Always flush interface property changes
+      iscsi: Always flush interface property changes
+      lsm: Always flush interface property changes
+      zram: Always flush interface property changes
+      vdo: Always flush interface property changes
+      udiskscrypttabmonitor: Add locking around crypttab_entries
+      udiskscrypttabmonitor: Control cache validity by contents checksum
+      tests: Remove sleep after modifying crypttab
+      udiskslinuxblock: Use udisks_linux_block_matches_id() for block device identification
+      udiskslinuxblock: Fix fstab records matching by needle
+      tests: Add basic stacked LVM + LUKS teardown tests
+      mount options: Add allowed mount options for XFS
+      mount options: Add allowed mount options for reiserfs
+      mount options: Add some more common allowed options
+      udisksdaemon: Fix UDisksModuleManager finalization
+      modules: Crash recovery on startup via a state file
+      zram: Fix zram.conf.d prefix
+      build: Use systemd pkg-config variable for modloaddir
+      zram: Require systemd
+      zram: Rename service to udisks2-zram-setup@.service
+      zram: Minor codestyle fixes
+      zram: Annotate created config files with UDisks2 header
+      zram: Separate relevant udev rules
+      zram: Fix the systemd service return code when swap is not requested
+      zram: Fix the systemd service type
+      tests: Install supplemental zram module files
+      tests: Reset the zram systemd service on startup
+      zram: Perform changes only when the env file exists for the given zram device
+
+Vojtech Trefny (6):
+      dbus-tests: Fix UdisksLVMVDOTest.test_resize_physical
+      dbus-tests: Fix expected MD_DEVICE key in mdadm --detail output
+      dbus-tests: Fix expected error in UdisksVDOTest.test_grow_physical
+      dbus-tests: Skip VDO and LVM VDO tests if we can't load the module
+      dbus-tests: Fix expected error message for failed LUKS resize
+      dbus_tests: Fix getting list of SATA drives for Drive.ATA test
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2020-08-12
 
 ---------------------------
 udisks 2.9.0
