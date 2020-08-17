@@ -2,7 +2,7 @@ Original author:
   David Zeuthen <davidz@redhat.com>, <zeuthen@gmail.com>
 
 Maintainer:
-  Vratislav Podzimek <vpodzime@redhat.com>
+  Tomas Bzatek <tbzatek@redhat.com>
 
 Contributors (In alphabetical order):
   A-Shahbazi <a.shahbazi@yandex.com>
@@ -96,4 +96,5 @@ Contributors (In alphabetical order):
   Vincent Untz <vuntz@gnome.org>
   Ville Skyttä <ville.skytta@iki.fi>
   Vojtech Trefny <vtrefny@redhat.com>
+  Vratislav Podzimek <vpodzime@redhat.com>
   Will Thompson <will@willthompson.co.uk>
