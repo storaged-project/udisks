@@ -697,9 +697,9 @@ calculate_mount_point (UDisksDaemon  *daemon,
         }
     }
   g_free (orig_mount_point);
-  g_free (mount_dir);
 
  out:
+  g_free (mount_dir);
   g_clear_object (&object);
   g_free (escaped_user_name);
   return mount_point;

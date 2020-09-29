@@ -582,6 +582,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                        UDISKS_ERROR,
                        UDISKS_ERROR_FAILED,
                        "sk_disk_open: %m");
+          g_free (blob);
           goto out;
         }
 
