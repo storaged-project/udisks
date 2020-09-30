@@ -1282,6 +1282,7 @@ handle_command_unlock_lock (gint        *argc,
         g_printerr ("Error unlocking %s: %s\n",
                     udisks_block_get_device (block),
                     error->message);
+        g_clear_error (&error);
         goto out;
       }
       g_variant_builder_add (&builder,
@@ -3103,6 +3104,7 @@ handle_command_status (gint        *argc,
                serial,
                block);
       g_free (block);
+      g_free (vendor_model);
     }
 
 
