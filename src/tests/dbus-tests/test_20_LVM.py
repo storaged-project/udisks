@@ -6,6 +6,7 @@ import unittest
 
 from distutils.version import LooseVersion
 
+import safe_dbus
 import udiskstestcase
 
 import gi
@@ -818,3 +819,93 @@ class UdisksLVMTeardownTest(UDisksLVMTestBase):
         fstab = self.read_file('/etc/fstab')
         self.assertIn(name, fstab)
         self.assertIn(self.fs_uuid, fstab)
+
+
+
+class UdisksLVMLoadTest(UDisksLVMTestBase):
+    '''Load tests with heavy LVM presence'''
+
+    IMG_FILE = '/tmp/udisks-lvm-load-test.img'
+    NUM_SNAPS = 1000
+
+    def find_loop_for_backing_file(self, backing_file):
+        ''' Finds a loop object for given backing file and returns its object path '''
+
+        objects = safe_dbus.call_sync(self.iface_prefix,
+                                      self.path_prefix,
+                                      'org.freedesktop.DBus.ObjectManager',
+                                      'GetManagedObjects',
+                                      None)
+
+        loops = {k: v for (k, v) in objects[0].items() if '/block_devices/loop' in k}
+        for obj_path, properties in loops.items():
+            if self.iface_prefix + '.Loop' in properties and \
+               properties[self.iface_prefix + '.Loop']['BackingFile'] == self.str_to_ay(backing_file):
+                return obj_path
+
+        return None
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.LOADTEST)
+    def test_01_setup_1000_snapshots(self):
+        ''' Create 1000 snapshots on a thin provisioned LV '''
+
+        # create persistent sparse file that will hold the LVM structure across test runs
+        self.assertFalse(os.path.exists(self.IMG_FILE))
+        ret, _out = self.run_command('truncate -s 10G %s' % self.IMG_FILE)
+        self.assertEqual(ret, 0)
+
+        manager = self.get_object('/Manager')
+        with open(self.IMG_FILE, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_obj_path = manager.LoopSetup(fd, self.no_options,
+                                              dbus_interface=self.iface_prefix + '.Manager')
+
+        self.assertTrue(loop_obj_path)
+        self.assertTrue(loop_obj_path.startswith(self.path_prefix))
+
+        loop_obj = self.bus.get_object(self.iface_prefix, loop_obj_path)
+        self.assertIsNotNone(loop_obj)
+        device_file = self.ay_to_str(self.get_property_raw(loop_obj, '.Block', 'Device'))
+        self.assertTrue(device_file.startswith('/dev/loop'))
+
+        # create PV, VG and a thin pool
+        ret, _out = self.run_command('pvcreate %s' % device_file)
+        self.assertEqual(ret, 0)
+        ret, _out = self.run_command('vgcreate udskthnvg %s' % device_file)
+        self.assertEqual(ret, 0)
+        ret, _out = self.run_command('lvcreate -n udskthnpl0 -L 8G udskthnvg')
+        self.assertEqual(ret, 0)
+        ret, _out = self.run_command('lvcreate -n udskthnpl0m -L 850M udskthnvg')
+        self.assertEqual(ret, 0)
+        ret, _out = self.run_command('lvconvert --type thin-pool --poolmetadata udskthnvg/udskthnpl0m udskthnvg/udskthnpl0 --yes')
+        self.assertEqual(ret, 0)
+        ret, _out = self.run_command('lvcreate -n udskthin0 -V 1T --thinpool udskthnpl0 udskthnvg')
+        self.assertEqual(ret, 0)
+
+        # create snapshots
+        for i in range(self.NUM_SNAPS):
+            ret, _out = self.run_command('lvcreate -n udskthin0s%.4d --snapshot udskthnvg/udskthin0' % i)
+            self.assertEqual(ret, 0)
+            ret, _out = self.run_command('lvchange -ay -K udskthnvg/udskthin0s%.4d' % i)
+            self.assertEqual(ret, 0)
+
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.LOADTEST)
+    def test_02_teardown_1000_snapshots(self):
+        ''' Teardown previously created snapshots '''
+
+        self.assertTrue(os.path.exists(self.IMG_FILE))
+
+        # find existing loop object that matches the backing file
+        loop_obj_path = self.find_loop_for_backing_file(self.IMG_FILE)
+        self.assertIsNotNone(loop_obj_path)
+
+        # remove all the LVM stuff at once
+        self.run_command('vgremove udskthnvg --yes')
+
+        # detach and remove the loop device
+        loop_obj = self.get_object(loop_obj_path)
+        loop_obj.Delete(self.no_options,
+                        dbus_interface=self.iface_prefix + '.Loop')
+
+        os.remove(self.IMG_FILE)
