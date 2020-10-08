@@ -656,6 +656,7 @@ class TestTags(Enum):
     UNSAFE = "unsafe"         # tests that change system configuration
     NOSTORAGE = "nostorage"   # tests that don't work with storage
     EXTRADEPS = "extradeps"   # tests that require special configuration and/or device to run
+    LOADTEST = "loadtest"     # tests used to prepare heavy load environment
 
     @classmethod
     def get_tags(cls):
@@ -678,6 +679,7 @@ def tag_test(*tags):
         func.unsafe = TestTags.UNSAFE in tags
         func.nostorage = TestTags.NOSTORAGE in tags
         func.extradeps = TestTags.EXTRADEPS in tags
+        func.loadtest = TestTags.LOADTEST in tags
 
         return func
 

@@ -184,6 +184,8 @@ def _get_test_tags(test):
         tags.add(udiskstestcase.TestTags.NOSTORAGE)
     if getattr(test_fn, "extradeps", False) or getattr(test_fn.__self__, "extradeps", False):
         tags.add(udiskstestcase.TestTags.EXTRADEPS)
+    if getattr(test_fn, "loadtest", False) or getattr(test_fn.__self__, "loadtest", False):
+        tags.add(udiskstestcase.TestTags.LOADTEST)
 
     tags.add(udiskstestcase.TestTags.ALL)
 
@@ -308,13 +310,15 @@ def parse_args():
         print('Unknown tag(s) specified:', ', '.join(args.exclude_tags - all_tags), file=sys.stderr)
         sys.exit(1)
 
-    # for backwards compatibility we want to exclude unsafe and unstable by default
+    # for backwards compatibility we want to exclude unsafe, unstable and loadtests by default
     if not 'JENKINS_HOME' in os.environ and not (udiskstestcase.TestTags.UNSAFE.value in args.include_tags or
                                                  udiskstestcase.TestTags.ALL.value in args.include_tags):
         args.exclude_tags.add(udiskstestcase.TestTags.UNSAFE.value)
     if not (udiskstestcase.TestTags.UNSTABLE.value in args.include_tags or
             udiskstestcase.TestTags.ALL.value in args.include_tags):
         args.exclude_tags.add(udiskstestcase.TestTags.UNSTABLE.value)
+    if not (udiskstestcase.TestTags.LOADTEST.value in args.include_tags):
+        args.exclude_tags.add(udiskstestcase.TestTags.LOADTEST.value)
 
     return args
 
