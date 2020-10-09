@@ -90,6 +90,7 @@ struct _UDisksLinuxProvider
 
   /* set to TRUE only in the coldplug phase */
   gboolean coldplug;
+  gboolean modules_coldplug;
 
   guint housekeeping_timeout;
   guint64 housekeeping_last;
@@ -576,11 +577,13 @@ ensure_modules (UDisksLinuxProvider *provider)
     }
 
   /* Perform coldplug */
-  udisks_debug ("Performing coldplug...");
+  udisks_debug ("Performing secondary/modules coldplug...");
   udisks_devices = get_udisks_devices (provider);
+  provider->modules_coldplug = TRUE;
   do_coldplug (provider, udisks_devices);
+  provider->modules_coldplug = FALSE;
   g_list_free_full (udisks_devices, g_object_unref);
-  udisks_debug ("Coldplug complete");
+  udisks_debug ("Secondary/modules coldplug complete");
 }
 
 /*
@@ -849,6 +852,24 @@ udisks_linux_provider_get_coldplug (UDisksLinuxProvider *provider)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), FALSE);
   return provider->coldplug;
+}
+
+/**
+ * udisks_linux_provider_get_modules_coldplug:
+ * @provider: A #UDisksLinuxProvider.
+ *
+ * Gets whether @provider is in the secondary coldplug phase as a result
+ * of module(s) being activated. This "modules coldplug" phase is intended
+ * for synchronous additional module interfaces initialization over
+ * an already initialized (coldplugged) base drive or block object.
+ *
+ * Returns: %TRUE if in the secondary coldplug phase, %FALSE otherwise.
+ **/
+gboolean
+udisks_linux_provider_get_modules_coldplug (UDisksLinuxProvider *provider)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), FALSE);
+  return provider->modules_coldplug;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

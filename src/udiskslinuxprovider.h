@@ -34,6 +34,7 @@ GType                  udisks_linux_provider_get_type        (void) G_GNUC_CONST
 UDisksLinuxProvider   *udisks_linux_provider_new             (UDisksDaemon        *daemon);
 GUdevClient           *udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider);
 gboolean               udisks_linux_provider_get_coldplug    (UDisksLinuxProvider *provider);
+gboolean               udisks_linux_provider_get_modules_coldplug (UDisksLinuxProvider *provider);
 
 G_END_DECLS
 

@@ -196,6 +196,7 @@ UDisksLinuxProvider
 udisks_linux_provider_new
 udisks_linux_provider_get_udev_client
 udisks_linux_provider_get_coldplug
+udisks_linux_provider_get_modules_coldplug
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_PROVIDER
 UDISKS_LINUX_PROVIDER
