@@ -24,6 +24,7 @@
 #include <blockdev/lvm.h>
 
 #include <src/udisksdaemon.h>
+#include <src/udiskslinuxprovider.h>
 #include <src/udiskslogging.h>
 #include <src/udiskslinuxdevice.h>
 #include <src/udisksmodulemanager.h>
@@ -58,7 +59,6 @@ struct _UDisksLinuxModuleLVM2 {
   GHashTable *name_to_volume_group;
 
   gint delayed_update_id;
-  gboolean coldplug_done;
 };
 
 typedef struct _UDisksLinuxModuleLVM2Class UDisksLinuxModuleLVM2Class;
@@ -85,7 +85,6 @@ udisks_linux_module_lvm2_constructed (GObject *object)
   UDisksLinuxModuleLVM2 *module = UDISKS_LINUX_MODULE_LVM2 (object);
 
   module->name_to_volume_group = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_object_unref);
-  module->coldplug_done = FALSE;
 
   if (G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed)
     G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed (object);
@@ -299,7 +298,7 @@ lvm_update_vgs (GObject      *source_obj,
 }
 
 static void
-lvm_update (UDisksLinuxModuleLVM2 *module)
+lvm_update (UDisksLinuxModuleLVM2 *module, gboolean coldplug)
 {
   GTask *task;
 
@@ -310,7 +309,11 @@ lvm_update (UDisksLinuxModuleLVM2 *module)
                      NULL /* callback_data */);
 
   /* holds a reference to 'task' until it is finished */
-  g_task_run_in_thread (task, (GTaskThreadFunc) vgs_task_func);
+  if (coldplug)
+    g_task_run_in_thread_sync (task, (GTaskThreadFunc) vgs_task_func);
+  else
+    g_task_run_in_thread (task, (GTaskThreadFunc) vgs_task_func);
+
   g_object_unref (task);
 }
 
@@ -319,7 +322,7 @@ delayed_lvm_update (gpointer user_data)
 {
   UDisksLinuxModuleLVM2 *module = UDISKS_LINUX_MODULE_LVM2 (user_data);
 
-  lvm_update (module);
+  lvm_update (module, FALSE);
   module->delayed_update_id = 0;
 
   return FALSE;
@@ -328,18 +331,21 @@ delayed_lvm_update (gpointer user_data)
 static void
 trigger_delayed_lvm_update (UDisksLinuxModuleLVM2 *module)
 {
+  UDisksDaemon *daemon;
+  UDisksLinuxProvider *provider;
+
   if (module->delayed_update_id > 0)
     return;
 
-  if (! module->coldplug_done)
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
+  provider = udisks_daemon_get_linux_provider (daemon);
+
+  if (udisks_linux_provider_get_coldplug (provider) ||
+      udisks_linux_provider_get_modules_coldplug (provider))
     {
-      /* Update immediately when doing coldplug, i.e. when lvm2 module has just
-       * been activated. This is not 100% effective as this affects only the
-       * first request but from the plugin nature we don't know whether
-       * coldplugging has been finished or not. Might be subject to change in
-       * the future. */
-      module->coldplug_done = TRUE;
-      lvm_update (module);
+      /* Update immediately in a synchronous fashion when doing coldplug,
+       * i.e. when lvm2 module has just been activated. */
+      lvm_update (module, TRUE);
     }
   else
     {
