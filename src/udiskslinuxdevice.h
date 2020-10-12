@@ -48,10 +48,12 @@ struct _UDisksLinuxDevice
   GUdevDevice *udev_device;
   guchar *ata_identify_device_data;
   guchar *ata_identify_packet_device_data;
+  gint64  timestamp;
 };
 
 GType              udisks_linux_device_get_type     (void) G_GNUC_CONST;
-UDisksLinuxDevice *udisks_linux_device_new_sync     (GUdevDevice *udev_device);
+UDisksLinuxDevice *udisks_linux_device_new_sync     (GUdevDevice        *udev_device,
+                                                     gint64              timestamp);
 gboolean           udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
                                                      GCancellable       *cancellable,
                                                      GError            **error);

@@ -97,6 +97,7 @@ static gboolean probe_ata (UDisksLinuxDevice  *device,
 /**
  * udisks_linux_device_new_sync:
  * @udev_device: A #GUdevDevice.
+ * @timestamp: Monotonic time of the @udev_device first appearance.
  *
  * Creates a new #UDisksLinuxDevice from @udev_device which includes
  * probing the device for more information, if applicable.
@@ -107,15 +108,18 @@ static gboolean probe_ata (UDisksLinuxDevice  *device,
  * Returns: A #UDisksLinuxDevice.
  */
 UDisksLinuxDevice *
-udisks_linux_device_new_sync (GUdevDevice *udev_device)
+udisks_linux_device_new_sync (GUdevDevice *udev_device,
+                              gint64       timestamp)
 {
   UDisksLinuxDevice *device;
   GError *error = NULL;
 
   g_return_val_if_fail (G_UDEV_IS_DEVICE (udev_device), NULL);
+  g_return_val_if_fail (timestamp > 0, NULL);
 
   device = g_object_new (UDISKS_TYPE_LINUX_DEVICE, NULL);
   device->udev_device = g_object_ref (udev_device);
+  device->timestamp = timestamp;
 
   /* No point in probing on remove events */
   if (!(g_strcmp0 (g_udev_device_get_action (udev_device), "remove") == 0))

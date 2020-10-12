@@ -223,6 +223,7 @@ typedef struct
   UDisksLinuxProvider *provider;
   GUdevDevice *udev_device;
   UDisksLinuxDevice *udisks_device;
+  gint64 timestamp;
 } ProbeRequest;
 
 static void
@@ -291,7 +292,8 @@ probe_request_thread_func (gpointer user_data)
       }
 
       /* probe the device - this may take a while */
-      request->udisks_device = udisks_linux_device_new_sync (request->udev_device);
+      request->udisks_device = udisks_linux_device_new_sync (request->udev_device,
+                                                             request->timestamp);
 
       /* now that we've probed the device, post the request back to the main thread */
       g_idle_add (on_idle_with_probed_uevent, request);
@@ -314,6 +316,7 @@ on_uevent (GUdevClient  *client,
   ProbeRequest *request;
 
   request = g_slice_new0 (ProbeRequest);
+  request->timestamp = g_get_monotonic_time ();
   request->provider = g_object_ref (provider);
   request->udev_device = g_object_ref (device);
 
@@ -484,7 +487,9 @@ get_udisks_devices (UDisksLinuxProvider *provider)
   GList *devices;
   GList *udisks_devices;
   GList *l;
+  gint64 timestamp;
 
+  timestamp = g_get_monotonic_time ();
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
 
   /* make sure we process sda before sdz and sdz before sdaa */
@@ -496,7 +501,7 @@ get_udisks_devices (UDisksLinuxProvider *provider)
       GUdevDevice *device = G_UDEV_DEVICE (l->data);
       if (!g_udev_device_get_is_initialized (device))
         continue;
-      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
+      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device, timestamp));
     }
   udisks_devices = g_list_reverse (udisks_devices);
   g_list_free_full (devices, g_object_unref);
