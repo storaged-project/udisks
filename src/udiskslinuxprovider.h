@@ -35,6 +35,7 @@ UDisksLinuxProvider   *udisks_linux_provider_new             (UDisksDaemon      
 GUdevClient           *udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider);
 gboolean               udisks_linux_provider_get_coldplug    (UDisksLinuxProvider *provider);
 gboolean               udisks_linux_provider_get_modules_coldplug (UDisksLinuxProvider *provider);
+gint64                 udisks_linux_provider_get_last_uevent (UDisksLinuxProvider *provider);
 
 G_END_DECLS
 

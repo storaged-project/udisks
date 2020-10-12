@@ -64,6 +64,7 @@ struct _UDisksLinuxProvider
   GUdevClient *gudev_client;
   GAsyncQueue *probe_request_queue;
   GThread *probe_request_thread;
+  gint64 last_uevent_timestamp;
 
   UDisksObjectSkeleton *manager_object;
 
@@ -314,9 +315,13 @@ on_uevent (GUdevClient  *client,
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
   ProbeRequest *request;
+  gint64 timestamp;
+
+  timestamp = g_get_monotonic_time ();
+  provider->last_uevent_timestamp = timestamp;
 
   request = g_slice_new0 (ProbeRequest);
-  request->timestamp = g_get_monotonic_time ();
+  request->timestamp = timestamp;
   request->provider = g_object_ref (provider);
   request->udev_device = g_object_ref (device);
 
@@ -346,6 +351,7 @@ udisks_linux_provider_constructed (GObject *object)
 
   /* get ourselves an udev client */
   provider->gudev_client = g_udev_client_new (subsystems);
+  provider->last_uevent_timestamp = g_get_monotonic_time ();
 
   g_signal_connect (provider->gudev_client,
                     "uevent",
@@ -875,6 +881,22 @@ udisks_linux_provider_get_modules_coldplug (UDisksLinuxProvider *provider)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), FALSE);
   return provider->modules_coldplug;
+}
+
+/**
+ * udisks_linux_provider_get_last_uevent:
+ * @provider: A #UDisksLinuxProvider.
+ *
+ * Gets timestamp of a last uevent received.
+ *
+ * Returns: monotonic time of a last uevent.
+ **/
+gint64
+udisks_linux_provider_get_last_uevent (UDisksLinuxProvider *provider)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), 0);
+  /* TODO: do we need to assure atomicity? */
+  return provider->last_uevent_timestamp;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
