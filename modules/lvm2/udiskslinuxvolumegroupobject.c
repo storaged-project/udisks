@@ -904,3 +904,20 @@ udisks_linux_volume_group_object_get_name (UDisksLinuxVolumeGroupObject *object)
   g_return_val_if_fail (UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT (object), NULL);
   return object->name;
 }
+
+/**
+ * udisks_linux_volume_group_object_get_lv_count:
+ * @object: A #UDisksLinuxVolumeGroupObject.
+ *
+ * Gets the number of logical volumes the volume group contains.
+ *
+ * Returns: The number of logical volumes for the object.
+ */
+guint
+udisks_linux_volume_group_object_get_lv_count (UDisksLinuxVolumeGroupObject *object)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT (object), 0);
+  g_assert (object->logical_volumes != NULL);
+
+  return g_hash_table_size (object->logical_volumes);
+}

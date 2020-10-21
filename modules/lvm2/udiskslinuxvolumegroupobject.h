@@ -42,6 +42,7 @@ void                            udisks_linux_volume_group_object_update        (
                                                                                 BDLVMVGdata                  *vginfo,
                                                                                 GSList                       *pvs,
                                                                                 gboolean                      update_sync);
+guint                           udisks_linux_volume_group_object_get_lv_count  (UDisksLinuxVolumeGroupObject *object);
 
 void                            udisks_linux_volume_group_object_poll          (UDisksLinuxVolumeGroupObject *object);
 

@@ -25,6 +25,14 @@
 #define LVM2_MODULE_NAME "lvm2"
 #define LVM2_POLICY_ACTION_ID "org.freedesktop.udisks2.lvm2.manage-lvm"
 
+/**
+ * LVM2_SCALABLE_MODE_THRESHOLD:
+ *
+ * Number of logical volumes detected in the system needed to
+ * switch the scalable mode on.
+ */
+#define LVM2_SCALABLE_MODE_THRESHOLD 100
+
 struct _UDisksLinuxModuleLVM2;
 typedef struct _UDisksLinuxModuleLVM2 UDisksLinuxModuleLVM2;
 

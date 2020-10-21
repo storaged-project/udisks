@@ -60,6 +60,8 @@ struct _UDisksLinuxModuleLVM2 {
 
   gint64 last_update_requested;
   GTask *update_task;
+
+  gboolean scalable_mode;
 };
 
 typedef struct _UDisksLinuxModuleLVM2Class UDisksLinuxModuleLVM2Class;
@@ -87,6 +89,7 @@ udisks_linux_module_lvm2_constructed (GObject *object)
 
   module->name_to_volume_group = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_object_unref);
   module->last_update_requested = 0;
+  module->scalable_mode = FALSE;
 
   if (G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed)
     G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed (object);
@@ -233,6 +236,7 @@ lvm_update_vgs (GObject      *source_obj,
   const gchar *vg_name;
   gint64 task_timestamp;
   gboolean sync_task;
+  guint lv_count = 0;
 
   g_warn_if_fail (task_data != NULL);
 
@@ -307,6 +311,19 @@ lvm_update_vgs (GObject      *source_obj,
             vg_pvs = g_slist_prepend (vg_pvs, bd_lvm_pvdata_copy (*pvs_p));
 
       udisks_linux_volume_group_object_update (group, *vgs_p, vg_pvs, sync_task);
+      lv_count += udisks_linux_volume_group_object_get_lv_count (group);
+    }
+
+  if (lv_count > LVM2_SCALABLE_MODE_THRESHOLD)
+    {
+      if (! module->scalable_mode)
+        udisks_warning ("lvm2: Total of %u logical volumes detected in the system, switching the scalable mode on.", lv_count);
+      module->scalable_mode = TRUE;
+    }
+  else
+    {
+      /* stepping down from scalable mode is currently allowed */
+      module->scalable_mode = FALSE;
     }
 
   /* UDisksLinuxVolumeGroupObject carries copies of BDLVMPVdata that belong to the VG.
@@ -367,7 +384,7 @@ lvm_update (UDisksLinuxModuleLVM2 *module, gint64 timestamp, gboolean coldplug, 
                                     task_data /* callback_data */);
 
   /* the callback is responsible for releasing the task reference */
-  if (coldplug)
+  if (coldplug || !module->scalable_mode)
     {
       task_data->sync_task = TRUE;
       g_task_run_in_thread_sync (module->update_task, (GTaskThreadFunc) vgs_task_func);
