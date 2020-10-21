@@ -702,7 +702,7 @@ update_vg (GObject      *source_obj,
 }
 
 void
-udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, BDLVMVGdata *vg_info, GSList *pvs)
+udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, BDLVMVGdata *vg_info, GSList *pvs, gboolean update_sync)
 {
   VGUpdateData *data = g_new0 (VGUpdateData, 1);
   gchar *vg_name = g_strdup (vg_info->name);
@@ -716,7 +716,15 @@ udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, B
   g_task_set_task_data (task, vg_name, g_free);
 
   /* holds a reference to 'task' until it is finished */
-  g_task_run_in_thread (task, (GTaskThreadFunc) lvs_task_func);
+  if (update_sync)
+    {
+      g_task_run_in_thread_sync (task, (GTaskThreadFunc) lvs_task_func);
+      update_vg (G_OBJECT (object), G_ASYNC_RESULT (task), data);
+    }
+  else
+    {
+      g_task_run_in_thread (task, (GTaskThreadFunc) lvs_task_func);
+    }
 
   g_object_unref (task);
 }

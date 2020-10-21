@@ -40,7 +40,8 @@ const gchar                    *udisks_linux_volume_group_object_get_name      (
 UDisksLinuxModuleLVM2          *udisks_linux_volume_group_object_get_module    (UDisksLinuxVolumeGroupObject *object);
 void                            udisks_linux_volume_group_object_update        (UDisksLinuxVolumeGroupObject *object,
                                                                                 BDLVMVGdata                  *vginfo,
-                                                                                GSList                       *pvs);
+                                                                                GSList                       *pvs,
+                                                                                gboolean                      update_sync);
 
 void                            udisks_linux_volume_group_object_poll          (UDisksLinuxVolumeGroupObject *object);
 
