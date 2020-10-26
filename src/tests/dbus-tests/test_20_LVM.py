@@ -1,6 +1,7 @@
 import dbus
 import os
 import re
+import shutil
 import time
 import unittest
 
@@ -55,6 +56,8 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
             vg.Delete(True, options, dbus_interface=self.iface_prefix + '.VolumeGroup')
             ret, _out = self.run_command('vgs %s' % vgname)
             self.assertNotEqual(ret, 0)
+            # remove lingering /dev entries
+            shutil.rmtree(os.path.join('/dev', vgname), ignore_errors=True)
         except dbus.exceptions.DBusException as e:
             if not ignore_removed:
                 raise e
