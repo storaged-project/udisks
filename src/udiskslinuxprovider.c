@@ -1387,6 +1387,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
       handle_block_uevent_for_mdraid (provider, action, device);
+      /* TODO: implement two-phase pre-remove and post-remove modules callback */
       handle_block_uevent_for_modules (provider, action, device);
     }
   else
@@ -1404,10 +1405,11 @@ handle_block_uevent (UDisksLinuxProvider *provider,
         }
       else
         {
-          handle_block_uevent_for_modules (provider, action, device);
           handle_block_uevent_for_mdraid (provider, action, device);
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
+          /* TODO: implement two-phase pre-add and post-add modules callback */
+          handle_block_uevent_for_modules (provider, action, device);
         }
     }
 
