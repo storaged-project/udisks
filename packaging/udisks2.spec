@@ -9,7 +9,6 @@
 
 %define with_bcache                     1
 %define with_btrfs                      1
-%define with_vdo                        1
 %define with_lsm                        1
 %define with_zram                       1
 %define with_lvmcache                   1
@@ -33,26 +32,6 @@
 # btrfs is not available on RHEL > 7
 %if 0%{?rhel} > 7 || %{with_btrfs} == 0
 %define with_btrfs 0
-%endif
-
-# vdo:
-# - Fedora: not available at all
-# - RHEL7: only x86_64
-# - RHEL8: all archs except i686
-%if %{is_fedora} || %{with_vdo} == 0
-%define with_vdo 0
-%endif
-
-%if %{is_rhel7}
-%ifnarch x86_64
-%define with_vdo 0
-%endif
-%endif
-
-%if %{is_rhel8}
-%ifnarch x86_64 aarch64 ppc64le s390x
-%define with_vdo 0
-%endif
 %endif
 
 # feature parity with existing RHEL 7 packages
@@ -259,19 +238,6 @@ Obsoletes: storaged-zram
 This package contains module for ZRAM configuration.
 %endif
 
-%if 0%{?with_vdo}
-%package -n %{name}-vdo
-Summary: Module for VDO
-Requires: %{name}%{?_isa} = %{version}-%{release}
-License: LGPLv2+
-Requires: vdo
-Requires: libblockdev-vdo >= %{libblockdev_version}
-BuildRequires: libblockdev-vdo-devel >= %{libblockdev_version}
-
-%description -n %{name}-vdo
-This package contains module for VDO management.
-%endif
-
 %prep
 %setup -q -n udisks-%{version}
 sed -i udisks/udisks2.conf.in -e "s/encryption=luks1/encryption=%{default_luks_encryption}/"
@@ -291,9 +257,7 @@ autoreconf -ivf
 %if 0%{?with_btrfs}
     --enable-btrfs    \
 %endif
-%if 0%{?with_vdo}
-    --enable-vdo      \
-%endif
+    --disable-vdo      \
 %if 0%{?with_zram}
     --enable-zram     \
 %endif
@@ -429,9 +393,6 @@ fi
 %if 0%{?with_zram}
 %{_libdir}/pkgconfig/udisks2-zram.pc
 %endif
-%if 0%{?with_vdo}
-%{_libdir}/pkgconfig/udisks2-vdo.pc
-%endif
 
 %if 0%{?with_bcache}
 %files -n %{name}-bcache
@@ -461,12 +422,6 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
 %{_unitdir}/udisks2-zram-setup@.service
 %{_udevrulesdir}/90-udisks2-zram.rules
-%endif
-
-%if 0%{?with_vdo}
-%files -n %{name}-vdo
-%{_libdir}/udisks2/modules/libudisks2_vdo.so
-%{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.vdo.policy
 %endif
 
 %changelog
