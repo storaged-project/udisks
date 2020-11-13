@@ -430,6 +430,10 @@ handle_loop_setup (UDisksManager          *object,
   error = NULL;
   wait_data.loop_device = loop_device;
   wait_data.path = path;
+  udisks_daemon_util_trigger_uevent_sync (manager->daemon,
+                                          loop_device,
+                                          NULL,
+                                          UDISKS_DEFAULT_WAIT_TIMEOUT);
   loop_object = udisks_daemon_wait_for_object_sync (manager->daemon,
                                                     wait_for_loop_object,
                                                     &wait_data,
