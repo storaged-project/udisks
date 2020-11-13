@@ -148,11 +148,16 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
                                     gboolean                     *needs_polling_ret)
 {
   UDisksLogicalVolume *iface;
+  UDisksLinuxModuleLVM2 *module;
+  UDisksDaemon *daemon;
   const char *type;
   gboolean active;
   const char *pool_objpath;
   const char *origin_objpath;
   guint64 size = 0;
+
+  module = udisks_linux_volume_group_object_get_module (group_object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
 
   iface = UDISKS_LOGICAL_VOLUME (logical_volume);
 
@@ -225,7 +230,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
        *
        * https://www.redhat.com/archives/linux-lvm/2014-January/msg00030.html
        */
-      udisks_daemon_util_lvm2_trigger_udev (dev_file);
+      udisks_daemon_util_trigger_uevent (daemon, dev_file);
       logical_volume->needs_udev_hack = FALSE;
       g_free (dev_file);
     }

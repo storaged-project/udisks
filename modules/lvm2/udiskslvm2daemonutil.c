@@ -263,11 +263,3 @@ udisks_daemon_util_lvm2_name_is_reserved (const gchar *name)
 }
 
 /* -------------------------------------------------------------------------------- */
-
-void
-udisks_daemon_util_lvm2_trigger_udev (const gchar *device_file)
-{
-  int fd = open (device_file, O_RDWR);
-  if (fd >= 0)
-    close (fd);
-}
