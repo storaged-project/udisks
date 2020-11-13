@@ -38,8 +38,6 @@
 #include <stdlib.h>
 #include <glib/gstdio.h>
 
-#include <blockdev/blockdev.h>
-
 #include "udiskslogging.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
@@ -959,121 +957,25 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static volatile guint uevent_serial = 0;
-
-static gboolean
-trigger_uevent (const gchar *path, const gchar *str)
-{
-  gint fd;
-
-  fd = open (path, O_WRONLY);
-  if (fd < 0)
-    {
-      udisks_warning ("Error opening %s while triggering uevent: %m", path);
-      return FALSE;
-    }
-
-  if (write (fd, str, strlen (str)) != (ssize_t) strlen (str))
-    {
-      udisks_warning ("Error writing '%s' to file %s: %m", str, path);
-      close (fd);
-      return FALSE;
-    }
-
-  close (fd);
-  return TRUE;
-}
-
-typedef struct
-{
-  UDisksLinuxBlockObject *object;
-  GMainLoop *main_loop;
-  guint serial;
-  gchar *uevent_path;
-  gboolean success;
-} SynthUeventData;
-
-static gboolean
-trigger_uevent_idle_cb (gpointer user_data)
-{
-  SynthUeventData *data = user_data;
-  gchar *str;
-
-  str = g_strdup_printf ("change %s UDISKSSERIAL=%u", udisks_daemon_get_uuid (data->object->daemon), data->serial);
-
-  if (! trigger_uevent (data->uevent_path, str))
-    {
-      /* kernel refused our string, try simple "change" but don't wait for it */
-      trigger_uevent (data->uevent_path, "change");
-      data->success = FALSE;
-      g_main_loop_quit (data->main_loop);
-    }
-  g_free (str);
-
-  /* remove the source */
-  return FALSE;
-}
-
-static gboolean
-uevent_wait_timeout_cb (gpointer user_data)
-{
-  SynthUeventData *data = user_data;
-
-  data->success = FALSE;
-  g_main_loop_quit (data->main_loop);
-
-  /* remove the source */
-  return FALSE;
-}
-
-static void
-uevent_probed_cb (UDisksLinuxProvider *provider,
-                  const gchar         *action,
-                  UDisksLinuxDevice   *device,
-                  gpointer             user_data)
-{
-  SynthUeventData *data = user_data;
-  const gchar *received_serial_str;
-  gint64 received_serial;
-  gchar *endptr;
-
-  received_serial_str = g_udev_device_get_property (device->udev_device, "SYNTH_ARG_UDISKSSERIAL");
-  if (received_serial_str != NULL)
-    {
-      endptr = (gchar *) received_serial_str;
-      received_serial = g_ascii_strtoll (received_serial_str, &endptr, 0);
-      if (endptr != received_serial_str && received_serial == data->serial)
-        {
-          data->success = TRUE;
-          g_main_loop_quit (data->main_loop);
-        }
-    }
-}
-
 /**
  * udisks_linux_block_object_trigger_uevent:
  * @object: A #UDisksLinuxBlockObject.
  *
  * Triggers a 'change' uevent in the kernel.
  *
- * The triggered event will bubble up from the kernel through the udev
- * stack and will eventually be received by the udisks daemon process
- * itself. This method does not wait for the event to be received.
+ * Refer to udisks_daemon_util_trigger_uevent() for detailed description.
  */
 void
 udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
 {
   UDisksLinuxDevice *device;
-  gchar *path;
+  const gchar *sysfs_path;
 
   g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
 
   device = udisks_linux_block_object_get_device (object);
-  path = g_strconcat (g_udev_device_get_sysfs_path (device->udev_device), "/uevent", NULL);
-
-  trigger_uevent (path, "change");
-
-  g_free (path);
+  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+  udisks_daemon_util_trigger_uevent (object->daemon, NULL, sysfs_path);
   g_object_unref (device);
 }
 
@@ -1083,19 +985,10 @@ udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
  * @timeout_seconds: Maximum time to wait for the uevent (in seconds).
  *
  * Triggers a 'change' uevent in the kernel and waits until it's received and
- * processed by udisks.
+ * processed through the uevent queue.
  *
- * Unlike udisks_linux_block_object_trigger_uevent() that just triggers
- * a synthetic uevent to the kernel, this call will actually block and wait until
- * the #UDisksLinuxProvider receives the uevent, performs probing and processes
- * the uevent further down the UDisks object stack. Upon returning from this
- * function call the caller may assume the event has been fully processed, all
- * D-Bus objects are updated and settled. Typically used in busy wait for
- * a particular D-Bus interface.
- *
- * Note that this uses synthetic uevent tagging and only works on linux kernel
- * 4.13 and higher. In case an older kernel is detected this acts like the classic
- * udisks_linux_block_object_trigger_uevent() call and %FALSE is returned.
+ * This is a convenient wrapper around udisks_daemon_util_trigger_uevent_sync().
+ * Refer to this function for detailed documentation.
  *
  * Returns: %TRUE if the uevent has been successfully received, %FALSE otherwise
  * or when the kernel version is too old.
@@ -1105,58 +998,17 @@ udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
                                                guint                   timeout_seconds)
 {
   UDisksLinuxDevice *device;
-  UDisksLinuxProvider *provider;
-  SynthUeventData data;
-  GMainContext *main_context;
-  GSource *idle_source;
-  GSource *timeout_source;
+  const gchar *sysfs_path;
+  gboolean ret;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
-  if (bd_utils_check_linux_version (4, 13, 0) < 0)
-    {
-      udisks_linux_block_object_trigger_uevent (object);
-      return FALSE;
-    }
-
-  data.object = object;
   device = udisks_linux_block_object_get_device (object);
-  data.uevent_path = g_strconcat (g_udev_device_get_sysfs_path (device->udev_device), "/uevent", NULL);
-  data.serial = g_atomic_int_add (&uevent_serial, 1);
-
-  main_context = g_main_context_new ();
-  g_main_context_push_thread_default (main_context);
-  data.main_loop = g_main_loop_new (main_context, FALSE);
-
-  /* queue the actual trigger in the loop */
-  idle_source = g_idle_source_new ();
-  g_source_set_callback (idle_source, (GSourceFunc) trigger_uevent_idle_cb, &data, NULL);
-  g_source_attach (idle_source, main_context);
-  g_source_unref (idle_source);
-
-  /* add timeout as a fallback */
-  timeout_source = g_timeout_source_new_seconds (timeout_seconds);
-  g_source_set_callback (timeout_source, (GSourceFunc) uevent_wait_timeout_cb, &data, NULL);
-  g_source_attach (timeout_source, main_context);
-  g_source_unref (timeout_source);
-
-  /* catch incoming uevents */
-  provider = udisks_daemon_get_linux_provider (object->daemon);
-  g_signal_connect (provider, "uevent-probed", G_CALLBACK (uevent_probed_cb), &data);
-
-  data.success = FALSE;
-  g_main_loop_run (data.main_loop);
-
-  g_signal_handlers_disconnect_by_func (provider, uevent_probed_cb, &data);
-  g_main_context_pop_thread_default (main_context);
-
-  g_main_loop_unref (data.main_loop);
-  g_main_context_unref (main_context);
-
-  g_free (data.uevent_path);
+  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+  ret = udisks_daemon_util_trigger_uevent_sync (object->daemon, NULL, sysfs_path, timeout_seconds);
   g_object_unref (device);
 
-  return data.success;
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
