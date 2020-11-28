@@ -70,7 +70,7 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
         watch_thread.run = False
         watch_thread.join()
 
-        # unexpected exception occured in erase thread -- raise it
+        # unexpected exception occurred in erase thread -- raise it
         # timeout reached is actually ok -- zeroing the device may take a long
         # time, but we just want to check the job object
         if self.exception is not None and not str(self.exception).endswith('Timeout was reached'):

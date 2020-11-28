@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_ALREADY_CANCELLED: The operation has already been cancelled.
  * @UDISKS_ERROR_NOT_AUTHORIZED: Not authorized to perform the requested operation.
  * @UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN: Like %UDISKS_ERROR_NOT_AUTHORIZED but authorization can be obtained through e.g. authentication.
- * @UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED: Like %UDISKS_ERROR_NOT_AUTHORIZED but an authentication was shown and the user dimissed it.
+ * @UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED: Like %UDISKS_ERROR_NOT_AUTHORIZED but an authentication was shown and the user dismissed it.
  * @UDISKS_ERROR_ALREADY_MOUNTED: The device is already mounted.
  * @UDISKS_ERROR_NOT_MOUNTED: The device is not mounted.
  * @UDISKS_ERROR_OPTION_NOT_PERMITTED: Not permitted to use the requested option.
@@ -88,7 +88,7 @@ typedef enum
  * @UDISKS_PARTITION_TYPE_INFO_FLAGS_NONE: No flags set.
  * @UDISKS_PARTITION_TYPE_INFO_FLAGS_SWAP: Partition type is used for swap.
  * @UDISKS_PARTITION_TYPE_INFO_FLAGS_RAID: Partition type is used for RAID/LVM or similar.
- * @UDISKS_PARTITION_TYPE_INFO_FLAGS_HIDDEN: Partition type indicates the partition is hidden (e.g. 'dos' type 0x1b "Hidden W95 FAT32"). Note that this is not the same as user-toggleable attributs/flags for a partition.
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_HIDDEN: Partition type indicates the partition is hidden (e.g. 'dos' type 0x1b "Hidden W95 FAT32"). Note that this is not the same as user-toggleable attributes/flags for a partition.
  * @UDISKS_PARTITION_TYPE_INFO_FLAGS_CREATE_ONLY: Partition type can only be used when creating a partition and e.g. should not be selectable in a "change partition type" user interface (e.g. 'dos' type 0x05, 0x0f and 0x85 for extended partitions).
  * @UDISKS_PARTITION_TYPE_INFO_FLAGS_SYSTEM: Partition type indicates the partition is part of the system / bootloader (e.g. 'dos' types 0xee, 0xff, 'gpt' types for 'EFI System partition' and 'BIOS Boot partition').
  *

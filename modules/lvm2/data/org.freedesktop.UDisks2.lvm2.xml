@@ -587,7 +587,7 @@
          @options: Additional options.
          @since: 2.3.0
 
-         Creates cache LV. Logical volume which name is provided, will be formated, converted to cache type
+         Creates cache LV. Logical volume which name is provided, will be formatted, converted to cache type
          and attached to origin logical volume as a cache pool LV. Logical volumes must be in the same volume group.
 
          No additional options are currently defined.

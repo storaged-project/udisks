@@ -1726,7 +1726,7 @@ udisks_daemon_find_object (UDisksDaemon *daemon,
  *
  * Gets all D-Bus objects exported by @daemon.
  *
- * Returns: (transfer full) (element-type UDisksObject): A list of #UDisksObject instaces. The returned list should be freed with g_list_free() after each element has been freed with g_object_unref().
+ * Returns: (transfer full) (element-type UDisksObject): A list of #UDisksObject instances. The returned list should be freed with g_list_free() after each element has been freed with g_object_unref().
  */
 GList *
 udisks_daemon_get_objects (UDisksDaemon *daemon)

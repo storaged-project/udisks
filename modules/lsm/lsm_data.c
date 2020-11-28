@@ -591,7 +591,7 @@ _fill_pl_id_2_lsm_pl_data_hash (GPtrArray *lsm_pl_array,
       if (pl_id == NULL || strlen (pl_id) == 0)
         continue;
 
-      /* Overide old data  */
+      /* Override old data  */
       g_hash_table_lookup_extended (_pl_id_2_lsm_pl_data_hash, pl_id,
                                     (gpointer *) &orig_pl_id,
                                     (gpointer *) &orig_lsm_pl_data);
@@ -1031,7 +1031,7 @@ std_lsm_refresh_time_get (void)
 
 /*
  * Return struct StdLsmVolData for given VPD83.
- * The memory should be freeed by std_lsm_vol_data_free ().
+ * The memory should be freed by std_lsm_vol_data_free ().
  */
 struct StdLsmVolData *
 std_lsm_vol_data_get (const char *vpd83)

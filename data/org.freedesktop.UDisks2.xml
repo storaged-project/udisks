@@ -159,7 +159,7 @@
         @enable: A boolean value indicating whether modules should be enabled. Currently only the %TRUE value is permitted.
 
         Loads and activates modules. Modules that have been already loaded are not reinitialized on subsequent calls to this method and are skipped.
-        In case any new module is getting activated by this method call a <literal>add</literal> uevent is trigerred on all exported objects.
+        In case any new module is getting activated by this method call a <literal>add</literal> uevent is triggered on all exported objects.
 
         This takes in account an optional explicit list of modules to load as specified in the <filename>/etc/udisks2/udisks2.conf</filename>
         config file. If unspecified all available modules will be loaded.
@@ -632,7 +632,7 @@
          that the SMART status was updated or 0 if never updated.
 
          The value of the other properties related to SMART are not
-         meaningful if this proeprty is 0.
+         meaningful if this property is 0.
     -->
     <property name="SmartUpdated" type="t" access="read"/>
 
@@ -1789,7 +1789,7 @@
 
          Resizes the partition.
 
-         The partiton will not change its position but might be slightly bigger
+         The partition will not change its position but might be slightly bigger
          than requested due to sector counts and alignment (e.g. 1MiB).
          If the requested size can't be allocated it results in an error.
          The maximal size can automatically be set by using 0 as size.
@@ -2338,7 +2338,7 @@
     <!-- BitmapLocation:
          The location of a write-intent bitmap (empty if the array is not running), if any.
 
-         If the RAID array does not suppor write-intent bitmaps (for
+         If the RAID array does not support write-intent bitmaps (for
          example RAID-0 arrays), this is empty.
 
          This property corresponds to the
@@ -2522,7 +2522,7 @@
       org.freedesktop.UDisks2.Block.Format() method that is used to
       format a block device.
 
-      When such operations are initated, a job object implementing
+      When such operations are initiated, a job object implementing
       this interface may be created so the progress can be tracked by
       the caller (and also other observers).
 

@@ -137,7 +137,7 @@ class UdisksDriveAtaTest(UdisksTestCase):
             if temp_attr:
                 # reported in Kelvins (double) by API, but in Celsius degrees (int) by CLI
                 temp_c = self.get_property(drive_obj, ".Drive.Ata", "SmartTemperature").value - 273
-                # nineth field is the raw value
+                # ninth field is the raw value
                 self.assertEqual(int(temp_c), int(temp_attr[8]))
 
             # power-on-hours has ID 9
@@ -145,7 +145,7 @@ class UdisksDriveAtaTest(UdisksTestCase):
             if pwon_attr:
                 # reported in seconds by API, but in hours by CLI
                 pwon_s = self.get_property(drive_obj, ".Drive.Ata", "SmartPowerOnSeconds")
-                # nineth field is the raw value
+                # ninth field is the raw value
                 self.assertEqual(int(pwon_s.value / 3600), int(pwon_attr[8]))
 
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")
@@ -180,7 +180,7 @@ class UdisksDriveAtaTest(UdisksTestCase):
                 if ret_tup[0] == 190: # temperature (milikelvin -> celsius)
                     self.assertEqual(int((ret_tup[6] / 1000) - 273), int(attr[8]))
 
-                if ret_tup[0] == 9: # miliseconds -> hours
+                if ret_tup[0] == 9: # milliseconds -> hours
                     self.assertEqual(int(ret_tup[6] / 3600000), int(attr[8]))
 
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")

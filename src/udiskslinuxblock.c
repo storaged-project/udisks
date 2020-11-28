@@ -1611,7 +1611,7 @@ add_remove_fstab_entry (UDisksBlock *block,
   if (!udisks_daemon_util_file_set_contents ("/etc/fstab",
                                              str->str,
                                              -1,
-                                             0644, /* mode to use if non-existant */
+                                             0644, /* mode to use if non-existent */
                                              error))
     goto out;
 
@@ -1902,7 +1902,7 @@ add_remove_crypttab_entry (UDisksBlock *block,
           if (!udisks_daemon_util_file_set_contents (filename,
                                                      add_passphrase_contents,
                                                      -1,
-                                                     0600, /* mode to use if non-existant */
+                                                     0600, /* mode to use if non-existent */
                                                      error))
             {
               g_free (filename);
@@ -1920,7 +1920,7 @@ add_remove_crypttab_entry (UDisksBlock *block,
   if (!udisks_daemon_util_file_set_contents ("/etc/crypttab",
                                              str->str,
                                              -1,
-                                             0600, /* mode to use if non-existant */
+                                             0600, /* mode to use if non-existent */
                                              error))
     goto out;
 

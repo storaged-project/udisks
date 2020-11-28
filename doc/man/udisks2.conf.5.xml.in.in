@@ -60,7 +60,7 @@
         <varlistentry>
           <term><option>modules = &lt;string list&gt;</option></term>
           <para>
-            This variable controlls what modules should be loaded. It may
+            This variable controls what modules should be loaded. It may
             contain either a comma-separated list of modules to load or a
             single asterisk which stands for all the modules.
           </para>

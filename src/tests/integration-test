@@ -443,7 +443,7 @@ class UDisksTestCase(unittest.TestCase):
                             'pkill --signal HUP systemd-udevd',
                             shell=True)
 
-        # craete a fake SCSI hard drive
+        # create a fake SCSI hard drive
         assert subprocess.call(['modprobe', 'scsi_debug', 'dev_size_mb=%i' % (
             VDEV_SIZE / 1048576)]) == 0, 'Failure to modprobe scsi_debug'
 
@@ -1108,7 +1108,7 @@ class FS(UDisksTestCase):
                 old_msg = 'is write-protected but `rw\' option given'
                 if not (old_msg in str(e) or new_msg  in str(e)):
                     self.fail('Mounting read-only device with \'rw\' option failed'
-                              'with an unxepected error.\nGot: %s\nExpected: \'%s\''
+                              'with an unexpected error.\nGot: %s\nExpected: \'%s\''
                               ' or \'%s\'' % (str(e), new_msg, old_msg))
             else:
                 self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
@@ -1376,7 +1376,7 @@ class Luks(UDisksTestCase):
         clear_dev = None
 
         try:
-            # check crypted device info
+            # check encrypted device info
             self.assertEqual(block.get_property('id-type'), 'crypto_LUKS')
             self.assertEqual(block.get_property('id-usage'), 'crypto')
             self.assertEqual(block.get_property('id-label'), '')

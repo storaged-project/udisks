@@ -385,7 +385,7 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error determing path: %m");
+                                             "Error determining path: %m");
       goto out;
     }
   path[path_len] = '\0';

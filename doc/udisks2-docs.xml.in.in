@@ -80,7 +80,7 @@
           Note that interfaces may be added and removed at
           run-time. For example, if a block device is full of zeroes
           (or, at least, have zeroes in the known metadata areas), it
-          will not intially implement the <link
+          will not initially implement the <link
           linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
           interface; however, if a filesystem is later created on the device
           (using, say, the

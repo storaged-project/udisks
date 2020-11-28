@@ -639,7 +639,7 @@ trigger_change_uevent (const gchar *sysfs_path)
   fd = open (path, O_WRONLY);
   if (fd < 0)
     {
-      udisks_warning ("Error opening %s for trigerring change uevent: %m", path);
+      udisks_warning ("Error opening %s for triggering change uevent: %m", path);
       goto out;
     }
 
@@ -2441,7 +2441,7 @@ udisks_state_get (UDisksState           *state,
   g_warn_if_fail (ret != NULL);
   g_variant_ref_sink (ret);
 
-  contents = NULL; /* ownership transfered to the returned GVariant */
+  contents = NULL; /* ownership transferred to the returned GVariant */
 
  out:
   g_free (contents);

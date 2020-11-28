@@ -156,7 +156,7 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
  * Calculate mount options for the given level of overrides. Matches the block
  * device-specific options on top of the defaults.
  *
- * Returns: %TRUE when mount options were overriden, %FALSE otherwise.
+ * Returns: %TRUE when mount options were overridden, %FALSE otherwise.
  */
 static gboolean
 compute_block_level_mount_options (GHashTable      *opts,
@@ -321,7 +321,7 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   if (changed && fsmo->defaults)
     {
       gchar *opts = g_strjoinv (",", fsmo->defaults);
-      udisks_notice ("Using overriden mount options: %s", opts);
+      udisks_notice ("Using overridden mount options: %s", opts);
       g_free (opts);
     }
 
@@ -667,7 +667,7 @@ is_uid_in_gid (uid_t uid,
   int num_supplementary_groups = 128;
   int n;
 
-  /* TODO: use some #define instead of harcoding some random number like 128 */
+  /* TODO: use some #define instead of hardcoding some random number like 128 */
 
   if (! udisks_daemon_util_get_user_info (uid, &primary_gid, &user_name, &error))
     {

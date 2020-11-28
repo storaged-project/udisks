@@ -124,7 +124,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         with self.assertRaises(dbus.exceptions.DBusException):
             manager.CanResize('minix')
         avail, mode, util = manager.CanResize('xfs')
-        # the resize mode flage values are defined in the method documentation
+        # the resize mode flags values are defined in the method documentation
         self.assertEqual(mode, online_grow | offline_grow)
         if avail:
             self.assertEqual(util, '')

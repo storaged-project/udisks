@@ -102,7 +102,7 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
             # this is probably a bug in mdadm, but we need to fix it somehow
             # until they fix it (or call it a feature) and it's better to do
             # it here than change every test
-            # update: they fixed it, now we can choose beetween "ev", "dev" and
+            # update: they fixed it, now we can choose between "ev", "dev" and
             #         nothing based on mdadm version
             if key.startswith('MD_DEVICE_ev'):
                 data[key.replace('_ev_', '_')] = value

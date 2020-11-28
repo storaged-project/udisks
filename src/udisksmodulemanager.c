@@ -74,7 +74,7 @@
  * activation.
  *
  * By default #UDisksModuleManager is constructed on daemon startup with module
- * loading delayed until requested. This can be overriden by the
+ * loading delayed until requested. This can be overridden by the
  * <literal>--force-load-modules</literal> and <literal>--disable-modules</literal>
  * commandline switches that makes modules loaded right on startup or never loaded
  * respectively.
@@ -708,7 +708,7 @@ udisks_module_manager_get_modules (UDisksModuleManager *manager)
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
 
   /* Return fast to avoid bottleneck over locking, expecting
-   * a simple pointer check whould be atomic.
+   * a simple pointer check would be atomic.
    */
   if (manager->modules == NULL)
     return NULL;
