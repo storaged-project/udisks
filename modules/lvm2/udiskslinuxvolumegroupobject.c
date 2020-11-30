@@ -652,6 +652,9 @@ update_vg (GObject      *source_obj,
       else
         udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
 
+      if (vdo_info)
+        bd_lvm_vdopooldata_free (vdo_info);
+
       g_hash_table_insert (new_lvs, (gchar *)lv_name, volume);
     }
 
