@@ -256,3 +256,22 @@ udisks_fstab_entry_get_passno (UDisksFstabEntry *entry)
   g_return_val_if_fail (UDISKS_IS_FSTAB_ENTRY (entry), 0);
   return entry->passno;
 }
+
+/**
+ * udisks_fstab_entry_has_opt:
+ * @entry: A #UDisksFstabEntry.
+ * @opt: Mount option to look for.
+ *
+ * Checks presence of the mount option for the @entry. Please see libmount
+ * mnt_match_options() for the @opt string specific requirements.
+ *
+ * Returns: Whether the @entry contains the specified option.
+ */
+gboolean
+udisks_fstab_entry_has_opt (UDisksFstabEntry *entry, const gchar *opt)
+{
+  g_return_val_if_fail (UDISKS_IS_FSTAB_ENTRY (entry), FALSE);
+
+  /* NOTE: libmount-specific matching procedure, might not suit all use cases */
+  return mnt_match_options (entry->opts, opt);
+}

@@ -34,6 +34,8 @@ const gchar     *udisks_fstab_entry_get_fsname   (UDisksFstabEntry *entry);
 const gchar     *udisks_fstab_entry_get_dir      (UDisksFstabEntry *entry);
 const gchar     *udisks_fstab_entry_get_fstype   (UDisksFstabEntry *entry);
 const gchar     *udisks_fstab_entry_get_opts     (UDisksFstabEntry *entry);
+gboolean         udisks_fstab_entry_has_opt      (UDisksFstabEntry *entry,
+                                                  const gchar      *opt);
 gint             udisks_fstab_entry_get_freq     (UDisksFstabEntry *entry);
 gint             udisks_fstab_entry_get_passno   (UDisksFstabEntry *entry);
 gint             udisks_fstab_entry_compare      (UDisksFstabEntry *entry,
