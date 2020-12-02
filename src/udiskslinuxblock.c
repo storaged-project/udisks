@@ -352,107 +352,6 @@ update_mdraid (UDisksLinuxBlock         *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-update_hints (UDisksLinuxBlock  *block,
-              UDisksLinuxDevice *device,
-              UDisksDrive       *drive)
-{
-  UDisksBlock *iface = UDISKS_BLOCK (block);
-  gboolean hint_partitionable;
-  gboolean hint_system;
-  gboolean hint_ignore;
-  gboolean hint_auto;
-  const gchar *hint_name;
-  const gchar *hint_icon_name;
-  const gchar *hint_symbolic_icon_name;
-  const gchar *device_file;
-
-  /* very conservative defaults */
-  hint_partitionable = TRUE;
-  hint_system = TRUE;
-  hint_ignore = FALSE;
-  hint_auto = FALSE;
-  hint_name = NULL;
-  hint_icon_name = NULL;
-  hint_symbolic_icon_name = NULL;
-
-  device_file = g_udev_device_get_device_file (device->udev_device);
-
-  /* Provide easy access to _only_ the following devices
-   *
-   *  - anything connected via known local buses (e.g. USB or Firewire, MMC or MemoryStick)
-   *  - any device with removable media
-   *
-   * Be careful when extending this list as we don't want to automount
-   * the world when (inadvertently) connecting to a SAN.
-   */
-  if (drive != NULL)
-    {
-      const gchar *connection_bus;
-      gboolean removable;
-      connection_bus = udisks_drive_get_connection_bus (drive);
-      removable = udisks_drive_get_media_removable (drive);
-      if (removable ||
-          g_strcmp0 (connection_bus, "usb") == 0 ||
-          g_strcmp0 (connection_bus, "ieee1394") == 0 ||
-          g_str_has_prefix (device_file, "/dev/mmcblk") ||
-          g_str_has_prefix (device_file, "/dev/msblk") ||
-          g_str_has_prefix (device_file, "/dev/mspblk"))
-        {
-          hint_system = FALSE;
-          hint_auto = TRUE;
-        }
-    }
-
-  /* Floppy drives are not partitionable and should never be auto-mounted */
-  if (g_str_has_prefix (device_file, "/dev/fd"))
-    {
-      hint_system = FALSE;
-      hint_partitionable = FALSE;
-      hint_auto = FALSE;
-    }
-
-  /* CD-ROM media / drives are not partitionable, at least not here on Linux */
-  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_CDROM"))
-    hint_partitionable = FALSE;
-
-  /* device-mapper devices are not partitionable (TODO: for multipath, they are via kpartx(8) hacks) */
-  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
-    hint_partitionable = FALSE;
-
-  /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
-
-  /* Override from UDISKS_* udev properties */
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYSTEM"))
-    hint_system = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_SYSTEM");
-
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_IGNORE"))
-    hint_ignore = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_IGNORE");
-
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_AUTO"))
-    hint_auto = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_AUTO");
-
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_NAME"))
-    hint_name = g_udev_device_get_property (device->udev_device, "UDISKS_NAME");
-
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_ICON_NAME"))
-    hint_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_ICON_NAME");
-
-  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME"))
-    hint_symbolic_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME");
-
-  /* ... and scene! */
-  udisks_block_set_hint_partitionable (iface, hint_partitionable);
-  udisks_block_set_hint_system (iface, hint_system);
-  udisks_block_set_hint_ignore (iface, hint_ignore);
-  udisks_block_set_hint_auto (iface, hint_auto);
-  udisks_block_set_hint_name (iface, hint_name);
-  udisks_block_set_hint_icon_name (iface, hint_icon_name);
-  udisks_block_set_hint_symbolic_icon_name (iface, hint_symbolic_icon_name);
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 /**
  * udisks_linux_block_matches_id:
  * @block: A #UDisksLinuxBlock.
@@ -927,6 +826,121 @@ udisks_linux_find_child_configuration (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+update_hints (UDisksDaemon      *daemon,
+              UDisksLinuxBlock  *block,
+              UDisksLinuxDevice *device,
+              UDisksDrive       *drive)
+{
+  UDisksBlock *iface = UDISKS_BLOCK (block);
+  gboolean hint_partitionable;
+  gboolean hint_system;
+  gboolean hint_ignore;
+  gboolean hint_auto;
+  const gchar *hint_name;
+  const gchar *hint_icon_name;
+  const gchar *hint_symbolic_icon_name;
+  const gchar *device_file;
+  GList *fstab_entries;
+  GList *l;
+
+  /* very conservative defaults */
+  hint_partitionable = TRUE;
+  hint_system = TRUE;
+  hint_ignore = FALSE;
+  hint_auto = FALSE;
+  hint_name = NULL;
+  hint_icon_name = NULL;
+  hint_symbolic_icon_name = NULL;
+
+  device_file = g_udev_device_get_device_file (device->udev_device);
+
+  /* Provide easy access to _only_ the following devices
+   *
+   *  - anything connected via known local buses (e.g. USB or Firewire, MMC or MemoryStick)
+   *  - any device with removable media
+   *
+   * Be careful when extending this list as we don't want to automount
+   * the world when (inadvertently) connecting to a SAN.
+   */
+  if (drive != NULL)
+    {
+      const gchar *connection_bus;
+      gboolean removable;
+      connection_bus = udisks_drive_get_connection_bus (drive);
+      removable = udisks_drive_get_media_removable (drive);
+      if (removable ||
+          g_strcmp0 (connection_bus, "usb") == 0 ||
+          g_strcmp0 (connection_bus, "ieee1394") == 0 ||
+          g_str_has_prefix (device_file, "/dev/mmcblk") ||
+          g_str_has_prefix (device_file, "/dev/msblk") ||
+          g_str_has_prefix (device_file, "/dev/mspblk"))
+        {
+          hint_system = FALSE;
+          hint_auto = TRUE;
+        }
+    }
+
+  /* Floppy drives are not partitionable and should never be auto-mounted */
+  if (g_str_has_prefix (device_file, "/dev/fd"))
+    {
+      hint_system = FALSE;
+      hint_partitionable = FALSE;
+      hint_auto = FALSE;
+    }
+
+  /* CD-ROM media / drives are not partitionable, at least not here on Linux */
+  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_CDROM"))
+    hint_partitionable = FALSE;
+
+  /* device-mapper devices are not partitionable (TODO: for multipath, they are via kpartx(8) hacks) */
+  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
+    hint_partitionable = FALSE;
+
+  /* Check fstab entries */
+  fstab_entries = find_fstab_entries (daemon, block, NULL);
+  for (l = fstab_entries; l != NULL; l = l->next)
+    {
+      UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
+      /* Honour the sysadmin-specified 'noauto' mount option */
+      if (udisks_fstab_entry_has_opt (entry, "+noauto"))
+        hint_auto = FALSE;
+    }
+  g_list_free_full (fstab_entries, g_object_unref);
+
+  /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
+
+  /* Override from UDISKS_* udev properties */
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYSTEM"))
+    hint_system = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_SYSTEM");
+
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_IGNORE"))
+    hint_ignore = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_IGNORE");
+
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_AUTO"))
+    hint_auto = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_AUTO");
+
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_NAME"))
+    hint_name = g_udev_device_get_property (device->udev_device, "UDISKS_NAME");
+
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_ICON_NAME"))
+    hint_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_ICON_NAME");
+
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME"))
+    hint_symbolic_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME");
+
+  /* ... and scene! */
+  udisks_block_set_hint_partitionable (iface, hint_partitionable);
+  udisks_block_set_hint_system (iface, hint_system);
+  udisks_block_set_hint_ignore (iface, hint_ignore);
+  udisks_block_set_hint_auto (iface, hint_auto);
+  udisks_block_set_hint_name (iface, hint_name);
+  udisks_block_set_hint_icon_name (iface, hint_icon_name);
+  udisks_block_set_hint_symbolic_icon_name (iface, hint_symbolic_icon_name);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *
 get_slave_sysfs_path (const gchar *sysfs_path)
 {
@@ -1224,7 +1238,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
-  update_hints (block, device, drive);
+  update_hints (daemon, block, device, drive);
   update_configuration (block, daemon);
 #ifdef HAVE_LIBMOUNT_UTAB
   update_userspace_mount_options (block, daemon);
