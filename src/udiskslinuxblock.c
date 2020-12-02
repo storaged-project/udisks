@@ -1940,6 +1940,26 @@ add_remove_crypttab_entry (UDisksBlock *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+update_block_fstab (UDisksDaemon           *daemon,
+                    UDisksLinuxBlock       *block,
+                    UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  gchar *drive_object_path;
+  UDisksDrive *drive = NULL;
+
+  update_configuration (block, daemon);
+
+  /* hints take fstab records in the calculation */
+  device = udisks_linux_block_object_get_device (object);
+  drive_object_path = find_drive (udisks_daemon_get_object_manager (daemon), device->udev_device, &drive);
+  update_hints (daemon, block, device, drive);
+  g_free (drive_object_path);
+  g_clear_object (&device);
+  g_clear_object (&drive);
+}
+
 static gboolean
 handle_add_configuration_item (UDisksBlock           *_block,
                                GDBusMethodInvocation *invocation,
@@ -1980,7 +2000,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      update_configuration (block, daemon);
+      update_block_fstab (daemon, block, object);
       udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2059,7 +2079,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      update_configuration (block, daemon);
+      update_block_fstab (daemon, block, object);
       udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
@@ -2151,7 +2171,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      update_configuration (block, daemon);
+      update_block_fstab (daemon, block, object);
       udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (old_type, "crypttab") == 0)
