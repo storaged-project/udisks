@@ -1,5 +1,6 @@
 import copy
 import dbus
+import glob
 import fcntl
 import os
 import time
@@ -19,6 +20,16 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
+        # this might fail in case of stray udev rules or records in /etc/fstab
+        hint_auto = self.get_property_raw(disk, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(False))
+        hint_ignore = self.get_property_raw(disk, '.Block', 'HintIgnore')
+        self.assertEqual(hint_ignore, dbus.Boolean(False))
+        hint_partitionable = self.get_property_raw(disk, '.Block', 'HintPartitionable')
+        self.assertEqual(hint_partitionable, dbus.Boolean(True))
+        hint_system = self.get_property_raw(disk, '.Block', 'HintSystem')
+        self.assertEqual(hint_system, dbus.Boolean(True))
+
         # create xfs filesystem
         disk.Format('xfs', self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
@@ -27,6 +38,15 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         fstype = self.get_property(disk, '.Block', 'IdType')
         fstype.assertEqual('xfs')
+
+        hint_auto = self.get_property_raw(disk, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(False))
+        hint_ignore = self.get_property_raw(disk, '.Block', 'HintIgnore')
+        self.assertEqual(hint_ignore, dbus.Boolean(False))
+        hint_partitionable = self.get_property_raw(disk, '.Block', 'HintPartitionable')
+        self.assertEqual(hint_partitionable, dbus.Boolean(True))
+        hint_system = self.get_property_raw(disk, '.Block', 'HintSystem')
+        self.assertEqual(hint_system, dbus.Boolean(True))
 
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, 'xfs')
@@ -42,6 +62,15 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         fstype = self.get_property(disk, '.Block', 'IdType')
         fstype.assertEqual('')
+
+        hint_auto = self.get_property_raw(disk, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(False))
+        hint_ignore = self.get_property_raw(disk, '.Block', 'HintIgnore')
+        self.assertEqual(hint_ignore, dbus.Boolean(False))
+        hint_partitionable = self.get_property_raw(disk, '.Block', 'HintPartitionable')
+        self.assertEqual(hint_partitionable, dbus.Boolean(True))
+        hint_system = self.get_property_raw(disk, '.Block', 'HintSystem')
+        self.assertEqual(hint_system, dbus.Boolean(True))
 
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE %s' % self.vdevs[0])
         self.assertEqual(sys_fstype, '')
@@ -185,12 +214,23 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         upd_conf.assertTrue()
         upd_conf.assertEqual(new_opts, getter=lambda c: c[0][1]['opts'])
 
+        # this might fail in case of stray udev rules or records in /etc/fstab
+        hint_auto = self.get_property_raw(disk, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(False))
+        hint_ignore = self.get_property_raw(disk, '.Block', 'HintIgnore')
+        self.assertEqual(hint_ignore, dbus.Boolean(False))
+        hint_partitionable = self.get_property_raw(disk, '.Block', 'HintPartitionable')
+        self.assertEqual(hint_partitionable, dbus.Boolean(True))
+        hint_system = self.get_property_raw(disk, '.Block', 'HintSystem')
+        self.assertEqual(hint_system, dbus.Boolean(True))
+
         # remove the configuration
         disk.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),
                                      self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         upd_conf = self.get_property(disk, '.Block', 'Configuration')
         upd_conf.assertFalse()
+
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_configuration_crypttab(self):
@@ -276,3 +316,96 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(disk)
 
         disk.Rescan(self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+
+class UdisksBlockRemovableTest(udiskstestcase.UdisksTestCase):
+    '''Extra block device tests over a scsi_debug removable device'''
+
+    # taken from test_40_drive.py and modified
+    def setUp(self):
+        res, _ = self.run_command('modprobe scsi_debug removable=1')
+        self.assertEqual(res, 0)
+        self.udev_settle()
+        dirs = []
+        # wait until directory appears
+        while len(dirs) < 1:
+            dirs = glob.glob('/sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*:*/block')
+            time.sleep(0.1)
+
+        self.cd_dev = os.listdir(dirs[0])
+        self.assertEqual(len(self.cd_dev), 1)
+        self.cd_dev = '/dev/' + self.cd_dev[0]
+        self.assertTrue(os.path.exists(self.cd_dev))
+
+        self.cd_device = self.get_device(self.cd_dev)
+
+    def tearDown(self):
+        device = self.cd_dev.split('/')[-1]
+        if os.path.exists('/sys/block/' + device):
+            self.write_file('/sys/block/%s/device/delete' % device, '1')
+            while os.path.exists(device):
+                time.sleep(0.1)
+            self.udev_settle()
+            self.run_command('modprobe -r scsi_debug')
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_configuration_fstab_removable(self):
+
+        # this test will change /etc/fstab, we might want to revert the changes when it finishes
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        # this might fail in case of stray udev rules or records in /etc/fstab
+        hint_auto = self.get_property_raw(self.cd_device, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(True))
+        hint_ignore = self.get_property_raw(self.cd_device, '.Block', 'HintIgnore')
+        self.assertEqual(hint_ignore, dbus.Boolean(False))
+        hint_partitionable = self.get_property_raw(self.cd_device, '.Block', 'HintPartitionable')
+        self.assertEqual(hint_partitionable, dbus.Boolean(True))
+        hint_system = self.get_property_raw(self.cd_device, '.Block', 'HintSystem')
+        self.assertEqual(hint_system, dbus.Boolean(False))
+
+        # configuration items as arrays of dbus.Byte
+        mnt = self.str_to_ay('/mnt/test')
+        fstype = self.str_to_ay('xfs')
+        opts = self.str_to_ay('defaults')
+
+        # set the new configuration
+        conf = dbus.Dictionary({'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0},
+                               signature=dbus.Signature('sv'))
+        self.cd_device.AddConfigurationItem(('fstab', conf), self.no_options,
+                                            dbus_interface=self.iface_prefix + '.Block')
+
+        hint_auto = self.get_property_raw(self.cd_device, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(True))
+
+        # get the configuration
+        old_conf = self.get_property(self.cd_device, '.Block', 'Configuration')
+        old_conf.assertTrue()
+
+        # update the configuration
+        new_opts = self.str_to_ay('defaults,noauto')
+        new_conf = copy.deepcopy(old_conf.value)
+        new_conf[0][1]['opts'] = new_opts
+
+        self.cd_device.UpdateConfigurationItem((old_conf.value[0][0], old_conf.value[0][1]), (new_conf[0][0], new_conf[0][1]),
+                                               self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        # get the configuration after the update
+        upd_conf = self.get_property(self.cd_device, '.Block', 'Configuration')
+        upd_conf.assertTrue()
+        upd_conf.assertEqual(new_opts, getter=lambda c: c[0][1]['opts'])
+
+        # 'noauto' option specified, should be reflected in the HintAuto property
+        hint_auto = self.get_property_raw(self.cd_device, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(False))
+
+        # remove the configuration
+        self.cd_device.RemoveConfigurationItem((upd_conf.value[0][0], upd_conf.value[0][1]),
+                                               self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        upd_conf = self.get_property(self.cd_device, '.Block', 'Configuration')
+        upd_conf.assertFalse()
+
+        hint_auto = self.get_property_raw(self.cd_device, '.Block', 'HintAuto')
+        self.assertEqual(hint_auto, dbus.Boolean(True))

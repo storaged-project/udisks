@@ -425,6 +425,7 @@ udisks_fstab_entry_get_opts
 udisks_fstab_entry_get_freq
 udisks_fstab_entry_get_passno
 udisks_fstab_entry_compare
+udisks_fstab_entry_has_opt
 <SUBSECTION Standard>
 UDISKS_TYPE_FSTAB_ENTRY
 UDISKS_FSTAB_ENTRY
