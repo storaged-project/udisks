@@ -23,68 +23,105 @@
 #include <glib.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <blockdev/fs.h>
 
 #include "udiskslinuxfilesystemhelpers.h"
 #include "udiskslogging.h"
 
 
-static gboolean recursive_chown (const gchar *directory, uid_t caller_uid, gid_t caller_gid)
+static gboolean
+recursive_chown (const gchar *path,
+                 uid_t        caller_uid,
+                 gid_t        caller_gid,
+                 gboolean     recursive,
+                 GError     **error)
 {
-  GDir * gdir = NULL;
-  const gchar *fname = NULL;
-  GError *local_error = NULL;
-  gchar path[PATH_MAX + 1] = {0};
+  int dirfd;
+  DIR *dir;
+  struct dirent *dirent;
+  GSList *list, *l;
 
-  gdir = g_dir_open (directory, 0, &local_error);
-  if (gdir == NULL)
+  g_return_val_if_fail (path != NULL, FALSE);
+
+  if (lchown (path, caller_uid, caller_gid) != 0)
     {
-      g_clear_error (&local_error);
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error changing ownership of %s to uid=%u and gid=%u: %m",
+                   path, caller_uid, caller_gid);
       return FALSE;
     }
 
-  if (chown (directory, caller_uid, caller_gid) != 0)
+  if (! recursive)
+    return TRUE;
+
+  /* read and traverse through the directory */
+  dirfd = open (path, O_DIRECTORY | O_NOFOLLOW);
+  if (dirfd < 0)
     {
-      g_dir_close (gdir);
+      if (errno == ENOTDIR)
+        return TRUE;
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening directory %s: %m", path);
       return FALSE;
     }
 
-  while ((fname = g_dir_read_name (gdir)))
+  dir = fdopendir (dirfd);
+  if (! dir)
     {
-      snprintf (path, sizeof (path), "%s/%s", directory, fname);
-      if (g_file_test (path, G_FILE_TEST_IS_DIR))
-        {
-          if (!recursive_chown (path, caller_uid, caller_gid))
-            {
-              g_dir_close (gdir);
-              return FALSE;
-            }
-        }
-      else if (g_file_test (path, G_FILE_TEST_IS_REGULAR) && !g_file_test (path, G_FILE_TEST_IS_SYMLINK))
-        {
-          if (chown (path, caller_uid, caller_gid) != 0)
-            {
-              g_dir_close (gdir);
-              return FALSE;
-            }
-        }
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening directory %s: %m", path);
+      close (dirfd);
+      return FALSE;
     }
 
-  g_dir_close (gdir);
+  /* build a list of filenames to prevent fd exhaustion */
+  list = NULL;
+  while ((errno = 0, dirent = readdir (dir)))
+    if (g_strcmp0 (dirent->d_name, ".") != 0 && g_strcmp0 (dirent->d_name, "..") != 0)
+      list = g_slist_append (list, g_strdup (dirent->d_name));
+  if (!dirent && errno != 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error reading directory %s: %m", path);
+      closedir (dir);
+      g_slist_free_full (list, g_free);
+      return FALSE;
+    }
+  closedir (dir);
+
+  /* recurse into parents */
+  for (l = list; l; l = g_slist_next (l))
+    {
+      gchar *newpath;
+
+      newpath = g_build_filename (path, l->data, NULL);
+      if (! recursive_chown (newpath, caller_uid, caller_gid, TRUE, error))
+        {
+          g_free (newpath);
+          g_slist_free_full (list, g_free);
+          return FALSE;
+        }
+      g_free (newpath);
+    }
+  g_slist_free_full (list, g_free);
+
   return TRUE;
 }
 
-
-gboolean take_filesystem_ownership (const gchar *device,
-                                    const gchar *fstype,
-                                    uid_t caller_uid,
-                                    gid_t caller_gid,
-                                    gboolean recursive,
-                                    GError **error)
+gboolean
+take_filesystem_ownership (const gchar  *device,
+                           const gchar  *fstype,
+                           uid_t         caller_uid,
+                           gid_t         caller_gid,
+                           gboolean      recursive,
+                           GError      **error)
 
 {
-
   gchar *mountpoint = NULL;
   GError *local_error = NULL;
   gboolean unmount = FALSE;
@@ -114,6 +151,7 @@ gboolean take_filesystem_ownership (const gchar *device,
               goto out;
             }
 
+          /* TODO: mount to a private mount namespace */
           if (!bd_fs_mount (device, mountpoint, fstype, NULL, NULL, &local_error))
             {
               g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -121,7 +159,7 @@ gboolean take_filesystem_ownership (const gchar *device,
                            device, mountpoint, local_error->message);
               g_clear_error (&local_error);
               if (g_rmdir (mountpoint) != 0)
-                  udisks_warning ("Error removing temporary mountpoint directory %s.", mountpoint);
+                udisks_warning ("Error removing temporary mountpoint directory %s.", mountpoint);
               success = FALSE;
               goto out;
             }
@@ -130,29 +168,10 @@ gboolean take_filesystem_ownership (const gchar *device,
         }
     }
 
-  if (recursive)
-    {
-      if (!recursive_chown (mountpoint, caller_uid, caller_gid))
-        {
-            g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                         "Cannot recursively chown %s to uid=%u and gid=%u: %m",
-                         mountpoint, caller_uid, caller_gid);
-
-          success = FALSE;
-          goto out;
-        }
-    }
-  else
-    {
-      if (chown (mountpoint, caller_uid, caller_gid) != 0)
-        {
-          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Cannot chown %s to uid=%u and gid=%u: %m",
-                       mountpoint, caller_uid, caller_gid);
-          success = FALSE;
-          goto out;
-        }
-    }
+  /* actual chown */
+  success = recursive_chown (mountpoint, caller_uid, caller_gid, recursive, error);
+  if (! success)
+    goto out;
 
   if (chmod (mountpoint, 0700) != 0)
     {
@@ -173,7 +192,7 @@ gboolean take_filesystem_ownership (const gchar *device,
           g_clear_error (&local_error);
         }
       if (g_rmdir (mountpoint) != 0)
-          udisks_warning ("Error removing temporary mountpoint directory %s.", mountpoint);
+        udisks_warning ("Error removing temporary mountpoint directory %s.", mountpoint);
     }
 
   g_free (mountpoint);
