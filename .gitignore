@@ -72,6 +72,7 @@ src/tests/udisks-test
 src/tests/udisks-test-helper
 src/udisksd
 stamp-*
+src/tests/dbus-tests/config_h.py
 tools/udisksctl
 tools/umount.udisks2
 udisks/modules.conf.d/udisks2_lsm.conf

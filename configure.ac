@@ -732,6 +732,7 @@ udisks/modules.conf.d/Makefile
 udisks/modules.conf.d/udisks2_lsm.conf
 src/Makefile
 src/tests/Makefile
+src/tests/dbus-tests/Makefile
 tools/Makefile
 modules/Makefile
 modules/btrfs/Makefile
