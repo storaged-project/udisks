@@ -5,7 +5,7 @@
    from libstoragemgmt-hpsa-plugin if you intend to set HP SmartArray for
    libstoragemgmt.
  * Setup an NetApp ONTAP simulator.
- * Enable http administor way ONTAP:
+ * Enable http administrator way ONTAP:
       options httpd.enable on
       options httpd.admin.enable on
       options httpd.admin.ssl.enable on
@@ -101,7 +101,7 @@
 * Then update_iface () of src/udiskslinuxdriveobject.c invoke module
   functions:
     * _drive_check () of lsm_module_iface.c:
-        If retrun TRUE, the dbus org.freedesktop.UDisks2.Drive.LSM interface
+        If return TRUE, the dbus org.freedesktop.UDisks2.Drive.LSM interface
         will be created.
         In order to refresh the lsm cache when new disk attached,
         in this method, we do extra refresh if not found in cache.
@@ -112,7 +112,7 @@
     * _drive_update () of lsm_module_iface.c:
         For add udev event, invoke udisks_linux_drive_lsm_update () of
         lsm_linux_drive.c which create loop event to refresh cache at
-        certain interval (configureable).
+        certain interval (configurable).
         For remove udev event, just g_object_unref ().
     * _on_refresh_data () of lsm_linux_drive.c:
         Triggered by glib loop event, refresh raid info via
@@ -259,7 +259,7 @@ _vpd83_2_lsm_vri_data_hash = {
               # std_lsm_vol_data_get ().
 
 * std_lsm_vol_data_get ():
-    Combine data retrived from _lsm_pl_data_lookup () and
+    Combine data retrieved from _lsm_pl_data_lookup () and
     _lsm_vri_data_lookup () to generate struct StdLsmVolData *.
 
 * std_lsm_data_teardown ():

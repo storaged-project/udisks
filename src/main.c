@@ -140,7 +140,7 @@ main (int    argc,
   if (opt_debug)
     {
       /* tell GLib logging to not throw away DEBUG and INFO messages (for our
-         "udisks" domain) unless already specied somehow by the user */
+         "udisks" domain) unless already specified somehow by the user */
       g_setenv("G_MESSAGES_DEBUG", "udisks", FALSE);
     }
 

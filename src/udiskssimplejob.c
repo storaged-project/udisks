@@ -80,7 +80,7 @@ udisks_simple_job_class_init (UDisksSimpleJobClass *klass)
  *
  * Creates a new #UDisksSimpleJob instance.
  *
- * Call udisks_simple_job_complete() to compelte the returned job.
+ * Call udisks_simple_job_complete() to complete the returned job.
  *
  * Returns: A new #UDisksSimpleJob. Free with g_object_unref().
  */

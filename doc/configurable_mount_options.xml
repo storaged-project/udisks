@@ -234,7 +234,7 @@ LABEL="udisks_mount_options_end"
     <para>
     As a general rule, set of options from higher levels always fully replace (<emphasis>cover</emphasis>, <emphasis>override</emphasis>) options from lower levels.
     This works on per-set basis, i.e. separately for each of the <literal>_allow</literal> and <literal>_defaults</literal> sets.
-    Please pay attention to allowance of the mount options overriden in the <literal>_defaults</literal> set at a given level without overriding the <literal>_allow</literal> set at the same place - lower levels may not allow all the options.
+    Please pay attention to allowance of the mount options overridden in the <literal>_defaults</literal> set at a given level without overriding the <literal>_allow</literal> set at the same place - lower levels may not allow all the options.
     </para>
 
     <para>
@@ -267,7 +267,7 @@ LABEL="udisks_mount_options_end"
 vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec
 ntfs_defaults=uid=$UID,gid=$GID
 </programlisting>
-    <note>There's no way to specify subset addition or subtraction, particular sets need to be overriden fully. I.e. take the builtin mount options and remove/add options as you like.</note>
+    <note>There's no way to specify subset addition or subtraction, particular sets need to be overridden fully. I.e. take the builtin mount options and remove/add options as you like.</note>
     </example>
 
     <example>
@@ -323,7 +323,7 @@ LABEL="udisks_mount_options_end"
 vfat_allow=uid=1001,uid=1005,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec
 </programlisting>
     <note>Notice that the usual <literal>uid=$UID</literal> option is missing from the <literal>vfat_allow</literal> set and specific allowed UIDs are the only ones defined.
-          As the <literal>vfat_defaults</literal> set is not being overriden here and still carries the <literal>uid=$UID</literal> mount option that gets automatically replaced by caller effective UID, the computed option value must match any of the <literal>vfat_allow</literal> options,
+          As the <literal>vfat_defaults</literal> set is not being overridden here and still carries the <literal>uid=$UID</literal> mount option that gets automatically replaced by caller effective UID, the computed option value must match any of the <literal>vfat_allow</literal> options,
           thus the whole mount operation will be denied if the UIDs don't match.</note>
     </example>
 

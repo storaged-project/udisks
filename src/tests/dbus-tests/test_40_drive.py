@@ -76,7 +76,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         # set configuration value to some improbable value
         self.cd_drive.SetConfiguration({'ata-pm-standby': 286}, self.no_options)
 
-        # validate that configration property has changed
+        # validate that configuration property has changed
         conf_value = self.get_property(self.cd_drive, '.Drive', 'Configuration')
         conf_value.assertIsNotNone()
         self.assertEqual(int(conf_value.value['ata-pm-standby']), 286)

@@ -32,8 +32,8 @@ G_BEGIN_DECLS
 /**
  * UDisksLinuxDevice:
  * @udev_device: A #GUdevDevice.
- * @ata_identify_device_data: 512-byte array containing the result of the IDENTIY DEVICE command or %NULL.
- * @ata_identify_packet_device_data: 512-byte array containing the result of the IDENTIY PACKET DEVICE command or %NULL.
+ * @ata_identify_device_data: 512-byte array containing the result of the IDENTIFY DEVICE command or %NULL.
+ * @ata_identify_packet_device_data: 512-byte array containing the result of the IDENTIFY PACKET DEVICE command or %NULL.
  *
  * Object containing information about a device on Linux. This is
  * essentially an instance of #GUdevDevice plus additional data - such

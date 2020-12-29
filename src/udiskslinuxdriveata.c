@@ -1911,7 +1911,7 @@ on_secure_erase_update_progress_timeout (gpointer user_data)
  * @enhanced: %TRUE to use the enhanced version of the ATA secure erase command.
  * @error: Return location for error or %NULL.
  *
- * Performs an ATA Secure Erase opeartion. Blocks the calling thread until the operation completes.
+ * Performs an ATA Secure Erase operation. Blocks the calling thread until the operation completes.
  *
  * This operation may take a very long time (hours) to complete.
  *
@@ -2183,7 +2183,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
                                          &output,
                                          &cleanup_error))
         {
-          udisks_critical ("Failed to clear user password '%s' on %s (%s) while attemping clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
+          udisks_critical ("Failed to clear user password '%s' on %s (%s) while attempting clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
                         pass,
                         device_file,
                         udisks_drive_get_id (_drive),

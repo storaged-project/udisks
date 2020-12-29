@@ -57,7 +57,7 @@ struct _UDisksAtaCommandInput
  * @status: Status
  * @lba: LBA
  * @buffer_size: Size of the @buffer member or 0
- * @buffer: Pointer to where to recieve data from the device or %NULL
+ * @buffer: Pointer to where to receive data from the device or %NULL
  *
  * Struct used for output data when sending ATA commands.
  */

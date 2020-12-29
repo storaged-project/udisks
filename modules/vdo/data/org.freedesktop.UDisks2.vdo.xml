@@ -129,7 +129,7 @@
 
       This interface is exposed for block objects that represent existing and running VDO volumes.
 
-      Due to the VDO design not every change trigerred outside of udisks gets
+      Due to the VDO design not every change triggered outside of udisks gets
       propagated via <literal>udev</literal> and may go unnoticed. It's guaranteed
       that changes made via udisks are properly reflected in the object properties
       though.

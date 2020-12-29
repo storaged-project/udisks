@@ -192,7 +192,7 @@ update_cleartext_device (UDisksLinuxEncrypted   *encrypted,
   UDisksDaemon *daemon = udisks_linux_block_object_get_daemon (object);
   const gchar *encrypted_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
 
-  /* wait_for_cleartext is used primarly in unlock but does exactly what we
+  /* wait_for_cleartext is used primarily in unlock but does exactly what we
      want -- returns a cleartext object for an encrypted object */
   cleartext_object = wait_for_cleartext_object (daemon, (gpointer) encrypted_path);
 
