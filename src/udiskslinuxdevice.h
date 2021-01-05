@@ -56,6 +56,16 @@ gboolean           udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
                                                      GCancellable       *cancellable,
                                                      GError            **error);
 
+gchar             *udisks_linux_device_read_sysfs_attr           (UDisksLinuxDevice  *device,
+                                                                  const gchar        *attr,
+                                                                  GError            **error);
+gint               udisks_linux_device_read_sysfs_attr_as_int    (UDisksLinuxDevice  *device,
+                                                                  const gchar        *attr,
+                                                                  GError            **error);
+guint64            udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDevice  *device,
+                                                                  const gchar        *attr,
+                                                                  GError            **error);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_DEVICE_H__ */

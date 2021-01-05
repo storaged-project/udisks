@@ -278,6 +278,9 @@ udisks_ata_send_command_sync
 UDisksLinuxDevice
 udisks_linux_device_new_sync
 udisks_linux_device_reprobe_sync
+udisks_linux_device_read_sysfs_attr
+udisks_linux_device_read_sysfs_attr_as_int
+udisks_linux_device_read_sysfs_attr_as_uint64
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_DEVICE
 UDISKS_LINUX_DEVICE
