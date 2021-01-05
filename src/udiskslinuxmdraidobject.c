@@ -555,6 +555,7 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
                    UDisksLinuxDevice       *device)
 {
   gchar *level = NULL;
+  GError *error = NULL;
 
   g_assert (object->sync_action_source == NULL);
   g_assert (object->degraded_source == NULL);
@@ -562,8 +563,14 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
   if (!UDISKS_IS_LINUX_DEVICE (device))
     goto out;
 
-  level = read_sysfs_attr (device->udev_device, "md/level");
-  if (level == NULL || !mdraid_has_redundancy (level))
+  level = udisks_linux_device_read_sysfs_attr (device, "md/level", &error);
+  if (!level)
+    {
+       udisks_warning ("mdraid: %s", error->message);
+       g_error_free (error);
+       goto out;
+    }
+  if (!mdraid_has_redundancy (level))
     goto out;
 
   /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
