@@ -487,6 +487,9 @@ set_media (UDisksDrive       *iface,
   udisks_drive_set_media_removable (iface, removable);
   if (is_pc_floppy_drive)
     ejectable = FALSE;
+  /* MMC/SD: disrespect the sysfs 'removable' attr as it usually doesn't reflect reality */
+  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "mmcblk"))
+    ejectable = removable;
   udisks_drive_set_ejectable (iface, ejectable);
 
   media_in_drive = NULL;
@@ -892,7 +895,6 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
   if (udisks_drive_get_media_removable (iface) ||
       g_strcmp0 (udisks_drive_get_connection_bus (iface), "usb") == 0 ||
-      g_strcmp0 (udisks_drive_get_connection_bus (iface), "sdio") == 0 ||
       g_strcmp0 (udisks_drive_get_connection_bus (iface), "ieee1394") == 0)
     removable_hint = TRUE;
   udisks_drive_set_removable (iface, removable_hint);
