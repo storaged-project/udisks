@@ -872,7 +872,6 @@ update_hints (UDisksDaemon      *daemon,
       if (removable ||
           g_strcmp0 (connection_bus, "usb") == 0 ||
           g_strcmp0 (connection_bus, "ieee1394") == 0 ||
-          g_str_has_prefix (device_file, "/dev/mmcblk") ||
           g_str_has_prefix (device_file, "/dev/msblk") ||
           g_str_has_prefix (device_file, "/dev/mspblk"))
         {
