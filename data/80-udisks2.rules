@@ -48,6 +48,8 @@ KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}==
 KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="SDcombo", ENV{ID_DRIVE_FLASH_SD_COMBO}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SDIO}="1"
 # compatibility fallback in case of an unavailable MMC_TYPE attr
 KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="", ENV{ID_DRIVE_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1"
+# import ID_SERIAL and related for "mmcblk_boot" devices from its parent
+KERNEL=="mmcblk[0-9]boot[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", IMPORT{parent}="ID_*"
 # ditto for memstick
 KERNEL=="msblk[0-9]|mspblk[0-9]", SUBSYSTEMS=="memstick", ENV{DEVTYPE}=="disk", ENV{ID_DRIVE_FLASH_MS}="1", ENV{ID_DRIVE_MEDIA_FLASH_MS}="1"
 
