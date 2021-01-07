@@ -727,7 +727,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
           gchar *device_file;
 
           device_file = udisks_linux_block_object_get_device_file (UDISKS_LINUX_BLOCK_OBJECT (block_object));
-          udisks_notice ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup", device_file);
+          udisks_debug ("udisks_state_check_mounted_fs_entry: block device %s is busy, skipping cleanup", device_file);
           g_free (device_file);
 
           keep = TRUE;
