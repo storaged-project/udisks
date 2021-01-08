@@ -35,7 +35,7 @@
     <para>
       It is also possible to configure the modules loading behavior via
       the configuration file placed at
-      <emphasis>@sysconfdir@/udisks/udisks2.conf</emphasis>.
+      <emphasis>@sysconfdir@/udisks2/udisks2.conf</emphasis>.
     </para>
   </refsect1>
 
