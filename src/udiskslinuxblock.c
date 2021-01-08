@@ -1777,7 +1777,15 @@ add_remove_crypttab_entry (UDisksBlock *block,
                             &contents,
                             NULL,
                             error))
-    goto out;
+    {
+      if (g_error_matches (*error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        {
+          contents = g_strdup ("");
+          g_clear_error (error);
+        }
+      else
+        goto out;
+    }
 
   lines = g_strsplit (contents, "\n", 0);
 
