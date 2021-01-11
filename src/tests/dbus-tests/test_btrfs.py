@@ -257,13 +257,8 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
             fstype.assertFalse()
 
         # check number of devices
-        # XXX: udisks currently reports wrong number of devices (2)
-        # 'handle_remove_device' sets the property to '1' but after unmounting
-        # the device 'on_mount_monitor_mount_removed' triggers another properties
-        # update and this sets the property to '2' for some unknown reason
-        # dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
-        # with self.assertRaises(AssertionError):
-        #     dbus_devs.assertEqual(1)
+        dbus_devs = self.get_property(dev1.obj, '.Filesystem.BTRFS', 'num_devices')
+        dbus_devs.assertEqual(1)
 
         _ret, out = self.run_command('btrfs filesystem show %s' % dev1.path)
         self.assertIn('Total devices 1 FS', out)
