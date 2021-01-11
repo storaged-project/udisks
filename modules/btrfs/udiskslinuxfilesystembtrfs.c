@@ -519,9 +519,9 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
       goto out;
     }
 
-  /* Update the interface. */
+  /* Trigger uevent on the filesystem and on the added/removed device */
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
-  udisks_linux_filesystem_btrfs_update (l_fs_btrfs, object);
+  udisks_daemon_util_trigger_uevent_sync (daemon, device, NULL, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
   udisks_filesystem_btrfs_complete_add_device (fs_btrfs, invocation);
