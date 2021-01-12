@@ -212,6 +212,7 @@ UDisksMountType
 udisks_mount_get_dev
 udisks_mount_get_mount_type
 udisks_mount_get_mount_path
+udisks_mount_get_fs_uuid
 udisks_mount_compare
 UDisksMountMonitor
 udisks_mount_monitor_new
