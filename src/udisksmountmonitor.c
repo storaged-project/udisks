@@ -846,6 +846,49 @@ udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor *monitor,
 }
 
 /**
+ * udisks_mount_monitor_get_mounts_for_fs_uuid:
+ * @monitor: A #UDisksMountMonitor.
+ * @fs_uuid: A filesystem UUID string.
+ *
+ * Gets all #UDisksMount objects for @fs_uuid.
+ *
+ * Returns: A #GList of #UDisksMount objects. The returned list must
+ * be freed with g_list_free() after each element has been freed with
+ * g_object_unref().
+ */
+GList *
+udisks_mount_monitor_get_mounts_for_fs_uuid (UDisksMountMonitor  *monitor,
+                                             const gchar         *fs_uuid)
+{
+  GList *ret;
+  GList *l;
+
+  ret = NULL;
+
+  udisks_mount_monitor_ensure (monitor);
+
+  g_mutex_lock (&monitor->mounts_mutex);
+
+  for (l = monitor->mounts; l != NULL; l = l->next)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM &&
+          g_strcmp0 (udisks_mount_get_fs_uuid (mount), fs_uuid) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (mount));
+        }
+    }
+
+  g_mutex_unlock (&monitor->mounts_mutex);
+
+  /* Sort the list to ensure that shortest mount paths appear first */
+  ret = g_list_sort (ret, (GCompareFunc) udisks_mount_compare);
+
+  return ret;
+}
+
+/**
  * udisks_mount_monitor_is_dev_in_use:
  * @monitor: A #UDisksMountMonitor.
  * @dev: A #dev_t device number.

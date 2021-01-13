@@ -217,6 +217,7 @@ udisks_mount_compare
 UDisksMountMonitor
 udisks_mount_monitor_new
 udisks_mount_monitor_get_mounts_for_dev
+udisks_mount_monitor_get_mounts_for_fs_uuid
 udisks_mount_monitor_is_dev_in_use
 <SUBSECTION Standard>
 UDISKS_TYPE_MOUNT
