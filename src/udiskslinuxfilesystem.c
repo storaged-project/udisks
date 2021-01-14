@@ -144,6 +144,42 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_filesystem_is_volume_based:
+ * @filesystem: A #UDisksLinuxFilesystem.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Indicates whether the @filesystem is bound to a traditional block
+ * device number (having a corresponding device node, denoted by
+ * major:minor number) or whether the @filesystem is built upon a concept
+ * of 'volume' (not necessarily bound to a particular block device),
+ * such as btrfs. This means the filesystem should be identified e.g.
+ * by UUID typically and that the traditional device number may not
+ * match a mounted filesystem.
+ *
+ * Returns: %FALSE in case of a traditional filesystem, %TRUE in case of a volume-based filesystem.
+ */
+gboolean
+udisks_linux_filesystem_is_volume_based (UDisksLinuxFilesystem  *filesystem,
+                                         UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *device;
+  gboolean ret;
+
+  device = udisks_linux_block_object_get_device (object);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  ret = g_strcmp0 (g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"), "btrfs") == 0 &&
+        g_udev_device_get_property (device->udev_device, "ID_FS_UUID") != NULL;
+  /* TODO: look also for ID_BTRFS_READY? */
+
+  g_object_unref (device);
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static guint64
 get_filesystem_size (UDisksLinuxBlockObject *object)
 {

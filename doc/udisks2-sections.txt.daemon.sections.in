@@ -360,6 +360,7 @@ udisks_linux_block_get_type
 UDisksLinuxFilesystem
 udisks_linux_filesystem_new
 udisks_linux_filesystem_update
+udisks_linux_filesystem_is_volume_based
 <SUBSECTION Standard>
 UDISKS_LINUX_FILESYSTEM
 UDISKS_IS_LINUX_FILESYSTEM
