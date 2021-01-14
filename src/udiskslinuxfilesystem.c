@@ -282,11 +282,16 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
 
-  p = g_ptr_array_new ();
-  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
+  /* match by ID_FS_UUID in case of a btrfs filesystem */
+  if (udisks_linux_filesystem_is_volume_based (filesystem, object))
+    mounts = udisks_mount_monitor_get_mounts_for_fs_uuid (mount_monitor, g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
+  else
+    mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
+
   /* we are guaranteed that the list is sorted so if there are
    * multiple mounts we'll always get the same order
    */
+  p = g_ptr_array_new ();
   for (l = mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
