@@ -850,6 +850,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   gboolean success = FALSE;
   gchar *device = NULL;
   UDisksBaseJob *job = NULL;
+  gboolean volume_based_fs;
 
 
   /* only allow a single call at a time */
@@ -866,6 +867,9 @@ handle_mount (UDisksFilesystem      *filesystem,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
   device = udisks_block_dup_device (block);
+
+  volume_based_fs = udisks_linux_filesystem_is_volume_based (UDISKS_LINUX_FILESYSTEM (filesystem),
+                                                             UDISKS_LINUX_BLOCK_OBJECT (object));
 
   /* perform state cleanup to avoid duplicate entries for this block device */
   udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -1041,16 +1045,18 @@ handle_mount (UDisksFilesystem      *filesystem,
                      mount_point_to_use,
                      caller_uid);
 
+      udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                     UDISKS_DEFAULT_WAIT_TIMEOUT);
+
       /* update the mounted-fs file */
       udisks_state_add_mounted_fs (state,
                                    mount_point_to_use,
-                                   udisks_block_get_device_number (block),
+                                   volume_based_fs ? 0 : udisks_block_get_device_number (block),
+                                   volume_based_fs ? udisks_block_get_id_uuid (block) : NULL,
                                    caller_uid,
                                    TRUE,   /* fstab_mounted */
                                    FALSE); /* persistent */
 
-      udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
-                                                     UDISKS_DEFAULT_WAIT_TIMEOUT);
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
     }
@@ -1201,7 +1207,8 @@ handle_mount (UDisksFilesystem      *filesystem,
   /* update the mounted-fs file */
   udisks_state_add_mounted_fs (state,
                                mount_point_to_use,
-                               udisks_block_get_device_number (block),
+                               volume_based_fs ? 0 : udisks_block_get_device_number (block),
+                               volume_based_fs ? udisks_block_get_id_uuid (block) : NULL,
                                caller_uid,
                                FALSE,  /* fstab_mounted */
                                mpoint_persistent);
@@ -1305,6 +1312,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
   UDisksBaseJob *job = NULL;
   UDisksObject *filesystem_object = NULL;
   WaitForFilesystemMountPointsData wait_data = {NULL, 0, NULL};
+  gboolean volume_based_fs;
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
@@ -1320,6 +1328,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
 
+  volume_based_fs = udisks_linux_filesystem_is_volume_based (UDISKS_LINUX_FILESYSTEM (filesystem),
+                                                             UDISKS_LINUX_BLOCK_OBJECT (object));
   udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
   /* trigger state cleanup so that we match actual mountpoint */
   udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
@@ -1449,7 +1459,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
   g_clear_pointer (&mount_point, g_free);
   mount_point = udisks_state_find_mounted_fs (state,
-                                              udisks_block_get_device_number (block),
+                                              volume_based_fs ? 0 : udisks_block_get_device_number (block),
+                                              volume_based_fs ? udisks_block_get_id_uuid (block) : NULL,
                                               &mounted_by_uid,
                                               &fstab_mounted);
   if (mount_point == NULL)
