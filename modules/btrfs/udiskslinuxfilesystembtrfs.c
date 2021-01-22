@@ -436,7 +436,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_set_label (fs_btrfs, invocation);
+  g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
 
 out:
   /* Release the resources */
@@ -524,7 +524,7 @@ btrfs_device_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
   udisks_daemon_util_trigger_uevent_sync (daemon, device, NULL, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Complete DBus call. */
-  udisks_filesystem_btrfs_complete_add_device (fs_btrfs, invocation);
+  g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
 
 out:
   /* Release the resources */
