@@ -1124,8 +1124,24 @@ handle_mount (UDisksFilesystem      *filesystem,
                      mount_point_to_use,
                      caller_uid);
 
+      /* trigger uevent on the master device and all its siblings in case of a multidisk volume */
       udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                      UDISKS_DEFAULT_WAIT_TIMEOUT);
+      if (volume_based_fs)
+        {
+          GList *siblings;
+          GList *l;
+
+          siblings = udisks_linux_filesystem_find_siblings (UDISKS_LINUX_FILESYSTEM (filesystem),
+                                                            UDISKS_LINUX_BLOCK_OBJECT (object));
+          for (l = siblings; l != NULL; l = l->next)
+            {
+              UDisksLinuxBlockObject *obj = UDISKS_LINUX_BLOCK_OBJECT (l->data);
+              /* TODO: parallelize */
+              udisks_linux_block_object_trigger_uevent_sync (obj, UDISKS_DEFAULT_WAIT_TIMEOUT);
+            }
+          g_list_free_full (siblings, g_object_unref);
+        }
 
       /* update the mounted-fs file */
       udisks_state_add_mounted_fs (state,
@@ -1297,8 +1313,25 @@ handle_mount (UDisksFilesystem      *filesystem,
                  mount_point_to_use,
                  caller_uid);
 
+  /* trigger uevent on the master device and all its siblings in case of a multidisk volume */
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
+  if (volume_based_fs)
+    {
+      GList *siblings;
+      GList *l;
+
+      siblings = udisks_linux_filesystem_find_siblings (UDISKS_LINUX_FILESYSTEM (filesystem),
+                                                        UDISKS_LINUX_BLOCK_OBJECT (object));
+      for (l = siblings; l != NULL; l = l->next)
+        {
+          UDisksLinuxBlockObject *obj = UDISKS_LINUX_BLOCK_OBJECT (l->data);
+          /* TODO: parallelize */
+          udisks_linux_block_object_trigger_uevent_sync (obj, UDISKS_DEFAULT_WAIT_TIMEOUT);
+        }
+      g_list_free_full (siblings, g_object_unref);
+    }
+
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
  out:
@@ -1602,9 +1635,26 @@ handle_unmount (UDisksFilesystem      *filesystem,
                  caller_uid);
 
   waiting:
-  /* wait for mount-points update before returning from method */
+  /* trigger uevent on the master device and all its siblings in case of a multidisk volume */
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
+  if (volume_based_fs)
+    {
+      GList *siblings;
+      GList *l;
+
+      siblings = udisks_linux_filesystem_find_siblings (UDISKS_LINUX_FILESYSTEM (filesystem),
+                                                        UDISKS_LINUX_BLOCK_OBJECT (object));
+      for (l = siblings; l != NULL; l = l->next)
+        {
+          UDisksLinuxBlockObject *obj = UDISKS_LINUX_BLOCK_OBJECT (l->data);
+          /* TODO: parallelize */
+          udisks_linux_block_object_trigger_uevent_sync (obj, UDISKS_DEFAULT_WAIT_TIMEOUT);
+        }
+      g_list_free_full (siblings, g_object_unref);
+    }
+
+  /* wait for mount-points update before returning from method */
   wait_data.mount_point = g_strdup (mount_point);
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem_mount_points,
