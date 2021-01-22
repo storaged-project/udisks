@@ -47,6 +47,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxfsinfo.h"
+#include "udiskslinuxprovider.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
@@ -176,6 +177,84 @@ udisks_linux_filesystem_is_volume_based (UDisksLinuxFilesystem  *filesystem,
   g_object_unref (device);
 
   return ret;
+}
+
+/**
+ * udisks_linux_filesystem_find_siblings:
+ * @filesystem: A #UDisksLinuxFilesystem.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Gets a list of block objects that form a multi-disk filesystem - a volume
+ * (in different perspective). Some filesystems need to be mounted first to fully
+ * expose their structure and the actual attached components (block devices).
+ *
+ * This call reaches to the udev database as not all #UDisksLinuxBlockObject objects
+ * may have finished processing their uevents or have received none at all. This
+ * function helps to identify such block devices and trigger explicit uevents.
+ *
+ * As for the <literal>btrfs</literal> filesystem this looks for other block
+ * devices carrying the particular ID_FS_UUID value of this @filesystem.
+ *
+ * The returned list doesn't contain @object.
+ *
+ * Returns: (transfer full) (element-type UDisksObject): A list of #UDisksObject instances. The returned list should be freed with g_list_free() after each element has been freed with g_object_unref().
+ */
+GList *
+udisks_linux_filesystem_find_siblings (UDisksLinuxFilesystem  *filesystem,
+                                       UDisksLinuxBlockObject *object)
+{
+  UDisksDaemon *daemon;
+  UDisksLinuxDevice *device;
+  GUdevClient *gudev_client;
+  GList *list = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_FILESYSTEM (filesystem), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), NULL);
+
+  daemon = udisks_linux_block_object_get_daemon (object);
+  gudev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (daemon));
+
+  /* check the actual filesystem type */
+  device = udisks_linux_block_object_get_device (object);
+  g_return_val_if_fail (device != NULL, NULL);
+
+  if (g_strcmp0 (g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"), "btrfs") == 0 &&
+      g_udev_device_get_property (device->udev_device, "ID_FS_UUID") != NULL)
+    {
+      /* btrfs case */
+      const gchar *fs_uuid;
+      GList *devices;
+      GList *l;
+
+      /* TODO: look also for ID_BTRFS_READY? */
+      fs_uuid = g_udev_device_get_property (device->udev_device, "ID_FS_UUID");
+
+      devices = g_udev_client_query_by_subsystem (gudev_client, "block");
+      for (l = devices; l != NULL; l = l->next)
+        {
+          GUdevDevice *d = G_UDEV_DEVICE (l->data);
+
+          if (g_udev_device_get_is_initialized (d) &&
+              g_udev_device_get_device_number (d) != g_udev_device_get_device_number (device->udev_device) &&
+              g_strcmp0 (g_udev_device_get_property (d, "ID_FS_TYPE"), "btrfs") == 0 &&
+              g_strcmp0 (g_udev_device_get_property (d, "ID_FS_UUID"), fs_uuid) == 0)
+            {
+              UDisksObject *obj;
+
+              /* TODO: at this point there might not be any corresponding #UDisksObject yet,
+               *       shall this function return a list of block device paths instead?
+               */
+              obj = udisks_daemon_find_block (daemon, g_udev_device_get_device_number (d));
+              if (obj)
+                list = g_list_append (list, obj);
+            }
+        }
+      g_list_free_full (devices, g_object_unref);
+    }
+
+  g_object_unref (device);
+
+  return list;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -36,6 +36,8 @@ void              udisks_linux_filesystem_update   (UDisksLinuxFilesystem  *file
 
 gboolean          udisks_linux_filesystem_is_volume_based (UDisksLinuxFilesystem  *filesystem,
                                                            UDisksLinuxBlockObject *object);
+GList            *udisks_linux_filesystem_find_siblings   (UDisksLinuxFilesystem  *filesystem,
+                                                           UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 
