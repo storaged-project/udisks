@@ -676,6 +676,7 @@ class Ext4TestCase(Ext2TestCase):
     def _invalid_label(self, disk):
         pass
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_take_ownership(self):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
@@ -713,10 +714,26 @@ class Ext4TestCase(Ext2TestCase):
 
         dirname = 'udisks_test_dir'
         fname = 'file.txt'
+        symlinkname = 'symlink'
+        fd, symlinktarget = tempfile.mkstemp(dir='/tmp')
+        self.addCleanup(self.remove_file, symlinktarget, True)
+        os.close(fd)
+        symlinkdirname = 'symlinkdir'
+        symlinkdirtarget = tempfile.mkdtemp(dir='/tmp')
+        self.addCleanup(self._rmtree, symlinkdirtarget)
 
         os.mknod(os.path.join(mnt_path, fname))
+        os.chown(os.path.join(mnt_path, fname), int(uid), int(gid))
         os.mkdir(os.path.join(mnt_path, dirname))
+        os.chown(os.path.join(mnt_path, dirname), int(uid), int(gid))
         os.mknod(os.path.join(mnt_path, dirname, fname))
+        os.chown(os.path.join(mnt_path, dirname, fname), int(uid), int(gid))
+        os.symlink(symlinktarget, os.path.join(mnt_path, dirname, symlinkname))
+        os.chown(symlinktarget, int(uid), int(gid))
+        os.symlink(symlinkdirtarget, os.path.join(mnt_path, dirname, symlinkdirname))
+        os.chown(symlinkdirtarget, int(uid), int(gid))
+        os.mknod(os.path.join(symlinkdirtarget, fname))
+        os.chown(os.path.join(symlinkdirtarget, fname), int(uid), int(gid))
 
         # now take ownership of the filesystem with recursive option -- owner
         # of everything should now be root
@@ -735,6 +752,36 @@ class Ext4TestCase(Ext2TestCase):
         sys_stat = os.stat(os.path.join(mnt_path, dirname, fname))
         self.assertEqual(sys_stat.st_uid, 0)
         self.assertEqual(sys_stat.st_gid, 0)
+
+        # symlink target should be left untouched
+        sys_stat = os.stat(symlinktarget)
+        self.assertEqual(sys_stat.st_uid, int(uid))
+        self.assertEqual(sys_stat.st_gid, int(gid))
+
+        sys_stat = os.stat(os.path.join(mnt_path, dirname, symlinkname))
+        self.assertEqual(sys_stat.st_uid, int(uid))
+        self.assertEqual(sys_stat.st_gid, int(gid))
+
+        sys_stat = os.lstat(os.path.join(mnt_path, dirname, symlinkname))
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
+        # symlink target directory and its files should be left untouched
+        sys_stat = os.stat(symlinkdirtarget)
+        self.assertEqual(sys_stat.st_uid, int(uid))
+        self.assertEqual(sys_stat.st_gid, int(gid))
+
+        sys_stat = os.stat(os.path.join(mnt_path, dirname, symlinkdirname))
+        self.assertEqual(sys_stat.st_uid, int(uid))
+        self.assertEqual(sys_stat.st_gid, int(gid))
+
+        sys_stat = os.lstat(os.path.join(mnt_path, dirname, symlinkdirname))
+        self.assertEqual(sys_stat.st_uid, 0)
+        self.assertEqual(sys_stat.st_gid, 0)
+
+        sys_stat = os.stat(os.path.join(symlinkdirtarget, fname))
+        self.assertEqual(sys_stat.st_uid, int(uid))
+        self.assertEqual(sys_stat.st_gid, int(gid))
 
 
 class XFSTestCase(UdisksFSTestCase):
