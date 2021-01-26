@@ -365,6 +365,8 @@
       <varlistentry><term>flash_sd</term><listitem><para>Secure Digital</para></listitem></varlistentry>
       <varlistentry><term>flash_sdhc</term><listitem><para>Secure Digital High Capacity</para></listitem></varlistentry>
       <varlistentry><term>flash_sdxc</term><listitem><para>Secure Digital eXtended Capacity</para></listitem></varlistentry>
+      <varlistentry><term>flash_sdio</term><listitem><para>Secure Digital Input Output</para></listitem></varlistentry>
+      <varlistentry><term>flash_sd_combo</term><listitem><para>Secure Digital Input Output combo card with storage and I/O functionality</para></listitem></varlistentry>
       <varlistentry><term>flash_mmc</term><listitem><para>MultiMediaCard</para></listitem></varlistentry>
       <varlistentry><term>floppy</term><listitem><para>Floppy Disk</para></listitem></varlistentry>
       <varlistentry><term>floppy_zip</term><listitem><para>Zip Disk</para></listitem></varlistentry>
@@ -482,7 +484,7 @@
       Known values include:
       <variablelist>
       <varlistentry><term>usb</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/USB">USB</ulink></para></listitem></varlistentry>
-      <varlistentry><term>sdio</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/Secure_Digital#SDIO">SDIO</ulink></para></listitem></varlistentry>
+      <varlistentry><term>sdio</term><listitem><para>Connected via SDHC or <ulink url="http://en.wikipedia.org/wiki/Secure_Digital">SDIO</ulink> controller (including eMMC).</para></listitem></varlistentry>
       <varlistentry><term>ieee1394</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/Firewire">Firewire</ulink></para></listitem></varlistentry>
       </variablelist>
     -->

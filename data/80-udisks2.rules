@@ -38,9 +38,18 @@ SUBSYSTEMS=="usb", ATTRS{bInterfaceClass}=="08", ATTRS{bInterfaceSubClass}=="04"
 #
 ENV{ID_VENDOR}=="*IOMEGA*", ENV{ID_MODEL}=="*ZIP*", ENV{ID_DRIVE_FLOPPY_ZIP}="1"
 
-# TODO: figure out if the drive supports SD and SDHC and what the current
+# MMC/SD: import parent MMC_TYPE
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", IMPORT{parent}="MMC_TYPE"
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="MMC", ENV{ID_DRIVE_FLASH_MMC}="1", ENV{ID_DRIVE_MEDIA_FLASH_MMC}="1"
+# TODO: figure out if the drive supports SD, SDHC or SDXC and what the current
 # kind of media is - right now we just assume SD
-KERNEL=="mmcblk[0-9]", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{ID_DRIVE_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1"
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="SD", ENV{ID_DRIVE_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1"
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="SDIO", ENV{ID_DRIVE_FLASH_SDIO}="1", ENV{ID_DRIVE_MEDIA_FLASH_SDIO}="1"
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="SDcombo", ENV{ID_DRIVE_FLASH_SD_COMBO}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SDIO}="1"
+# compatibility fallback in case of an unavailable MMC_TYPE attr
+KERNEL=="mmcblk[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{MMC_TYPE}=="", ENV{ID_DRIVE_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1"
+# import ID_SERIAL and related for "mmcblk_boot" devices from its parent
+KERNEL=="mmcblk[0-9]boot[0-9]*", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", IMPORT{parent}="ID_*"
 # ditto for memstick
 KERNEL=="msblk[0-9]|mspblk[0-9]", SUBSYSTEMS=="memstick", ENV{DEVTYPE}=="disk", ENV{ID_DRIVE_FLASH_MS}="1", ENV{ID_DRIVE_MEDIA_FLASH_MS}="1"
 

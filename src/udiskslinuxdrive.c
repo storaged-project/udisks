@@ -368,7 +368,9 @@ static const struct
   { "ID_DRIVE_FLASH_SD", "flash_sd", FALSE, TRUE },
   { "ID_DRIVE_FLASH_SDHC", "flash_sdhc", FALSE, TRUE },
   { "ID_DRIVE_FLASH_SDXC", "flash_sdxc", FALSE, TRUE },
-  { "ID_DRIVE_FLASH_MMC", "flash_mmc", FALSE, TRUE },
+  { "ID_DRIVE_FLASH_SDIO", "flash_sdio", FALSE, TRUE },
+  { "ID_DRIVE_FLASH_SD_COMBO", "flash_sd_combo", FALSE, TRUE },
+  { "ID_DRIVE_FLASH_MMC", "flash_mmc", TRUE, FALSE },
   { "ID_DRIVE_FLOPPY", "floppy", FALSE, TRUE },
   { "ID_DRIVE_FLOPPY_ZIP", "floppy_zip", FALSE, TRUE },
   { "ID_DRIVE_FLOPPY_JAZ", "floppy_jaz", FALSE, TRUE },
@@ -408,6 +410,7 @@ static const struct
   { "ID_DRIVE_MEDIA_FLASH_SD", "flash_sd" },
   { "ID_DRIVE_MEDIA_FLASH_SDHC", "flash_sdhc" },
   { "ID_DRIVE_MEDIA_FLASH_SDXC", "flash_sdxc" },
+  { "ID_DRIVE_MEDIA_FLASH_SDIO", "flash_sdio" },
   { "ID_DRIVE_MEDIA_FLASH_MMC", "flash_mmc" },
   { "ID_DRIVE_MEDIA_FLOPPY", "floppy" },
   { "ID_DRIVE_MEDIA_FLOPPY_ZIP", "floppy_zip" },
@@ -484,6 +487,9 @@ set_media (UDisksDrive       *iface,
   udisks_drive_set_media_removable (iface, removable);
   if (is_pc_floppy_drive)
     ejectable = FALSE;
+  /* MMC/SD: disrespect the sysfs 'removable' attr as it usually doesn't reflect reality */
+  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "mmcblk"))
+    ejectable = removable;
   udisks_drive_set_ejectable (iface, ejectable);
 
   media_in_drive = NULL;
@@ -889,7 +895,6 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
   if (udisks_drive_get_media_removable (iface) ||
       g_strcmp0 (udisks_drive_get_connection_bus (iface), "usb") == 0 ||
-      g_strcmp0 (udisks_drive_get_connection_bus (iface), "sdio") == 0 ||
       g_strcmp0 (udisks_drive_get_connection_bus (iface), "ieee1394") == 0)
     removable_hint = TRUE;
   udisks_drive_set_removable (iface, removable_hint);
