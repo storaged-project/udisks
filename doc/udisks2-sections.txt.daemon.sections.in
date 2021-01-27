@@ -307,6 +307,8 @@ udisks_daemon_util_file_set_contents
 udisks_daemon_util_on_user_seat
 udisks_daemon_util_get_free_mdraid_device
 udisks_ata_identify_get_word
+udisks_daemon_util_trigger_uevent
+udisks_daemon_util_trigger_uevent_sync
 </SECTION>
 
 <SECTION>

@@ -51,6 +51,15 @@ guint64 udisks_daemon_util_block_get_size (GUdevDevice *device,
                                            gboolean    *out_media_available,
                                            gboolean    *out_media_change_detected);
 
+void udisks_daemon_util_trigger_uevent (UDisksDaemon *daemon,
+                                        const gchar  *device_file,
+                                        const gchar  *sysfs_path);
+
+gboolean udisks_daemon_util_trigger_uevent_sync (UDisksDaemon *daemon,
+                                                 const gchar  *device_file,
+                                                 const gchar  *sysfs_path,
+                                                 guint         timeout_seconds);
+
 gchar *udisks_daemon_util_resolve_link (const gchar *path,
                                         const gchar *name);
 
