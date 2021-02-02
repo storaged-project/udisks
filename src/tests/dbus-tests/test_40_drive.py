@@ -91,7 +91,6 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         def read_sys_file(value):
             return self.read_file(os.path.join(sys_dir, value)).strip()
 
-        serial = read_sys_file('wwid').rsplit(None, 1)[-1]  # get the last word in the file
         ret_code, wwn = self.run_command('lsblk -d -no WWN %s' % self.cd_dev)
         self.assertEqual(ret_code, 0)
 
@@ -105,12 +104,10 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
             'Optical': 1,
             'Removable': 1,
             'RotationRate': -1,
-            'Id': '%s-%s-%s' % (read_sys_file('vendor'), read_sys_file('model'), serial),
             'Media': 'optical_cd',
             'Model': read_sys_file('model'),
             'Revision': read_sys_file('rev'),
             'Seat': 'seat0',
-            'Serial': serial,
             'Vendor': read_sys_file('vendor'),
             'WWN': wwn,
             'OpticalNumDataTracks': 1,
