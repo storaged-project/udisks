@@ -3,6 +3,10 @@ import re
 import time
 import unittest
 
+import gi
+gi.require_version('BlockDev', '2.0')
+from gi.repository import BlockDev
+
 from distutils.version import LooseVersion
 
 import udiskstestcase
@@ -56,6 +60,15 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
         if not cls.check_module_loaded('zram'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('Udisks module for zram tests not loaded, skipping.')
+
+        if not BlockDev.utils_have_kernel_module('zram'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            raise unittest.SkipTest('zram kernel module not available, skipping.')
+
+        ret, _out = cls.run_command('lsmod | grep zram')
+        if ret == 0:
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            raise unittest.SkipTest('zram kernel module already loaded, skipping.')
 
         cls._save_conf_files()
 
