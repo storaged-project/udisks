@@ -52,10 +52,6 @@ if HAVE_BCACHE
 dbus_interface_files += $(top_srcdir)/modules/bcache/data/org.freedesktop.UDisks2.bcache.xml
 endif
 
-if HAVE_VDO
-dbus_interface_files += $(top_srcdir)/modules/vdo/data/org.freedesktop.UDisks2.vdo.xml
-endif
-
 $(dbus_built_sources) : Makefile.am $(dbus_interface_files)
 	mkdir -p $(top_builddir)/doc/xml &&						\
 	gdbus-codegen									\

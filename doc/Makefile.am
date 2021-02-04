@@ -165,14 +165,6 @@ else
 	$(AM_V_at) $(SED) "/<\!-- BCACHE_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
 	$(AM_V_at) $(SED) "/\# BCACHE_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_BCACHE
-if HAVE_VDO
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).vdo.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).vdo.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).vdo.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-else
-	$(AM_V_at) $(SED) "/<\!-- VDO_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) "/\# VDO_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-endif # HAVE_VDO
 
 
 if ENABLE_DAEMON
@@ -231,15 +223,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/bcache
 GTKDOC_LIBS += $(top_builddir)/modules/bcache/libudisks2_bcache.la
 endif # HAVE_BCACHE
 
-# GTKDOC for VDO
-if HAVE_VDO
-DOC_SOURCE_DIR += $(top_srcdir)/modules/vdo
-HFILE_GLOB += $(top_srcdir)/modules/vdo/*.h
-CFILE_GLOB += $(top_srcdir)/modules/vdo/*.c
-AM_CPPFLAGS += -I$(top_srcdir)/modules/vdo
-GTKDOC_LIBS += $(top_builddir)/modules/vdo/libudisks2_vdo.la
-endif # HAVE_VDO
-
 endif # ENABLE_DAEMON
 
 
@@ -267,9 +250,6 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).lvm2.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).lvm2.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
-	$(DOC_MAIN_SGML_FILE).vdo.dbus.in                                      \
-	$(DOC_MAIN_SGML_FILE).vdo.generated.in                                 \
-	$(DOC_MAIN_SGML_FILE).vdo.sed                                          \
 	$(DOC_MAIN_SGML_FILE).zram.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).zram.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).zram.block_devices.in                            \
@@ -288,8 +268,6 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_TYPES).lsm.sed                                                \
 	$(UDISKS_TYPES).lvm2.in                                                \
 	$(UDISKS_TYPES).lvm2.sed                                               \
-	$(UDISKS_TYPES).vdo.in                                                 \
-	$(UDISKS_TYPES).vdo.sed                                                \
 	$(UDISKS_TYPES).zram.in                                                \
 	$(UDISKS_TYPES).zram.sed                                               \
 	$(UDISKS_SECTIONS).in.in                                               \
@@ -306,8 +284,6 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_SECTIONS).lsm.sed                                             \
 	$(UDISKS_SECTIONS).lvm2.sections.in                                    \
 	$(UDISKS_SECTIONS).lvm2.sed                                            \
-	$(UDISKS_SECTIONS).vdo.sections.in                                     \
-	$(UDISKS_SECTIONS).vdo.sed                                             \
 	$(UDISKS_SECTIONS).zram.sections.in                                    \
 	$(UDISKS_SECTIONS).zram.sed                                            \
 	$(UDISKS_SECTIONS).lsm.sections.in                                     \

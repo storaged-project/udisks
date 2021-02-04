@@ -13,8 +13,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
                                     'btrfs': 'BTRFS',
                                     'iscsi': 'ISCSI.Initiator',
                                     'lvm2': 'LVM2',
-                                    'zram': 'ZRAM',
-                                    'vdo': 'VDO'}
+                                    'zram': 'ZRAM'}
 
     def setUp(self):
         self.manager_obj = self.get_object('/Manager')

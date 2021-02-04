@@ -27,10 +27,6 @@ if HAVE_BCACHE
 MODULES += bcache
 endif
 
-if HAVE_VDO
-MODULES += vdo
-endif
-
 $(CONFIG_H_PY):
 	echo -n 'UDISKS_MODULES_ENABLED = { ' > $(CONFIG_H_PY)
 	for i in $(MODULES); do \
