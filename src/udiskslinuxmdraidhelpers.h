@@ -24,16 +24,12 @@
 #define __UDISKS_LINUX_MDRAID_HEPLERS_H__
 
 #include <glib.h>
-#include <gudev/gudev.h>
 
 
 G_BEGIN_DECLS
 
 gboolean mdraid_has_redundancy (const gchar *raid_level);
 gboolean mdraid_has_stripes (const gchar *raid_level);
-gchar   *read_sysfs_attr (GUdevDevice *device, const gchar *attr);
-gint     read_sysfs_attr_as_int (GUdevDevice *device, const gchar *attr);
-guint64  read_sysfs_attr_as_uint64 (GUdevDevice *device, const gchar *attr);
 
 G_END_DECLS
 

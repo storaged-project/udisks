@@ -255,3 +255,95 @@ probe_ata (UDisksLinuxDevice  *device,
     }
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_device_read_sysfs_attr:
+ * @device: A #UDisksLinuxDevice.
+ * @attr: Attribute name (a path).
+ * @error: Return location for error or %NULL.
+ *
+ * Read a sysfs attribute within the device sysfs hierarchy.
+ * The @attr can be a path relative to the @device base sysfs path.
+ *
+ * Returns: (transfer full): Attribute contents or %NULL if unavailable. Free with g_free().
+ */
+gchar *
+udisks_linux_device_read_sysfs_attr (UDisksLinuxDevice  *device,
+                                     const gchar        *attr,
+                                     GError            **error)
+{
+  gchar *ret = NULL;
+  gchar *path;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device->udev_device), NULL);
+  g_return_val_if_fail (attr != NULL, NULL);
+
+  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device->udev_device), attr);
+  if (!g_file_get_contents (path, &ret, NULL /* size */, error))
+    {
+      g_prefix_error (error, "Error reading sysfs attr `%s': ", path);
+    }
+  else
+    {
+      /* remove newline from the attribute */
+      g_strstrip (ret);
+    }
+  g_free (path);
+
+  return ret;
+}
+
+/**
+ * udisks_linux_device_read_sysfs_attr_as_int:
+ * @device: A #UDisksLinuxDevice.
+ * @attr: Attribute name (a path).
+ * @error: Return location for error or %NULL.
+ *
+ * Read a sysfs attribute within the device sysfs hierarchy.
+ * The @attr can be a path relative to the @device base sysfs path.
+ *
+ * Returns: Numerical attribute value or 0 on error.
+ */
+gint
+udisks_linux_device_read_sysfs_attr_as_int (UDisksLinuxDevice  *device,
+                                            const gchar        *attr,
+                                            GError            **error)
+{
+  gint ret = 0;
+  gchar *str;
+
+  if ((str = udisks_linux_device_read_sysfs_attr (device, attr, error)))
+    ret = atoi (str);
+  g_free (str);
+
+  return ret;
+}
+
+/**
+ * udisks_linux_device_read_sysfs_attr_as_uint64:
+ * @device: A #UDisksLinuxDevice.
+ * @attr: Attribute name (a path).
+ * @error: Return location for error or %NULL.
+ *
+ * Read a sysfs attribute within the device sysfs hierarchy.
+ * The @attr can be a path relative to the @device base sysfs path.
+ *
+ * Returns: Numerical attribute value or 0 on error.
+ */
+guint64
+udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDevice  *device,
+                                               const gchar        *attr,
+                                               GError            **error)
+{
+  guint64 ret = 0;
+  gchar *str;
+
+  if ((str = udisks_linux_device_read_sysfs_attr (device, attr, error)))
+    ret = g_ascii_strtoull (str, NULL, 0);
+  g_free (str);
+
+  return ret;
+}
