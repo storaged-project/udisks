@@ -1,11 +1,11 @@
-%global glib2_version                   2.36
+%global glib2_version                   2.50
 %global gobject_introspection_version   1.30.0
 %global polkit_version                  0.102
 %global systemd_version                 208
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             2.19
+%global libblockdev_version             2.25
 
 %define with_bcache                     1
 %define with_btrfs                      1
@@ -470,6 +470,9 @@ fi
 %endif
 
 %changelog
+* Thu Feb 04 2021 Tomas Bzatek <tbzatek@redhat.com> - 2.9.2-1
+- Version 2.9.2
+
 * Wed Aug 12 2020 Tomas Bzatek <tbzatek@redhat.com> - 2.9.1-1
 - Version 2.9.1
 

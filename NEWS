@@ -1,17 +1,51 @@
 ---------------------------
-udisks 2.9.2 (unreleased)
+udisks 2.9.2
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.9.1:
-(TODO: make shortlog)
+
+Marius Vollmer (1):
+      udiskslinuxblock: Survive a missing /etc/crypttab
+
+Tomas Bzatek (20):
+      lvm2: Fix leaking BDLVMVDOPooldata
+      tests: Test modules that are actually enabled during build
+      build: Exclude VDO module from distcheck build
+      udisksfstabentry: Add udisks_fstab_entry_has_opt()
+      udiskslinuxblock: Reflect fstab "noauto" mount option in HintAuto
+      udiskslinuxblock: Update hints after fstab change
+      tests: Add tests for Block hints
+      udiskslinuxfilesystemhelpers: Make TakeOwnership() race free
+      tests: Extend filesystem test_take_ownership tests with symlinks
+      mount options: Allow 'nosymfollow' mount option for unprivileged mounts
+      udisksstate: Silence the block device busy messages on cleanup lock
+      udev: Distinguish mmcblk-class device types
+      udev: Propagate mmcblk disk attributes to mmcblk_boot devices
+      udiskslinuxdrive: Tweak the 'removable'/'ejectable' hints for mmcblk-class devices
+      udiskslinuxblock: Tweak the hints for mmcblk-class devices
+      udisksdaemonutil: Refactor udisks_daemon_util_trigger_uevent() out of UDisksLinuxBlockObject
+      udiskslinuxmanager: Trigger uevent after loop device setup
+      tests: Remove scsi_debug serial number checks
+      tests: Skip zram tests if zram module is already loaded
+
+Torstein Husebø (1):
+      treewide: Fix typos
+
+Vojtech Trefny (3):
+      AUTHORS: Add tbzatek as the maintainer
+      tests: Do not use nilfs2 as an example of non-resizable FS
+      Memory leak fixes
+
+zhmars (1):
+      doc: Update config file path
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2021-02-04
 
 ---------------------------
 udisks 2.9.1
