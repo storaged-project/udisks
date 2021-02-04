@@ -627,34 +627,6 @@ lookup_asv (GVariant    *asv,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-trigger_change_uevent (const gchar *sysfs_path)
-{
-  gchar* path = NULL;
-  gint fd = -1;
-
-  g_return_if_fail (sysfs_path != NULL);
-
-  path = g_strconcat (sysfs_path, "/uevent", NULL);
-  fd = open (path, O_WRONLY);
-  if (fd < 0)
-    {
-      udisks_warning ("Error opening %s for triggering change uevent: %m", path);
-      goto out;
-    }
-
-  if (write (fd, "change", sizeof "change" - 1) != sizeof "change" - 1)
-    {
-      udisks_warning ("Error writing 'change' to file %s: %m", path);
-      goto out;
-    }
-
- out:
-  if (fd >= 0)
-    close (fd);
-  g_free (path);
-}
-
 /* returns TRUE if the entry should be kept */
 static gboolean
 udisks_state_check_mounted_fs_entry (UDisksState  *state,
@@ -894,7 +866,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
            */
           if (change_sysfs_path != NULL)
             {
-              trigger_change_uevent (change_sysfs_path);
+              udisks_daemon_util_trigger_uevent (state->daemon, NULL, change_sysfs_path);
             }
         }
 
