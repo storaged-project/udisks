@@ -49,6 +49,8 @@ doc/udisks2-docs.xml.in
 doc/udisks2-docs.xml.lsm.man
 doc/udisks2-docs.xml.lvm2.man
 doc/udisks2-docs.xml.zram.block_devices
+doc/udisks2-docs.xml.daemon.man
+doc/udisks2-docs.xml.daemon.part
 doc/udisks2-overrides.txt
 doc/udisks2-sections*.txt*
 doc/udisks2-sections*.sections
@@ -60,12 +62,18 @@ doc/udisks2.types*
 doc/udisks2.hierarchy
 doc/udisks2.interfaces
 doc/udisks2.prerequisites
+doc/udisks2.actions
 doc/*.signals
 gtk-doc.make
 libtool
 m4/
 po/POTFILES
 po/Makefile.in.in
+po/Makevars.template
+po/Rules-quot
+po/*.sed
+po/*quot.header
+po/*.sin
 src/*-marshal.*
 src/udisks-daemon-resources.*
 src/tests/udisks-test
