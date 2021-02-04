@@ -546,34 +546,6 @@ if test "x$enable_bcache" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
-# VDO module
-have_vdo=no
-AC_ARG_ENABLE(vdo, AS_HELP_STRING([--enable-vdo], [enable VDO support]))
-if test "x$enable_vdo" = "xyes"; then
-    # libblockdev
-    SAVE_CFLAGS=$CFLAGS
-    SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS"
-    LDFLAGS="$GLIB_LIBS"
-
-    # libblockdev-vdo
-    AC_MSG_CHECKING([libblockdev-vdo presence])
-    AC_TRY_COMPILE([#include <blockdev/vdo.h>], [],
-                   [AC_MSG_RESULT([yes])
-                    have_vdo=yes],
-                   [AC_MSG_RESULT([no])
-                    have_vdo=no])
-    CFLAGS=$SAVE_CFLAGS
-    LDFLAGS=$SAVE_LDFLAGS
-
-    if test "x$have_vdo" = "xno"; then
-        if test "x$enable_vdo" = "xyes" -o "x$enable_modules" = "xyes"; then
-            AC_MSG_ERROR([VDO support requested but header or library not found])
-        fi
-    fi
-fi
-AM_CONDITIONAL(HAVE_VDO, [test "x$have_vdo" = "xyes"])
-
 if test "x$enable_daemon" = "xyes"; then
   # libblockdev part
   SAVE_CFLAGS=$CFLAGS
@@ -753,9 +725,6 @@ modules/lsm/data/udisks2-lsm.pc
 modules/bcache/Makefile
 modules/bcache/data/Makefile
 modules/bcache/data/udisks2-bcache.pc
-modules/vdo/Makefile
-modules/vdo/data/Makefile
-modules/vdo/data/udisks2-vdo.pc
 doc/Makefile
 doc/udisks2-docs.xml.in
 doc/udisks2-sections.txt.in
@@ -798,10 +767,6 @@ doc/udisks2-docs.xml.bcache.dbus
 doc/udisks2-docs.xml.bcache.generated
 doc/udisks2-sections.txt.bcache.sections
 doc/udisks2.types.bcache
-doc/udisks2-docs.xml.vdo.dbus
-doc/udisks2-docs.xml.vdo.generated
-doc/udisks2-sections.txt.vdo.sections
-doc/udisks2.types.vdo
 po/Makefile.in
 ])
 
@@ -848,5 +813,4 @@ echo "
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
         Bcache module:              ${have_bcache}
-        VDO module (deprecated):    ${have_vdo}
 "

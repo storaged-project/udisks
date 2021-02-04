@@ -257,7 +257,6 @@ autoreconf -ivf
 %if 0%{?with_btrfs}
     --enable-btrfs    \
 %endif
-    --disable-vdo      \
 %if 0%{?with_zram}
     --enable-zram     \
 %endif
