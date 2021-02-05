@@ -139,9 +139,11 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, 'resize2fs')
         self.assertEqual(avail, find_executable('resize2fs') is not None)
         avail, mode, util = manager.CanResize('vfat')
-        self.assertTrue(avail)  # libparted, no executable
-        self.assertEqual(util, '')
-        self.assertEqual(mode, offline_shrink | offline_grow)
+        if avail:
+            self.assertEqual(util, '')
+        else:
+            self.assertEqual(util, 'vfat-resize')
+        self.assertEqual(avail, find_executable('vfat-resize') is not None)
 
     def test_40_can_repair(self):
         '''Test for installed filesystem repair utility with CanRepair'''
