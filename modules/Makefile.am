@@ -26,8 +26,4 @@ if HAVE_BCACHE
 SUBDIRS += bcache
 endif # HAVE_BCACHE
 
-if HAVE_VDO
-SUBDIRS += vdo
-endif # HAVE_VDO
-
 NULL =
