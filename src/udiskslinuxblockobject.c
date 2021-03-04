@@ -760,12 +760,13 @@ swapspace_check (UDisksObject *object)
   UDisksMountType mount_type;
 
   ret = FALSE;
-  if ((g_strcmp0 (udisks_block_get_id_usage (block_object->iface_block_device), "other") == 0 &&
+  if (object->iface_block_device != NULL &&
+       ((g_strcmp0 (udisks_block_get_id_usage (block_object->iface_block_device), "other") == 0 &&
        g_strcmp0 (udisks_block_get_id_type (block_object->iface_block_device), "swap") == 0)
       || (udisks_mount_monitor_is_dev_in_use (block_object->mount_monitor,
                                               g_udev_device_get_device_number (block_object->device->udev_device),
                                               &mount_type)
-          && mount_type == UDISKS_MOUNT_TYPE_SWAP))
+          && mount_type == UDISKS_MOUNT_TYPE_SWAP)))
     ret = TRUE;
 
   return ret;
