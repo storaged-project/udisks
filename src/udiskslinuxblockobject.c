@@ -127,8 +127,8 @@ udisks_linux_block_object_finalize (GObject *_object)
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
 
   /* note: we don't hold a ref to block->daemon or block->mount_monitor */
-  g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_added, object);
-  g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_removed, object);
+  g_warn_if_fail (g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_added, object) == 1);
+  g_warn_if_fail (g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_removed, object) == 1);
 
   g_object_unref (object->device);
   g_mutex_clear (&object->device_mutex);
@@ -446,6 +446,7 @@ update_iface (UDisksObject                     *object,
       if (has)
         {
           *interface_pointer = g_object_new (skeleton_type, NULL);
+          g_warn_if_fail (*interface_pointer != NULL);
           if (connect_func != NULL)
             connect_func (object);
           add = TRUE;
@@ -875,6 +876,7 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
 
   update_iface (UDISKS_OBJECT (object), action, block_device_check, block_device_connect, block_device_update,
                 UDISKS_TYPE_LINUX_BLOCK, &object->iface_block_device);
+  g_warn_if_fail (object->iface_block_device != NULL);
   update_iface (UDISKS_OBJECT (object), action, contains_filesystem, filesystem_connect, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &object->iface_filesystem);
   update_iface (UDISKS_OBJECT (object), action, swapspace_check, swapspace_connect, swapspace_update,
