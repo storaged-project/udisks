@@ -35,9 +35,11 @@
 
 #include <locale.h>
 
+#ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #define POLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE
 #include <polkitagent/polkitagent.h>
+#endif
 
 static UDisksClient *client = NULL;
 static GMainLoop *loop = NULL;
@@ -57,6 +59,7 @@ static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *c
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_POLKIT
 static PolkitAgentListener *local_polkit_agent = NULL;
 static gpointer local_agent_handle = NULL;
 
@@ -119,6 +122,16 @@ shutdown_local_polkit_agent (void)
   if (local_polkit_agent != NULL)
     g_object_unref (local_polkit_agent);
 }
+#else
+static gboolean
+setup_local_polkit_agent (void)
+{
+  return TRUE;
+}
+
+static void
+shutdown_local_polkit_agent (void) { }
+#endif
 
 
 /* ---------------------------------------------------------------------------------------------------- */

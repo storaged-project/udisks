@@ -31,12 +31,14 @@ endif
 udevrulesdir = $(udevdir)/rules.d
 udevrules_DATA = 80-udisks2.rules
 
+if HAVE_POLKIT
 polkitdir        = $(datadir)/polkit-1/actions
 polkit_in_files  = org.freedesktop.UDisks2.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 $(polkit_DATA): $(polkit_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
+endif
 endif
 
 completionsdir = $(datadir)/bash-completion/completions

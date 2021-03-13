@@ -24,33 +24,6 @@
 #include "udisksdaemonutil.h"
 #include "udisksauthorization.h"
 
-/* Need this until we can depend on a libpolkit with this bugfix
- *
- * http://cgit.freedesktop.org/polkit/commit/?h=wip/js-rule-files&id=224f7b892478302dccbe7e567b013d3c73d376fd
- */
-static void
-_safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gchar *value)
-{
-  if (value != NULL && strlen (value) > 0)
-    polkit_details_insert (details, key, value);
-}
-
-static void
-_safe_polkit_details_insert_int (PolkitDetails *details, const gchar *key, gint value)
-{
-  gchar buf[32];
-  snprintf (buf, sizeof buf, "%d", value);
-  polkit_details_insert (details, key, buf);
-}
-
-static void
-_safe_polkit_details_insert_uint64 (PolkitDetails *details, const gchar *key, guint64 value)
-{
-  gchar buf[32];
-  snprintf (buf, sizeof buf, "0x%08llx", (unsigned long long int) value);
-  polkit_details_insert (details, key, buf);
-}
-
 static gboolean
 check_authorization_no_polkit (UDisksDaemon            *daemon,
                                UDisksObject            *object,
@@ -155,6 +128,34 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
     }
 
   return TRUE;
+}
+
+#ifdef HAVE_POLKIT
+/* Need this until we can depend on a libpolkit with this bugfix
+ *
+ * http://cgit.freedesktop.org/polkit/commit/?h=wip/js-rule-files&id=224f7b892478302dccbe7e567b013d3c73d376fd
+ */
+static void
+_safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gchar *value)
+{
+  if (value != NULL && strlen (value) > 0)
+    polkit_details_insert (details, key, value);
+}
+
+static void
+_safe_polkit_details_insert_int (PolkitDetails *details, const gchar *key, gint value)
+{
+  gchar buf[32];
+  snprintf (buf, sizeof buf, "%d", value);
+  polkit_details_insert (details, key, buf);
+}
+
+static void
+_safe_polkit_details_insert_uint64 (PolkitDetails *details, const gchar *key, guint64 value)
+{
+  gchar buf[32];
+  snprintf (buf, sizeof buf, "0x%08llx", (unsigned long long int) value);
+  polkit_details_insert (details, key, buf);
 }
 
 gboolean
@@ -379,4 +380,17 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
   g_clear_object (&result);
   return ret;
 }
+#else
+gboolean
+udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *daemon,
+                                                        UDisksObject           *object,
+                                                        const gchar            *action_id,
+                                                        GVariant               *options,
+                                                        const gchar            *message,
+                                                        GDBusMethodInvocation  *invocation,
+                                                        GError                **error)
+{
+  return check_authorization_no_polkit (daemon, object, action_id, options, message, invocation, error);
+}
+#endif
 

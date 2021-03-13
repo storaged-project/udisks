@@ -150,13 +150,31 @@ PKG_CHECK_MODULES(GIO, [gio-unix-2.0 >= 2.50])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
-PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102])
-AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
-AC_SUBST(POLKIT_GOBJECT_1_LIBS)
+have_polkit=no
+AC_ARG_ENABLE(polkit, AS_HELP_STRING([--disable-polkit], [disable polkit support]))
+if test "x$enable_polkit" != "xno"; then
+  PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102],
+		    [have_polkit_gobject=yes],
+		    [have_polkit_gobject=no])
+  if test "x$have_polkit_gobject" = "xno"; then
+    AC_MSG_ERROR([polkit support requested but polkit-gobject libraries not found])
+  fi
+  AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
+  AC_SUBST(POLKIT_GOBJECT_1_LIBS)
 
-PKG_CHECK_MODULES(POLKIT_AGENT_1, [polkit-agent-1 >= 0.102])
-AC_SUBST(POLKIT_AGENT_1_CFLAGS)
-AC_SUBST(POLKIT_AGENT_1_LIBS)
+  PKG_CHECK_MODULES(POLKIT_AGENT_1, [polkit-agent-1 >= 0.102],
+		    [have_polkit_agent=yes],
+		    [have_polkit_agent=no])
+  if test "x$have_polkit_agent" = "xno"; then
+    AC_MSG_ERROR([polkit support requested but polkit-agent libraries not found])
+  fi
+  AC_SUBST(POLKIT_AGENT_1_CFLAGS)
+  AC_SUBST(POLKIT_AGENT_1_LIBS)
+  if test "$have_polkit_gobject" = "yes" -a "$have_polkit_agent" = "yes"; then
+    have_polkit=yes
+  fi
+fi
+AM_CONDITIONAL(HAVE_POLKIT, [test "$have_polkit" = "yes"])
 
 if test "x$enable_daemon" = "xyes"; then
   PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= 165])
@@ -793,6 +811,7 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
+        polkit support:             ${have_polkit}
         using libmount/utab:        ${have_libmount_utab}
 
         compiler:                   ${CC}

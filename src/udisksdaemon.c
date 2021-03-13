@@ -379,6 +379,7 @@ udisks_daemon_constructed (GObject *object)
   uuid_unparse (uuid, &uuid_buf[0]);
   daemon->uuid = g_strdup (uuid_buf);
 
+#ifdef HAVE_POLKIT
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {
@@ -386,6 +387,7 @@ udisks_daemon_constructed (GObject *object)
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
+#endif
 
   daemon->object_manager = g_dbus_object_manager_server_new ("/org/freedesktop/UDisks2");
 

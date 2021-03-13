@@ -22,7 +22,12 @@
 #define __UDISKS_AUTHORIZATION_H__
 
 #include "udisksdaemontypes.h"
+
+#ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
+#else
+typedef void* PolkitAuthority;
+#endif
 
 G_BEGIN_DECLS
 
