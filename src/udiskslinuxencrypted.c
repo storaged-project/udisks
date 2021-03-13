@@ -37,6 +37,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"

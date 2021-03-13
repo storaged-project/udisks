@@ -40,6 +40,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udiskslinuxdevice.h"
 #include "udiskslinuxblock.h"
 #include "udiskssimplejob.h"

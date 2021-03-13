@@ -41,6 +41,7 @@
 #include "udiskslinuxmanager.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udisksstate.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"

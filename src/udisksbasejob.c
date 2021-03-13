@@ -27,6 +27,7 @@
 #include "udisksbasejob.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udisks-daemon-marshal.h"
 
 #define MAX_SAMPLES 100

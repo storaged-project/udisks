@@ -53,6 +53,7 @@
 #include "udisksprivate.h"
 #include "udisksconfigmanager.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udiskslinuxprovider.h"
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"

@@ -74,21 +74,6 @@ gboolean udisks_daemon_util_on_user_seat (UDisksDaemon          *daemon,
                                           UDisksObject          *object,
                                           uid_t                  user);
 
-gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
-                                                      UDisksObject          *object,
-                                                      const gchar           *action_id,
-                                                      GVariant              *options,
-                                                      const gchar           *message,
-                                                      GDBusMethodInvocation *invocation);
-
-gboolean udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *daemon,
-                                                                 UDisksObject           *object,
-                                                                 const gchar            *action_id,
-                                                                 GVariant               *options,
-                                                                 const gchar            *message,
-                                                                 GDBusMethodInvocation  *invocation,
-                                                                 GError                **error);
-
 gboolean udisks_daemon_util_get_user_info (const uid_t   uid,
                                            gid_t        *out_gid,
                                            gchar       **out_user_name,
@@ -129,22 +114,6 @@ gchar *udisks_daemon_util_get_free_mdraid_device (void);
 
 guint16 udisks_ata_identify_get_word (const guchar *identify_data, guint word_number);
 
-/* Utility macro for policy verification. */
-#define UDISKS_DAEMON_CHECK_AUTHORIZATION(daemon,                   \
-                                          object,                   \
-                                          action_id,                \
-                                          options,                  \
-                                          message,                  \
-                                          invocation)               \
-  if (! udisks_daemon_util_check_authorization_sync ((daemon),      \
-                                                     (object),      \
-                                                     (action_id),   \
-                                                     (options),     \
-                                                     (message),     \
-                                                     (invocation))) \
-    { \
-      goto out; \
-    }
 
 G_END_DECLS
 

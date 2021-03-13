@@ -42,6 +42,7 @@
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udiskslinuxdevice.h"
 #include "udiskssimplejob.h"
 

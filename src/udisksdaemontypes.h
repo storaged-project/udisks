@@ -23,7 +23,6 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <polkit/polkit.h>
 #include <udisks/udisks.h>
 #include <gudev/gudev.h>
 

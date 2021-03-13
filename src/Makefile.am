@@ -92,6 +92,7 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udisksmount.h                  udisksmount.c                           \
 	udisksmountmonitor.h           udisksmountmonitor.c                    \
 	udisksdaemonutil.h             udisksdaemonutil.c                      \
+	udisksauthorization.h          udisksauthorization.c                   \
 	udiskslogging.h                udiskslogging.c                         \
 	udisksstate.h                  udisksstate.c                           \
 	udisksprivate.h                                                        \

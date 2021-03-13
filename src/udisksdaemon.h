@@ -23,6 +23,7 @@
 
 #include "config.h"
 #include "udisksdaemontypes.h"
+#include "udisksauthorization.h"
 
 G_BEGIN_DECLS
 

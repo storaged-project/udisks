@@ -50,6 +50,7 @@
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
+#include "udisksauthorization.h"
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
 #include "udiskslinuxdevice.h"
