@@ -1195,6 +1195,8 @@ handle_resolve_device (UDisksManager         *object,
   const gchar *devpath = NULL;
   const gchar *devuuid = NULL;
   const gchar *devlabel = NULL;
+  const gchar *partuuid = NULL;
+  const gchar *partlabel = NULL;
 
   GSList *blocks = NULL;
   GSList *blocks_p = NULL;
@@ -1211,11 +1213,15 @@ handle_resolve_device (UDisksManager         *object,
   g_variant_lookup (arg_devspec, "path", "&s", &devpath);
   g_variant_lookup (arg_devspec, "uuid", "&s", &devuuid);
   g_variant_lookup (arg_devspec, "label", "&s", &devlabel);
+  g_variant_lookup (arg_devspec, "partuuid", "&s", &partuuid);
+  g_variant_lookup (arg_devspec, "partlabel", "&s", &partlabel);
 
   blocks = get_block_objects (object, &num_blocks);
 
   for (blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next)
     {
+      found = FALSE;
+
       if (devpath != NULL)
           found = compare_paths (object, blocks_p->data, devpath);
 
@@ -1223,6 +1229,27 @@ handle_resolve_device (UDisksManager         *object,
           found = g_strcmp0 (udisks_block_get_id_uuid (blocks_p->data), devuuid) == 0;
       if (devlabel != NULL)
           found = g_strcmp0 (udisks_block_get_id_label (blocks_p->data), devlabel) == 0;
+
+      if (partlabel != NULL || partuuid != NULL)
+        {
+          UDisksLinuxBlockObject *block_object;
+          UDisksLinuxDevice *linux_device;
+
+          block_object = udisks_daemon_util_dup_object (blocks_p->data, NULL);
+          if (block_object != NULL)
+            {
+              linux_device = udisks_linux_block_object_get_device (block_object);
+              g_clear_object (&block_object);
+              if (linux_device != NULL && linux_device->udev_device != NULL &&
+                  ((partuuid != NULL  && g_strcmp0 (partuuid,  g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
+                   (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0)))
+                {
+                  g_object_unref (linux_device);
+                  found = TRUE;
+                }
+              g_clear_object (&linux_device);
+            }
+        }
 
       if (found)
         {
