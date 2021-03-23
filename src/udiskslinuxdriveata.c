@@ -1625,10 +1625,13 @@ apply_conf_data_free (ApplyConfData *data)
   g_free (data);
 }
 
-static gpointer
-apply_configuration_thread_func (gpointer user_data)
+static void
+apply_configuration_thread_func (GTask        *task,
+                                 gpointer      source_object,
+                                 gpointer      task_data,
+                                 GCancellable *cancellable)
 {
-  ApplyConfData *data = user_data;
+  ApplyConfData *data = task_data;
   UDisksDaemon *daemon;
   const gchar *device_file = NULL;
   gint fd = -1;
@@ -1799,8 +1802,6 @@ apply_configuration_thread_func (gpointer user_data)
  out:
   if (fd != -1)
     close (fd);
-  apply_conf_data_free (data);
-  return NULL;
 }
 
 /**
@@ -1819,6 +1820,7 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta *drive,
 {
   gboolean has_conf = FALSE;
   ApplyConfData *data = NULL;
+  GTask *task;
 
   data = g_new0 (ApplyConfData, 1);
   data->ata_pm_standby = -1;
@@ -1862,9 +1864,10 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta *drive,
   /* this can easily take a long time and thus block (the drive may be in standby mode
    * and needs to spin up) - so run it in a thread
    */
-  g_thread_new ("apply-conf-thread",
-                apply_configuration_thread_func,
-                data);
+  task = g_task_new (data->object, NULL, NULL, NULL);
+  g_task_set_task_data (task, data, (GDestroyNotify) apply_conf_data_free);
+  g_task_run_in_thread (task, apply_configuration_thread_func);
+  g_object_unref (task);
 
   data = NULL; /* don't free data below */
 
