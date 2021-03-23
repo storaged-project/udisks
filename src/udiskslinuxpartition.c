@@ -764,6 +764,9 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+
   ret = TRUE;
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
