@@ -129,6 +129,8 @@ gchar *udisks_daemon_util_get_free_mdraid_device (void);
 
 guint16 udisks_ata_identify_get_word (const guchar *identify_data, guint word_number);
 
+gboolean udisks_module_validate_name (const gchar *module_name);
+
 /* Utility macro for policy verification. */
 #define UDISKS_DAEMON_CHECK_AUTHORIZATION(daemon,                   \
                                           object,                   \

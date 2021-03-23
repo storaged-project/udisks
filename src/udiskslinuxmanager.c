@@ -956,6 +956,15 @@ handle_enable_module (UDisksManager         *object,
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
   EnableModulesData *data;
 
+  if (! udisks_module_validate_name (arg_name))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                             "Requested module name '%s' is not a valid udisks2 module name.",
+                                             arg_name);
+      return TRUE;
+    }
+
   if (! arg_enable)
     {
       /* TODO: implement proper module unloading */

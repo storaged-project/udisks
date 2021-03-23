@@ -26,6 +26,7 @@
 #include "udiskslogging.h"
 #include "udisksdaemontypes.h"
 #include "udisksconfigmanager.h"
+#include "udisksdaemonutil.h"
 
 struct _UDisksConfigManager {
   GObject parent_instance;
@@ -59,6 +60,8 @@ enum
 
 #define DEFAULTS_GROUP_NAME "defaults"
 #define DEFAULTS_ENCRYPTION_KEY "encryption"
+
+#define MODULES_ALL_ARG "*"
 
 static void
 udisks_config_manager_get_property (GObject    *object,
@@ -170,7 +173,16 @@ parse_config_file (UDisksConfigManager         *manager,
             {
               modules_tmp = modules;
               for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
-                *out_modules = g_list_append (*out_modules, g_strdup (g_strstrip (module_i)));
+                {
+                  g_strstrip (module_i);
+                  if (! udisks_module_validate_name (module_i) && !g_str_equal (module_i, MODULES_ALL_ARG))
+                    {
+                      g_warning ("Invalid module name '%s' specified in the %s config file.",
+                                 module_i, conf_filename);
+                      continue;
+                    }
+                  *out_modules = g_list_append (*out_modules, g_strdup (module_i));
+                }
               g_strfreev (modules);
             }
         }
@@ -397,7 +409,7 @@ udisks_config_manager_get_modules_all (UDisksConfigManager *manager)
 
   parse_config_file (manager, NULL, NULL, &modules);
 
-  ret = !modules || (g_strcmp0 (modules->data, "*") == 0 && g_list_length (modules) == 1);
+  ret = !modules || (g_strcmp0 (modules->data, MODULES_ALL_ARG) == 0 && g_list_length (modules) == 1);
 
   g_list_free_full (modules, (GDestroyNotify) g_free);
 
