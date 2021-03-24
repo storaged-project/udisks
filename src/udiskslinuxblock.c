@@ -2913,7 +2913,9 @@ static inline gboolean
 need_partprobe_after_mkfs (const gchar *fs_type)
 {
   /* udftools makes fake MBR since the 2.0 release */
-  return (g_strcmp0 (fs_type, "udf") == 0);
+  /* dosfstools makes fake MBR since the 4.2 release */
+  return (g_strcmp0 (fs_type, "udf") == 0 ||
+          g_strcmp0 (fs_type, "vfat") == 0);
 }
 
 void
