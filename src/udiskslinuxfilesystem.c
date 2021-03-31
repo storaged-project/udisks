@@ -274,7 +274,11 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
     }
   g_clear_object (&ata);
 
-  if (! skip_fs_size)
+  /*If mounts is empty (the disk is not mounted), skip the file system size 
+   * check to prevent the "size" from being unable to be obtained immediately 
+   * when the disk is performing other operations (such as formatting), causing 
+   * the udisks process to wait for a long time.*/
+  if (NULL != mounts && ! skip_fs_size)
     udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
