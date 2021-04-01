@@ -747,7 +747,7 @@ filesystem_update (UDisksObject   *object,
                    GDBusInterface *_iface)
 {
   FsUpdateData *data = NULL;
-  data = g_new0 (FsUpdata, 1);
+  data = g_new0 (FsUpdateData, 1);
   data->filesystem = UDISKS_LINUX_FILESYSTEM (_iface);
   data->object = UDISKS_LINUX_BLOCK_OBJECT (object);
   g_thread_new("filesystem-update",udisks_linux_filesystem_update,data);
