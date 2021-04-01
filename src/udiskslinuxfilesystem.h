@@ -29,10 +29,19 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_FILESYSTEM(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_FILESYSTEM, UDisksLinuxFilesystem))
 #define UDISKS_IS_LINUX_FILESYSTEM(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_FILESYSTEM))
 
+/*
+ * @filesystem: A #UDisksLinuxFilesystem.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+*/
+typedef struct
+{
+    UDisksLinuxFilesystem  *filesystem;
+    UDisksLinuxBlockObject *object;
+}FsUpdateData;
+
 GType             udisks_linux_filesystem_get_type (void) G_GNUC_CONST;
 UDisksFilesystem *udisks_linux_filesystem_new      (void);
-void              udisks_linux_filesystem_update   (UDisksLinuxFilesystem  *filesystem,
-                                                    UDisksLinuxBlockObject *object);
+void              udisks_linux_filesystem_update   (gpointer user_data);
 
 G_END_DECLS
 

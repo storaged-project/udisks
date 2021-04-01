@@ -225,15 +225,13 @@ get_drive_ata (UDisksLinuxBlockObject *object)
 
 /**
  * udisks_linux_filesystem_update:
- * @filesystem: A #UDisksLinuxFilesystem.
- * @object: The enclosing #UDisksLinuxBlockObject instance.
  *
  * Updates the interface.
  */
 void
-udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
-                                UDisksLinuxBlockObject *object)
+udisks_linux_filesystem_update (gpointer user_data)
 {
+  FsUpdateData *fs_update_data = user_data;
   UDisksMountMonitor *mount_monitor;
   UDisksLinuxDevice *device;
   UDisksDriveAta *ata = NULL;
@@ -243,8 +241,8 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   gboolean skip_fs_size = FALSE;
   guchar pm_state;
 
-  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
-  device = udisks_linux_block_object_get_device (object);
+  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (fs_update_data->object));
+  device = udisks_linux_block_object_get_device (fs_update_data->object);
 
   p = g_ptr_array_new ();
   mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
@@ -258,7 +256,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
         g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
     }
   g_ptr_array_add (p, NULL);
-  udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
+  udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (fs_update_data->filesystem),
                                       (const gchar *const *) p->pdata);
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
@@ -266,7 +264,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
    * drive waking up - nothing has changed anyway since it's been sleeping...
    */
-  ata = get_drive_ata (object);
+  ata = get_drive_ata (fs_update_data->object);
   if (ata != NULL)
     {
       if (udisks_linux_drive_ata_get_pm_state (UDISKS_LINUX_DRIVE_ATA (ata), NULL, &pm_state))
@@ -275,9 +273,9 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_clear_object (&ata);
 
   if (! skip_fs_size)
-    udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
+    udisks_filesystem_set_size (UDISKS_FILESYSTEM (fs_update_data->filesystem), get_filesystem_size (fs_update_data->object));
 
-  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (fs_update_data->filesystem));
 
   g_object_unref (device);
 }
