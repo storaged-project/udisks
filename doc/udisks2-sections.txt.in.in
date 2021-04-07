@@ -1006,8 +1006,6 @@ udisks_loop_skeleton_get_type
 
 <!-- BCACHE_GENERATED_SECTIONS -->
 
-<!-- VDO_GENERATED_SECTIONS -->
-
 <SECTION>
 <FILE>UDisksPartition</FILE>
 UDisksPartition
