@@ -503,8 +503,6 @@ attr_changed (GIOChannel   *channel,
   UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
   gboolean bail = FALSE;
   GError *error = NULL;
-  gchar *str = NULL;
-  gsize len = 0;
 
   if (cond & ~G_IO_ERR)
     goto out;
@@ -518,7 +516,7 @@ attr_changed (GIOChannel   *channel,
       goto out;
     }
 
-  if (g_io_channel_read_to_end (channel, &str, &len, &error) != G_IO_STATUS_NORMAL)
+  if (g_io_channel_read_to_end (channel, NULL, NULL, &error) != G_IO_STATUS_NORMAL)
     {
       udisks_debug ("Error reading (uuid %s): %s (%s, %d)",
                     object->uuid, error->message, g_quark_to_string (error->domain), error->code);
@@ -526,8 +524,6 @@ attr_changed (GIOChannel   *channel,
       bail = TRUE;
       goto out;
     }
-
-  g_free (str);
 
   /* synthesize uevent */
   if (object->raid_device != NULL)
