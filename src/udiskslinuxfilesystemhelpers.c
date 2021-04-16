@@ -142,11 +142,11 @@ take_filesystem_ownership (const gchar  *device,
       else
         {
           /* device is not mounted, we need to mount it */
-          mountpoint = g_mkdtemp (g_strdup ("/run/udisks2/temp-mount-XXXXXX"));
-          if (mountpoint == NULL)
+          mountpoint = g_strdup ("/run/udisks2/temp-mount-XXXXXX");
+          if (g_mkdtemp (mountpoint) == NULL)
             {
               g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                           "Cannot create temporary mountpoint.");
+                           "Cannot create temporary mountpoint: %m.");
               success = FALSE;
               goto out;
             }
