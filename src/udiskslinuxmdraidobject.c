@@ -468,7 +468,8 @@ watch_attr (UDisksLinuxDevice *device,
   GError *error = NULL;
   gchar *path = NULL;
   GIOChannel *channel = NULL;
-  GSource *ret = NULL;;
+  GSource *ret = NULL;
+  guint source_id;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
 
@@ -478,9 +479,14 @@ watch_attr (UDisksLinuxDevice *device,
     {
       ret = g_io_create_watch (channel, G_IO_ERR);
       g_source_set_callback (ret, callback, user_data, NULL);
-      g_source_attach (ret, g_main_context_get_thread_default ());
+      source_id = g_source_attach (ret, g_main_context_get_thread_default ());
       g_source_unref (ret);
       g_io_channel_unref (channel); /* the keeps a reference to this object */
+      if (source_id == 0)
+        {
+          /* something bad happened while attaching the source */
+          ret = NULL;
+        }
     }
   else
     {
