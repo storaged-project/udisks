@@ -123,7 +123,7 @@ const FSInfo _fs_info[] =
       NULL,
       FALSE, /* supports_online_label_rename */
       FALSE, /* supports_owners */
-      "mkexfatfs -n $LABEL $DEVICE",
+      "mkfs.exfat -n $LABEL $DEVICE",
       NULL,
       NULL, /* option_no_discard */
     },
