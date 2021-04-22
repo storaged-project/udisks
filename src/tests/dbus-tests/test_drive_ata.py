@@ -20,14 +20,17 @@ DISK_PATH = "/dev/disk/by-path/"
 
 def _get_sata_disks():
     sata_disks = []
-    by_path = os.listdir(DISK_PATH)
-    for dev in by_path:
-        if "ata" in dev and "part" not in dev:
-            path = os.path.realpath(os.path.join(DISK_PATH, dev))
-            name = os.path.basename(path)
-            if name.startswith("sd"):
-                # ignore devices like CD drives etc.
-                sata_disks.append(name)
+    try:
+        by_path = os.listdir(DISK_PATH)
+        for dev in by_path:
+            if "ata" in dev and "part" not in dev:
+                path = os.path.realpath(os.path.join(DISK_PATH, dev))
+                name = os.path.basename(path)
+                if name.startswith("sd"):
+                    # ignore devices like CD drives etc.
+                    sata_disks.append(name)
+    except:
+        pass
     return sata_disks
 
 
