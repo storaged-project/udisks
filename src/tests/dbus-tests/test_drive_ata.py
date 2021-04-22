@@ -4,7 +4,7 @@ import re
 import unittest
 import time
 
-from udiskstestcase import UdisksTestCase
+import udiskstestcase
 
 SMART_CMDLINE_FAIL      = 1 << 0
 SMART_OPEN_READ_FAIL    = 1 << 1
@@ -32,7 +32,7 @@ def _get_sata_disks():
 
 
 for disk in _get_sata_disks():
-    ret, out = UdisksTestCase.run_command("smartctl -a /dev/%s" % disk)
+    ret, out = udiskstestcase.UdisksTestCase.run_command("smartctl -a /dev/%s" % disk)
 
     # Only the following bits in the exit status mean the device failed to
     # provide valid SMART data, others may be set for different reasons (see
@@ -46,7 +46,7 @@ for disk in _get_sata_disks():
     else:
         smart_unsupported.add(disk)
 
-class UdisksDriveAtaTest(UdisksTestCase):
+class UdisksDriveAtaTest(udiskstestcase.UdisksTestCase):
     '''Noninvasive tests for the Drive.Ata interface'''
 
     def get_smart_setting(self, disk, attr, out_prefix):
@@ -102,6 +102,7 @@ class UdisksDriveAtaTest(UdisksTestCase):
             intro_data = drive_intro.Introspect()
             self.assertNotIn('interface name="org.freedesktop.UDisks2.Drive.Ata"', intro_data)
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")
     def test_properties(self):
         for disk in smart_supported:
@@ -148,6 +149,7 @@ class UdisksDriveAtaTest(UdisksTestCase):
                 # ninth field is the raw value
                 self.assertEqual(int(pwon_s.value / 3600), int(pwon_attr[8]))
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")
     def test_smart_get_attributes(self):
         for disk in smart_supported:
