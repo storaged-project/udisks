@@ -816,6 +816,20 @@ udisks_client_get_block_for_dev (UDisksClient *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static int
+compare_blocks_by_device (gconstpointer a,
+                          gconstpointer b)
+{
+  UDisksBlock *block_a = udisks_object_get_block (UDISKS_OBJECT (a));
+  UDisksBlock *block_b = udisks_object_get_block (UDISKS_OBJECT (b));
+
+  g_assert (block_a != NULL);
+  g_assert (block_b != NULL);
+
+  return g_strcmp0 (udisks_block_get_device (block_a),
+                    udisks_block_get_device (block_b));
+}
+
 static GList *
 get_top_level_blocks_for_drive (UDisksClient *client,
                                 const gchar  *drive_object_path)
@@ -847,6 +861,7 @@ get_top_level_blocks_for_drive (UDisksClient *client,
         }
       g_object_unref (block);
     }
+  ret = g_list_sort (ret, compare_blocks_by_device);
   g_list_free_full (object_proxies, g_object_unref);
   return ret;
 }
