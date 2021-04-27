@@ -1,6 +1,9 @@
 # Generate config.h.py with translated defines for easy use within Python
 
 CONFIG_H_PY = config_h.py
+
+BUILT_SOURCES = $(CONFIG_H_PY)
+
 MODULES =
 
 if HAVE_BTRFS
@@ -34,9 +37,15 @@ $(CONFIG_H_PY):
 	done
 	echo '}' >> $(CONFIG_H_PY)
 
-all: $(CONFIG_H_PY)
+all:
+
+# always rebuild config_h.py
+.PHONY: $(BUILT_SOURCES)
 
 EXTRA_DIST =
 
+dist-hook :
+	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)
+
 clean-local:
-	rm -f *~ $(CONFIG_H_PY)
+	rm -f *~ $(BUILT_SOURCES)
