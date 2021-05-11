@@ -38,6 +38,7 @@
 #include <gio/gunixfdlist.h>
 
 #include <libmount/libmount.h>
+#include <blkid/blkid.h>
 
 #include <blockdev/part.h>
 #include <blockdev/fs.h>
@@ -361,88 +362,63 @@ update_mdraid (UDisksLinuxBlock         *block,
  * argument may be a device file or a common KEY=VALUE identifier as used e.g. in /etc/fstab
  * or /etc/crypttab.
  *
+ * The @device_path should be a demangled (unquoted/unencoded/unescaped) string.
+ *
  * Returns: %TRUE when identifiers do match, %FALSE otherwise.
  */
 gboolean
 udisks_linux_block_matches_id (UDisksLinuxBlock *block,
                                const gchar      *device_path)
 {
-  const gchar *device = NULL;
-  const gchar *label = NULL;
-  const gchar *uuid = NULL;
-  const gchar *partuuid = NULL;
-  const gchar *partlabel = NULL;
-  const gchar *const *symlinks;
+  gchar *tag_type = NULL;
+  gchar *tag_val = NULL;
+  gboolean ret = FALSE;
 
-  if (device_path == NULL || strlen (device_path) < 1)
-    {
-      return FALSE;
-    }
-  if (g_str_has_prefix (device_path, "UUID="))
-    {
-      uuid = device_path + 5;
-    }
-  else if (g_str_has_prefix (device_path, "LABEL="))
-    {
-      label = device_path + 6;
-    }
-  else if (g_str_has_prefix (device_path, "PARTUUID="))
-    {
-      partuuid = device_path + 9;
-    }
-  else if (g_str_has_prefix (device_path, "PARTLABEL="))
-    {
-      partlabel = device_path + 10;
-    }
-  else if (g_str_has_prefix (device_path, "/dev"))
-    {
-      device = device_path;
-    }
-  else
-    {
-      /* ignore non-device entry */
-      return FALSE;
-    }
+  g_return_val_if_fail (device_path != NULL && strlen (device_path) > 0, FALSE);
 
-  if (device != NULL)
+  if (blkid_parse_tag_string (device_path, &tag_type, &tag_val) != 0 || !tag_type || !tag_val)
     {
-      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+      /* the "NAME=value" string parsing failed, treat it as a device file */
+      const gchar *const *symlinks;
+
+      g_free (tag_type);
+      g_free (tag_val);
+
+      if (g_strcmp0 (device_path, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
         return TRUE;
 
       symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-      if (symlinks && g_strv_contains (symlinks, device))
+      if (symlinks && g_strv_contains (symlinks, device_path))
         return TRUE;
+
+      return FALSE;
     }
-  if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
+
+  ret = g_str_equal (tag_type, "UUID") && g_strcmp0 (tag_val, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0;
+  ret = ret || (g_str_equal (tag_type, "LABEL") && g_strcmp0 (tag_val, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0);
+
+  if (!ret && (g_str_equal (tag_type, "PARTUUID") || g_str_equal (tag_type, "PARTLABEL")))
     {
-      return TRUE;
-    }
-  if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
-    {
-      return TRUE;
-    }
-  if (partlabel != NULL || partuuid != NULL)
-    {
-      UDisksLinuxBlockObject *object;
-      UDisksLinuxDevice *linux_device;
+      UDisksObject *object;
+      UDisksPartition *partition;
 
       object = udisks_daemon_util_dup_object (block, NULL);
       if (object != NULL)
         {
-          linux_device = udisks_linux_block_object_get_device (object);
-          g_clear_object (&object);
-          if (linux_device != NULL && linux_device->udev_device != NULL &&
-              ((partuuid != NULL  && g_strcmp0 (partuuid,  g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_UUID")) == 0) ||
-               (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (linux_device->udev_device, "ID_PART_ENTRY_NAME")) == 0)))
+          partition = udisks_object_peek_partition (object);
+          if (partition != NULL)
             {
-              g_object_unref (linux_device);
-              return TRUE;
+              ret = (g_str_equal (tag_type, "PARTUUID")  && g_strcmp0 (tag_val, udisks_partition_get_uuid (partition)) == 0) ||
+                    (g_str_equal (tag_type, "PARTLABEL") && g_strcmp0 (tag_val, udisks_partition_get_name (partition)) == 0);
             }
-          g_clear_object (&linux_device);
+          g_object_unref (object);
         }
     }
 
-  return FALSE;
+  g_free (tag_type);
+  g_free (tag_val);
+
+  return ret;
 }
 
 static GList *
