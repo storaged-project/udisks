@@ -1157,10 +1157,21 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
   const gchar *sysfs_path;
   UDisksLinuxBlockObject *object;
   UDisksDaemon *daemon;
+  const gchar *const *symlinks;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
-
+  
+  /* When u disk quick plug test, the kernel may report an error "change" event. 
+   * At this time, the value of sysfs_path is wrong, and the value of the 
+   * corresponding *symlinks is also empty. Do not continue to save this data.
+   */
+  symlinks = g_udev_device_get_device_file_symlinks (device->udev_device);
+  if(g_strcmp0 (action, "change") == 0 && NULL == *symlinks)
+  {
+    return;
+  }
+  
   if (g_strcmp0 (action, "remove") == 0)
     {
       object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
