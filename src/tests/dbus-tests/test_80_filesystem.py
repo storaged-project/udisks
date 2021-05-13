@@ -1255,7 +1255,7 @@ class NILFS2TestCase(UdisksFSTestCase):
 class F2FSTestCase(UdisksFSTestCase):
     _fs_name = 'f2fs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
-    _can_label = False
+    _can_label = True
     _can_relabel = False
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
 
