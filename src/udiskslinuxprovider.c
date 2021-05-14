@@ -222,6 +222,7 @@ typedef struct
   UDisksLinuxProvider *provider;
   GUdevDevice *udev_device;
   UDisksLinuxDevice *udisks_device;
+  gboolean known_block;
 } ProbeRequest;
 
 static void
@@ -253,6 +254,30 @@ on_idle_with_probed_uevent (gpointer user_data)
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+uevent_is_spurious (GUdevDevice *dev)
+{
+  if (g_strcmp0 (g_udev_device_get_action (dev), "change") != 0)
+    return FALSE;
+
+  if (g_strcmp0 (g_udev_device_get_subsystem (dev), "block") != 0)
+    return FALSE;
+
+  if (g_strcmp0 (g_udev_device_get_devtype (dev), "disk") != 0)
+    return FALSE;
+
+  if (g_udev_device_has_property (dev, "ID_TYPE"))
+    return FALSE;
+
+  /* see kernel block/genhd.c: disk_uevents[] */
+  if (g_udev_device_get_property_as_int (dev, "DISK_MEDIA_CHANGE") == 1)
+    return TRUE;
+  if (g_udev_device_get_property_as_int (dev, "DISK_EJECT_REQUEST") == 1)
+    return TRUE;
+
+  return FALSE;
+}
 
 gpointer
 probe_request_thread_func (gpointer user_data)
@@ -289,6 +314,10 @@ probe_request_thread_func (gpointer user_data)
         dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
       }
 
+      /* ignore spurious uevents */
+      if (!request->known_block && uevent_is_spurious (request->udev_device))
+        continue;
+
       /* probe the device - this may take a while */
       request->udisks_device = udisks_linux_device_new_sync (request->udev_device);
 
@@ -311,10 +340,14 @@ on_uevent (GUdevClient  *client,
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
   ProbeRequest *request;
+  const gchar *sysfs_path;
 
   request = g_slice_new0 (ProbeRequest);
   request->provider = g_object_ref (provider);
   request->udev_device = g_object_ref (device);
+
+  sysfs_path = g_udev_device_get_sysfs_path (device);
+  request->known_block = sysfs_path != NULL && g_hash_table_contains (provider->sysfs_to_block, sysfs_path);
 
   /* process uevent in "probing-thread" */
   g_async_queue_push (provider->probe_request_queue, request);
