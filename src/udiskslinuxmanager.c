@@ -763,9 +763,12 @@ handle_mdraid_create (UDisksManager         *_object,
         }
       raid_device_file = g_strdup_printf ("/dev/%s", raid_node);
     }
-
   else
     raid_device_file = g_strdup (array_name);
+
+  /* trigger uevent on the newly created md node */
+  udisks_daemon_util_trigger_uevent_sync (manager->daemon, raid_device_file, NULL,
+                                          UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* ... then, sit and wait for raid array object to show up */
   array_object = udisks_daemon_wait_for_object_sync (manager->daemon,
