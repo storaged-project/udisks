@@ -240,6 +240,18 @@
               Filesystem UUID. #org.freedesktop.UDisks2.Block:IdUUID is used.
             </para></listitem>
           </varlistentry>
+          <varlistentry>
+            <term>partuuid (type <literal>'s'</literal>)</term>
+            <listitem><para>
+              Partition UUID. #org.freedesktop.UDisks2.Partition:UUID is used.
+            </para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>partlabel (type <literal>'s'</literal>)</term>
+            <listitem><para>
+              Partition Name. #org.freedesktop.UDisks2.Partition:Name is used.
+            </para></listitem>
+          </varlistentry>
         </variablelist>
 
         It is possbile to specify multiple keys. In this case, only devices matching all values will be returned.
