@@ -26,6 +26,12 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     chap_iqn = 'iqn.2003-01.udisks.test:iscsi-test-chap'
     mutual_iqn = 'iqn.2003-01.udisks.test:iscsi-test-mutual'
 
+    # Define common D-Bus method call timeout that needs to be slightly longer
+    # than the corresponding timeout defined in libiscsi:
+    #   #define ISCSID_REQ_TIMEOUT 1000
+    # In reality the timeout is typically around 120 sec for the 'login' operation.
+    iscsi_timeout = 1000 + 5
+
     @classmethod
     def setUpClass(cls):
         udiskstestcase.UdisksTestCase.setUpClass()
@@ -78,7 +84,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     def test_login_noauth(self):
         manager = self.get_object('/Manager')
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
-                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                               timeout=self.iscsi_timeout)
 
         node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
         self.assertIsNotNone(node)
@@ -90,7 +97,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._force_lougout, self.noauth_iqn)
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
-                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                      timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -105,7 +113,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertIn(self.str_to_ay(devs[0]), symlinks)
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
-                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                       timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -120,7 +129,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         manager = self.get_object('/Manager')
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
-                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                               timeout=self.iscsi_timeout)
 
         node = next((node for node in nodes if node[0] == self.chap_iqn), None)
         self.assertIsNotNone(node)
@@ -138,14 +148,16 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
-                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                          timeout=self.iscsi_timeout)
 
         # right password
         options['password'] = self.password
 
         self.addCleanup(self._force_lougout, self.chap_iqn)
         manager.Login(iqn, tpg, host, port, iface, options,
-                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                      timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -160,7 +172,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertIn(self.str_to_ay(devs[0]), symlinks)
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
-                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                       timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -175,7 +188,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         manager = self.get_object('/Manager')
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
-                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                               timeout=self.iscsi_timeout)
 
         node = next((node for node in nodes if node[0] == self.mutual_iqn), None)
         self.assertIsNotNone(node)
@@ -193,7 +207,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._force_lougout, self.mutual_iqn)
         manager.Login(iqn, tpg, host, port, iface, options,
-                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                      timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 1)
@@ -208,7 +223,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertIn(self.str_to_ay(devs[0]), symlinks)
 
         manager.Logout(iqn, tpg, host, port, iface, self.no_options,
-                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                       timeout=self.iscsi_timeout)
 
         devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
         self.assertEqual(len(devs), 0)
@@ -228,7 +244,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
             self.skipTest("ISCSI.Session objects not supported.")
 
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
-                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                               timeout=self.iscsi_timeout)
 
         node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
         self.assertIsNotNone(node)
@@ -237,7 +254,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._force_lougout, self.noauth_iqn)
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
-                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                      timeout=self.iscsi_timeout)
 
         # /org/freedesktop/UDisks2/iscsi/sessionX should be created
         udisks = self.get_object('')
@@ -260,7 +278,8 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         # logout using session
         session.Logout(self.no_options,
-                       dbus_interface=self.iface_prefix + '.ISCSI.Session')
+                       dbus_interface=self.iface_prefix + '.ISCSI.Session',
+                       timeout=self.iscsi_timeout)
 
         # make sure the session object is no longer on dbus
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
