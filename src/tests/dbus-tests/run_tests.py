@@ -162,6 +162,7 @@ def _get_test_tags(test):
     """ Get test tags for single test case """
 
     tags = set()
+    tags.add(udiskstestcase.TestTags.ALL)
 
     # test failed to load, usually some ImportError or something really broken
     # in the test file, just return empty list and let it fail
@@ -184,8 +185,6 @@ def _get_test_tags(test):
         tags.add(udiskstestcase.TestTags.NOSTORAGE)
     if getattr(test_fn, "extradeps", False) or getattr(test_fn.__self__, "extradeps", False):
         tags.add(udiskstestcase.TestTags.EXTRADEPS)
-
-    tags.add(udiskstestcase.TestTags.ALL)
 
     return tags
 
