@@ -493,10 +493,16 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=uid=,gid=,shortname=mixed,utf8=1,showexec\n", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
             test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=xxxxx\n\n[%s]\nvfat_defaults=yyyyyy\n" % block_fs_dev, udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
 
-    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
-    def test_mount_fstab(self):
+
+    def _test_fstab_label(self, disk_obj_path, label, fstab_label_str, mount_should_fail):
         if not self._can_create:
             self.skipTest('Cannot create %s filesystem' % self._fs_name)
+
+        if label:
+            if not self._can_label:
+                self.skipTest('Cannot set label when creating %s filesystem' % self._fs_name)
+            if self._fs_name == 'vfat':
+                self.skipTest('dosfstools >= 4.2 introduced stricter label rules')
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_name)
@@ -505,17 +511,31 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         fstab = self.read_file('/etc/fstab')
         self.addCleanup(self.write_file, '/etc/fstab', fstab)
 
-        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk = self.get_object(disk_obj_path)
         self.assertIsNotNone(disk)
+        disk_dev_path = self.ay_to_str(self.get_property_raw(disk, '.Block', 'Device'))
+
+        d = self.no_options
+        if label:
+            d = dbus.Dictionary(signature='sv')
+            d['label'] = label
 
         # create filesystem
-        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
-        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        disk.Format(self._fs_name, d, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, disk_dev_path)
 
         # get real block object for the newly created filesystem
-        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        block_fs, block_fs_dev = self._get_formatted_block_object(disk_dev_path)
         self.assertIsNotNone(block_fs)
         self.assertIsNotNone(block_fs_dev)
+
+        if label:
+            # test dbus properties
+            dbus_label = self.get_property(block_fs, '.Block', 'IdLabel')
+            dbus_label.assertEqual(label)
+            # test system values
+            _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % block_fs_dev)
+            self.assertEqual(sys_label, label)
 
         # create a tempdir
         tmp = tempfile.mkdtemp()
@@ -528,30 +548,102 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # set the new configuration
         conf_items = {'dir': mnt, 'type': fstype, 'opts': opts, 'freq': 0, 'passno': 0}
-        if self.vdevs[0] != block_fs_dev:
+        if label:
+            conf_items['fsname'] = self.str_to_ay(fstab_label_str)
+        elif disk_dev_path != block_fs_dev:
             # avoid using IDs for partitioned block devices
             conf_items['fsname'] = self.str_to_ay(block_fs_dev)
         conf = dbus.Dictionary(conf_items, signature=dbus.Signature('sv'))
         block_fs.AddConfigurationItem(('fstab', conf), self.no_options,
                                       dbus_interface=self.iface_prefix + '.Block')
 
+        # test if the `mount` command is able to mount it
+        ret, out = self.run_command('mount %s' % tmp)
+        self.addCleanup(self.try_unmount, tmp)
+        self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, disk_dev_path)
+        if mount_should_fail:
+            self.assertEquals(ret, 1)
+            self.assertIn("can't find", out)
+        else:
+            self.assertEquals(ret, 0)
+            ret, out = self.run_command('umount %s' % tmp)
+            self.assertEquals(ret, 0)
+
         # mount using fstab options
         block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, block_fs_dev)
-        self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
         dbus_mounts.assertLen(1)  # just one mountpoint
+        # in case of a fstab record mismatch UDisks will create a dynamic mountpoint instead
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
-        self.assertEqual(dbus_mnt, tmp)
-
-        # system mountpoint
-        self.assertTrue(os.path.ismount(tmp))
 
         _ret, out = self.run_command('mount | grep %s' % block_fs_dev)
-        self.assertIn(tmp, out)
-        self.assertIn('ro', out)
+        if mount_should_fail:
+            self.assertNotEqual(dbus_mnt, tmp)
+            # user mountpoint
+            self.assertFalse(os.path.ismount(tmp))
+            self.assertNotIn(tmp, out)
+        else:
+            self.assertEqual(dbus_mnt, tmp)
+            # system mountpoint
+            self.assertTrue(os.path.ismount(tmp))
+            self.assertIn(tmp, out)
+            self.assertIn('ro', out)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_fstab(self):
+        disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
+        self._test_fstab_label(disk_obj_path, None, None, False)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_fstab_complex_label(self):
+        """ Test fstab mounts identified by a complex label"""
+
+        label = '\'UD "SK S2\''
+        disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
+        self._test_fstab_label(disk_obj_path, label, "LABEL='%s'" % label, False)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_fstab_complex_label2(self):
+        label = '"UD \'SK"'
+        disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
+        self._test_fstab_label(disk_obj_path, label, 'LABEL="%s"' % label, False)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_fstab_complex_label_bad(self):
+        """ Test fstab mount mismatch by a badly escaped complex label"""
+
+        label = '\'UD "SK S2\''
+        disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
+        self._test_fstab_label(disk_obj_path, label, "LABEL=%s" % label, True)
+
+
+    def _remove_partition(self, part):
+        try:
+            part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+        except:
+            pass
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_fstab_partlabel(self):
+        """ Test fstab mounts identified by PARTLABEL"""
+
+        start = 1024**2
+        size = 140*1024**2  # btrfs needs at least 114 MB, nilfs needs 134 MB
+        partlabel = '\'PRT "x LBL\''
+        fslabel = '\'UD "SK S2\''
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        disk.Format('gpt', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        part = disk.CreatePartition(dbus.UInt64(start), dbus.UInt64(size), '', partlabel,
+                                    self.no_options,
+                                    dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.addCleanup(self._remove_partition, part)
+
+        self._test_fstab_label(part, fslabel, "PARTLABEL='%s'" % partlabel, False)
 
     def test_unmount_no_race_in_mount_points(self):
         if not self._can_create:
@@ -1163,7 +1255,7 @@ class NILFS2TestCase(UdisksFSTestCase):
 class F2FSTestCase(UdisksFSTestCase):
     _fs_name = 'f2fs'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
-    _can_label = False
+    _can_label = True
     _can_relabel = False
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
 
@@ -1184,7 +1276,7 @@ class UDFTestCase(UdisksFSTestCase):
 
     def _get_formatted_block_object(self, dev_path):
         """ udftools >= 2.0 create fake MBR partition table, need to test the partitioned volume. """
-        if self._get_mkudffs_version() >= LooseVersion('2.0'):
+        if self._get_mkudffs_version() >= LooseVersion('2.0') and not dev_path.endswith("1"):
             dev_path += "1"
         block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
         return (block_object, dev_path)
