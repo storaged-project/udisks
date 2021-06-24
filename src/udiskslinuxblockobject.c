@@ -1018,6 +1018,7 @@ udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
 /**
  * udisks_linux_block_object_reread_partition_table:
  * @object: A #UDisksLinuxBlockObject.
+ * @error: Return location for error.
  *
  * Requests the kernel to re-read the partition table for @object.
  *
@@ -1025,22 +1026,30 @@ udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
  * kernel through the udev stack and will eventually be received by
  * the udisks daemon process itself. This method does not wait for the
  * event to be received.
+ *
+ * Returns: %TRUE if the partition reread request was issued successfully
+ * or %FALSE when error occurred with @error set.
  */
-void
-udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object)
+gboolean
+udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject  *object,
+                                                  GError                 **error)
 {
   UDisksLinuxDevice *device;
   const gchar *device_file;
   gint fd;
+  gboolean ret = TRUE;
 
-  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
+  g_warn_if_fail (!error || !*error);
 
   device = udisks_linux_block_object_get_device (object);
   device_file = g_udev_device_get_device_file (device->udev_device);
   fd = open (device_file, O_RDONLY);
   if (fd == -1)
     {
-      udisks_warning ("Error opening %s while re-reading partition table: %m", device_file);
+      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                   "Error opening %s while re-reading partition table: %m", device_file);
+      ret = FALSE;
     }
   else
     {
@@ -1058,12 +1067,15 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
 
       if (ioctl (fd, BLKRRPART) != 0)
         {
-          udisks_warning ("Error issuing BLKRRPART to %s: %m", device_file);
+          g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                       "Error re-reading partition table (BLKRRPART ioctl) on %s: %m", device_file);
+          ret = FALSE;
         }
       close (fd);
     }
 
   g_object_unref (device);
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -3122,8 +3122,12 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* ...then wait until this change has taken effect */
-  if (was_partitioned)
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (was_partitioned &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data = g_new0 (FormatWaitData, 1);
@@ -3399,8 +3403,12 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  if (need_partprobe_after_mkfs (type))
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (need_partprobe_after_mkfs (type) &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data->object = object_to_mkfs;
@@ -3902,8 +3910,12 @@ handle_rescan (UDisksBlock           *block,
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
-  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0)
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
 
   udisks_block_complete_rescan (block, invocation);
 
