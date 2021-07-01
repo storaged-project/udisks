@@ -2885,15 +2885,6 @@ build_command (const gchar *template,
   return command;
 }
 
-static inline gboolean
-need_partprobe_after_mkfs (const gchar *fs_type)
-{
-  /* udftools makes fake MBR since the 2.0 release */
-  /* dosfstools makes fake MBR since the 4.2 release */
-  return (g_strcmp0 (fs_type, "udf") == 0 ||
-          g_strcmp0 (fs_type, "vfat") == 0);
-}
-
 void
 udisks_linux_block_handle_format (UDisksBlock             *block,
                                   GDBusMethodInvocation   *invocation,
@@ -3403,7 +3394,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  if (need_partprobe_after_mkfs (type) &&
+  if (udisks_linux_fsinfo_creates_protective_parttable (type) &&
       !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
     {
       udisks_warning ("%s", error->message);
