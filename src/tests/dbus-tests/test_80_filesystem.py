@@ -79,8 +79,15 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         ret, _out = cls.run_command('type %s' % command)
         return ret == 0
 
+    def _creates_protective_part_table(self):
+        """ Indicates whether mkfs creates a protective partition table. """
+        return False
+
     def _get_formatted_block_object(self, dev_path):
         """ Get the real block object and its device path for a given filesystem type after formatting. """
+        if self._creates_protective_part_table() and not dev_path.endswith("1") and \
+           not self._fs_name == "vfat":  # udisksd forces --mbr=n for vfat
+            dev_path += "1"
         block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
         return (block_object, dev_path)
 
@@ -501,7 +508,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if label:
             if not self._can_label:
                 self.skipTest('Cannot set label when creating %s filesystem' % self._fs_name)
-            if self._fs_name == 'vfat':
+            if self._fs_name == 'vfat' and self._creates_protective_part_table():
                 self.skipTest('dosfstools >= 4.2 introduced stricter label rules')
 
         if not self._can_mount:
@@ -731,7 +738,89 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_protective_part_overwrite(self):
+        """ Test overwriting the protective partition table header by creating new filesystem on a nested partition. """
+        if not self._creates_protective_part_table():
+            self.skipTest('Filesystem %s does not create protective partition table' % self._fs_name)
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
 
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        if self._fs_name == "vfat":
+            # need to force creation of a protective MBR
+            ret, _out = self.run_command('mkfs.vfat --mbr=y %s' % self.vdevs[0])
+            self.assertEqual(ret, 0)
+            time.sleep(2)
+        else:
+           self._create_format(disk)
+
+        # verify that there's a partition table and partition with the expected filesystem
+        pttype = self.get_property(disk, '.PartitionTable', 'Type')
+        pttype.assertNotEqual('gpt')
+        parts = self.get_property(disk, '.PartitionTable', 'Partitions')
+        parts.assertLen(1)
+
+        part = self.get_object(parts.value[0])
+        self.assertIsNotNone(part)
+        part_offset = self.get_property(part, '.Partition', 'Offset')
+        # expect a partition starting with offset 0
+        part_offset.assertEqual(0)
+
+        # attempt to create another filesystem on the partition
+        msg = 'This partition cannot be modified because it contains a partition table; please reinitialize layout of the whole device.'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            part.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_protective_part_overwrite_mounted(self):
+        """ Test overwriting the master block device carrying a protective partition table having the nested partition mounted. """
+        if not self._creates_protective_part_table():
+            self.skipTest('Filesystem %s does not create protective partition table' % self._fs_name)
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_name)
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_name)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        if self._fs_name == "vfat":
+            # need to force creation of a protective MBR
+            ret, _out = self.run_command('mkfs.vfat --mbr=y %s' % self.vdevs[0])
+            self.assertEqual(ret, 0)
+            time.sleep(2)
+        else:
+           self._create_format(disk)
+
+        # verify that there's a partition table and partition with the expected filesystem
+        pttype = self.get_property(disk, '.PartitionTable', 'Type')
+        pttype.assertNotEqual('gpt')
+        parts = self.get_property(disk, '.PartitionTable', 'Partitions')
+        parts.assertLen(1)
+
+        part = self.get_object(parts.value[0])
+        self.assertIsNotNone(part)
+        part_offset = self.get_property(part, '.Partition', 'Offset')
+        # expect a partition starting with offset 0
+        part_offset.assertEqual(0)
+
+        # mount the filesystem
+        d = dbus.Dictionary(signature='sv')
+        d['fstype'] = self._fs_name
+        d['options'] = 'ro'
+        mnt_path = part.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, mnt_path)
+
+        # now try formatting the master block device
+        msg = r"Error wiping device: Failed to open the device|Error synchronizing after initial wipe: Timed out waiting for object"
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        part.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        disk.Format(self._fs_name, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
 
 class Ext2TestCase(UdisksFSTestCase):
@@ -897,6 +986,18 @@ class VFATTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
+
+    def _get_dosfstools_version(self):
+        _ret, out = self.run_command("mkfs.vfat --help")
+        # mkfs.fat 4.1 (2017-01-24)
+        m = re.search(r"mkfs\.fat ([\d\.]+)", out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError("Failed to determine dosfstools version from: %s" % out)
+        return LooseVersion(m.groups()[0])
+
+    def _creates_protective_part_table(self):
+        # dosfstools >= 4.2 create fake MBR partition table
+        return self._get_dosfstools_version() >= LooseVersion('4.2')
 
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
@@ -1274,12 +1375,9 @@ class UDFTestCase(UdisksFSTestCase):
             return LooseVersion("0")
         return LooseVersion(m.groups()[0])
 
-    def _get_formatted_block_object(self, dev_path):
-        """ udftools >= 2.0 create fake MBR partition table, need to test the partitioned volume. """
-        if self._get_mkudffs_version() >= LooseVersion('2.0') and not dev_path.endswith("1"):
-            dev_path += "1"
-        block_object = self.get_object('/block_devices/' + os.path.basename(dev_path))
-        return (block_object, dev_path)
+    def _creates_protective_part_table(self):
+        # udftools >= 2.0 create fake MBR partition table
+        return self._get_mkudffs_version() >= LooseVersion('2.0')
 
 
 class FailsystemTestCase(UdisksFSTestCase):
