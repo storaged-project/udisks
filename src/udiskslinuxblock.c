@@ -2817,6 +2817,54 @@ udisks_linux_block_encrypted_unlock (UDisksBlock *block)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
+trigger_uevent_on_nested_partitions (UDisksDaemon           *daemon,
+                                     UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *block_device;
+  GUdevClient *gudev_client;
+  GUdevEnumerator *gudev_enumerator;
+  const gchar *sysfs_path;
+  GList *list;
+  GList *l;
+
+  block_device = udisks_linux_block_object_get_device (object);
+  if (block_device == NULL)
+    return;
+
+  sysfs_path = g_udev_device_get_sysfs_path (block_device->udev_device);
+
+  /* Can't be quite sure that block objects for all the partitions have been created
+   * at this point, also the UDisksPartitionTable.Partitions property is filled from
+   * a list of exported objects on the object manager filtered by a device path.
+   * Reaching to udev db directly instead.
+   */
+  gudev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (daemon));
+  gudev_enumerator = g_udev_enumerator_new (gudev_client);
+
+  g_udev_enumerator_add_match_sysfs_attr (gudev_enumerator, "partition", "1");
+
+  list = g_udev_enumerator_execute (gudev_enumerator);
+  for (l = list; l; l = g_list_next (l))
+    {
+      GUdevDevice *parent;
+
+      parent = g_udev_device_get_parent (l->data);
+      if (parent)
+        {
+          if (g_strcmp0 (g_udev_device_get_sysfs_path (parent), sysfs_path) == 0)
+            udisks_daemon_util_trigger_uevent_sync (daemon, NULL, g_udev_device_get_sysfs_path (l->data), UDISKS_DEFAULT_WAIT_TIMEOUT);
+          g_object_unref (parent);
+        }
+    }
+  g_list_free_full (list, g_object_unref);
+
+  g_object_unref (gudev_enumerator);
+  g_object_unref (block_device);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
 handle_format_failure (GDBusMethodInvocation *invocation,
                        GError *error)
 {
@@ -3402,6 +3450,15 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  /* In case a protective partition table was potentially created, trigger uevents
+   * on all nested partitions. */
+  if (udisks_linux_fsinfo_creates_protective_parttable (type))
+    {
+      trigger_uevent_on_nested_partitions (daemon, UDISKS_LINUX_BLOCK_OBJECT (object));
+    }
+
+  /* Wait for the desired filesystem interface */
   wait_data->object = object_to_mkfs;
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem,
