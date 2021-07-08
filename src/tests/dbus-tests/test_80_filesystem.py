@@ -577,6 +577,9 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             ret, out = self.run_command('umount %s' % tmp)
             self.assertEquals(ret, 0)
 
+        # previously mounted externally, give udisksd some time to register /proc/self/mountinfo changes
+        time.sleep(2)
+
         # mount using fstab options
         block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
