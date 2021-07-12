@@ -42,6 +42,8 @@ const FSInfo  *get_fs_info (const gchar *fstype);
 const gchar  **get_supported_filesystems (void);
 const gchar  **get_supported_encryption_types (void);
 
+gboolean       udisks_linux_fsinfo_creates_protective_parttable (const gchar *fs_type);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_FSINFO_H__ */

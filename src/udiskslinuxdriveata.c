@@ -2164,7 +2164,12 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
 
   clear_passwd_on_failure = FALSE;
 
-  udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+  if (! udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object),
+                                                          &local_error))
+    {
+      udisks_warning ("%s", local_error->message);
+      g_clear_error (&local_error);
+    }
 
   ret = TRUE;
 
@@ -2319,7 +2324,12 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+  if (!udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
+
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (block_object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
 

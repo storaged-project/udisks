@@ -317,3 +317,22 @@ get_supported_encryption_types (void)
 {
   return _encryption_types;
 }
+
+/**
+ * udisks_linux_fsinfo_creates_protective_parttable:
+ * @fs_type: filesystem type.
+ *
+ * Indicates whether the @fs_type potentially creates a protective (MBR)
+ * partition table during mkfs.
+ *
+ * Returns: %TRUE if there's a chance a protective partition table is created,
+ *          %FALSE otherwise.
+ */
+gboolean
+udisks_linux_fsinfo_creates_protective_parttable (const gchar *fs_type)
+{
+  /* udftools makes fake MBR since the 2.0 release */
+  /* dosfstools makes fake MBR since the 4.2 release */
+  return (g_strcmp0 (fs_type, "udf") == 0 ||
+          g_strcmp0 (fs_type, "vfat") == 0);
+}
