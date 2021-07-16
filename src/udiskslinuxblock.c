@@ -231,7 +231,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
   GUdevDevice *whole_disk_block_device;
   const gchar *whole_disk_block_device_sysfs_path;
   gchar *ret;
-  GList *objects;
+  GList *objects = NULL;
   GList *l;
 
   ret = NULL;
@@ -240,6 +240,8 @@ find_drive (GDBusObjectManagerServer  *object_manager,
     whole_disk_block_device = g_object_ref (block_device);
   else
     whole_disk_block_device = g_udev_device_get_parent_with_subsystem (block_device, "block", "disk");
+  if (whole_disk_block_device == NULL)
+    goto out;
   whole_disk_block_device_sysfs_path = g_udev_device_get_sysfs_path (whole_disk_block_device);
 
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
@@ -273,7 +275,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
 
  out:
   g_list_free_full (objects, g_object_unref);
-  g_object_unref (whole_disk_block_device);
+  g_clear_object (&whole_disk_block_device);
   return ret;
 }
 
