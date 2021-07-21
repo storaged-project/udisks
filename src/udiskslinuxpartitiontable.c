@@ -492,7 +492,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   /* wipe the newly created partition if wanted */
   if (part_spec->type != BD_PART_TYPE_EXTENDED)
     {
-      if (!bd_fs_wipe (part_spec->path, TRUE, &error))
+      if (!bd_fs_wipe (part_spec->path, TRUE, TRUE, &error))
         {
           if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
             g_clear_error (&error);

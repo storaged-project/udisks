@@ -3100,7 +3100,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   device_name = udisks_block_dup_device (block);
 
   /* First wipe the device... */
-  if (! bd_fs_wipe (device_name, TRUE, &error))
+  if (! bd_fs_wipe (device_name, TRUE, TRUE, &error))
     {
       if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
         /* no signature to remove, ignore */

@@ -1060,7 +1060,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (opt_wipe)
     {
-      if (!bd_fs_wipe (member_device_file, TRUE, &error))
+      if (!bd_fs_wipe (member_device_file, TRUE, TRUE, &error))
         {
           g_prefix_error (&error,
                           "Error wiping '%s' after removal from RAID array '%s': ",
