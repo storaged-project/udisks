@@ -2817,6 +2817,54 @@ udisks_linux_block_encrypted_unlock (UDisksBlock *block)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
+trigger_uevent_on_nested_partitions (UDisksDaemon           *daemon,
+                                     UDisksLinuxBlockObject *object)
+{
+  UDisksLinuxDevice *block_device;
+  GUdevClient *gudev_client;
+  GUdevEnumerator *gudev_enumerator;
+  const gchar *sysfs_path;
+  GList *list;
+  GList *l;
+
+  block_device = udisks_linux_block_object_get_device (object);
+  if (block_device == NULL)
+    return;
+
+  sysfs_path = g_udev_device_get_sysfs_path (block_device->udev_device);
+
+  /* Can't be quite sure that block objects for all the partitions have been created
+   * at this point, also the UDisksPartitionTable.Partitions property is filled from
+   * a list of exported objects on the object manager filtered by a device path.
+   * Reaching to udev db directly instead.
+   */
+  gudev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (daemon));
+  gudev_enumerator = g_udev_enumerator_new (gudev_client);
+
+  g_udev_enumerator_add_match_sysfs_attr (gudev_enumerator, "partition", "1");
+
+  list = g_udev_enumerator_execute (gudev_enumerator);
+  for (l = list; l; l = g_list_next (l))
+    {
+      GUdevDevice *parent;
+
+      parent = g_udev_device_get_parent (l->data);
+      if (parent)
+        {
+          if (g_strcmp0 (g_udev_device_get_sysfs_path (parent), sysfs_path) == 0)
+            udisks_daemon_util_trigger_uevent_sync (daemon, NULL, g_udev_device_get_sysfs_path (l->data), UDISKS_DEFAULT_WAIT_TIMEOUT);
+          g_object_unref (parent);
+        }
+    }
+  g_list_free_full (list, g_object_unref);
+
+  g_object_unref (gudev_enumerator);
+  g_object_unref (block_device);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
 handle_format_failure (GDBusMethodInvocation *invocation,
                        GError *error)
 {
@@ -2883,15 +2931,6 @@ build_command (const gchar *template,
     }
 
   return command;
-}
-
-static inline gboolean
-need_partprobe_after_mkfs (const gchar *fs_type)
-{
-  /* udftools makes fake MBR since the 2.0 release */
-  /* dosfstools makes fake MBR since the 4.2 release */
-  return (g_strcmp0 (fs_type, "udf") == 0 ||
-          g_strcmp0 (fs_type, "vfat") == 0);
 }
 
 void
@@ -3100,7 +3139,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   device_name = udisks_block_dup_device (block);
 
   /* First wipe the device... */
-  if (! bd_fs_wipe (device_name, TRUE, &error))
+#ifdef HAVE_LIBBLOCKDEV3
+  if (! bd_fs_wipe (device_name, TRUE, FALSE, &error))
+#else
+  if (! bd_fs_wipe_force (device_name, TRUE, FALSE, &error))
+#endif
     {
       if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
         /* no signature to remove, ignore */
@@ -3118,8 +3161,12 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* ...then wait until this change has taken effect */
-  if (was_partitioned)
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (was_partitioned &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
   wait_data = g_new0 (FormatWaitData, 1);
@@ -3395,10 +3442,23 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  if (need_partprobe_after_mkfs (type))
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (udisks_linux_fsinfo_creates_protective_parttable (type) &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  /* In case a protective partition table was potentially created, trigger uevents
+   * on all nested partitions. */
+  if (udisks_linux_fsinfo_creates_protective_parttable (type))
+    {
+      trigger_uevent_on_nested_partitions (daemon, UDISKS_LINUX_BLOCK_OBJECT (object));
+    }
+
+  /* Wait for the desired filesystem interface */
   wait_data->object = object_to_mkfs;
   filesystem_object = udisks_daemon_wait_for_object_sync (daemon,
                                                           wait_for_filesystem,
@@ -3898,8 +3958,12 @@ handle_rescan (UDisksBlock           *block,
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
-  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0)
-    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
 
   udisks_block_complete_rescan (block, invocation);
 

@@ -1464,6 +1464,21 @@
         /etc/crypttab that have been created with the 'track-parents'
         options to AddConfigurationItem will be removed even if their
         block device is currently unavailable.
+
+        Note that if the operation fails the block device may be left
+        in an inconsistent state. In cases of removing partition table
+        and failed operation it's advised to validate the device e.g.
+        by re-reading the partition table or force-wiping it before
+        performing further operations.
+
+        In case the <parameter>tear-down</parameter> option is not set
+        and the block device being formatted is partitioned and
+        contains mounted filesystem or an active layered structure
+        inside then the Format operation may not fail, yet could still
+        overwrite nested foreign data regions. It is the caller
+        responsibility to ensure the device is ready for destructive
+        operations. This may be subject to further restrictions
+        in the future.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>

@@ -394,6 +394,8 @@ handle_set_label (UDisksSwapspace        *swapspace,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_swapspace_complete_set_label (swapspace, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
