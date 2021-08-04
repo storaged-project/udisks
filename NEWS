@@ -1,17 +1,53 @@
 ---------------------------
-udisks 2.9.3 (unreleased)
+udisks 2.9.3
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.9.2:
-(TODO: make shortlog)
+
+Florian Ziegler (1):
+      Ignore "Extended Boot Loader" GPT partition
+
+Sebastien Bacher (1):
+      Use the mkfs command to format exfat partitions
+
+Tomas Bzatek (19):
+      udiskslinuxblockobject: Add safety checks for UDisksLinuxBlock interface
+      udiskslinuxfsinfo: Add dosfstools >= 4.2 quirks
+      udiskslinuxblock: Re-read partition table after creating FAT filesystem
+      udiskslinuxdriveata: Use GTask to apply configuration in a thread
+      udiskslinuxfilesystemhelpers: Fix leaking string in case g_mkdtemp() fails
+      udiskslinuxmdraidobject: Optimize unused data out from the g_io_channel_read_to_end() call
+      udiskslinuxmdraidobject: Handle source attach failure gracefully
+      udiskslinuxmanager: Trigger uevent on a newly created mdraid array
+      udiskslinuxswapspace: Trigger uevent after setting label
+      udiskslinuxblock: Handle missing parent device while looking up drive for block
+      modules: Limit module name to alphanumeric characters and -_ separators
+      tests: Mark Drive.ATA tests as unstable
+      tests: Handle missing /dev/disk/by-path gracefully
+      tests: Respect custom method call timeouts
+      tests: Extend iscsi method call timeouts
+      tests: Extend module tests with invalid characters
+      tests: Do not dist config_h.py
+      spec: Do not build udisks2-zram for any RHEL release
+
+Vojtech Trefny (3):
+      udiskslinuxpartition: Trigger uevent after changing partition type
+      dbus_tests: Fix including non-existing tests based on tags
+      Add (no)autodefrag to list of allowed btrfs mount options
+
+Will Thompson (1):
+      udisksclient: Make get_block_for_drive deterministic
+
+olf (1):
+      Fix two comments (one copy'o, one typo)
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2021-08-04
 
 ---------------------------
 udisks 2.9.2

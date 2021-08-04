@@ -18,6 +18,8 @@
 %define default_luks_encryption         luks1
 
 %define is_fedora                       0%{?rhel} == 0
+%define is_rhel7                        (0%{?rhel} && 0%{?rhel} == 7)
+%define is_rhel8                        (0%{?rhel} && 0%{?rhel} == 8)
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
@@ -468,6 +470,9 @@ fi
 %endif
 
 %changelog
+* Wed Aug 04 2021 Tomas Bzatek <tbzatek@redhat.com> - 2.9.3-1
+- Version 2.9.3
+
 * Thu Feb 04 2021 Tomas Bzatek <tbzatek@redhat.com> - 2.9.2-1
 - Version 2.9.2
 
