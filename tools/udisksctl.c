@@ -575,6 +575,20 @@ static const GOptionEntry command_unmount_entries[] =
   }
 };
 
+static void
+list_options (const GOptionEntry *entries)
+{
+  const GOptionEntry* current;
+  for (current = entries; current->long_name; current++)
+    {
+      if ((current->arg != G_OPTION_ARG_STRING && current->arg != G_OPTION_ARG_FILENAME) ||
+          (current->arg_data != NULL && !*(gchar**)current->arg_data))
+      {
+        g_print ("--%s \n", current->long_name);
+      }
+    }
+}
+
 static gint
 handle_command_mount_unmount (gint        *argc,
                               gchar      **argv[],
@@ -651,12 +665,9 @@ handle_command_mount_unmount (gint        *argc,
         }
     }
 
-  if (request_completion &&
-      (opt_mount_unmount_object_path == NULL && !complete_objects) &&
-      (opt_mount_unmount_device == NULL && !complete_devices))
+  if (request_completion && !complete_objects && !complete_devices)
     {
-      g_print ("--object-path \n"
-               "--block-device \n");
+      list_options (is_mount ? command_mount_entries : command_unmount_entries);
     }
 
   if (complete_objects)
@@ -1162,12 +1173,9 @@ handle_command_unlock_lock (gint        *argc,
         }
     }
 
-  if (request_completion &&
-      (opt_unlock_lock_object_path == NULL && !complete_objects) &&
-      (opt_unlock_lock_device == NULL && !complete_devices))
+  if (request_completion && !complete_objects && !complete_devices)
     {
-      g_print ("--object-path \n"
-               "--block-device \n");
+        list_options (is_unlock ? command_unlock_entries : command_lock_entries);
     }
 
   if (complete_objects)
@@ -1564,24 +1572,15 @@ handle_command_loop (gint        *argc,
 
   if (request_completion)
     {
-      if (is_setup)
+      if (!complete_files && !complete_devices && !complete_objects)
         {
-          if (opt_loop_file == NULL && !complete_files)
-            {
-              g_print ("--file \n");
-            }
-          if (complete_files)
-            {
-              g_print ("@FILES@");
-            }
+          list_options (is_setup ? command_loop_setup_entries : command_loop_delete_entries);
         }
       else
         {
-          if ((opt_loop_object_path == NULL && !complete_objects) &&
-              (opt_loop_device == NULL && !complete_devices))
+          if (complete_files)
             {
-              g_print ("--object-path \n"
-                       "--block-device \n");
+              g_print ("@FILES@");
             }
 
           if (complete_objects)
@@ -1599,8 +1598,8 @@ handle_command_loop (gint        *argc,
                     }
                 }
               g_list_free_full (objects, g_object_unref);
-              goto out;
             }
+
           if (complete_devices)
             {
               objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
@@ -1618,13 +1617,11 @@ handle_command_loop (gint        *argc,
                     }
                 }
               g_list_free_full (objects, g_object_unref);
-              goto out;
             }
         }
 
       /* done with completion */
-      if (request_completion)
-        goto out;
+      goto out;
     }
 
   g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -1910,22 +1907,15 @@ handle_command_smart_simulate (gint        *argc,
 
   if (request_completion)
     {
-      if (opt_smart_simulate_file == NULL && !complete_files && !complete_objects && !complete_devices)
-        {
-          g_print ("--file \n");
-        }
-
       if (complete_files)
         {
           g_print ("@FILES@");
           goto out;
         }
 
-      if ((opt_smart_simulate_object_path == NULL && !complete_objects) &&
-          (opt_smart_simulate_device == NULL && !complete_devices))
+      if (!complete_objects && !complete_devices)
         {
-          g_print ("--object-path \n"
-                   "--block-device \n");
+          list_options (command_smart_simulate_entries);
         }
 
       if (complete_objects)
@@ -2173,11 +2163,9 @@ handle_command_power_off (gint        *argc,
 
   if (request_completion)
     {
-      if ((opt_power_off_object_path == NULL && !complete_objects) &&
-          (opt_power_off_device == NULL && !complete_devices))
+      if (!complete_objects && !complete_devices)
         {
-          g_print ("--object-path \n"
-                   "--block-device \n");
+          list_options (command_power_off_entries);
         }
 
       if (complete_objects)
@@ -2382,13 +2370,11 @@ handle_command_info (gint        *argc,
     }
 
   if (request_completion &&
-      (opt_info_object == NULL && !complete_objects) &&
-      (opt_info_device == NULL && !complete_devices) &&
-      (opt_info_drive == NULL && !complete_drives))
+      !complete_objects &&
+      !complete_devices &&
+      !complete_drives)
     {
-      g_print ("--object-path \n"
-               "--block-device \n"
-               "--drive \n");
+      list_options (command_info_entries);
     }
 
   if (complete_objects)
