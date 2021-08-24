@@ -27,6 +27,7 @@ CPPFLAGS =                                                                     \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
 	$(BLOCKDEV_CFLAGS)                                                     \
+	$(DBUS_1_CFLAGS)                                                       \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 

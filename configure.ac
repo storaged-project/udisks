@@ -142,6 +142,9 @@ fi
 # Libraries
 #
 
+PKG_CHECK_MODULES(DBUS_1, [dbus-1])
+AC_SUBST(DBUS_1_CFLAGS)
+
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.50])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
@@ -603,7 +606,7 @@ if test "x$enable_daemon" = "xyes"; then
   SAVE_CFLAGS=$CFLAGS
   SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
+  CFLAGS="$GLIB_CFLAGS $DBUS_1_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-swap presence])
   AC_TRY_COMPILE([#include <blockdev/swap.h>], [],
@@ -623,7 +626,7 @@ if test "x$enable_daemon" = "xyes"; then
   SAVE_CFLAGS=$CFLAGS
   SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
+  CFLAGS="$GLIB_CFLAGS $DBUS_1_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-mdraid presence])
   AC_TRY_COMPILE([#include <blockdev/mdraid.h>], [],
@@ -643,7 +646,7 @@ if test "x$enable_daemon" = "xyes"; then
   SAVE_CFLAGS=$CFLAGS
   SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
+  CFLAGS="$GLIB_CFLAGS $DBUS_1_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-fs presence])
   AC_TRY_COMPILE([#include <blockdev/fs.h>], [],
@@ -663,7 +666,7 @@ if test "x$enable_daemon" = "xyes"; then
   SAVE_CFLAGS=$CFLAGS
   SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
+  CFLAGS="$GLIB_CFLAGS $DBUS_1_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-crypto presence])
   AC_TRY_COMPILE([#include <blockdev/crypto.h>], [],
