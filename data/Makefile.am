@@ -44,6 +44,11 @@ completions_DATA =                                                             \
 	completions/udisksctl                                                  \
 	$(NULL)
 
+zshcompletionsdir = $(datadir)/zsh/site-functions
+zshcompletions_DATA =                                                          \
+	completions/_udisks2                                                   \
+	$(NULL)
+
 EXTRA_DIST =                                                                   \
 	80-udisks2.rules                                                       \
 	org.freedesktop.UDisks2.xml                                            \
@@ -53,6 +58,7 @@ EXTRA_DIST =                                                                   \
 	$(dbusconf_in_files)                                                   \
 	$(polkit_in_files)                                                     \
 	$(completions_DATA)                                                    \
+	$(zshcompletions_DATA)                                                 \
 	$(NULL)
 
 clean-local:
