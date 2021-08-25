@@ -4,8 +4,7 @@ import six
 import dbus
 import unittest
 import tempfile
-
-from distutils.spawn import find_executable
+import shutil
 
 import udiskstestcase
 
@@ -34,7 +33,7 @@ class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
         udiskstestcase.UdisksTestCase.setUpClass()
 
         # sqlite3 is needed to hack the lsm sim db
-        if not find_executable('sqlite3'):
+        if not shutil.which('sqlite3'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('LSM: sqlite3 executable not found in $PATH, skipping.')
 

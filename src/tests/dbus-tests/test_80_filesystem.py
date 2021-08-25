@@ -7,7 +7,6 @@ import shutil
 import tempfile
 import unittest
 import time
-from distutils.spawn import find_executable
 from packaging.version import Version
 
 from multiprocessing import Process, Pipe
@@ -1487,7 +1486,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
 class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
     def _create_iso9660_on_dev(self, dev):
-        if not find_executable("genisoimage"):
+        if not shutil.which("genisoimage"):
             self.skipTest("Cannot create an iso9660 file system")
 
         tmp = tempfile.mkdtemp()
