@@ -8,7 +8,7 @@ import tempfile
 import unittest
 import time
 from distutils.spawn import find_executable
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 from multiprocessing import Process, Pipe
 
@@ -66,7 +66,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         m = re.search(r'libmount ([\d\.]+)', out)
         if not m or len(m.groups()) != 1:
             raise RuntimeError('Failed to determine libmount version from: %s' % out)
-        return LooseVersion(m.groups()[0])
+        return Version(m.groups()[0])
 
     def _get_mount_options_conf_path(self):
         if os.environ["UDISKS_TESTS_ARG_SYSTEM"] == "1":
@@ -699,7 +699,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     def test_userspace_mount_options(self):
         libmount_version = self._get_libmount_version()
-        if libmount_version < LooseVersion('2.30'):
+        if libmount_version < Version('2.30'):
             self.skipTest('userspace mount options are not supported with libmount < 2.30')
 
         if not self._can_create:
@@ -996,11 +996,11 @@ class VFATTestCase(UdisksFSTestCase):
         m = re.search(r"mkfs\.fat ([\d\.]+)", out)
         if not m or len(m.groups()) != 1:
             raise RuntimeError("Failed to determine dosfstools version from: %s" % out)
-        return LooseVersion(m.groups()[0])
+        return Version(m.groups()[0])
 
     def _creates_protective_part_table(self):
         # dosfstools >= 4.2 create fake MBR partition table
-        return self._get_dosfstools_version() >= LooseVersion('4.2')
+        return self._get_dosfstools_version() >= Version('4.2')
 
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
@@ -1375,12 +1375,12 @@ class UDFTestCase(UdisksFSTestCase):
         _ret, out = self.run_command('mkudffs 2>&1 | grep "mkudffs from udftools"')
         m = re.search(r'from udftools ([\d\.]+)', out)
         if not m or len(m.groups()) != 1:
-            return LooseVersion("0")
-        return LooseVersion(m.groups()[0])
+            return Version("0")
+        return Version(m.groups()[0])
 
     def _creates_protective_part_table(self):
         # udftools >= 2.0 create fake MBR partition table
-        return self._get_mkudffs_version() >= LooseVersion('2.0')
+        return self._get_mkudffs_version() >= Version('2.0')
 
 
 class FailsystemTestCase(UdisksFSTestCase):
