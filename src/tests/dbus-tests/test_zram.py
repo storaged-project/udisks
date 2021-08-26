@@ -207,8 +207,8 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
         # test some properties
         # location of some sysfs files we use is different since linux 4.11
-        kernel_version = os.uname()[2]
-        if Version(kernel_version) >= Version("4.11"):
+        ver = BlockDev.utils_get_linux_version()
+        if Version("%d.%d.%d" % (ver.major, ver.minor, ver.micro)) >= Version("4.11"):
             self._test_zram_properties_fedora(zram, zram_name)
         else:
             self._test_zram_properties_centos(zram, zram_name)
