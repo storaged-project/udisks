@@ -7,7 +7,7 @@ import gi
 gi.require_version('BlockDev', '2.0')
 from gi.repository import BlockDev
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 import udiskstestcase
 
@@ -207,8 +207,8 @@ class UdisksZRAMTest(udiskstestcase.UdisksTestCase):
 
         # test some properties
         # location of some sysfs files we use is different since linux 4.11
-        kernel_version = os.uname()[2]
-        if LooseVersion(kernel_version) >= LooseVersion("4.11"):
+        ver = BlockDev.utils_get_linux_version()
+        if Version("%d.%d.%d" % (ver.major, ver.minor, ver.micro)) >= Version("4.11"):
             self._test_zram_properties_fedora(zram, zram_name)
         else:
             self._test_zram_properties_centos(zram, zram_name)

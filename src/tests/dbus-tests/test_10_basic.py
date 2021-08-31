@@ -2,7 +2,7 @@ import udiskstestcase
 import dbus
 import os
 import six
-from distutils.spawn import find_executable
+import shutil
 
 from config_h import UDISKS_MODULES_ENABLED
 
@@ -106,19 +106,19 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.xfs')
-        self.assertEqual(avail, find_executable('mkfs.xfs') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.xfs') is not None)
         avail, util = manager.CanFormat('f2fs')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.f2fs')
-        self.assertEqual(avail, find_executable('mkfs.f2fs') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.f2fs') is not None)
         avail, util = manager.CanFormat('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.ext4')
-        self.assertEqual(avail, find_executable('mkfs.ext4') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.ext4') is not None)
         for fs in map(str, self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems').value):
             avail, util = manager.CanFormat(fs)
             # currently UDisks relies on executables for filesystem creation
@@ -143,20 +143,20 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_growfs')
-        self.assertEqual(avail, find_executable('xfs_growfs') is not None)
+        self.assertEqual(avail, shutil.which('xfs_growfs') is not None)
         avail, mode, util = manager.CanResize('ext4')
         self.assertEqual(mode, offline_shrink | offline_grow | online_grow)
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'resize2fs')
-        self.assertEqual(avail, find_executable('resize2fs') is not None)
+        self.assertEqual(avail, shutil.which('resize2fs') is not None)
         avail, mode, util = manager.CanResize('vfat')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'vfat-resize')
-        self.assertEqual(avail, find_executable('vfat-resize') is not None)
+        self.assertEqual(avail, shutil.which('vfat-resize') is not None)
 
     def test_40_can_repair(self):
         '''Test for installed filesystem repair utility with CanRepair'''
@@ -168,13 +168,13 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_repair')
-        self.assertEqual(avail, find_executable('xfs_repair') is not None)
+        self.assertEqual(avail, shutil.which('xfs_repair') is not None)
         avail, util = manager.CanRepair('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'e2fsck')
-        self.assertEqual(avail, find_executable('e2fsck') is not None)
+        self.assertEqual(avail, shutil.which('e2fsck') is not None)
         avail, util = manager.CanRepair('vfat')
         self.assertTrue(avail)  # libparted, no executable
         self.assertEqual(util, '')
@@ -189,13 +189,13 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_db')
-        self.assertEqual(avail, find_executable('xfs_db') is not None)
+        self.assertEqual(avail, shutil.which('xfs_db') is not None)
         avail, util = manager.CanCheck('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'e2fsck')
-        self.assertEqual(avail, find_executable('e2fsck') is not None)
+        self.assertEqual(avail, shutil.which('e2fsck') is not None)
         avail, util = manager.CanCheck('vfat')
         self.assertTrue(avail)  # libparted, no executable
         self.assertEqual(util, '')

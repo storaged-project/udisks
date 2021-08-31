@@ -36,8 +36,8 @@ import sys
 import os
 import contextlib
 import signal
+import shutil
 from os.path import dirname
-from distutils.spawn import find_executable
 
 srcdir = dirname(dirname(dirname(os.path.realpath(__file__))))
 libdir = os.path.join(srcdir, 'udisks', '.libs')
@@ -495,7 +495,7 @@ class UDisksTestCase(unittest.TestCase):
         Newer udftools ship an udev rule that calls pktsetup to create a /dev/pktcdvd/
         device on every cd-rom device. So if there's no pktsetup tool in the system,
         the attached device wouldn't most likely exist either. """
-        if os.path.exists(cd_device) and find_executable("pktsetup"):
+        if os.path.exists(cd_device) and shutil.which("pktsetup"):
             try:
                 rdev = os.stat(cd_device).st_rdev
                 subprocess.call(['pktsetup', '-d', '%d:%d' % (os.major(rdev), os.minor(rdev))])

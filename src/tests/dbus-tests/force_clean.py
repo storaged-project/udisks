@@ -3,7 +3,7 @@ import subprocess
 import glob
 import syslog
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 
 class ForceClean(object):
@@ -55,7 +55,7 @@ class ForceClean(object):
         import blivet
 
         # we need at least blivet 2.0 to do this cleanup
-        if LooseVersion(blivet.__version__) >= LooseVersion("2.0.0"):
+        if Version(blivet.__version__) >= Version("2.0.0"):
             blvt = blivet.Blivet()
             blvt.reset()
             for device in diff:

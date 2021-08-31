@@ -9,7 +9,7 @@ import unittest
 from bytesize import bytesize
 from collections import namedtuple
 from contextlib import contextmanager
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 import udiskstestcase
 
@@ -65,7 +65,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         m = re.search(r'[Bb]trfs.* v([\d\.]+)', out)
         if not m or len(m.groups()) != 1:
             raise RuntimeError('Failed to determine btrfs version from: %s' % out)
-        return LooseVersion(m.groups()[0])
+        return Version(m.groups()[0])
 
     def test__manager_interface(self):
         '''Test for module D-Bus Manager interface presence'''
@@ -164,7 +164,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
     def test_subvolumes(self):
 
         btrfs_version = self._get_btrfs_version()
-        if btrfs_version == LooseVersion('4.13.2'):
+        if btrfs_version == Version('4.13.2'):
             self.skipTest('subvolumes list is broken with btrfs-progs v4.13.2')
 
         dev = self._get_devices(1)[0]
