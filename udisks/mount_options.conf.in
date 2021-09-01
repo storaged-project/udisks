@@ -10,7 +10,7 @@
 # allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload
 
 ### Specific filesystem type options
-# vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec,flush
+# vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec,flush,usefree
 # vfat_allow=uid=$UID,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec
 # ntfs_defaults=uid=$UID,gid=$GID,windows_names
 # ntfs_allow=uid=$UID,gid=$GID,umask,dmask,fmask,locale,norecover,ignore_case,windows_names,compression,nocompression,big_writes

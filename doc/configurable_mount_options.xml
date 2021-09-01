@@ -129,7 +129,7 @@ defaults=ro
 allow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload
 
 # specific filesystem type options
-vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec,flush
+vfat_defaults=uid=$UID,gid=$GID,shortname=mixed,utf8=1,showexec,flush,usefree
 vfat_allow=uid=$UID,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec
 ntfs_defaults=uid=$UID,gid=$GID,windows_names
 ntfs_allow=uid=$UID,gid=$GID,umask,dmask,fmask,locale,norecover,ignore_case,windows_names
@@ -191,7 +191,7 @@ ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="udisks_mount_options_end"
 # Use specific charset for FAT filesystems
 #
 # ENV{ID_FS_TYPE}=="vfat", \
-# ENV{UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS}="uid=$UID,gid=$GID,shortname=mixed,utf8=0,iocharset=iso8859-15,showexec,flush"
+# ENV{UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS}="uid=$UID,gid=$GID,shortname=mixed,utf8=0,iocharset=iso8859-15,showexec,flush,usefree"
 
 #
 # Mount all USB devices read-only
