@@ -419,12 +419,21 @@ have_mount (UDisksMountMonitor *monitor,
   for (l = monitor->mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
-      if (udisks_mount_get_dev (mount) == dev &&
-          g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) == 0)
+
+      if (udisks_mount_get_dev (mount) != dev)
+        continue;
+
+      if (mount_point != NULL)
         {
-          ret = TRUE;
-          break;
+          if (udisks_mount_get_mount_type (mount) != UDISKS_MOUNT_TYPE_FILESYSTEM)
+            continue;
+
+          if (g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) != 0)
+            continue;
         }
+
+      ret = TRUE;
+      break;
     }
 
   return ret;
