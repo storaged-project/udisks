@@ -315,6 +315,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         _ret, out = self.run_command('mount | grep %s' % block_fs_dev)
         self.assertIn(mnt_path, out)
         self.assertIn('ro', out)
+        if self._fs_name.startswith('ext'):
+            self.assertIn('errors=remount-ro', out)
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -472,6 +474,10 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if self._fs_name == "udf":
             test_custom_option(self, False, None, False, "[defaults]\ndefaults=\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore,uid=forget\n")
             test_custom_option(self, True, "uid=notallowed", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore\n")
+        if self._fs_name.startswith("ext"):
+            test_custom_option(self, False, "errors=remount-ro", True, "", match_mount_option="errors=remount-ro")
+            test_custom_option(self, True, "errors=panic", False, "")
+            test_custom_option(self, True, "errors=continue", False, "")
 
         # udev rules overrides
         test_readonly(self, False, "", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_DEFAULTS": "rw" })
