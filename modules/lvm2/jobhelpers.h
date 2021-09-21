@@ -21,7 +21,7 @@
  */
 
 #ifndef __LVM_JOB_HELPERS_H__
-#define __LVM_JOB_HEPLERS_H__
+#define __LVM_JOB_HELPERS_H__
 
 #include <glib.h>
 #include <blockdev/lvm.h>
@@ -192,4 +192,4 @@ void lvs_task_func (GTask        *task,
 
 G_END_DECLS
 
-#endif  /* __LVM_JOB_HEPLERS_H__ */
+#endif  /* __LVM_JOB_HELPERS_H__ */
