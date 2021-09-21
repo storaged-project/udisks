@@ -315,8 +315,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     }
   blocks = g_list_reverse (blocks);
 
-  /* XXX: is it okay to allocate memory on stack here? */
-  pvs = (const gchar**) alloca (sizeof(gchar*) * n);
+  pvs = (const gchar**) alloca (sizeof (gchar*) * (n + 1));
 
   /* wipe existing devices */
   for (l = blocks; l != NULL; l = l->next)
