@@ -1617,7 +1617,7 @@ udisks_daemon_util_get_free_mdraid_device (void)
 guint16
 udisks_ata_identify_get_word (const guchar *identify_data, guint word_number)
 {
-  const guint16 *words = (const guint16 *) identify_data;
+  const guint16 *words = (const guint16 *) (void *) identify_data;
   guint16 ret = 0;
 
   g_return_val_if_fail (word_number < 256, 0);
