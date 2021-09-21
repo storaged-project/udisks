@@ -55,7 +55,6 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -Wformat=2                                \
         -Wimplicit                                \
         -Winit-self                               \
-        -Wlogical-op                              \
         -Wmissing-declarations                    \
         -Wmissing-format-attribute                \
         -Wmissing-include-dirs                    \
@@ -78,8 +77,6 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -Wstrict-prototypes                       \
         -Wundef                                   \
         -Wuninitialized                           \
-        -Wmaybe-uninitialized                     \
-        -Wunsafe-loop-optimizations               \
         -Wvla                                     \
         -Wwrite-strings                           \
         -fdata-sections                           \
