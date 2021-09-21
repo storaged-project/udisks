@@ -21,7 +21,7 @@
  */
 
 #ifndef __UDISKS_LINUX_MDRAID_HELPERS_H__
-#define __UDISKS_LINUX_MDRAID_HEPLERS_H__
+#define __UDISKS_LINUX_MDRAID_HELPERS_H__
 
 #include <glib.h>
 #include <gudev/gudev.h>
@@ -38,4 +38,4 @@ guint64  read_sysfs_attr_as_uint64 (GUdevDevice *device, const gchar *attr);
 G_END_DECLS
 
 
-#endif /* __UDISKS_LINUX_MDRAID_HEPLERS_H__ */
+#endif /* __UDISKS_LINUX_MDRAID_HELPERS_H__ */
