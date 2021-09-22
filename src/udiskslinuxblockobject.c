@@ -942,9 +942,14 @@ on_mount_monitor_mount_added (UDisksMountMonitor  *monitor,
                               UDisksMount         *mount,
                               gpointer             user_data)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
+  UDisksLinuxBlockObject *object;
+
+  object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
+
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
+
+  g_object_unref (object);
 }
 
 static void
@@ -952,9 +957,14 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
                                 UDisksMount         *mount,
                                 gpointer             user_data)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
+  UDisksLinuxBlockObject *object;
+
+  object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
+
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
+
+  g_object_unref (object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
