@@ -747,6 +747,7 @@ handle_mdraid_create (UDisksManager         *_object,
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       success = FALSE;
+      job = NULL;
       goto out;
     }
 
