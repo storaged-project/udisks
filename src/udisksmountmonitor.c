@@ -251,17 +251,18 @@ reload_mounts (UDisksMountMonitor *monitor)
   GList *added;
   GList *removed;
   GList *l;
+  GList *old_mounts;
 
   udisks_mount_monitor_ensure (monitor);
 
   g_mutex_lock (&monitor->mounts_mutex);
   cur_mounts = g_list_copy_deep (monitor->mounts, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) udisks_mount_compare);
+  old_mounts = monitor->old_mounts;
+  monitor->old_mounts = cur_mounts;
   g_mutex_unlock (&monitor->mounts_mutex);
 
-  /* no need to lock monitor->old_mounts as reload_mounts() should
-   * always be called from monitor->monitor_context. */
-  cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) udisks_mount_compare);
-  diff_sorted_lists (monitor->old_mounts, cur_mounts, (GCompareFunc) udisks_mount_compare, &added, &removed);
+  diff_sorted_lists (old_mounts, cur_mounts, (GCompareFunc) udisks_mount_compare, &added, &removed);
 
   for (l = removed; l != NULL; l = l->next)
     {
@@ -275,9 +276,7 @@ reload_mounts (UDisksMountMonitor *monitor)
       g_signal_emit (monitor, signals[MOUNT_ADDED_SIGNAL], 0, mount);
     }
 
-  g_list_free_full (monitor->old_mounts, g_object_unref);
-  monitor->old_mounts = cur_mounts;
-
+  g_list_free_full (old_mounts, g_object_unref);
   g_list_free (removed);
   g_list_free (added);
 }
@@ -420,12 +419,21 @@ have_mount (UDisksMountMonitor *monitor,
   for (l = monitor->mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
-      if (udisks_mount_get_dev (mount) == dev &&
-          g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) == 0)
+
+      if (udisks_mount_get_dev (mount) != dev)
+        continue;
+
+      if (mount_point != NULL)
         {
-          ret = TRUE;
-          break;
+          if (udisks_mount_get_mount_type (mount) != UDISKS_MOUNT_TYPE_FILESYSTEM)
+            continue;
+
+          if (g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) != 0)
+            continue;
         }
+
+      ret = TRUE;
+      break;
     }
 
   return ret;
