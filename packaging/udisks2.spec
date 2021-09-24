@@ -133,6 +133,8 @@ Requires: gdisk
 Requires: eject
 # For utab monitor
 Requires: libmount
+# The actual polkit agent
+Requires: polkit >= %{polkit_version}
 
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
