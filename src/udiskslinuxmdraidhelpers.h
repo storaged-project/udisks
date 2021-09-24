@@ -21,7 +21,7 @@
  */
 
 #ifndef __UDISKS_LINUX_MDRAID_HELPERS_H__
-#define __UDISKS_LINUX_MDRAID_HEPLERS_H__
+#define __UDISKS_LINUX_MDRAID_HELPERS_H__
 
 #include <glib.h>
 
@@ -34,4 +34,4 @@ gboolean mdraid_has_stripes (const gchar *raid_level);
 G_END_DECLS
 
 
-#endif /* __UDISKS_LINUX_MDRAID_HEPLERS_H__ */
+#endif /* __UDISKS_LINUX_MDRAID_HELPERS_H__ */
