@@ -21,7 +21,7 @@
  */
 
 #ifndef __UDISKS_LINUX_ENCRYPTED_HELPERS_H__
-#define __UDISKS_LINUX_ENCRYPTED_HEPLERS_H__
+#define __UDISKS_LINUX_ENCRYPTED_HELPERS_H__
 
 #include <glib.h>
 #include <blockdev/crypto.h>

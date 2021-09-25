@@ -106,7 +106,7 @@
     </defaults>
   </action>
 
-  <!-- mount a device attached to another seat -->
+  <!-- unlock a device attached to another seat -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-other-seat">
     <description>Unlock an encrypted device plugged into another seat</description>
     <message>Authentication is required to unlock an encrypted device</message>
@@ -400,7 +400,7 @@
   </action>
 
   <!-- ###################################################################### -->
-  <!-- Drive configuration (Power Management, Acustics, etc.) -->
+  <!-- Drive configuration (Power Management, Acoustics, etc.) -->
 
   <action id="org.freedesktop.udisks2.modify-drive-settings">
     <description>Modify drive settings</description>

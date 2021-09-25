@@ -55,7 +55,6 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -Wformat=2                                \
         -Wimplicit                                \
         -Winit-self                               \
-        -Wlogical-op                              \
         -Wmissing-declarations                    \
         -Wmissing-format-attribute                \
         -Wmissing-include-dirs                    \
@@ -78,8 +77,6 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -Wstrict-prototypes                       \
         -Wundef                                   \
         -Wuninitialized                           \
-        -Wmaybe-uninitialized                     \
-        -Wunsafe-loop-optimizations               \
         -Wvla                                     \
         -Wwrite-strings                           \
         -fdata-sections                           \
@@ -171,9 +168,21 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(BLOCKDEV_CFLAGS)
   AC_SUBST(BLOCKDEV_LIBS)
 
+  PKG_CHECK_MODULES(BLOCKDEV3, [blockdev >= 2.99],
+                    [have_libblockdev3=yes],
+                    [have_libblockdev3=no])
+  if test "x$have_libblockdev3" = "xyes"; then
+    AC_DEFINE([HAVE_LIBBLOCKDEV3], 1, [Defined when libblockdev-3 is available])
+  fi
+  AC_SUBST(HAVE_LIBBLOCKDEV3)
+
   PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
   AC_SUBST(LIBATASMART_CFLAGS)
   AC_SUBST(LIBATASMART_LIBS)
+
+  PKG_CHECK_MODULES(LIBBLKID, [blkid])
+  AC_SUBST(LIBBLKID_CFLAGS)
+  AC_SUBST(LIBBLKID_LIBS)
 
   PKG_CHECK_MODULES(LIBMOUNT, [mount >= 2.18])
   AC_SUBST(LIBMOUNT_CFLAGS)
@@ -794,6 +803,7 @@ echo "
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
         using libmount/utab:        ${have_libmount_utab}
+        using libblockdev-3.0:      ${have_libblockdev3}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

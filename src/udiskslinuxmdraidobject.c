@@ -468,7 +468,8 @@ watch_attr (UDisksLinuxDevice *device,
   GError *error = NULL;
   gchar *path = NULL;
   GIOChannel *channel = NULL;
-  GSource *ret = NULL;;
+  GSource *ret = NULL;
+  guint source_id;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
 
@@ -478,9 +479,14 @@ watch_attr (UDisksLinuxDevice *device,
     {
       ret = g_io_create_watch (channel, G_IO_ERR);
       g_source_set_callback (ret, callback, user_data, NULL);
-      g_source_attach (ret, g_main_context_get_thread_default ());
+      source_id = g_source_attach (ret, g_main_context_get_thread_default ());
       g_source_unref (ret);
       g_io_channel_unref (channel); /* the keeps a reference to this object */
+      if (source_id == 0)
+        {
+          /* something bad happened while attaching the source */
+          ret = NULL;
+        }
     }
   else
     {
@@ -503,8 +509,6 @@ attr_changed (GIOChannel   *channel,
   UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
   gboolean bail = FALSE;
   GError *error = NULL;
-  gchar *str = NULL;
-  gsize len = 0;
 
   if (cond & ~G_IO_ERR)
     goto out;
@@ -518,7 +522,7 @@ attr_changed (GIOChannel   *channel,
       goto out;
     }
 
-  if (g_io_channel_read_to_end (channel, &str, &len, &error) != G_IO_STATUS_NORMAL)
+  if (g_io_channel_read_to_end (channel, NULL, NULL, &error) != G_IO_STATUS_NORMAL)
     {
       udisks_debug ("Error reading (uuid %s): %s (%s, %d)",
                     object->uuid, error->message, g_quark_to_string (error->domain), error->code);
@@ -526,8 +530,6 @@ attr_changed (GIOChannel   *channel,
       bail = TRUE;
       goto out;
     }
-
-  g_free (str);
 
   /* synthesize uevent */
   if (object->raid_device != NULL)

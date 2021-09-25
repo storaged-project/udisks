@@ -4,7 +4,7 @@ import re
 import time
 import unittest
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 import udiskstestcase
 
@@ -28,7 +28,7 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
         m = re.search(r'LVM version:.* ([\d\.]+)', out)
         if not m or len(m.groups()) != 1:
             raise RuntimeError('Failed to determine LVM version from: %s' % out)
-        return LooseVersion(m.groups()[0])
+        return Version(m.groups()[0])
 
     def _create_vg(self, vgname, devices):
         manager = self.get_object('/Manager')
@@ -425,7 +425,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
             raise unittest.SkipTest('VDO kernel module not available, skipping.')
 
         lvm_version = cls._get_lvm_version()
-        if lvm_version < LooseVersion('2.3.07'):
+        if lvm_version < Version('2.3.07'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('LVM >= 2.3.07 is needed for LVM VDO, skipping.')
 

@@ -21,6 +21,8 @@
 #include <string.h>
 #include <glib.h>
 
+#include <blockdev/exec.h>
+
 #include "config.h"
 #include "udiskslinuxfsinfo.h"
 #include "udisksconfigmanager.h"
@@ -121,7 +123,7 @@ const FSInfo _fs_info[] =
       NULL,
       FALSE, /* supports_online_label_rename */
       FALSE, /* supports_owners */
-      "mkexfatfs -n $LABEL $DEVICE",
+      "mkfs.exfat -n $LABEL $DEVICE",
       NULL,
       NULL, /* option_no_discard */
     },
@@ -236,6 +238,19 @@ const FSInfo _fs_info[] =
     },
   };
 
+/* workaround for dosfstools >= 4.2 */
+static const FSInfo vfat_dosfstools_42 =
+    {
+      FS_VFAT,
+      "fatlabel $DEVICE $LABEL",
+      "fatlabel --reset $DEVICE",
+      FALSE, /* supports_online_label_rename */
+      FALSE, /* supports_owners */
+      "mkfs.vfat -I -n $LABEL --mbr=n $DEVICE",
+      NULL,
+      NULL, /* option_no_discard */
+    };
+
 /**
  * get_fs_info:
  *
@@ -248,6 +263,7 @@ const FSInfo _fs_info[] =
 const FSInfo *
 get_fs_info (const gchar *fstype)
 {
+  const FSInfo *info = NULL;
   guint n;
 
   g_return_val_if_fail (fstype != NULL, NULL);
@@ -255,10 +271,20 @@ get_fs_info (const gchar *fstype)
   for (n = 0; n < sizeof(_fs_info)/sizeof(FSInfo); n++)
     {
       if (strcmp (_fs_info[n].fstype, fstype) == 0)
-        return &_fs_info[n];
+        {
+          info = &_fs_info[n];
+          break;
+        }
     }
 
-  return NULL;
+  /* dosfstools >= 4.2 workaround */
+  if (g_str_equal (fstype, FS_VFAT) &&
+      bd_utils_check_util_version ("mkfs.vfat", "4.2", "--help", "mkfs.fat\\s+([\\d\\.]+).+", NULL))
+    {
+      info = &vfat_dosfstools_42;
+    }
+
+  return info;
 }
 
 /**
@@ -290,4 +316,23 @@ const gchar **
 get_supported_encryption_types (void)
 {
   return _encryption_types;
+}
+
+/**
+ * udisks_linux_fsinfo_creates_protective_parttable:
+ * @fs_type: filesystem type.
+ *
+ * Indicates whether the @fs_type potentially creates a protective (MBR)
+ * partition table during mkfs.
+ *
+ * Returns: %TRUE if there's a chance a protective partition table is created,
+ *          %FALSE otherwise.
+ */
+gboolean
+udisks_linux_fsinfo_creates_protective_parttable (const gchar *fs_type)
+{
+  /* udftools makes fake MBR since the 2.0 release */
+  /* dosfstools makes fake MBR since the 4.2 release */
+  return (g_strcmp0 (fs_type, "udf") == 0 ||
+          g_strcmp0 (fs_type, "vfat") == 0);
 }

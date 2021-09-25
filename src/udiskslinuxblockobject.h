@@ -44,7 +44,8 @@ dev_t                     udisks_linux_block_object_get_device_number (UDisksLin
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
 gboolean                  udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
                                                                          guint                   timeout_seconds);
-void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
+gboolean                  udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject  *object,
+                                                                            GError                 **error);
 gboolean                  udisks_linux_block_object_contains_filesystem (UDisksObject *object);
 
 void                      udisks_linux_block_object_lock_for_cleanup     (UDisksLinuxBlockObject *object);

@@ -1617,7 +1617,7 @@ udisks_daemon_util_get_free_mdraid_device (void)
 guint16
 udisks_ata_identify_get_word (const guchar *identify_data, guint word_number)
 {
-  const guint16 *words = (const guint16 *) identify_data;
+  const guint16 *words = (const guint16 *) (void *) identify_data;
   guint16 ret = 0;
 
   g_return_val_if_fail (word_number < 256, 0);
@@ -1877,6 +1877,32 @@ udisks_daemon_util_trigger_uevent_sync (UDisksDaemon *daemon,
   g_free (data.uevent_path);
 
   return data.success;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_module_validate_name:
+ * @module_name: A udisks2 module name.
+ *
+ * Checks the string for a valid udisks2 module name. Only alphanumeric characters
+ * along with the '-' and '_' separators are permitted.
+ *
+ * Returns: %TRUE if the string is a valid udisks2 module name, %FALSE otherwise.
+ */
+gboolean
+udisks_module_validate_name (const gchar *module_name)
+{
+  int i;
+
+  for (i = 0; module_name[i] != '\0'; i++)
+    /* going ASCII, will disqualify any UTF-* string */
+    if (! g_ascii_isalnum (module_name[i]) &&
+        module_name[i] != '-' &&
+        module_name[i] != '_')
+      return FALSE;
+
+  return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -13,7 +13,7 @@ import gi
 gi.require_version('BlockDev', '2.0')
 from gi.repository import BlockDev
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 import udiskstestcase
 
@@ -26,7 +26,7 @@ def _get_cryptsetup_version():
     m = re.search(r'cryptsetup ([\d\.]+)', out)
     if not m or len(m.groups()) != 1:
         raise RuntimeError('Failed to determine cryptsetup version from: %s' % out)
-    return LooseVersion(m.groups()[0])
+    return Version(m.groups()[0])
 
 
 def _get_blkid_version():
@@ -34,7 +34,7 @@ def _get_blkid_version():
     m = re.search(r'blkid from util-linux ([\d\.]+)', out)
     if not m or len(m.groups()) != 1:
         raise RuntimeError('Failed to determine blkid version from: %s' % out)
-    return LooseVersion(m.groups()[0])
+    return Version(m.groups()[0])
 
 
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
@@ -515,7 +515,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
     def setUp(self):
         cryptsetup_version = _get_cryptsetup_version()
-        if cryptsetup_version < LooseVersion('2.0.0'):
+        if cryptsetup_version < Version('2.0.0'):
             self.skipTest('LUKS2 not supported')
 
         super(UdisksEncryptedTestLUKS2, self).setUp()
@@ -616,7 +616,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         passwd = 'test'
 
         cryptsetup_version = _get_cryptsetup_version()
-        if cryptsetup_version < LooseVersion('2.2.0'):
+        if cryptsetup_version < Version('2.2.0'):
             self.skipTest('Integrity devices are not marked as internal in cryptsetup < 2.2.0')
 
         device = self.get_device(self.vdevs[0])
@@ -674,11 +674,11 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
 
     def setUp(self):
         cryptsetup_version = _get_cryptsetup_version()
-        if cryptsetup_version < LooseVersion('2.3.0'):
+        if cryptsetup_version < Version('2.3.0'):
             self.skipTest('BITLK not supported by cryptsetup')
 
         blkid_version = _get_blkid_version()
-        if blkid_version < LooseVersion('2.33'):
+        if blkid_version < Version('2.33'):
             self.skipTest('BITLK not supported by blkid')
 
         self.manager = self.get_interface('/Manager', '.Manager')

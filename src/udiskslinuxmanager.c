@@ -699,7 +699,11 @@ handle_mdraid_create (UDisksManager         *_object,
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-      if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, &error))
+#ifdef HAVE_LIBBLOCKDEV3
+      if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, FALSE, &error))
+#else
+      if (!bd_fs_wipe_force (udisks_block_get_device (block), TRUE, FALSE, &error))
+#endif
         {
           /* no signature to remove, ignore */
           if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
@@ -744,9 +748,10 @@ handle_mdraid_create (UDisksManager         *_object,
   if (!bd_md_create (array_name, arg_level, disks, 0, NULL, FALSE, arg_chunk, NULL, &error))
     {
       g_prefix_error (&error, "Error creating RAID array: ");
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       success = FALSE;
+      job = NULL;
       goto out;
     }
 
@@ -763,9 +768,12 @@ handle_mdraid_create (UDisksManager         *_object,
         }
       raid_device_file = g_strdup_printf ("/dev/%s", raid_node);
     }
-
   else
     raid_device_file = g_strdup (array_name);
+
+  /* trigger uevent on the newly created md node */
+  udisks_daemon_util_trigger_uevent_sync (manager->daemon, raid_device_file, NULL,
+                                          UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* ... then, sit and wait for raid array object to show up */
   array_object = udisks_daemon_wait_for_object_sync (manager->daemon,
@@ -812,7 +820,11 @@ handle_mdraid_create (UDisksManager         *_object,
                            caller_uid);
 
   /* ... wipe the created RAID array */
-  if (!bd_fs_wipe (raid_device_file, TRUE, &error))
+#ifdef HAVE_LIBBLOCKDEV3
+  if (!bd_fs_wipe (raid_device_file, TRUE, FALSE, &error))
+#else
+  if (!bd_fs_wipe_force (raid_device_file, TRUE, FALSE, &error))
+#endif
     {
       if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
         g_clear_error (&error);
@@ -955,6 +967,15 @@ handle_enable_module (UDisksManager         *object,
 {
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
   EnableModulesData *data;
+
+  if (! udisks_module_validate_name (arg_name))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                             "Requested module name '%s' is not a valid udisks2 module name.",
+                                             arg_name);
+      return TRUE;
+    }
 
   if (! arg_enable)
     {

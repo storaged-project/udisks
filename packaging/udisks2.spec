@@ -13,37 +13,27 @@
 %define with_zram                       1
 %define with_lvmcache                   1
 
-# valid options are 'luks1' or 'luks2'
-%define default_luks_encryption         luks1
-
 %define is_fedora                       0%{?rhel} == 0
-%define is_rhel7                        (0%{?rhel} && 0%{?rhel} == 7)
-%define is_rhel8                        (0%{?rhel} && 0%{?rhel} == 8)
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
 
-# bcache is not available on RHEL
-%if (0%{?rhel}) || %{with_bcache} == 0
+# bcache and zram are not available on RHEL
+%if (0%{?rhel})
 %define with_bcache 0
+%define with_zram 0
 %endif
 
 # btrfs is not available on RHEL > 7
-%if 0%{?rhel} > 7 || %{with_btrfs} == 0
+%if 0%{?rhel} > 7
 %define with_btrfs 0
 %endif
 
 # feature parity with existing RHEL 7 packages
 %if (0%{?rhel}) && (0%{?rhel} <= 7)
 %define with_lsm 0
-%define with_zram 0
 %define with_lvmcache 0
-%endif
-
-# default to LUKS2 for RHEL > 7
-%if 0%{?rhel} > 7
-%define default_luks_encryption luks2
 %endif
 
 
@@ -240,7 +230,6 @@ This package contains module for ZRAM configuration.
 
 %prep
 %setup -q -n udisks-%{version}
-sed -i udisks/udisks2.conf.in -e "s/encryption=luks1/encryption=%{default_luks_encryption}/"
 
 %build
 autoreconf -ivf

@@ -127,8 +127,8 @@ udisks_linux_block_object_finalize (GObject *_object)
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
 
   /* note: we don't hold a ref to block->daemon or block->mount_monitor */
-  g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_added, object);
-  g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_removed, object);
+  g_warn_if_fail (g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_added, object) == 1);
+  g_warn_if_fail (g_signal_handlers_disconnect_by_func (object->mount_monitor, on_mount_monitor_mount_removed, object) == 1);
 
   g_object_unref (object->device);
   g_mutex_clear (&object->device_mutex);
@@ -446,6 +446,7 @@ update_iface (UDisksObject                     *object,
       if (has)
         {
           *interface_pointer = g_object_new (skeleton_type, NULL);
+          g_warn_if_fail (*interface_pointer != NULL);
           if (connect_func != NULL)
             connect_func (object);
           add = TRUE;
@@ -875,6 +876,7 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
 
   update_iface (UDISKS_OBJECT (object), action, block_device_check, block_device_connect, block_device_update,
                 UDISKS_TYPE_LINUX_BLOCK, &object->iface_block_device);
+  g_warn_if_fail (object->iface_block_device != NULL);
   update_iface (UDISKS_OBJECT (object), action, contains_filesystem, filesystem_connect, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &object->iface_filesystem);
   update_iface (UDISKS_OBJECT (object), action, swapspace_check, swapspace_connect, swapspace_update,
@@ -940,9 +942,14 @@ on_mount_monitor_mount_added (UDisksMountMonitor  *monitor,
                               UDisksMount         *mount,
                               gpointer             user_data)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
+  UDisksLinuxBlockObject *object;
+
+  object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
+
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
+
+  g_object_unref (object);
 }
 
 static void
@@ -950,9 +957,14 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
                                 UDisksMount         *mount,
                                 gpointer             user_data)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
+  UDisksLinuxBlockObject *object;
+
+  object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
+
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
+
+  g_object_unref (object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1016,6 +1028,7 @@ udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
 /**
  * udisks_linux_block_object_reread_partition_table:
  * @object: A #UDisksLinuxBlockObject.
+ * @error: Return location for error.
  *
  * Requests the kernel to re-read the partition table for @object.
  *
@@ -1023,22 +1036,30 @@ udisks_linux_block_object_trigger_uevent_sync (UDisksLinuxBlockObject *object,
  * kernel through the udev stack and will eventually be received by
  * the udisks daemon process itself. This method does not wait for the
  * event to be received.
+ *
+ * Returns: %TRUE if the partition reread request was issued successfully
+ * or %FALSE when error occurred with @error set.
  */
-void
-udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object)
+gboolean
+udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject  *object,
+                                                  GError                 **error)
 {
   UDisksLinuxDevice *device;
   const gchar *device_file;
   gint fd;
+  gboolean ret = TRUE;
 
-  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+  g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), FALSE);
+  g_warn_if_fail (!error || !*error);
 
   device = udisks_linux_block_object_get_device (object);
   device_file = g_udev_device_get_device_file (device->udev_device);
   fd = open (device_file, O_RDONLY);
   if (fd == -1)
     {
-      udisks_warning ("Error opening %s while re-reading partition table: %m", device_file);
+      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                   "Error opening %s while re-reading partition table: %m", device_file);
+      ret = FALSE;
     }
   else
     {
@@ -1056,12 +1077,15 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
 
       if (ioctl (fd, BLKRRPART) != 0)
         {
-          udisks_warning ("Error issuing BLKRRPART to %s: %m", device_file);
+          g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                       "Error re-reading partition table (BLKRRPART ioctl) on %s: %m", device_file);
+          ret = FALSE;
         }
       close (fd);
     }
 
   g_object_unref (device);
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

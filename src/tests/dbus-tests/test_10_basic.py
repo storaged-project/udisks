@@ -1,7 +1,8 @@
 import udiskstestcase
 import dbus
 import os
-from distutils.spawn import find_executable
+import six
+import shutil
 
 from config_h import UDISKS_MODULES_ENABLED
 
@@ -54,7 +55,9 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             pass
 
         # mock the udisks2.conf to load only tested modules
-        contents = '[udisks2]\nmodules=%s\n' % ','.join(self._get_modules())
+        modules = self._get_modules()
+        modules.add('inva/id')
+        contents = '[udisks2]\nmodules=%s\n' % ','.join(modules)
         self.write_file(self._get_udisks2_conf_path(), contents)
         self.addCleanup(self._restore_udisks2_conf)
 
@@ -72,10 +75,21 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             with self.assertRaises(dbus.exceptions.DBusException):
                 manager.EnableModule(module, dbus.Boolean(False))
             manager.EnableModule(module, dbus.Boolean(True))
-        with self.assertRaises(dbus.exceptions.DBusException):
-            manager.EnableModule("nonexistent", dbus.Boolean(True))
-        with self.assertRaises(dbus.exceptions.DBusException):
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
+                                   r'cannot open shared object file: No such file or directory'):
+            manager.EnableModule("non-exist_ent", dbus.Boolean(True))
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
+                                   r'Module unloading is not currently supported.'):
             manager.EnableModule("nonexistent", dbus.Boolean(False))
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
+                                   r'Requested module name .* is not a valid udisks2 module name.'):
+            manager.EnableModule("inváálěd", dbus.Boolean(True))
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
+                                   r'Requested module name .* is not a valid udisks2 module name.'):
+            manager.EnableModule("inváálěd", dbus.Boolean(False))
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
+                                   r'Requested module name .* is not a valid udisks2 module name.'):
+            manager.EnableModule("module/../intruder", dbus.Boolean(True))
 
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')
@@ -92,19 +106,19 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.xfs')
-        self.assertEqual(avail, find_executable('mkfs.xfs') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.xfs') is not None)
         avail, util = manager.CanFormat('f2fs')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.f2fs')
-        self.assertEqual(avail, find_executable('mkfs.f2fs') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.f2fs') is not None)
         avail, util = manager.CanFormat('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'mkfs.ext4')
-        self.assertEqual(avail, find_executable('mkfs.ext4') is not None)
+        self.assertEqual(avail, shutil.which('mkfs.ext4') is not None)
         for fs in map(str, self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems').value):
             avail, util = manager.CanFormat(fs)
             # currently UDisks relies on executables for filesystem creation
@@ -129,18 +143,20 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_growfs')
-        self.assertEqual(avail, find_executable('xfs_growfs') is not None)
+        self.assertEqual(avail, shutil.which('xfs_growfs') is not None)
         avail, mode, util = manager.CanResize('ext4')
         self.assertEqual(mode, offline_shrink | offline_grow | online_grow)
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'resize2fs')
-        self.assertEqual(avail, find_executable('resize2fs') is not None)
+        self.assertEqual(avail, shutil.which('resize2fs') is not None)
         avail, mode, util = manager.CanResize('vfat')
-        self.assertTrue(avail)  # libparted, no executable
-        self.assertEqual(util, '')
-        self.assertEqual(mode, offline_shrink | offline_grow)
+        if avail:
+            self.assertEqual(util, '')
+        else:
+            self.assertEqual(util, 'vfat-resize')
+        self.assertEqual(avail, shutil.which('vfat-resize') is not None)
 
     def test_40_can_repair(self):
         '''Test for installed filesystem repair utility with CanRepair'''
@@ -152,13 +168,13 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_repair')
-        self.assertEqual(avail, find_executable('xfs_repair') is not None)
+        self.assertEqual(avail, shutil.which('xfs_repair') is not None)
         avail, util = manager.CanRepair('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'e2fsck')
-        self.assertEqual(avail, find_executable('e2fsck') is not None)
+        self.assertEqual(avail, shutil.which('e2fsck') is not None)
         avail, util = manager.CanRepair('vfat')
         self.assertTrue(avail)  # libparted, no executable
         self.assertEqual(util, '')
@@ -173,13 +189,13 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'xfs_db')
-        self.assertEqual(avail, find_executable('xfs_db') is not None)
+        self.assertEqual(avail, shutil.which('xfs_db') is not None)
         avail, util = manager.CanCheck('ext4')
         if avail:
             self.assertEqual(util, '')
         else:
             self.assertEqual(util, 'e2fsck')
-        self.assertEqual(avail, find_executable('e2fsck') is not None)
+        self.assertEqual(avail, shutil.which('e2fsck') is not None)
         avail, util = manager.CanCheck('vfat')
         self.assertTrue(avail)  # libparted, no executable
         self.assertEqual(util, '')
