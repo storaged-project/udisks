@@ -2759,6 +2759,7 @@ teardown_block_walker (UDisksDaemon  *daemon,
              device has been cleaned up.  Lock the backing device so
              that we can format or wipe it later.
           */
+          g_object_unref (cleartext);
           if (enc && !udisks_linux_encrypted_lock (UDISKS_LINUX_ENCRYPTED (enc),
                                                    data->invocation,
                                                    data->options,
