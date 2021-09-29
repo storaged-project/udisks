@@ -1,4 +1,40 @@
 ---------------------------
+udisks 2.9.4
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.9.3:
+
+Tomas Bzatek (17):
+      udisksmountmonitor: Tweak the mount list update and difference
+      udisksmountmonitor: Skip mount_path checks for swap records when comparing
+      udiskslinuxfilesystem: Add quirk to prefer the new 'ntfs3' driver
+      udiskslinuxencryptedhelpers: Fix the header guard typo
+      udiskslinuxmdraidhelpers: Fix the header guard typo
+      udiskslinuxfilesystemhelpers: Fix the header guard typo
+      udiskslinuxblockobject: Hold object reference within UDisksMountMonitor signal handlers
+      udiskslinuxmanager: Fix access to unowned GError
+      udiskslinuxmanager: Prevent double free of UDisksSimpleJob on error
+      udiskslinuxblock: Fix leaking cleartext block interface
+      lvm2: Fix jobhelpers.h header guard
+      lvm2: Fix insufficient list allocation
+      mount options: Always use errors=remount-ro for ext filesystems
+      mount options: Add ntfs3 kernel driver options
+      build: Remove warnings unknown to clang
+      tests: Adapt to clang differences when causing a segfault
+      spec: Require polkit for the daemon
+
+videlanicolas (1):
+      Fix typo
+
+Thanks to all our contributors.
+
+Tomas Bzatek
+2021-09-29
+
+---------------------------
 udisks 2.9.3
 ---------------------------
 
