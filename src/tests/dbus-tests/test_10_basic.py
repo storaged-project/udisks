@@ -152,11 +152,13 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(util, 'resize2fs')
         self.assertEqual(avail, shutil.which('resize2fs') is not None)
         avail, mode, util = manager.CanResize('vfat')
-        if avail:
-            self.assertEqual(util, '')
-        else:
+        # the only valid reason for VFAT not being available is missing vfat-resize
+        # the support is either compiled in (libblockdev 2.x) or via vfat-resize (3.x)
+        if not avail:
             self.assertEqual(util, 'vfat-resize')
-        self.assertEqual(avail, shutil.which('vfat-resize') is not None)
+
+        if shutil.which('vfat-resize') is not None:
+            self.assertTrue(avail)
 
     def test_40_can_repair(self):
         '''Test for installed filesystem repair utility with CanRepair'''
