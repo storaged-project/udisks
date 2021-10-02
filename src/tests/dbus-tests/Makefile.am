@@ -31,11 +31,11 @@ MODULES += bcache
 endif
 
 $(CONFIG_H_PY):
-	echo -n 'UDISKS_MODULES_ENABLED = { ' > $(CONFIG_H_PY)
+	echo -n 'UDISKS_MODULES_ENABLED = set([' > $(CONFIG_H_PY)
 	for i in $(MODULES); do \
 		echo -n "'$$i', " >> $(CONFIG_H_PY); \
 	done
-	echo '}' >> $(CONFIG_H_PY)
+	echo '])' >> $(CONFIG_H_PY)
 
 all:
 
