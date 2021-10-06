@@ -614,7 +614,6 @@ udisks_linux_mount_options_get_builtin (void)
                                                "/org/freedesktop/UDisks2/data/builtin_mount_options.conf",
                                                G_RESOURCE_LOOKUP_FLAGS_NONE,
                                                &error);
-  g_resource_unref (daemon_resource);
 
   if (builtin_opts_bytes == NULL)
     {
