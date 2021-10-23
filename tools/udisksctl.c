@@ -2121,7 +2121,7 @@ handle_command_power_off (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksDriveAta *ata;
+  UDisksDrive *drv;
   guint n;
   GVariant *options;
   GVariantBuilder builder;
@@ -2187,12 +2187,15 @@ handle_command_power_off (gint        *argc,
           for (l = objects; l != NULL; l = l->next)
             {
               object = UDISKS_OBJECT (l->data);
-              ata = udisks_object_peek_drive_ata (object);
-              if (ata != NULL)
+              drv = udisks_object_peek_drive (object);
+              if (drv != NULL)
                 {
-                  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-                  g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
-                  g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+                  if (udisks_drive_get_can_power_off(drv))
+                    {
+                      object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+                      g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+                      g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+                    }
                 }
             }
           g_list_free_full (objects, g_object_unref);
@@ -2204,16 +2207,19 @@ handle_command_power_off (gint        *argc,
           for (l = objects; l != NULL; l = l->next)
             {
               object = UDISKS_OBJECT (l->data);
-              ata = udisks_object_peek_drive_ata (object);
-              if (ata != NULL)
+              drv = udisks_object_peek_drive (object);
+              if (drv != NULL)
                 {
-                  const gchar * const *symlinks;
-                  UDisksBlock *block;
-                  block = udisks_client_get_block_for_drive (client, udisks_object_peek_drive (object), TRUE);
-                  g_print ("%s \n", udisks_block_get_device (block));
-                  symlinks = udisks_block_get_symlinks (block);
-                  for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
-                    g_print ("%s \n", symlinks[n]);
+                  if (udisks_drive_get_can_power_off (drv))
+                    {
+                      const gchar * const *symlinks;
+                      UDisksBlock *block;
+                      block = udisks_client_get_block_for_drive (client, udisks_object_peek_drive (object), TRUE);
+                      g_print ("%s \n", udisks_block_get_device (block));
+                      symlinks = udisks_block_get_symlinks (block);
+                      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                        g_print ("%s \n", symlinks[n]);
+                    }
                 }
             }
           g_list_free_full (objects, g_object_unref);
