@@ -601,11 +601,11 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     {
       guchar count;
       gboolean noio = FALSE;
+      if (drive->standby_enabled)
+        noio = update_io_stats (drive, device);
       if (!get_pm_state (device, error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
-      if (drive->standby_enabled)
-        noio = update_io_stats (drive, device);
       /* don't wake up disk unless specically asked to */
       if (nowakeup && (!awake || noio))
         {
