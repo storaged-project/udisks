@@ -2126,6 +2126,7 @@ handle_command_power_off (gint        *argc,
   GVariant *options;
   GVariantBuilder builder;
   GError *error;
+  UDisksDrive *proxy;
 
   ret = 1;
   opt_power_off_object_path = NULL;
@@ -2264,7 +2265,16 @@ handle_command_power_off (gint        *argc,
 
  try_again:
   error = NULL;
-  if (!udisks_drive_call_power_off_sync (udisks_object_peek_drive (object),
+
+  proxy = udisks_object_peek_drive (object);
+  if (!proxy)
+    {
+      g_printerr ("Error powering off drive: dbus interface not supported");
+      g_object_unref (object);
+      goto out;
+    }
+
+  if (!udisks_drive_call_power_off_sync (proxy,
                                          options,
                                          NULL,                       /* GCancellable */
                                          &error))
