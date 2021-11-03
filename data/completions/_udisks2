@@ -1,0 +1,68 @@
+#compdef udisksctl
+
+# Completion function for zsh
+
+local curcontext="$curcontext" cmd="$words[1]" params ca_opts
+local -i i ret=1
+local -a state state_descr line expl cmds opts vals
+
+if (( CURRENT == 2 )); then
+  cmds=( $(_call_program commands $cmd complete "$cmd" ${#cmd}) )
+  _wanted commands expl "command" compadd -M "r:|-=* r:|=*" -a cmds
+else
+  curcontext="${curcontext%:*}-${words[2]}:"
+  opts=( $(_call_program options $cmd complete "${(q)words[1,2]}" ${(c)#words[1,2]}) )
+  for ((i=$#opts;i;i--)); do
+    case $opts[i] in
+      --block-device)
+        opts[i]=( '(-b --block-device -d --drive -p --object-path)'{-b,--block-device=}'[specify block device]:block device:->block-devices' )
+      ;;
+      --drive)
+        opts[i]=( '(-d --drive -b --block-device -p --object-path)'{-d,--drive=}'[specify drive]:drive:->drives' )
+      ;;
+      --force)
+        opts[i]=( '(-f --force)'{-f,--force} )
+      ;;
+      --file)
+        opts[i]=( '(-f --file)'{-f,--file=}'[specify filename]:file:_files' )
+      ;;
+      --filesystem-type)
+        opts[i]=( '(-t --filesystem-type)'{-t,--filesystem-type=}'[specify filesystem type to use]: :_file_systems' )
+      ;;
+      --no-user-interaction)
+        opts[i]=( "--no-user-interaction[don't authenticate the user if needed]" )
+      ;;
+      --offset)
+        opts[i]=( '(-o --offset)'{-o,--offset}'[specify offset]:offset (bytes)' )
+      ;;
+      --object-path)
+        opts[i]=( '(-p --object-path -b --block-device -d --drive)'{-p,--object-path=}'[specify object]:object path:->object-paths' )
+      ;;
+      --options)
+        opts[i]=( '(-o --options)'{-o,--options=}'[specify mount options]:mount options' )
+      ;;
+      --read-only)
+        opts[i]=( '(-r --read-only)'{-r,--read-only} )
+      ;;
+      --size)
+        opts[i]=( '(-s --size)'{-s,--size=}'[specify size]:size (bytes)' )
+      ;;
+    esac
+  done
+  shift words
+  (( CURRENT-- ))
+  _arguments -S -C '(-)--help[display usage information]' $opts && ret=0
+
+  if [[ -n $state ]]; then
+    params="$cmd $words[1] "
+    case $state in
+      block-devices) params+="--block-device" ca_opts=( -M "r:|/=* r:|=*" ) ;;
+      drives) params+="--drive" ca_opts=( -M "r:|_=* r:|=*" ) ;;
+      object-paths) params+="--object-path" ca_opts=( -f -M "r:|/=* r:|=*" ) ;;
+    esac
+    vals=( $(_call_program values $cmd complete "${(q)params}" $#params) )
+    _description values expl $state_descr
+    compadd "$expl[@]" $ca_opts -a vals && ret=0
+  fi
+  return ret
+fi

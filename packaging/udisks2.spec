@@ -320,6 +320,7 @@ fi
 
 %{_datadir}/dbus-1/system.d/org.freedesktop.UDisks2.conf
 %{_datadir}/bash-completion/completions/udisksctl
+%{_datadir}/zsh/site-functions/_udisks2
 %{_tmpfilesdir}/%{name}.conf
 %{_unitdir}/udisks2.service
 %{_udevrulesdir}/80-udisks2.rules
