@@ -96,7 +96,11 @@ if test -z "$enable_available_modules"; then
   enable_available_modules=no
 fi
 
+m4_ifdef([GTK_DOC_CHECK], [
 GTK_DOC_CHECK([1.3],[--flavour no-tmpl])
+],[
+AM_CONDITIONAL([ENABLE_GTK_DOC], false)
+])
 
 AC_ARG_ENABLE(man,
               [AS_HELP_STRING([--enable-man],
