@@ -145,6 +145,11 @@ udisks_linux_manager_set_property (GObject      *object,
     }
 }
 
+static const gchar *features[] = {
+  "mount:target-option",
+  NULL
+};
+
 static void
 udisks_linux_manager_init (UDisksLinuxManager *manager)
 {
@@ -156,6 +161,7 @@ udisks_linux_manager_init (UDisksLinuxManager *manager)
                                             get_supported_filesystems ());
   udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
                                                  get_supported_encryption_types ());
+  udisks_manager_set_features (UDISKS_MANAGER (manager), features);
 }
 
 static void

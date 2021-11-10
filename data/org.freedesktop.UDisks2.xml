@@ -43,6 +43,15 @@
     <property name="SupportedEncryptionTypes" type="as" access="read"/>
     <property name="DefaultEncryptionType" type="s" access="read"/>
 
+    <!-- Features: List of specific features of this version of UDisks2
+
+         "mount:target-option" - The
+         org.freedesktop.UDisks2.Filesystem.Mount and
+         org.freedesktop.UDisks2.Filesystem.Unmount methods support
+         the "target" option.
+    -->
+    <property name="Features" type="as" access="read"/>
+
     <!--
         CanFormat:
         @type: The filesystem type to be tested for formatting availability.
@@ -1868,7 +1877,7 @@
 
     <!--
         Mount:
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's'), <parameter>options</parameter> (of type 's'), and <parameter>target</parameter> (of type 'ay').
         @mount_path: The filesystem path where the device was mounted.
 
         Mounts the filesystem.
@@ -1895,6 +1904,10 @@
         <command>mount</command> command is called directly (as root)
         and the given options or filesystem type given in @options are
         ignored.
+
+        If the @target option is given, the device must have an entry
+        in <filename>/etc/fstab</filename> with the given target, and
+        the mount options are taken from that entry.
 
         If <literal>x-udisks-auth</literal> is specified as an option
         for the device in the <filename>/etc/fstab</filename> file,
@@ -1939,6 +1952,11 @@
         If the mountpoint was previously created by udisks it is
         guaranteed it will be removed upon returning from this method
         call.
+
+        If the @target option is given, the device must have an entry
+        in <filename>/etc/fstab</filename> with the given target, and
+        it is ummounted from the given target, regardless of where
+        else it is mounted.
 
         If the filesystem is busy, this operation fails with the error
         <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks2.Error.DeviceBusy</constant></link>

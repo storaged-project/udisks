@@ -801,6 +801,7 @@ has_option (const gchar *options,
 static gboolean
 is_system_managed (UDisksDaemon *daemon,
                    UDisksBlock  *block,
+                   const gchar  *target,
                    gchar       **out_mount_point,
                    gchar       **out_mount_options)
 {
@@ -822,20 +823,27 @@ is_system_managed (UDisksDaemon *daemon,
     {
       if (udisks_linux_block_matches_id (UDISKS_LINUX_BLOCK (block), mnt_fs_get_source (fs)))
         {
+          /* Filter out entries that don't match the specified target (if any).
+           */
+          if (target && g_strcmp0 (mnt_fs_get_target (fs), target) != 0)
+            continue;
+
           /* If this block device is found in fstab, but something else is already
            * mounted on that mount point, ignore the fstab entry.
            */
-          UDisksMount *mount = udisks_mount_monitor_get_mount_for_path (mount_monitor, mnt_fs_get_target (fs));
-          if (mount == NULL || udisks_block_get_device_number (block) == udisks_mount_get_dev (mount))
-            {
-              ret = TRUE;
-              if (out_mount_point != NULL)
-                *out_mount_point = g_strdup (mnt_fs_get_target (fs));
-              if (out_mount_options != NULL)
-                *out_mount_options = mnt_fs_strdup_options (fs);
-            }
+          {
+            UDisksMount *mount = udisks_mount_monitor_get_mount_for_path (mount_monitor, mnt_fs_get_target (fs));
+            if (mount == NULL || udisks_block_get_device_number (block) == udisks_mount_get_dev (mount))
+              {
+                ret = TRUE;
+                if (out_mount_point != NULL)
+                  *out_mount_point = g_strdup (mnt_fs_get_target (fs));
+                if (out_mount_options != NULL)
+                  *out_mount_options = mnt_fs_strdup_options (fs);
+              }
+            g_clear_object (&mount);
+          }
 
-          g_clear_object (&mount);
           if (ret)
             break;
         }
@@ -862,6 +870,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   gid_t caller_gid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
+  const gchar *opt_target = NULL;
   gchar *fs_type_to_use = NULL;
   gchar *mount_options_to_use = NULL;
   gchar *mount_point_to_use = NULL;
@@ -876,6 +885,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   gchar *device = NULL;
   UDisksBaseJob *job = NULL;
 
+  g_variant_lookup (options, "target", "^&ay", &opt_target);
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
@@ -897,32 +907,45 @@ handle_mount (UDisksFilesystem      *filesystem,
   udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (daemon, block, &mount_point_to_use, &fstab_mount_options))
+  if (is_system_managed (daemon, block, opt_target, &mount_point_to_use, &fstab_mount_options))
     {
       system_managed = TRUE;
     }
 
-  /* First, fail if the device is already mounted */
-  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
-  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+  if (opt_target && !system_managed)
     {
-      GString *str;
-      guint n;
-      str = g_string_new (NULL);
-      for (n = 0; existing_mount_points[n] != NULL; n++)
-        {
-          if (n > 0)
-            g_string_append (str, ", ");
-          g_string_append_printf (str, "`%s'", existing_mount_points[n]);
-        }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_ALREADY_MOUNTED,
-                                             "Device %s is already mounted at %s.\n",
-                                             device,
-                                             str->str);
-      g_string_free (str, TRUE);
+                                             UDISKS_ERROR_FAILED,
+                                             "Entry for device %s and target %s not found in /etc/fstab.\n",
+                                             device, opt_target);
       goto out;
+    }
+
+  /* First, fail if the device is already mounted (and is not system managed). */
+  if (!system_managed)
+    {
+      existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+      if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+        {
+          GString *str;
+          guint n;
+          str = g_string_new (NULL);
+          for (n = 0; existing_mount_points[n] != NULL; n++)
+            {
+              if (n > 0)
+                g_string_append (str, ", ");
+              g_string_append_printf (str, "`%s'", existing_mount_points[n]);
+            }
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_ALREADY_MOUNTED,
+                                                 "Device %s is already mounted at %s.\n",
+                                                 device,
+                                                 str->str);
+          g_string_free (str, TRUE);
+          goto out;
+        }
     }
 
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -1318,6 +1341,7 @@ handle_unmount (UDisksFilesystem      *filesystem,
   UDisksState *state = NULL;
   gchar *mount_point = NULL;
   gchar *fstab_mount_options = NULL;
+  const gchar *opt_target = NULL;
   GError *error = NULL;
   uid_t mounted_by_uid;
   uid_t caller_uid;
@@ -1330,6 +1354,8 @@ handle_unmount (UDisksFilesystem      *filesystem,
   UDisksBaseJob *job = NULL;
   UDisksObject *filesystem_object = NULL;
   WaitForFilesystemMountPointsData wait_data = {NULL, 0, NULL};
+
+  g_variant_lookup (options, "target", "^&ay", &opt_target);
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
@@ -1384,23 +1410,54 @@ handle_unmount (UDisksFilesystem      *filesystem,
     }
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (daemon, block, &mount_point, &fstab_mount_options))
+  if (is_system_managed (daemon, block, opt_target, &mount_point, &fstab_mount_options))
     {
       system_managed = TRUE;
     }
 
+  if (opt_target && !system_managed)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Entry for device %s and target %s not found in /etc/fstab.\n",
+                                             udisks_block_get_device (block), opt_target);
+      goto out;
+    }
+
   /* if system-managed (e.g. referenced in /etc/fstab or similar) and
    * with the option x-udisks-auth or user(s), just run umount(8) as the
-   * calling user
+   * calling user.
    */
-  if (system_managed && (has_option (fstab_mount_options, "x-udisks-auth") ||
-                         has_option (fstab_mount_options, "users") ||
-                         has_option (fstab_mount_options, "user")))
+  if (system_managed)
     {
       gboolean unmount_fstab_as_root;
 
-      unmount_fstab_as_root = FALSE;
+      unmount_fstab_as_root = !(has_option (fstab_mount_options, "x-udisks-auth") ||
+                                has_option (fstab_mount_options, "users") ||
+                                has_option (fstab_mount_options, "user"));
     unmount_fstab_again:
+
+      if (unmount_fstab_as_root)
+        {
+          if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                            object,
+                                                            "org.freedesktop.udisks2.filesystem-fstab",
+                                                            options,
+                                                            /* Translators: Shown in authentication dialog when the
+                                                             * user requests unmounting a filesystem that is in
+                                                             * /etc/fstab file with the x-udisks-auth option.
+                                                             *
+                                                             * Do not translate $(drive), it's a
+                                                             * placeholder and will be replaced by the name of
+                                                             * the drive/device in question
+                                                             *
+                                                             * Do not translate /etc/fstab
+                                                             */
+                                                            N_("Authentication is required to unmount $(drive) referenced in the /etc/fstab file"),
+                                                            invocation))
+            goto out;
+        }
 
       job = udisks_daemon_launch_simple_job (daemon,
                                              UDISKS_OBJECT (object),
@@ -1434,23 +1491,6 @@ handle_unmount (UDisksFilesystem      *filesystem,
           if (!unmount_fstab_as_root && error->code == BD_FS_ERROR_AUTH)
             {
               g_clear_error (&error);
-              if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                                object,
-                                                                "org.freedesktop.udisks2.filesystem-fstab",
-                                                                options,
-                                                                /* Translators: Shown in authentication dialog when the
-                                                                 * user requests unmounting a filesystem that is in
-                                                                 * /etc/fstab file with the x-udisks-auth option.
-                                                                 *
-                                                                 * Do not translate $(drive), it's a
-                                                                 * placeholder and will be replaced by the name of
-                                                                 * the drive/device in question
-                                                                 *
-                                                                 * Do not translate /etc/fstab
-                                                                 */
-                                                                N_("Authentication is required to unmount $(drive) referenced in the /etc/fstab file"),
-                                                                invocation))
-                goto out;
               unmount_fstab_as_root = TRUE;
               goto unmount_fstab_again;
             }
