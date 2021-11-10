@@ -494,6 +494,9 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         dbus_size = self.get_property(pool, '.LogicalVolume', 'Size')
         dbus_size.assertEqual(psize)
 
+        dbus_type = self.get_property(lv, '.LogicalVolume', 'Type')
+        dbus_type.assertNotEqual('vdopool')
+
         # VDO properties
         dbus_comp = self.get_property(lv, '.VDOVolume', 'Compression')
         dbus_comp.assertTrue()

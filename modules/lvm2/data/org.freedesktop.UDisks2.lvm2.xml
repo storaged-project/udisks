@@ -427,11 +427,13 @@
 
     <!-- Type:
 
-         The general type of a logical volume. One of "block" or
-         "pool". More types might be defined in the future.
+         The general type of a logical volume. One of "block", "pool"
+         or "vdopool". More types might be defined in the future.
 
          A volume of type "block" can be used as a block device. A
          volume of type "pool" can be used to create thin volumes.
+         A volume of type "vdopool" is the internal pool for the
+         VDO logical volume device.
     -->
     <property name="Type" type="s" access="read"/>
 
