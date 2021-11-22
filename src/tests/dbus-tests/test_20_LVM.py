@@ -508,7 +508,6 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         # get statistics and do some simple sanity check
         stats = lv.GetStatistics(self.no_options, dbus_interface=self.iface_prefix + '.VDOVolume')
         self.assertIn("writeAmplificationRatio", stats.keys())
-        self.assertGreater(float(stats["writeAmplificationRatio"]), 0)
 
     def test_enable_disable_compression_deduplication(self):
         vgname = 'udisks_test_vdo_vg'
