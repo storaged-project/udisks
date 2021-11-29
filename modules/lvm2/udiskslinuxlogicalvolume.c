@@ -173,6 +173,8 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
 
       if (target_type == 't' && volume_type == 't')
         type = "pool";
+      else if (volume_type == 'd')
+        type = "vdopool";
       if (meta_lv_info && meta_lv_info->size)
         size += meta_lv_info->size;
 
