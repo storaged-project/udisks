@@ -135,8 +135,7 @@ check_authorization (UDisksPartition       *partition,
                                                caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -351,7 +350,7 @@ handle_set_flags (UDisksPartition       *partition,
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -499,7 +498,7 @@ handle_set_name (UDisksPartition       *partition,
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -873,7 +872,7 @@ handle_resize (UDisksPartition       *partition,
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -994,7 +993,7 @@ handle_delete (UDisksPartition       *partition,
   object = udisks_daemon_util_dup_object (partition, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -1012,9 +1011,7 @@ handle_delete (UDisksPartition       *partition,
       if (!udisks_linux_block_teardown (block, invocation, options, &error))
         {
           if (invocation != NULL)
-            g_dbus_method_invocation_take_error (invocation, error);
-          else
-            g_clear_error (&error);
+            g_dbus_method_invocation_return_gerror (invocation, error);
           goto out;
         }
     }
