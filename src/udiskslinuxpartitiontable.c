@@ -277,7 +277,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -293,7 +293,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -301,7 +300,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
       goto out;
     }
 
@@ -464,7 +462,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
         {
           g_prefix_error (&error, "Error setting name for newly created partition: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          g_dbus_method_invocation_return_gerror (invocation, error);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
           goto out;
         }
@@ -483,7 +481,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       if (!ret)
         {
           g_prefix_error (&error, "Error setting type for newly created partition: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          g_dbus_method_invocation_return_gerror (invocation, error);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
           goto out;
         }
@@ -520,7 +518,6 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   /* sit and wait for the partition to show up */
   g_warn_if_fail (wait_data->pos_to_wait_for > 0);
   wait_data->partition_table_object = object;
-  error = NULL;
   partition_object = udisks_daemon_wait_for_object_sync (daemon,
                                                          wait_for_partition,
                                                          wait_data,
@@ -530,7 +527,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   if (partition_object == NULL)
     {
       g_prefix_error (&error, "Error waiting for partition to appear: ");
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       goto out;
     }
