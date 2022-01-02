@@ -1040,7 +1040,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -1066,7 +1066,6 @@ handle_resize (UDisksEncrypted       *encrypted,
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
       goto out;
     }
 

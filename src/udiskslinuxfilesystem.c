@@ -1739,7 +1739,7 @@ handle_resize (UDisksFilesystem      *filesystem,
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -1921,7 +1921,7 @@ handle_repair (UDisksFilesystem      *filesystem,
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -2089,7 +2089,7 @@ handle_check (UDisksFilesystem      *filesystem,
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
@@ -2257,7 +2257,7 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      g_dbus_method_invocation_return_gerror (invocation, error);
       goto out;
     }
 
