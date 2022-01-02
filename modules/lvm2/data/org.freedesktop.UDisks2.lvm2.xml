@@ -312,7 +312,7 @@
 
      <!-- CreateVDOVolume:
          @lv_name: The name of the to-be-created VDO LV.
-         @pool_name: The name of the to-be-created VDO pool LV.
+         @pool_name: The name of the to-be-created VDO pool LV or an empty string for a default name.
          @data_size: The size of the data VDO LV (physical size of the @pool_name VDO pool LV).
          @virtual_size: The virtual_size of the @lv_name VDO LV or 0 for default (@data_size minus metadata).
          @index_memory: Amount of index memory in bytes or 0 for default.
