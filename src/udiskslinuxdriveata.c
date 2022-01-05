@@ -437,43 +437,6 @@ selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
   return ret;
 }
 
-static gboolean
-get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
-{
-  int fd;
-  gboolean rc = FALSE;
-  /* ATA8: 7.8 CHECK POWER MODE - E5h, Non-Data */
-  UDisksAtaCommandInput input = {.command = 0xe5};
-  UDisksAtaCommandOutput output = {0};
-
-  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
-  if (fd == -1)
-    {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device file %s while getting PM state: %m",
-                   g_udev_device_get_device_file (device->udev_device));
-      goto out;
-    }
-
-  if (!udisks_ata_send_command_sync (fd,
-                                     -1,
-                                     UDISKS_ATA_COMMAND_PROTOCOL_NONE,
-                                     &input,
-                                     &output,
-                                     error))
-    {
-      g_prefix_error (error, "Error sending ATA command CHECK POWER MODE: ");
-      goto out;
-    }
-  /* count field is used for the state, see ATA8: table 102 */
-  *count = output.count;
-  rc = TRUE;
- out:
-  if (fd != -1)
-    close (fd);
-  return rc;
-}
-
 static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *device)
 {
   const gchar *drivepath = g_udev_device_get_sysfs_path (device->udev_device);
@@ -603,7 +566,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       gboolean noio = FALSE;
       if (drive->standby_enabled)
         noio = update_io_stats (drive, device);
-      if (!get_pm_state (device, error, &count))
+      if (!udisks_ata_get_pm_state (g_udev_device_get_device_file (device->udev_device), error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
       /* don't wake up disk unless specically asked to */
@@ -1322,7 +1285,7 @@ udisks_linux_drive_ata_get_pm_state (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
-  ret = get_pm_state (device, error, pm_state);
+  ret = udisks_ata_get_pm_state (g_udev_device_get_device_file (device->udev_device), error, pm_state);
 
  out:
   g_clear_object (&device);
