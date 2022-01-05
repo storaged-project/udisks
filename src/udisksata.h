@@ -73,6 +73,16 @@ struct _UDisksAtaCommandOutput
   guchar *buffer;
 };
 
+/**
+ * UDISKS_ATA_PM_STATE_AWAKE:
+ * @pm_state: The power state value.
+ *
+ * Decodes the power state value as returned by #udisks_ata_get_pm_state.
+ *
+ * Returns: %TRUE when the drive is awake, %FALSE when sleeping.
+*/
+#define UDISKS_ATA_PM_STATE_AWAKE(pm_state) (pm_state >= 0x41)
+
 gboolean udisks_ata_send_command_sync (gint                       fd,
                                        gint                       timeout_msec,
                                        UDisksAtaCommandProtocol   protocol,
@@ -80,6 +90,9 @@ gboolean udisks_ata_send_command_sync (gint                       fd,
                                        UDisksAtaCommandOutput    *output,
                                        GError                   **error);
 
+gboolean udisks_ata_get_pm_state      (const gchar               *device,
+                                       GError                   **error,
+                                       guchar                    *count);
 
 G_END_DECLS
 

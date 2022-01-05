@@ -269,6 +269,8 @@ UDisksAtaCommandProtocol
 UDisksAtaCommandInput
 UDisksAtaCommandOutput
 udisks_ata_send_command_sync
+udisks_ata_get_pm_state
+UDISKS_ATA_PM_STATE_AWAKE
 </SECTION>
 
 <SECTION>

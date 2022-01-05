@@ -308,3 +308,65 @@ udisks_ata_send_command_sync (gint                       fd,
  out:
   return ret;
 }
+
+/**
+ * udisks_ata_get_pm_state:
+ * @device: ATA drive block device path.
+ * @error: Return location for error.
+ * @pm_state: Return location for the current power state value.
+ *
+ * Get the current power mode state.
+ *
+ * The format of @pm_state is the result obtained from sending the
+ * ATA command `CHECK POWER MODE` to the drive.
+ *
+ * Known values include:
+ *  - `0x00`: Device is in PM2: Standby state.
+ *  - `0x40`: Device is in the PM0: Active state, the NV Cache power mode is enabled, and the spindle is spun down or spinning down.
+ *  - `0x41`: Device is in the PM0: Active state, the NV Cache power mode is enabled, and the spindle is spun up or spinning up.
+ *  - `0x80`: Device is in PM1: Idle state.
+ *  - `0xff`: Device is in the PM0: Active state or PM1: Idle State.
+ *
+ * Typically user interfaces will report "Drive is spun down" if @pm_state is
+ * 0x00 and "Drive is spun up" otherwise.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+udisks_ata_get_pm_state (const gchar *device, GError **error, guchar *count)
+{
+  int fd;
+  gboolean rc = FALSE;
+  /* ATA8: 7.8 CHECK POWER MODE - E5h, Non-Data */
+  UDisksAtaCommandInput input = {.command = 0xe5};
+  UDisksAtaCommandOutput output = {0};
+
+  g_warn_if_fail (device != NULL);
+
+  fd = open (device, O_RDONLY|O_NONBLOCK);
+  if (fd == -1)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening device file %s while getting PM state: %m",
+                   device);
+      goto out;
+    }
+
+  if (!udisks_ata_send_command_sync (fd,
+                                     -1,
+                                     UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                     &input,
+                                     &output,
+                                     error))
+    {
+      g_prefix_error (error, "Error sending ATA command CHECK POWER MODE: ");
+      goto out;
+    }
+  /* count field is used for the state, see ATA8: table 102 */
+  *count = output.count;
+  rc = TRUE;
+ out:
+  if (fd != -1)
+    close (fd);
+  return rc;
+}
