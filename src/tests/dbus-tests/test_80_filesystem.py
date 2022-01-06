@@ -569,24 +569,11 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_fs.AddConfigurationItem(('fstab', conf), self.no_options,
                                       dbus_interface=self.iface_prefix + '.Block')
 
-        # test if the `mount` command is able to mount it
-        ret, out = self.run_command('mount %s' % tmp)
+        # mount using fstab options
+        block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.addCleanup(self.try_unmount, tmp)
         self.addCleanup(self.try_unmount, block_fs_dev)
         self.addCleanup(self.try_unmount, disk_dev_path)
-        if mount_should_fail:
-            self.assertEquals(ret, 1)
-            self.assertIn("can't find", out)
-        else:
-            self.assertEquals(ret, 0)
-            ret, out = self.run_command('umount %s' % tmp)
-            self.assertEquals(ret, 0)
-
-        # previously mounted externally, give udisksd some time to register /proc/self/mountinfo changes
-        time.sleep(2)
-
-        # mount using fstab options
-        block_fs.Mount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
         # dbus mountpoint
         dbus_mounts = self.get_property(block_fs, '.Filesystem', 'MountPoints')
@@ -606,6 +593,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             self.assertTrue(os.path.ismount(tmp))
             self.assertIn(tmp, out)
             self.assertIn('ro', out)
+
+        block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab(self):
