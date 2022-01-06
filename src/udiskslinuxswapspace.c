@@ -216,6 +216,8 @@ handle_start (UDisksSwapspace        *swapspace,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_swapspace_complete_start (swapspace, invocation);
 
  out:
@@ -312,6 +314,8 @@ handle_stop (UDisksSwapspace        *swapspace,
       goto out;
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_swapspace_complete_stop (swapspace, invocation);
 
  out:
