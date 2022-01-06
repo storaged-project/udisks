@@ -39,6 +39,7 @@
 #include "udisksmoduleobject.h"
 #include "udisksdaemonutil.h"
 #include "udisksconfigmanager.h"
+#include "udisksutabentry.h"
 
 /**
  * SECTION:udiskslinuxprovider
@@ -1559,7 +1560,7 @@ on_housekeeping_timeout (gpointer user_data)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-update_all_block_objects (UDisksLinuxProvider *provider)
+update_block_objects (UDisksLinuxProvider *provider, const gchar *device_path)
 {
   GList *objects;
   GList *l;
@@ -1572,18 +1573,36 @@ update_all_block_objects (UDisksLinuxProvider *provider)
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (l->data);
-      udisks_linux_block_object_uevent (object, "change", NULL);
+
+      if (device_path == NULL)
+        udisks_linux_block_object_uevent (object, "change", NULL);
+      else
+        {
+          gchar *block_dev;
+          gboolean match;
+
+          block_dev = udisks_linux_block_object_get_device_file (object);
+          match = g_strcmp0 (block_dev, device_path) == 0;
+          g_free (block_dev);
+          if (match)
+            {
+              udisks_linux_block_object_uevent (object, "change", NULL);
+              break;
+            }
+        }
     }
 
   g_list_free_full (objects, g_object_unref);
 }
 
+/* fstab monitoring */
 static void
 mount_monitor_on_mountpoints_changed (GUnixMountMonitor *monitor,
                                       gpointer           user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_objects (provider);
+  /* TODO: compare differences and only update relevant objects */
+  update_block_objects (provider, NULL);
 }
 
 static void
@@ -1592,7 +1611,7 @@ crypttab_monitor_on_entry_added (UDisksCrypttabMonitor *monitor,
                                  gpointer               user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_objects (provider);
+  update_block_objects (provider, NULL);
 }
 
 static void
@@ -1601,7 +1620,7 @@ crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
                                    gpointer               user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_objects (provider);
+  update_block_objects (provider, NULL);
 }
 
 #ifdef HAVE_LIBMOUNT_UTAB
@@ -1611,7 +1630,7 @@ utab_monitor_on_entry_added (UDisksUtabMonitor *monitor,
                              gpointer           user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_objects (provider);
+  update_block_objects (provider, udisks_utab_entry_get_source (entry));
 }
 
 static void
@@ -1620,6 +1639,6 @@ utab_monitor_on_entry_removed (UDisksUtabMonitor *monitor,
                                gpointer           user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_objects (provider);
+  update_block_objects (provider, udisks_utab_entry_get_source (entry));
 }
 #endif
