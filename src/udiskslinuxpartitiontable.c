@@ -43,6 +43,7 @@
 #include "udiskslinuxblock.h"
 #include "udiskslinuxpartition.h"
 #include "udiskssimplejob.h"
+#include "udisksstate.h"
 
 /**
  * SECTION:udiskslinuxpartitiontable
@@ -261,6 +262,7 @@ create_partition (UDisksPartitionTable   *table,
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
+  UDisksState *state = NULL;
   gchar *device_name = NULL;
   WaitForPartitionData *wait_data = NULL;
   UDisksObject *partition_object = NULL;
@@ -283,6 +285,10 @@ create_partition (UDisksPartitionTable   *table,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
   g_variant_lookup (options, "partition-type", "&s", &partition_type);
 
@@ -566,6 +572,10 @@ create_partition (UDisksPartitionTable   *table,
  out:
   if (fd >= 0)
     close (fd);
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
   g_free (table_type);
   g_free (wait_data);
   g_clear_error (&error);
