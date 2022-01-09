@@ -41,9 +41,7 @@ UDisksCrypttabEntry *_udisks_crypttab_entry_new (const gchar *name,
                                                  const gchar *passphrase,
                                                  const gchar *options);
 
-#ifdef HAVE_LIBMOUNT_UTAB
 UDisksUtabEntry * _udisks_utab_entry_new (struct libmnt_fs *fs);
-#endif
 
 G_END_DECLS
 
