@@ -3230,6 +3230,7 @@ format_set_partition_type (UDisksPartition       *partition,
     {
       if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
                                                  partition_type,
+                                                 TRUE, /* lock_held */
                                                  caller_uid,
                                                  NULL, /* cancellable */
                                                  error))
