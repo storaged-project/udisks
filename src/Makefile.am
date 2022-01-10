@@ -98,6 +98,8 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udisksfstabentry.h             udisksfstabentry.c                      \
 	udiskscrypttabentry.h          udiskscrypttabentry.c                   \
 	udiskscrypttabmonitor.h        udiskscrypttabmonitor.c                 \
+	udisksutabentry.h              udisksutabentry.c                       \
+	udisksutabmonitor.h            udisksutabmonitor.c                     \
 	udiskslinuxdevice.h            udiskslinuxdevice.c                     \
 	udisksata.h                    udisksata.c                             \
 	udisksmodulemanager.h          udisksmodulemanager.c                   \
@@ -106,12 +108,6 @@ libudisks_daemon_la_SOURCES =                                                  \
 	udisksconfigmanager.h          udisksconfigmanager.c                   \
 	$(BUILT_SOURCES)                                                       \
 	$(NULL)
-
-if HAVE_LIBMOUNT_UTAB
-libudisks_daemon_la_SOURCES +=                                                 \
-	udisksutabentry.h              udisksutabentry.c                       \
-	udisksutabmonitor.h            udisksutabmonitor.c
-endif # HAVE_LIBMOUNT_UTAB
 
 libudisks_daemon_la_CFLAGS =                                                   \
 	-I$(top_srcdir)                                                        \

@@ -101,13 +101,11 @@ typedef struct _UDisksCrypttabMonitor UDisksCrypttabMonitor;
 struct _UDisksCrypttabEntry;
 typedef struct _UDisksCrypttabEntry UDisksCrypttabEntry;
 
-#ifdef HAVE_LIBMOUNT_UTAB
 struct _UDisksUtabMonitor;
 typedef struct _UDisksUtabMonitor UDisksUtabMonitor;
 
 struct _UDisksUtabEntry;
 typedef struct _UDisksUtabEntry UDisksUtabEntry;
-#endif
 
 struct _UDisksLinuxPartition;
 typedef struct _UDisksLinuxPartition UDisksLinuxPartition;

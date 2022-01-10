@@ -69,11 +69,8 @@
 #include "udiskslinuxencryptedhelpers.h"
 #include "udiskslinuxpartitiontable.h"
 #include "udiskslinuxfilesystemhelpers.h"
-
-#ifdef HAVE_LIBMOUNT_UTAB
 #include "udisksutabmonitor.h"
 #include "udisksutabentry.h"
-#endif
 
 /**
  * SECTION:udiskslinuxblock
@@ -519,7 +516,6 @@ find_crypttab_entries_for_needle (gchar        *needle,
   return ret;
 }
 
-#ifdef HAVE_LIBMOUNT_UTAB
 static GList *
 find_utab_entries_for_device (UDisksLinuxBlock *block,
                               UDisksDaemon     *daemon)
@@ -546,7 +542,6 @@ find_utab_entries_for_device (UDisksLinuxBlock *block,
   g_slist_free_full (entries, g_object_unref);
   return ret;
 }
-#endif
 
 static void
 add_fstab_entry (GVariantBuilder  *builder,
@@ -679,7 +674,6 @@ calculate_configuration (UDisksLinuxBlock  *block,
   return ret;
 }
 
-#ifdef HAVE_LIBMOUNT_UTAB
 static gchar **
 calculate_userspace_mount_options (UDisksLinuxBlock *block,
                                    UDisksDaemon     *daemon)
@@ -702,7 +696,6 @@ calculate_userspace_mount_options (UDisksLinuxBlock *block,
 
   return (gchar **) g_ptr_array_free (ret, FALSE);
 }
-#endif
 
 static void
 update_configuration (UDisksLinuxBlock  *block,
@@ -724,7 +717,6 @@ update_configuration (UDisksLinuxBlock  *block,
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (block));
 }
 
-#ifdef HAVE_LIBMOUNT_UTAB
 static void
 update_userspace_mount_options (UDisksLinuxBlock *block,
                                 UDisksDaemon     *daemon)
@@ -736,7 +728,6 @@ update_userspace_mount_options (UDisksLinuxBlock *block,
 
   g_strfreev (opts);
 }
-#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -1217,9 +1208,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
 
   update_hints (daemon, block, device, drive);
   update_configuration (block, daemon);
-#ifdef HAVE_LIBMOUNT_UTAB
   update_userspace_mount_options (block, daemon);
-#endif
   update_mdraid (block, device, drive, object_manager);
 
  out:
