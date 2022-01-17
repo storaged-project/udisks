@@ -56,6 +56,7 @@
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxmountoptions.h"
+#include "udisksata.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -78,6 +79,10 @@ struct _UDisksLinuxFilesystem
 {
   UDisksFilesystemSkeleton parent_instance;
   GMutex lock;
+  guint64 cached_fs_size;
+  gchar *cached_device_file;
+  gchar *cached_fs_type;
+  gboolean cached_drive_is_ata;
 };
 
 struct _UDisksLinuxFilesystemClass
@@ -85,7 +90,14 @@ struct _UDisksLinuxFilesystemClass
   UDisksFilesystemSkeletonClass parent_class;
 };
 
+enum
+{
+  PROP_0,
+  PROP_SIZE,
+};
+
 static void filesystem_iface_init (UDisksFilesystemIface *iface);
+static guint64 get_filesystem_size (UDisksLinuxFilesystem *filesystem);
 
 G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_TYPE_FILESYSTEM_SKELETON,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_FILESYSTEM, filesystem_iface_init));
@@ -106,6 +118,8 @@ udisks_linux_filesystem_finalize (GObject *object)
   UDisksLinuxFilesystem *filesystem = UDISKS_LINUX_FILESYSTEM (object);
 
   g_mutex_clear (&(filesystem->lock));
+  g_free (filesystem->cached_device_file);
+  g_free (filesystem->cached_fs_type);
 
   if (G_OBJECT_CLASS (udisks_linux_filesystem_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_filesystem_parent_class)->finalize (object);
@@ -120,12 +134,54 @@ udisks_linux_filesystem_init (UDisksLinuxFilesystem *filesystem)
 }
 
 static void
+udisks_linux_filesystem_get_property (GObject    *object,
+                                      guint       prop_id,
+                                      GValue     *value,
+                                      GParamSpec *pspec)
+{
+  UDisksLinuxFilesystem *filesystem = UDISKS_LINUX_FILESYSTEM (object);
+
+  switch (prop_id)
+    {
+    case PROP_SIZE:
+      g_value_set_uint64 (value, get_filesystem_size (filesystem));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+udisks_linux_filesystem_set_property (GObject      *object,
+                                      guint         prop_id,
+                                      const GValue *value,
+                                      GParamSpec   *pspec)
+{
+  switch (prop_id)
+    {
+    case PROP_SIZE:
+      g_warning ("udisks_linux_filesystem_set_property() should never be called, value = %lu", g_value_get_uint64 (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
 udisks_linux_filesystem_class_init (UDisksLinuxFilesystemClass *klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_linux_filesystem_finalize;
+  gobject_class->get_property = udisks_linux_filesystem_get_property;
+  gobject_class->set_property = udisks_linux_filesystem_set_property;
+
+  g_object_class_override_property (gobject_class, PROP_SIZE, "size");
 }
 
 /**
@@ -144,49 +200,58 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* WARNING: called with GDBusObjectManager lock held, avoid any object lookup */
 static guint64
-get_filesystem_size (UDisksLinuxBlockObject *object)
+get_filesystem_size (UDisksLinuxFilesystem *filesystem)
 {
   guint64 size = 0;
-  UDisksLinuxDevice *device;
-  gchar *dev;
-  const gchar *type;
   GError *error = NULL;
 
-  device = udisks_linux_block_object_get_device (object);
-  dev = udisks_linux_block_object_get_device_file (object);
-  type = g_udev_device_get_property (device->udev_device, "ID_FS_TYPE");
+  if (!filesystem->cached_device_file || !filesystem->cached_fs_type)
+    return 0;
 
-  if (g_strcmp0 (type, "ext2") == 0)
+  /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
+   * drive waking up - nothing has changed anyway since it's been sleeping...
+   */
+  if (filesystem->cached_drive_is_ata)
     {
-      BDFSExt2Info *info = bd_fs_ext2_get_info (dev, &error);
+      guchar pm_state = 0;
+
+      if (udisks_ata_get_pm_state (filesystem->cached_device_file, NULL, &pm_state))
+        if (!UDISKS_ATA_PM_STATE_AWAKE (pm_state) && filesystem->cached_fs_size > 0)
+          return filesystem->cached_fs_size;
+    }
+
+  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") == 0)
+    {
+      BDFSExt2Info *info = bd_fs_ext2_get_info (filesystem->cached_device_file, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext2_info_free (info);
         }
     }
-  else if (g_strcmp0 (type, "ext3") == 0)
+  else if (g_strcmp0 (filesystem->cached_fs_type, "ext3") == 0)
     {
-      BDFSExt3Info *info = bd_fs_ext3_get_info (dev, &error);
+      BDFSExt3Info *info = bd_fs_ext3_get_info (filesystem->cached_device_file, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext3_info_free (info);
         }
     }
-  else if (g_strcmp0 (type, "ext4") == 0)
+  else if (g_strcmp0 (filesystem->cached_fs_type, "ext4") == 0)
     {
-      BDFSExt4Info *info = bd_fs_ext4_get_info (dev, &error);
+      BDFSExt4Info *info = bd_fs_ext4_get_info (filesystem->cached_device_file, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
           bd_fs_ext4_info_free (info);
         }
     }
-  else if (g_strcmp0 (type, "xfs") == 0)
+  else if (g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
     {
-      BDFSXfsInfo *info = bd_fs_xfs_get_info (dev, &error);
+      BDFSXfsInfo *info = bd_fs_xfs_get_info (filesystem->cached_device_file, &error);
       if (info)
         {
           size = info->block_size * info->block_count;
@@ -194,10 +259,9 @@ get_filesystem_size (UDisksLinuxBlockObject *object)
         }
     }
 
-  g_free (dev);
-  g_object_unref (device);
   g_clear_error (&error);
 
+  filesystem->cached_fs_size = size;
   return size;
 }
 
@@ -234,14 +298,12 @@ void
 udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
                                 UDisksLinuxBlockObject *object)
 {
+  UDisksDriveAta *ata = NULL;
   UDisksMountMonitor *mount_monitor;
   UDisksLinuxDevice *device;
-  UDisksDriveAta *ata = NULL;
   GPtrArray *p;
   GList *mounts;
   GList *l;
-  gboolean skip_fs_size = FALSE;
-  guchar pm_state;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -263,19 +325,23 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
-  /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
-   * drive waking up - nothing has changed anyway since it's been sleeping...
+  /* cached device properties for on-demand filesystem size retrieval */
+  g_free (filesystem->cached_device_file);
+  g_free (filesystem->cached_fs_type);
+  filesystem->cached_fs_type = g_strdup (g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
+  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") == 0 ||
+      g_strcmp0 (filesystem->cached_fs_type, "ext3") == 0 ||
+      g_strcmp0 (filesystem->cached_fs_type, "ext4") == 0 ||
+      g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
+    filesystem->cached_device_file = udisks_linux_block_object_get_device_file (object);
+
+  /* TODO: this only looks for a drive object associated with the current
+   * block object. In case of a complex layered structure this needs to walk
+   * the tree and return a list of physical drives to check the powermanagement on.
    */
   ata = get_drive_ata (object);
-  if (ata != NULL)
-    {
-      if (udisks_linux_drive_ata_get_pm_state (UDISKS_LINUX_DRIVE_ATA (ata), NULL, &pm_state))
-        skip_fs_size = ! UDISKS_LINUX_DRIVE_ATA_IS_AWAKE (pm_state);
-    }
+  filesystem->cached_drive_is_ata = ata != NULL && udisks_drive_ata_get_pm_supported (ata);
   g_clear_object (&ata);
-
-  if (! skip_fs_size)
-    udisks_filesystem_set_size (UDISKS_FILESYSTEM (filesystem), get_filesystem_size (object));
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
 
@@ -1872,10 +1938,9 @@ handle_resize (UDisksFilesystem      *filesystem,
 
   /* At least resize2fs might need another uevent after it is done.
    */
+  UDISKS_LINUX_FILESYSTEM (filesystem)->cached_fs_size = 0;
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
-
-  udisks_filesystem_set_size (filesystem, get_filesystem_size (UDISKS_LINUX_BLOCK_OBJECT (object)));
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
   udisks_filesystem_complete_resize (filesystem, invocation);
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);

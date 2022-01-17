@@ -161,7 +161,6 @@ udisks_linux_drive_ata_smart_selftest_sync
 udisks_linux_drive_ata_apply_configuration
 udisks_linux_drive_ata_secure_erase_sync
 udisks_linux_drive_ata_get_pm_state
-UDISKS_LINUX_DRIVE_ATA_IS_AWAKE
 <SUBSECTION Standard>
 UDISKS_LINUX_DRIVE_ATA
 UDISKS_IS_LINUX_DRIVE_ATA
@@ -269,6 +268,8 @@ UDisksAtaCommandProtocol
 UDisksAtaCommandInput
 UDisksAtaCommandOutput
 udisks_ata_send_command_sync
+udisks_ata_get_pm_state
+UDISKS_ATA_PM_STATE_AWAKE
 </SECTION>
 
 <SECTION>
