@@ -1868,7 +1868,7 @@
 
     <!--
         Mount:
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>fstype</parameter> (of type 's'), <parameter>options</parameter> (of type 's'), and <parameter>allow-multi</parameter> (of type 'b').
         @mount_path: The filesystem path where the device was mounted.
 
         Mounts the filesystem.
@@ -1905,6 +1905,13 @@
         typically results in the user having to authenticate as an
         administrator). If authorized, the <command>mount</command>
         command is then run as root.
+
+        Normally, a filesystem can only be mounted once and this call
+        will avoid any attempt to mount a filesystem that is already
+        mounted.  However, when the @allow-multi option is set to
+        true, the filesystem is attempted to be mounted even if it is
+        already mounted.  Depending on the filesystem type, this might
+        or might not succeed and might or might not be a good idea.
 
         The filesystem should be unmounted using the
         org.freedesktop.UDisks2.Filesystem.Unmount() method.

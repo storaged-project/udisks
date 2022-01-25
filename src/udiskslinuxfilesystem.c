@@ -860,6 +860,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   UDisksState *state = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
+  gboolean opt_allow_multi = FALSE;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
   gchar *fs_type_to_use = NULL;
@@ -876,6 +877,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   gchar *device = NULL;
   UDisksBaseJob *job = NULL;
 
+  g_variant_lookup (options, "allow-multi", "b", &opt_allow_multi);
 
   /* only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
@@ -903,26 +905,29 @@ handle_mount (UDisksFilesystem      *filesystem,
     }
 
   /* First, fail if the device is already mounted */
-  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
-  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+  if (!opt_allow_multi)
     {
-      GString *str;
-      guint n;
-      str = g_string_new (NULL);
-      for (n = 0; existing_mount_points[n] != NULL; n++)
+      existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+      if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
         {
-          if (n > 0)
-            g_string_append (str, ", ");
-          g_string_append_printf (str, "`%s'", existing_mount_points[n]);
+          GString *str;
+          guint n;
+          str = g_string_new (NULL);
+          for (n = 0; existing_mount_points[n] != NULL; n++)
+            {
+              if (n > 0)
+                g_string_append (str, ", ");
+              g_string_append_printf (str, "`%s'", existing_mount_points[n]);
+            }
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_ALREADY_MOUNTED,
+                                                 "Device %s is already mounted at %s.\n",
+                                                 device,
+                                                 str->str);
+          g_string_free (str, TRUE);
+          goto out;
         }
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_ALREADY_MOUNTED,
-                                             "Device %s is already mounted at %s.\n",
-                                             device,
-                                             str->str);
-      g_string_free (str, TRUE);
-      goto out;
     }
 
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
