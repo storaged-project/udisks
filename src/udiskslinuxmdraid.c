@@ -1060,11 +1060,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (opt_wipe)
     {
-#ifdef HAVE_LIBBLOCKDEV3
       if (!bd_fs_wipe (member_device_file, TRUE, TRUE, &error))
-#else
-      if (!bd_fs_wipe_force (member_device_file, TRUE, TRUE, &error))
-#endif
         {
           g_prefix_error (&error,
                           "Error wiping '%s' after removal from RAID array '%s': ",

@@ -699,11 +699,7 @@ handle_mdraid_create (UDisksManager         *_object,
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
-#ifdef HAVE_LIBBLOCKDEV3
       if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, FALSE, &error))
-#else
-      if (!bd_fs_wipe_force (udisks_block_get_device (block), TRUE, FALSE, &error))
-#endif
         {
           /* no signature to remove, ignore */
           if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
@@ -820,11 +816,7 @@ handle_mdraid_create (UDisksManager         *_object,
                            caller_uid);
 
   /* ... wipe the created RAID array */
-#ifdef HAVE_LIBBLOCKDEV3
   if (!bd_fs_wipe (raid_device_file, TRUE, FALSE, &error))
-#else
-  if (!bd_fs_wipe_force (raid_device_file, TRUE, FALSE, &error))
-#endif
     {
       if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
         g_clear_error (&error);
