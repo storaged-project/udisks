@@ -168,14 +168,6 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(BLOCKDEV_CFLAGS)
   AC_SUBST(BLOCKDEV_LIBS)
 
-  PKG_CHECK_MODULES(BLOCKDEV3, [blockdev >= 2.99],
-                    [have_libblockdev3=yes],
-                    [have_libblockdev3=no])
-  if test "x$have_libblockdev3" = "xyes"; then
-    AC_DEFINE([HAVE_LIBBLOCKDEV3], 1, [Defined when libblockdev-3 is available])
-  fi
-  AC_SUBST(HAVE_LIBBLOCKDEV3)
-
   PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
   AC_SUBST(LIBATASMART_CFLAGS)
   AC_SUBST(LIBATASMART_LIBS)
@@ -792,7 +784,6 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
-        using libblockdev-3.0:      ${have_libblockdev3}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}
