@@ -657,6 +657,26 @@ if test "x$enable_daemon" = "xyes"; then
   if test "x$have_crypto" = "xno"; then
     AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
   fi
+
+  # libblockdev nvme
+  SAVE_CFLAGS=$CFLAGS
+  SAVE_LDFLAGS=$LDFLAGS
+
+  CFLAGS="$GLIB_CFLAGS"
+  LDFLAGS="$GLIB_LIBS"
+  AC_MSG_CHECKING([libblockdev-nvme presence])
+  AC_TRY_COMPILE([#include <blockdev/nvme.h>], [],
+                 [AC_MSG_RESULT([yes])
+                 have_nvme=yes],
+                 [AC_MSG_RESULT([no])
+                 have_nvme=no])
+
+  CFLAGS=$SAVE_CFLAGS
+  LDFLAGS=$SAVE_LDFLAGS
+
+  if test "x$have_nvme" = "xno"; then
+    AC_MSG_ERROR([BLOCKDEV NVMe support requested but header or library not found])
+  fi
 fi
 
 
