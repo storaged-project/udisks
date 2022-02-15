@@ -321,7 +321,6 @@
          @write_policy: Specifies the write policy.
          @options: Additional options.
          @result: The object path of the new VDO logical volume.
-
          @since: 2.9.0
 
          Create a new VDO logical volume that is backed by a newly created
