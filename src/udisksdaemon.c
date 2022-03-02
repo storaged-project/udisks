@@ -358,12 +358,10 @@ udisks_daemon_constructed (GObject *object)
         }
     else
       {
-        /* a missing plugin is okay, calling functions from it will fail, but
-           until that happens, life will just be great */
-        for (plugin_p=plugins; *plugin_p; plugin_p++)
+        for (plugin_p = plugins; *plugin_p; plugin_p++)
           if (!bd_is_plugin_available ((*plugin_p)->name))
-            udisks_warning ("Failed to load the '%s' libblockdev plugin",
-                            bd_get_plugin_name ((*plugin_p)->name));
+            udisks_error ("Failed to load the '%s' libblockdev plugin",
+                          bd_get_plugin_name ((*plugin_p)->name));
       }
     }
 
