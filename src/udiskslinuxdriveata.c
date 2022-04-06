@@ -576,7 +576,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                        UDISKS_ERROR,
                        UDISKS_ERROR_WOULD_WAKEUP,
                        "Disk is in sleep mode and the nowakeup option was passed");
-          goto out;
+          goto out_io;
         }
     }
 
@@ -644,11 +644,14 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   update_smart (drive, device);
 
   ret = TRUE;
-  /* update stats again to account for the IO we just did to read the SMART info */
-  update_io_stats (drive, device);
 
   /* ensure property changes are sent before the method return */
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
+
+ out_io:
+  /* update stats again to account for the IO we just did to read the SMART info */
+  if (drive->standby_enabled)
+    update_io_stats (drive, device);
 
  out:
   g_clear_object (&device);
