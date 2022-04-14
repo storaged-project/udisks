@@ -66,6 +66,7 @@ struct _UDisksLinuxVolumeGroupObject
   gchar *name;
 
   GHashTable *logical_volumes;
+  guint32 update_epoch;
   guint32 poll_epoch;
   guint poll_timeout_id;
   gboolean poll_requested;
@@ -99,6 +100,7 @@ static void crypttab_changed (UDisksCrypttabMonitor  *monitor,
 typedef struct {
   BDLVMVGdata *vg_info;
   GSList *vg_pvs;
+  guint32 epoch;
 } VGUpdateData;
 
 static void
@@ -183,6 +185,7 @@ udisks_linux_volume_group_object_set_property (GObject      *__object,
 static void
 udisks_linux_volume_group_object_init (UDisksLinuxVolumeGroupObject *object)
 {
+  object->update_epoch = 0;
   object->poll_epoch = 0;
   object->poll_timeout_id = 0;
   object->poll_requested = FALSE;
@@ -575,6 +578,12 @@ update_vg (GObject      *source_obj,
   BDLVMVGdata *vg_info = data->vg_info;
   GSList *vg_pvs = data->vg_pvs;
 
+  if (data->epoch != object->update_epoch)
+    {
+      lv_list_free (lvs);
+      return;
+    }
+
   /* free the data container (but not 'vg_info' and 'vg_pvs') */
   g_free (data);
 
@@ -711,8 +720,11 @@ udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object, B
   gchar *vg_name = g_strdup (vg_info->name);
   GTask *task = NULL;
 
+  object->update_epoch++;
+
   data->vg_info = vg_info;
   data->vg_pvs = pvs;
+  data->epoch = object->update_epoch;
 
   /* the callback (update_vg) is called in the default main loop (context) */
   task = g_task_new (g_object_ref (object), NULL /* cancellable */, update_vg, data /* callback_data */);

@@ -59,6 +59,8 @@ struct _UDisksLinuxModuleLVM2 {
 
   gint delayed_update_id;
   gboolean coldplug_done;
+
+  guint32 update_epoch;
 };
 
 typedef struct _UDisksLinuxModuleLVM2Class UDisksLinuxModuleLVM2Class;
@@ -86,6 +88,7 @@ udisks_linux_module_lvm2_constructed (GObject *object)
 
   module->name_to_volume_group = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_object_unref);
   module->coldplug_done = FALSE;
+  module->update_epoch = 0;
 
   if (G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed)
     G_OBJECT_CLASS (udisks_linux_module_lvm2_parent_class)->constructed (object);
@@ -221,6 +224,12 @@ lvm_update_vgs (GObject      *source_obj,
   gpointer key, value;
   const gchar *vg_name;
 
+  if (GPOINTER_TO_UINT (user_data) != module->update_epoch)
+    {
+      vgs_pvs_data_free (data);
+      return;
+    }
+
   if (! data)
     {
       if (error)
@@ -303,11 +312,13 @@ lvm_update (UDisksLinuxModuleLVM2 *module)
 {
   GTask *task;
 
+  module->update_epoch++;
+
   /* the callback (lvm_update_vgs) is called in the default main loop (context) */
   task = g_task_new (module,
                      NULL /* cancellable */,
                      lvm_update_vgs,
-                     NULL /* callback_data */);
+                     GUINT_TO_POINTER (module->update_epoch));
 
   /* holds a reference to 'task' until it is finished */
   g_task_run_in_thread (task, (GTaskThreadFunc) vgs_task_func);
