@@ -119,6 +119,12 @@ typedef struct UDisksInhibitCookie UDisksInhibitCookie;
 struct _UDisksModuleManager;
 typedef struct _UDisksModuleManager UDisksModuleManager;
 
+struct _UDisksLinuxNVMeController;
+typedef struct _UDisksLinuxNVMeController UDisksLinuxNVMeController;
+
+struct _UDisksLinuxNVMeNamespace;
+typedef struct _UDisksLinuxNVMeNamespace UDisksLinuxNVMeNamespace;
+
 typedef struct _UDisksConfigManager        UDisksConfigManager;
 typedef struct _UDisksConfigManagerClass   UDisksConfigManagerClass;
 

@@ -713,9 +713,9 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   UDisksDrive *iface = UDISKS_DRIVE (drive);
   UDisksLinuxDevice *device = NULL;
   const gchar *serial = NULL;
-  guint64 size;
-  gboolean media_available;
-  gboolean media_change_detected;
+  guint64 size = 0;
+  gboolean media_available = TRUE;
+  gboolean media_change_detected = TRUE;
   gboolean is_pc_floppy_drive = FALSE;
   gboolean removable_hint = FALSE;
   UDisksDaemon *daemon;
@@ -800,6 +800,57 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
        *  - lookup Revision from fwrev and hwrev in sysfs
        */
     }
+  else if (udisks_linux_device_subsystem_is_nvme (device))
+    {
+      gchar *model = NULL;
+      gchar *firmware = NULL;
+
+      serial = g_udev_device_get_sysfs_attr (device->udev_device, "serial");
+      model = g_strdup (g_udev_device_get_sysfs_attr (device->udev_device, "model"));
+      firmware = g_strdup (g_udev_device_get_sysfs_attr (device->udev_device, "firmware_rev"));
+
+      /* Since we issue the 'NVMe Identify Controller' command to the drive which
+       * is an actual ioctl and the drive may be busy or in a temporary offline state,
+       * leaving us with missing data, it's better to leave old information around
+       * instead of clearing to blank.
+       */
+      if (device->nvme_ctrl_info)
+        {
+          /* TODO: decode nvme_ctrl_info's Vendor ID */
+          /* TODO: rotation rate - add support for NVMe Log Page – Rotational Media Information Log to libblockdev first */
+          if (model == NULL || strlen (model) == 0)
+            {
+              g_free (model);
+              model = g_strdup (device->nvme_ctrl_info->model_number);
+            }
+          if (firmware == NULL || strlen (firmware) == 0)
+            {
+              g_free (firmware);
+              firmware = g_strdup (device->nvme_ctrl_info->firmware_ver);
+            }
+          if (device->nvme_ctrl_info->serial_number && strlen (device->nvme_ctrl_info->serial_number) > 0)
+            serial = device->nvme_ctrl_info->serial_number;
+          size = device->nvme_ctrl_info->size_total;
+          /* WWN is namespace specific, leaving unset */
+        }
+      else
+        {
+          udisks_debug ("Missing probed NVMe controller information for %s",
+                        g_udev_device_get_sysfs_path (device->udev_device));
+        }
+      if (model)
+        {
+          g_strstrip (model);
+          udisks_drive_set_model (iface, model);
+          g_free (model);
+        }
+      if (firmware)
+        {
+          g_strstrip (firmware);
+          udisks_drive_set_revision (iface, firmware);
+          g_free (firmware);
+        }
+    }
   else
     {
       const gchar *vendor;
@@ -883,9 +934,10 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   udisks_drive_set_serial (iface, serial);
 
   /* common bits go here */
-  size = udisks_daemon_util_block_get_size (device->udev_device,
-                                            &media_available,
-                                            &media_change_detected);
+  if (size == 0)
+    size = udisks_daemon_util_block_get_size (device->udev_device,
+                                              &media_available,
+                                              &media_change_detected);
   udisks_drive_set_size (iface, size);
   udisks_drive_set_media_available (iface, media_available);
   udisks_drive_set_media_change_detected (iface, media_change_detected);

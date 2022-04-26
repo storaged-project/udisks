@@ -37,6 +37,7 @@
 #include "udisksmodulemanager.h"
 #include "udisksmodule.h"
 #include "udisksmoduleobject.h"
+#include "udiskslinuxnvmecontroller.h"
 
 /**
  * SECTION:udiskslinuxdriveobject
@@ -66,6 +67,7 @@ struct _UDisksLinuxDriveObject
   /* interfaces */
   UDisksDrive *iface_drive;
   UDisksDriveAta *iface_drive_ata;
+  UDisksLinuxNVMeController *iface_nvme_ctrl;
   GHashTable *module_ifaces;
 };
 
@@ -95,6 +97,8 @@ udisks_linux_drive_object_finalize (GObject *_object)
     g_object_unref (object->iface_drive);
   if (object->iface_drive_ata != NULL)
     g_object_unref (object->iface_drive_ata);
+  if (object->iface_nvme_ctrl != NULL)
+    g_object_unref (object->iface_nvme_ctrl);
   if (object->module_ifaces != NULL)
     g_hash_table_destroy (object->module_ifaces);
 
@@ -537,7 +541,7 @@ update_iface (UDisksObject                     *object,
               g_dbus_object_skeleton_remove_interface
                 (G_DBUS_OBJECT_SKELETON (object),
                  G_DBUS_INTERFACE_SKELETON (*interface_pointer));
-              g_object_unref(tmp_iface);
+              g_object_unref (tmp_iface);
             }
 
           g_object_unref (*interface_pointer);
@@ -615,6 +619,44 @@ drive_ata_update (UDisksObject   *object,
   UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
 
   return udisks_linux_drive_ata_update (UDISKS_LINUX_DRIVE_ATA (drive_object->iface_drive_ata), drive_object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+nvme_ctrl_check (UDisksObject *object)
+{
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+  gboolean ret;
+  UDisksLinuxDevice *device;
+
+  ret = FALSE;
+  if (drive_object->devices == NULL)
+    goto out;
+
+  device = drive_object->devices->data;
+  if (udisks_linux_device_subsystem_is_nvme (device) &&
+      g_udev_device_has_sysfs_attr (device->udev_device, "subsysnqn"))
+    ret = TRUE;
+
+ out:
+  return ret;
+}
+
+static void
+nvme_ctrl_connect (UDisksObject *object)
+{
+
+}
+
+static gboolean
+nvme_ctrl_update (UDisksObject   *object,
+                  const gchar    *uevent_action,
+                  GDBusInterface *_iface)
+{
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+
+  return udisks_linux_nvme_controller_update (UDISKS_LINUX_NVME_CONTROLLER (drive_object->iface_nvme_ctrl), drive_object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -698,6 +740,8 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
                                 UDISKS_TYPE_LINUX_DRIVE, &object->iface_drive);
   conf_changed |= update_iface (UDISKS_OBJECT (object), action, drive_ata_check, drive_ata_connect, drive_ata_update,
                                 UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
+  conf_changed |= update_iface (UDISKS_OBJECT (object), action, nvme_ctrl_check, nvme_ctrl_connect, nvme_ctrl_update,
+                                UDISKS_TYPE_LINUX_NVME_CONTROLLER, &object->iface_nvme_ctrl);
 
   /* Attach interfaces from modules */
   module_manager = udisks_daemon_get_module_manager (object->daemon);
@@ -860,24 +904,57 @@ udisks_linux_drive_object_should_include_device (GUdevClient        *client,
                                                  UDisksLinuxDevice  *device,
                                                  gchar             **out_vpd)
 {
-  gboolean ret;
-  gchar *vpd;
+  gboolean ret = FALSE;
+  gchar *vpd = NULL;
 
-  ret = FALSE;
-  vpd = NULL;
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0)
+    {
+      /* The 'block' subsystem encompasses several objects with varying
+       * DEVTYPE including
+       *
+       *  - disk
+       *  - partition
+       *
+       * and we are only interested in the first.
+       */
+      if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
+        goto out;
+      /* however for NVMe we only want to expose controller nodes */
+      if (udisks_linux_device_subsystem_is_nvme (device))
+        goto out;
+      vpd = check_for_vpd (device->udev_device);
+    }
+  else if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "nvme") == 0)
+    {
+      const gchar *sysfs_path;
+      const gchar *hostnqn;
+      const gchar *transport;
 
-  /* The 'block' subsystem encompasses several objects with varying
-   * DEVTYPE including
-   *
-   *  - disk
-   *  - partition
-   *
-   * and we are only interested in the first.
-   */
-  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
-    goto out;
+      if (!g_udev_device_has_sysfs_attr (device->udev_device, "transport"))
+        goto out;
+      if (!g_udev_device_get_device_file (device->udev_device))
+        /* calls we're about to do need a device node */
+        goto out;
 
-  vpd = check_for_vpd (device->udev_device);
+      sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+      hostnqn = g_udev_device_get_sysfs_attr (device->udev_device, "hostnqn");
+      transport = g_udev_device_get_sysfs_attr (device->udev_device, "transport");
+
+      /* FIXME: Contrary to the SCSI VPD string that is unique and stable there's no such
+       *  common identifier available for all the NVMe transports. At early stages of fabrics
+       *  connection the availability of the following sysfs attributes proved to be spotty:
+       *  'subsysnqn', 'cntlid', 'cntrltype', 'model', 'serial', 'firmware'. As a temporary
+       *  solution a sysfs path is taken into account, along with hostnqn (if available)
+       *  and a transport to form the VPD string. As this string is used to uniquely identify
+       *  a drive in its lifecycle and there's very little chance of the sysfs path changing,
+       *  this should do the trick. It may be possible to differentiate key attributes
+       *  according to the actual transport.
+       */
+      vpd = g_strdup_printf ("NVMe:hostnqn=%s+transport=%s+%s",
+                             hostnqn ? hostnqn : "nohostnqn",
+                             transport ? transport : "notransport",
+                             sysfs_path);
+    }
 
   if (vpd == NULL)
     {

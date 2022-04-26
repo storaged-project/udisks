@@ -281,6 +281,8 @@
          The <ulink
          url="http://en.wikipedia.org/wiki/World_Wide_Name">World Wide
          Name</ulink> of the drive or blank if unknown.
+
+         In case of NVMe drives please refer to namespace-level WWN properties.
     -->
     <property name="WWN" type="s" access="read"/>
 
@@ -420,6 +422,7 @@
     <property name="MediaChangeDetected" type="b" access="read"/>
 
     <!-- Size: The size of the drive (or the media currently in the drive).
+         In case of NVMe this value indicates the total NVM capacity that is accessible by the NVMe controller.
          This is always 0 if #org.freedesktop.UDisks2.Drive:MediaChangeDetected is %FALSE.
     -->
     <property name="Size" type="t" access="read"/>
@@ -951,6 +954,210 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+    org.freedesktop.UDisks2.NVMe.Controller:
+    @short_description: NVMe controller device
+
+    This interface represents a controller device in a NVM subsystem.
+  -->
+  <interface name="org.freedesktop.UDisks2.NVMe.Controller">
+    <!-- State:
+         @since: 2.10.0
+
+         The controller operating state. Values other than <literal>live</literal> may result in temporary
+         refusal of any I/O and subsequent missing information provided by UDisks.
+
+         Known values include:
+         <variablelist>
+           <varlistentry><term>live</term><listitem><para>Controller is up and running.</para></listitem></varlistentry>
+           <varlistentry><term>new</term><listitem><para></para></listitem></varlistentry>
+           <varlistentry><term>resetting</term><listitem><para></para></listitem></varlistentry>
+           <varlistentry><term>connecting</term><listitem><para></para></listitem></varlistentry>
+           <varlistentry><term>deleting</term><listitem><para></para></listitem></varlistentry>
+           <varlistentry><term>deleting (no IO)</term><listitem><para></para></listitem></varlistentry>
+           <varlistentry><term>dead</term><listitem><para></para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="State" type="s" access="read"/>
+
+    <!-- ControllerID:
+         @since: 2.10.0
+
+         The NVM subsystem unique controller identifier.
+    -->
+    <property name="ControllerID" type="q" access="read"/>
+
+    <!-- SubsystemNQN:
+         @since: 2.10.0
+
+         The NVM Subsystem NVMe Qualified Name.
+    -->
+    <property name="SubsystemNQN" type="s" access="read"/>
+
+    <!-- FGUID:
+         @since: 2.10.0
+
+         The FRU Globally Unique Identifier.
+
+         Field-Replaceable Unit (FRU) is a physical component, device, or assembly that is able
+         to be removed and replaced without having to replace the entire system.
+
+         The FRU Globally Unique Identifier is a 128-bit value that is globally unique for a given
+         Field Replaceable Unit (FRU). Value of %0 indicates this feature is not supported.
+    -->
+    <property name="FGUID" type="s" access="read"/>
+
+    <!-- NVMeRevision:
+         @since: 2.10.0
+
+         The major, minor, and micro version of the NVM Express base specification
+         that the controller implementation supports.
+    -->
+    <property name="NVMeRevision" type="s" access="read"/>
+
+    <!-- Transport:
+         @since: 2.10.0
+
+         The transport type the device is connected with.
+
+         Known values include:
+         <variablelist>
+           <varlistentry><term>pcie</term><listitem><para>PCI Express Transport</para></listitem></varlistentry>
+           <varlistentry><term>rdma</term><listitem><para>RDMA Transport</para></listitem></varlistentry>
+           <varlistentry><term>fc</term><listitem><para>Fibre Channel Transport</para></listitem></varlistentry>
+           <varlistentry><term>tcp</term><listitem><para>TCP Transport</para></listitem></varlistentry>
+           <varlistentry><term>loop</term><listitem><para>Intra-host Transport (i.e., loopback)</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="Transport" type="s" access="read"/>
+
+    <!-- UnallocatedCapacity:
+         @since: 2.10.0
+
+         The unallocated NVM capacity that is accessible by the controller.
+    -->
+    <property name="UnallocatedCapacity" type="t" access="read"/>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+    org.freedesktop.UDisks2.NVMe.Namespace:
+    @short_description: NVMe namespace device
+
+    This interface represents a namespace device in a NVM subsystem.
+  -->
+  <interface name="org.freedesktop.UDisks2.NVMe.Namespace">
+    <!-- NSID:
+         @since: 2.10.0
+
+         The Namespace Identifier.
+    -->
+    <property name="NSID" type="u" access="read"/>
+
+    <!-- NGUID:
+         @since: 2.10.0
+
+         The Namespace Globally Unique Identifier.
+
+         A 128-bit value that is globally unique and assigned to the namespace when the namespace
+         is created. Remains fixed throughout the life of the namespace.
+    -->
+    <property name="NGUID" type="s" access="read"/>
+
+    <!-- EUI64:
+         @since: 2.10.0
+
+         The IEEE Extended Unique Identifier.
+
+         A 64-bit value that is globally unique and assigned to the namespace when the namespace
+         is created. Remains fixed throughout the life of the namespace.
+    -->
+    <property name="EUI64" type="s" access="read"/>
+
+    <!-- UUID:
+         @since: 2.10.0
+
+         The Namespace UUID.
+
+         Contains a 128-bit Universally Unique Identifier (UUID) as specified in RFC 4122.
+    -->
+    <property name="UUID" type="s" access="read"/>
+
+    <!-- WWN:
+         @since: 2.10.0
+
+         The <ulink
+         url="http://en.wikipedia.org/wiki/World_Wide_Name">World Wide
+         Name</ulink> of the namespace or blank if unknown.
+    -->
+    <property name="WWN" type="s" access="read"/>
+
+    <!-- LBAFormats:
+         @since: 2.10.0
+
+         List of LBA formats supported by the controller.
+
+         This is an array of pairs of (@size, @performance) where @size denotes
+         LBA Data Size in bytes and @performance indicates the relative performance
+         relative to other formats in the list.
+
+         Known values for <literal>performance</literal> include:
+         <variablelist>
+           <varlistentry><term>0</term><listitem><para>Unknown relative performance index</para></listitem></varlistentry>
+           <varlistentry><term>1</term><listitem><para>Best performance</para></listitem></varlistentry>
+           <varlistentry><term>2</term><listitem><para>Better performance</para></listitem></varlistentry>
+           <varlistentry><term>3</term><listitem><para>Good performance</para></listitem></varlistentry>
+           <varlistentry><term>4</term><listitem><para>Degraded performance</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="LBAFormats" type="a(qy)" access="read"/>
+
+    <!-- FormattedLBASize:
+         @since: 2.10.0
+
+         The LBA data size and the relative performance index that the namespace
+         has been formatted with.
+
+         Similar to #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats this is a pair
+         of (@size, @performance) where @size denotes a LBA Data Size in bytes and
+         @performance indicates the relative performance  relative to other formats
+         indicated in the #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats property.
+    -->
+    <property name="FormattedLBASize" type="(qy)" access="read"/>
+
+    <!-- NamespaceSize:
+         @since: 2.10.0
+
+         The total size of the namespace in logical blocks. The number of logical
+         blocks is based on the formatted LBA size (see
+         #org.freedesktop.UDisks2.NVMe.Namespace:FormattedLBASize).
+    -->
+    <property name="NamespaceSize" type="t" access="read"/>
+
+    <!-- NamespaceCapacity:
+         @since: 2.10.0
+
+         The maximum number of logical blocks that may be allocated in the namespace.
+         The number of logical blocks is based on the formatted LBA size (see
+         #org.freedesktop.UDisks2.NVMe.Namespace:FormattedLBASize).
+    -->
+    <property name="NamespaceCapacity" type="t" access="read"/>
+
+    <!-- NamespaceUtilization:
+         @since: 2.10.0
+
+         The current number of logical blocks allocated in the namespace. This value
+         is less than or equal to the #org.freedesktop.UDisks2.NVMe.Namespace:NamespaceCapacity.
+         The number of logical blocks is based on the formatted LBA size (see
+         #org.freedesktop.UDisks2.NVMe.Namespace:FormattedLBASize).
+    -->
+    <property name="NamespaceUtilization" type="t" access="read"/>
 
   </interface>
 

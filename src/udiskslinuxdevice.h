@@ -21,6 +21,8 @@
 #ifndef __UDISKS_LINUX_DEVICE_H__
 #define __UDISKS_LINUX_DEVICE_H__
 
+#include <blockdev/nvme.h>
+
 #include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
@@ -34,6 +36,8 @@ G_BEGIN_DECLS
  * @udev_device: A #GUdevDevice.
  * @ata_identify_device_data: 512-byte array containing the result of the IDENTIFY DEVICE command or %NULL.
  * @ata_identify_packet_device_data: 512-byte array containing the result of the IDENTIFY PACKET DEVICE command or %NULL.
+ * @nvme_ctrl_info: A #BDNVMEControllerInfo data in case of a NVMe Controller.
+ * @nvme_ns_info: A #BDNVMENamespaceInfo data in case of a NVMe Namespace.
  *
  * Object containing information about a device on Linux. This is
  * essentially an instance of #GUdevDevice plus additional data - such
@@ -48,6 +52,8 @@ struct _UDisksLinuxDevice
   GUdevDevice *udev_device;
   guchar *ata_identify_device_data;
   guchar *ata_identify_packet_device_data;
+  BDNVMEControllerInfo *nvme_ctrl_info;
+  BDNVMENamespaceInfo *nvme_ns_info;
 };
 
 GType              udisks_linux_device_get_type     (void) G_GNUC_CONST;
@@ -65,6 +71,8 @@ gint               udisks_linux_device_read_sysfs_attr_as_int    (UDisksLinuxDev
 guint64            udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDevice  *device,
                                                                   const gchar        *attr,
                                                                   GError            **error);
+
+gboolean           udisks_linux_device_subsystem_is_nvme         (UDisksLinuxDevice  *device);
 
 G_END_DECLS
 

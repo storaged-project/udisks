@@ -362,7 +362,7 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
 static void
 udisks_linux_provider_constructed (GObject *object)
 {
-  const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", NULL};
+  const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", "nvme", NULL};
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
   UDisksDaemon *daemon;
   UDisksConfigManager *config_manager;
@@ -517,6 +517,7 @@ get_udisks_devices (UDisksLinuxProvider *provider)
   GList *l;
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
+  devices = g_list_concat (devices, g_udev_client_query_by_subsystem (provider->gudev_client, "nvme"));
 
   /* make sure we process sda before sdz and sdz before sdaa */
   devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
@@ -1188,6 +1189,9 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
   UDisksLinuxBlockObject *object;
   UDisksDaemon *daemon;
 
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") != 0)
+    return;
+
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
 
@@ -1240,6 +1244,10 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
   GList *modules;
   GList *l;
   GList *modules_to_remove = NULL;
+
+  /* TODO: modules might be theoretically able to handle non-block devices */
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") != 0)
+    return;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
@@ -1415,7 +1423,8 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                 g_udev_device_get_sysfs_path (device->udev_device));
 
   subsystem = g_udev_device_get_subsystem (device->udev_device);
-  if (g_strcmp0 (subsystem, "block") == 0)
+  if (g_strcmp0 (subsystem, "block") == 0 ||
+      g_strcmp0 (subsystem, "nvme") == 0)
     {
       handle_block_uevent (provider, action, device);
     }
