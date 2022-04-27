@@ -281,6 +281,7 @@ udisks_linux_device_reprobe_sync
 udisks_linux_device_read_sysfs_attr
 udisks_linux_device_read_sysfs_attr_as_int
 udisks_linux_device_read_sysfs_attr_as_uint64
+udisks_linux_device_subsystem_is_nvme
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_DEVICE
 UDISKS_LINUX_DEVICE
@@ -589,4 +590,30 @@ UDISKS_TYPE_MODULE_OBJECT
 <SUBSECTION Private>
 udisks_module_object_get_type
 udisks_module_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxnvmecontroller</FILE>
+UDisksLinuxNVMeController
+udisks_linux_nvme_controller_new
+udisks_linux_nvme_controller_update
+<SUBSECTION Standard>
+UDISKS_LINUX_NVME_CONTROLLER
+UDISKS_IS_LINUX_NVME_CONTROLLER
+UDISKS_TYPE_LINUX_NVME_CONTROLLER
+<SUBSECTION Private>
+udisks_linux_nvme_controller_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxnvmenamespace</FILE>
+UDisksLinuxNVMeNamespace
+udisks_linux_nvme_namespace_new
+udisks_linux_nvme_namespace_update
+<SUBSECTION Standard>
+UDISKS_LINUX_NVME_NAMESPACE
+UDISKS_IS_LINUX_NVME_NAMESPACE
+UDISKS_TYPE_LINUX_NVME_NAMESPACE
+<SUBSECTION Private>
+udisks_linux_nvme_namespace_get_type
 </SECTION>
