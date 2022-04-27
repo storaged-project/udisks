@@ -135,7 +135,8 @@ udisks_linux_manager_iscsi_initiator_class_init (UDisksLinuxManagerISCSIInitiato
   gobject_class->set_property = udisks_linux_manager_iscsi_initiator_set_property;
   gobject_class->finalize = udisks_linux_manager_iscsi_initiator_finalize;
 
-  /** UDisksLinuxManager:module
+  /**
+   * UDisksLinuxManager:module:
    *
    * The #UDisksLinuxModuleISCSI for the object.
    */

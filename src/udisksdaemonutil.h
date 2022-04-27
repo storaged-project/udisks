@@ -25,8 +25,8 @@
 
 G_BEGIN_DECLS
 
-GString* udisks_string_concat (GString*, GString*);
-void udisks_string_wipe_and_free (GString*);
+GString *udisks_string_concat (GString *a, GString *b);
+void udisks_string_wipe_and_free (GString *string);
 
 gboolean udisks_variant_lookup_binary (GVariant     *dict,
                                        const gchar  *name,

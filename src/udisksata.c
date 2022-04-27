@@ -333,7 +333,7 @@ udisks_ata_send_command_sync (gint                       fd,
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  */
 gboolean
-udisks_ata_get_pm_state (const gchar *device, GError **error, guchar *count)
+udisks_ata_get_pm_state (const gchar *device, GError **error, guchar *pm_state)
 {
   int fd;
   gboolean rc = FALSE;
@@ -362,8 +362,8 @@ udisks_ata_get_pm_state (const gchar *device, GError **error, guchar *count)
       g_prefix_error (error, "Error sending ATA command CHECK POWER MODE: ");
       goto out;
     }
-  /* count field is used for the state, see ATA8: table 102 */
-  *count = output.count;
+  /* pm_state field is used for the state, see ATA8: table 102 */
+  *pm_state = output.count;
   rc = TRUE;
  out:
   if (fd != -1)
