@@ -579,7 +579,7 @@ add_crypttab_entry (GVariantBuilder       *builder,
   gsize passphrase_contents_length;
 
   passphrase_path = udisks_crypttab_entry_get_passphrase_path (entry);
-  if (passphrase_path == NULL || g_strcmp0 (passphrase_path, "none") == 0)
+  if (passphrase_path == NULL || g_strcmp0 (passphrase_path, "none") == 0 || g_strcmp0 (passphrase_path, "-") == 0)
     passphrase_path = "";
   passphrase_contents = NULL;
   if (!(g_strcmp0 (passphrase_path, "") == 0 || g_str_has_prefix (passphrase_path, "/dev")))
@@ -1774,7 +1774,7 @@ add_remove_crypttab_entry (UDisksBlock *block,
                                parsed_name, parsed_device, parsed_passphrase_path, parsed_options);
           if (num_parsed >= 2)
             {
-              if (num_parsed < 3 || g_strcmp0 (parsed_passphrase_path, "none") == 0)
+              if (num_parsed < 3 || g_strcmp0 (parsed_passphrase_path, "none") == 0 || g_strcmp0 (parsed_passphrase_path, "-") == 0)
                 strcpy (parsed_passphrase_path, "");
               if (num_parsed < 4)
                 strcpy (parsed_options, "");

@@ -310,6 +310,45 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(conf.value[0][1]['name'], self.str_to_ay(self.vdevs[0]))
         self.assertEqual(conf.value[0][1]['device'], self.str_to_ay('UUID=%s' % uuid.value))
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_configuration_crypttab_no_keyfile(self):
+        # this test will change /etc/crypttab, we might want to revert the changes when it finishes
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+
+        # format the disk
+        disk1 = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        disk1.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+
+        # cleanup -- close the luks and remove format
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        self.addCleanup(self._close_luks, disk1)
+
+        # format the disk
+        disk2 = self.get_object('/block_devices/' + os.path.basename(self.vdevs[1]))
+        disk2.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+
+        # cleanup -- close the luks and remove format
+        self.addCleanup(self.wipe_fs, self.vdevs[1])
+        self.addCleanup(self._close_luks, disk2)
+
+        # write configuration to crypttab
+        # both "none" and "-" should be accepted as an empty/non-existing key file
+        uuid1 = self.get_property(disk1, '.Block', 'IdUUID')
+        uuid2 = self.get_property(disk2, '.Block', 'IdUUID')
+        self.write_file('/etc/crypttab', '%s UUID=%s\tnone\n%s UUID=%s\t-\n' % (self.vdevs[0], uuid1.value,
+                                                                                self.vdevs[1], uuid2.value))
+
+        # get the secret configuration (passphrase)
+        sec_conf = disk1.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.assertIsNotNone(sec_conf)
+        self.assertEqual(sec_conf[0][1]['passphrase-path'], self.str_to_ay(''))
+
+        # get the secret configuration (passphrase)
+        sec_conf = disk2.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.assertIsNotNone(sec_conf)
+        self.assertEqual(sec_conf[0][1]['passphrase-path'], self.str_to_ay(''))
+
     def test_rescan(self):
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
