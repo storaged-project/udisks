@@ -521,6 +521,20 @@
   </action>
 
   <!-- ###################################################################### -->
+  <!-- NVMe Controller operations -->
+
+  <!-- Update/refresh SMART data -->
+  <action id="org.freedesktop.udisks2.nvme-smart-update">
+    <description>Update SMART data</description>
+    <message>Authentication is required to update SMART data</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
   <!-- Canceling jobs -->
 
   <!-- Cancel own job -->

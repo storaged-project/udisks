@@ -1042,6 +1042,127 @@
     -->
     <property name="UnallocatedCapacity" type="t" access="read"/>
 
+    <!-- SmartUpdated:
+         @since: 2.10.0
+
+         The point in time (seconds since the
+         <ulink url="http://en.wikipedia.org/wiki/Unix_epoch">Unix Epoch</ulink>)
+         that the SMART/Health Information was updated or 0 if never updated.
+
+         The value of the other properties related to SMART are not
+         meaningful if this property is 0.
+    -->
+    <property name="SmartUpdated" type="t" access="read"/>
+
+    <!-- SmartCriticalWarning:
+         @since: 2.10.0
+
+         Critical warnings issued for the current state of the controller. An empty array
+         indicates a healthy state. This is the primary health assesment property to watch for.
+
+         Known values include:
+         <variablelist>
+         <varlistentry><term>spare</term>
+           <listitem><para>The available spare capacity has fallen below the threshold.</para></listitem></varlistentry>
+         <varlistentry><term>temperature</term>
+           <listitem><para>A temperature is either greater than or equal to an over temperature threshold; or less than or equal to an under temperature threshold.</para></listitem></varlistentry>
+         <varlistentry><term>degraded</term>
+           <listitem><para>The NVM subsystem reliability has been degraded due to significant media related errors or any internal error that degrades NVM subsystem reliability.</para></listitem></varlistentry>
+         <varlistentry><term>readonly</term>
+           <listitem><para>All of the media has been placed in read only mode. Unrelated to the write protection state of a namespace.</para></listitem></varlistentry>
+         <varlistentry><term>volatile_mem</term>
+           <listitem><para>The volatile memory backup device has failed. Only valid if the controller has a volatile memory backup solution.</para></listitem></varlistentry>
+         <varlistentry><term>pmr_readonly</term>
+           <listitem><para>Persistent Memory Region has become read-only or unreliable.</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="SmartCriticalWarning" type="as" access="read"/>
+
+    <!-- SmartPowerOnHours:
+         @since: 2.10.0
+
+         The amount of time the disk has been powered on (according to SMART data) or 0 if unknown.
+    -->
+    <property name="SmartPowerOnHours" type="t" access="read"/>
+
+    <!-- SmartTemperature:
+         @since: 2.10.0
+
+         The temperature (in Kelvin) that represents the current composite temperature
+         of the controller and associated namespaces or 0 if unknown. Values of the particular
+         temperature sensors are exposed via the SmartGetAttributes() method.
+    -->
+    <property name="SmartTemperature" type="q" access="read"/>
+
+    <!--
+        SmartUpdate:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Reads SMART/Health Information from the NVMe controller and update relevant properties.
+        Data in this interface are typically updated on every uevent or as a result of Asynchronous
+        Event Notification.
+    -->
+    <method name="SmartUpdate">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SmartGetAttributes:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @attributes: The SMART attributes.
+        @since: 2.10.0
+
+        Get the SMART/Health Information attributes.
+
+        Known values include:
+        <variablelist>
+        <varlistentry><term>avail_spare (type 'y')</term>
+          <listitem><para>Available Spare: a normalized percentage (0% to 100%) of the remaining spare capacity available.</para></listitem></varlistentry>
+        <varlistentry><term>spare_thresh (type 'y')</term>
+          <listitem><para>Available Spare Threshold: a normalized percentage (0% to 100%) of the available spare threshold.</para></listitem></varlistentry>
+        <varlistentry><term>percent_used (type 'y')</term>
+          <listitem><para>Percentage Used: a vendor specific estimate of the percentage drive life used based on the actual usage
+                          and the manufacturer's prediction. A value of 100 indicates that the estimated endurance has been consumed,
+                          but may not indicate an NVM subsystem failure. The value is allowed to exceed 100.</para></listitem></varlistentry>
+        <varlistentry><term>total_data_read (type 't')</term>
+          <listitem><para>An estimated calculation of total data read in bytes based on calculation of data units read from the host.</para></listitem></varlistentry>
+        <varlistentry><term>total_data_written (type 't')</term>
+          <listitem><para>An estimated calculation of total data written in bytes based on calculation of data units written by the host.</para></listitem></varlistentry>
+        <varlistentry><term>ctrl_busy_time (type 't')</term>
+          <listitem><para>Amount of time the controller is busy with I/O commands, reported in minutes.</para></listitem></varlistentry>
+        <varlistentry><term>power_cycles (type 't')</term>
+          <listitem><para>The number of power cycles.</para></listitem></varlistentry>
+        <varlistentry><term>unsafe_shutdowns (type 't')</term>
+          <listitem><para>The number of unsafe shutdowns as a result of a Shutdown Notification not received prior to loss of power.</para></listitem></varlistentry>
+        <varlistentry><term>media_errors (type 't')</term>
+          <listitem><para>Media and Data Integrity Errors: the number of occurrences where the controller detected an unrecovered data integrity error
+                          (e.g. uncorrectable ECC, CRC checksum failure, or LBA tag mismatch).</para></listitem></varlistentry>
+        <varlistentry><term>num_err_log_entries (type 't')</term>
+          <listitem><para>Number of Error Information Log Entries: the number of Error Information log entries over the life of the controller.</para></listitem></varlistentry>
+        <varlistentry><term>temp_sensors (type 'aq')</term>
+          <listitem><para>Array of the current temperature reported by temperature sensors 1-8 in Kelvins or 0 when the particular sensor is not available.</para></listitem></varlistentry>
+        <varlistentry><term>wctemp (type 'q')</term>
+          <listitem><para>Warning Composite Temperature Threshold (WCTEMP): indicates the minimum Composite Temperature (@SmartTemperature) value
+                          that indicates an overheating condition during which controller operation continues.</para></listitem></varlistentry>
+        <varlistentry><term>cctemp (type 'q')</term>
+          <listitem><para>Critical Composite Temperature Threshold (CCTEMP): indicates the minimum Composite Temperature (@SmartTemperature) value
+                          that indicates a critical overheating condition (e.g., may prevent continued normal operation, possibility of data loss,
+                           automatic device shutdown, extreme performance throttling, or permanent damage).</para></listitem></varlistentry>
+        <varlistentry><term>warning_temp_time (type 'u')</term>
+          <listitem><para>Warning Composite Temperature Time: the amount of time in minutes that the Composite Temperature (@SmartTemperature) is greater
+                          than or equal to the Warning Composite Temperature Threshold (@wctemp) and less than the Critical Composite Temperature Threshold
+                          (@cctemp).</para></listitem></varlistentry>
+        <varlistentry><term>critical_temp_time (type 'u')</term>
+          <listitem><para>Critical Composite Temperature Time: the amount of time in minutes that the Composite Temperature (@SmartTemperature) is greater
+                          than or equal to the Critical Composite Temperature Threshold (@cctemp).</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="SmartGetAttributes">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="attributes" direction="out" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

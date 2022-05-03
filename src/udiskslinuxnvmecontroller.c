@@ -62,6 +62,12 @@ typedef struct _UDisksLinuxNVMeControllerClass   UDisksLinuxNVMeControllerClass;
 struct _UDisksLinuxNVMeController
 {
   UDisksNVMeControllerSkeleton parent_instance;
+
+  GMutex          smart_lock;
+  guint64         smart_updated;
+  BDNVMESmartLog *smart_log;
+
+  gboolean        secure_erase_in_progress;
 };
 
 struct _UDisksLinuxNVMeControllerClass
@@ -79,15 +85,23 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxNVMeController, udisks_linux_nvme_controller
 static void
 udisks_linux_nvme_controller_finalize (GObject *object)
 {
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (object);
+
+  if (ctrl->smart_log != NULL)
+    bd_nvme_smart_log_free (ctrl->smart_log);
+  g_mutex_clear (&ctrl->smart_lock);
+
   if (G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize (object);
 }
 
 
 static void
-udisks_linux_nvme_controller_init (UDisksLinuxNVMeController *drive)
+udisks_linux_nvme_controller_init (UDisksLinuxNVMeController *ctrl)
 {
-  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (drive),
+  g_mutex_init (&ctrl->smart_lock);
+
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (ctrl),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
@@ -115,6 +129,56 @@ udisks_linux_nvme_controller_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* may be called from *any* thread when the SMART data has been updated */
+static void
+update_smart (UDisksLinuxNVMeController *ctrl,
+              UDisksLinuxDevice         *device)
+{
+  BDNVMESmartLog *smart_log = NULL;
+  guint64 updated = 0;
+
+  g_mutex_lock (&ctrl->smart_lock);
+  if (ctrl->smart_log != NULL)
+    {
+      smart_log = bd_nvme_smart_log_copy (ctrl->smart_log);
+      updated = ctrl->smart_updated;
+    }
+  g_mutex_unlock (&ctrl->smart_lock);
+
+  g_object_freeze_notify (G_OBJECT (ctrl));
+  udisks_nvme_controller_set_smart_updated (UDISKS_NVME_CONTROLLER (ctrl), updated);
+  if (smart_log != NULL)
+    {
+      GPtrArray *a;
+
+      a = g_ptr_array_new ();
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_SPARE) == BD_NVME_SMART_CRITICAL_WARNING_SPARE)
+        g_ptr_array_add (a, g_strdup ("spare"));
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE) == BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE)
+        g_ptr_array_add (a, g_strdup ("temperature"));
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_DEGRADED) == BD_NVME_SMART_CRITICAL_WARNING_DEGRADED)
+        g_ptr_array_add (a, g_strdup ("degraded"));
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_READONLY) == BD_NVME_SMART_CRITICAL_WARNING_READONLY)
+        g_ptr_array_add (a, g_strdup ("readonly"));
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_VOLATILE_MEM) == BD_NVME_SMART_CRITICAL_WARNING_VOLATILE_MEM)
+        g_ptr_array_add (a, g_strdup ("volatile_mem"));
+      if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_PMR_READONLY) == BD_NVME_SMART_CRITICAL_WARNING_PMR_READONLY)
+        g_ptr_array_add (a, g_strdup ("pmr_readonly"));
+      g_ptr_array_add (a, NULL);
+      udisks_nvme_controller_set_smart_critical_warning (UDISKS_NVME_CONTROLLER (ctrl),
+                                                         (const gchar *const *) a->pdata);
+
+      udisks_nvme_controller_set_smart_power_on_hours (UDISKS_NVME_CONTROLLER (ctrl), smart_log->power_on_hours);
+      udisks_nvme_controller_set_smart_temperature (UDISKS_NVME_CONTROLLER (ctrl), smart_log->temperature);
+
+      bd_nvme_smart_log_free (smart_log);
+      g_ptr_array_free (a, TRUE);
+    }
+  g_object_thaw_notify (G_OBJECT (ctrl));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_nvme_controller_update:
  * @ctrl: A #UDisksLinuxNVMeController.
@@ -134,6 +198,7 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   const gchar *subsysnqn = NULL;
   const gchar *transport = NULL;
   const gchar *state = NULL;
+  BDNVMESmartLog *smart_log;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -165,6 +230,20 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   if (state)
     udisks_nvme_controller_set_state (iface, state);
 
+  smart_log = bd_nvme_get_smart_log (g_udev_device_get_device_file (device->udev_device), NULL);
+  if (smart_log != NULL)
+    {
+      g_mutex_lock (&ctrl->smart_lock);
+
+      bd_nvme_smart_log_free (ctrl->smart_log);
+      ctrl->smart_log = smart_log;
+      ctrl->smart_updated = time (NULL);
+
+      g_mutex_unlock (&ctrl->smart_lock);
+
+      update_smart (ctrl, device);
+    }
+
   g_object_thaw_notify (G_OBJECT (object));
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (ctrl));
@@ -175,7 +254,226 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_nvme_controller_refresh_smart_sync:
+ * @ctrl: The #UDisksLinuxNVMeController to refresh.
+ * @cancellable: A #GCancellable or %NULL.
+ * @error: Return location for error.
+ *
+ * Synchronously refreshes SMART/Health Information Log on @ctrl.
+ * The calling thread is blocked until the data has been obtained.
+ *
+ * This may only be called if @ctrl has been associated with a
+ * #UDisksLinuxDriveObject instance.
+ *
+ * This method may be called from any thread.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctrl,
+                                                 GCancellable               *cancellable,
+                                                 GError                    **error)
+{
+  UDisksLinuxDriveObject *object;
+  UDisksLinuxDevice *device;
+  BDNVMESmartLog *smart_log;
+
+  object = udisks_daemon_util_dup_object (ctrl, error);
+  if (object == NULL)
+    return FALSE;
+
+  if (ctrl->secure_erase_in_progress)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                   "Secure erase in progress");
+      g_object_unref (object);
+      return FALSE;
+    }
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  g_assert (device != NULL);
+
+  smart_log = bd_nvme_get_smart_log (g_udev_device_get_device_file (device->udev_device), error);
+  if (smart_log != NULL)
+    {
+      g_mutex_lock (&ctrl->smart_lock);
+
+      bd_nvme_smart_log_free (ctrl->smart_log);
+      ctrl->smart_log = smart_log;
+      ctrl->smart_updated = time (NULL);
+
+      g_mutex_unlock (&ctrl->smart_lock);
+
+      update_smart (ctrl, device);
+
+      /* ensure property changes are sent before the method return */
+      g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (ctrl));
+    }
+
+  g_clear_object (&device);
+  g_clear_object (&object);
+  return smart_log != NULL;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_smart_update (UDisksNVMeController  *_object,
+                     GDBusMethodInvocation *invocation,
+                     GVariant              *options)
+{
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (_object);
+  UDisksLinuxDriveObject *object;
+  UDisksDaemon *daemon = NULL;
+  GError *error = NULL;
+  const gchar *message;
+  const gchar *action_id;
+
+  object = udisks_daemon_util_dup_object (_object, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the user
+   * refreshes SMART data from a disk.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to update SMART data from $(drive)");
+  action_id = "org.freedesktop.udisks2.nvme-smart-update";
+
+  /* Check that the user is authorized */
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  if (!udisks_linux_nvme_controller_refresh_smart_sync (ctrl,
+                                                        NULL, /* cancellable */
+                                                        &error))
+    {
+      udisks_debug ("Error updating NVMe Health Information for %s: %s (%s, %d)",
+                    g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_nvme_controller_complete_smart_update (_object, invocation);
+
+ out:
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_smart_get_attributes (UDisksNVMeController  *object,
+                             GDBusMethodInvocation *invocation,
+                             GVariant              *options)
+{
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (object);
+  BDNVMESmartLog *smart_log = NULL;
+  GVariantBuilder builder;
+
+  g_mutex_lock (&ctrl->smart_lock);
+  smart_log = bd_nvme_smart_log_copy (ctrl->smart_log);
+  g_mutex_unlock (&ctrl->smart_lock);
+
+  if (smart_log == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "SMART data not collected");
+    }
+  else
+    {
+      GVariantBuilder array_builder;
+      guint i;
+
+      g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+
+      g_variant_builder_add (&builder, "{sv}",
+                             "avail_spare",
+                             g_variant_new_byte (smart_log->avail_spare));
+      g_variant_builder_add (&builder, "{sv}",
+                             "spare_thresh",
+                             g_variant_new_byte (smart_log->spare_thresh));
+      g_variant_builder_add (&builder, "{sv}",
+                             "percent_used",
+                             g_variant_new_byte (smart_log->percent_used));
+
+      if (smart_log->total_data_read > 0)
+        g_variant_builder_add (&builder, "{sv}",
+                               "total_data_read",
+                               g_variant_new_uint64 (smart_log->total_data_read));
+      if (smart_log->total_data_written > 0)
+        g_variant_builder_add (&builder, "{sv}",
+                               "total_data_written",
+                               g_variant_new_uint64 (smart_log->total_data_written));
+
+      g_variant_builder_add (&builder, "{sv}",
+                             "ctrl_busy_time",
+                             g_variant_new_uint64 (smart_log->ctrl_busy_time));
+      g_variant_builder_add (&builder, "{sv}",
+                             "power_cycles",
+                             g_variant_new_uint64 (smart_log->power_cycles));
+      g_variant_builder_add (&builder, "{sv}",
+                             "unsafe_shutdowns",
+                             g_variant_new_uint64 (smart_log->unsafe_shutdowns));
+      g_variant_builder_add (&builder, "{sv}",
+                             "media_errors",
+                             g_variant_new_uint64 (smart_log->media_errors));
+      g_variant_builder_add (&builder, "{sv}",
+                             "num_err_log_entries",
+                             g_variant_new_uint64 (smart_log->num_err_log_entries));
+
+      g_variant_builder_init (&array_builder, G_VARIANT_TYPE_ARRAY);
+      for (i = 0; i < G_N_ELEMENTS (smart_log->temp_sensors); i++)
+        g_variant_builder_add_value (&array_builder, g_variant_new_uint16 (smart_log->temp_sensors[i]));
+      g_variant_builder_add (&builder, "{sv}",
+                             "temp_sensors",
+                             g_variant_builder_end (&array_builder));
+
+      if (smart_log->wctemp > 0)
+        g_variant_builder_add (&builder, "{sv}",
+                               "wctemp",
+                               g_variant_new_uint16 (smart_log->wctemp));
+      if (smart_log->cctemp > 0)
+        g_variant_builder_add (&builder, "{sv}",
+                               "cctemp",
+                               g_variant_new_uint16 (smart_log->cctemp));
+
+      g_variant_builder_add (&builder, "{sv}",
+                             "warning_temp_time",
+                             g_variant_new_uint32 (smart_log->warning_temp_time));
+      g_variant_builder_add (&builder, "{sv}",
+                             "critical_temp_time",
+                             g_variant_new_uint32 (smart_log->critical_temp_time));
+
+      udisks_nvme_controller_complete_smart_get_attributes (object, invocation,
+                                                            g_variant_builder_end (&builder));
+      bd_nvme_smart_log_free (smart_log);
+    }
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 nvme_controller_iface_init (UDisksNVMeControllerIface *iface)
 {
+  iface->handle_smart_update = handle_smart_update;
+  iface->handle_smart_get_attributes = handle_smart_get_attributes;
 }
