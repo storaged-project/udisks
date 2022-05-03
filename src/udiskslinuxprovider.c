@@ -1131,6 +1131,11 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                     }
                 }
             }
+          else
+            {
+              udisks_critical ("Couldn't find existing drive object for device %s (uevent action '%s', VPD '%s')",
+                               sysfs_path, action, vpd);
+            }
         }
     }
 
