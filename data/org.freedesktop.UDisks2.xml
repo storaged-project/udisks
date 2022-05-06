@@ -1094,6 +1094,45 @@
     -->
     <property name="SmartTemperature" type="q" access="read"/>
 
+    <!-- SmartSelftestStatus:
+         @since: 2.10.0
+
+         The status of the last self-test. Known values include:
+         <variablelist>
+         <varlistentry><term>success</term>
+           <listitem><para>Operation completed without error (or never ran).</para></listitem></varlistentry>
+         <varlistentry><term>aborted</term>
+           <listitem><para>Operation was aborted by a Device Self-test command.</para></listitem></varlistentry>
+         <varlistentry><term>ctrl_reset</term>
+           <listitem><para>Operation was aborted by a Controller Level Reset.</para></listitem></varlistentry>
+         <varlistentry><term>ns_removed</term>
+           <listitem><para>Operation was aborted due to a removal of a namespace from the namespace inventory.</para></listitem></varlistentry>
+         <varlistentry><term>aborted_format</term>
+           <listitem><para>Operation was aborted due to the processing of a Format NVM command.</para></listitem></varlistentry>
+         <varlistentry><term>fatal_error</term>
+           <listitem><para>A fatal error or unknown test error occurred while the controller was executing the device self-test operation and the operation did not complete.</para></listitem></varlistentry>
+         <varlistentry><term>unknown_seg_fail</term>
+           <listitem><para>Operation completed with a segment that failed and the segment that failed is not known.</para></listitem></varlistentry>
+         <varlistentry><term>known_seg_fail</term>
+           <listitem><para>Operation completed with one or more failed segments.</para></listitem></varlistentry>
+         <varlistentry><term>aborted_unknown</term>
+           <listitem><para>Operation was aborted for unknown reason.</para></listitem></varlistentry>
+         <varlistentry><term>aborted_sanitize</term>
+           <listitem><para>Operation was aborted due to a sanitize operation.</para></listitem></varlistentry>
+         <varlistentry><term>inprogress</term>
+           <listitem><para>Self-test operation is currently in progress.</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="SmartSelftestStatus" type="s" access="read"/>
+
+    <!--
+        SmartSelftestPercentRemaining:
+        @since: 2.10.0
+
+        The percent remaining or -1 if unknown.
+    -->
+    <property name="SmartSelftestPercentRemaining" type="i" access="read"/>
+
     <!--
         SmartUpdate:
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
@@ -1161,6 +1200,39 @@
     <method name="SmartGetAttributes">
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="attributes" direction="out" type="a{sv}"/>
+    </method>
+
+    <!--
+        SmartSelftestStart:
+        @type: The type test to run.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Starts a device selftest operation on all active namespaces accessible through the controller
+        at the time the operation is started. A device selftest operation is a diagnostic testing
+        sequence that tests the integrity and functionality of the controller and may include testing
+        of the media associated with namespaces.
+
+        The @type parameter indicates the type of test to start - valid values are
+        <literal>short</literal>, <literal>extended</literal> and <literal>vendor-specific</literal>.
+
+        Note that the method returns immediately after the test has been started
+        successfully and the operation is performed in the background.
+    -->
+    <method name="SmartSelftestStart">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SmartSelftestAbort:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Aborts a running device selftest.
+    -->
+    <method name="SmartSelftestAbort">
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
   </interface>
@@ -2961,6 +3033,8 @@
              <listitem><para>Removing device from RAID Array.</para></listitem></varlistentry>
            <varlistentry><term>md-raid-create</term>
              <listitem><para>Create a RAID Array.</para></listitem></varlistentry>
+           <varlistentry><term>nvme-selftest</term>
+             <listitem><para>NVMe device self-test operation.</para></listitem></varlistentry>
          </variablelist>
          The
          <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>

@@ -34,7 +34,6 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxnvmecontroller.h"
-#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
@@ -63,11 +62,14 @@ struct _UDisksLinuxNVMeController
 {
   UDisksNVMeControllerSkeleton parent_instance;
 
-  GMutex          smart_lock;
-  guint64         smart_updated;
-  BDNVMESmartLog *smart_log;
+  GMutex             smart_lock;
+  guint64            smart_updated;
+  BDNVMESmartLog    *smart_log;
 
-  gboolean        secure_erase_in_progress;
+  BDNVMESelfTestLog *selftest_log;
+  UDisksThreadedJob *selftest_job;
+
+  gboolean           secure_erase_in_progress;
 };
 
 struct _UDisksLinuxNVMeControllerClass
@@ -89,12 +91,13 @@ udisks_linux_nvme_controller_finalize (GObject *object)
 
   if (ctrl->smart_log != NULL)
     bd_nvme_smart_log_free (ctrl->smart_log);
+  if (ctrl->selftest_log != NULL)
+    bd_nvme_self_test_log_free (ctrl->selftest_log);
   g_mutex_clear (&ctrl->smart_lock);
 
   if (G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize (object);
 }
-
 
 static void
 udisks_linux_nvme_controller_init (UDisksLinuxNVMeController *ctrl)
@@ -131,10 +134,10 @@ udisks_linux_nvme_controller_new (void)
 
 /* may be called from *any* thread when the SMART data has been updated */
 static void
-update_smart (UDisksLinuxNVMeController *ctrl,
-              UDisksLinuxDevice         *device)
+update_iface_smart (UDisksLinuxNVMeController *ctrl)
 {
   BDNVMESmartLog *smart_log = NULL;
+  BDNVMESelfTestLog *selftest_log = NULL;
   guint64 updated = 0;
 
   g_mutex_lock (&ctrl->smart_lock);
@@ -143,6 +146,8 @@ update_smart (UDisksLinuxNVMeController *ctrl,
       smart_log = bd_nvme_smart_log_copy (ctrl->smart_log);
       updated = ctrl->smart_updated;
     }
+  if (ctrl->selftest_log != NULL)
+    selftest_log = bd_nvme_self_test_log_copy (ctrl->selftest_log);
   g_mutex_unlock (&ctrl->smart_lock);
 
   g_object_freeze_notify (G_OBJECT (ctrl));
@@ -174,6 +179,41 @@ update_smart (UDisksLinuxNVMeController *ctrl,
       bd_nvme_smart_log_free (smart_log);
       g_ptr_array_free (a, TRUE);
     }
+  else
+    {
+      /* fallback, smart_log has never been retrieved successfully */
+      const gchar * const *warning = { NULL };
+
+      udisks_nvme_controller_set_smart_critical_warning (UDISKS_NVME_CONTROLLER (ctrl), warning);
+      udisks_nvme_controller_set_smart_power_on_hours (UDISKS_NVME_CONTROLLER (ctrl), 0);
+      udisks_nvme_controller_set_smart_temperature (UDISKS_NVME_CONTROLLER (ctrl), 0);
+    }
+
+  if (selftest_log != NULL)
+    {
+      const gchar *status = "success";
+      gint compl = -1;
+
+      if (selftest_log->current_operation != BD_NVME_SELF_TEST_ACTION_NOT_RUNNING)
+        {
+          compl = 100 - selftest_log->current_operation_completion;
+          status = "inprogress";
+        }
+      else
+      if (selftest_log->entries && *selftest_log->entries)
+        status = bd_nvme_self_test_result_to_string ((*selftest_log->entries)->result, NULL);
+
+      udisks_nvme_controller_set_smart_selftest_percent_remaining (UDISKS_NVME_CONTROLLER (ctrl), compl);
+      udisks_nvme_controller_set_smart_selftest_status (UDISKS_NVME_CONTROLLER (ctrl), status);
+      bd_nvme_self_test_log_free (selftest_log);
+    }
+  else
+    {
+      /* fallback */
+      udisks_nvme_controller_set_smart_selftest_percent_remaining (UDISKS_NVME_CONTROLLER (ctrl), -1);
+      udisks_nvme_controller_set_smart_selftest_status (UDISKS_NVME_CONTROLLER (ctrl), "");
+    }
+
   g_object_thaw_notify (G_OBJECT (ctrl));
 }
 
@@ -198,7 +238,6 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   const gchar *subsysnqn = NULL;
   const gchar *transport = NULL;
   const gchar *state = NULL;
-  BDNVMESmartLog *smart_log;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -230,19 +269,7 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   if (state)
     udisks_nvme_controller_set_state (iface, state);
 
-  smart_log = bd_nvme_get_smart_log (g_udev_device_get_device_file (device->udev_device), NULL);
-  if (smart_log != NULL)
-    {
-      g_mutex_lock (&ctrl->smart_lock);
-
-      bd_nvme_smart_log_free (ctrl->smart_log);
-      ctrl->smart_log = smart_log;
-      ctrl->smart_updated = time (NULL);
-
-      g_mutex_unlock (&ctrl->smart_lock);
-
-      update_smart (ctrl, device);
-    }
+  udisks_linux_nvme_controller_refresh_smart_sync (ctrl, NULL, NULL);
 
   g_object_thaw_notify (G_OBJECT (object));
 
@@ -278,6 +305,8 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device;
   BDNVMESmartLog *smart_log;
+  BDNVMESelfTestLog *selftest_log;
+  const gchar *dev_file;
 
   object = udisks_daemon_util_dup_object (ctrl, error);
   if (object == NULL)
@@ -292,20 +321,31 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     }
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  g_warn_if_fail (device != NULL);
+  dev_file = g_udev_device_get_device_file (device->udev_device);
+  g_warn_if_fail (dev_file != NULL);
 
-  smart_log = bd_nvme_get_smart_log (g_udev_device_get_device_file (device->udev_device), error);
-  if (smart_log != NULL)
+  smart_log = bd_nvme_get_smart_log (dev_file, error);
+  selftest_log = bd_nvme_get_self_test_log (dev_file, NULL);
+  if (smart_log || selftest_log)
     {
       g_mutex_lock (&ctrl->smart_lock);
 
-      bd_nvme_smart_log_free (ctrl->smart_log);
-      ctrl->smart_log = smart_log;
-      ctrl->smart_updated = time (NULL);
+      if (smart_log)
+        {
+          bd_nvme_smart_log_free (ctrl->smart_log);
+          ctrl->smart_log = smart_log;
+          ctrl->smart_updated = time (NULL);
+        }
+      if (selftest_log)
+        {
+          bd_nvme_self_test_log_free (ctrl->selftest_log);
+          ctrl->selftest_log = selftest_log;
+        }
 
       g_mutex_unlock (&ctrl->smart_lock);
 
-      update_smart (ctrl, device);
+      update_iface_smart (ctrl);
 
       /* ensure property changes are sent before the method return */
       g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (ctrl));
@@ -471,9 +511,361 @@ handle_smart_get_attributes (UDisksNVMeController  *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+selftest_job_func (UDisksThreadedJob  *job,
+                   GCancellable       *cancellable,
+                   gpointer            user_data,
+                   GError            **error)
+{
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (user_data);
+  UDisksLinuxDriveObject *object;
+  UDisksLinuxDevice *device = NULL;
+  gboolean ret = FALSE;
+
+  object = udisks_daemon_util_dup_object (ctrl, error);
+  if (object == NULL)
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  g_assert (device != NULL);
+
+  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+  udisks_job_set_progress (UDISKS_JOB (job), 0.0);
+
+  while (TRUE)
+    {
+      gboolean still_in_progress;
+      gdouble progress;
+      GPollFD poll_fd;
+
+      if (!udisks_linux_nvme_controller_refresh_smart_sync (ctrl,
+                                                            NULL,  /* cancellable */
+                                                            error))
+        {
+          udisks_warning ("Unable to retrieve selftest log for %s while polling during the test operation: %s (%s, %d)",
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                          (*error)->message, g_quark_to_string ((*error)->domain), (*error)->code);
+          goto out;
+        }
+
+      g_mutex_lock (&ctrl->smart_lock);
+      still_in_progress = ctrl->selftest_log && ctrl->selftest_log->current_operation != BD_NVME_SELF_TEST_ACTION_NOT_RUNNING;
+      progress = (ctrl->selftest_log ? ctrl->selftest_log->current_operation_completion : 0) / 100.0;
+      g_mutex_unlock (&ctrl->smart_lock);
+
+      if (!still_in_progress)
+        {
+          ret = TRUE;
+          goto out;
+        }
+
+      if (progress < 0.0)
+        progress = 0.0;
+      if (progress > 1.0)
+        progress = 1.0;
+      udisks_job_set_progress (UDISKS_JOB (job), progress);
+
+      /* Sleep for 30 seconds or until we're cancelled */
+      if (g_cancellable_make_pollfd (cancellable, &poll_fd))
+        {
+          gint poll_ret;
+          do
+            {
+              poll_ret = g_poll (&poll_fd, 1, 30 * 1000);
+            }
+          while (poll_ret == -1 && errno == EINTR);
+          g_cancellable_release_fd (cancellable);
+        }
+      else
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error creating pollfd for cancellable");
+          goto out;
+        }
+
+      /* Check if we're cancelled */
+      if (g_cancellable_is_cancelled (cancellable))
+        {
+          GError *c_error;
+
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_CANCELLED,
+                       "Self-test was cancelled");
+
+          /* OK, cancelled ... still need to a) abort the test; and b) update the status */
+          c_error = NULL;
+          if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device),
+                                         BD_NVME_SELF_TEST_ACTION_ABORT,
+                                         &c_error))
+            {
+              udisks_warning ("Error aborting device selftest for %s on cancel path: %s (%s, %d)",
+                              g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                              c_error->message, g_quark_to_string (c_error->domain), c_error->code);
+              g_clear_error (&c_error);
+            }
+          if (!udisks_linux_nvme_controller_refresh_smart_sync (ctrl,
+                                                                NULL,  /* cancellable */
+                                                                &c_error))
+            {
+              udisks_warning ("Error updating drive health information for %s on cancel path: %s (%s, %d)",
+                              g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                              c_error->message, g_quark_to_string (c_error->domain), c_error->code);
+              g_clear_error (&c_error);
+            }
+          goto out;
+        }
+    }
+
+  ret = TRUE;
+
+ out:
+  /* terminate the job */
+  g_mutex_lock (&ctrl->smart_lock);
+  ctrl->selftest_job = NULL;
+  g_mutex_unlock (&ctrl->smart_lock);
+  g_clear_object (&device);
+  g_clear_object (&object);
+  return ret;
+}
+
+
+static gboolean
+handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
+                             GDBusMethodInvocation *invocation,
+                             const gchar           *type,
+                             GVariant              *options)
+{
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (_ctrl);
+  UDisksLinuxDriveObject *object;
+  UDisksDaemon *daemon;
+  UDisksLinuxDevice *device = NULL;
+  BDNVMESelfTestAction action;
+  BDNVMESelfTestLog *self_test_log;
+  uid_t caller_uid;
+  gint64 time_est = 0;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (ctrl, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  g_mutex_lock (&ctrl->smart_lock);
+  if (ctrl->selftest_job != NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "There is already device self-test running");
+      g_mutex_unlock (&ctrl->smart_lock);
+      goto out;
+    }
+  g_mutex_unlock (&ctrl->smart_lock);
+
+  if (g_strcmp0 (type, "short") == 0)
+    action = BD_NVME_SELF_TEST_ACTION_SHORT;
+  else if (g_strcmp0 (type, "extended") == 0)
+    action = BD_NVME_SELF_TEST_ACTION_EXTENDED;
+  else if (g_strcmp0 (type, "vendor-specific") == 0)
+    action = BD_NVME_SELF_TEST_ACTION_VENDOR_SPECIFIC;
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unknown self-test type %s", type);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    "org.freedesktop.udisks2.nvme-smart-selftest",
+                                                    options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * initiates a device self-test.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to start a device self-test on $(drive)"),
+                                                    invocation))
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  g_assert (device != NULL);
+
+  /* Time estimates */
+  if (action == BD_NVME_SELF_TEST_ACTION_EXTENDED)
+    {
+      BDNVMEControllerInfo *ctrl_info;
+
+      ctrl_info = bd_nvme_get_controller_info (g_udev_device_get_device_file (device->udev_device), &error);
+      if (ctrl_info == NULL)
+        {
+          udisks_warning ("Error retrieving controller info for %s: %s (%s, %d)",
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                          error->message, g_quark_to_string (error->domain), error->code);
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      time_est = ctrl_info->selftest_ext_time * 60 * 1000000;
+      bd_nvme_controller_info_free (ctrl_info);
+    }
+
+  /* Check that the Device Self-test (Log Identifier 06h) log page can be retrieved,
+   * otherwise we wouldn't be able to detect the test progress and its completion.
+   */
+  self_test_log = bd_nvme_get_self_test_log (g_udev_device_get_device_file (device->udev_device), &error);
+  if (!self_test_log)
+    {
+      udisks_warning ("Unable to retrieve selftest log for %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  bd_nvme_self_test_log_free (self_test_log);
+
+  /* Trigger the self-test operation */
+  if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device), action, &error))
+    {
+      udisks_warning ("Error starting device selftest for %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  g_mutex_lock (&ctrl->smart_lock);
+  if (ctrl->selftest_job == NULL)
+    {
+      ctrl->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                                   UDISKS_OBJECT (object),
+                                                                                   "nvme-selftest",
+                                                                                   caller_uid,
+                                                                                   selftest_job_func,
+                                                                                   g_object_ref (ctrl),
+                                                                                   g_object_unref,
+                                                                                   NULL)); /* GCancellable */
+      if (time_est > 0)
+        {
+          udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->selftest_job), FALSE);
+          udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->selftest_job),
+                                            g_get_real_time () + time_est);
+        }
+      udisks_threaded_job_start (ctrl->selftest_job);
+    }
+  g_mutex_unlock (&ctrl->smart_lock);
+
+  udisks_nvme_controller_complete_smart_selftest_start (_ctrl, invocation);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_smart_selftest_abort (UDisksNVMeController  *_ctrl,
+                             GDBusMethodInvocation *invocation,
+                             GVariant              *options)
+{
+  UDisksLinuxNVMeController *ctrl = UDISKS_LINUX_NVME_CONTROLLER (_ctrl);
+  UDisksLinuxDriveObject *object;
+  UDisksDaemon *daemon;
+  UDisksLinuxDevice *device = NULL;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (ctrl, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    "org.freedesktop.udisks2.nvme-smart-selftest",
+                                                    options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * aborts a running device self-test.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to abort a device self-test on $(drive)"),
+                                                    invocation))
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  g_assert (device != NULL);
+
+  if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device),
+                                 BD_NVME_SELF_TEST_ACTION_ABORT,
+                                 &error))
+    {
+      udisks_warning ("Error aborting device selftest for %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* This wakes up the selftest thread */
+  g_mutex_lock (&ctrl->smart_lock);
+  if (ctrl->selftest_job != NULL)
+    {
+      g_cancellable_cancel (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (ctrl->selftest_job)));
+    }
+  g_mutex_unlock (&ctrl->smart_lock);
+  /* TODO: wait for the selftest thread to terminate */
+
+  if (!udisks_linux_nvme_controller_refresh_smart_sync (ctrl,
+                                                        NULL,  /* cancellable */
+                                                        &error))
+    {
+      udisks_warning ("Error updating health information for %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_nvme_controller_complete_smart_selftest_abort (_ctrl, invocation);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 nvme_controller_iface_init (UDisksNVMeControllerIface *iface)
 {
   iface->handle_smart_update = handle_smart_update;
   iface->handle_smart_get_attributes = handle_smart_get_attributes;
+  iface->handle_smart_selftest_start = handle_smart_selftest_start;
+  iface->handle_smart_selftest_abort = handle_smart_selftest_abort;
 }
