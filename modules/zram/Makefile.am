@@ -78,6 +78,7 @@ libudisks2_zram_la_LDFLAGS =                                                   \
 	$(NULL)
 
 libudisks2_zram_la_LIBADD =                                                    \
+	$(top_builddir)/src/libudisks-daemon.la                                \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
