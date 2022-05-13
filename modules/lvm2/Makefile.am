@@ -76,6 +76,7 @@ libudisks2_lvm2_la_LDFLAGS =                                                   \
 	$(NULL)
 
 libudisks2_lvm2_la_LIBADD =                                                    \
+	$(top_builddir)/src/libudisks-daemon.la                                \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
