@@ -1133,6 +1133,31 @@
     -->
     <property name="SmartSelftestPercentRemaining" type="i" access="read"/>
 
+    <!-- SanitizeStatus:
+         @since: 2.10.0
+
+         The information about the most recent sanitize operation. Known values include:
+         <variablelist>
+         <varlistentry><term>never_sanitized</term>
+           <listitem><para>The NVM subsystem has never been sanitized (or the status is unknown).</para></listitem></varlistentry>
+         <varlistentry><term>success</term>
+           <listitem><para>Operation completed successfully.</para></listitem></varlistentry>
+         <varlistentry><term>failure</term>
+           <listitem><para>The most recent sanitize operation failed.</para></listitem></varlistentry>
+         <varlistentry><term>inprogress</term>
+           <listitem><para>A sanitize operation is currently in progress.</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="SanitizeStatus" type="s" access="read"/>
+
+    <!--
+        SanitizePercentRemaining:
+        @since: 2.10.0
+
+        The percent remaining or -1 if unknown.
+    -->
+    <property name="SanitizePercentRemaining" type="i" access="read"/>
+
     <!--
         SmartUpdate:
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
@@ -1232,6 +1257,43 @@
         Aborts a running device selftest.
     -->
     <method name="SmartSelftestAbort">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SanitizeStart:
+        @action: The sanitize action to perform.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>overwrite_pass_count</parameter> (of type 'y'), <parameter>overwrite_pattern</parameter> (of type 'u') and <parameter>overwrite_invert_pattern</parameter> (of type 'b').
+        @since: 2.10.0
+
+        Starts a sanitize operation in the background. A sanitize operation alters all user data
+        in the NVM subsystem such that recovery of any previous user data from any cache,
+        the non-volatile media, or any Controller Memory Buffer is not possible. The scope
+        of a sanitize operation is all locations in the NVM subsystem that are able to contain
+        user data, including caches, Persistent Memory Regions, and unallocated or deallocated
+        areas of the media.
+
+        Once started, a sanitize operation is not able to be aborted and continues after
+        a Controller Level Reset including across power cycles. Once the sanitize operation
+        has run the media affected may not be immediately ready for use unless additional
+        media modification mechanism is run. This is often vendor specific and also depends
+        on the sanitize method (@action) used.
+
+        The sanitize operation is set to be executed with the No-Deallocate After Sanitize
+        feature turned on, i.e. the controller shall not deallocate any user data as a result
+        of successfully completing the sanitize operation.
+
+        The @action parameter indicates the type of the sanitize action to take - valid values are
+        <literal>block-erase</literal>, <literal>overwrite</literal> and <literal>crypto-erase</literal>.
+
+        In case of the <literal>overwrite</literal> action additional options are taken in account.
+        The <literal>overwrite_pass_count</literal> option specifies number of overwrite passes (1-15)
+        defaulting to 16 passes when not specified. The <literal>overwrite_pattern</literal> option
+        specifies a 32-bit pattern, defaulting to zero if not specified. The <literal>overwrite_invert_pattern</literal>
+        option indicates that the overwrite pattern should be inverted between passes.
+    -->
+    <method name="SanitizeStart">
+      <arg name="action" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
@@ -3035,6 +3097,8 @@
              <listitem><para>Create a RAID Array.</para></listitem></varlistentry>
            <varlistentry><term>nvme-selftest</term>
              <listitem><para>NVMe device self-test operation.</para></listitem></varlistentry>
+           <varlistentry><term>nvme-sanitize</term>
+             <listitem><para>NVMe sanitize operation.</para></listitem></varlistentry>
          </variablelist>
          The
          <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>

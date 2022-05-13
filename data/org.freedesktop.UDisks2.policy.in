@@ -545,6 +545,17 @@
     </defaults>
   </action>
 
+  <!-- Sanitize operation -->
+  <action id="org.freedesktop.udisks2.nvme-sanitize">
+    <description>Start the sanitize operation</description>
+    <message>Authentication is required to perform a sanitize operation</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- ###################################################################### -->
   <!-- Canceling jobs -->
 
