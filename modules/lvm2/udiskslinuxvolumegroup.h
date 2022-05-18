@@ -36,6 +36,7 @@ GType              udisks_linux_volume_group_get_type  (void) G_GNUC_CONST;
 UDisksVolumeGroup *udisks_linux_volume_group_new       (void);
 void               udisks_linux_volume_group_update    (UDisksLinuxVolumeGroup  *volume_group,
                                                         BDLVMVGdata             *vg_info,
+                                                        GSList                  *vg_pvs,
                                                         gboolean                *needs_polling_ret);
 
 GList *udisks_linux_volume_group_get_logical_volumes (UDisksVolumeGroup *group,

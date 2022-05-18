@@ -132,6 +132,100 @@ udisks_linux_logical_volume_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static GVariant *
+build_segment (UDisksDaemon *daemon,
+               UDisksVolumeGroup *group,
+               BDLVMSEGdata *seg)
+{
+  GVariantBuilder seg_builder;
+  UDisksObject *block_object;
+  guint64 extent_size = udisks_volume_group_get_extent_size (group);
+
+  g_variant_builder_init (&seg_builder, G_VARIANT_TYPE ("(tto)"));
+  g_variant_builder_add (&seg_builder, "t", seg->pv_start_pe * extent_size);
+  g_variant_builder_add (&seg_builder, "t", seg->size_pe * extent_size);
+  block_object = udisks_daemon_find_block_by_device_file (daemon, seg->pvdev);
+  if (block_object)
+    {
+      g_variant_builder_add (&seg_builder, "o", g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object)));
+      g_object_unref (block_object);
+    }
+  else
+    g_variant_builder_add (&seg_builder, "o", "/");
+  return g_variant_builder_end (&seg_builder);
+}
+
+static GVariant *build_structure (UDisksDaemon *daemon, UDisksVolumeGroup *group, BDLVMLVdata *lv, BDLVMLVdata **all);
+
+static gboolean
+lvnameeq (gchar *name, gchar *maybe_bracketed_name)
+{
+  size_t len = strlen (maybe_bracketed_name);
+  return (g_strcmp0 (name, maybe_bracketed_name) == 0
+          || (maybe_bracketed_name[0] == '['
+              && maybe_bracketed_name[len-1] == ']'
+              && strlen (name) == len-2
+              && strncmp (name, maybe_bracketed_name+1, len-2) == 0));
+}
+
+static GVariant *
+build_structures (UDisksDaemon *daemon,
+                  UDisksVolumeGroup *group,
+                  gchar **lv_names,
+                  BDLVMLVdata **all)
+{
+  GVariantBuilder list_builder;
+  g_variant_builder_init (&list_builder, G_VARIANT_TYPE ("aa{sv}"));
+  for (int i = 0; lv_names[i]; i++)
+    {
+      int j;
+      for (j = 0; all[j]; j++) {
+        if (lvnameeq (lv_names[i], all[j]->lv_name))
+          break;
+      }
+      if (all[j])
+        g_variant_builder_add_value (&list_builder, build_structure (daemon, group, all[j], all));
+    }
+  return g_variant_builder_end (&list_builder);
+}
+
+static GVariant *
+build_structure (UDisksDaemon *daemon,
+                 UDisksVolumeGroup *group,
+                 BDLVMLVdata *lv,
+                 BDLVMLVdata **all)
+{
+  GVariantBuilder lv_builder;
+
+  g_variant_builder_init (&lv_builder, G_VARIANT_TYPE_VARDICT);
+  if (lv->lv_name[0] == '[')
+    {
+      gchar *name = g_strndup (lv->lv_name + 1, strlen (lv->lv_name) - 2);
+      g_variant_builder_add (&lv_builder, "{sv}", "name", g_variant_new_string (name));
+      g_free (name);
+    }
+  else
+    g_variant_builder_add (&lv_builder, "{sv}", "name", g_variant_new_string (lv->lv_name));
+
+  g_variant_builder_add (&lv_builder, "{sv}", "type", g_variant_new_string (lv->segtype));
+  g_variant_builder_add (&lv_builder, "{sv}", "size", g_variant_new_uint64 (lv->size));
+
+  if (lv->segs) {
+    GVariantBuilder segs_builder;
+    g_variant_builder_init (&segs_builder, G_VARIANT_TYPE ("a(tto)"));
+    for (int i = 0; lv->segs[i]; i++)
+      g_variant_builder_add_value (&segs_builder, build_segment (daemon, group, lv->segs[i]));
+    g_variant_builder_add (&lv_builder, "{sv}", "segments", g_variant_builder_end (&segs_builder));
+  } else {
+    if (lv->data_lvs)
+      g_variant_builder_add (&lv_builder, "{sv}", "data", build_structures (daemon, group, lv->data_lvs, all));
+    if (lv->metadata_lvs)
+      g_variant_builder_add (&lv_builder, "{sv}", "metadata", build_structures (daemon, group, lv->metadata_lvs, all));
+  }
+
+  return g_variant_builder_end (&lv_builder);
+}
+
 /**
  * udisks_linux_logical_volume_update:
  * @logical_volume: A #UDisksLinuxLogicalVolume.
@@ -145,16 +239,24 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
                                     UDisksLinuxVolumeGroupObject *group_object,
                                     BDLVMLVdata                  *lv_info,
                                     BDLVMLVdata                  *meta_lv_info,
+                                    BDLVMLVdata                 **all_lv_infos,
                                     gboolean                     *needs_polling_ret)
 {
+  UDisksLinuxModuleLVM2 *module;
+  UDisksDaemon *daemon;
   UDisksLogicalVolume *iface;
+  UDisksVolumeGroup *group;
   const char *type;
   gboolean active;
   const char *pool_objpath;
   const char *origin_objpath;
   guint64 size = 0;
 
+  module = udisks_linux_volume_group_object_get_module (group_object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
+
   iface = UDISKS_LOGICAL_VOLUME (logical_volume);
+  group = udisks_object_get_volume_group (UDISKS_OBJECT (group_object));
 
   udisks_logical_volume_set_name (iface, lv_info->lv_name);
   udisks_logical_volume_set_uuid (iface, lv_info->uuid);
@@ -182,6 +284,20 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
         active = TRUE;
     }
   udisks_logical_volume_set_type_ (iface, type);
+  if (g_strcmp0 (lv_info->segtype, "error") == 0)
+    udisks_logical_volume_set_layout (iface, "linear");
+  else
+    udisks_logical_volume_set_layout (iface, lv_info->segtype);
+  if ((g_str_has_prefix (lv_info->segtype, "raid") && g_strcmp0 (lv_info->segtype, "raid0") != 0)
+      || g_strcmp0 (lv_info->segtype, "mirror") == 0)
+    {
+      udisks_logical_volume_set_sync_ratio (iface, lv_info->copy_percent / 100.0);
+      if (lv_info->copy_percent != 100)
+        *needs_polling_ret = TRUE;
+    }
+  else
+    udisks_logical_volume_set_sync_ratio (iface, 1.0);
+
   udisks_logical_volume_set_active (iface, active);
   udisks_logical_volume_set_size (iface, size);
 
@@ -231,6 +347,8 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
       logical_volume->needs_udev_hack = FALSE;
       g_free (dev_file);
     }
+
+  udisks_logical_volume_set_structure (iface, build_structure (daemon, group, lv_info, all_lv_infos));
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
@@ -409,8 +527,7 @@ common_setup (UDisksLinuxLogicalVolume           *volume,
                                                out_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -500,6 +617,65 @@ handle_delete (UDisksLogicalVolume   *_volume,
     }
 
   udisks_logical_volume_complete_delete (_volume, invocation);
+
+ out:
+  g_clear_object (&object);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_repair (UDisksLogicalVolume   *_volume,
+               GDBusMethodInvocation *invocation,
+               const gchar *const    *arg_pvs,
+               GVariant              *options)
+{
+  GError *error = NULL;
+  UDisksLinuxLogicalVolume *volume = UDISKS_LINUX_LOGICAL_VOLUME (_volume);
+  UDisksLinuxLogicalVolumeObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  uid_t caller_uid;
+  UDisksLinuxVolumeGroupObject *group_object;
+  LVJobData data = {0};
+  g_auto(GStrv) pvs = NULL;
+
+  if (!common_setup (volume, invocation, options,
+                     N_("Authentication is required to repair a logical volume"),
+                     &object, &daemon, &caller_uid))
+    goto out;
+
+  group_object = udisks_linux_logical_volume_object_get_volume_group (object);
+  data.vg_name = udisks_linux_volume_group_object_get_name (group_object);
+  data.lv_name = udisks_linux_logical_volume_object_get_name (object);
+  pvs = udisks_daemon_util_lvm2_gather_pvs (daemon, group_object, arg_pvs, &error);
+  if (pvs == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  data.new_lv_pvs = (const gchar **)pvs;
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-lvol-repair",
+                                               caller_uid,
+                                               lvrepair_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error repairing logical volume: %s",
+                                             error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  udisks_logical_volume_complete_repair (_volume, invocation);
 
  out:
   g_clear_object (&object);
@@ -1054,6 +1230,7 @@ logical_volume_iface_init (UDisksLogicalVolumeIface *iface)
   iface->handle_delete = handle_delete;
   iface->handle_rename = handle_rename;
   iface->handle_resize = handle_resize;
+  iface->handle_repair = handle_repair;
   iface->handle_activate = handle_activate;
   iface->handle_deactivate = handle_deactivate;
   iface->handle_create_snapshot = handle_create_snapshot;

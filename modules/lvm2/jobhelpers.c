@@ -34,7 +34,7 @@ gboolean lvcreate_job_func (UDisksThreadedJob  *job,
                             GError            **error)
 {
     LVJobData *data = user_data;
-    return bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, NULL /* type */, NULL /* pvs */, NULL /* extra_args */, error);
+    return bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, data->new_lv_layout, data->new_lv_pvs, NULL /* extra_args */, error);
 }
 
 gboolean lvcreate_thin_pool_job_func (UDisksThreadedJob  *job,
@@ -207,6 +207,15 @@ gboolean lv_vdo_deduplication_job_func (UDisksThreadedJob  *job,
         return bd_lvm_vdo_disable_deduplication (data->vg_name, data->lv_name, NULL /* extra_args */, error);
 }
 
+gboolean lvrepair_job_func (UDisksThreadedJob  *job,
+                            GCancellable       *cancellable,
+                            gpointer            user_data,
+                            GError            **error)
+{
+    LVJobData *data = user_data;
+    return bd_lvm_lvrepair (data->vg_name, data->lv_name, data->new_lv_pvs, NULL /* extra_args */, error);
+}
+
 gboolean vgcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
                             gpointer            user_data,
@@ -349,7 +358,7 @@ void lvs_task_func (GTask        *task,
   BDLVMLVdata **ret = NULL;
   gchar *vg_name = (gchar*) task_data;
 
-  ret = bd_lvm_lvs (vg_name, &error);
+  ret = bd_lvm_lvs_tree (vg_name, &error);
   if (!ret)
     g_task_return_error (task, error);
   else

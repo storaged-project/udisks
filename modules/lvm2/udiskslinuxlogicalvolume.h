@@ -39,6 +39,7 @@ void                 udisks_linux_logical_volume_update   (UDisksLinuxLogicalVol
                                                            UDisksLinuxVolumeGroupObject *group_object,
                                                            BDLVMLVdata                  *lv_info,
                                                            BDLVMLVdata                  *meta_lv_info,
+                                                           BDLVMLVdata                 **all_lv_infos,
                                                            gboolean                     *needs_polling_ret);
 void                   udisks_linux_logical_volume_update_etctabs (UDisksLinuxLogicalVolume     *logical_volume,
                                                                    UDisksLinuxVolumeGroupObject *group_object);

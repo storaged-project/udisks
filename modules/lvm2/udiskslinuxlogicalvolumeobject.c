@@ -300,6 +300,7 @@ void
 udisks_linux_logical_volume_object_update (UDisksLinuxLogicalVolumeObject *object,
                                            BDLVMLVdata *lv_info,
                                            BDLVMLVdata *meta_lv_info,
+                                           BDLVMLVdata **all_lv_infos,
                                            BDLVMVDOPooldata *vdo_info,
                                            gboolean *needs_polling_ret)
 {
@@ -307,7 +308,7 @@ udisks_linux_logical_volume_object_update (UDisksLinuxLogicalVolumeObject *objec
 
   udisks_linux_logical_volume_update (UDISKS_LINUX_LOGICAL_VOLUME (object->iface_logical_volume),
                                       object->volume_group,
-                                      lv_info, meta_lv_info,
+                                      lv_info, meta_lv_info, all_lv_infos,
                                       needs_polling_ret);
 
   if (vdo_info)
