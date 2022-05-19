@@ -36,6 +36,7 @@
 #include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
+#include "udisksthreadedjob.h"
 #include "udiskslinuxdevice.h"
 
 /**
@@ -58,6 +59,9 @@ typedef struct _UDisksLinuxNVMeNamespaceClass   UDisksLinuxNVMeNamespaceClass;
 struct _UDisksLinuxNVMeNamespace
 {
   UDisksNVMeNamespaceSkeleton parent_instance;
+
+  GMutex             format_lock;
+  UDisksThreadedJob *format_job;
 };
 
 struct _UDisksLinuxNVMeNamespaceClass
@@ -75,6 +79,8 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxNVMeNamespace, udisks_linux_nvme_namespace, 
 static void
 udisks_linux_nvme_namespace_init (UDisksLinuxNVMeNamespace *ns)
 {
+  g_mutex_init (&ns->format_lock);
+
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (ns),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
@@ -82,6 +88,10 @@ udisks_linux_nvme_namespace_init (UDisksLinuxNVMeNamespace *ns)
 static void
 udisks_linux_nvme_namespace_finalize (GObject *object)
 {
+  UDisksLinuxNVMeNamespace *ns = UDISKS_LINUX_NVME_NAMESPACE (object);
+
+  g_mutex_clear (&ns->format_lock);
+
   if (G_OBJECT_CLASS (udisks_linux_nvme_namespace_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_nvme_namespace_parent_class)->finalize (object);
 }
@@ -124,6 +134,7 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
   UDisksNVMeNamespace *iface = UDISKS_NVME_NAMESPACE (ns);
   UDisksLinuxDevice *device;
   guint nsid = 0;
+  gint format_progress = -1;
   const gchar *nguid = NULL;
   const gchar *eui64 = NULL;
   const gchar *uuid = NULL;
@@ -134,6 +145,7 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
     return;
 
   g_object_freeze_notify (G_OBJECT (object));
+  g_mutex_lock (&ns->format_lock);
 
   nsid = g_udev_device_get_sysfs_attr_as_int (device->udev_device, "nsid");
   nguid = g_udev_device_get_sysfs_attr (device->udev_device, "nguid");
@@ -172,6 +184,8 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
 
           udisks_nvme_namespace_set_lbaformats (iface, g_variant_builder_end (&builder));
         }
+      if ((device->nvme_ns_info->features & BD_NVME_NS_FEAT_FORMAT_PROGRESS) == BD_NVME_NS_FEAT_FORMAT_PROGRESS)
+        format_progress = device->nvme_ns_info->format_progress_remaining;
     }
 
   udisks_nvme_namespace_set_nsid (iface, nsid);
@@ -183,6 +197,8 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
     udisks_nvme_namespace_set_uuid (iface, uuid);
   if (wwn)
     udisks_nvme_namespace_set_wwn (iface, wwn);
+  udisks_nvme_namespace_set_format_percent_remaining (iface, format_progress);
+  g_mutex_unlock (&ns->format_lock);
 
   g_object_thaw_notify (G_OBJECT (object));
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (ns));
@@ -191,7 +207,226 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+format_ns_job_func (UDisksThreadedJob  *job,
+                    GCancellable       *cancellable,
+                    gpointer            user_data,
+                    GError            **error)
+{
+  UDisksLinuxNVMeNamespace *ns = UDISKS_LINUX_NVME_NAMESPACE (user_data);
+  UDisksLinuxBlockObject *object;
+  UDisksLinuxDevice *device = NULL;
+  gboolean ret = FALSE;
+
+  object = udisks_daemon_util_dup_object (ns, error);
+  if (object == NULL)
+    goto out;
+
+  device = udisks_linux_block_object_get_device (object);
+  g_assert (device != NULL);
+
+  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+  udisks_job_set_progress (UDISKS_JOB (job), 0.0);
+
+  while (!g_cancellable_is_cancelled (cancellable))
+    {
+      BDNVMENamespaceInfo *ns_info;
+      GPollFD poll_fd;
+
+      ns_info = bd_nvme_get_namespace_info (g_udev_device_get_device_file (device->udev_device), error);
+      if (!ns_info)
+        {
+          udisks_warning ("Unable to retrieve namespace info for %s while polling during the format operation: %s (%s, %d)",
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                          (*error)->message, g_quark_to_string ((*error)->domain), (*error)->code);
+          goto out;
+        }
+
+      /* Update the properties */
+      if ((ns_info->features & BD_NVME_NS_FEAT_FORMAT_PROGRESS) == BD_NVME_NS_FEAT_FORMAT_PROGRESS)
+        {
+          gdouble progress = (100 - ns_info->format_progress_remaining) / 100.0;
+
+          g_mutex_lock (&ns->format_lock);
+          udisks_nvme_namespace_set_format_percent_remaining (UDISKS_NVME_NAMESPACE (ns),
+                                                              ns_info->format_progress_remaining);
+          g_mutex_unlock (&ns->format_lock);
+
+          if (progress < 0.0)
+            progress = 0.0;
+          if (progress > 1.0)
+            progress = 1.0;
+          udisks_job_set_progress (UDISKS_JOB (job), progress);
+        }
+
+      /* Sleep for 5 seconds or until we're cancelled */
+      if (g_cancellable_make_pollfd (cancellable, &poll_fd))
+        {
+          gint poll_ret;
+          do
+            {
+              poll_ret = g_poll (&poll_fd, 1, 5 * 1000);
+            }
+          while (poll_ret == -1 && errno == EINTR);
+          g_cancellable_release_fd (cancellable);
+        }
+      else
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error creating pollfd for cancellable");
+          goto out;
+        }
+    }
+
+  ret = TRUE;
+
+ out:
+  /* terminate the job */
+  g_mutex_lock (&ns->format_lock);
+  ns->format_job = NULL;
+  g_mutex_unlock (&ns->format_lock);
+  g_clear_object (&device);
+  g_clear_object (&object);
+  return ret;
+}
+
+
+static gboolean
+handle_format_namespace (UDisksNVMeNamespace   *_ns,
+                         GDBusMethodInvocation *invocation,
+                         GVariant              *arg_options)
+{
+  UDisksLinuxNVMeNamespace *ns = UDISKS_LINUX_NVME_NAMESPACE (_ns);
+  UDisksLinuxBlockObject *object;
+  UDisksDaemon *daemon;
+  UDisksLinuxDevice *device = NULL;
+  guint16 lba_data_size = 0;
+  const gchar *arg_secure_erase = NULL;
+  BDNVMEFormatSecureErase secure_erase = BD_NVME_FORMAT_SECURE_ERASE_NONE;
+  uid_t caller_uid;
+  GCancellable *cancellable = NULL;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (_ns, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (object);
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  g_mutex_lock (&ns->format_lock);
+  if (ns->format_job != NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "There is already a format operation running");
+      g_mutex_unlock (&ns->format_lock);
+      goto out;
+    }
+  g_mutex_unlock (&ns->format_lock);
+
+  g_variant_lookup (arg_options, "lba_data_size", "q", &lba_data_size);
+  g_variant_lookup (arg_options, "secure_erase", "s", &arg_secure_erase);
+
+  if (arg_secure_erase)
+    {
+      if (g_strcmp0 (arg_secure_erase, "user_data") == 0)
+        secure_erase = BD_NVME_FORMAT_SECURE_ERASE_USER_DATA;
+      else if (g_strcmp0 (arg_secure_erase, "crypto_erase") == 0)
+        secure_erase = BD_NVME_FORMAT_SECURE_ERASE_CRYPTO;
+      else
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Unknown secure erase type %s", arg_secure_erase);
+          goto out;
+        }
+    }
+
+  device = udisks_linux_block_object_get_device (object);
+  g_assert (device != NULL);
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    "org.freedesktop.udisks2.nvme-format-namespace",
+                                                    arg_options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * initiates a device self-test.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to format a namespace on $(drive)"),
+                                                    invocation))
+    goto out;
+
+  /* Start the job */
+  cancellable = g_cancellable_new ();
+  g_mutex_lock (&ns->format_lock);
+  if (ns->format_job == NULL)
+    {
+      ns->format_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                               UDISKS_OBJECT (object),
+                                                                               "nvme-format-ns",
+                                                                               caller_uid,
+                                                                               format_ns_job_func,
+                                                                               g_object_ref (ns),
+                                                                               g_object_unref,
+                                                                               cancellable));
+      udisks_threaded_job_start (ns->format_job);
+    }
+  g_mutex_unlock (&ns->format_lock);
+
+  /* Trigger the format operation */
+  if (!bd_nvme_format (g_udev_device_get_device_file (device->udev_device),
+                       lba_data_size,
+                       secure_erase,
+                       &error))
+    {
+      udisks_warning ("Error formatting namespace %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      g_cancellable_cancel (cancellable);
+      goto out;
+    }
+
+  g_cancellable_cancel (cancellable);
+  if (udisks_linux_block_object_reread_partition_table (object, &error))
+    {
+      udisks_warning ("%s", error->message);
+      g_clear_error (&error);
+    }
+  udisks_linux_block_object_trigger_uevent_sync (object, UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  udisks_nvme_namespace_complete_format_namespace (_ns, invocation);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&object);
+  g_clear_object (&cancellable);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 nvme_namespace_iface_init (UDisksNVMeNamespaceIface *iface)
 {
+  iface->handle_format_namespace = handle_format_namespace;
 }

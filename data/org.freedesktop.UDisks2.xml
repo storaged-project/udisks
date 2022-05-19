@@ -1414,6 +1414,34 @@
     -->
     <property name="NamespaceUtilization" type="t" access="read"/>
 
+    <!--
+        FormatPercentRemaining:
+        @since: 2.10.0
+
+        The percent remaining of a running format operation or -1 if unknown (e.g. not reported by the drive).
+    -->
+    <property name="FormatPercentRemaining" type="i" access="read"/>
+
+    <!--
+        FormatNamespace:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>lba_data_size</parameter> (of type 'q') and <parameter>secure_erase</parameter> (of type 's').
+        @since: 2.10.0
+
+        Performs low level format of the NVM media, destroying all data and metadata in the current namespace.
+
+        The optional @lba_data_size parameter indicates the LBA Data Size in bytes to use (see the related
+        #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats property). If not specified, the current active format is used.
+
+        The optional @secure_erase parameter can be used to perform secure erase - valid values are
+        <literal>user_data</literal> where the user data are overwritten by a pattern, and <literal>crypto_erase</literal>
+        which removes the encryption key with which the user data was previously encrypted.
+
+        This call blocks until the format operation has finished.
+    -->
+    <method name="FormatNamespace">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -3099,6 +3127,8 @@
              <listitem><para>NVMe device self-test operation.</para></listitem></varlistentry>
            <varlistentry><term>nvme-sanitize</term>
              <listitem><para>NVMe sanitize operation.</para></listitem></varlistentry>
+           <varlistentry><term>nvme-format-ns</term>
+             <listitem><para>NVMe format namespace operation.</para></listitem></varlistentry>
          </variablelist>
          The
          <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>
