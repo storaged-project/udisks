@@ -343,6 +343,8 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(ncap, self.NS_SIZE / lbaf_curr[0])
             nutl = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceUtilization')
             self.assertEqual(nutl, self.NS_SIZE / lbaf_curr[0])
+            format_progress = self.get_property_raw(ns, '.NVMe.Namespace', 'FormatPercentRemaining')
+            self.assertEqual(format_progress, -1)
 
 
     def test_health_info(self):
@@ -442,3 +444,50 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             drive_obj.SanitizeStart('crypto-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+
+
+    def test_format_ns(self):
+        self._nvme_connect()
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+        time.sleep(1)
+
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        for d in ns_devs:
+            ns = self.get_object('/block_devices/' + os.path.basename(d))
+            self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+
+            drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+            drive_obj = self.get_object(drive_obj_path)
+            self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+            state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+            state.assertEqual('live', timeout=10)
+
+            msg = 'Format NVM command error: Invalid Command Opcode: A reserved coded value or an unsupported value in the command opcode field'
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                ns.FormatNamespace(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+            d = dbus.Dictionary(signature='sv')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Unknown secure erase type xxx'):
+                d['secure_erase'] = 'xxx'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['secure_erase'] = 'user_data'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['secure_erase'] = 'crypto_erase'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+            d = dbus.Dictionary(signature='sv')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = 0
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            lbaf_curr = self.get_property_raw(ns, '.NVMe.Namespace', 'FormattedLBASize')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = lbaf_curr[0]
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            msg = "Couldn't match desired LBA data block size in a device supported LBA format data sizes"
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = dbus.UInt16(666)
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
