@@ -108,6 +108,8 @@ libudisks_daemon_la_SOURCES =                                                   
 	udisksconfigmanager.h            udisksconfigmanager.c                   \
 	udiskslinuxnvmecontroller.h      udiskslinuxnvmecontroller.c             \
 	udiskslinuxnvmenamespace.h       udiskslinuxnvmenamespace.c              \
+	udiskslinuxmanagernvme.h         udiskslinuxmanagernvme.c                \
+	udiskslinuxnvmefabrics.h         udiskslinuxnvmefabrics.c                \
 	$(BUILT_SOURCES)                                                         \
 	$(NULL)
 

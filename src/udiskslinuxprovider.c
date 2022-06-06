@@ -32,6 +32,7 @@
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmanager.h"
+#include "udiskslinuxmanagernvme.h"
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
@@ -688,6 +689,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (_provider);
   UDisksDaemon *daemon;
   UDisksManager *manager;
+  UDisksManagerNVMe *manager_nvme;
   UDisksModuleManager *module_manager;
   GList *udisks_devices;
   guint n;
@@ -733,6 +735,9 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   manager = udisks_linux_manager_new (daemon);
   udisks_object_skeleton_set_manager (provider->manager_object, manager);
   g_object_unref (manager);
+  manager_nvme = udisks_linux_manager_nvme_new (daemon);
+  udisks_object_skeleton_set_manager_nvme (provider->manager_object, manager_nvme);
+  g_object_unref (manager_nvme);
 
   module_manager = udisks_daemon_get_module_manager (daemon);
   g_signal_connect_swapped (module_manager, "modules-activated", G_CALLBACK (ensure_modules), provider);

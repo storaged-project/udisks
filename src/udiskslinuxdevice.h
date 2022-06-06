@@ -73,6 +73,7 @@ guint64            udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDev
                                                                   GError            **error);
 
 gboolean           udisks_linux_device_subsystem_is_nvme         (UDisksLinuxDevice  *device);
+gboolean           udisks_linux_device_nvme_is_fabrics           (UDisksLinuxDevice  *device);
 
 G_END_DECLS
 

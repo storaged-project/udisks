@@ -125,6 +125,12 @@ typedef struct _UDisksLinuxNVMeController UDisksLinuxNVMeController;
 struct _UDisksLinuxNVMeNamespace;
 typedef struct _UDisksLinuxNVMeNamespace UDisksLinuxNVMeNamespace;
 
+struct _UDisksLinuxManagerNVMe;
+typedef struct _UDisksLinuxManagerNVMe UDisksLinuxManagerNVMe;
+
+struct _UDisksLinuxNVMeFabrics;
+typedef struct _UDisksLinuxNVMeFabrics UDisksLinuxNVMeFabrics;
+
 typedef struct _UDisksConfigManager        UDisksConfigManager;
 typedef struct _UDisksConfigManagerClass   UDisksConfigManagerClass;
 

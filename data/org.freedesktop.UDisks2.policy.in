@@ -567,6 +567,27 @@
     </defaults>
   </action>
 
+  <!-- Fabrics connect -->
+  <action id="org.freedesktop.udisks2.nvme-connect">
+    <description>NVMeoF connection</description>
+    <message>Authentication is required to connect to an NVMe over Fabrics controller</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.nvme-disconnect">
+    <description>Disconnect a NVMeoF controller</description>
+    <message>Authentication is required to disconnect a NVMe over Fabrics controller</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- ###################################################################### -->
   <!-- Canceling jobs -->
 
