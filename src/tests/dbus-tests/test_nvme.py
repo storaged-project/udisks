@@ -491,3 +491,35 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = dbus.UInt16(666)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+    def test_fabrics_connect(self):
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
+            manager.Connect(self.SUBNQN, "notransport", "", self.no_options)
+        msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Connect(self.SUBNQN, "loop", "127.0.0.1", self.no_options)
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Connect("unknownsubnqn", "loop", "", self.no_options)
+
+        d = dbus.Dictionary(signature='sv')
+        d['host_nqn'] = self.str_to_ay('nqn.2014-08.org.nvmexpress:uuid:01234567-8900-abcd-efff-abcdabcdabcd')
+        d['host_id'] = self.str_to_ay('cccccccc-abcd-abcd-1234-1234567890ab')
+        ctrl_obj_path = manager.Connect(self.SUBNQN, "loop", "", d)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        hostnqn = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+        self.assertEqual(hostnqn, d['host_nqn'])
+        hostid = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostID')
+        self.assertEqual(hostid, d['host_id'])
+        tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        ctrl = self.get_object(ctrl_obj_path)
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
+            self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
