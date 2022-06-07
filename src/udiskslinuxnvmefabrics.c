@@ -130,6 +130,7 @@ udisks_linux_nvme_fabrics_update (UDisksLinuxNVMeFabrics *ctrl,
   UDisksLinuxDevice *device;
   const gchar *hostnqn = NULL;
   const gchar *hostid = NULL;
+  const gchar *transport = NULL;
   const gchar *tr_addr = NULL;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
@@ -140,12 +141,15 @@ udisks_linux_nvme_fabrics_update (UDisksLinuxNVMeFabrics *ctrl,
 
   hostnqn = g_udev_device_get_sysfs_attr (device->udev_device, "hostnqn");
   hostid = g_udev_device_get_sysfs_attr (device->udev_device, "hostid");
+  transport = g_udev_device_get_sysfs_attr (device->udev_device, "transport");
   tr_addr = g_udev_device_get_sysfs_attr (device->udev_device, "address");
 
   if (hostnqn)
     udisks_nvme_fabrics_set_host_nqn (iface, hostnqn);
   if (hostid)
     udisks_nvme_fabrics_set_host_id (iface, hostid);
+  if (transport)
+    udisks_nvme_fabrics_set_transport (iface, transport);
   if (tr_addr)
     udisks_nvme_fabrics_set_transport_address (iface, tr_addr);
 

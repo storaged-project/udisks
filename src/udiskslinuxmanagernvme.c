@@ -319,7 +319,7 @@ wait_for_fabrics_object (UDisksDaemon *daemon,
       if (ctrl && fab)
         {
           if (g_strcmp0 (udisks_nvme_controller_get_subsystem_nqn (ctrl), data->subsysnqn) == 0 &&
-              g_strcmp0 (udisks_nvme_controller_get_transport (ctrl), data->transport) == 0 &&
+              g_strcmp0 (udisks_nvme_fabrics_get_transport (fab), data->transport) == 0 &&
               (!data->transport_addr || g_strcmp0 (udisks_nvme_fabrics_get_transport_address (fab), data->transport_addr) == 0) &&
               (!data->host_nqn || g_strcmp0 (udisks_nvme_fabrics_get_host_nqn (fab), data->host_nqn) == 0) &&
               (!data->host_id || g_strcmp0 (udisks_nvme_fabrics_get_host_id (fab), data->host_id) == 0))

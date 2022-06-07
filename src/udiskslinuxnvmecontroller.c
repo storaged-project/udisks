@@ -276,7 +276,6 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   UDisksLinuxDevice *device;
   gint cntl_id = 0;
   const gchar *subsysnqn = NULL;
-  const gchar *transport = NULL;
   const gchar *state = NULL;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
@@ -287,7 +286,6 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
   subsysnqn = g_udev_device_get_sysfs_attr (device->udev_device, "subsysnqn");
   cntl_id = g_udev_device_get_sysfs_attr_as_int (device->udev_device, "cntlid");
-  transport = g_udev_device_get_sysfs_attr (device->udev_device, "transport");
   state = g_udev_device_get_sysfs_attr (device->udev_device, "state");
 
   if (device->nvme_ctrl_info)
@@ -304,8 +302,6 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   udisks_nvme_controller_set_controller_id (iface, cntl_id);
   if (subsysnqn)
     udisks_nvme_controller_set_subsystem_nqn (iface, subsysnqn);
-  if (transport)
-    udisks_nvme_controller_set_transport (iface, transport);
   if (state)
     udisks_nvme_controller_set_state (iface, state);
 

@@ -1142,22 +1142,6 @@
     -->
     <property name="NVMeRevision" type="s" access="read"/>
 
-    <!-- Transport:
-         @since: 2.10.0
-
-         The transport type the device is connected with.
-
-         Known values include:
-         <variablelist>
-           <varlistentry><term>pcie</term><listitem><para>PCI Express Transport</para></listitem></varlistentry>
-           <varlistentry><term>rdma</term><listitem><para>RDMA Transport</para></listitem></varlistentry>
-           <varlistentry><term>fc</term><listitem><para>Fibre Channel Transport</para></listitem></varlistentry>
-           <varlistentry><term>tcp</term><listitem><para>TCP Transport</para></listitem></varlistentry>
-           <varlistentry><term>loop</term><listitem><para>Intra-host Transport (i.e., loopback)</para></listitem></varlistentry>
-         </variablelist>
-    -->
-    <property name="Transport" type="s" access="read"/>
-
     <!-- UnallocatedCapacity:
          @since: 2.10.0
 
@@ -1589,6 +1573,22 @@
          The actual Host UUID used for the connection.
     -->
     <property name="HostID" type="ay" access="read"/>
+
+    <!-- Transport:
+         @since: 2.10.0
+
+         The transport type the device is connected with.
+
+         Known values include:
+         <variablelist>
+           <varlistentry><term>pcie</term><listitem><para>PCI Express Transport</para></listitem></varlistentry>
+           <varlistentry><term>rdma</term><listitem><para>RDMA Transport</para></listitem></varlistentry>
+           <varlistentry><term>fc</term><listitem><para>Fibre Channel Transport</para></listitem></varlistentry>
+           <varlistentry><term>tcp</term><listitem><para>TCP Transport</para></listitem></varlistentry>
+           <varlistentry><term>loop</term><listitem><para>Intra-host Transport (i.e., loopback)</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="Transport" type="s" access="read"/>
 
     <!-- TransportAddress:
          @since: 2.10.0

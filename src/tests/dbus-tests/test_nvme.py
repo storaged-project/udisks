@@ -295,8 +295,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(len(fguid), 0)
         rev = self.get_property_raw(drive_obj, '.NVMe.Controller', 'NVMeRevision')
         self.assertTrue(rev.startswith('1.'))
-        transport = self.get_property_raw(drive_obj, '.NVMe.Controller', 'Transport')
-        self.assertEqual(transport, 'loop')
         unalloc_cap = self.get_property_raw(drive_obj, '.NVMe.Controller', 'UnallocatedCapacity')
         self.assertEquals(unalloc_cap, 0)
 
@@ -516,6 +514,8 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(hostnqn, d['host_nqn'])
         hostid = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostID')
         self.assertEqual(hostid, d['host_id'])
+        transport = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'Transport')
+        self.assertEqual(transport, 'loop')
         tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
         self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
 
