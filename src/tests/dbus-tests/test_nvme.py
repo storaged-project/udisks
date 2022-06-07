@@ -103,26 +103,6 @@ def find_nvme_ns_devs_for_subnqn(subnqn):
 
     return ns_dev_paths
 
-
-def get_nvme_hostnqn():
-    """
-    Retrieves NVMe host NQN string from /etc/nvme/hostnqn or uses nvme-cli to generate
-    new one (stable, typically generated from machine DMI data) when not available.
-    """
-
-    hostnqn = None
-    try:
-        hostnqn = read_file('/etc/nvme/hostnqn')
-    except:
-        pass
-
-    if hostnqn is None or len(hostnqn.strip()) < 1:
-        ret, hostnqn = udiskstestcase.run_command('nvme gen-hostnqn')
-        if ret != 0:
-            raise RuntimeError("Cannot get host NQN: '%s %s'" % (hostnqn, err))
-
-    return hostnqn.strip()
-
 def setup_nvme_target(dev_paths, subnqn):
     """
     Sets up a new NVMe target loop device (using nvmetcli) on top of the
@@ -219,7 +199,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
                 path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
                 cls.loop_devs += ["/dev/%s" % loop_dev]
 
-        cls.hostnqn = get_nvme_hostnqn()
         setup_nvme_target(cls.loop_devs, cls.SUBNQN)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
@@ -228,7 +207,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             raise RuntimeError("Error disconnecting the '%s' subsystem NQN: '%s'" % (subnqn, out))
 
     def _nvme_connect(self):
-        ret, out = self.run_command("nvme connect --transport=loop --hostnqn=%s --nqn=%s" % (self.hostnqn, self.SUBNQN))
+        ret, out = self.run_command("nvme connect --transport=loop --nqn=%s" % self.SUBNQN)
         if ret != 0:
             raise RuntimeError("Error connecting to the NVMe target: %s" % out)
         nvme_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
