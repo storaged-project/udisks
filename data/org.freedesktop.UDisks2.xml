@@ -298,6 +298,32 @@
     <property name="HostID" type="ay" access="read"/>
 
     <!--
+        SetHostNQN:
+        @hostnqn: The Host NQN value to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the system-wide Host NQN string,
+    -->
+    <method name="SetHostNQN">
+      <arg name="hostnqn" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetHostID:
+        @hostid: The Host ID value to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the system-wide Host ID string,
+    -->
+    <method name="SetHostID">
+      <arg name="hostid" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
         Connect:
         @subsysnqn: The name for the NVMe subsystem to connect to.
         @transport: The network fabric used for a NVMe-over-Fabrics network.

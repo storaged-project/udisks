@@ -491,8 +491,172 @@ handle_connect (UDisksManagerNVMe     *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  UDisksObject *object;
+  const gchar *hostnqn;
+  const gchar *hostid;
+} WaitForHostNQNData;
+
+static UDisksObject *
+wait_for_hostnqn (UDisksDaemon *daemon,
+                  gpointer      user_data)
+{
+  WaitForHostNQNData *data = user_data;
+  UDisksManagerNVMe *manager;
+
+  manager = udisks_object_peek_manager_nvme (data->object);
+  if ((data->hostnqn && g_strcmp0 (udisks_manager_nvme_get_host_nqn (manager), data->hostnqn) == 0) ||
+      (data->hostid  && g_strcmp0 (udisks_manager_nvme_get_host_id (manager), data->hostid) == 0))
+    return g_object_ref (data->object);
+
+  return NULL;
+}
+
+static gboolean
+handle_set_host_nqn (UDisksManagerNVMe     *_manager,
+                     GDBusMethodInvocation *invocation,
+                     const gchar           *arg_hostnqn,
+                     GVariant              *arg_options)
+{
+  UDisksLinuxManagerNVMe *manager = UDISKS_LINUX_MANAGER_NVME (_manager);
+  UDisksObject *object;
+  uid_t caller_uid;
+  UDisksObject *wait_object = NULL;
+  WaitForHostNQNData wait_data;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (_manager, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (manager->daemon,
+                                                    NULL,
+                                                    "org.freedesktop.udisks2.nvme-set-hostnqn-id",
+                                                    arg_options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests setting new NVMe Host NQN value.
+                                                     */
+                                                    N_("Authentication is required to set NVMe Host NQN"),
+                                                    invocation))
+    goto out;
+
+  if (!bd_nvme_set_host_nqn (arg_hostnqn, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  wait_data.object = object;
+  wait_data.hostnqn = arg_hostnqn;
+  wait_data.hostid = NULL;
+
+  wait_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                    wait_for_hostnqn,
+                                                    &wait_data,
+                                                    NULL,
+                                                    UDISKS_DEFAULT_WAIT_TIMEOUT,
+                                                    &error);
+  if (wait_object == NULL)
+    {
+      g_prefix_error (&error, "Error waiting for new Host NQN value: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_manager_nvme_complete_set_host_nqn (_manager, invocation);
+
+ out:
+  if (wait_object != NULL)
+    g_object_unref (wait_object);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+handle_set_host_id (UDisksManagerNVMe     *_manager,
+                    GDBusMethodInvocation *invocation,
+                    const gchar           *arg_hostid,
+                    GVariant              *arg_options)
+{
+  UDisksLinuxManagerNVMe *manager = UDISKS_LINUX_MANAGER_NVME (_manager);
+  UDisksObject *object;
+  uid_t caller_uid;
+  UDisksObject *wait_object = NULL;
+  WaitForHostNQNData wait_data;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (_manager, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (manager->daemon,
+                                                    NULL,
+                                                    "org.freedesktop.udisks2.nvme-set-hostnqn-id",
+                                                    arg_options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests setting new NVMe Host ID value.
+                                                     */
+                                                    N_("Authentication is required to set NVMe Host ID"),
+                                                    invocation))
+    goto out;
+
+  if (!bd_nvme_set_host_id (arg_hostid, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  wait_data.object = object;
+  wait_data.hostnqn = NULL;
+  wait_data.hostid = arg_hostid;
+
+  wait_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                    wait_for_hostnqn,
+                                                    &wait_data,
+                                                    NULL,
+                                                    UDISKS_DEFAULT_WAIT_TIMEOUT,
+                                                    &error);
+  if (wait_object == NULL)
+    {
+      g_prefix_error (&error, "Error waiting for new Host ID value: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_manager_nvme_complete_set_host_id (_manager, invocation);
+
+ out:
+  if (wait_object != NULL)
+    g_object_unref (wait_object);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 manager_iface_init (UDisksManagerNVMeIface *iface)
 {
   iface->handle_connect = handle_connect;
+  iface->handle_set_host_nqn = handle_set_host_nqn;
+  iface->handle_set_host_id = handle_set_host_id;
 }
