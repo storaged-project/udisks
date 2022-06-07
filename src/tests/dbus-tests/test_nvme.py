@@ -523,3 +523,43 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl = self.get_object(ctrl_obj_path)
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
+
+    def test_hostnqn(self):
+        HOSTNQN_PATH = '/etc/nvme/hostnqn'
+        HOSTID_PATH = '/etc/nvme/hostid'
+        FAKE_HOSTNQN = 'nqn.2014-08.org.nvmexpress:uuid:beefbeef-beef-beef-beef-beefdeadbeef'
+        FAKE_HOSTID = 'beefbeef-beef-beef-beef-beefdeadbeef'
+
+        # save hostnqn and hostid files
+        try:
+            saved_hostnqn = read_file(HOSTNQN_PATH)
+            self.addCleanup(write_file, HOSTNQN_PATH, saved_hostnqn)
+        except:
+            self.addCleanup(self.remove_file, HOSTNQN_PATH, ignore_nonexistent=True)
+        try:
+            saved_hostid = read_file(HOSTID_PATH)
+            self.addCleanup(write_file, HOSTID_PATH, saved_hostid)
+        except:
+            self.addCleanup(self.remove_file, HOSTID_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTID_PATH, ignore_nonexistent=True)
+
+        # an external event, inotify watch on the daemon side
+        time.sleep(2)
+
+        manager = self.get_interface('/Manager', '.Manager.NVMe')
+        hostnqn = self.get_property_raw(manager, '.Manager.NVMe', 'HostNQN')
+        self.assertTrue(self.ay_to_str(hostnqn).startswith('nqn.2014-08.org.nvmexpress:uuid:'))
+        hostid = self.get_property_raw(manager, '.Manager.NVMe', 'HostID')
+        self.assertEqual(len(hostid), 1)  # the zero trailing byte
+
+        manager.SetHostNQN(self.str_to_ay(FAKE_HOSTNQN), self.no_options, dbus_interface=self.iface_prefix + '.Manager.NVMe')
+        manager.SetHostID(self.str_to_ay(FAKE_HOSTID), self.no_options, dbus_interface=self.iface_prefix + '.Manager.NVMe')
+        hostnqn = self.get_property_raw(manager, '.Manager.NVMe', 'HostNQN')
+        self.assertEqual(hostnqn, self.str_to_ay(FAKE_HOSTNQN))
+        hostid = self.get_property_raw(manager, '.Manager.NVMe', 'HostID')
+        self.assertEqual(hostid, self.str_to_ay(FAKE_HOSTID))
+
+        self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTID_PATH, ignore_nonexistent=True)
