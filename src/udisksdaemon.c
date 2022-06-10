@@ -326,12 +326,13 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
+  BDPluginSpec nvme_plugin = {BD_PLUGIN_NVME, NULL};
 
   /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
      Additional plugins are required by various modules, but they make sure
      plugins are loaded themselves. */
   BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
-                             &fs_plugin, &crypto_plugin, NULL};
+                             &fs_plugin, &crypto_plugin, &nvme_plugin, NULL};
   BDPluginSpec **plugin_p = NULL;
   error = NULL;
 
@@ -357,12 +358,10 @@ udisks_daemon_constructed (GObject *object)
         }
     else
       {
-        /* a missing plugin is okay, calling functions from it will fail, but
-           until that happens, life will just be great */
-        for (plugin_p=plugins; *plugin_p; plugin_p++)
+        for (plugin_p = plugins; *plugin_p; plugin_p++)
           if (!bd_is_plugin_available ((*plugin_p)->name))
-            udisks_warning ("Failed to load the '%s' libblockdev plugin",
-                            bd_get_plugin_name ((*plugin_p)->name));
+            udisks_error ("Failed to load the '%s' libblockdev plugin",
+                          bd_get_plugin_name ((*plugin_p)->name));
       }
     }
 

@@ -164,17 +164,9 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(GMODULE_CFLAGS)
   AC_SUBST(GMODULE_LIBS)
 
-  PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.25])
+  PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 2.99])
   AC_SUBST(BLOCKDEV_CFLAGS)
   AC_SUBST(BLOCKDEV_LIBS)
-
-  PKG_CHECK_MODULES(BLOCKDEV3, [blockdev >= 2.99],
-                    [have_libblockdev3=yes],
-                    [have_libblockdev3=no])
-  if test "x$have_libblockdev3" = "xyes"; then
-    AC_DEFINE([HAVE_LIBBLOCKDEV3], 1, [Defined when libblockdev-3 is available])
-  fi
-  AC_SUBST(HAVE_LIBBLOCKDEV3)
 
   PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
   AC_SUBST(LIBATASMART_CFLAGS)
@@ -665,6 +657,26 @@ if test "x$enable_daemon" = "xyes"; then
   if test "x$have_crypto" = "xno"; then
     AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
   fi
+
+  # libblockdev nvme
+  SAVE_CFLAGS=$CFLAGS
+  SAVE_LDFLAGS=$LDFLAGS
+
+  CFLAGS="$GLIB_CFLAGS"
+  LDFLAGS="$GLIB_LIBS"
+  AC_MSG_CHECKING([libblockdev-nvme presence])
+  AC_TRY_COMPILE([#include <blockdev/nvme.h>], [],
+                 [AC_MSG_RESULT([yes])
+                 have_nvme=yes],
+                 [AC_MSG_RESULT([no])
+                 have_nvme=no])
+
+  CFLAGS=$SAVE_CFLAGS
+  LDFLAGS=$SAVE_LDFLAGS
+
+  if test "x$have_nvme" = "xno"; then
+    AC_MSG_ERROR([BLOCKDEV NVMe support requested but header or library not found])
+  fi
 fi
 
 
@@ -792,7 +804,6 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
-        using libblockdev-3.0:      ${have_libblockdev3}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

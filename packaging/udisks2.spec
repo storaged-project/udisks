@@ -5,7 +5,7 @@
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             2.25
+%global libblockdev_version             2.99
 
 %define with_bcache                     1
 %define with_btrfs                      1
@@ -68,6 +68,7 @@ BuildRequires: libblockdev-swap-devel   >= %{libblockdev_version}
 BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
+BuildRequires: libblockdev-nvme-devel   >= %{libblockdev_version}
 BuildRequires: libmount-devel
 BuildRequires: libuuid-devel
 
@@ -78,6 +79,7 @@ Requires: libblockdev-swap   >= %{libblockdev_version}
 Requires: libblockdev-mdraid >= %{libblockdev_version}
 Requires: libblockdev-fs     >= %{libblockdev_version}
 Requires: libblockdev-crypto >= %{libblockdev_version}
+Requires: libblockdev-nvme   >= %{libblockdev_version}
 
 # Needed for the systemd-related macros used in this file
 %{?systemd_requires}

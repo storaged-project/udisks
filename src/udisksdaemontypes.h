@@ -119,6 +119,12 @@ typedef struct UDisksInhibitCookie UDisksInhibitCookie;
 struct _UDisksModuleManager;
 typedef struct _UDisksModuleManager UDisksModuleManager;
 
+struct _UDisksLinuxNVMeController;
+typedef struct _UDisksLinuxNVMeController UDisksLinuxNVMeController;
+
+struct _UDisksLinuxNVMeNamespace;
+typedef struct _UDisksLinuxNVMeNamespace UDisksLinuxNVMeNamespace;
+
 typedef struct _UDisksConfigManager        UDisksConfigManager;
 typedef struct _UDisksConfigManagerClass   UDisksConfigManagerClass;
 
@@ -162,11 +168,12 @@ typedef enum
  * UDisksLogLevel:
  * @UDISKS_LOG_LEVEL_DEBUG: Debug messages.
  * @UDISKS_LOG_LEVEL_INFO: Informational messages.
- * @UDISKS_LOG_LEVEL_NOTICE: Messages that the administrator should take notice of.
+ * @UDISKS_LOG_LEVEL_MESSAGE: Messages that the administrator should take notice of.
  * @UDISKS_LOG_LEVEL_WARNING: Warning messages.
+ * @UDISKS_LOG_LEVEL_CRITICAL: Critical warning messages.
  * @UDISKS_LOG_LEVEL_ERROR: Error messages.
  *
- * Logging levels. The level @UDISKS_LOG_LEVEL_NOTICE and above goes to syslog.
+ * Logging levels. The level @UDISKS_LOG_LEVEL_MESSAGE and above goes to syslog.
  *
  * Unlike g_warning() and g_error(), none of these logging levels causes the program to ever terminate.
  */

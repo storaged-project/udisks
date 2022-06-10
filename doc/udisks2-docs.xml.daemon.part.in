@@ -36,6 +36,7 @@
       <xi:include href="xml/udiskslinuxdrive.xml"/>
       <xi:include href="xml/udiskslinuxdriveata.xml"/>
       <xi:include href="xml/udiskslinuxdriveobject.xml"/>
+      <xi:include href="xml/udiskslinuxnvmecontroller.xml"/>
     </chapter>
     <chapter id="ref-daemon-mdraid">
       <title>Linux RAID</title>
@@ -52,5 +53,6 @@
       <xi:include href="xml/udiskslinuxswapspace.xml"/>
       <xi:include href="xml/udiskslinuxloop.xml"/>
       <xi:include href="xml/udiskslinuxblockobject.xml"/>
+      <xi:include href="xml/udiskslinuxnvmenamespace.xml"/>
     </chapter>
   </part>

@@ -60,6 +60,7 @@
 #include "udisksmodulemanager.h"
 #include "udisksmodule.h"
 #include "udisksmoduleobject.h"
+#include "udiskslinuxnvmenamespace.h"
 
 /**
  * SECTION:udiskslinuxblockobject
@@ -97,6 +98,7 @@ struct _UDisksLinuxBlockObject
   UDisksSwapspace *iface_swapspace;
   UDisksEncrypted *iface_encrypted;
   UDisksLoop *iface_loop;
+  UDisksNVMeNamespace *iface_nvme_namespace;
   GHashTable *module_ifaces;
 };
 
@@ -149,6 +151,8 @@ udisks_linux_block_object_finalize (GObject *_object)
     g_object_unref (object->iface_encrypted);
   if (object->iface_loop != NULL)
     g_object_unref (object->iface_loop);
+  if (object->iface_nvme_namespace != NULL)
+    g_object_unref (object->iface_nvme_namespace);
   if (object->module_ifaces != NULL)
     g_hash_table_destroy (object->module_ifaces);
 
@@ -845,6 +849,34 @@ loop_update (UDisksObject   *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+nvme_namespace_check (UDisksObject *object)
+{
+  UDisksLinuxBlockObject *block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
+
+  if (udisks_linux_device_subsystem_is_nvme (block_object->device) &&
+      g_udev_device_has_sysfs_attr (block_object->device->udev_device, "nsid"))
+    return TRUE;
+
+  return FALSE;
+}
+
+static void
+nvme_namespace_connect (UDisksObject *object)
+{
+}
+
+static gboolean
+nvme_namespace_update (UDisksObject   *object,
+                       const gchar    *uevent_action,
+                       GDBusInterface *_iface)
+{
+  udisks_linux_nvme_namespace_update (UDISKS_LINUX_NVME_NAMESPACE (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_block_object_uevent:
  * @object: A #UDisksLinuxBlockObject.
@@ -889,6 +921,8 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
                 UDISKS_TYPE_LINUX_PARTITION_TABLE, &object->iface_partition_table);
   update_iface (UDISKS_OBJECT (object), action, partition_check, partition_connect, partition_update,
                 UDISKS_TYPE_LINUX_PARTITION, &object->iface_partition);
+  update_iface (UDISKS_OBJECT (object), action, nvme_namespace_check, nvme_namespace_connect, nvme_namespace_update,
+                UDISKS_TYPE_LINUX_NVME_NAMESPACE, &object->iface_nvme_namespace);
 
   /* Attach interfaces from modules */
   module_manager = udisks_daemon_get_module_manager (object->daemon);

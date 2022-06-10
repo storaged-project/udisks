@@ -53,7 +53,7 @@ gboolean                  udisks_daemon_get_enable_tcrypt     (UDisksDaemon    *
 const gchar              *udisks_daemon_get_uuid              (UDisksDaemon    *daemon);
 
 /**
- * UDisksDaemonWaitFunc:
+ * UDisksDaemonWaitFuncGeneric:
  * @daemon: A #UDisksDaemon.
  * @user_data: The #gpointer passed to udisks_daemon_wait_for_object_sync().
  *

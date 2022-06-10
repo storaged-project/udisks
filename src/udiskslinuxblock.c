@@ -227,6 +227,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
 {
   GUdevDevice *whole_disk_block_device;
   const gchar *whole_disk_block_device_sysfs_path;
+  gchar **nvme_ctrls = NULL;
   gchar *ret;
   GList *objects = NULL;
   GList *l;
@@ -240,6 +241,25 @@ find_drive (GDBusObjectManagerServer  *object_manager,
   if (whole_disk_block_device == NULL)
     goto out;
   whole_disk_block_device_sysfs_path = g_udev_device_get_sysfs_path (whole_disk_block_device);
+
+  /* check for NVMe */
+  if (g_strcmp0 (g_udev_device_get_subsystem (whole_disk_block_device), "block") == 0)
+    {
+      GUdevDevice *parent_device;
+
+      parent_device = g_udev_device_get_parent (whole_disk_block_device);
+      if (parent_device && g_udev_device_has_sysfs_attr (parent_device, "subsysnqn") &&
+          g_str_has_prefix (g_udev_device_get_subsystem (parent_device), "nvme"))
+        {
+          /* 'parent_device' is a nvme subsystem,
+           * 'whole_disk_block_device' is a namespace
+           */
+          nvme_ctrls = bd_nvme_find_ctrls_for_ns (whole_disk_block_device_sysfs_path,
+                                                  g_udev_device_get_sysfs_attr (parent_device, "subsysnqn"),
+                                                  NULL, NULL, NULL);
+        }
+      g_clear_object (&parent_device);
+    }
 
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
@@ -258,12 +278,17 @@ find_drive (GDBusObjectManagerServer  *object_manager,
           const gchar *drive_sysfs_path;
 
           drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device->udev_device);
-          if (g_strcmp0 (whole_disk_block_device_sysfs_path, drive_sysfs_path) == 0)
+          if (g_strcmp0 (whole_disk_block_device_sysfs_path, drive_sysfs_path) == 0 ||
+              (nvme_ctrls && g_strv_contains ((const gchar * const *) nvme_ctrls, drive_sysfs_path)))
             {
               if (out_drive != NULL)
                 *out_drive = udisks_object_get_drive (UDISKS_OBJECT (object));
               ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_list_free_full (drive_devices, g_object_unref);
+              /* FIXME: NVMe namespace may be provided by multiple controllers within
+               *  a NVMe subsystem, however the org.freedesktop.UDisks2.Block.Drive
+               *  property may only contain single object path.
+               */
               goto out;
             }
         }
@@ -273,6 +298,8 @@ find_drive (GDBusObjectManagerServer  *object_manager,
  out:
   g_list_free_full (objects, g_object_unref);
   g_clear_object (&whole_disk_block_device);
+  if (nvme_ctrls)
+    g_strfreev (nvme_ctrls);
   return ret;
 }
 
@@ -3131,11 +3158,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   device_name = udisks_block_dup_device (block);
 
   /* First wipe the device... */
-#ifdef HAVE_LIBBLOCKDEV3
   if (! bd_fs_wipe (device_name, TRUE, FALSE, &error))
-#else
-  if (! bd_fs_wipe_force (device_name, TRUE, FALSE, &error))
-#endif
     {
       if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
         /* no signature to remove, ignore */

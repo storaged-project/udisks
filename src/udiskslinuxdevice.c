@@ -75,6 +75,8 @@ udisks_linux_device_finalize (GObject *object)
   g_clear_object (&device->udev_device);
   g_free (device->ata_identify_device_data);
   g_free (device->ata_identify_packet_device_data);
+  bd_nvme_controller_info_free (device->nvme_ctrl_info);
+  bd_nvme_namespace_info_free (device->nvme_ns_info);
 
   G_OBJECT_CLASS (udisks_linux_device_parent_class)->finalize (object);
 }
@@ -155,6 +157,9 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
                                   GError            **error)
 {
   gboolean ret = FALSE;
+  const gchar *device_file;
+
+  device_file = g_udev_device_get_device_file (device->udev_device);
 
   /* Get IDENTIFY DEVICE / IDENTIFY PACKET DEVICE data for ATA devices */
   if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
@@ -162,6 +167,52 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
       g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
     {
       if (!probe_ata (device, cancellable, error))
+        goto out;
+    }
+  else
+  /* NVMe controller device */
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "nvme") == 0 &&
+      g_udev_device_has_sysfs_attr (device->udev_device, "subsysnqn") &&
+      g_udev_device_has_property (device->udev_device, "NVME_TRTYPE") &&
+      device_file != NULL)
+    {
+      /* Even though the device node exists and udev has finished probing,
+       * the device might not be fully usable at this point. The sysfs
+       * attr 'state' indicates actual state with 'live' being the healthy state.
+       *
+       * Kernel 5.18 will trigger extra uevent once the controller state reaches
+       * 'live' with a 'NVME_EVENT=connected' attribute attached:
+       *
+       *    commit 20d64911e7580f7e29c0086d67860c18307377d7
+       *    Author: Martin Belanger <martin.belanger@dell.com>
+       *    Date:   Tue Feb 8 14:33:45 2022 -0500
+       *
+       *    nvme: send uevent on connection up
+       *
+       * See also kernel drivers/nvme/host/core.c: nvme_sysfs_show_state()
+       */
+
+      /* TODO: shall we trigger uevent on all namespaces once NVME_EVENT=connected is received? */
+      device->nvme_ctrl_info = bd_nvme_get_controller_info (device_file, error);
+      if (!device->nvme_ctrl_info)
+        {
+          if (error && g_error_matches (*error, BD_NVME_ERROR, BD_NVME_ERROR_BUSY))
+            {
+              g_clear_error (error);
+            }
+          else
+            goto out;
+        }
+    }
+  else
+  /* NVMe namespace block device */
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
+      g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
+      udisks_linux_device_subsystem_is_nvme (device) &&
+      device_file != NULL)
+    {
+      device->nvme_ns_info = bd_nvme_get_namespace_info (device_file, error);
+      if (!device->nvme_ns_info)
         goto out;
     }
 
@@ -346,4 +397,39 @@ udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDevice  *device,
   g_free (str);
 
   return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_device_subsystem_is_nvme:
+ * @device: A #UDisksLinuxDevice.
+ *
+ * Walks up the device hierarchy and checks if @device is part of a NVMe topology.
+ *
+ * Returns: %TRUE in case of a NVMe device, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_subsystem_is_nvme (UDisksLinuxDevice *device)
+{
+  GUdevDevice *parent;
+
+  parent = g_object_ref (device->udev_device);
+  while (parent)
+    {
+      const gchar *subsystem;
+      GUdevDevice *d;
+
+      subsystem = g_udev_device_get_subsystem (parent);
+      if (subsystem && g_str_has_prefix (subsystem, "nvme"))
+        {
+          g_object_unref (parent);
+          return TRUE;
+        }
+      d = parent;
+      parent = g_udev_device_get_parent (d);
+      g_object_unref (d);
+    }
+
+  return FALSE;
 }

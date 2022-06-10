@@ -26,3 +26,5 @@ udisks_crypttab_entry_get_type
 udisks_crypttab_monitor_get_type
 udisks_linux_mdraid_object_get_type
 udisks_linux_mdraid_get_type
+udisks_linux_nvme_controller_get_type
+udisks_linux_nvme_namespace_get_type

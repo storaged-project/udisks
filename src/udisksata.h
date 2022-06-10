@@ -92,7 +92,7 @@ gboolean udisks_ata_send_command_sync (gint                       fd,
 
 gboolean udisks_ata_get_pm_state      (const gchar               *device,
                                        GError                   **error,
-                                       guchar                    *count);
+                                       guchar                    *pm_state);
 
 G_END_DECLS
 

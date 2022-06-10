@@ -373,6 +373,8 @@
       <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
       <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Loop.xml"/>
       <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.NVMe.Controller.xml"/>
+      <xi:include href="xml/udisks-generated-doc-org.freedesktop.UDisks2.NVMe.Namespace.xml"/>
       <!-- LSM_DBUS_INTERFACE -->
       <!-- LVM2_DBUS_INTERFACE -->
       <!-- ISCSI_DBUS_INTERFACE -->
@@ -403,6 +405,8 @@
       <xi:include href="xml/UDisksSwapspace.xml"/>
       <xi:include href="xml/UDisksEncrypted.xml"/>
       <xi:include href="xml/UDisksLoop.xml"/>
+      <xi:include href="xml/UDisksNVMeController.xml"/>
+      <xi:include href="xml/UDisksNVMeNamespace.xml"/>
       <!-- LSM_GENERATED_CODE -->
       <!-- LVM2_GENERATED_CODE -->
       <!-- ISCSI_GENERATED_CODE -->
