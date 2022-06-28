@@ -1194,15 +1194,6 @@ handle_mount (UDisksFilesystem      *filesystem,
                                          0,
                                          NULL /* cancellable */);
 
-  if (g_strcmp0 (fs_type_to_use, "ntfs") == 0)
-    {
-      /* Prefer the new 'ntfs3' kernel driver and fall back to generic 'ntfs'
-       * (ntfs3g or the legacy kernel 'ntfs' driver) if not available.
-       */
-      g_free (fs_type_to_use);
-      fs_type_to_use = g_strdup ("ntfs3,ntfs");
-    }
-
   if (!bd_fs_mount (device, mount_point_to_use, fs_type_to_use, mount_options_to_use, NULL, &error))
     {
       /* ugh, something went wrong.. we need to clean up the created mount point */
