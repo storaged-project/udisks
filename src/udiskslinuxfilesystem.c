@@ -452,13 +452,17 @@ is_allowed_filesystem (const gchar *fstype)
  * calculate_fs_type: <internal>
  * @block: A #UDisksBlock.
  * @given_options: The a{sv} #GVariant.
- * @fs_signature: The probed filesystem signature.
- * @fs_type: The target filesystem type to use for mounting.
+ * @fs_signature: A place to store the probed filesystem signature.
+ * @fs_type: A place to store the specific filesystem type to use for mounting. %NULL indicates no preference in relation to @fs_signature.
  * @error: Return location for error or %NULL.
  *
- * Retrieves the actual filesystem type (superblock signature) and calculates
- * the file system type to use (may be "auto"). The resulting values are
- * valid UTF-8 strings, free them with g_free().
+ * Retrieves the actual filesystem type (superblock signature) and an optional
+ * specified filesystem type. Under normal circumstances only the signature
+ * is returned if known and @fs_type set to %NULL. In case of an explicit override
+ * the @fs_type is set to a specific value. In case a filesystem signature
+ * is unknown and no override requested, the @fs_type is set to "auto".
+ *
+ * The resulting values are valid UTF-8 strings, free them with g_free().
  *
  * Returns: %TRUE in case of success with @fs_signature and @fs_type set, %FALSE in case of a failure and @error being set.
  */
@@ -474,6 +478,9 @@ calculate_fs_type (UDisksBlock  *block,
 
   g_warn_if_fail (fs_signature != NULL);
   g_warn_if_fail (fs_type != NULL);
+
+  *fs_type = NULL;
+  *fs_signature = NULL;
 
   if (block != NULL)
     probed_fs_type = udisks_block_get_id_type (block);
@@ -513,22 +520,22 @@ calculate_fs_type (UDisksBlock  *block,
                            requested_fs_type);
               return FALSE;
             }
+          *fs_type = g_ascii_strdown (requested_fs_type, -1);
         }
-
-      *fs_type = g_strdup (requested_fs_type);
     }
   else
     {
-      if (probed_fs_type != NULL && strlen (probed_fs_type) > 0)
-        *fs_type = g_strdup (probed_fs_type);
-      else
+      if (probed_fs_type == NULL || strlen (probed_fs_type) == 0)
         *fs_type = g_strdup ("auto");
-    }
+     }
 
-  *fs_signature = g_strdup (probed_fs_type);
+  if (probed_fs_type != NULL && strlen (probed_fs_type) > 0)
+    *fs_signature = g_ascii_strdown (probed_fs_type, -1);
 
-  g_warn_if_fail (g_utf8_validate (*fs_type, -1, NULL));
-  g_warn_if_fail (g_utf8_validate (*fs_signature, -1, NULL));
+  if (*fs_type)
+    g_warn_if_fail (g_utf8_validate (*fs_type, -1, NULL));
+  if (*fs_signature)
+    g_warn_if_fail (g_utf8_validate (*fs_signature, -1, NULL));
 
   return TRUE;
 }
@@ -1019,9 +1026,11 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
   const gchar *probed_fs_usage = NULL;
   gchar *fs_type_to_use = NULL;
   gchar *fs_signature = NULL;
-  gchar *mount_options_to_use = NULL;
+  UDisksMountOptionsEntry **mount_options;
+  UDisksMountOptionsEntry **mount_options_i;
   UDisksBaseJob *job = NULL;
   GError *error = NULL;
+  gboolean success;
 
   g_warn_if_fail (mount_point_to_use != NULL);
   g_warn_if_fail (mpoint_persistent != NULL);
@@ -1122,17 +1131,18 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
     }
 
   /* Calculate mount options (guaranteed to be valid UTF-8) */
-  mount_options_to_use = udisks_linux_calculate_mount_options (daemon,
-                                                               block,
-                                                               caller_uid,
-                                                               fs_type_to_use,
-                                                               options,
-                                                               &error);
-  if (mount_options_to_use == NULL)
+  mount_options = udisks_linux_calculate_mount_options (daemon,
+                                                        block,
+                                                        caller_uid,
+                                                        fs_signature,
+                                                        fs_type_to_use,
+                                                        options,
+                                                        &error);
+  g_free (fs_signature);
+  g_free (fs_type_to_use);
+  if (mount_options == NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
-      g_free (fs_signature);
-      g_free (fs_type_to_use);
       return FALSE;
     }
 
@@ -1142,31 +1152,45 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
                                          0,
                                          NULL /* cancellable */);
 
-  if (!bd_fs_mount (device, *mount_point_to_use, fs_type_to_use, mount_options_to_use, NULL, &error))
+  success = FALSE;
+  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
     {
-      /* ugh, something went wrong.. we need to clean up the created mount point */
-      if (g_rmdir (*mount_point_to_use) != 0)
-        udisks_warning ("Error removing directory %s: %m", *mount_point_to_use);
-
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error mounting %s at %s: %s",
-                                             device,
-                                             *mount_point_to_use,
-                                             error->message);
-      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_clear_error (&error);
-      g_free (fs_signature);
-      g_free (fs_type_to_use);
-      return FALSE;
+      if (!bd_fs_mount (device,
+                        *mount_point_to_use,
+                        (*mount_options_i)->fs_type,
+                        (*mount_options_i)->options,
+                        NULL, &error))
+        {
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_UNKNOWN_FS) &&
+              *(mount_options_i + sizeof (void *)))
+            {
+              /* Unknown filesystem, continue to the next one unless this is the last entry */
+              g_clear_error (&error);
+              continue;
+            }
+          /* Clean up the created mount point */
+          if (g_rmdir (*mount_point_to_use) != 0)
+            udisks_warning ("Error removing directory %s: %m", *mount_point_to_use);
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error mounting %s at %s: %s",
+                                                 device,
+                                                 *mount_point_to_use,
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          g_clear_error (&error);
+          break;
+        }
+      success = TRUE;
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+      break;
     }
 
-  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
-
-  g_free (fs_signature);
-  g_free (fs_type_to_use);
-  return TRUE;
+  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
+    udisks_mount_options_entry_free (*mount_options_i);
+  g_free (mount_options);
+  return success;
 }
 
 

@@ -134,6 +134,23 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
     }
 }
 
+/*
+ * udisks_mount_options_entry_free:
+ * @entry: A #UDisksMountOptionsEntry.
+ *
+ * Frees the mount options entry.
+ */
+void
+udisks_mount_options_entry_free (UDisksMountOptionsEntry *entry)
+{
+  if (entry)
+    {
+      g_free (entry->fs_type);
+      g_free (entry->options);
+      g_free (entry);
+    }
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 #define MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME "mount_options.conf"
@@ -924,56 +941,32 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/*
- * udisks_linux_calculate_mount_options: <internal>
- * @daemon: A #UDisksDaemon.
- * @block: A #UDisksBlock.
- * @caller_uid: The uid of the caller making the request.
- * @fs_type: The filesystem type to use or %NULL.
- * @options: Options requested by the caller.
- * @error: Return location for error or %NULL.
- *
- * Calculates the mount option string to use. Ensures (by returning an
- * error) that only safe options are used.
- *
- * Returns: A string with mount options or %NULL if @error is set. Free with g_free().
- */
-gchar *
-udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
-                                      UDisksBlock   *block,
-                                      uid_t          caller_uid,
-                                      const gchar   *fs_type,
-                                      GVariant      *options,
-                                      GError       **error)
+static UDisksMountOptionsEntry *
+calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
+                                     UDisksBlock   *block,
+                                     UDisksLinuxBlockObject *object,
+                                     uid_t          caller_uid,
+                                     gboolean       shared_fs,
+                                     const gchar   *fs_type,
+                                     GVariant      *options,
+                                     GError       **error)
 {
+  UDisksMountOptionsEntry *entry;
   FSMountOptions *fsmo;
   gchar **allow_uid_self = NULL;
   gchar **allow_gid_self = NULL;
   GVariant *options_to_use;
   GVariantIter iter;
-  UDisksLinuxBlockObject *object = NULL;
-  UDisksLinuxDevice *device = NULL;
-  gboolean shared_fs = FALSE;
   gchar *options_to_use_str = NULL;
   gchar *key, *value;
-  gchar *fs_type_l;
   GString *str;
 
-  object = udisks_daemon_util_dup_object (block, NULL);
-  device = udisks_linux_block_object_get_device (object);
-  if (device != NULL && device->udev_device != NULL &&
-      g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
-    shared_fs = TRUE;
+  entry = g_new0 (UDisksMountOptionsEntry, 1);
 
-  fs_type_l = g_ascii_strdown (fs_type, -1);
-  fsmo = compute_mount_options_for_fs_type (daemon, block, object, fs_type_l);
-  g_free (fs_type_l);
+  fsmo = compute_mount_options_for_fs_type (daemon, block, object, fs_type);
 
   allow_uid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_UID_SELF);
   allow_gid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_GID_SELF);
-
-  g_clear_object (&device);
-  g_clear_object (&object);
 
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
@@ -1045,9 +1038,88 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   g_strfreev (allow_uid_self);
   g_strfreev (allow_gid_self);
 
-  g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
+  if (!options_to_use_str)
+    return NULL;
 
-  return options_to_use_str;
+  g_assert (g_utf8_validate (options_to_use_str, -1, NULL));
+
+  entry->fs_type = g_strdup (fs_type);
+  entry->options = options_to_use_str;
+
+  return entry;
+}
+
+/*
+ * udisks_linux_calculate_mount_options: <internal>
+ * @daemon: A #UDisksDaemon.
+ * @block: A #UDisksBlock.
+ * @caller_uid: The uid of the caller making the request.
+ * @fs_signature: Probed filesystem signature or %NULL if unavailable.
+ * @fs_type: The preferred filesystem type to use or %NULL.
+ * @options: Options requested by the caller.
+ * @error: Return location for error or %NULL.
+ *
+ * Calculates filesystem types for a given @fs_signature in order of preference and mount options for each one of them.
+
+ * Calculates the mount option string to use. Ensures (by returning an
+ * error) that only safe options are used.
+ *
+ * Returns: A string with mount options or %NULL if @error is set. Free with g_free().
+ */
+UDisksMountOptionsEntry **
+udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
+                                      UDisksBlock   *block,
+                                      uid_t          caller_uid,
+                                      const gchar   *fs_signature,
+                                      const gchar   *fs_type,
+                                      GVariant      *options,
+                                      GError       **error)
+{
+  UDisksLinuxBlockObject *object = NULL;
+  UDisksLinuxDevice *device = NULL;
+  gboolean shared_fs = FALSE;
+  GPtrArray *ptr_array;
+
+  ptr_array = g_ptr_array_new_with_free_func ((GDestroyNotify) udisks_mount_options_entry_free);
+  object = udisks_daemon_util_dup_object (block, NULL);
+  device = udisks_linux_block_object_get_device (object);
+  if (device != NULL && device->udev_device != NULL &&
+      g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
+    shared_fs = TRUE;
+
+
+
+    {
+      UDisksMountOptionsEntry *entry;
+
+      entry = calculate_mount_options_for_fs_type (daemon,
+                                                   block,
+                                                   object,
+                                                   caller_uid,
+                                                   shared_fs,
+                                                   fs_type ? fs_type : fs_signature,
+                                                   options,
+                                                   error);
+      if (!entry)
+        {
+          /* NB: failure computing any of the filesystem types will result
+           * in failure of the whole computation.
+           */
+          g_ptr_array_free (ptr_array, TRUE);
+          ptr_array = NULL;
+          /* break; */
+        } else
+      g_ptr_array_add (ptr_array, entry);
+    }
+
+  g_clear_object (&device);
+  g_clear_object (&object);
+
+  if (!ptr_array)
+    return NULL;
+
+  g_ptr_array_add (ptr_array, NULL);  /* trailing NULL element */
+  return (UDisksMountOptionsEntry **) g_ptr_array_free (ptr_array, FALSE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
