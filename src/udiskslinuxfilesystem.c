@@ -368,6 +368,7 @@ static const gchar *well_known_filesystems[] =
   "vfat",
   "exfat",
   "ntfs",
+  "ntfs3",
   NULL,
 };
 
