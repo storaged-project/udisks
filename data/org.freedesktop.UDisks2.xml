@@ -2095,7 +2095,10 @@
         option and mount options (a comma-separated string) can be
         given in @options option. Note that both the mount options and
         filesystem types are validated against a (small) whitelist to
-        avoid unexpected privilege escalation
+        avoid unexpected privilege escalation. The filesystem type is
+        by default determined by the #org.freedesktop.UDisks2.Block:IdType
+        property. The @fstype option doesn't typically need to be
+        specified, primarily intended as an override in corner cases.
 
         If the device in question is referenced in the
         <filename>/etc/fstab</filename> file, the
