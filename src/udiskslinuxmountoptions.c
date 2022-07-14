@@ -54,6 +54,7 @@ typedef struct
 {
   gchar **defaults;
   gchar **allow;
+  gchar **drivers;
 } FSMountOptions;
 
 static void
@@ -63,6 +64,7 @@ free_fs_mount_options (FSMountOptions *options)
     {
       g_strfreev (options->defaults);
       g_strfreev (options->allow);
+      g_strfreev (options->drivers);
       g_free (options);
     }
 }
@@ -113,6 +115,7 @@ append_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
 
   strv_append_unique (src->defaults, &dest->defaults);
   strv_append_unique (src->allow, &dest->allow);
+  /* appending not allowed for 'drivers' */
 }
 
 /* Similar to append_fs_mount_options() but replaces the member data instead of appending */
@@ -131,6 +134,11 @@ override_fs_mount_options (const FSMountOptions *src, FSMountOptions *dest)
     {
       g_strfreev (dest->allow);
       dest->allow = g_strdupv (src->allow);
+    }
+  if (src->drivers)
+    {
+      g_strfreev (dest->drivers);
+      dest->drivers = g_strdupv (src->drivers);
     }
 }
 
@@ -158,9 +166,47 @@ udisks_mount_options_entry_free (UDisksMountOptionsEntry *entry)
 #define MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS  "defaults"
 #define MOUNT_OPTIONS_KEY_DEFAULTS           "defaults"
 #define MOUNT_OPTIONS_KEY_ALLOW              "allow"
+#define MOUNT_OPTIONS_KEY_DRIVERS            "drivers"
 #define MOUNT_OPTIONS_ARG_UID_SELF           "$UID"
 #define MOUNT_OPTIONS_ARG_GID_SELF           "$GID"
 #define UDEV_MOUNT_OPTIONS_PREFIX            "UDISKS_MOUNT_OPTIONS_"
+#define FS_SIGNATURE_DRIVER_SEP              ":"
+
+
+/* transfer none */
+static GHashTable *
+get_options_for_block (GHashTable  *opts,
+                       UDisksBlock *block)
+{
+  GHashTable *block_options = NULL;
+  const gchar *block_device;
+  const gchar * const *block_symlinks;
+  GList *keys;
+  GList *l;
+
+  if (!block)
+    return NULL;
+
+  block_device = udisks_block_get_device (block);
+  block_symlinks = udisks_block_get_symlinks (block);
+
+  keys = g_hash_table_get_keys (opts);
+  g_warn_if_fail (keys != NULL);
+  for (l = keys; l != NULL; l = l->next)
+    {
+      if (!l->data || g_str_equal (l->data, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
+        continue;
+      if (g_str_equal (l->data, block_device) ||
+          (block_symlinks && g_strv_contains (block_symlinks, l->data)))
+        {
+          block_options = g_hash_table_lookup (opts, l->data);
+          break;
+        }
+    }
+  g_list_free (keys);
+
+  return block_options;
+}
 
 /*
  * compute_block_level_mount_options: <internal>
@@ -202,32 +248,7 @@ compute_block_level_mount_options (GHashTable      *opts,
     }
 
   /* Match specific block device */
-  block_options = NULL;
-  if (block)
-    {
-      const gchar *block_device;
-      const gchar * const *block_symlinks;
-      GList *keys;
-      GList *l;
-
-      block_device = udisks_block_get_device (block);
-      block_symlinks = udisks_block_get_symlinks (block);
-
-      keys = g_hash_table_get_keys (opts);
-      g_warn_if_fail (keys != NULL);
-      for (l = keys; l != NULL; l = l->next)
-        {
-          if (!l->data || g_str_equal (l->data, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS))
-            continue;
-          if (g_str_equal (l->data, block_device) ||
-              (block_symlinks && g_strv_contains (block_symlinks, l->data)))
-            {
-              block_options = g_hash_table_lookup (opts, l->data);
-              break;
-            }
-        }
-      g_list_free (keys);
-    }
+  block_options = get_options_for_block (opts, block);
 
   /* Block device specific options should fully override "general" options per-member basis */
   if (block_options)
@@ -247,14 +268,65 @@ compute_block_level_mount_options (GHashTable      *opts,
 }
 
 /*
+ * compute_block_level_fs_drivers: <internal>
+ * @daemon: A #UDisksDaemon.
+ * @block: A #UDisksBlock.
+ * @fs_signature: The filesystem signature to match.
+ *
+ * Calculate filesystem drivers for the given level of overrides. Matches the block
+ * device-specific options on top of the defaults.
+ *
+ * Returns: (transfer full) (array zero-terminated=1): list of filesystem drivers. Free with g_strfreev().
+ */
+static gchar **
+compute_block_level_fs_drivers (GHashTable      *opts,
+                                UDisksBlock     *block,
+                                const gchar     *fs_signature)
+{
+  GHashTable *general_options;
+  GHashTable *block_options;
+  gchar **drivers = NULL;
+
+  /* Compute general defaults first */
+  general_options = g_hash_table_lookup (opts, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+  if (general_options)
+    {
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (general_options, fs_signature);
+      if (o)
+        drivers = g_strdupv (o->drivers);
+    }
+
+  /* Match specific block device */
+  block_options = get_options_for_block (opts, block);
+
+  /* Block device specific options should fully override "general" options per-member basis */
+  if (block_options)
+    {
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (block_options, fs_signature);
+      if (o)
+        {
+          g_strfreev (drivers);
+          drivers = g_strdupv (o->drivers);
+        }
+    }
+
+  return drivers;
+}
+
+/*
  * compute_mount_options_for_fs_type: <internal>
  * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
  * @object: A #UDisksLinuxBlockObject.
+ * @overrides: Config file overrides.
  * @fstype: The filesystem type to use or %NULL.
  *
- * Calculate mount options across different levels of overrides
- * (builtin, global config, local user config).
+ * Calculate mount options across different levels of overrides (builtin,
+ * global config, local user config).
  *
  * Returns: (transfer full): Newly allocated #FSMountOptions options. Free with free_fs_mount_options().
  */
@@ -262,19 +334,16 @@ static FSMountOptions *
 compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
                                    UDisksBlock            *block,
                                    UDisksLinuxBlockObject *object,
+                                   GHashTable             *overrides,
                                    const gchar            *fstype)
 {
-  UDisksConfigManager *config_manager;
   UDisksLinuxDevice *device;
   GHashTable *builtin_opts;
-  GHashTable *overrides;
   FSMountOptions *fsmo;
   FSMountOptions *fsmo_any;
-  gchar *config_file_path;
+  GHashTable *udev_overrides;
   GError *error = NULL;
   gboolean changed = FALSE;
-
-  config_manager = udisks_daemon_get_config_manager (daemon);
 
   /* Builtin options, two-level hashtable */
   builtin_opts = g_object_get_data (G_OBJECT (daemon), "mount-options");
@@ -285,42 +354,25 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
   compute_block_level_mount_options (builtin_opts, block, fstype, fsmo, fsmo_any);
 
   /* Global config file overrides, two-level hashtable */
-  config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
-                                       MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
-  overrides = mount_options_parse_config_file (config_file_path, &error);
   if (overrides)
-    {
-      changed = compute_block_level_mount_options (overrides, block, fstype, fsmo, fsmo_any);
-      g_hash_table_unref (overrides);
-    }
-  else
-    {
-      if (! g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT) /* not found */ &&
-          ! g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED) /* empty file */ )
-        {
-          udisks_warning ("Error reading global mount options config file %s: %s",
-                          config_file_path, error->message);
-        }
-      g_clear_error (&error);
-    }
-  g_free (config_file_path);
+    changed = compute_block_level_mount_options (overrides, block, fstype, fsmo, fsmo_any);
 
   /* udev properties, single-level hashtable */
   device = udisks_linux_block_object_get_device (object);
-  overrides = mount_options_get_from_udev (device, &error);
-  if (overrides)
+  udev_overrides = mount_options_get_from_udev (device, &error);
+  if (udev_overrides)
     {
       FSMountOptions *o;
 
-      o = g_hash_table_lookup (overrides, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
+      o = g_hash_table_lookup (udev_overrides, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS);
       override_fs_mount_options (o, fsmo_any);
       changed = changed || o != NULL;
 
-      o = fstype ? g_hash_table_lookup (overrides, fstype) : NULL;
+      o = fstype ? g_hash_table_lookup (udev_overrides, fstype) : NULL;
       override_fs_mount_options (o, fsmo);
       changed = changed || o != NULL;
 
-      g_hash_table_unref (overrides);
+      g_hash_table_unref (udev_overrides);
     }
   else
     {
@@ -343,6 +395,93 @@ compute_mount_options_for_fs_type (UDisksDaemon           *daemon,
     }
 
   return fsmo;
+}
+
+/*
+ * compute_drivers: <internal>
+ * @daemon: A #UDisksDaemon.
+ * @block: A #UDisksBlock.
+ * @object: A #UDisksLinuxBlockObject.
+ * @overrides: Config file overrides.
+ * @fs_signature: Probed filesystem signature or %NULL if unavailable.
+ * @fs_type: The preferred filesystem type to use or %NULL.
+ *
+ * Calculate filesystem drivers for the filesystem signature and preferred filesystem type.
+ *
+ * Returns: (transfer full) (array zero-terminated=1): list of filesystem drivers. Free with g_strfreev().
+ */
+static gchar **
+compute_drivers (UDisksDaemon           *daemon,
+                 UDisksBlock            *block,
+                 UDisksLinuxBlockObject *object,
+                 GHashTable             *overrides,
+                 const gchar            *fs_signature,
+                 const gchar            *fs_type)
+{
+  UDisksLinuxDevice *device;
+  GHashTable *builtin_opts;
+  GHashTable *udev_overrides;
+  GError *error = NULL;
+  gchar **drivers;
+
+  /* No probed filesystem signature available or specific filesystem type is requested */
+  if (!fs_signature || fs_type)
+    {
+      drivers = g_new0 (gchar *, 2);
+      *drivers = g_strdup (fs_type);
+      return drivers;
+    }
+
+  /* Builtin options, two-level hashtable */
+  builtin_opts = g_object_get_data (G_OBJECT (daemon), "mount-options");
+  g_return_val_if_fail (builtin_opts != NULL, NULL);
+  drivers = compute_block_level_fs_drivers (builtin_opts, block, fs_signature);
+
+  /* Global config file overrides, two-level hashtable */
+  if (overrides)
+    {
+      gchar **d;
+
+      d = compute_block_level_fs_drivers (overrides, block, fs_signature);
+      if (d)
+        {
+          g_strfreev (drivers);
+          drivers = d;
+        }
+    }
+
+  /* udev properties, single-level hashtable */
+  device = udisks_linux_block_object_get_device (object);
+  udev_overrides = mount_options_get_from_udev (device, &error);
+  if (udev_overrides)
+    {
+      FSMountOptions *o;
+
+      o = g_hash_table_lookup (udev_overrides, fs_signature);
+      if (o && o->drivers)
+        {
+          g_strfreev (drivers);
+          drivers = g_strdupv (o->drivers);
+        }
+
+      g_hash_table_unref (udev_overrides);
+    }
+  else
+    {
+      udisks_warning ("Error getting udev mount options: %s",
+                      error->message);
+      g_clear_error (&error);
+    }
+  g_object_unref (device);
+
+  /* No drivers configured for the specific fs_signature, use the signature itself */
+  if (!drivers)
+    {
+      drivers = g_new0 (gchar *, 2);
+      *drivers = g_strdup (fs_signature);
+    }
+
+  return drivers;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -412,6 +551,11 @@ extract_fs_type (const gchar *key, const gchar **group)
       *group = MOUNT_OPTIONS_KEY_ALLOW;
       return g_strndup (key, strlen (key) - strlen (MOUNT_OPTIONS_KEY_ALLOW) - 1);
     }
+  if (g_str_has_suffix (key, "_" MOUNT_OPTIONS_KEY_DRIVERS))
+    {
+      *group = MOUNT_OPTIONS_KEY_DRIVERS;
+      return g_strndup (key, strlen (key) - strlen (MOUNT_OPTIONS_KEY_DRIVERS) - 1);
+    }
 
   /* invalid key name */
   *group = NULL;
@@ -435,6 +579,18 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
     }
   g_warn_if_fail (group != NULL);
 
+  /* Trim equal 'fs_signature:fs_type' strings */
+  if (strstr (fs_type, FS_SIGNATURE_DRIVER_SEP))
+    {
+      gchar **split = g_strsplit (fs_type, FS_SIGNATURE_DRIVER_SEP, 2);
+      if (g_strv_length (split) == 2 && g_strcmp0 (split[0], split[1]) == 0)
+        {
+          g_free (fs_type);
+          fs_type = g_strdup (split[0]);
+        }
+      g_strfreev (split);
+    }
+
   ent = g_hash_table_lookup (mount_options, fs_type);
   if (!ent)
     {
@@ -442,9 +598,16 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
       g_hash_table_replace (mount_options, g_strdup (fs_type), ent);
     }
 
-  opts = parse_mount_options_string (value,
-                                     /* strip empty values for _allow groups for easier matching */
-                                     !g_str_equal (group, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS));
+  if (g_str_equal (group, MOUNT_OPTIONS_KEY_DRIVERS))
+    {
+      opts = g_strsplit (value, ",", -1);
+    }
+  else
+    {
+      opts = parse_mount_options_string (value,
+                                         /* strip empty values for _allow groups for easier matching */
+                                         !g_str_equal (group, MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS));
+    }
 
 #define ASSIGN_OPTS(g,p) \
   if (g_str_equal (group, g)) \
@@ -459,7 +622,8 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
   else
 
   ASSIGN_OPTS (MOUNT_OPTIONS_KEY_ALLOW, allow)
-  ASSIGN_OPTS (MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS, defaults)
+  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_DEFAULTS, defaults)
+  ASSIGN_OPTS (MOUNT_OPTIONS_KEY_DRIVERS, drivers)
     {
       /* should be caught by extract_fs_type() already */
       g_warning ("parse_key_value_pair: Unmatched key '%s' found, ignoring", key);
@@ -614,9 +778,8 @@ mount_options_get_from_udev (UDisksLinuxDevice *device, GError **error)
  * Get built-in set of default mount options. This function will never
  * fail, the process is aborted in case of a parse error.
  *
- * Returns: (transfer full) A #GHashTable with mount options.
+ * Returns: (transfer full): A two-level #GHashTable.
  */
-/* returns two-level hashtable */
 GHashTable *
 udisks_linux_mount_options_get_builtin (void)
 {
@@ -945,6 +1108,7 @@ static UDisksMountOptionsEntry *
 calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
                                      UDisksBlock   *block,
                                      UDisksLinuxBlockObject *object,
+                                     GHashTable    *overrides,
                                      uid_t          caller_uid,
                                      gboolean       shared_fs,
                                      const gchar   *fs_type,
@@ -961,9 +1125,7 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
   gchar *key, *value;
   GString *str;
 
-  entry = g_new0 (UDisksMountOptionsEntry, 1);
-
-  fsmo = compute_mount_options_for_fs_type (daemon, block, object, fs_type);
+  fsmo = compute_mount_options_for_fs_type (daemon, block, object, overrides, fs_type);
 
   allow_uid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_UID_SELF);
   allow_gid_self = extract_opts_with_arg (fsmo->allow, MOUNT_OPTIONS_ARG_GID_SELF);
@@ -1042,8 +1204,7 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
     return NULL;
 
   g_assert (g_utf8_validate (options_to_use_str, -1, NULL));
-
-  entry->fs_type = g_strdup (fs_type);
+  entry = g_new0 (UDisksMountOptionsEntry, 1);
   entry->options = options_to_use_str;
 
   return entry;
@@ -1059,12 +1220,11 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
  * @options: Options requested by the caller.
  * @error: Return location for error or %NULL.
  *
- * Calculates filesystem types for a given @fs_signature in order of preference and mount options for each one of them.
-
- * Calculates the mount option string to use. Ensures (by returning an
- * error) that only safe options are used.
+ * Calculates filesystem types for a given filesystem signature and a preferred
+ * filesystem type and returns a list of computed mount options for each filesystem
+ * driver defined. Ensures (by returning an error) that only safe options are used.
  *
- * Returns: A string with mount options or %NULL if @error is set. Free with g_free().
+ * Returns: (transfer full) (array zero-terminated=1): A list of #UDisksMountOptionsEntry or %NULL if @error is set.
  */
 UDisksMountOptionsEntry **
 udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
@@ -1076,44 +1236,81 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
                                       GError       **error)
 {
   UDisksLinuxBlockObject *object = NULL;
+  UDisksConfigManager *config_manager;
   UDisksLinuxDevice *device = NULL;
   gboolean shared_fs = FALSE;
+  GHashTable *overrides;
+  gchar *config_file_path;
+  GError *l_error = NULL;
   GPtrArray *ptr_array;
+  gchar **drivers;
+  gchar **d;
 
-  ptr_array = g_ptr_array_new_with_free_func ((GDestroyNotify) udisks_mount_options_entry_free);
+  config_manager = udisks_daemon_get_config_manager (daemon);
   object = udisks_daemon_util_dup_object (block, NULL);
   device = udisks_linux_block_object_get_device (object);
   if (device != NULL && device->udev_device != NULL &&
       g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
     shared_fs = TRUE;
 
+  /* Global config file overrides */
+  config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                                       MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
+  overrides = mount_options_parse_config_file (config_file_path, &l_error);
+  if (!overrides)
+    {
+      if (! g_error_matches (l_error, G_FILE_ERROR, G_FILE_ERROR_NOENT) /* not found */ &&
+          ! g_error_matches (l_error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED) /* empty file */ )
+        {
+          udisks_warning ("Error reading global mount options config file %s: %s",
+                          config_file_path, l_error->message);
+        }
+      g_clear_error (&l_error);
+    }
+  g_free (config_file_path);
 
+  /* Compute filesystem drivers for given @fs_signature and @fs_type */
+  drivers = compute_drivers (daemon, block, object, overrides, fs_signature, fs_type);
 
+  ptr_array = g_ptr_array_new_with_free_func ((GDestroyNotify) udisks_mount_options_entry_free);
+  for (d = drivers; *d; d++)
     {
       UDisksMountOptionsEntry *entry;
+      gchar *fs_type_full;
+
+      if (fs_signature && g_strcmp0 (fs_signature, "auto") != 0 && g_strcmp0 (fs_signature, *d) != 0)
+        fs_type_full = g_strdup_printf ("%s" FS_SIGNATURE_DRIVER_SEP "%s", fs_signature, *d);
+      else
+        fs_type_full = g_strdup (*d);
 
       entry = calculate_mount_options_for_fs_type (daemon,
                                                    block,
                                                    object,
+                                                   overrides,
                                                    caller_uid,
                                                    shared_fs,
-                                                   fs_type ? fs_type : fs_signature,
+                                                   fs_type_full,
                                                    options,
                                                    error);
+      g_free (fs_type_full);
       if (!entry)
         {
-          /* NB: failure computing any of the filesystem types will result
+          /* Failure computing any of the filesystem types will result
            * in failure of the whole computation.
            */
           g_ptr_array_free (ptr_array, TRUE);
           ptr_array = NULL;
-          /* break; */
-        } else
+          break;
+        }
+      entry->fs_type = g_strdup (*d);
       g_ptr_array_add (ptr_array, entry);
     }
 
   g_clear_object (&device);
   g_clear_object (&object);
+  if (overrides)
+    g_hash_table_unref (overrides);
+  g_strfreev (drivers);
 
   if (!ptr_array)
     return NULL;
