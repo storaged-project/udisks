@@ -350,25 +350,34 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* required for kernel module autoloading */
 static const gchar *well_known_filesystems[] =
 {
+  "bcache",
+  "bcachefs",
   "btrfs",
+  "erofs",
+  "exfat",
   "ext2",
   "ext3",
   "ext4",
-  "udf",
+  "f2fs",
+  "hfs",
+  "hfsplus",
   "iso9660",
-  "xfs",
   "jfs",
-  "nilfs",
-  "reiserfs",
-  "reiser4",
   "msdos",
-  "umsdos",
-  "vfat",
-  "exfat",
+  "nilfs",
+  "nilfs2",
   "ntfs",
   "ntfs3",
+  "udf",
+  "reiserfs",
+  "reiser4",
+  "reiser5",
+  "umsdos",
+  "vfat",
+  "xfs",
   NULL,
 };
 
