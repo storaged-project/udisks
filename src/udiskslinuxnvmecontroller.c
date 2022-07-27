@@ -355,9 +355,19 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     return FALSE;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_warn_if_fail (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      return FALSE;
+    }
   dev_file = g_udev_device_get_device_file (device->udev_device);
-  g_warn_if_fail (dev_file != NULL);
+  if (dev_file == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No device file available");
+      return FALSE;
+    }
 
   smart_log = bd_nvme_get_smart_log (dev_file, error);
   selftest_log = bd_nvme_get_self_test_log (dev_file, NULL);
@@ -567,7 +577,12 @@ selftest_job_func (UDisksThreadedJob  *job,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
 
   udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
   udisks_job_set_progress (UDISKS_JOB (job), 0.0);
@@ -757,7 +772,12 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
 
   /* Time estimates */
   if (action == BD_NVME_SELF_TEST_ACTION_EXTENDED)
@@ -867,7 +887,12 @@ handle_smart_selftest_abort (UDisksNVMeController  *_ctrl,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
 
   if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device),
                                  BD_NVME_SELF_TEST_ACTION_ABORT,
@@ -927,7 +952,12 @@ sanitize_job_func (UDisksThreadedJob  *job,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
 
   udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
   udisks_job_set_progress (UDISKS_JOB (job), 0.0);
@@ -1111,7 +1141,12 @@ handle_sanitize_start (UDisksNVMeController  *_object,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
 
   /* Check that the Sanitize Status (Log Identifier 81h) log page can be retrieved,
    * otherwise we wouldn't be able to detect the sanitize progress and its status.

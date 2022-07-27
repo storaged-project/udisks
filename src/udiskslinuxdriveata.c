@@ -516,13 +516,18 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
 
   if (drive->secure_erase_in_progress)
     {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
-                   "Secure erase in progress");
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                           "Secure erase in progress");
       goto out;
     }
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
 
   /* TODO: use cancellable */
 
@@ -696,7 +701,12 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
     goto out;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
 
   if (g_strcmp0 (type, "short") == 0)
     test = SK_SMART_SELF_TEST_SHORT;

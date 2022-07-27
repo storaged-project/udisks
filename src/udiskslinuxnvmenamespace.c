@@ -223,7 +223,12 @@ format_ns_job_func (UDisksThreadedJob  *job,
     goto out;
 
   device = udisks_linux_block_object_get_device (object);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No udev device");
+      goto out;
+    }
 
   udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
   udisks_job_set_progress (UDISKS_JOB (job), 0.0);
@@ -359,7 +364,12 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
     }
 
   device = udisks_linux_block_object_get_device (object);
-  g_assert (device != NULL);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     UDISKS_OBJECT (object),
