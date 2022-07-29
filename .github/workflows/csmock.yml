@@ -1,0 +1,48 @@
+name: Run static analysis using csmock
+
+env:
+  CSMOCK_CHROOTS: "default"
+  CSMOCK_TOOLS: "clang cppcheck gcc"
+
+on:
+  pull_request:
+    branches:
+     - master
+
+jobs:
+  build:
+    name: csmock
+    runs-on: ubuntu-22.04
+    env:
+      CI_CONTAINER: udisks-ci-csmock
+    steps:
+      - name: Checkout udisks repository
+        uses: actions/checkout@v3
+
+      - name: Install podman
+        run: |
+          sudo apt -qq update
+          sudo apt -y -qq install podman
+
+      - name: Build the container
+        run: |
+          podman build --no-cache -t ${{ env.CI_CONTAINER }} -f misc/ci.Dockerfile .
+
+      - name: Start the container
+        run: |
+          podman run -d -t --name ${{ env.CI_CONTAINER }} --privileged --volume "$(pwd):/app" --workdir "/app" ${{ env.CI_CONTAINER }}
+
+      - name: Install test dependencies in the container
+        run: |
+          podman exec -it ${{ env.CI_CONTAINER }} bash -c "ansible-playbook -i "localhost," -c local misc/install-test-dependencies.yml"
+
+      - name: Run csmock build in the container
+        run: |
+          podman exec -it ${{ env.CI_CONTAINER }} bash -c "/ci/run_csmock_tests -c /ci/copr-builder.conf -p udisks -t ${{ env.CSMOCK_TOOLS }} -r ${{ env.CSMOCK_CHROOTS }}"
+
+      - name: Upload the csmock logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: csmock_logs
+          path: csmock_*/*

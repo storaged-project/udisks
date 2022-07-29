@@ -1,0 +1,67 @@
+# This is a simple ansible playbook for installing packages needed by the
+# udisks test suite.
+# You can do this by using 'make install-requires' or manually using
+# 'ansible-playbook -K -i "localhost," -c local install-test-dependencies.yml'
+# Currently only Fedora is supported by this playbook.
+
+---
+- hosts: all
+  become: true
+
+  tasks:
+####### Fedora
+  - name: Install basic build tools (Fedora)
+    package: name={{item}} state=present
+    with_items:
+      - gcc
+      - make
+      - libtool
+      - autoconf
+      - automake
+    when: ansible_distribution == 'Fedora'
+
+  - name: Enable our copr repository with latest builds of libblockdev
+    command: "dnf -y copr enable @storage/udisks-daily"
+    args:
+      warn: false
+    when: ansible_distribution == 'Fedora'
+
+  - name: Install dnf-plugins-core for dnf builddep (Fedora)
+    package: name=dnf-plugins-core state=present
+    when: ansible_distribution == 'Fedora'
+
+  - name: Install build dependencies (Fedora)
+    command: "dnf -y builddep udisks2 --nogpgcheck"
+    args:
+      warn: false
+    when: ansible_distribution == 'Fedora'
+
+  - name: Install libblockdev NVMe plugin (Fedora)
+    package: name=libblockdev-nvme-devel state=present
+    when: ansible_distribution == 'Fedora'
+
+  - name: Install test dependencies (Fedora)
+    package: name={{item}} state=present
+    with_items:
+      - python3-bytesize
+      - python3-blockdev
+      - dbus-daemon
+      - sqlite
+      - targetcli
+      - nvme-cli
+      - nvmetcli
+      - smartmontools
+      - genisoimage
+      - xfsprogs
+      - ntfsprogs
+      - dosfstools
+      - e2fsprogs
+      - f2fs-tools
+      - kernel-modules-extra
+      - nilfs-utils
+      - udftools
+      - python-systemd
+      - python3-systemd
+      - python3-monotonic
+      - python3-monotonic
+    when: ansible_distribution == 'Fedora'

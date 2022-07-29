@@ -1,0 +1,47 @@
+name: Build RPM packages
+
+env:
+  MOCK_CHROOTS: "fedora-rawhide fedora-36 fedora-35"
+
+on:
+  pull_request:
+    branches:
+     - master
+
+jobs:
+  build:
+    name: rpmbuild
+    runs-on: ubuntu-22.04
+    env:
+      CI_CONTAINER: udisks-ci-rpmbuild
+    steps:
+      - name: Checkout udisks repository
+        uses: actions/checkout@v3
+
+      - name: Install podman
+        run: |
+          sudo apt -qq update
+          sudo apt -y -qq install podman
+
+      - name: Build the container
+        run: |
+          podman build --no-cache -t ${{ env.CI_CONTAINER }} -f misc/ci.Dockerfile .
+
+      - name: Start the container
+        run: |
+          podman run -d -t --name ${{ env.CI_CONTAINER }} --privileged --volume "$(pwd):/app" --workdir "/app" ${{ env.CI_CONTAINER }}
+
+      - name: Install test dependencies in the container
+        run: |
+          podman exec -it ${{ env.CI_CONTAINER }} bash -c "ansible-playbook -i "localhost," -c local misc/install-test-dependencies.yml"
+
+      - name: Run RPM mock builds in the container
+        run: |
+          podman exec -it ${{ env.CI_CONTAINER }} bash -c "/ci/run_rpmbuild_tests -c /ci/copr-builder.conf -p udisks -r ${{ env.MOCK_CHROOTS }}"
+
+      - name: Upload the rpmbuild logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: rpmbuild_logs
+          path: rpmbuild_*.log
