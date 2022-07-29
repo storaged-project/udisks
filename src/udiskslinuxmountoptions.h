@@ -26,14 +26,28 @@
 
 G_BEGIN_DECLS
 
-gchar *      udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
-                                                   UDisksBlock   *block,
-                                                   uid_t          caller_uid,
-                                                   const gchar   *fs_type,
-                                                   GVariant      *options,
-                                                   GError       **error);
+/**
+ * UDisksMountOptionsEntry:
+ * @fs_type: The filesystem type to use.
+ * @options: comma-separated mount options.
+ */
+typedef struct
+{
+  gchar *fs_type;
+  gchar *options;
+} UDisksMountOptionsEntry;
 
-GHashTable * udisks_linux_mount_options_get_builtin (void);
+void                       udisks_mount_options_entry_free        (UDisksMountOptionsEntry *entry);
+
+UDisksMountOptionsEntry ** udisks_linux_calculate_mount_options   (UDisksDaemon            *daemon,
+                                                                   UDisksBlock             *block,
+                                                                   uid_t                    caller_uid,
+                                                                   const gchar             *fs_signature,
+                                                                   const gchar             *fs_type,
+                                                                   GVariant                *options,
+                                                                   GError                 **error);
+
+GHashTable               * udisks_linux_mount_options_get_builtin (void);
 
 
 G_END_DECLS

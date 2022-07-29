@@ -350,24 +350,34 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* required for kernel module autoloading */
 static const gchar *well_known_filesystems[] =
 {
+  "bcache",
+  "bcachefs",
   "btrfs",
+  "erofs",
+  "exfat",
   "ext2",
   "ext3",
   "ext4",
-  "udf",
+  "f2fs",
+  "hfs",
+  "hfsplus",
   "iso9660",
-  "xfs",
   "jfs",
+  "msdos",
   "nilfs",
+  "nilfs2",
+  "ntfs",
+  "ntfs3",
+  "udf",
   "reiserfs",
   "reiser4",
-  "msdos",
+  "reiser5",
   "umsdos",
   "vfat",
-  "exfat",
-  "ntfs",
+  "xfs",
   NULL,
 };
 
@@ -452,22 +462,36 @@ is_allowed_filesystem (const gchar *fstype)
  * calculate_fs_type: <internal>
  * @block: A #UDisksBlock.
  * @given_options: The a{sv} #GVariant.
+ * @fs_signature: A place to store the probed filesystem signature.
+ * @fs_type: A place to store the specific filesystem type to use for mounting. %NULL indicates no preference in relation to @fs_signature.
  * @error: Return location for error or %NULL.
  *
- * Calculates the file system type to use.
+ * Retrieves the actual filesystem type (superblock signature) and an optional
+ * specified filesystem type. Under normal circumstances only the signature
+ * is returned if known and @fs_type set to %NULL. In case of an explicit override
+ * the @fs_type is set to a specific value. In case a filesystem signature
+ * is unknown and no override requested, the @fs_type is set to "auto".
  *
- * Returns: A valid UTF-8 string with the filesystem type (may be "auto") or %NULL if @error is set. Free with g_free().
+ * The resulting values are valid UTF-8 strings, free them with g_free().
+ *
+ * Returns: %TRUE in case of success with @fs_signature and @fs_type set, %FALSE in case of a failure and @error being set.
  */
-static gchar *
+static gboolean
 calculate_fs_type (UDisksBlock  *block,
                    GVariant     *given_options,
+                   gchar       **fs_signature,
+                   gchar       **fs_type,
                    GError      **error)
 {
-  gchar *fs_type_to_use = NULL;
   const gchar *probed_fs_type = NULL;
   const gchar *requested_fs_type;
 
-  probed_fs_type = NULL;
+  g_warn_if_fail (fs_signature != NULL);
+  g_warn_if_fail (fs_type != NULL);
+
+  *fs_type = NULL;
+  *fs_signature = NULL;
+
   if (block != NULL)
     probed_fs_type = udisks_block_get_id_type (block);
 
@@ -504,25 +528,26 @@ calculate_fs_type (UDisksBlock  *block,
                            "Requested filesystem type `%s' is neither well-known nor "
                            "in /proc/filesystems nor in /etc/filesystems",
                            requested_fs_type);
-              goto out;
+              return FALSE;
             }
+          *fs_type = g_ascii_strdown (requested_fs_type, -1);
         }
-
-      /* TODO: maybe check that it's compatible with probed_fs_type */
-      fs_type_to_use = g_strdup (requested_fs_type);
     }
   else
     {
-      if (probed_fs_type != NULL && strlen (probed_fs_type) > 0)
-        fs_type_to_use = g_strdup (probed_fs_type);
-      else
-        fs_type_to_use = g_strdup ("auto");
-    }
+      if (probed_fs_type == NULL || strlen (probed_fs_type) == 0)
+        *fs_type = g_strdup ("auto");
+     }
 
- out:
-  g_assert (fs_type_to_use == NULL || g_utf8_validate (fs_type_to_use, -1, NULL));
+  if (probed_fs_type != NULL && strlen (probed_fs_type) > 0)
+    *fs_signature = g_ascii_strdown (probed_fs_type, -1);
 
-  return fs_type_to_use;
+  if (*fs_type)
+    g_warn_if_fail (g_utf8_validate (*fs_type, -1, NULL));
+  if (*fs_signature)
+    g_warn_if_fail (g_utf8_validate (*fs_signature, -1, NULL));
+
+  return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -848,6 +873,337 @@ is_system_managed (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_mount_fstab (UDisksDaemon          *daemon,
+                    UDisksObject          *object,
+                    uid_t                  caller_uid,
+                    gid_t                  caller_gid,
+                    const gchar           *mount_point_to_use,
+                    const gchar           *fstab_mount_options,
+                    GDBusMethodInvocation *invocation,
+                    GVariant              *options)
+{
+  UDisksBlock *block;
+  const gchar *device = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  gboolean success = FALSE;
+  gboolean mount_fstab_as_root = FALSE;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+
+  block = udisks_object_peek_block (object);
+  device = udisks_block_get_device (block);
+
+  if (!has_option (fstab_mount_options, "x-udisks-auth") &&
+      !has_option (fstab_mount_options, "user") &&
+      !has_option (fstab_mount_options, "users"))
+    {
+      mount_fstab_as_root = TRUE;
+      action_id = "org.freedesktop.udisks2.filesystem-mount";
+      /* Translators: Shown in authentication dialog when the user
+       * requests mounting a filesystem.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to mount $(drive)");
+      if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+        {
+          if (udisks_block_get_hint_system (block))
+            {
+              action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+            }
+          else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
+            {
+              action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
+            }
+        }
+
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        object,
+                                                        action_id,
+                                                        options,
+                                                        message,
+                                                        invocation))
+        return FALSE;
+    }
+
+
+  if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
+    {
+      if (g_mkdir_with_parents (mount_point_to_use, 0755) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error creating directory `%s' to be used for mounting %s: %m",
+                                                 mount_point_to_use,
+                                                 device);
+          return FALSE;
+        }
+    }
+
+  while (TRUE)
+    {
+      job = udisks_daemon_launch_simple_job (daemon,
+                                             UDISKS_OBJECT (object),
+                                             "filesystem-mount",
+                                             mount_fstab_as_root ? 0 : caller_uid,
+                                             NULL /* cancellable */);
+
+      /* XXX: using run_as_uid for root doesn't work even if the caller is already root */
+      if (!mount_fstab_as_root && caller_uid != 0)
+        {
+          BDExtraArg uid_arg = { g_strdup ("run_as_uid"), g_strdup_printf ("%d", caller_uid) };
+          BDExtraArg gid_arg = { g_strdup ("run_as_gid"), g_strdup_printf ("%d", caller_gid) };
+          const BDExtraArg *extra_args[3] = { &uid_arg, &gid_arg, NULL };
+
+          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, extra_args, &error);
+
+          g_free (uid_arg.opt);
+          g_free (uid_arg.val);
+          g_free (gid_arg.opt);
+          g_free (gid_arg.val);
+        }
+      else
+        {
+          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, NULL, &error);
+        }
+
+      if (!success)
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      else
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+      if (!success)
+        {
+          if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
+            {
+              g_clear_error (&error);
+              action_id = "org.freedesktop.udisks2.filesystem-fstab";
+              /* Translators: Shown in authentication dialog when the
+               * user requests mounting a filesystem that is in
+               * /etc/fstab file with the x-udisks-auth option.
+               *
+               * Do not translate $(drive), it's a
+               * placeholder and will be replaced by the name of
+               * the drive/device in question
+               *
+               * Do not translate /etc/fstab
+               */
+              message = N_("Authentication is required to mount $(drive) referenced in the /etc/fstab file");
+              if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                                object,
+                                                                action_id,
+                                                                options,
+                                                                message,
+                                                                invocation))
+                return FALSE;
+              mount_fstab_as_root = TRUE;
+              continue;  /* retry */
+            }
+
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error mounting system-managed device %s: %s",
+                                                 device,
+                                                 error->message);
+          g_clear_error (&error);
+          return FALSE;
+        }
+      return TRUE;
+    }
+}
+
+
+static gboolean
+handle_mount_dynamic (UDisksDaemon          *daemon,
+                      UDisksObject          *object,
+                      uid_t                  caller_uid,
+                      gid_t                  caller_gid,
+                      const gchar           *caller_user_name,
+                      gchar                **mount_point_to_use,
+                      gboolean              *mpoint_persistent,
+                      GDBusMethodInvocation *invocation,
+                      GVariant              *options)
+{
+  UDisksBlock *block;
+  const gchar *device = NULL;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  const gchar *probed_fs_usage = NULL;
+  gchar *fs_type_to_use = NULL;
+  gchar *fs_signature = NULL;
+  UDisksMountOptionsEntry **mount_options;
+  UDisksMountOptionsEntry **mount_options_i;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+  gboolean success;
+
+  g_warn_if_fail (mount_point_to_use != NULL);
+  g_warn_if_fail (mpoint_persistent != NULL);
+
+  block = udisks_object_peek_block (object);
+  device = udisks_block_get_device (block);
+
+  /* Fail if the device is not mountable - we actually allow mounting
+   * devices that are not probed since since it could be that we just
+   * don't have the data in the udev database but the device has a
+   * filesystem *anyway*...
+   *
+   * For example, this applies to PC floppy devices - automatically
+   * probing for media them creates annoying noise. So they won't
+   * appear in the udev database.
+   */
+  if (block != NULL)
+    probed_fs_usage = udisks_block_get_id_usage (block);
+  if (probed_fs_usage != NULL && strlen (probed_fs_usage) > 0 &&
+      g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
+                                             device,
+                                             probed_fs_usage);
+      return FALSE;
+    }
+
+  /* Check that the user is actually authorized to mount the
+   * device. Need to do this before calculating a mount point since we
+   * may be racing with other threads...
+   */
+  action_id = "org.freedesktop.udisks2.filesystem-mount";
+  /* Translators: Shown in authentication dialog when the user
+   * requests mounting a filesystem.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to mount $(drive)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+        }
+      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
+        }
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    return FALSE;
+
+  /* Calculate filesystem type (guaranteed to be valid UTF-8) */
+  if (!calculate_fs_type (block, options, &fs_signature, &fs_type_to_use, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return FALSE;
+    }
+
+  /* Calculate mount point (guaranteed to be valid UTF-8) */
+  *mount_point_to_use = calculate_mount_point (daemon,
+                                               block,
+                                               caller_uid,
+                                               caller_gid,
+                                               caller_user_name,
+                                               fs_type_to_use,
+                                               mpoint_persistent,
+                                               &error);
+  if (*mount_point_to_use == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      g_free (fs_signature);
+      g_free (fs_type_to_use);
+      return FALSE;
+    }
+
+  /* Create the mount point */
+  if (g_mkdir (*mount_point_to_use, 0700) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating mount point `%s': %m",
+                                             *mount_point_to_use);
+      g_free (fs_signature);
+      g_free (fs_type_to_use);
+      return FALSE;
+    }
+
+  /* Calculate mount options (guaranteed to be valid UTF-8) */
+  mount_options = udisks_linux_calculate_mount_options (daemon,
+                                                        block,
+                                                        caller_uid,
+                                                        fs_signature,
+                                                        fs_type_to_use,
+                                                        options,
+                                                        &error);
+  g_free (fs_signature);
+  g_free (fs_type_to_use);
+  if (mount_options == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return FALSE;
+    }
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "filesystem-mount",
+                                         0,
+                                         NULL /* cancellable */);
+
+  success = FALSE;
+  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
+    {
+      if (!bd_fs_mount (device,
+                        *mount_point_to_use,
+                        (*mount_options_i)->fs_type,
+                        (*mount_options_i)->options,
+                        NULL, &error))
+        {
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_UNKNOWN_FS) &&
+              *(mount_options_i + sizeof (void *)))
+            {
+              /* Unknown filesystem, continue to the next one unless this is the last entry */
+              g_clear_error (&error);
+              continue;
+            }
+          /* Clean up the created mount point */
+          if (g_rmdir (*mount_point_to_use) != 0)
+            udisks_warning ("Error removing directory %s: %m", *mount_point_to_use);
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error mounting %s at %s: %s",
+                                                 device,
+                                                 *mount_point_to_use,
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          g_clear_error (&error);
+          break;
+        }
+      success = TRUE;
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+      break;
+    }
+
+  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
+    udisks_mount_options_entry_free (*mount_options_i);
+  g_free (mount_options);
+  return success;
+}
+
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_mount (UDisksFilesystem      *filesystem,
@@ -861,23 +1217,15 @@ handle_mount (UDisksFilesystem      *filesystem,
   uid_t caller_uid;
   gid_t caller_gid;
   const gchar * const *existing_mount_points;
-  const gchar *probed_fs_usage;
-  gchar *fs_type_to_use = NULL;
-  gchar *mount_options_to_use = NULL;
   gchar *mount_point_to_use = NULL;
   gboolean mpoint_persistent = TRUE;
   gchar *fstab_mount_options = NULL;
   gchar *caller_user_name = NULL;
   GError *error = NULL;
-  const gchar *action_id = NULL;
-  const gchar *message = NULL;
   gboolean system_managed = FALSE;
-  gboolean success = FALSE;
   gchar *device = NULL;
-  UDisksBaseJob *job = NULL;
 
-
-  /* only allow a single call at a time */
+  /* Only allow a single call at a time */
   g_mutex_lock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
 
   object = udisks_daemon_util_dup_object (filesystem, &error);
@@ -892,17 +1240,14 @@ handle_mount (UDisksFilesystem      *filesystem,
   state = udisks_daemon_get_state (daemon);
   device = udisks_block_dup_device (block);
 
-  /* perform state cleanup to avoid duplicate entries for this block device */
+  /* Perform state cleanup to avoid duplicate entries for this block device */
   udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
   udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
-  /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (daemon, block, &mount_point_to_use, &fstab_mount_options))
-    {
-      system_managed = TRUE;
-    }
+  /* Check if mount point is managed by e.g. /etc/fstab or similar */
+  system_managed = is_system_managed (daemon, block, &mount_point_to_use, &fstab_mount_options);
 
-  /* First, fail if the device is already mounted */
+  /* Fail if the device is already mounted */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
   if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
     {
@@ -943,296 +1288,44 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
 
+  /* Mount it */
   if (system_managed)
     {
-      gboolean mount_fstab_as_root = FALSE;
-
-      if (!has_option (fstab_mount_options, "x-udisks-auth") &&
-          !has_option (fstab_mount_options, "user") &&
-          !has_option (fstab_mount_options, "users"))
-        {
-          action_id = "org.freedesktop.udisks2.filesystem-mount";
-          /* Translators: Shown in authentication dialog when the user
-           * requests mounting a filesystem.
-           *
-           * Do not translate $(drive), it's a placeholder and
-           * will be replaced by the name of the drive/device in question
-           */
-          message = N_("Authentication is required to mount $(drive)");
-          if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
-            {
-              if (udisks_block_get_hint_system (block))
-                {
-                  action_id = "org.freedesktop.udisks2.filesystem-mount-system";
-                }
-              else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-                {
-                  action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
-                }
-            }
-
-          if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                            object,
-                                                            action_id,
-                                                            options,
-                                                            message,
-                                                            invocation))
-            goto out;
-          mount_fstab_as_root = TRUE;
-        }
-
-      if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
-        {
-          if (g_mkdir_with_parents (mount_point_to_use, 0755) != 0)
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error creating directory `%s' to be used for mounting %s: %m",
-                                                     mount_point_to_use,
-                                                     device);
-              goto out;
-            }
-        }
-
-    mount_fstab_again:
-      job = udisks_daemon_launch_simple_job (daemon,
-                                             UDISKS_OBJECT (object),
-                                             "filesystem-mount",
-                                             mount_fstab_as_root ? 0 : caller_uid,
-                                             NULL /* cancellable */);
-
-      /* XXX: using run_as_uid for root doesn't work even if the caller is already root */
-      if (!mount_fstab_as_root && caller_uid != 0)
-        {
-          BDExtraArg uid_arg = {g_strdup ("run_as_uid"), g_strdup_printf("%d", caller_uid)};
-          BDExtraArg gid_arg = {g_strdup ("run_as_gid"), g_strdup_printf("%d", caller_gid)};
-          const BDExtraArg *extra_args[3] = {&uid_arg, &gid_arg, NULL};
-
-          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, extra_args, &error);
-
-          g_free (uid_arg.opt);
-          g_free (uid_arg.val);
-          g_free (gid_arg.opt);
-          g_free (gid_arg.val);
-        }
-      else
-        {
-          success = bd_fs_mount (NULL, mount_point_to_use, NULL, NULL, NULL, &error);
-        }
-
-      if (!success)
-          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      else
-          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
-
-      if (!success)
-        {
-          if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
-            {
-              g_clear_error (&error);
-              if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                                object,
-                                                                "org.freedesktop.udisks2.filesystem-fstab",
-                                                                options,
-                                                                /* Translators: Shown in authentication dialog when the
-                                                                 * user requests mounting a filesystem that is in
-                                                                 * /etc/fstab file with the x-udisks-auth option.
-                                                                 *
-                                                                 * Do not translate $(drive), it's a
-                                                                 * placeholder and will be replaced by the name of
-                                                                 * the drive/device in question
-                                                                 *
-                                                                 * Do not translate /etc/fstab
-                                                                 */
-                                                                N_("Authentication is required to mount $(drive) referenced in the /etc/fstab file"),
-                                                                invocation))
-                goto out;
-              mount_fstab_as_root = TRUE;
-              goto mount_fstab_again;
-            }
-
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error mounting system-managed device %s: %s",
-                                                 device,
-                                                 error->message);
-          g_clear_error (&error);
+      if (!handle_mount_fstab (daemon,
+                               object,
+                               caller_uid,
+                               caller_gid,
+                               mount_point_to_use,
+                               fstab_mount_options,
+                               invocation,
+                               options))
           goto out;
-        }
-      udisks_notice ("Mounted %s (system) at %s on behalf of uid %u",
-                     device,
-                     mount_point_to_use,
-                     caller_uid);
-
-      /* update the mounted-fs file */
-      udisks_state_add_mounted_fs (state,
-                                   mount_point_to_use,
-                                   udisks_block_get_device_number (block),
-                                   caller_uid,
-                                   TRUE,   /* fstab_mounted */
-                                   FALSE); /* persistent */
-
-      udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
-                                                     UDISKS_DEFAULT_WAIT_TIMEOUT);
-      udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
-      goto out;
-    }
-
-  /* Then fail if the device is not mountable - we actually allow mounting
-   * devices that are not probed since since it could be that we just
-   * don't have the data in the udev database but the device has a
-   * filesystem *anyway*...
-   *
-   * For example, this applies to PC floppy devices - automatically
-   * probing for media them creates annoying noise. So they won't
-   * appear in the udev database.
-   */
-  probed_fs_usage = NULL;
-  if (block != NULL)
-    probed_fs_usage = udisks_block_get_id_usage (block);
-  if (probed_fs_usage != NULL && strlen (probed_fs_usage) > 0 &&
-      g_strcmp0 (probed_fs_usage, "filesystem") != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
-                                             device,
-                                             probed_fs_usage);
-      goto out;
-    }
-
-  /* calculate filesystem type (guaranteed to be valid UTF-8) */
-  fs_type_to_use = calculate_fs_type (block,
-                                      options,
-                                      &error);
-  if (fs_type_to_use == NULL)
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* calculate mount options (guaranteed to be valid UTF-8) */
-  mount_options_to_use = udisks_linux_calculate_mount_options (daemon,
-                                                               block,
-                                                               caller_uid,
-                                                               fs_type_to_use,
-                                                               options,
-                                                               &error);
-  if (mount_options_to_use == NULL)
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* Now, check that the user is actually authorized to mount the
-   * device. Need to do this before calculating a mount point since we
-   * may be racing with other threads...
-   */
-  action_id = "org.freedesktop.udisks2.filesystem-mount";
-  /* Translators: Shown in authentication dialog when the user
-   * requests mounting a filesystem.
-   *
-   * Do not translate $(drive), it's a placeholder and
-   * will be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to mount $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
-    {
-      if (udisks_block_get_hint_system (block))
-        {
-          action_id = "org.freedesktop.udisks2.filesystem-mount-system";
-        }
-      else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
-        {
-          action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
-        }
-    }
-
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
-
-  /* calculate mount point (guaranteed to be valid UTF-8) */
-  mount_point_to_use = calculate_mount_point (daemon,
-                                              block,
-                                              caller_uid,
-                                              caller_gid,
-                                              caller_user_name,
-                                              fs_type_to_use,
-                                              &mpoint_persistent,
-                                              &error);
-  if (mount_point_to_use == NULL)
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  /* create the mount point */
-  if (g_mkdir (mount_point_to_use, 0700) != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating mount point `%s': %m",
-                                             mount_point_to_use);
-      goto out;
-    }
-
-  job = udisks_daemon_launch_simple_job (daemon,
-                                         UDISKS_OBJECT (object),
-                                         "filesystem-mount",
-                                         0,
-                                         NULL /* cancellable */);
-
-  if (g_strcmp0 (fs_type_to_use, "ntfs") == 0)
-    {
-      /* Prefer the new 'ntfs3' kernel driver and fall back to generic 'ntfs'
-       * (ntfs3g or the legacy kernel 'ntfs' driver) if not available.
-       */
-      g_free (fs_type_to_use);
-      fs_type_to_use = g_strdup ("ntfs3,ntfs");
-    }
-
-  if (!bd_fs_mount (device, mount_point_to_use, fs_type_to_use, mount_options_to_use, NULL, &error))
-    {
-      /* ugh, something went wrong.. we need to clean up the created mount point */
-      if (g_rmdir (mount_point_to_use) != 0)
-        udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
-
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error mounting %s at %s: %s",
-                                             device,
-                                             mount_point_to_use,
-                                             error->message);
-      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-      g_clear_error (&error);
-      goto out;
     }
   else
-    udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+    {
+      if (!handle_mount_dynamic (daemon,
+                                 object,
+                                 caller_uid,
+                                 caller_gid,
+                                 caller_user_name,
+                                 &mount_point_to_use,
+                                 &mpoint_persistent,
+                                 invocation,
+                                 options))
+          goto out;
+    }
 
-  /* update the mounted-fs file */
+  /* Update the mounted-fs file */
   udisks_state_add_mounted_fs (state,
                                mount_point_to_use,
                                udisks_block_get_device_number (block),
                                caller_uid,
-                               FALSE,  /* fstab_mounted */
-                               mpoint_persistent);
+                               system_managed,
+                               system_managed ? FALSE : mpoint_persistent);
 
-  udisks_notice ("Mounted %s at %s on behalf of uid %u",
+  udisks_notice ("Mounted %s%s at %s on behalf of uid %u",
                  device,
+                 system_managed ? " (system)" : "",
                  mount_point_to_use,
                  caller_uid);
 
@@ -1243,18 +1336,14 @@ handle_mount (UDisksFilesystem      *filesystem,
  out:
   if (object != NULL)
     udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
   if (state != NULL)
     udisks_state_check (state);
-  g_free (fs_type_to_use);
-  g_free (mount_options_to_use);
   g_free (mount_point_to_use);
   g_free (fstab_mount_options);
   g_free (caller_user_name);
   g_free (device);
   g_clear_object (&object);
-
-  /* only allow a single call at a time */
-  g_mutex_unlock (&UDISKS_LINUX_FILESYSTEM (filesystem)->lock);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

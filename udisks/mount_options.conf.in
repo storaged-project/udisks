@@ -1,5 +1,11 @@
 # This file contains custom mount options for udisks 2.x
 # Typically placed at /etc/udisks2/mount_options.conf
+#
+# The simplified syntax is 'fs_signature[:fs_driver]_key=value1,value2,...'
+# where 'fs_signature' is the on-disk superblock identifier as exposed by blkid/udev
+# and 'fs_driver' is (optionally) the filesystem type (a kernel driver) passed
+# to the mount call. The 'key' is either "defaults", "allow" or "drivers".
+#
 # Refer to http://storaged.org/doc/udisks2-api/latest/mount_options.html
 #
 

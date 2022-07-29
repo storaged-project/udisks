@@ -2,7 +2,7 @@
   <title>Configurable mount options</title>
 
     <para>
-    UDisks comes with a set of predefined mount options for common filesystem types used for dynamic mountpoints (excluding <filename>/etc/fstab</filename> records).
+    UDisks comes with a set of predefined mount options for common filesystems used for dynamic mountpoints (i.e., excluding <filename>/etc/fstab</filename> records).
     This selection has been made with focus on the primary project target: end users, consumers and workstations mostly working with removable media.
     </para>
 
@@ -13,9 +13,9 @@
     </para>
 
     <para>
-    Technically UDisks carries a set of allowed mount options for well known filesystem types and related set of default options that are subset of the allowed ones and are always passed to the mount command.
+    Technically UDisks carries a set of allowed mount options for well known filesystems and related set of default options that are subset of the allowed and are always passed to the mount command.
     Additional mount options can be specified via the <parameter>options</parameter> parameter of the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">org.freedesktop.UDisks2.Filesystem.Mount()</link> method call.
-    These options however need to be subset of allowed mount options for the given filesystem type. It is a client (caller) responsibility to always append desired extra mount options.
+    These options however need to be subset of allowed mount options for the given filesystem type.
     </para>
 
     <para>
@@ -27,6 +27,17 @@
     <para>
     No public API has changed, overrides can be defined either via config files or via specific udev rules. UDisks computes mount options on every <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call, no need to restart or poke the daemon.
     </para>
+
+  <simplesect><title>Filesystem signature vs. filesystem driver</title>
+    <para>
+    The configurable mount options definition introduced in UDisks 2.9.0 considered the filesystem signature and corresponding filesystem driver an equal definition. Matching filesystem signature identifier was used as a filesystem type for mounting, as is common for most widely used filesystems.
+    </para>
+
+    <para>
+    This has been changed in UDisks 2.10.0 and the configurable mount options gained ability to specify filesystem driver (i.e. a kernel or fuse driver) for a particular filesystem signature, along with a definition of filesystem driver priorities if necessary.
+    In the following paragraphs the term <emphasis>'filesystem signature'</emphasis> typically means <emphasis>'filesystem type'</emphasis> unless stated otherwise.
+    </para>
+  </simplesect>
 
   <simplesect><title>Basic definitions</title>
     <para>
@@ -40,11 +51,15 @@
     </para>
 
     <para>
-    For each filesystem type a pair of two sets are defined: <literal>_allow</literal> and <literal>_defaults</literal>.
+    Typically for each filesystem signature a pair of two sets are defined: <literal>_allow</literal> and <literal>_defaults</literal>.
+    The syntax of each record is <literal>fs_signature[:fs_driver]_key=value1,value2,...</literal> where <literal>fs_signature</literal> denotes the on-disk filesystem signature as detected by <literal>udev/blkid</literal>,
+    an optional <literal>fs_driver</literal> separated by the '<literal>:</literal>' character indicates the filesystem type (<emphasis>driver</emphasis>) to use for the mount call and
+    the <literal>key</literal> is one of the <literal>_allow</literal>, <literal>_defaults</literal> or <literal>_drivers</literal> set of values.
+    In case the optional <literal>fs_driver</literal> part is not specified, it is expected that the name of the filesystem drive equals to filesystem signature, as usual.
     </para>
 
     <para>
-    The <literal>_allow</literal> set define mount options ever allowed and considered, the <literal>_defaults</literal> are the target options to use that are then finally passed to the <command>mount</command> command.
+    The <literal>_allow</literal> set define mount options ever allowed and considered, the <literal>_defaults</literal> are the target options to use that are then (after further amendmends) passed to the mount command.
     </para>
 
     <para>
@@ -52,12 +67,24 @@
     </para>
 
     <para>
-    Other than the filesystem specific options there's also a group of general options that are always merged with fs-specific ones. These include general options like <literal>rw</literal>, <literal>ro</literal>, etc.
-    Let's refer to them as <literal><emphasis>any</emphasis></literal> filesystem type options for simplicity in the further text. The result of option set stacking, overrides and merging is referred to as <emphasis>(resulting) computed set of options</emphasis>.
+    Optionally, the <literal>_drivers</literal> set defines filesystem driver priorities for the particular filesystem signature to use for the actual mount call, from highest to lowest.
+    Only the <literal>fs_driver</literal> part of the <literal>fs_signature[:fs_driver]_key</literal> triplet should be specified here, separated by comma.
     </para>
 
     <para>
-    Apart from the final computed options UDisks always adds the following options: <literal>nodev</literal>, <literal>nosuid</literal>, <literal>uhelper=udisks2</literal> no matter if included in <literal>_allow</literal> or not. These are hardcoded and can't be changed.
+    The <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call will then attempt to mount the filesystem using computed options defined for the particular filesystem driver separately.
+    Multiple mount attempts are made where in case the filesystem driver is unknown to the kernel, the next one in the list is tried until the operation succeeds. This might potentially lead to extra error messages in the system log from the unsuccessful tries.
+    Distributors are suggested to tweak the priorities according to the supported filesystem drivers.
+    To take advantage of this functionality the <literal>_drivers</literal> record needs to be present, otherwise the extra filesystem driver definitions are ignored and only the base filesystem signature definition matching the filesystem driver name is taken in account.
+    </para>
+
+    <para>
+    Other than the filesystem signature specific options there's also a group of general options that are always merged with fs-specific ones. These include general options like <literal>rw</literal>, <literal>ro</literal>, etc.
+    Let's refer to them as <literal><emphasis>any</emphasis></literal> filesystem options for simplicity in the further text. The result of option set stacking, overrides and merging is referred to as <emphasis>(resulting) computed set of options</emphasis>.
+    </para>
+
+    <para>
+    Apart from the final computed options UDisks always adds the following options due to security concerns: <literal>nodev</literal>, <literal>nosuid</literal>, <literal>uhelper=udisks2</literal> no matter if included in <literal>_allow</literal> or not. These are hardcoded and can't be changed.
     </para>
 
     <para>
@@ -67,12 +94,12 @@
 
   <simplesect><title>Unprivileged mounts, UID and GID passing</title>
     <para>
-    UDisks daemon typically runs as root and spawns the <command>mount</command> command with root privileges while processing requests from unprivileged clients and it needs a way to set proper permissions for the mounted filesystem.
+    UDisks daemon typically runs as root and spawns the mount command with root privileges while processing requests from unprivileged clients and it needs a way to set proper permissions for the mounted filesystem.
     This is usually done by passing the <literal>uid</literal> and <literal>gid</literal> mount options that common filesystems honour. UDisks take the D-Bus method caller effective UID and finds its corresponding primary GID.
     </para>
 
     <para>
-    Also a <literal>uhelper=udisks2</literal> mount option is added automatically to indicate the <command>umount</command> command to use UDisks again for unmounting when called by an unprivileged user.
+    Also a <literal>uhelper=udisks2</literal> mount option is added automatically to indicate the umount command to use UDisks again for unmounting when called by an unprivileged user.
     </para>
 
     <para>
@@ -88,7 +115,7 @@
 
   <simplesect><title>Option set specifics</title>
     <para>
-    Option sets are composite strings of mount options with or without arguments separated by commas. There's generally no difference from an option string commonly used with the <command>mount</command> command. However UDisks brings a couple of specifics for greater flexibility.
+    Option sets are composite strings of mount options with or without arguments separated by commas. There's generally no difference from an option string commonly used with the mount command. UDisks brings a couple of specifics for greater flexibility.
     </para>
 
     <para>
@@ -325,6 +352,26 @@ vfat_allow=uid=1001,uid=1005,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,cod
     <note>Notice that the usual <literal>uid=$UID</literal> option is missing from the <literal>vfat_allow</literal> set and specific allowed UIDs are the only ones defined.
           As the <literal>vfat_defaults</literal> set is not being overridden here and still carries the <literal>uid=$UID</literal> mount option that gets automatically replaced by caller effective UID, the computed option value must match any of the <literal>vfat_allow</literal> options,
           thus the whole mount operation will be denied if the UIDs don't match.</note>
+    </example>
+
+    <example>
+      <title>Multiple filesystem drivers for a common filesystem signature</title>
+<programlisting>
+[defaults]
+# the legacy ntfs kernel driver and the ntfs-3g fuse driver
+# the usual case where the filesystem signature corresponds with the filesystem driver
+ntfs_defaults=uid=$UID,gid=$GID,windows_names
+ntfs_allow=uid=$UID,gid=$GID,umask,dmask,fmask,locale,norecover,ignore_case,windows_names,compression,nocompression,big_writes
+
+# ntfs3 kernel driver
+# different filesystem driver for a common filesystem signature
+ntfs:ntfs3_defaults=uid=$UID,gid=$GID
+ntfs:ntfs3_allow=uid=$UID,gid=$GID,umask,dmask,fmask,iocharset,discard,nodiscard,sparse,nosparse,hidden,nohidden,sys_immutable,nosys_immutable,showmeta,noshowmeta,prealloc,noprealloc
+
+# filesystem driver order for the specified filesystem signature
+# required to actually use the extra definitions
+ntfs_drivers=ntfs3,ntfs
+</programlisting>
     </example>
 
     </para>
