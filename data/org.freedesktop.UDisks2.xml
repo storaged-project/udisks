@@ -36,11 +36,32 @@
     <!-- Version: The version of the daemon currently running  -->
     <property name="Version" type="s" access="read"/>
 
-    <!-- SupportedFilesystems: List of supported filesystem by UDisks2 -->
+    <!--
+        SupportedFilesystems:
+
+        List of filesystems supported by UDisks2. For each such filesystem
+        UDisks supports filesystem creation (<quote>mkfs</quote>) and
+        changing labels.
+
+        While UDisks2 can essentially mount any filesystem, only the listed
+        types are fully supported for block operations.
+    -->
     <property name="SupportedFilesystems" type="as" access="read"/>
 
-    <!-- SupportedEncryptionTypes: List of supported encryption types by UDisks2 -->
+    <!--
+        SupportedEncryptionTypes:
+        @since: 2.8.3
+
+        List of supported block encryption types by UDisks2.
+    -->
     <property name="SupportedEncryptionTypes" type="as" access="read"/>
+
+    <!--
+        DefaultEncryptionType:
+        @since: 2.8.3
+
+        The default block encryption type.
+    -->
     <property name="DefaultEncryptionType" type="s" access="read"/>
 
     <!--
