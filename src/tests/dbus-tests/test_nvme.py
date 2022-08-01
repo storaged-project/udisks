@@ -1,6 +1,7 @@
 import os
 import stat
 import re
+import six
 import tempfile
 import time
 import sys
@@ -342,3 +343,151 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(ncap, self.NS_SIZE / lbaf_curr[0])
             nutl = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceUtilization')
             self.assertEqual(nutl, self.NS_SIZE / lbaf_curr[0])
+            format_progress = self.get_property_raw(ns, '.NVMe.Namespace', 'FormatPercentRemaining')
+            self.assertEqual(format_progress, -1)
+
+
+    def test_health_info(self):
+        self._nvme_connect()
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+        time.sleep(1)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 1)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        # find drive object through one of the namespace block objects
+        ns = self.get_object('/block_devices/' + os.path.basename(ns_devs[0]))
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+        drive_obj = self.get_object(drive_obj_path)
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+        state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+        state.assertEqual('live', timeout=10)
+
+        smart_updated = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartUpdated')
+        self.assertGreater(smart_updated, 0)
+        smart_warnings = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartCriticalWarning')
+        self.assertEqual(len(smart_warnings), 0)
+        smart_poh = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartPowerOnHours')
+        self.assertEqual(smart_poh, 0)
+        smart_temp = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartTemperature')
+        self.assertEqual(smart_temp, 0)
+        smart_selftest_status = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartSelftestStatus')
+        self.assertEqual(smart_selftest_status, '')
+        smart_selftest_remaining = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartSelftestPercentRemaining')
+        self.assertEqual(smart_selftest_remaining, -1)
+
+        drive_obj.SmartUpdate(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        smart_updated2 = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SmartUpdated')
+        self.assertGreaterEqual(smart_updated2, smart_updated)
+
+        attrs = drive_obj.SmartGetAttributes(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        self.assertGreater(len(attrs), 10)
+        self.assertEqual(attrs['avail_spare'], 0);
+        self.assertEqual(attrs['spare_thresh'], 0);
+        self.assertEqual(attrs['percent_used'], 0);
+        self.assertEqual(attrs['ctrl_busy_time'], 0);
+        self.assertEqual(attrs['power_cycles'], 0);
+        self.assertEqual(attrs['unsafe_shutdowns'], 0);
+        self.assertEqual(attrs['media_errors'], 0);
+        self.assertIn('num_err_log_entries', attrs);
+        self.assertEqual(attrs['temp_sensors'], [0, 0, 0, 0, 0, 0, 0, 0]);
+        self.assertEqual(attrs['warning_temp_time'], 0);
+        self.assertEqual(attrs['critical_temp_time'], 0);
+
+        # Try trigerring a self-test operation
+        msg = 'Unknown self-test type xxx'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SmartSelftestStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        msg = 'NVMe Get Log Page - Device Self-test Log command error: Invalid Field in Command'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SmartSelftestStart('short', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        msg = 'NVMe Device Self-test command error: Invalid Command Opcode'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SmartSelftestAbort(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+
+
+    def test_sanitize(self):
+        self._nvme_connect()
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+        time.sleep(1)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 1)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        # find drive object through one of the namespace block objects
+        ns = self.get_object('/block_devices/' + os.path.basename(ns_devs[0]))
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+        drive_obj = self.get_object(drive_obj_path)
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+        state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+        state.assertEqual('live', timeout=10)
+
+        sanitize_status = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SanitizeStatus')
+        self.assertEqual(sanitize_status, '')
+        sanitize_percent_remaining = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SanitizePercentRemaining')
+        self.assertEqual(sanitize_percent_remaining, -1)
+
+        # Try trigerring a sanitize operation
+        msg = 'Unknown sanitize action xxx'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SanitizeStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        msg = 'NVMe Get Log Page - Sanitize Status Log command error: Invalid Field in Command'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SanitizeStart('block-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SanitizeStart('crypto-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            drive_obj.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+
+
+    def test_format_ns(self):
+        self._nvme_connect()
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+        time.sleep(1)
+
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        for d in ns_devs:
+            ns = self.get_object('/block_devices/' + os.path.basename(d))
+            self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+
+            drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+            drive_obj = self.get_object(drive_obj_path)
+            self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+            state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+            state.assertEqual('live', timeout=10)
+
+            msg = 'Format NVM command error: Invalid Command Opcode: A reserved coded value or an unsupported value in the command opcode field'
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                ns.FormatNamespace(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+            d = dbus.Dictionary(signature='sv')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Unknown secure erase type xxx'):
+                d['secure_erase'] = 'xxx'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['secure_erase'] = 'user_data'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['secure_erase'] = 'crypto_erase'
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+            d = dbus.Dictionary(signature='sv')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = 0
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            lbaf_curr = self.get_property_raw(ns, '.NVMe.Namespace', 'FormattedLBASize')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = lbaf_curr[0]
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            msg = "Couldn't match desired LBA data block size in a device supported LBA format data sizes"
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = dbus.UInt16(666)
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')

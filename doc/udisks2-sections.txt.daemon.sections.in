@@ -597,6 +597,7 @@ udisks_module_get_type
 UDisksLinuxNVMeController
 udisks_linux_nvme_controller_new
 udisks_linux_nvme_controller_update
+udisks_linux_nvme_controller_refresh_smart_sync
 <SUBSECTION Standard>
 UDISKS_LINUX_NVME_CONTROLLER
 UDISKS_IS_LINUX_NVME_CONTROLLER

@@ -1046,12 +1046,12 @@ udisks_linux_drive_object_should_include_device (GUdevClient        *client,
 /**
  * udisks_linux_drive_object_housekeeping:
  * @object: A #UDisksLinuxDriveObject.
- * @secs_since_last: Number of seconds sincex the last housekeeping or 0 if the first housekeeping ever.
+ * @secs_since_last: Number of seconds since the last housekeeping or 0 if the first housekeeping ever.
  * @cancellable: A %GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Called periodically (every ten minutes or so) to perform
- * housekeeping tasks such as refreshing ATA SMART data.
+ * housekeeping tasks such as refreshing ATA/NVMe SMART data.
  *
  * The function runs in a dedicated thread and is allowed to perform
  * blocking I/O.
@@ -1071,6 +1071,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
 
   ret = FALSE;
 
+  /* ATA */
   if (object->iface_drive_ata != NULL &&
       udisks_drive_ata_get_smart_supported (object->iface_drive_ata) &&
       udisks_drive_ata_get_smart_enabled (object->iface_drive_ata))
@@ -1114,6 +1115,21 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
               g_propagate_prefixed_error (error, local_error, "Error updating SMART data: ");
               goto out;
             }
+        }
+    }
+  /* NVMe */
+  if (object->iface_nvme_ctrl != NULL)
+    {
+      GError *local_error = NULL;
+
+      udisks_info ("Refreshing Health Information on %s",
+                   g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+
+      if (!udisks_linux_nvme_controller_refresh_smart_sync (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl),
+                                                            cancellable, &local_error))
+        {
+          g_propagate_prefixed_error (error, local_error, "Error updating Health Information: ");
+          goto out;
         }
     }
 

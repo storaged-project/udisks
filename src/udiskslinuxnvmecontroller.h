@@ -34,6 +34,10 @@ UDisksNVMeController *udisks_linux_nvme_controller_new      (void);
 gboolean              udisks_linux_nvme_controller_update   (UDisksLinuxNVMeController *ctrl,
                                                              UDisksLinuxDriveObject    *object);
 
+gboolean              udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctrl,
+                                                                       GCancellable               *cancellable,
+                                                                       GError                    **error);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_NVME_CONTROLLER_H__ */

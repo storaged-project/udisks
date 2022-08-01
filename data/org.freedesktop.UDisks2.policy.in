@@ -521,6 +521,53 @@
   </action>
 
   <!-- ###################################################################### -->
+  <!-- NVMe Controller operations -->
+
+  <!-- Update/refresh SMART data -->
+  <action id="org.freedesktop.udisks2.nvme-smart-update">
+    <description>Update SMART data</description>
+    <message>Authentication is required to update SMART data</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Start and abort SMART self-tests -->
+  <action id="org.freedesktop.udisks2.nvme-smart-selftest">
+    <description>Run device self-test</description>
+    <message>Authentication is required to run a device self-test</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Sanitize operation -->
+  <action id="org.freedesktop.udisks2.nvme-sanitize">
+    <description>Start the sanitize operation</description>
+    <message>Authentication is required to perform a sanitize operation</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Format namespace -->
+  <action id="org.freedesktop.udisks2.nvme-format-namespace">
+    <description>Format a namespace</description>
+    <message>Authentication is required to format a namespace</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
   <!-- Canceling jobs -->
 
   <!-- Cancel own job -->
