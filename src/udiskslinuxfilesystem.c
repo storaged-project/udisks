@@ -2013,7 +2013,7 @@ handle_resize (UDisksFilesystem      *filesystem,
     }
 
   udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
-  if (! bd_fs_resize (udisks_block_get_device (block), size, &error))
+  if (! bd_fs_resize (udisks_block_get_device (block), size, probed_fs_type, &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -2184,7 +2184,7 @@ handle_repair (UDisksFilesystem      *filesystem,
     }
 
   udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
-  ret = bd_fs_repair (udisks_block_get_device (block), &error);
+  ret = bd_fs_repair (udisks_block_get_device (block), probed_fs_type, &error);
   if (error)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -2352,7 +2352,7 @@ handle_check (UDisksFilesystem      *filesystem,
     }
 
   udisks_bd_thread_set_progress_for_job (UDISKS_JOB (job));
-  ret = bd_fs_check (udisks_block_get_device (block), &error);
+  ret = bd_fs_check (udisks_block_get_device (block), probed_fs_type, &error);
   if (error)
     {
       g_dbus_method_invocation_return_error (invocation,
