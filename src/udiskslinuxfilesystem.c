@@ -205,7 +205,6 @@ static guint64
 get_filesystem_size (UDisksLinuxFilesystem *filesystem)
 {
   guint64 size = 0;
-  GError *error = NULL;
 
   if (!filesystem->cached_device_file || !filesystem->cached_fs_type)
     return 0;
@@ -222,45 +221,7 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
           return filesystem->cached_fs_size;
     }
 
-  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") == 0)
-    {
-      BDFSExt2Info *info = bd_fs_ext2_get_info (filesystem->cached_device_file, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext2_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (filesystem->cached_fs_type, "ext3") == 0)
-    {
-      BDFSExt3Info *info = bd_fs_ext3_get_info (filesystem->cached_device_file, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext3_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (filesystem->cached_fs_type, "ext4") == 0)
-    {
-      BDFSExt4Info *info = bd_fs_ext4_get_info (filesystem->cached_device_file, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_ext4_info_free (info);
-        }
-    }
-  else if (g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
-    {
-      BDFSXfsInfo *info = bd_fs_xfs_get_info (filesystem->cached_device_file, &error);
-      if (info)
-        {
-          size = info->block_size * info->block_count;
-          bd_fs_xfs_info_free (info);
-        }
-    }
-
-  g_clear_error (&error);
-
+  size = bd_fs_get_size (filesystem->cached_device_file, filesystem->cached_fs_type, NULL);
   filesystem->cached_fs_size = size;
   return size;
 }
@@ -329,11 +290,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_free (filesystem->cached_device_file);
   g_free (filesystem->cached_fs_type);
   filesystem->cached_fs_type = g_strdup (g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
-  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") == 0 ||
-      g_strcmp0 (filesystem->cached_fs_type, "ext3") == 0 ||
-      g_strcmp0 (filesystem->cached_fs_type, "ext4") == 0 ||
-      g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
-    filesystem->cached_device_file = udisks_linux_block_object_get_device_file (object);
+  filesystem->cached_device_file = udisks_linux_block_object_get_device_file (object);
 
   /* TODO: this only looks for a drive object associated with the current
    * block object. In case of a complex layered structure this needs to walk

@@ -249,10 +249,10 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         # repair before resizing to half size, then check
         self.assertTrue(block_fs.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         size = self.get_property(block_fs, '.Block', 'Size').value
-        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size)
+        self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size, delta=1024**2)
         block_fs.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertTrue(block_fs.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
-        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size // 2)
+        self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size // 2, delta=1024**2)
 
     def test_size(self):
         if not self._can_create:
@@ -276,18 +276,19 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(block_fs)
         self.assertIsNotNone(block_fs_dev)
 
-        # mount
-        d = dbus.Dictionary(signature='sv')
-        d['options'] = 'ro'
-        if self._fs_name:
-            d['fstype'] = self._fs_name
-        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
-        self.addCleanup(self.try_unmount, block_fs_dev)
-        self.addCleanup(self.try_unmount, self.vdevs[0])
+        # mount, except for ntfs which can't tell us size when mounted...
+        if self._fs_signature != "ntfs":
+            d = dbus.Dictionary(signature='sv')
+            if self._fs_name:
+                d['fstype'] = self._fs_name
+            d['options'] = 'ro'
+            mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+            self.addCleanup(self.try_unmount, block_fs_dev)
+            self.addCleanup(self.try_unmount, self.vdevs[0])
 
         # check reported size
         size = self.get_property(block_fs, '.Block', 'Size').value
-        self.get_property(block_fs, '.Filesystem', 'Size').assertEqual(size)
+        self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size, delta=1024**2)
 
     def test_mount_auto(self):
         if not self._can_create:
@@ -1027,6 +1028,7 @@ class VFATTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
 
     def _get_dosfstools_version(self):
         _ret, out = self.run_command("mkfs.vfat --help")
@@ -1350,6 +1352,7 @@ class NTFSTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
 
     @classmethod
     def setUpClass(cls):
@@ -1372,6 +1375,7 @@ class NTFS3TestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
     _have_ntfs3g = UdisksFSTestCase.command_exists('ntfs-3g')
 
     @classmethod
@@ -1448,6 +1452,7 @@ class F2FSTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = False
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
+    _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_signature = 'udf'
