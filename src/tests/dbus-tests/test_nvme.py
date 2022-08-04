@@ -12,6 +12,7 @@ import dbus
 import unittest
 import udiskstestcase
 
+from config_h import PACKAGE_SYSCONF_DIR
 
 
 def find_nvme_ctrl_devs_for_subnqn(subnqn):
@@ -509,6 +510,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         HOSTID_PATH = '/etc/nvme/hostid'
         FAKE_HOSTNQN = 'nqn.2014-08.org.nvmexpress:uuid:beefbeef-beef-beef-beef-beefdeadbeef'
         FAKE_HOSTID = 'beefbeef-beef-beef-beef-beefdeadbeef'
+
+        if PACKAGE_SYSCONF_DIR != '/etc':
+            self.skipTest("UDisks has been configured in non-system prefix, skipping...")
 
         # save hostnqn and hostid files
         try:
