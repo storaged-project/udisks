@@ -189,6 +189,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
         ro = self.get_property(loop_dev_obj, ".Block", "ReadOnly")
         ro.assertTrue()
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_50_create_no_part_scan(self):
         # create a partition on the file (future loop device)
         ret, out = self.run_command("parted %s mklabel msdos" % self.LOOP_DEVICE_FILENAME)
