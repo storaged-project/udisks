@@ -1008,10 +1008,6 @@ udisks_loop_skeleton_get_type
 
 <!-- BTRFS_GENERATED_SECTIONS -->
 
-<!-- ZRAM_GENERATED_SECTIONS -->
-
-<!-- BCACHE_GENERATED_SECTIONS -->
-
 <SECTION>
 <FILE>UDisksPartition</FILE>
 UDisksPartition

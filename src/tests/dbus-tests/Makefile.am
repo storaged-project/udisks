@@ -18,16 +18,8 @@ if HAVE_LVM2
 MODULES += lvm2
 endif
 
-if HAVE_ZRAM
-MODULES += zram
-endif
-
 if HAVE_LSM
 MODULES += lsm
-endif
-
-if HAVE_BCACHE
-MODULES += bcache
 endif
 
 $(CONFIG_H_PY):

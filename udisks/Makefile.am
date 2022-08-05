@@ -40,16 +40,8 @@ if HAVE_LVM2
 dbus_interface_files += $(top_srcdir)/modules/lvm2/data/org.freedesktop.UDisks2.lvm2.xml
 endif
 
-if HAVE_ZRAM
-dbus_interface_files += $(top_srcdir)/modules/zram/data/org.freedesktop.UDisks2.zram.xml
-endif
-
 if HAVE_LSM
 dbus_interface_files += $(top_srcdir)/modules/lsm/data/org.freedesktop.UDisks2.lsm.xml
-endif
-
-if HAVE_BCACHE
-dbus_interface_files += $(top_srcdir)/modules/bcache/data/org.freedesktop.UDisks2.bcache.xml
 endif
 
 $(dbus_built_sources) : Makefile.am $(dbus_interface_files)

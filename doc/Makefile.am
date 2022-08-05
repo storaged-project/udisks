@@ -149,22 +149,6 @@ else
 	$(AM_V_at) $(SED) "/<\!-- BTRFS_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
 	$(AM_V_at) $(SED) "/\# BTRFS_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
 endif # HAVE_BTRFS
-if HAVE_ZRAM
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).zram.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).zram.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).zram.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-else
-	$(AM_V_at) $(SED) "/<\!-- ZRAM_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) "/\# ZRAM_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-endif # HAVE_ZRAM
-if HAVE_BCACHE
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).bcache.sed $(builddir)/$(DOC_MAIN_SGML_FILE) > $(builddir)/$(DOC_MAIN_SGML_FILE).tmp && mv -f $(builddir)/$(DOC_MAIN_SGML_FILE).tmp $(builddir)/$(DOC_MAIN_SGML_FILE)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_SECTIONS).bcache.sed $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) -f $(DOC_DIR)/$(UDISKS_TYPES).bcache.sed $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-else
-	$(AM_V_at) $(SED) "/<\!-- BCACHE_GENERATED_SECTIONS -->/d" $(builddir)/$(UDISKS_SECTIONS) > $(builddir)/$(UDISKS_SECTIONS).tmp && mv -f $(builddir)/$(UDISKS_SECTIONS).tmp $(builddir)/$(UDISKS_SECTIONS)
-	$(AM_V_at) $(SED) "/\# BCACHE_TYPES/d" $(builddir)/$(UDISKS_TYPES) > $(builddir)/$(UDISKS_TYPES).tmp && mv -f $(builddir)/$(UDISKS_TYPES).tmp $(builddir)/$(UDISKS_TYPES)
-endif # HAVE_BCACHE
 
 
 if ENABLE_DAEMON
@@ -196,15 +180,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/btrfs
 GTKDOC_LIBS += $(top_builddir)/modules/btrfs/libudisks2_btrfs.la
 endif # HAVE_BTRFS
 
-# GTKDOC for ZRAM
-if HAVE_ZRAM
-DOC_SOURCE_DIR += $(top_srcdir)/modules/zram
-HFILE_GLOB += $(top_srcdir)/modules/zram/*.h
-CFILE_GLOB += $(top_srcdir)/modules/zram/*.c
-AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
-GTKDOC_LIBS += $(top_builddir)/modules/zram/libudisks2_zram.la
-endif # HAVE_ZRAM
-
 # GTKDOC for LSM
 if HAVE_LSM
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lsm
@@ -213,15 +188,6 @@ CFILE_GLOB += $(top_srcdir)/modules/lsm/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/lsm
 GTKDOC_LIBS += $(top_builddir)/modules/lsm/libudisks2_lsm.la
 endif # HAVE_LSM
-
-# GTKDOC for BCACHE
-if HAVE_BCACHE
-DOC_SOURCE_DIR += $(top_srcdir)/modules/bcache
-HFILE_GLOB += $(top_srcdir)/modules/bcache/*.h
-CFILE_GLOB += $(top_srcdir)/modules/bcache/*.c
-AM_CPPFLAGS += -I$(top_srcdir)/modules/bcache
-GTKDOC_LIBS += $(top_builddir)/modules/bcache/libudisks2_bcache.la
-endif # HAVE_BCACHE
 
 endif # ENABLE_DAEMON
 
@@ -233,9 +199,6 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).in.in                                            \
 	$(DOC_MAIN_SGML_FILE).in                                               \
-	$(DOC_MAIN_SGML_FILE).bcache.dbus.in                                   \
-	$(DOC_MAIN_SGML_FILE).bcache.generated.in                              \
-	$(DOC_MAIN_SGML_FILE).bcache.sed                                       \
 	$(DOC_MAIN_SGML_FILE).btrfs.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).btrfs.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).btrfs.sed                                        \
@@ -250,14 +213,8 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).lvm2.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).lvm2.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
-	$(DOC_MAIN_SGML_FILE).zram.dbus.in                                     \
-	$(DOC_MAIN_SGML_FILE).zram.generated.in                                \
-	$(DOC_MAIN_SGML_FILE).zram.block_devices.in                            \
-	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
 	$(UDISKS_TYPES).in.in                                                  \
 	$(UDISKS_TYPES).in                                                     \
-	$(UDISKS_TYPES).bcache.in                                              \
-	$(UDISKS_TYPES).bcache.sed                                             \
 	$(UDISKS_TYPES).btrfs.in                                               \
 	$(UDISKS_TYPES).btrfs.sed                                              \
 	$(UDISKS_TYPES).daemon.in                                              \
@@ -268,12 +225,8 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_TYPES).lsm.sed                                                \
 	$(UDISKS_TYPES).lvm2.in                                                \
 	$(UDISKS_TYPES).lvm2.sed                                               \
-	$(UDISKS_TYPES).zram.in                                                \
-	$(UDISKS_TYPES).zram.sed                                               \
 	$(UDISKS_SECTIONS).in.in                                               \
 	$(UDISKS_SECTIONS).in                                                  \
-	$(UDISKS_SECTIONS).bcache.sections.in                                  \
-	$(UDISKS_SECTIONS).bcache.sed                                          \
 	$(UDISKS_SECTIONS).btrfs.sections.in                                   \
 	$(UDISKS_SECTIONS).btrfs.sed                                           \
 	$(UDISKS_SECTIONS).daemon.sections.in                                  \
@@ -284,8 +237,6 @@ EXTRA_DIST +=                                                                  \
 	$(UDISKS_SECTIONS).lsm.sed                                             \
 	$(UDISKS_SECTIONS).lvm2.sections.in                                    \
 	$(UDISKS_SECTIONS).lvm2.sed                                            \
-	$(UDISKS_SECTIONS).zram.sections.in                                    \
-	$(UDISKS_SECTIONS).zram.sed                                            \
 	$(UDISKS_SECTIONS).lsm.sections.in                                     \
 	configurable_mount_options.xml                                         \
 	version.xml.in                                                         \

@@ -7,10 +7,8 @@
 %global with_gtk_doc                    1
 %global libblockdev_version             2.99
 
-%define with_bcache                     1
 %define with_btrfs                      1
 %define with_lsm                        1
-%define with_zram                       1
 %define with_lvmcache                   1
 
 %define is_fedora                       0%{?rhel} == 0
@@ -18,12 +16,6 @@
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
-
-# bcache and zram are not available on RHEL
-%if (0%{?rhel})
-%define with_bcache 0
-%define with_zram 0
-%endif
 
 # btrfs is not available on RHEL > 7
 %if 0%{?rhel} > 7
@@ -173,20 +165,6 @@ Obsoletes: libstoraged-devel
 This package contains the development files for the library lib%{name}, a
 dynamic library, which provides access to the udisksd daemon.
 
-%if 0%{?with_bcache}
-%package -n %{name}-bcache
-Summary: Module for Bcache
-Requires: %{name}%{?_isa} = %{version}-%{release}
-License: LGPLv2+
-Requires: libblockdev-kbd >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
-Provides:  storaged-bcache = %{version}-%{release}
-Obsoletes: storaged-bcache
-
-%description -n %{name}-bcache
-This package contains module for Bcache configuration.
-%endif
-
 %if 0%{?with_btrfs}
 %package -n %{name}-btrfs
 Summary: Module for BTRFS
@@ -216,22 +194,6 @@ Obsoletes: storaged-lsm
 This package contains module for LSM configuration.
 %endif
 
-%if 0%{?with_zram}
-%package -n %{name}-zram
-Summary: Module for ZRAM
-Requires: %{name}%{?_isa} = %{version}-%{release}
-License: LGPLv2+
-Requires: libblockdev-kbd >= %{libblockdev_version}
-Requires: libblockdev-swap >= %{libblockdev_version}
-BuildRequires: libblockdev-kbd-devel >= %{libblockdev_version}
-BuildRequires: libblockdev-swap-devel
-Provides:  storaged-zram = %{version}-%{release}
-Obsoletes: storaged-zram
-
-%description -n %{name}-zram
-This package contains module for ZRAM configuration.
-%endif
-
 %prep
 %setup -q -n udisks-%{version}
 
@@ -244,14 +206,8 @@ autoreconf -ivf
 %else
     --disable-gtk-doc \
 %endif
-%if 0%{?with_bcache}
-    --enable-bcache   \
-%endif
 %if 0%{?with_btrfs}
     --enable-btrfs    \
-%endif
-%if 0%{?with_zram}
-    --enable-zram     \
 %endif
 %if 0%{?with_lsm}
     --enable-lsm      \
@@ -293,21 +249,6 @@ fi
 %systemd_postun_with_restart udisks2.service
 
 %ldconfig_scriptlets -n lib%{name}
-
-%if 0%{?with_zram}
-%post -n %{name}-zram
-%systemd_post udisks2-zram-setup@.service
-if [ -S /run/udev/control ]; then
-    udevadm control --reload
-    udevadm trigger
-fi
-
-%preun -n %{name}-zram
-%systemd_preun udisks2-zram-setup@.service
-
-%postun -n %{name}-zram
-%systemd_postun udisks2-zram-setup@.service
-%endif
 
 %files -f udisks2.lang
 %doc README.md AUTHORS NEWS HACKING
@@ -374,23 +315,11 @@ fi
 %{_libdir}/pkgconfig/udisks2.pc
 %{_libdir}/pkgconfig/udisks2-lvm2.pc
 %{_libdir}/pkgconfig/udisks2-iscsi.pc
-%if 0%{?with_bcache}
-%{_libdir}/pkgconfig/udisks2-bcache.pc
-%endif
 %if 0%{?with_btrfs}
 %{_libdir}/pkgconfig/udisks2-btrfs.pc
 %endif
 %if 0%{?with_lsm}
 %{_libdir}/pkgconfig/udisks2-lsm.pc
-%endif
-%if 0%{?with_zram}
-%{_libdir}/pkgconfig/udisks2-zram.pc
-%endif
-
-%if 0%{?with_bcache}
-%files -n %{name}-bcache
-%{_libdir}/udisks2/modules/libudisks2_bcache.so
-%{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.bcache.policy
 %endif
 
 %if 0%{?with_btrfs}
@@ -406,15 +335,6 @@ fi
 %{_mandir}/man5/udisks2_lsm.conf.*
 %{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.lsm.policy
 %attr(0600,root,root) %{_sysconfdir}/udisks2/modules.conf.d/udisks2_lsm.conf
-%endif
-
-%if 0%{?with_zram}
-%files -n %{name}-zram
-%dir %{_sysconfdir}/udisks2/modules.conf.d
-%{_libdir}/udisks2/modules/libudisks2_zram.so
-%{_datadir}/polkit-1/actions/org.freedesktop.UDisks2.zram.policy
-%{_unitdir}/udisks2-zram-setup@.service
-%{_udevrulesdir}/90-udisks2-zram.rules
 %endif
 
 %changelog
