@@ -1250,7 +1250,7 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   object = udisks_daemon_util_dup_object (block, NULL);
   device = udisks_linux_block_object_get_device (object);
   if (device != NULL && device->udev_device != NULL &&
-      g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED"))
+      g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED") || g_udev_device_get_property (device->udev_device, "UDISKS_MOUNT_WHERE")))
     shared_fs = TRUE;
 
   /* Global config file overrides */

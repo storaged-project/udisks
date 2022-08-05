@@ -602,6 +602,7 @@ calculate_mount_point (UDisksDaemon  *daemon,
   gchar *escaped_user_name = NULL;
   gchar *mount_dir = NULL;
   gchar *mount_point = NULL;
+  gchar *where = NULL;
   gchar *orig_mount_point;
   GString *str;
   gchar *s;
@@ -727,6 +728,21 @@ calculate_mount_point (UDisksDaemon  *daemon,
   else
     {
       mount_point = g_strdup_printf ("%s/disk", mount_dir);
+    }
+
+    if (object != NULL) {
+        UDisksLinuxDevice *device = udisks_linux_block_object_get_device(object);
+
+        if (device != NULL && device->udev_device != NULL) {
+            where = g_strdup(g_udev_device_get_property(device->udev_device, "UDISKS_MOUNT_WHERE"));
+
+            if (where != NULL) {
+                mount_point = where;
+            }
+
+            g_object_unref(device);
+        }
+
     }
 
   /* ... then uniqify the mount point */
