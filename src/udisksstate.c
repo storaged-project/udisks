@@ -652,7 +652,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
 
   if (realpath (mount_point_str, mount_point) == NULL)
     {
-      udisks_critical ("udisks_state_check_mounted_fs_entry: mountpoint %s is invalid, cannot recover the canonical path ", mount_point_str);
+      udisks_critical ("udisks_state_check_mounted_fs_entry: mountpoint %s is invalid, cannot recover the canonical path: %m", mount_point_str);
     }
 
   fstab_mount_value = lookup_asv (details, "fstab-mount");
