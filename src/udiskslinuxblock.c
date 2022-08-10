@@ -3068,18 +3068,12 @@ format_wipe (UDisksDaemon  *daemon,
   FormatWaitData wait_data = { 0, };
   GError *l_error = NULL;
 
-  if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, FALSE, &l_error))
+  if (!bd_fs_clean (udisks_block_get_device (block), FALSE, &l_error))
     {
-      if (g_error_matches (l_error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-        /* no signature to remove, ignore */
-        g_clear_error (&l_error);
-      else
-        {
-          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Error wiping device: %s", l_error->message);
-          g_error_free (l_error);
-          return FALSE;
-        }
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error wiping device: %s", l_error->message);
+      g_error_free (l_error);
+      return FALSE;
     }
 
   /* wait until this change has taken effect */
@@ -3509,16 +3503,15 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       /* Only perform another wipe on LUKS devices, otherwise the device has been already wiped earlier. */
       if (encrypt_passphrase != NULL)
         {
-          if (!bd_fs_wipe (udisks_block_get_device (block_to_mkfs), TRUE, FALSE, &error))
+          GError *l_error = NULL;
+
+          if (!bd_fs_clean (udisks_block_get_device (block_to_mkfs), FALSE, &l_error))
             {
-              if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-                g_clear_error (&error);
-              else
-                {
-                  g_prefix_error (&error, "Error wiping device: ");
-                  handle_format_failure (invocation, error);
-                  goto out;
-                }
+              g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "Error wiping device: %s", l_error->message);
+              g_error_free (l_error);
+              handle_format_failure (invocation, error);
+              goto out;
             }
         }
     }
