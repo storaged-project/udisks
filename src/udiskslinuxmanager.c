@@ -997,41 +997,36 @@ handle_can_format (UDisksManager         *object,
                    const gchar           *type)
 {
   gchar *required_utility = NULL;
-  gchar *binary_path = NULL;
+  GError *error = NULL;
+  gboolean ret;
 
-  if (g_strcmp0 (type, "swap") == 0)
-    required_utility = g_strdup ("mkswap");
-  else if (g_strcmp0 (type, "empty") == 0)
-    required_utility = g_strdup ("wipefs");
-  else
+  /* builtin support */
+  if (g_strcmp0 (type, "empty") == 0 || g_strcmp0 (type, "dos") == 0 || g_strcmp0 (type, "gpt") == 0)
     {
-      const gchar **supported_fs = get_supported_filesystems ();
-      for (gsize i = 0; supported_fs[i] != NULL; i++)
-        {
-          if (g_strcmp0 (type, supported_fs[i]) == 0)
-            {
-            required_utility = g_strconcat ("mkfs.", type, NULL);
-            break;
-            }
-        }
-    }
-
-  if (required_utility == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_NOT_SUPPORTED,
-                                             "Creation of filesystem type %s is not supported",
-                                             type);
+      udisks_manager_complete_can_format (object,
+                                          invocation,
+                                          g_variant_new ("(bs)", TRUE, ""));
       return TRUE;
     }
 
-  binary_path = g_find_program_in_path (required_utility);
+  if (g_strcmp0 (type, "swap") == 0)
+    {
+      required_utility = g_strdup ("mkswap");
+      ret = bd_utils_check_util_version (required_utility, NULL, "", NULL, NULL);
+    }
+  else
+    {
+      ret = bd_fs_can_mkfs (type, NULL, &required_utility, &error);
+      if (error != NULL)
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          return TRUE;
+        }
+    }
+
   udisks_manager_complete_can_format (object,
                                       invocation,
-                                      g_variant_new ("(bs)", binary_path != NULL,
-                                                     binary_path != NULL ? "" : required_utility));
-  g_free (binary_path);
+                                      g_variant_new ("(bs)", ret, ret ? "" : required_utility));
   g_free (required_utility);
 
   return TRUE;
