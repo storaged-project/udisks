@@ -3270,7 +3270,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
   gboolean no_discard_flag = FALSE;
-  BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
   UDisksObject *filesystem_object;
 
   object = udisks_daemon_util_dup_object (block, &error);
@@ -3478,12 +3477,41 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
         }
     }
 
-  if (g_strcmp0 (type, "dos") == 0)
-    part_table_type = BD_PART_TABLE_MSDOS;
-  else if (g_strcmp0 (type, "gpt") == 0)
-    part_table_type = BD_PART_TABLE_GPT;
+  /* Perform the actual mkfs, partition table creation or wipe depending on @type */
+  if (g_strcmp0 (type, "dos") == 0 || g_strcmp0 (type, "gpt") == 0)
+    {
+      BDPartTableType part_table_type = BD_PART_TABLE_UNDEF;
 
-  if (part_table_type == BD_PART_TABLE_UNDEF)
+      /* Create the partition table. */
+      if (g_strcmp0 (type, "dos") == 0)
+        part_table_type = BD_PART_TABLE_MSDOS;
+      else if (g_strcmp0 (type, "gpt") == 0)
+        part_table_type = BD_PART_TABLE_GPT;
+      if (! bd_part_create_table (udisks_block_get_device (block_to_mkfs), part_table_type, TRUE, &error))
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+    }
+  else if (g_strcmp0 (type, "empty") == 0)
+    {
+      /* Only perform another wipe on LUKS devices, otherwise the device has been already wiped earlier. */
+      if (encrypt_passphrase != NULL)
+        {
+          if (!bd_fs_wipe (udisks_block_get_device (block_to_mkfs), TRUE, FALSE, &error))
+            {
+              if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
+                g_clear_error (&error);
+              else
+                {
+                  g_prefix_error (&error, "Error wiping device: ");
+                  handle_format_failure (invocation, error);
+                  goto out;
+                }
+            }
+        }
+    }
+  else
     {
       /* Build and run mkfs shell command */
       const gchar *device = udisks_block_get_device (block_to_mkfs);
@@ -3512,15 +3540,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           goto out;
         }
       g_free (error_message);
-    }
-  else
-    {
-      /* Create the partition table. */
-      if (! bd_part_create_table (device_name, part_table_type, TRUE, &error))
-        {
-          handle_format_failure (invocation, error);
-          goto out;
-        }
     }
 
   /* Set the partition type, if requested */
