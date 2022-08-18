@@ -677,7 +677,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         """ Test fstab mounts identified by PARTLABEL"""
 
         start = 1024**2
-        size = 140*1024**2  # btrfs needs at least 114 MB, nilfs needs 134 MB
+        size = 350*1024**2  # btrfs needs at least 114 MB, nilfs needs 134 MB, xfs needs 300 MB
         partlabel = '\'PRT "x LBL\''
         fslabel = '\'UD "SK S2\''
 
