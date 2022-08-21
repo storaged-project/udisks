@@ -104,7 +104,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         dbus_usage.assertEqual('filesystem')
 
         dbus_type = self.get_property(luks, '.Block', 'IdType')
-        dbus_type.assertEqual('xfs')
+        dbus_type.assertEqual('ext4')
 
         device = self.get_property(luks, '.Block', 'Device')
         device.assertEqual(self.str_to_ay('/dev/' + dm_name))  # device is an array of byte
@@ -114,7 +114,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # check system values
         _ret, sys_type = self.run_command('lsblk -d -no FSTYPE /dev/%s' % dm_name)
-        self.assertEqual(sys_type, 'xfs')
+        self.assertEqual(sys_type, 'ext4')
 
         _ret, sys_uuid = self.run_command('lsblk -d -no UUID /dev/%s' % dm_name)
         bus_uuid = self.get_property(luks, '.Block', 'IdUUID')
@@ -441,7 +441,7 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
         else:
             options['encrypt.passphrase'] = passphrase
             options['encrypt.type'] = 'luks1'
-        device.Format('xfs', options,
+        device.Format('ext4', options,
                       dbus_interface=self.iface_prefix + '.Block')
 
     def _get_metadata_size_from_dump(self, disk):
@@ -478,7 +478,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         else:
             options['encrypt.passphrase'] = passphrase
             options['encrypt.type'] = 'luks2'
-        device.Format('xfs', options,
+        device.Format('ext4', options,
                       dbus_interface=self.iface_prefix + '.Block')
 
     def _create_luks_integrity(self, device, passphrase):
@@ -579,7 +579,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         options = dbus.Dictionary(signature='sv')
         options['encrypt.passphrase'] = 'test'
 
-        disk.Format('xfs', options,
+        disk.Format('ext4', options,
                     dbus_interface=self.iface_prefix + '.Block')
 
         self.addCleanup(self._remove_luks, disk)

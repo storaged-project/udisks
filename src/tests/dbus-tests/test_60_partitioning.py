@@ -291,9 +291,9 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._remove_format, disk)
 
-        # create partition with xfs format
+        # create partition with ext4 format
         path = disk.CreatePartitionAndFormat(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
-                                             self.no_options, 'xfs', self.no_options,
+                                             self.no_options, 'ext4', self.no_options,
                                              dbus_interface=self.iface_prefix + '.PartitionTable')
 
         part = self.bus.get_object(self.iface_prefix, path)
@@ -313,7 +313,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         usage.assertEqual('filesystem')
 
         fstype = self.get_property(part, '.Block', 'IdType')
-        fstype.assertEqual('xfs')
+        fstype.assertEqual('ext4')
 
         # check system values
         part_name = path.split('/')[-1]
@@ -328,7 +328,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_start * BLOCK_SIZE, 1024**2)
 
         _ret, sys_fstype = self.run_command('lsblk -d -no FSTYPE /dev/%s' % part_name)
-        self.assertEqual(sys_fstype, 'xfs')
+        self.assertEqual(sys_fstype, 'ext4')
 
     def _have_udftools(self):
         ret, _out = self.run_command('type mkudffs')
@@ -429,7 +429,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
             time.sleep(5)
             part.Delete(self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
-    def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='xfs', type=''):
+    def _create_partition(self, disk, start=1024**2, size=100 * 1024**2, fmt='ext4', type=''):
         if fmt:
             path = disk.CreatePartitionAndFormat(dbus.UInt64(start), dbus.UInt64(size), type, '',
                                                  self.no_options, fmt, self.no_options,
@@ -485,7 +485,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part = self._create_partition(disk)
         self.addCleanup(self._remove_partition, part)
 
-        self._create_format(part, 'xfs')
+        self._create_format(part, 'ext4')
         self.addCleanup(self._remove_format, part)
 
         # set boot flag (10000000(2), 128(10), 0x80(16))
@@ -559,7 +559,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part = self._create_partition(disk)
         self.addCleanup(self._remove_partition, part)
 
-        self._create_format(part, 'xfs')
+        self._create_format(part, 'ext4')
         self.addCleanup(self._remove_format, part)
 
         # first try some invalid guid
@@ -593,7 +593,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part = self._create_partition(disk)
         self.addCleanup(self._remove_partition, part)
 
-        self._create_format(part, 'xfs')
+        self._create_format(part, 'ext4')
         self.addCleanup(self._remove_format, part)
 
         # try to set part type to an extended partition type -- should fail
@@ -687,7 +687,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part = self._create_partition(disk)
         self.addCleanup(self._remove_partition, part)
 
-        self._create_format(part, 'xfs')
+        self._create_format(part, 'ext4')
         self.addCleanup(self._remove_format, part)
 
         # first try some invalid name (longer than 36 characters)
