@@ -2384,11 +2384,6 @@ erase_ata_device (UDisksBlock   *block,
       goto out;
     }
 
-  /* sleep a tiny bit here to avoid the secure erase code racing with
-   * programs spawned by udev
-   */
-  g_usleep (500 * 1000);
-
   ret = udisks_linux_drive_ata_secure_erase_sync (UDISKS_LINUX_DRIVE_ATA (ata),
                                                   caller_uid,
                                                   enhanced,
