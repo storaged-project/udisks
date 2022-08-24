@@ -146,14 +146,42 @@ udisks_linux_manager_set_property (GObject      *object,
 }
 
 static void
+set_supported_filesystems (UDisksLinuxManager *manager)
+{
+  const gchar **fss;
+  const gchar **fss_i;
+  GPtrArray *ptr_array;
+  GError *error = NULL;
+
+  fss = bd_fs_supported_filesystems (&error);
+  if (!fss)
+    {
+      udisks_warning ("Unable to retrieve list of supported filesystems: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  ptr_array = g_ptr_array_new ();
+  for (fss_i = fss; *fss_i; fss_i++)
+    g_ptr_array_add (ptr_array, (gpointer) *fss_i);
+  g_free (fss);
+
+  if (! g_ptr_array_find_with_equal_func (ptr_array, "swap", g_str_equal, NULL))
+    g_ptr_array_add (ptr_array, (gpointer) "swap");
+  g_ptr_array_add (ptr_array, NULL);
+
+  udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager), (const gchar * const *) ptr_array->pdata);
+  g_ptr_array_free (ptr_array, TRUE);
+}
+
+static void
 udisks_linux_manager_init (UDisksLinuxManager *manager)
 {
   g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 
-  udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager),
-                                            get_supported_filesystems ());
+  set_supported_filesystems (manager);
   udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
                                                  get_supported_encryption_types ());
 }
