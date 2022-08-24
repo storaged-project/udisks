@@ -182,8 +182,6 @@ udisks_linux_manager_init (UDisksLinuxManager *manager)
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 
   set_supported_filesystems (manager);
-  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
-                                                 get_supported_encryption_types ());
 }
 
 static void
@@ -194,6 +192,8 @@ udisks_linux_manager_constructed (GObject *obj)
 
   udisks_manager_set_default_encryption_type (UDISKS_MANAGER (manager),
                                               udisks_config_manager_get_encryption (config_manager));
+  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
+                                                 udisks_config_manager_get_supported_encryption_types (config_manager));
 
   G_OBJECT_CLASS (udisks_linux_manager_parent_class)->constructed (obj);
 }

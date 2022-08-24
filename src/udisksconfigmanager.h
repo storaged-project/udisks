@@ -60,6 +60,7 @@ gboolean              udisks_config_manager_get_modules_all (UDisksConfigManager
 UDisksModuleLoadPreference
                       udisks_config_manager_get_load_preference (UDisksConfigManager *manager);
 const gchar          *udisks_config_manager_get_encryption (UDisksConfigManager *manager);
+const gchar * const  *udisks_config_manager_get_supported_encryption_types (UDisksConfigManager *manager);
 
 const gchar          *udisks_config_manager_get_config_dir  (UDisksConfigManager *manager);
 

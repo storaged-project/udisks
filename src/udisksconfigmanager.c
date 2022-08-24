@@ -449,3 +449,23 @@ udisks_config_manager_get_config_dir (UDisksConfigManager *manager)
   g_warn_if_fail (manager->config_dir != NULL);
   return manager->config_dir;
 }
+
+/**
+ * udisks_config_manager_get_supported_encryption_types:
+ * @manager: A #UDisksConfigManager.
+ *
+ * Returns: (transfer none) (array zero-terminated=1): a %NULL terminated list of supported encryption types.
+ *          Do not free or modify.
+ */
+const gchar * const *
+udisks_config_manager_get_supported_encryption_types (UDisksConfigManager *manager)
+{
+  static const gchar *_encryption_types[] =
+    {
+      UDISKS_ENCRYPTION_LUKS1,
+      UDISKS_ENCRYPTION_LUKS2,
+      NULL
+    };
+
+  return _encryption_types;
+}
