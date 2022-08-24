@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 
 typedef struct {
   const gchar *device;
-  const gchar *map_name;
+  gchar *map_name;
   GString *passphrase;
   GString *new_passphrase;
   const gchar **keyfiles;

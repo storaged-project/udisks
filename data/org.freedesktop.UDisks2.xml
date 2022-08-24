@@ -1954,9 +1954,11 @@
 
         If the option <parameter>dry-run-first</parameter> is set to
         %TRUE then a dry run of the formatting command is performed
-        first, if Udisks knows how to do that.  The idea is that
+        first, if UDisks knows how to do that.  The idea is that
         this allows a deeper check of the parameters even when
-        <parameter>no-block</parameter> is %TRUE.
+        <parameter>no-block</parameter> is %TRUE. Note that the block
+        device has already been modified (wiped) when the dry run
+        check is called.
 
         If the option <parameter>no-discard</parameter> is set to
         %TRUE then Udisks tells the formatting utility not to issue

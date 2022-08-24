@@ -783,7 +783,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
     }
 
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
-  data.map_name = g_udev_device_get_sysfs_attr (device->udev_device, "dm/name");
+  data.map_name = (gchar *) g_udev_device_get_sysfs_attr (device->udev_device, "dm/name");
 
   if (is_luks)
     close_func = luks_close_job_func;
