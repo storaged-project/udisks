@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/file.h>
 #include <fcntl.h>
 
 #include <pwd.h>
@@ -1920,6 +1921,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
   UDisksBaseJob *job = NULL;
   gint num_minutes = 0;
   guint timeout_id = 0;
+  gint num_tries = 0;
   gboolean claimed = FALSE;
   GError *local_error = NULL;
   const gchar *pass = "xxxx";
@@ -1977,6 +1979,13 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
 
   drive->secure_erase_in_progress = TRUE;
 
+  /* Acquire an exclusive BSD lock to prevent udev probes */
+  while (flock (fd, LOCK_EX | LOCK_NB) != 0)
+    {
+      g_usleep (100 * 1000); /* microseconds */
+      if (num_tries++ > 5)
+        break;
+    }
   claimed = TRUE;
 
   /* First get the IDENTIFY data directly from the drive, for sanity checks */

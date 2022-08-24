@@ -2354,6 +2354,7 @@ erase_ata_device (UDisksBlock   *block,
 {
   gboolean ret = FALSE;
   UDisksObject *drive_object = NULL;
+  UDisksLinuxBlockObject *block_object = NULL;
   UDisksDriveAta *ata = NULL;
 
   drive_object = udisks_daemon_find_object (daemon, udisks_block_get_drive (block));
@@ -2369,10 +2370,19 @@ erase_ata_device (UDisksBlock   *block,
       goto out;
     }
 
-  /* sleep a tiny bit here to avoid the secure erase code racing with
-   * programs spawned by udev
-   */
-  g_usleep (500 * 1000);
+  /* Reverse check to ensure we're erasing whole block device and not a partition */
+  block_object = udisks_linux_drive_object_get_block (UDISKS_LINUX_DRIVE_OBJECT (drive_object), FALSE /* get_hw */);
+  if (block_object == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED, "Couldn't find a block device for the drive to erase");
+      goto out;
+    }
+  if (g_strcmp0 (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                 g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object))) != 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED, "ATA secure erase needs to be performed on a whole block device");
+      goto out;
+    }
 
   ret = udisks_linux_drive_ata_secure_erase_sync (UDISKS_LINUX_DRIVE_ATA (ata),
                                                   caller_uid,
@@ -2382,6 +2392,7 @@ erase_ata_device (UDisksBlock   *block,
  out:
   g_clear_object (&ata);
   g_clear_object (&drive_object);
+  g_clear_object (&block_object);
   return ret;
 }
 
