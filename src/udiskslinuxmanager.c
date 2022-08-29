@@ -45,7 +45,6 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
-#include "udiskslinuxfsinfo.h"
 #include "udiskssimplejob.h"
 #include "udisksconfigmanager.h"
 

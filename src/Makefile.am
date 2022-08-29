@@ -84,7 +84,6 @@ libudisks_daemon_la_SOURCES =                                                   
 	udiskslinuxmdraid.h              udiskslinuxmdraid.c                     \
 	udiskslinuxmanager.h             udiskslinuxmanager.c                    \
 	udiskslinuxmountoptions.h        udiskslinuxmountoptions.c               \
-	udiskslinuxfsinfo.h              udiskslinuxfsinfo.c                     \
 	udisksbasejob.h                  udisksbasejob.c                         \
 	udisksspawnedjob.h               udisksspawnedjob.c                      \
 	udisksthreadedjob.h              udisksthreadedjob.c                     \
