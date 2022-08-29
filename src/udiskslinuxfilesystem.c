@@ -46,7 +46,6 @@
 #include "udiskslinuxfilesystemhelpers.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxblock.h"
-#include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksdaemonutil.h"
@@ -1622,26 +1621,17 @@ handle_set_label (UDisksFilesystem      *filesystem,
                   GVariant              *options)
 {
   UDisksBlock *block;
-  UDisksObject *object;
+  UDisksObject *object = NULL;
   UDisksDaemon *daemon;
   UDisksState *state = NULL;
   const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
-  const FSInfo *fs_info;
   const gchar *action_id;
   const gchar *message;
-  gchar *real_label = NULL;
+  gchar *required_utility = NULL;
   uid_t caller_uid;
-  gchar *command;
-  gint status = 0;
-  gchar *out_message = NULL;
-  gboolean success = FALSE;
-  gchar *tmp;
+  UDisksBaseJob *job = NULL;
   GError *error = NULL;
-
-  object = NULL;
-  daemon = NULL;
-  command = NULL;
 
   object = udisks_daemon_util_dup_object (filesystem, &error);
   if (object == NULL)
@@ -1681,62 +1671,35 @@ handle_set_label (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  fs_info = get_fs_info (probed_fs_type);
-
-  if (fs_info == NULL || fs_info->command_change_label == NULL)
+  if (! bd_fs_can_set_label (probed_fs_type, &required_utility, &error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_NOT_SUPPORTED,
-                                             "Don't know how to change label on device of type %s:%s",
-                                             probed_fs_usage,
-                                             probed_fs_type);
+      if (error != NULL)
+        {
+          g_dbus_method_invocation_return_error_literal (invocation,
+                                                         UDISKS_ERROR,
+                                                         UDISKS_ERROR_FAILED,
+                                                         error->message);
+          g_error_free (error);
+        }
+      else
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot change %s filesystem label on %s: executable %s not found",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               required_utility);
       goto out;
     }
 
-  /* VFAT does not allow some characters; as dosfslabel does not enforce this,
-   * check in advance; also, VFAT only knows upper-case characters, dosfslabel
-   * enforces this */
-  if (g_strcmp0 (probed_fs_type, "vfat") == 0)
+  if (! bd_fs_check_label (probed_fs_type, label, &error))
     {
-      const gchar *forbidden = "\"*/:<>?\\|";
-      guint n;
-      for (n = 0; forbidden[n] != 0; n++)
-        {
-          if (strchr (label, forbidden[n]) != NULL)
-            {
-              g_dbus_method_invocation_return_error (invocation,
+      g_dbus_method_invocation_return_error_literal (invocation,
                                                      UDISKS_ERROR,
-                                                     UDISKS_ERROR_NOT_SUPPORTED,
-                                                     "character '%c' not supported in VFAT labels",
-                                                     forbidden[n]);
-               goto out;
-            }
-        }
-
-      /* we need to remember that we make a copy, so assign it to a new
-       * variable, too */
-      real_label = g_ascii_strup (label, -1);
-      label = real_label;
-    }
-
-  /* Fail if the device is already mounted and the tools/drivers doesn't
-   * support changing the label in that case
-   */
-  if (filesystem != NULL && !fs_info->supports_online_label_rename)
-    {
-      const gchar * const *existing_mount_points;
-      existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
-      if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_NOT_SUPPORTED,
-                                                 "Cannot change label on mounted device of type %s:%s.\n",
-                                                 probed_fs_usage,
-                                                 probed_fs_type);
-          goto out;
-        }
+                                                     UDISKS_ERROR_FAILED,
+                                                     error->message);
+      g_error_free (error);
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
@@ -1770,27 +1733,30 @@ handle_set_label (UDisksFilesystem      *filesystem,
                                                     invocation))
     goto out;
 
-  if (fs_info->command_clear_label != NULL && strlen (label) == 0)
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         object,
+                                         "filesystem-modify",
+                                         caller_uid,
+                                         NULL /* cancellable */);
+  if (job == NULL)
     {
-      command = udisks_daemon_util_subst_str_and_escape (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
-    }
-  else
-    {
-      tmp = udisks_daemon_util_subst_str_and_escape (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
-      command = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label);
-      g_free (tmp);
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
     }
 
-  success = udisks_daemon_launch_spawned_job_sync (daemon,
-                                                   object,
-                                                   "filesystem-modify", caller_uid,
-                                                   NULL, /* cancellable */
-                                                   0,    /* uid_t run_as_uid */
-                                                   0,    /* uid_t run_as_euid */
-                                                   &status,
-                                                   &out_message,
-                                                   NULL, /* input_string */
-                                                   "%s", command);
+  if (! bd_fs_set_label (udisks_block_get_device (block), label, probed_fs_type, &error))
+    {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
   /* Label property is automatically updated after an udev change
    * event for this device, but udev sometimes returns the old label
@@ -1800,25 +1766,15 @@ handle_set_label (UDisksFilesystem      *filesystem,
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
 
-  if (success)
-    udisks_filesystem_complete_set_label (filesystem, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error setting label: %s",
-                                           out_message);
+  udisks_filesystem_complete_set_label (filesystem, invocation);
 
  out:
   if (object != NULL)
     udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (state != NULL)
     udisks_state_check (state);
-  /* for some FSes we need to copy and modify label; free our copy */
-  g_free (real_label);
-  g_free (command);
+  g_free (required_utility);
   g_clear_object (&object);
-  g_free (out_message);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -2353,7 +2309,7 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
   const gchar *probed_fs_type = NULL;
   const gchar *action_id = NULL;
   const gchar *message = NULL;
-  const FSInfo *fs_info = NULL;
+  const BDFSFeatures *fs_features;
   UDisksBaseJob *job = NULL;
   GError *error = NULL;
   gboolean recursive = FALSE;
@@ -2408,14 +2364,22 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
     }
 
   probed_fs_type = udisks_block_get_id_type (block);
-  fs_info = get_fs_info (probed_fs_type);
-  if (fs_info == NULL || !fs_info->supports_owners)
+  fs_features = bd_fs_features (probed_fs_type, &error);
+  if (fs_features == NULL)
+    {
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_NOT_SUPPORTED,
+                                                     error->message);
+      goto out;
+    }
+  if ((fs_features->features & BD_FS_FEATURE_OWNERS) != BD_FS_FEATURE_OWNERS)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_NOT_SUPPORTED,
                                              "Filesystem %s doesn't support ownership",
-                                             probed_fs_usage);
+                                             probed_fs_type);
       goto out;
     }
 
