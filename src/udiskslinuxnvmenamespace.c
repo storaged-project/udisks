@@ -333,18 +333,6 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
       goto out;
     }
 
-  g_mutex_lock (&ns->format_lock);
-  if (ns->format_job != NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "There is already a format operation running");
-      g_mutex_unlock (&ns->format_lock);
-      goto out;
-    }
-  g_mutex_unlock (&ns->format_lock);
-
   g_variant_lookup (arg_options, "lba_data_size", "q", &lba_data_size);
   g_variant_lookup (arg_options, "secure_erase", "s", &arg_secure_erase);
 
@@ -387,20 +375,26 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
     goto out;
 
   /* Start the job */
-  cancellable = g_cancellable_new ();
   g_mutex_lock (&ns->format_lock);
-  if (ns->format_job == NULL)
+  if (ns->format_job != NULL)
     {
-      ns->format_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
-                                                                               UDISKS_OBJECT (object),
-                                                                               "nvme-format-ns",
-                                                                               caller_uid,
-                                                                               format_ns_job_func,
-                                                                               g_object_ref (ns),
-                                                                               g_object_unref,
-                                                                               cancellable));
-      udisks_threaded_job_start (ns->format_job);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "There is already a format operation running");
+      g_mutex_unlock (&ns->format_lock);
+      goto out;
     }
+  cancellable = g_cancellable_new ();
+  ns->format_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                           UDISKS_OBJECT (object),
+                                                                           "nvme-format-ns",
+                                                                           caller_uid,
+                                                                           format_ns_job_func,
+                                                                           g_object_ref (ns),
+                                                                           g_object_unref,
+                                                                           cancellable));
+  udisks_threaded_job_start (ns->format_job);
   g_mutex_unlock (&ns->format_lock);
 
   /* Trigger the format operation */
@@ -418,7 +412,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
     }
 
   g_cancellable_cancel (cancellable);
-  if (udisks_linux_block_object_reread_partition_table (object, &error))
+  if (!udisks_linux_block_object_reread_partition_table (object, &error))
     {
       udisks_warning ("%s", error->message);
       g_clear_error (&error);
