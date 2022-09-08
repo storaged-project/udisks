@@ -43,12 +43,12 @@
 #include <blockdev/part.h>
 #include <blockdev/fs.h>
 #include <blockdev/crypto.h>
+#include <blockdev/swap.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
-#include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udisksstate.h"
 #include "udisksprivate.h"
@@ -2518,61 +2518,6 @@ erase_device (UDisksBlock   *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static const struct
-{
-  const gchar *table_type;
-  const gchar *id_type;
-  const gchar *partition_type;
-} partition_types_by_id[] = {
-  {"dos", "vfat",         "0x0c"},
-  {"dos", "ntfs",         "0x07"},
-  {"dos", "exfat",        "0x07"},
-  {"dos", "swap",         "0x82"},
-  {"dos", "ext2",         "0x83"},
-  {"dos", "ext3",         "0x83"},
-  {"dos", "ext4",         "0x83"},
-  {"dos", "xfs",          "0x83"},
-  {"dos", "btrfs",        "0x83"},
-  {"dos", "crypto_LUKS",  "0xe8"},
-  {"dos", "udf",          "0x07"},
-
-  {"gpt", "vfat",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"}, /* Microsoft Basic Data */
-  {"gpt", "ntfs",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
-  {"gpt", "exfat",        "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
-  {"gpt", "swap",         "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"}, /* Linux Swap */
-  {"gpt", "ext2",         "0fc63daf-8483-4772-8e79-3d69d8477de4"}, /* Linux Filesystem */
-  {"gpt", "ext3",         "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-  {"gpt", "ext4",         "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-  {"gpt", "xfs",          "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-  {"gpt", "btrfs",        "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-  {"gpt", "crypto_LUKS",  "ca7d7ccb-63ed-4c53-861c-1742536059cc"},
-  {"gpt", "udf",          "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
-};
-
-
-/* may return NULL if nothing suitable was found */
-static const gchar *
-determine_partition_type_for_id (const gchar *table_type,
-                                 const gchar *id_type)
-{
-  const gchar *ret = NULL;
-  guint n;
-
-  for (n = 0; n < G_N_ELEMENTS (partition_types_by_id); n++)
-    {
-      if (g_strcmp0 (partition_types_by_id[n].table_type, table_type) == 0 &&
-          g_strcmp0 (partition_types_by_id[n].id_type,    id_type) == 0)
-        {
-          ret = partition_types_by_id[n].partition_type;
-          goto out;
-        }
-    }
- out:
-  return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 typedef gboolean BlockWalker (UDisksDaemon *daemon,
                               UDisksBlock  *block,
                               gboolean      is_leaf,
@@ -2975,61 +2920,70 @@ format_check_auth (UDisksDaemon          *daemon,
 }
 
 static gboolean
-format_add_blocksize (gchar        **command,
-                      const gchar   *device,
-                      GError       **error)
+format_pre_checks (const gchar         *fs_type,
+                   const gchar         *label,
+                   const BDFSFeatures **fs_features,
+                   GError             **error)
 {
-  gint fd = -1;
-  gchar *new_cmd = NULL;
-  gint blksize = 0;
-  gchar *size_str = NULL;
+  GError *l_error = NULL;
+  gchar *required_utility = NULL;
 
-  fd = open (device, O_RDONLY);
-  if (fd < 0)
+  if (g_strcmp0 (fs_type, "dos") == 0 ||
+      g_strcmp0 (fs_type, "gpt") == 0 ||
+      g_strcmp0 (fs_type, "empty") == 0 ||
+      g_strcmp0 (fs_type, "swap") == 0)
+    return TRUE;
+
+  /* TODO: swap deps are checked on plugin initialization, subject to change */
+
+  *fs_features = bd_fs_features (fs_type, &l_error);
+  if (! *fs_features)
     {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Failed to open the device '%s' to get its block size", device);
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                           l_error->message);
+      g_clear_error (&l_error);
       return FALSE;
     }
 
-  if (ioctl (fd, BLKSSZGET, &blksize) < 0)
+  if (!bd_fs_can_mkfs (fs_type, NULL, &required_utility, &l_error))
     {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Failed to get block size of the device '%s'", device);
-      close (fd);
+      if (l_error != NULL)
+        {
+          g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                               l_error->message);
+          g_clear_error (&l_error);
+          return FALSE;
+        }
+
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "Creation of file system type %s is not supported: executable %s not found",
+                   fs_type, required_utility);
+      g_free (required_utility);
       return FALSE;
     }
-  close (fd);
 
-  size_str = g_strdup_printf ("%d", blksize);
-  new_cmd = udisks_daemon_util_subst_str_and_escape (*command, "$BLOCKSIZE", size_str);
-  g_free (size_str);
-  g_free (*command);
-  *command = new_cmd;
+  if (label != NULL)
+    {
+      if (((*fs_features)->mkfs & BD_FS_MKFS_LABEL) == 0)
+        {
+          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                       "File system type %s does not support labels", fs_type);
+          return FALSE;
+        }
+      if (! bd_fs_check_label (fs_type, label, &l_error))
+        {
+          if (! g_error_matches (l_error, BD_FS_ERROR, BD_FS_ERROR_NOT_SUPPORTED))
+            {
+              g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                   l_error->message);
+              g_error_free (l_error);
+              return FALSE;
+            }
+          g_clear_error (&l_error);
+        }
+    }
 
   return TRUE;
-}
-
-static gchar *
-format_build_command (const gchar *template,
-                      const gchar *device,
-                      const gchar *label,
-                      const gchar *options,
-                      GError     **error)
-{
-  gchar *tmp, *tmp2, *command;
-  tmp = udisks_daemon_util_subst_str_and_escape (template, "$DEVICE", device);
-  tmp2 = udisks_daemon_util_subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
-  command = udisks_daemon_util_subst_str (tmp2, "$OPTIONS", options != NULL ? options : "");
-  g_free (tmp);
-  g_free (tmp2);
-  if (strstr (command, "$BLOCKSIZE") && ! format_add_blocksize (&command, device, error))
-    {
-      g_free (command);
-      return NULL;
-    }
-
-  return command;
 }
 
 static gboolean
@@ -3068,18 +3022,12 @@ format_wipe (UDisksDaemon  *daemon,
   FormatWaitData wait_data = { 0, };
   GError *l_error = NULL;
 
-  if (!bd_fs_wipe (udisks_block_get_device (block), TRUE, FALSE, &l_error))
+  if (!bd_fs_clean (udisks_block_get_device (block), FALSE, &l_error))
     {
-      if (g_error_matches (l_error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-        /* no signature to remove, ignore */
-        g_clear_error (&l_error);
-      else
-        {
-          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Error wiping device: %s", l_error->message);
-          g_error_free (l_error);
-          return FALSE;
-        }
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error wiping device: %s", l_error->message);
+      g_error_free (l_error);
+      return FALSE;
     }
 
   /* wait until this change has taken effect */
@@ -3243,6 +3191,106 @@ format_create_luks (UDisksDaemon  *daemon,
   return TRUE;
 }
 
+static gboolean
+format_set_partition_type (UDisksPartition       *partition,
+                           UDisksPartitionTable  *partition_table,
+                           const gchar           *fs_type,
+                           gboolean               encrypted,
+                           const BDFSFeatures    *fs_features,
+                           uid_t                  caller_uid,
+                           GError               **error)
+{
+  const gchar *part_table_type;
+  const gchar *partition_type = NULL;
+
+  part_table_type = udisks_partition_table_get_type_ (partition_table);
+  if (g_strcmp0 (part_table_type, "gpt") == 0)
+    {
+      if (encrypted)
+        partition_type = "ca7d7ccb-63ed-4c53-861c-1742536059cc";
+      else if (g_strcmp0 (fs_type, "swap") == 0)
+        partition_type = "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f";
+      else if (fs_features != NULL)
+        partition_type = fs_features->partition_type;
+    }
+  else if (g_strcmp0 (part_table_type, "dos") == 0)
+    {
+      if (encrypted)
+        partition_type = "0xe8";
+      else if (g_strcmp0 (fs_type, "swap") == 0)
+        partition_type = "0x82";
+      else if (fs_features != NULL)
+        partition_type = fs_features->partition_id;
+    }
+
+  if (partition_type == NULL)
+    return TRUE;   /* do nothing */
+
+  if (g_strcmp0 (udisks_partition_get_type_ (partition), partition_type) != 0)
+    {
+      if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
+                                                 partition_type,
+                                                 caller_uid,
+                                                 NULL, /* cancellable */
+                                                 error))
+        {
+          g_prefix_error (error, "Error setting partition type after formatting: ");
+          return FALSE;
+        }
+    }
+
+  return TRUE;
+}
+
+typedef struct {
+  const gchar *device;
+  const gchar *type;
+  const gchar *label;
+  gboolean dry_run;
+  gboolean no_discard;
+} FormatJobData;
+
+static gboolean
+format_job_func (UDisksThreadedJob  *job,
+                 GCancellable       *cancellable,
+                 gpointer            user_data,
+                 GError            **error)
+{
+  FormatJobData *data = user_data;
+  BDFSMkfsOptions options = { 0, };
+  GError *l_error = NULL;
+
+  /* special case for swap */
+  if (g_strcmp0 (data->type, "swap") == 0)
+    {
+      if (! bd_swap_mkswap (data->device, data->label, NULL, &l_error))
+        {
+          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                       "Error creating swap: %s", l_error->message);
+          g_error_free (l_error);
+          return FALSE;
+        }
+      return TRUE;
+    }
+
+  /* real filesystems */
+  options.label = data->label;
+  options.dry_run = data->dry_run;
+  options.no_discard = data->no_discard;
+  options.no_pt = TRUE;  /* disable creation of a protective part table */
+
+  if (! bd_fs_mkfs (data->device, data->type, &options, NULL, &l_error))
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error creating filesystem '%s': %s",
+                   data->type, l_error->message);
+      g_error_free (l_error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 
 void
 udisks_linux_block_handle_format (UDisksBlock             *block,
@@ -3252,36 +3300,32 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                   void                   (*complete)(gpointer user_data),
                                   gpointer                 complete_user_data)
 {
-  FormatWaitData wait_data = { 0, };
   UDisksObject *object;
   UDisksPartition *partition = NULL;
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *block_to_mkfs = NULL;
   UDisksObject *object_to_mkfs = NULL;
+  UDisksObject *filesystem_object;
   UDisksDaemon *daemon;
   UDisksState *state = NULL;
-  const FSInfo *fs_info;
-  const gchar *command_options = NULL;
-  gchar *command = NULL;
-  gchar *error_message = NULL;
+  const BDFSFeatures *fs_features = NULL;
+  FormatWaitData wait_data = { 0, };
   GError *error = NULL;
-  int status;
   uid_t caller_uid;
   gid_t caller_gid;
+  /* D-Bus options */
   gboolean take_ownership = FALSE;
   GString *encrypt_passphrase = NULL;
   const gchar *encrypt_type = NULL;
   const gchar *erase_type = NULL;
-  const gchar *label = NULL;
-  gchar *device_name = NULL;
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
   gboolean dry_run_first = FALSE;
-  const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
   gboolean teardown_flag = FALSE;
   gboolean no_discard_flag = FALSE;
-  UDisksObject *filesystem_object;
+  const gchar *label = NULL;
+
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (object == NULL)
@@ -3335,12 +3379,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
           g_clear_object (&partition_table_object);
         }
     }
-  /* figure out partition type to set, if requested */
-  if (update_partition_type && partition != NULL && partition_table != NULL)
-    {
-      partition_type = determine_partition_type_for_id (udisks_partition_table_get_type_ (partition_table),
-                                                        encrypt_passphrase != NULL ? "crypto_LUKS" : type);
-    }
 
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
@@ -3354,14 +3392,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       goto out;
     }
 
-  /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
-   *       There are some obvious security implications by doing this, though
-   */
-  fs_info = get_fs_info (type);
-  if (fs_info == NULL || fs_info->command_create_fs == NULL)
+  /* Check for filesystem type support */
+  if (!format_pre_checks (type, label, &fs_features, &error))
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
-                   "Creation of file system type %s is not supported", type);
       handle_format_failure (invocation, error);
       goto out;
     }
@@ -3394,46 +3427,36 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       goto out;
     }
 
-  device_name = udisks_block_dup_device (block);
-  if (no_discard_flag && fs_info->option_no_discard)
-    command_options = fs_info->option_no_discard;
-
   /* If requested, check whether the ultimate filesystem creation
      will succeed before actually getting to work.
   */
-  if (dry_run_first && fs_info->command_validate_create_fs)
+  if (dry_run_first && fs_features != NULL &&
+      (fs_features->mkfs & BD_FS_MKFS_DRY_RUN) == BD_FS_MKFS_DRY_RUN)
     {
-      command = format_build_command (fs_info->command_validate_create_fs, device_name, label, command_options, &error);
-      if (command == NULL)
+      FormatJobData format_job_data = { 0, };
+
+      format_job_data.device = udisks_block_get_device (block);
+      format_job_data.type = type;
+      format_job_data.label = label;
+      format_job_data.dry_run = TRUE;
+      format_job_data.no_discard = no_discard_flag;
+
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   object,
+                                                   "format-mkfs",
+                                                   caller_uid,
+                                                   format_job_func,
+                                                   &format_job_data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* cancellable */
+                                                   &error))
         {
           handle_format_failure (invocation, error);
           goto out;
         }
-
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object,
-                                                  "format-mkfs", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL, /* input_string */
-                                                  "%s", command))
-        {
-          g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Error creating file system: %s", error_message);
-          handle_format_failure (invocation, error);
-          g_free (error_message);
-          goto out;
-        }
-
-      g_free (error_message);
-      g_free (command);
     }
 
-  /* And now create the desired filesystem */
-
+  /* Create LUKS, if requested */
   if (encrypt_passphrase != NULL)
     {
       if (!format_create_luks (daemon,
@@ -3456,33 +3479,19 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       block_to_mkfs = g_object_ref (block);
     }
 
-  /* complete early, if requested */
+  /* Complete early, if requested */
   if (no_block)
     {
       complete (complete_user_data);
       invocation = NULL;
     }
 
-  /* Erase the device, if requested
-   */
+  /* Erase the device, if requested */
   if (erase_type != NULL)
     {
       if (!erase_device (block_to_mkfs, object_to_mkfs, daemon, caller_uid, erase_type, &error))
         {
           g_prefix_error (&error, "Error erasing device: ");
-          handle_format_failure (invocation, error);
-          goto out;
-        }
-    }
-
-  /* Set label, if needed */
-  if (label != NULL)
-    {
-      /* TODO: return an error if label is too long */
-      if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
-        {
-          g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
-                       "File system type %s does not support labels", type);
           handle_format_failure (invocation, error);
           goto out;
         }
@@ -3509,72 +3518,64 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       /* Only perform another wipe on LUKS devices, otherwise the device has been already wiped earlier. */
       if (encrypt_passphrase != NULL)
         {
-          if (!bd_fs_wipe (udisks_block_get_device (block_to_mkfs), TRUE, FALSE, &error))
+          GError *l_error = NULL;
+
+          if (!bd_fs_clean (udisks_block_get_device (block_to_mkfs), FALSE, &l_error))
             {
-              if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_NOFS))
-                g_clear_error (&error);
-              else
-                {
-                  g_prefix_error (&error, "Error wiping device: ");
-                  handle_format_failure (invocation, error);
-                  goto out;
-                }
+              g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "Error wiping device: %s", l_error->message);
+              g_error_free (l_error);
+              handle_format_failure (invocation, error);
+              goto out;
             }
         }
     }
   else
     {
-      /* Build and run mkfs shell command */
-      const gchar *device = udisks_block_get_device (block_to_mkfs);
-      command = format_build_command (fs_info->command_create_fs, device, label, command_options, &error);
-      if (command == NULL)
-        {
-          handle_format_failure (invocation, error);
-          goto out;
-        }
+      /* Create the final filesystem */
+      FormatJobData format_job_data = { 0, };
 
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  object_to_mkfs,
-                                                  "format-mkfs", caller_uid,
-                                                  NULL, /* cancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  &status,
-                                                  &error_message,
-                                                  NULL, /* input_string */
-                                                  "%s", command))
+      format_job_data.device = udisks_block_get_device (block_to_mkfs);
+      format_job_data.type = type;
+      format_job_data.label = label;
+      format_job_data.dry_run = FALSE;
+      format_job_data.no_discard = no_discard_flag;
+
+      if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                                   object,
+                                                   "format-mkfs",
+                                                   caller_uid,
+                                                   format_job_func,
+                                                   &format_job_data,
+                                                   NULL, /* user_data_free_func */
+                                                   NULL, /* cancellable */
+                                                   &error))
         {
-          g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                       "Error creating file system: %s", error_message);
           handle_format_failure (invocation, error);
-          g_free (error_message);
           goto out;
         }
-      g_free (error_message);
     }
 
   /* Set the partition type, if requested */
-  if (partition_type != NULL && partition != NULL)
+  if (update_partition_type && partition != NULL && partition_table != NULL)
     {
-      if (g_strcmp0 (udisks_partition_get_type_ (partition), partition_type) != 0)
+      if (! format_set_partition_type (partition,
+                                       partition_table,
+                                       type,
+                                       encrypt_passphrase != NULL,
+                                       fs_features,
+                                       caller_uid,
+                                       &error))
         {
-          if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
-                                                     partition_type,
-                                                     caller_uid,
-                                                     NULL, /* cancellable */
-                                                     &error))
-            {
-              g_prefix_error (&error, "Error setting partition type after formatting: ");
-              handle_format_failure (invocation, error);
-              goto out;
-            }
+          handle_format_failure (invocation, error);
+          goto out;
         }
     }
 
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  if (udisks_linux_fsinfo_creates_protective_parttable (type) &&
+  if (fs_features && (fs_features->features & BD_FS_FEATURE_PARTITION_TABLE) == BD_FS_FEATURE_PARTITION_TABLE &&
       !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &error))
     {
       udisks_warning ("%s", error->message);
@@ -3585,7 +3586,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
 
   /* In case a protective partition table was potentially created, trigger uevents
    * on all nested partitions. */
-  if (udisks_linux_fsinfo_creates_protective_parttable (type))
+  if (fs_features && (fs_features->features & BD_FS_FEATURE_PARTITION_TABLE) == BD_FS_FEATURE_PARTITION_TABLE)
     {
       trigger_uevent_on_nested_partitions (daemon, UDISKS_LINUX_BLOCK_OBJECT (object));
     }
@@ -3608,12 +3609,13 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_object_unref (filesystem_object);
 
   /* Change ownership, if requested and supported */
-  if (take_ownership && fs_info->supports_owners)
+  if (take_ownership && fs_features != NULL &&
+      (fs_features->features & BD_FS_FEATURE_OWNERS) == BD_FS_FEATURE_OWNERS)
     {
       if (!take_filesystem_ownership (udisks_block_get_device (block_to_mkfs),
                                       type, caller_uid, caller_gid, FALSE, &error))
         {
-          g_prefix_error (&error, "Failed to take ownership of newly created filesystem: ");
+          g_prefix_error (&error, "Failed to take ownership of the newly created filesystem: ");
           handle_format_failure (invocation, error);
           goto out;
         }
@@ -3638,8 +3640,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (state != NULL)
     udisks_state_check (state);
-  g_free (device_name);
-  g_free (command);
   if (config_items)
     g_variant_unref (config_items);
   udisks_string_wipe_and_free (encrypt_passphrase);

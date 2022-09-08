@@ -45,7 +45,6 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
-#include "udiskslinuxfsinfo.h"
 #include "udiskssimplejob.h"
 #include "udisksconfigmanager.h"
 
@@ -146,16 +145,42 @@ udisks_linux_manager_set_property (GObject      *object,
 }
 
 static void
+set_supported_filesystems (UDisksLinuxManager *manager)
+{
+  const gchar **fss;
+  const gchar **fss_i;
+  GPtrArray *ptr_array;
+  GError *error = NULL;
+
+  fss = bd_fs_supported_filesystems (&error);
+  if (!fss)
+    {
+      udisks_warning ("Unable to retrieve list of supported filesystems: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  ptr_array = g_ptr_array_new ();
+  for (fss_i = fss; *fss_i; fss_i++)
+    g_ptr_array_add (ptr_array, (gpointer) *fss_i);
+  g_free (fss);
+
+  if (! g_ptr_array_find_with_equal_func (ptr_array, "swap", g_str_equal, NULL))
+    g_ptr_array_add (ptr_array, (gpointer) "swap");
+  g_ptr_array_add (ptr_array, NULL);
+
+  udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager), (const gchar * const *) ptr_array->pdata);
+  g_ptr_array_free (ptr_array, TRUE);
+}
+
+static void
 udisks_linux_manager_init (UDisksLinuxManager *manager)
 {
   g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 
-  udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager),
-                                            get_supported_filesystems ());
-  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
-                                                 get_supported_encryption_types ());
+  set_supported_filesystems (manager);
 }
 
 static void
@@ -166,6 +191,8 @@ udisks_linux_manager_constructed (GObject *obj)
 
   udisks_manager_set_default_encryption_type (UDISKS_MANAGER (manager),
                                               udisks_config_manager_get_encryption (config_manager));
+  udisks_manager_set_supported_encryption_types (UDISKS_MANAGER (manager),
+                                                 udisks_config_manager_get_supported_encryption_types (config_manager));
 
   G_OBJECT_CLASS (udisks_linux_manager_parent_class)->constructed (obj);
 }
@@ -997,41 +1024,36 @@ handle_can_format (UDisksManager         *object,
                    const gchar           *type)
 {
   gchar *required_utility = NULL;
-  gchar *binary_path = NULL;
+  GError *error = NULL;
+  gboolean ret;
 
-  if (g_strcmp0 (type, "swap") == 0)
-    required_utility = g_strdup ("mkswap");
-  else if (g_strcmp0 (type, "empty") == 0)
-    required_utility = g_strdup ("wipefs");
-  else
+  /* builtin support */
+  if (g_strcmp0 (type, "empty") == 0 || g_strcmp0 (type, "dos") == 0 || g_strcmp0 (type, "gpt") == 0)
     {
-      const gchar **supported_fs = get_supported_filesystems ();
-      for (gsize i = 0; supported_fs[i] != NULL; i++)
-        {
-          if (g_strcmp0 (type, supported_fs[i]) == 0)
-            {
-            required_utility = g_strconcat ("mkfs.", type, NULL);
-            break;
-            }
-        }
-    }
-
-  if (required_utility == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_NOT_SUPPORTED,
-                                             "Creation of filesystem type %s is not supported",
-                                             type);
+      udisks_manager_complete_can_format (object,
+                                          invocation,
+                                          g_variant_new ("(bs)", TRUE, ""));
       return TRUE;
     }
 
-  binary_path = g_find_program_in_path (required_utility);
+  if (g_strcmp0 (type, "swap") == 0)
+    {
+      required_utility = g_strdup ("mkswap");
+      ret = bd_utils_check_util_version (required_utility, NULL, "", NULL, NULL);
+    }
+  else
+    {
+      ret = bd_fs_can_mkfs (type, NULL, &required_utility, &error);
+      if (error != NULL)
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          return TRUE;
+        }
+    }
+
   udisks_manager_complete_can_format (object,
                                       invocation,
-                                      g_variant_new ("(bs)", binary_path != NULL,
-                                                     binary_path != NULL ? "" : required_utility));
-  g_free (binary_path);
+                                      g_variant_new ("(bs)", ret, ret ? "" : required_utility));
   g_free (required_utility);
 
   return TRUE;

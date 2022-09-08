@@ -94,31 +94,20 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     def test_30_supported_filesystems(self):
         fss = self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems')
         self.assertEqual({str(s) for s in fss.value},
-                         {'nilfs2', 'btrfs', 'swap', 'ext3', 'udf', 'xfs', 'minix', 'ext2', 'ext4', 'f2fs', 'reiserfs', 'ntfs', 'vfat', 'exfat'})
+                         {'nilfs2', 'btrfs', 'swap', 'ext2', 'ext3', 'ext4', 'udf', 'xfs', 'f2fs', 'ntfs', 'vfat', 'exfat'})
 
     def test_40_can_format(self):
         '''Test for installed filesystem creation utility with CanFormat'''
         manager = self.get_interface(self.manager_obj, '.Manager')
         with self.assertRaises(dbus.exceptions.DBusException):
             manager.CanFormat('wxyz')
-        avail, util = manager.CanFormat('xfs')
-        if avail:
-            self.assertEqual(util, '')
-        else:
-            self.assertEqual(util, 'mkfs.xfs')
-        self.assertEqual(avail, shutil.which('mkfs.xfs') is not None)
-        avail, util = manager.CanFormat('f2fs')
-        if avail:
-            self.assertEqual(util, '')
-        else:
-            self.assertEqual(util, 'mkfs.f2fs')
-        self.assertEqual(avail, shutil.which('mkfs.f2fs') is not None)
-        avail, util = manager.CanFormat('ext4')
-        if avail:
-            self.assertEqual(util, '')
-        else:
-            self.assertEqual(util, 'mkfs.ext4')
-        self.assertEqual(avail, shutil.which('mkfs.ext4') is not None)
+        for fs in ('xfs', 'f2fs', 'ext4'):
+            avail, util = manager.CanFormat('xfs')
+            if avail:
+                self.assertEqual(util, '')
+            else:
+                self.assertEqual(util, 'mkfs.%s' % fs)
+            self.assertEqual(avail, shutil.which('mkfs.%s' % fs) is not None)
         for fs in map(str, self.get_property(self.manager_obj, '.Manager', 'SupportedFilesystems').value):
             avail, util = manager.CanFormat(fs)
             # currently UDisks relies on executables for filesystem creation

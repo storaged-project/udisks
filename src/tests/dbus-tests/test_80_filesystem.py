@@ -251,6 +251,9 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         size = self.get_property(block_fs, '.Block', 'Size').value
         self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size, delta=1024**2)
         block_fs.Resize(dbus.UInt64(size // 2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+        if self._fs_signature == "ntfs":
+            # workaround for ntfsprogs, requiring one more repair pass after resize
+            self.assertTrue(block_fs.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         self.assertTrue(block_fs.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size // 2, delta=1024**2)
 
@@ -277,7 +280,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertIsNotNone(block_fs_dev)
 
         # mount, except for ntfs which can't tell us size when mounted...
-        if self._fs_signature != "ntfs":
+        if self._fs_signature not in ["ntfs", "exfat"]:
             d = dbus.Dictionary(signature='sv')
             if self._fs_name:
                 d['fstype'] = self._fs_name
@@ -503,13 +506,13 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         test_custom_option(self, True,  "rw", True, "[defaults]\nallow=exec,noexec,nodev,nosuid,atime,noatime,nodiratime,sync,dirsync,noload\n\n[{1}]\n{0}_allow=\n{0}_defaults=rw\n".format(_fs_id, block_fs_dev))
         test_custom_option(self, False, "rw", True, "[defaults]\n\n[{1}]\n{0}_allow=rw\n{0}_defaults=rw\n".format(_fs_id, block_fs_dev))
         # uid and gid passing
-        if self._fs_signature in ["vfat", "ntfs"]:
+        if self._fs_signature in ["vfat", "exfat", "ntfs"]:
             test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=\n")
             test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=,gid=\n")
             test_custom_option(self, True,  None, False, "[defaults]\ndefaults=xuid=\n")
             test_custom_option(self, True,  None, False, "[defaults]\ndefaults=uid=,xuid=,gid=\n")
             test_custom_option(self, False, None, False, "[defaults]\ndefaults=uid=596\n")
-        if self._fs_signature in ["vfat", "udf"]:
+        if self._fs_signature in ["vfat", "exfat", "udf"]:
             test_custom_option(self, True, "uid=10", True, "[defaults]\nallow=uid=$UID,gid=$GID,exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore\n")
             test_custom_option(self, False, "uid=10", True, "[defaults]\nallow=uid=$UID,gid=$GID,exec,noexec,nodev,nosuid,atime,noatime,nodiratime,ro,rw,sync,dirsync,noload,uid=ignore,uid=10\n")
         # fs-specific mount options
@@ -647,13 +650,19 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     def test_mount_fstab_complex_label(self):
         """ Test fstab mounts identified by a complex label"""
 
-        label = '\'UD "SK S2\''
+        if self._fs_signature == "xfs":
+            label = '\'UD"SKS2\''
+        else:
+            label = '\'UD "SK S2\''
         disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
         self._test_fstab_label(disk_obj_path, label, "LABEL='%s'" % label, False)
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_fstab_complex_label2(self):
-        label = '"UD \'SK"'
+        if self._fs_signature == "xfs":
+            label = '"UD\'SK"'
+        else:
+            label = '"UD \'SK"'
         disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
         self._test_fstab_label(disk_obj_path, label, 'LABEL="%s"' % label, False)
 
@@ -661,7 +670,10 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     def test_mount_fstab_complex_label_bad(self):
         """ Test fstab mount mismatch by a badly escaped complex label"""
 
-        label = '\'UD "SK S2\''
+        if self._fs_signature == "xfs":
+            label = '\'UD"SKS2\''
+        else:
+            label = '\'UD "SK S2\''
         disk_obj_path = '/block_devices/' + os.path.basename(self.vdevs[0])
         self._test_fstab_label(disk_obj_path, label, "LABEL=%s" % label, True)
 
@@ -679,7 +691,10 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         start = 1024**2
         size = 350*1024**2  # btrfs needs at least 114 MB, nilfs needs 134 MB, xfs needs 300 MB
         partlabel = '\'PRT "x LBL\''
-        fslabel = '\'UD "SK S2\''
+        if self._fs_signature == "xfs":
+            fslabel = '\'UD"SKS2\''
+        else:
+            fslabel = '\'UD "SK S2\''
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -857,7 +872,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.addCleanup(self.try_unmount, mnt_path)
 
         # now try formatting the master block device
-        msg = r"Error wiping device: Failed to open the device|Error synchronizing after initial wipe: Timed out waiting for object"
+        msg = r"Error wiping device:.*Failed to open the device|Error synchronizing after initial wipe: Timed out waiting for object"
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
@@ -875,15 +890,9 @@ class Ext2TestCase(UdisksFSTestCase):
 
     def _invalid_label(self, disk):
         label = 'a' * 17  # at most 16 characters, longer should be truncated
-        disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
-
-        # test dbus properties
-        dbus_label = self.get_property(disk, '.Block', 'IdLabel')
-        dbus_label.assertEqual(label[0:16])
-
-        # test system values
-        _ret, sys_label = self.run_command('lsblk -d -no LABEL %s' % self.vdevs[0])
-        self.assertEqual(sys_label, label[0:16])
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Label for ext filesystem must be at most 16 characters long.'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
 class Ext3TestCase(Ext2TestCase):
@@ -1017,36 +1026,14 @@ class XFSTestCase(UdisksFSTestCase):
 
     def _invalid_label(self, disk):
         label = 'a a'  # space not allowed
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Label for XFS filesystem cannot contain spaces.'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
-class VFATTestCase(UdisksFSTestCase):
-    _fs_signature = 'vfat'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.vfat')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
-    _can_mount = True
-    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
-
-    def _get_dosfstools_version(self):
-        _ret, out = self.run_command("mkfs.vfat --help")
-        # mkfs.fat 4.1 (2017-01-24)
-        m = re.search(r"mkfs\.fat ([\d\.]+)", out)
-        if not m or len(m.groups()) != 1:
-            raise RuntimeError("Failed to determine dosfstools version from: %s" % out)
-        return Version(m.groups()[0])
-
-    def _creates_protective_part_table(self):
-        # dosfstools >= 4.2 create fake MBR partition table
-        return self._get_dosfstools_version() >= Version('4.2')
-
-    def _invalid_label(self, disk):
-        label = 'a' * 12  # at most 11 characters
-        msg = 'org.freedesktop.UDisks2.Error.Failed: Error setting label'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+class NonPOSIXTestCase(UdisksFSTestCase):
+    """ Filesystems that don't support POSIX/native file ownership
+    """
 
     def _set_fstab_mountpoint(self, disk, options):
         # create a tempdir
@@ -1341,9 +1328,46 @@ class VFATTestCase(UdisksFSTestCase):
         if not res[0]:
             self.fail(res[1])
 
+
+class VFATTestCase(NonPOSIXTestCase):
+    _fs_signature = 'vfat'
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.vfat')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
+    _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
+
+    def _invalid_label(self, disk):
+        label = 'a' * 12  # at most 11 characters
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Label for VFAT filesystem must be at most 11 characters long.'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+    def _get_dosfstools_version(self):
+        _ret, out = self.run_command("mkfs.vfat --help")
+        # mkfs.fat 4.1 (2017-01-24)
+        m = re.search(r"mkfs\.fat ([\d\.]+)", out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError("Failed to determine dosfstools version from: %s" % out)
+        return Version(m.groups()[0])
+
+    def _creates_protective_part_table(self):
+        # dosfstools >= 4.2 create fake MBR partition table
+        return self._get_dosfstools_version() >= Version('4.2')
+
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_repair_resize_check(self):
         super(VFATTestCase, self).test_repair_resize_check()
+
+
+class EXFATTestCase(NonPOSIXTestCase):
+    _fs_signature = 'exfat'
+    _can_create = True and UdisksFSTestCase.command_exists('mkfs.exfat')
+    _can_label = True
+    _can_relabel = True and UdisksFSTestCase.command_exists('exfatlabel')
+    _can_mount = True
+    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.exfat')
+
 
 class NTFSTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
@@ -1418,22 +1442,6 @@ class BTRFSTestCase(UdisksFSTestCase):
     _can_mount = True
 
 
-class ReiserFSTestCase(UdisksFSTestCase):
-    _fs_signature = 'reiserfs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.reiserfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('reiserfstune')
-    _can_mount = True
-
-
-class MinixTestCase(UdisksFSTestCase):
-    _fs_signature = 'minix'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.minix')
-    _can_label = False
-    _can_relabel = False
-    _can_mount = True and udiskstestcase.UdisksTestCase.module_available('minix')
-
-
 class NILFS2TestCase(UdisksFSTestCase):
     _fs_signature = 'nilfs2'
     _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
@@ -1482,36 +1490,14 @@ class FailsystemTestCase(UdisksFSTestCase):
         self.assertIsNotNone(disk)
 
         # try to create some nonexisting filesystem
-        msg = 'org.freedesktop.UDisks2.Error.NotSupported: Creation of file system '\
-              'type definitely-nonexisting-fs is not supported'
+        msg = 'org.freedesktop.UDisks2.Error.NotSupported: Filesystem \'definitely-nonexisting-fs\' is not supported.'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Format('definitely-nonexisting-fs', self.no_options,
                         dbus_interface=self.iface_prefix + '.Block')
 
-    def test_label(self):
-        # we need some filesystem that doesn't support labels
-        fs = MinixTestCase
-
-        if not fs._can_create:
-            self.skipTest('Cannot create %s filesystem to test not supported '
-                          'labelling.' % fs._fs_signature)
-
-        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        self.assertIsNotNone(disk)
-
-        # try create minix filesystem with label
-        label = 'test'
-        d = dbus.Dictionary(signature='sv')
-        d['label'] = label
-
-        msg = 'org.freedesktop.UDisks2.Error.NotSupported: File system '\
-              'type %s does not support labels' % fs._fs_signature
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            disk.Format(fs._fs_signature, d, dbus_interface=self.iface_prefix + '.Block')
-
     def test_relabel(self):
         # we need some filesystem that doesn't support setting label after creating it
-        fs = MinixTestCase
+        fs = F2FSTestCase
 
         if not fs._can_create:
             self.skipTest('Cannot create %s filesystem to test not supported '
@@ -1524,8 +1510,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         disk.Format(fs._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
-        msg = 'org.freedesktop.UDisks2.Error.NotSupported: Don\'t know how to '\
-              'change label on device of type filesystem:%s' % fs._fs_signature
+        msg = "org.freedesktop.UDisks2.Error.Failed: Setting the label of filesystem 'f2fs' is not supported."
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel('test', self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
