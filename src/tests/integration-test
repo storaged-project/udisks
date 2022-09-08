@@ -405,13 +405,10 @@ class UDisksTestCase(unittest.TestCase):
                 else:
                     break
 
-        # check localstatedir
+        # create localstatedirs
         for d in (os.path.join(make_vars['localstatedir'], 'run', 'udisks2'),
                   os.path.join(make_vars['localstatedir'], 'lib', 'udisks2')):
-            if not os.path.exists(d):
-                sys.stderr.write('The directory %s does not exist; please '
-                                 'create it before running these tests.\n' % d)
-                sys.exit(1)
+            os.makedirs(d, exist_ok=True)
 
     @classmethod
     def setup_vdev(cls):
