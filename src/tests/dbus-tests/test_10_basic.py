@@ -102,7 +102,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         with self.assertRaises(dbus.exceptions.DBusException):
             manager.CanFormat('wxyz')
         for fs in ('xfs', 'f2fs', 'ext4'):
-            avail, util = manager.CanFormat('xfs')
+            avail, util = manager.CanFormat(fs)
             if avail:
                 self.assertEqual(util, '')
             else:
