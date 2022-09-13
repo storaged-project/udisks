@@ -746,7 +746,7 @@ class FS(UDisksTestCase):
             self.fail('Expected failure for bogus file system')
         except GLib.GError as e:
             self.assertIn('UDisks2.Error.NotSupported', e.message)
-            self.assertIn('type bogus', e.message)
+            self.assertIn('\'bogus\' is not supported', e.message)
 
     def test_create_fs_unsupported_label(self):
         """Format() with unsupported label"""
@@ -867,7 +867,8 @@ class FS(UDisksTestCase):
                 self.fs_create(None, fs_type, no_options)
                 self.fail('Expected failure for missing mkfs.' + fs_type)
             except GLib.GError as e:
-                self.assertIn('UDisks2.Error.Failed', e.message)
+                self.assertIn('UDisks2.Error.NotSupported', e.message)
+                self.assertIn('executable %s not found' % mkfs, e.message)
             return
 
         # do checks with command line tools (mkfs/mount/umount)

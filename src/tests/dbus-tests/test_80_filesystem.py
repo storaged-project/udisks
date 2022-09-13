@@ -555,8 +555,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if label:
             if not self._can_label:
                 self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
-            if self._fs_signature == 'vfat' and self._creates_protective_part_table():
-                self.skipTest('dosfstools >= 4.2 introduced stricter label rules')
+            if self._fs_signature == 'vfat':
+                self.skipTest('VFAT has strict label rules, skipping')
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
