@@ -282,6 +282,7 @@ udisks_linux_device_read_sysfs_attr
 udisks_linux_device_read_sysfs_attr_as_int
 udisks_linux_device_read_sysfs_attr_as_uint64
 udisks_linux_device_subsystem_is_nvme
+udisks_linux_device_nvme_is_fabrics
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_DEVICE
 UDISKS_LINUX_DEVICE
@@ -617,4 +618,30 @@ UDISKS_IS_LINUX_NVME_NAMESPACE
 UDISKS_TYPE_LINUX_NVME_NAMESPACE
 <SUBSECTION Private>
 udisks_linux_nvme_namespace_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxmanagernvme</FILE>
+UDisksLinuxManagerNVMe
+udisks_linux_manager_nvme_new
+udisks_linux_manager_nvme_get_daemon
+<SUBSECTION Standard>
+UDISKS_LINUX_MANAGER_NVME
+UDISKS_IS_LINUX_MANAGER_NVME
+UDISKS_TYPE_LINUX_MANAGER_NVME
+<SUBSECTION Private>
+udisks_linux_manager_nvme_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxnvmefabrics</FILE>
+UDisksLinuxNVMeFabrics
+udisks_linux_nvme_fabrics_new
+udisks_linux_nvme_fabrics_update
+<SUBSECTION Standard>
+UDISKS_LINUX_NVME_FABRICS
+UDISKS_IS_LINUX_NVME_FABRICS
+UDISKS_TYPE_LINUX_NVME_FABRICS
+<SUBSECTION Private>
+udisks_linux_nvme_fabrics_get_type
 </SECTION>

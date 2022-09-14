@@ -12,6 +12,7 @@ import dbus
 import unittest
 import udiskstestcase
 
+from config_h import PACKAGE_SYSCONF_DIR
 
 
 def find_nvme_ctrl_devs_for_subnqn(subnqn):
@@ -102,26 +103,6 @@ def find_nvme_ns_devs_for_subnqn(subnqn):
             _check_subsys(dev, ns_dev_paths)
 
     return ns_dev_paths
-
-
-def get_nvme_hostnqn():
-    """
-    Retrieves NVMe host NQN string from /etc/nvme/hostnqn or uses nvme-cli to generate
-    new one (stable, typically generated from machine DMI data) when not available.
-    """
-
-    hostnqn = None
-    try:
-        hostnqn = read_file('/etc/nvme/hostnqn')
-    except:
-        pass
-
-    if hostnqn is None or len(hostnqn.strip()) < 1:
-        ret, hostnqn = udiskstestcase.run_command('nvme gen-hostnqn')
-        if ret != 0:
-            raise RuntimeError("Cannot get host NQN: '%s %s'" % (hostnqn, err))
-
-    return hostnqn.strip()
 
 def setup_nvme_target(dev_paths, subnqn):
     """
@@ -219,7 +200,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
                 path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
                 cls.loop_devs += ["/dev/%s" % loop_dev]
 
-        cls.hostnqn = get_nvme_hostnqn()
         setup_nvme_target(cls.loop_devs, cls.SUBNQN)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
@@ -228,7 +208,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             raise RuntimeError("Error disconnecting the '%s' subsystem NQN: '%s'" % (subnqn, out))
 
     def _nvme_connect(self):
-        ret, out = self.run_command("nvme connect --transport=loop --hostnqn=%s --nqn=%s" % (self.hostnqn, self.SUBNQN))
+        ret, out = self.run_command("nvme connect --transport=loop --nqn=%s" % self.SUBNQN)
         if ret != 0:
             raise RuntimeError("Error connecting to the NVMe target: %s" % out)
         nvme_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
@@ -295,8 +275,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(len(fguid), 0)
         rev = self.get_property_raw(drive_obj, '.NVMe.Controller', 'NVMeRevision')
         self.assertTrue(rev.startswith('1.'))
-        transport = self.get_property_raw(drive_obj, '.NVMe.Controller', 'Transport')
-        self.assertEqual(transport, 'loop')
         unalloc_cap = self.get_property_raw(drive_obj, '.NVMe.Controller', 'UnallocatedCapacity')
         self.assertEquals(unalloc_cap, 0)
 
@@ -491,3 +469,80 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = dbus.UInt16(666)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+    def test_fabrics_connect(self):
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
+            manager.Connect(self.SUBNQN, "notransport", "", self.no_options)
+        msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Connect(self.SUBNQN, "loop", "127.0.0.1", self.no_options)
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Connect("unknownsubnqn", "loop", "", self.no_options)
+
+        d = dbus.Dictionary(signature='sv')
+        d['host_nqn'] = self.str_to_ay('nqn.2014-08.org.nvmexpress:uuid:01234567-8900-abcd-efff-abcdabcdabcd')
+        d['host_id'] = self.str_to_ay('cccccccc-abcd-abcd-1234-1234567890ab')
+        ctrl_obj_path = manager.Connect(self.SUBNQN, "loop", "", d)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        hostnqn = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+        self.assertEqual(hostnqn, d['host_nqn'])
+        hostid = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostID')
+        self.assertEqual(hostid, d['host_id'])
+        transport = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'Transport')
+        self.assertEqual(transport, 'loop')
+        tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        ctrl = self.get_object(ctrl_obj_path)
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
+            self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
+
+    def test_hostnqn(self):
+        HOSTNQN_PATH = '/etc/nvme/hostnqn'
+        HOSTID_PATH = '/etc/nvme/hostid'
+        FAKE_HOSTNQN = 'nqn.2014-08.org.nvmexpress:uuid:beefbeef-beef-beef-beef-beefdeadbeef'
+        FAKE_HOSTID = 'beefbeef-beef-beef-beef-beefdeadbeef'
+
+        if PACKAGE_SYSCONF_DIR != '/etc':
+            self.skipTest("UDisks has been configured in non-system prefix, skipping...")
+
+        # save hostnqn and hostid files
+        try:
+            saved_hostnqn = read_file(HOSTNQN_PATH)
+            self.addCleanup(write_file, HOSTNQN_PATH, saved_hostnqn)
+        except:
+            self.addCleanup(self.remove_file, HOSTNQN_PATH, ignore_nonexistent=True)
+        try:
+            saved_hostid = read_file(HOSTID_PATH)
+            self.addCleanup(write_file, HOSTID_PATH, saved_hostid)
+        except:
+            self.addCleanup(self.remove_file, HOSTID_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTID_PATH, ignore_nonexistent=True)
+
+        # an external event, inotify watch on the daemon side
+        time.sleep(2)
+
+        manager = self.get_interface('/Manager', '.Manager.NVMe')
+        hostnqn = self.get_property_raw(manager, '.Manager.NVMe', 'HostNQN')
+        self.assertTrue(self.ay_to_str(hostnqn).startswith('nqn.2014-08.org.nvmexpress:uuid:'))
+        hostid = self.get_property_raw(manager, '.Manager.NVMe', 'HostID')
+        self.assertEqual(len(hostid), 1)  # the zero trailing byte
+
+        manager.SetHostNQN(self.str_to_ay(FAKE_HOSTNQN), self.no_options, dbus_interface=self.iface_prefix + '.Manager.NVMe')
+        manager.SetHostID(self.str_to_ay(FAKE_HOSTID), self.no_options, dbus_interface=self.iface_prefix + '.Manager.NVMe')
+        hostnqn = self.get_property_raw(manager, '.Manager.NVMe', 'HostNQN')
+        self.assertEqual(hostnqn, self.str_to_ay(FAKE_HOSTNQN))
+        hostid = self.get_property_raw(manager, '.Manager.NVMe', 'HostID')
+        self.assertEqual(hostid, self.str_to_ay(FAKE_HOSTID))
+
+        self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
+        self.remove_file(HOSTID_PATH, ignore_nonexistent=True)

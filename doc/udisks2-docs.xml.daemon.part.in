@@ -28,6 +28,7 @@
     <chapter id="ref-daemon-linux-types">
       <title>Linux-specific types</title>
       <xi:include href="xml/udiskslinuxmanager.xml"/>
+      <xi:include href="xml/udiskslinuxmanagernvme.xml"/>
       <xi:include href="xml/udiskslinuxprovider.xml"/>
       <xi:include href="xml/udiskslinuxdevice.xml"/>
     </chapter>
@@ -37,6 +38,7 @@
       <xi:include href="xml/udiskslinuxdriveata.xml"/>
       <xi:include href="xml/udiskslinuxdriveobject.xml"/>
       <xi:include href="xml/udiskslinuxnvmecontroller.xml"/>
+      <xi:include href="xml/udiskslinuxnvmefabrics.xml"/>
     </chapter>
     <chapter id="ref-daemon-mdraid">
       <title>Linux RAID</title>

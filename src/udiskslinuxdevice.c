@@ -433,3 +433,30 @@ udisks_linux_device_subsystem_is_nvme (UDisksLinuxDevice *device)
 
   return FALSE;
 }
+
+/**
+ * udisks_linux_device_nvme_is_fabrics:
+ * @device: A #UDisksLinuxDevice.
+ *
+ * Determines whether @device is a NVMe over Fabrics device.
+ *
+ * Returns: %TRUE in case of a NVMeoF device, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_nvme_is_fabrics (UDisksLinuxDevice *device)
+{
+  const gchar *transport;
+
+  if (!udisks_linux_device_subsystem_is_nvme (device))
+    return FALSE;
+
+  transport = g_udev_device_get_sysfs_attr (device->udev_device, "transport");
+  /* Consider only 'pcie' local */
+  if (g_strcmp0 (transport, "rdma") == 0 ||
+      g_strcmp0 (transport, "fc") == 0 ||
+      g_strcmp0 (transport, "tcp") == 0 ||
+      g_strcmp0 (transport, "loop") == 0)
+    return TRUE;
+
+  return FALSE;
+}

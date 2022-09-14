@@ -36,6 +36,7 @@ $(CONFIG_H_PY):
 		echo -n "'$$i', " >> $(CONFIG_H_PY); \
 	done
 	echo '])' >> $(CONFIG_H_PY)
+	echo "PACKAGE_SYSCONF_DIR = \""$(sysconfdir)"\"" >> $(CONFIG_H_PY)
 
 all:
 

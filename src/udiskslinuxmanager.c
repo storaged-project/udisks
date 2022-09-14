@@ -69,8 +69,6 @@ struct _UDisksLinuxManager
 {
   UDisksManagerSkeleton parent_instance;
 
-  GMutex lock;
-
   UDisksDaemon *daemon;
 };
 
@@ -95,10 +93,6 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManager, udisks_linux_manager, UDISKS_TYPE_M
 static void
 udisks_linux_manager_finalize (GObject *object)
 {
-  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
-
-  g_mutex_clear (&(manager->lock));
-
   G_OBJECT_CLASS (udisks_linux_manager_parent_class)->finalize (object);
 }
 
@@ -176,7 +170,6 @@ set_supported_filesystems (UDisksLinuxManager *manager)
 static void
 udisks_linux_manager_init (UDisksLinuxManager *manager)
 {
-  g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 

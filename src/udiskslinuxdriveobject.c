@@ -38,6 +38,7 @@
 #include "udisksmodule.h"
 #include "udisksmoduleobject.h"
 #include "udiskslinuxnvmecontroller.h"
+#include "udiskslinuxnvmefabrics.h"
 
 /**
  * SECTION:udiskslinuxdriveobject
@@ -68,6 +69,7 @@ struct _UDisksLinuxDriveObject
   UDisksDrive *iface_drive;
   UDisksDriveAta *iface_drive_ata;
   UDisksLinuxNVMeController *iface_nvme_ctrl;
+  UDisksNVMeFabrics *iface_nvme_fabrics;
   GHashTable *module_ifaces;
 };
 
@@ -99,6 +101,8 @@ udisks_linux_drive_object_finalize (GObject *_object)
     g_object_unref (object->iface_drive_ata);
   if (object->iface_nvme_ctrl != NULL)
     g_object_unref (object->iface_nvme_ctrl);
+  if (object->iface_nvme_fabrics != NULL)
+    g_object_unref (object->iface_nvme_fabrics);
   if (object->module_ifaces != NULL)
     g_hash_table_destroy (object->module_ifaces);
 
@@ -661,6 +665,34 @@ nvme_ctrl_update (UDisksObject   *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+nvme_fabrics_check (UDisksObject *object)
+{
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+
+  if (drive_object->devices == NULL)
+    return FALSE;
+
+  return udisks_linux_device_nvme_is_fabrics (drive_object->devices->data);
+}
+
+static void
+nvme_fabrics_connect (UDisksObject *object)
+{
+}
+
+static gboolean
+nvme_fabrics_update (UDisksObject   *object,
+                     const gchar    *uevent_action,
+                     GDBusInterface *_iface)
+{
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+
+  return udisks_linux_nvme_fabrics_update (UDISKS_LINUX_NVME_FABRICS (drive_object->iface_nvme_fabrics), drive_object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void apply_configuration (UDisksLinuxDriveObject *object);
 
 static GList *
@@ -742,6 +774,8 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
                                 UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
   conf_changed |= update_iface (UDISKS_OBJECT (object), action, nvme_ctrl_check, nvme_ctrl_connect, nvme_ctrl_update,
                                 UDISKS_TYPE_LINUX_NVME_CONTROLLER, &object->iface_nvme_ctrl);
+  conf_changed |= update_iface (UDISKS_OBJECT (object), action, nvme_fabrics_check, nvme_fabrics_connect, nvme_fabrics_update,
+                                UDISKS_TYPE_LINUX_NVME_FABRICS, &object->iface_nvme_fabrics);
 
   /* Attach interfaces from modules */
   module_manager = udisks_daemon_get_module_manager (object->daemon);
