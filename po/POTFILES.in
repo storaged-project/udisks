@@ -30,9 +30,11 @@ src/udiskslinuxencrypted.c
 src/udiskslinuxfilesystem.c
 src/udiskslinuxloop.c
 src/udiskslinuxmanager.c
+src/udiskslinuxmanagernvme.c
 src/udiskslinuxmdraid.c
 src/udiskslinuxmountoptions.c
 src/udiskslinuxnvmecontroller.c
+src/udiskslinuxnvmefabrics.c
 src/udiskslinuxnvmenamespace.c
 src/udiskslinuxpartition.c
 src/udiskslinuxpartitiontable.c
