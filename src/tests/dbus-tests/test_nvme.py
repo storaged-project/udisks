@@ -312,9 +312,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertTrue(wwn.startswith('uuid.'))
             lbaf = self.get_property_raw(ns, '.NVMe.Namespace', 'LBAFormats')
             self.assertEquals(len(lbaf), 1)
-            self.assertEquals(lbaf[0], (512, 1))
+            self.assertEquals(lbaf[0], (512, 0, 1))
             lbaf_curr = self.get_property_raw(ns, '.NVMe.Namespace', 'FormattedLBASize')
-            self.assertEquals(lbaf_curr, (512, 1))
+            self.assertEquals(lbaf_curr, (512, 0, 1))
             nsize = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceSize')
             self.assertEqual(nsize, self.NS_SIZE / lbaf_curr[0])
             ncap = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceCapacity')
@@ -465,9 +465,18 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = lbaf_curr[0]
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = lbaf_curr[0]
+                d['metadata_size'] = lbaf_curr[1]
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
             msg = "Couldn't match desired LBA data block size in a device supported LBA format data sizes"
             with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = dbus.UInt16(666)
+                ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                d['lba_data_size'] = lbaf_curr[0]
+                d['metadata_size'] = dbus.UInt16(5)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
     def test_fabrics_connect(self):

@@ -1491,9 +1491,10 @@
 
          List of LBA formats supported by the controller.
 
-         This is an array of pairs of (@size, @performance) where @size denotes
-         LBA Data Size in bytes and @performance indicates the relative performance
-         relative to other formats in the list.
+         This is an array of triplets of (@size, @metadata_size, @performance) where @size
+         denotes LBA Data Size in bytes, @metadata_size denotes the number of metadata bytes
+         provided per LBA and @performance indicates the relative performance relative
+         to other formats in the list.
 
          Known values for <literal>performance</literal> include:
          <variablelist>
@@ -1504,20 +1505,21 @@
            <varlistentry><term>4</term><listitem><para>Degraded performance</para></listitem></varlistentry>
          </variablelist>
     -->
-    <property name="LBAFormats" type="a(qy)" access="read"/>
+    <property name="LBAFormats" type="a(qqy)" access="read"/>
 
     <!-- FormattedLBASize:
          @since: 2.10.0
 
-         The LBA data size and the relative performance index that the namespace
-         has been formatted with.
+         The actual LBA data size, the metadata size and the relative performance index
+         that the namespace has been formatted with.
 
-         Similar to #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats this is a pair
-         of (@size, @performance) where @size denotes a LBA Data Size in bytes and
-         @performance indicates the relative performance  relative to other formats
+         Similar to #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats this is a triplet
+         of (@size, @metadata_size, @performance) where @size denotes LBA Data Size
+         in bytes, @metadata_size denotes the number of metadata bytes provided per LBA
+         and @performance indicates the relative performance relative to other formats
          indicated in the #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats property.
     -->
-    <property name="FormattedLBASize" type="(qy)" access="read"/>
+    <property name="FormattedLBASize" type="(qqy)" access="read"/>
 
     <!-- NamespaceSize:
          @since: 2.10.0
@@ -1557,13 +1559,14 @@
 
     <!--
         FormatNamespace:
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>lba_data_size</parameter> (of type 'q') and <parameter>secure_erase</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>lba_data_size</parameter> (of type 'q'), <parameter>metadata_size</parameter> (of type 'q') and <parameter>secure_erase</parameter> (of type 's').
         @since: 2.10.0
 
         Performs low level format of the NVM media, destroying all data and metadata in the current namespace.
 
         The optional @lba_data_size parameter indicates the LBA Data Size in bytes to use (see the related
-        #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats property). If not specified, the current active format is used.
+        #org.freedesktop.UDisks2.NVMe.Namespace:LBAFormats property) and similarly the @metadata_size parameter
+        denotes the number of metadata bytes provided per LBA. If not specified, the current active format is used.
 
         The optional @secure_erase parameter can be used to perform secure erase - valid values are
         <literal>user_data</literal> where the user data are overwritten by a pattern, and <literal>crypto_erase</literal>
