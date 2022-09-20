@@ -1636,16 +1636,16 @@ has_whitespace (const gchar *s)
 static gchar *
 make_block_luksname (UDisksBlock *block, GError **error)
 {
-  gchar *uuid = NULL;
+  BDCryptoLUKSInfo *info = NULL;
 
   udisks_linux_block_encrypted_lock (block);
-  uuid = bd_crypto_luks_uuid (udisks_block_get_device (block), error);
+  info = bd_crypto_luks_info (udisks_block_get_device (block), error);
   udisks_linux_block_encrypted_unlock (block);
 
-  if (uuid)
+  if (info)
     {
-      gchar *ret = g_strdup_printf ("luks-%s", uuid);
-      g_free (uuid);
+      gchar *ret = g_strdup_printf ("luks-%s", info->uuid);
+      bd_crypto_luks_info_free (info);
 
       return ret;
     }
