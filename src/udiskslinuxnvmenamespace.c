@@ -169,8 +169,9 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
       if (device->nvme_ns_info->current_lba_format.data_size > 0)
         {
           udisks_nvme_namespace_set_formatted_lbasize (iface,
-              g_variant_new ("(qy)", device->nvme_ns_info->current_lba_format.data_size,
-                                     device->nvme_ns_info->current_lba_format.relative_performance));
+              g_variant_new ("(qqy)", device->nvme_ns_info->current_lba_format.data_size,
+                                      device->nvme_ns_info->current_lba_format.metadata_size,
+                                      device->nvme_ns_info->current_lba_format.relative_performance));
         }
 
       if (device->nvme_ns_info->lba_formats && *device->nvme_ns_info->lba_formats)
@@ -178,10 +179,13 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
           GVariantBuilder builder;
           BDNVMELBAFormat **f;
 
-          g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(qy)"));
+          g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(qqy)"));
 
           for (f = device->nvme_ns_info->lba_formats; *f; f++)
-            g_variant_builder_add (&builder, "(qy)", (*f)->data_size, (*f)->relative_performance);
+            g_variant_builder_add (&builder, "(qqy)",
+                                   (*f)->data_size,
+                                   (*f)->metadata_size,
+                                   (*f)->relative_performance);
 
           udisks_nvme_namespace_set_lbaformats (iface, g_variant_builder_end (&builder));
         }
@@ -309,6 +313,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
   UDisksDaemon *daemon;
   UDisksLinuxDevice *device = NULL;
   guint16 lba_data_size = 0;
+  guint16 metadata_size = 0;
   const gchar *arg_secure_erase = NULL;
   BDNVMEFormatSecureErase secure_erase = BD_NVME_FORMAT_SECURE_ERASE_NONE;
   uid_t caller_uid;
@@ -334,6 +339,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
     }
 
   g_variant_lookup (arg_options, "lba_data_size", "q", &lba_data_size);
+  g_variant_lookup (arg_options, "metadata_size", "q", &metadata_size);
   g_variant_lookup (arg_options, "secure_erase", "s", &arg_secure_erase);
 
   if (arg_secure_erase)
@@ -400,6 +406,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
   /* Trigger the format operation */
   if (!bd_nvme_format (g_udev_device_get_device_file (device->udev_device),
                        lba_data_size,
+                       metadata_size,
                        secure_erase,
                        &error))
     {
