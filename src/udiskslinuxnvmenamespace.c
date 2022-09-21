@@ -212,18 +212,31 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  UDisksLinuxNVMeNamespace *ns;
+  gboolean feat_progress;
+} FormatNSData;
+
+static void
+free_format_ns_data (FormatNSData *data)
+{
+  g_object_unref (data->ns);
+  g_free (data);
+}
+
 static gboolean
 format_ns_job_func (UDisksThreadedJob  *job,
                     GCancellable       *cancellable,
                     gpointer            user_data,
                     GError            **error)
 {
-  UDisksLinuxNVMeNamespace *ns = UDISKS_LINUX_NVME_NAMESPACE (user_data);
+  FormatNSData *data = user_data;
   UDisksLinuxBlockObject *object;
   UDisksLinuxDevice *device = NULL;
   gboolean ret = FALSE;
 
-  object = udisks_daemon_util_dup_object (ns, error);
+  object = udisks_daemon_util_dup_object (data->ns, error);
   if (object == NULL)
     goto out;
 
@@ -240,33 +253,37 @@ format_ns_job_func (UDisksThreadedJob  *job,
 
   while (!g_cancellable_is_cancelled (cancellable))
     {
-      BDNVMENamespaceInfo *ns_info;
       GPollFD poll_fd;
 
-      ns_info = bd_nvme_get_namespace_info (g_udev_device_get_device_file (device->udev_device), error);
-      if (!ns_info)
+      if (data->feat_progress)
         {
-          udisks_warning ("Unable to retrieve namespace info for %s while polling during the format operation: %s (%s, %d)",
-                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
-                          (*error)->message, g_quark_to_string ((*error)->domain), (*error)->code);
-          goto out;
-        }
+          BDNVMENamespaceInfo *ns_info;
+          gdouble progress;
 
-      /* Update the properties */
-      if ((ns_info->features & BD_NVME_NS_FEAT_FORMAT_PROGRESS) == BD_NVME_NS_FEAT_FORMAT_PROGRESS)
-        {
-          gdouble progress = (100 - ns_info->format_progress_remaining) / 100.0;
+          ns_info = bd_nvme_get_namespace_info (g_udev_device_get_device_file (device->udev_device), error);
+          if (!ns_info)
+            {
+              udisks_warning ("Unable to retrieve namespace info for %s while polling during the format operation: %s (%s, %d)",
+                              g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                              (*error)->message, g_quark_to_string ((*error)->domain), (*error)->code);
+              goto out;
+            }
 
-          g_mutex_lock (&ns->format_lock);
-          udisks_nvme_namespace_set_format_percent_remaining (UDISKS_NVME_NAMESPACE (ns),
+          /* Update the properties */
+          progress = (100 - ns_info->format_progress_remaining) / 100.0;
+
+          g_mutex_lock (&data->ns->format_lock);
+          udisks_nvme_namespace_set_format_percent_remaining (UDISKS_NVME_NAMESPACE (data->ns),
                                                               ns_info->format_progress_remaining);
-          g_mutex_unlock (&ns->format_lock);
+          g_mutex_unlock (&data->ns->format_lock);
 
           if (progress < 0.0)
             progress = 0.0;
           if (progress > 1.0)
             progress = 1.0;
           udisks_job_set_progress (UDISKS_JOB (job), progress);
+
+          bd_nvme_namespace_info_free (ns_info);
         }
 
       /* Sleep for 5 seconds or until we're cancelled */
@@ -294,9 +311,9 @@ format_ns_job_func (UDisksThreadedJob  *job,
 
  out:
   /* terminate the job */
-  g_mutex_lock (&ns->format_lock);
-  ns->format_job = NULL;
-  g_mutex_unlock (&ns->format_lock);
+  g_mutex_lock (&data->ns->format_lock);
+  data->ns->format_job = NULL;
+  g_mutex_unlock (&data->ns->format_lock);
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
@@ -317,6 +334,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
   const gchar *arg_secure_erase = NULL;
   BDNVMEFormatSecureErase secure_erase = BD_NVME_FORMAT_SECURE_ERASE_NONE;
   uid_t caller_uid;
+  FormatNSData *data;
   GCancellable *cancellable = NULL;
   GError *error = NULL;
 
@@ -365,6 +383,12 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
                                              "No udev device");
       goto out;
     }
+  if (device->nvme_ns_info == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No probed namespace info available");
+      goto out;
+    }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     UDISKS_OBJECT (object),
@@ -392,13 +416,16 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
       goto out;
     }
   cancellable = g_cancellable_new ();
+  data = g_new0 (FormatNSData, 1);
+  data->ns = g_object_ref (ns);
+  data->feat_progress = (device->nvme_ns_info->features & BD_NVME_NS_FEAT_FORMAT_PROGRESS) == BD_NVME_NS_FEAT_FORMAT_PROGRESS;
   ns->format_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
                                                                            UDISKS_OBJECT (object),
                                                                            "nvme-format-ns",
                                                                            caller_uid,
                                                                            format_ns_job_func,
-                                                                           g_object_ref (ns),
-                                                                           g_object_unref,
+                                                                           data,
+                                                                           (GDestroyNotify) free_format_ns_data,
                                                                            cancellable));
   udisks_threaded_job_start (ns->format_job);
   g_mutex_unlock (&ns->format_lock);
