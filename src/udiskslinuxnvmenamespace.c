@@ -150,7 +150,9 @@ udisks_linux_nvme_namespace_update (UDisksLinuxNVMeNamespace *ns,
 
   nsid = g_udev_device_get_sysfs_attr_as_int (device->udev_device, "nsid");
   nguid = g_udev_device_get_sysfs_attr (device->udev_device, "nguid");
-  uuid = g_udev_device_get_sysfs_attr (device->udev_device, "uuid");
+  /* not reading the 'uuid' attr to avoid bogus messages from the kernel:
+   *   block nvme0n1: No UUID available providing old NGUID
+   */
   wwn = g_udev_device_get_sysfs_attr (device->udev_device, "wwid");
   if (!wwn)
     wwn = g_udev_device_get_property (device->udev_device, "ID_WWN");
