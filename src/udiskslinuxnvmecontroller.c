@@ -341,9 +341,9 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
 {
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device;
-  BDNVMESmartLog *smart_log;
-  BDNVMESelfTestLog *selftest_log;
-  BDNVMESanitizeLog *sanitize_log;
+  BDNVMESmartLog *smart_log = NULL;
+  BDNVMESelfTestLog *selftest_log = NULL;
+  BDNVMESanitizeLog *sanitize_log = NULL;
   const gchar *dev_file;
 
   object = udisks_daemon_util_dup_object (ctrl, error);
@@ -364,10 +364,24 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
                            "No device file available");
       return FALSE;
     }
+  if (device->nvme_ctrl_info == NULL)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "No probed controller info available");
+      return FALSE;
+    }
 
+  /* Controller capabilities check - there's no authoritative way to find out which
+   * log pages are actually supported, taking controller feature flags in account instead.
+   * The "Supported Log Pages" log page support only came with NVMe 2.0 specification.
+   */
   smart_log = bd_nvme_get_smart_log (dev_file, error);
-  selftest_log = bd_nvme_get_self_test_log (dev_file, NULL);
-  sanitize_log = bd_nvme_get_sanitize_log (dev_file, NULL);
+  if ((device->nvme_ctrl_info->features & BD_NVME_CTRL_FEAT_SELFTEST) == BD_NVME_CTRL_FEAT_SELFTEST)
+    selftest_log = bd_nvme_get_self_test_log (dev_file, NULL);
+  if ((device->nvme_ctrl_info->features & BD_NVME_CTRL_FEAT_SANITIZE_CRYPTO) == BD_NVME_CTRL_FEAT_SANITIZE_CRYPTO ||
+      (device->nvme_ctrl_info->features & BD_NVME_CTRL_FEAT_SANITIZE_BLOCK) == BD_NVME_CTRL_FEAT_SANITIZE_BLOCK ||
+      (device->nvme_ctrl_info->features & BD_NVME_CTRL_FEAT_SANITIZE_OVERWRITE) == BD_NVME_CTRL_FEAT_SANITIZE_OVERWRITE)
+    sanitize_log = bd_nvme_get_sanitize_log (dev_file, NULL);
   if (smart_log || selftest_log || sanitize_log)
     {
       g_mutex_lock (&ctrl->smart_lock);
@@ -738,6 +752,26 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
     }
   g_mutex_unlock (&ctrl->smart_lock);
 
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
+  if (device->nvme_ctrl_info == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No probed controller info available");
+      goto out;
+    }
+  if ((device->nvme_ctrl_info->features & BD_NVME_CTRL_FEAT_SELFTEST) != BD_NVME_CTRL_FEAT_SELFTEST)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "The NVMe controller has no support for self-test operations");
+      goto out;
+    }
+
   if (g_strcmp0 (type, "short") == 0)
     action = BD_NVME_SELF_TEST_ACTION_SHORT;
   else if (g_strcmp0 (type, "extended") == 0)
@@ -767,31 +801,9 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
                                                     invocation))
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  if (device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No udev device");
-      goto out;
-    }
-
   /* Time estimates */
   if (action == BD_NVME_SELF_TEST_ACTION_EXTENDED)
-    {
-      BDNVMEControllerInfo *ctrl_info;
-
-      ctrl_info = bd_nvme_get_controller_info (g_udev_device_get_device_file (device->udev_device), &error);
-      if (ctrl_info == NULL)
-        {
-          udisks_warning ("Error retrieving controller info for %s: %s (%s, %d)",
-                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
-                          error->message, g_quark_to_string (error->domain), error->code);
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
-      time_est = ctrl_info->selftest_ext_time * 60 * 1000000;
-      bd_nvme_controller_info_free (ctrl_info);
-    }
+    time_est = device->nvme_ctrl_info->selftest_ext_time * 60 * 1000000;
 
   /* Check that the Device Self-test (Log Identifier 06h) log page can be retrieved,
    * otherwise we wouldn't be able to detect the test progress and its completion.
@@ -1056,6 +1068,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
   UDisksDaemon *daemon;
   UDisksLinuxDevice *device = NULL;
   BDNVMESanitizeAction action;
+  BDNVMEControllerFeature ctrl_feature;
   gint overwrite_pass_count = 0;
   guint32 overwrite_pattern = 0;
   gboolean overwrite_invert_pattern = FALSE;
@@ -1103,18 +1116,49 @@ handle_sanitize_start (UDisksNVMeController  *_object,
     }
   g_mutex_unlock (&ctrl->smart_lock);
 
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
+  if (device->nvme_ctrl_info == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No probed controller info available");
+      goto out;
+    }
+
   if (g_strcmp0 (arg_action, "block-erase") == 0)
-    action = BD_NVME_SANITIZE_ACTION_BLOCK_ERASE;
+    {
+      action = BD_NVME_SANITIZE_ACTION_BLOCK_ERASE;
+      ctrl_feature = BD_NVME_CTRL_FEAT_SANITIZE_BLOCK;
+    }
   else if (g_strcmp0 (arg_action, "overwrite") == 0)
-    action = BD_NVME_SANITIZE_ACTION_OVERWRITE;
+    {
+      action = BD_NVME_SANITIZE_ACTION_OVERWRITE;
+      ctrl_feature = BD_NVME_CTRL_FEAT_SANITIZE_OVERWRITE;
+    }
   else if (g_strcmp0 (arg_action, "crypto-erase") == 0)
-    action = BD_NVME_SANITIZE_ACTION_CRYPTO_ERASE;
+    {
+      action = BD_NVME_SANITIZE_ACTION_CRYPTO_ERASE;
+      ctrl_feature = BD_NVME_CTRL_FEAT_SANITIZE_CRYPTO;
+    }
   else
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Unknown sanitize action %s", arg_action);
+      goto out;
+    }
+
+  if ((device->nvme_ctrl_info->features & ctrl_feature) != ctrl_feature)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "The NVMe controller has no support for the %s sanitize operation",
+                                             arg_action);
       goto out;
     }
 
@@ -1135,14 +1179,6 @@ handle_sanitize_start (UDisksNVMeController  *_object,
                                                     N_("Authentication is required to perform a sanitize operation of $(drive)"),
                                                     invocation))
     goto out;
-
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  if (device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No udev device");
-      goto out;
-    }
 
   /* Check that the Sanitize Status (Log Identifier 81h) log page can be retrieved,
    * otherwise we wouldn't be able to detect the sanitize progress and its status.

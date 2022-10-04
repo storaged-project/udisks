@@ -376,10 +376,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(attrs['critical_temp_time'], 0);
 
         # Try trigerring a self-test operation
-        msg = 'Unknown self-test type xxx'
+        msg = 'The NVMe controller has no support for self-test operations'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-        msg = 'NVMe Get Log Page - Device Self-test Log command error: Invalid Field in Command'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestStart('short', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         msg = 'NVMe Device Self-test command error: Invalid Command Opcode'
@@ -415,7 +414,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         msg = 'Unknown sanitize action xxx'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-        msg = 'NVMe Get Log Page - Sanitize Status Log command error: Invalid Field in Command'
+        msg = r'The NVMe controller has no support for the .* sanitize operation'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('block-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
