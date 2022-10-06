@@ -1422,6 +1422,13 @@ class NTFSCommonTestCase(UdisksFSTestCase):
     _can_label = True
     _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
+    _have_ntfs3g = UdisksFSTestCase.command_exists('ntfs-3g')
+
+    @classmethod
+    def setUpClass(cls):
+        udiskstestcase.UdisksTestCase.setUpClass()
+        if not BlockDev.utils_have_kernel_module('ntfs3') and not BlockDev.utils_have_kernel_module('ntfs3') and not cls._have_ntfs3g:
+            raise unittest.SkipTest('No ntfs/ntfs3/ntfs3g implementation available, skipping.')
 
     def test_mount_auto_configurable_mount_options(self):
         raise unittest.SkipTest('Not applicable for the common NTFS test case, skipping.')
