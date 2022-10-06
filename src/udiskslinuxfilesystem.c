@@ -1127,8 +1127,7 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
                         (*mount_options_i)->options,
                         NULL, &error))
         {
-          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_UNKNOWN_FS) &&
-              *(mount_options_i + sizeof (void *)))
+          if (g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_UNKNOWN_FS) && *(mount_options_i + 1))
             {
               /* Unknown filesystem, continue to the next one unless this is the last entry */
               g_clear_error (&error);
