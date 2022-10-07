@@ -360,7 +360,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
 
   g_variant_lookup (arg_options, "lba_data_size", "q", &lba_data_size);
   g_variant_lookup (arg_options, "metadata_size", "q", &metadata_size);
-  g_variant_lookup (arg_options, "secure_erase", "s", &arg_secure_erase);
+  g_variant_lookup (arg_options, "secure_erase", "&s", &arg_secure_erase);
 
   if (arg_secure_erase)
     {
