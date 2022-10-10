@@ -171,11 +171,8 @@ iscsi_perform_login_action (UDisksLinuxModuleISCSI     *module,
   /* Get a libiscsi context. */
   ctx = udisks_linux_module_iscsi_get_libiscsi_context (module);
 
-  if (action == ACTION_LOGIN &&
-      auth_info && auth_info->method == libiscsi_auth_chap)
-    {
-      libiscsi_node_set_auth (ctx, node, auth_info);
-    }
+  if (action == ACTION_LOGIN && auth_info)
+    libiscsi_node_set_auth (ctx, node, auth_info);
 
   /* Login or Logout */
   err = action == ACTION_LOGIN ?
