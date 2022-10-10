@@ -284,3 +284,61 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # make sure the session object is no longer on dbus
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(session_path, objects.keys())
+
+    def test_login_noauth_badauth(self):
+        """
+        Test auth info override
+        """
+        manager = self.get_object('/Manager')
+        nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
+                                               dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                               timeout=self.iscsi_timeout)
+
+        node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
+        self.assertIsNotNone(node)
+
+        (iqn, tpg, host, port, iface) = node
+        self.assertEqual(iqn, self.noauth_iqn)
+        self.assertEqual(host, self.address)
+        self.assertEqual(port, self.port)
+
+        self.addCleanup(self._force_lougout, self.noauth_iqn)
+
+        # first attempt - wrong password
+        options = dbus.Dictionary(signature='sv')
+        options['username'] = self.initiator
+        msg = 'Login failed: initiator reported error'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            options['password'] = '12345'
+            manager.Login(iqn, tpg, host, port, iface, options,
+                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                          timeout=self.iscsi_timeout)
+
+        # second atttempt - no password
+        manager.Login(iqn, tpg, host, port, iface, self.no_options,
+                      dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                      timeout=self.iscsi_timeout)
+
+        devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
+        self.assertEqual(len(devs), 1)
+
+        # check if the block device have 'Symlinks' property updated
+        disk_name = os.path.realpath(devs[0]).split('/')[-1]
+        disk_obj = self.get_object('/block_devices/' + disk_name)
+        dbus_path = str(disk_obj.object_path)
+        self.assertIsNotNone(disk_obj)
+
+        symlinks = self.get_property_raw(disk_obj, '.Block', 'Symlinks')
+        self.assertIn(self.str_to_ay(devs[0]), symlinks)
+
+        manager.Logout(iqn, tpg, host, port, iface, self.no_options,
+                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                       timeout=self.iscsi_timeout)
+
+        devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
+        self.assertEqual(len(devs), 0)
+
+        # make sure the disk is no longer on dbus
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        self.assertNotIn(dbus_path, objects.keys())
