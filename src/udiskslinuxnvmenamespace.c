@@ -62,6 +62,7 @@ struct _UDisksLinuxNVMeNamespace
   UDisksNVMeNamespaceSkeleton parent_instance;
 
   GMutex             format_lock;
+  GCond              format_cond;
   UDisksThreadedJob *format_job;
 };
 
@@ -81,6 +82,7 @@ static void
 udisks_linux_nvme_namespace_init (UDisksLinuxNVMeNamespace *ns)
 {
   g_mutex_init (&ns->format_lock);
+  g_cond_init (&ns->format_cond);
 
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (ns),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
@@ -92,6 +94,7 @@ udisks_linux_nvme_namespace_finalize (GObject *object)
   UDisksLinuxNVMeNamespace *ns = UDISKS_LINUX_NVME_NAMESPACE (object);
 
   g_mutex_clear (&ns->format_lock);
+  g_cond_clear (&ns->format_cond);
 
   if (G_OBJECT_CLASS (udisks_linux_nvme_namespace_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_nvme_namespace_parent_class)->finalize (object);
@@ -221,8 +224,12 @@ typedef struct
 } FormatNSData;
 
 static void
-free_format_ns_data (FormatNSData *data)
+format_ns_job_func_done (FormatNSData *data)
 {
+  g_mutex_lock (&data->ns->format_lock);
+  data->ns->format_job = NULL;
+  g_cond_signal (&data->ns->format_cond);
+  g_mutex_unlock (&data->ns->format_lock);
   g_object_unref (data->ns);
   g_free (data);
 }
@@ -313,9 +320,6 @@ format_ns_job_func (UDisksThreadedJob  *job,
 
  out:
   /* terminate the job */
-  g_mutex_lock (&data->ns->format_lock);
-  data->ns->format_job = NULL;
-  g_mutex_unlock (&data->ns->format_lock);
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
@@ -427,7 +431,7 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
                                                                            caller_uid,
                                                                            format_ns_job_func,
                                                                            data,
-                                                                           (GDestroyNotify) free_format_ns_data,
+                                                                           (GDestroyNotify) format_ns_job_func_done,
                                                                            cancellable));
   udisks_threaded_job_start (ns->format_job);
   g_mutex_unlock (&ns->format_lock);
@@ -439,15 +443,27 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
                        secure_erase,
                        &error))
     {
+      /* cancel the job and wait until the job func finishes */
+      g_cancellable_cancel (cancellable);
+      g_mutex_lock (&ns->format_lock);
+      while (ns->format_job != NULL)
+        g_cond_wait (&ns->format_cond, &ns->format_lock);
+      g_mutex_unlock (&ns->format_lock);
+
       udisks_warning ("Error formatting namespace %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
       g_dbus_method_invocation_take_error (invocation, error);
-      g_cancellable_cancel (cancellable);
       goto out;
     }
 
+  /* cancel the job and wait until the job func finishes */
   g_cancellable_cancel (cancellable);
+  g_mutex_lock (&ns->format_lock);
+  while (ns->format_job != NULL)
+    g_cond_wait (&ns->format_cond, &ns->format_lock);
+  g_mutex_unlock (&ns->format_lock);
+
   if (!udisks_linux_block_object_reread_partition_table (object, &error))
     {
       udisks_warning ("%s", error->message);
