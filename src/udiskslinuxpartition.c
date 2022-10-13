@@ -339,7 +339,6 @@ handle_set_flags (UDisksPartition       *partition,
   gchar *partition_name = NULL;
   gboolean bootable = FALSE;
   GError *error = NULL;
-  guint64 bd_flags = 0;
   UDisksBaseJob *job = NULL;
 
   if (!check_authorization (partition, invocation, options, &caller_uid))
@@ -384,21 +383,10 @@ handle_set_flags (UDisksPartition       *partition,
 
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
-      if (flags & 1) /* 1 << 0 */
-          bd_flags |= BD_PART_FLAG_GPT_SYSTEM_PART;
-      if (flags & 4) /* 1 << 2 */
-          bd_flags |= BD_PART_FLAG_LEGACY_BOOT;
-      if (flags & 0x1000000000000000) /* 1 << 60 */
-          bd_flags |= BD_PART_FLAG_GPT_READ_ONLY;
-      if (flags & 0x4000000000000000) /* 1 << 62 */
-          bd_flags |= BD_PART_FLAG_GPT_HIDDEN;
-      if (flags & 0x8000000000000000) /* 1 << 63 */
-          bd_flags |= BD_PART_FLAG_GPT_NO_AUTOMOUNT;
-
-      if (!bd_part_set_part_flags (device_name,
-                                   partition_name,
-                                   bd_flags,
-                                   &error))
+      if (!bd_part_set_part_attributes (device_name,
+                                        partition_name,
+                                        flags,
+                                        &error))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -415,11 +403,10 @@ handle_set_flags (UDisksPartition       *partition,
       /* 7th bit - the partition is marked as bootable */
       bootable = !!(flags & 1 << 7); /* Narrow possible values to TRUE/FALSE */
 
-      if (!bd_part_set_part_flag (device_name,
-                                  partition_name,
-                                  BD_PART_FLAG_BOOT,
-                                  bootable,
-                                  &error))
+      if (!bd_part_set_part_bootable (device_name,
+                                      partition_name,
+                                      bootable,
+                                      &error))
       {
         g_dbus_method_invocation_return_error (invocation,
                                                UDISKS_ERROR,
