@@ -406,74 +406,6 @@ if test "x$enable_btrfs" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
 
-# ZRAM module
-have_kbd="no"
-have_swap="no"
-have_zram="no"
-AC_ARG_ENABLE(zram, AS_HELP_STRING([--enable-zram], [enable ZRAM support]))
-if test "x$enable_zram" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_available_modules" = "xyes"; then
-    # libblockdev
-    SAVE_CFLAGS=$CFLAGS
-    SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS"
-    LDFLAGS="$GLIB_LIBS"
-
-    # libblockdev-kbd
-    AC_MSG_CHECKING([libblockdev-kbd presence])
-    AC_TRY_COMPILE([#include <blockdev/kbd.h>], [],
-                   [AC_MSG_RESULT([yes])
-                    have_kbd=yes],
-                   [AC_MSG_RESULT([no])
-                    have_kbd=no])
-
-    if test "x$have_kbd" = "xno"; then
-        if test "x$enable_zram" = "xyes" -o "x$enable_modules" = "xyes"; then
-            AC_MSG_ERROR([KBD support requested but header or library not found])
-        fi
-    fi
-
-    CFLAGS="$GLIB_CFLAGS"
-    LDFLAGS="$GLIB_LIBS"
-
-    # libblockdev-swap
-    AC_MSG_CHECKING([libblockdev-swap presence])
-    AC_TRY_COMPILE([#include <blockdev/swap.h>], [],
-                   [AC_MSG_RESULT([yes])
-                   have_swap=yes],
-                   [AC_MSG_RESULT([no])
-                   have_swap=no])
-
-    CFLAGS=$SAVE_CFLAGS
-    LDFLAGS=$SAVE_LDFLAGS
-
-    if test "x$have_swap" = "xno"; then
-        if test "x$enable_zram" = "xyes" -o "x$enable_modules" = "xyes"; then
-            AC_MSG_ERROR([SWAP support requested but header or library not found])
-        fi
-    fi
-
-    # needs systemd
-    if test -z "$systemdsystemunitdir"; then
-        AC_MSG_ERROR([systemd is required for ZRAM support])
-    fi
-
-    have_zram="yes"
-
-    if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
-       AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
-    fi
-
-    AC_ARG_WITH([zramconfdir],
-      [AS_HELP_STRING([--with-zramconfdir=DIR], [Directory for ZRAM configuration])],
-      [zramconfdir=$withval],
-      [zramconfdir="${prefix}/lib/zram.conf.d"])
-    AC_SUBST([zramconfdir], [$zramconfdir])
-fi
-AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
-
-
 # LSM module
 have_lsm=no
 have_libconfig=no
@@ -507,36 +439,7 @@ if test "x$enable_lsm" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 
-# Bcache module
-have_bcache=no
-AC_ARG_ENABLE(bcache, AS_HELP_STRING([--enable-bcache], [enable Bcache support]))
-if test "x$enable_bcache" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_available_modules" = "xyes"; then
-    # libblockdev
-    SAVE_CFLAGS=$CFLAGS
-    SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$GLIB_CFLAGS"
-    LDFLAGS="$GLIB_LIBS"
-
-    # libblockdev-kbd
-    AC_MSG_CHECKING([libblockdev-kbd presence])
-    AC_TRY_COMPILE([#include <blockdev/kbd.h>], [],
-                   [AC_MSG_RESULT([yes])
-                    have_bcache=yes],
-                   [AC_MSG_RESULT([no])
-                    have_bcache=no])
-    CFLAGS=$SAVE_CFLAGS
-    LDFLAGS=$SAVE_LDFLAGS
-
-    if test "x$have_bcache" = "xno"; then
-        if test "x$enable_bcache" = "xyes" -o "x$enable_modules" = "xyes"; then
-            AC_MSG_ERROR([Bcache support requested but header or library not found])
-        fi
-    fi
-fi
-AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
-
+have_swap="no"
 if test "x$enable_daemon" = "xyes"; then
   # libblockdev part
   SAVE_CFLAGS=$CFLAGS
@@ -727,15 +630,9 @@ modules/iscsi/data/udisks2-iscsi.pc
 modules/lvm2/Makefile
 modules/lvm2/data/Makefile
 modules/lvm2/data/udisks2-lvm2.pc
-modules/zram/Makefile
-modules/zram/data/Makefile
-modules/zram/data/udisks2-zram.pc
 modules/lsm/Makefile
 modules/lsm/data/Makefile
 modules/lsm/data/udisks2-lsm.pc
-modules/bcache/Makefile
-modules/bcache/data/Makefile
-modules/bcache/data/udisks2-bcache.pc
 doc/Makefile
 doc/udisks2-docs.xml.in
 doc/udisks2-sections.txt.in
@@ -769,15 +666,6 @@ doc/udisks2-docs.xml.btrfs.dbus
 doc/udisks2-docs.xml.btrfs.generated
 doc/udisks2-sections.txt.btrfs.sections
 doc/udisks2.types.btrfs
-doc/udisks2-docs.xml.zram.dbus
-doc/udisks2-docs.xml.zram.generated
-doc/udisks2-docs.xml.zram.block_devices
-doc/udisks2-sections.txt.zram.sections
-doc/udisks2.types.zram
-doc/udisks2-docs.xml.bcache.dbus
-doc/udisks2-docs.xml.bcache.generated
-doc/udisks2-sections.txt.bcache.sections
-doc/udisks2.types.bcache
 po/Makefile.in
 ])
 
@@ -820,7 +708,5 @@ echo "
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
         LVMCache:                   ${have_lvmcache}
-        Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
-        Bcache module:              ${have_bcache}
 "

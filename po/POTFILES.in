@@ -1,9 +1,6 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
 data/org.freedesktop.UDisks2.policy.in
-modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in
-modules/bcache/udiskslinuxblockbcache.c
-modules/bcache/udiskslinuxmanagerbcache.c
 modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in
 modules/btrfs/udiskslinuxfilesystembtrfs.c
 modules/btrfs/udiskslinuxmanagerbtrfs.c
@@ -19,9 +16,6 @@ modules/lvm2/udiskslinuxmanagerlvm2.c
 modules/lvm2/udiskslinuxphysicalvolume.c
 modules/lvm2/udiskslinuxvdovolume.c
 modules/lvm2/udiskslinuxvolumegroup.c
-modules/zram/data/org.freedesktop.UDisks2.zram.policy.in
-modules/zram/udiskslinuxmanagerzram.c
-modules/zram/udiskslinuxblockzram.c
 src/udisksbasejob.c
 src/udiskslinuxblock.c
 src/udiskslinuxdrive.c

@@ -71,7 +71,6 @@
           Such objects implement the
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Block.top_of_page">org.freedesktop.UDisks2.Block</link>
           D-Bus interface and may optionally implement other D-Bus interfaces such as
-          <!-- ZRAM_BLOCK_DEVICES_IFACE -->
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>,
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Partition.top_of_page">org.freedesktop.UDisks2.Partition</link> or
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Loop.top_of_page">org.freedesktop.UDisks2.Loop</link> depending on the block device in question.
@@ -381,8 +380,6 @@
       <!-- LVM2_DBUS_INTERFACE -->
       <!-- ISCSI_DBUS_INTERFACE -->
       <!-- BTRFS_DBUS_INTERFACE -->
-      <!-- ZRAM_DBUS_INTERFACE -->
-      <!-- BCACHE_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -415,8 +412,6 @@
       <!-- LVM2_GENERATED_CODE -->
       <!-- ISCSI_GENERATED_CODE -->
       <!-- BTRFS_GENERATED_CODE -->
-      <!-- ZRAM_GENERATED_CODE -->
-      <!-- BCACHE_GENERATED_CODE -->
     </chapter>
   </part>
 
