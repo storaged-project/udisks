@@ -151,8 +151,14 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         options = dbus.Dictionary(signature='sv')
         options['username'] = self.initiator
 
+        msg = 'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
+        # missing auth info
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Login(iqn, tpg, host, port, iface, self.no_options,
+                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                          timeout=self.iscsi_timeout)
+
         # wrong password
-        msg = 'Login failed: initiator reported error'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
@@ -318,7 +324,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # first attempt - wrong password
         options = dbus.Dictionary(signature='sv')
         options['username'] = self.initiator
-        msg = 'Login failed: initiator reported error'
+        msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
