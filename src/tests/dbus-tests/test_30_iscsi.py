@@ -6,6 +6,7 @@ import os
 import re
 import six
 import time
+import shutil
 import unittest
 
 
@@ -25,6 +26,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     noauth_iqn = 'iqn.2003-01.udisks.test:iscsi-test-noauth'
     chap_iqn = 'iqn.2003-01.udisks.test:iscsi-test-chap'
     mutual_iqn = 'iqn.2003-01.udisks.test:iscsi-test-mutual'
+
 
     # Define common D-Bus method call timeout that needs to be slightly longer
     # than the corresponding timeout defined in libiscsi:
@@ -61,6 +63,10 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         initiator = bytearray(data)
         return initiator.strip().split(b"InitiatorName=")[1]
 
+    def _clean_iscsid_node_dir(self):
+        for iqn in [self.noauth_iqn, self.chap_iqn, self.mutual_iqn]:
+            shutil.rmtree(os.path.join('/var/lib/iscsi/nodes/', iqn), ignore_errors=True)
+
     def test__manager_interface(self):
         '''Test for module D-Bus Manager interface presence'''
 
@@ -86,6 +92,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                                                timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
 
         node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
         self.assertIsNotNone(node)
@@ -131,6 +138,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                                                timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
 
         node = next((node for node in nodes if node[0] == self.chap_iqn), None)
         self.assertIsNotNone(node)
@@ -143,8 +151,14 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         options = dbus.Dictionary(signature='sv')
         options['username'] = self.initiator
 
+        msg = 'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
+        # missing auth info
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            manager.Login(iqn, tpg, host, port, iface, self.no_options,
+                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                          timeout=self.iscsi_timeout)
+
         # wrong password
-        msg = 'Login failed: initiator reported error'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
@@ -190,6 +204,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                                                timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
 
         node = next((node for node in nodes if node[0] == self.mutual_iqn), None)
         self.assertIsNotNone(node)
@@ -246,6 +261,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                                                timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
 
         node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
         self.assertIsNotNone(node)
@@ -293,6 +309,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         nodes, _ = manager.DiscoverSendTargets(self.address, self.port, self.no_options,
                                                dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                                                timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
 
         node = next((node for node in nodes if node[0] == self.noauth_iqn), None)
         self.assertIsNotNone(node)
@@ -307,7 +324,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         # first attempt - wrong password
         options = dbus.Dictionary(signature='sv')
         options['username'] = self.initiator
-        msg = 'Login failed: initiator reported error'
+        msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,

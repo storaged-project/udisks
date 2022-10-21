@@ -385,7 +385,7 @@
       "tpgs": [
         {
           "attributes": {
-            "authentication": 0,
+            "authentication": 1,
             "cache_dynamic_acls": 0,
             "default_cmdsn_depth": 64,
             "default_erl": 0,
@@ -432,7 +432,7 @@
             }
           ],
           "parameters": {
-            "AuthMethod": "CHAP,None",
+            "AuthMethod": "CHAP",
             "DataDigest": "CRC32C,None",
             "DataPDUInOrder": "Yes",
             "DataSequenceInOrder": "Yes",
@@ -471,7 +471,7 @@
       "tpgs": [
         {
           "attributes": {
-            "authentication": 0,
+            "authentication": 1,
             "cache_dynamic_acls": 0,
             "default_cmdsn_depth": 64,
             "default_erl": 0,
@@ -520,7 +520,7 @@
             }
           ],
           "parameters": {
-            "AuthMethod": "CHAP,None",
+            "AuthMethod": "CHAP",
             "DataDigest": "CRC32C,None",
             "DataPDUInOrder": "Yes",
             "DataSequenceInOrder": "Yes",
