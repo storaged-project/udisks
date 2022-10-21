@@ -43,6 +43,7 @@
 #include "udisksdaemonutil.h"
 #include "udisksstate.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxblock.h"
 #include "udiskslinuxdevice.h"
 #include "udisksmodulemanager.h"
 #include "udiskssimplejob.h"
@@ -1193,25 +1194,17 @@ handle_get_block_devices (UDisksManager         *object,
   return TRUE;  /* returning TRUE means that we handled the method invocation */
 }
 
-static gboolean
-compare_paths (UDisksManager         *object,
-               UDisksBlock           *block,
-               const gchar           *path)
+static inline gboolean
+match_id_format (UDisksLinuxBlock *block, const gchar *key, const gchar *val)
 {
-  const gchar *const *symlinks = NULL;
+  gchar *s;
+  gboolean ret;
 
-  if (g_strcmp0 (udisks_block_get_device (block), path) == 0)
-    return TRUE;
+  s = g_strdup_printf ("%s=%s", key, val);
+  ret = udisks_linux_block_matches_id (block, s);
+  g_free (s);
 
-  symlinks = udisks_block_get_symlinks (block);
-  if (symlinks != NULL)
-    {
-      for (guint i = 0; symlinks[i] != NULL; i++)
-        if (g_strcmp0 (symlinks[i], path) == 0)
-          return TRUE;
-    }
-
-  return FALSE;
+  return ret;
 }
 
 static gboolean
@@ -1223,6 +1216,8 @@ handle_resolve_device (UDisksManager         *object,
   const gchar *devpath = NULL;
   const gchar *devuuid = NULL;
   const gchar *devlabel = NULL;
+  const gchar *partuuid = NULL;
+  const gchar *partlabel = NULL;
 
   GSList *blocks = NULL;
   GSList *blocks_p = NULL;
@@ -1233,28 +1228,42 @@ handle_resolve_device (UDisksManager         *object,
   guint num_found = 0;
   const gchar **ret_paths = NULL;
 
-  gboolean found = FALSE;
   guint i = 0;
 
   g_variant_lookup (arg_devspec, "path", "&s", &devpath);
   g_variant_lookup (arg_devspec, "uuid", "&s", &devuuid);
   g_variant_lookup (arg_devspec, "label", "&s", &devlabel);
+  g_variant_lookup (arg_devspec, "partuuid", "&s", &partuuid);
+  g_variant_lookup (arg_devspec, "partlabel", "&s", &partlabel);
+
+  if (!devpath && !devuuid && !devlabel && !partuuid && !partlabel)
+    {
+      g_dbus_method_invocation_return_error_literal (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Invalid device specification provided");
+      return TRUE;
+    }
 
   blocks = get_block_objects (object, &num_blocks);
 
   for (blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next)
     {
-      if (devpath != NULL)
-          found = compare_paths (object, blocks_p->data, devpath);
+      UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (blocks_p->data);
+      gboolean found = TRUE;
 
+      if (devpath != NULL)
+          found = udisks_linux_block_matches_id (block, devpath);
       if (devuuid != NULL)
-          found = g_strcmp0 (udisks_block_get_id_uuid (blocks_p->data), devuuid) == 0;
+          found = found && match_id_format (block, "UUID", devuuid);
       if (devlabel != NULL)
-          found = g_strcmp0 (udisks_block_get_id_label (blocks_p->data), devlabel) == 0;
+          found = found && match_id_format (block, "LABEL", devlabel);
+      if (partuuid != NULL)
+          found = found && match_id_format (block, "PARTUUID", partuuid);
+      if (partlabel != NULL)
+          found = found && match_id_format (block, "PARTLABEL", partlabel);
 
       if (found)
         {
-          ret = g_slist_prepend (ret, blocks_p->data);
+          ret = g_slist_prepend (ret, block);
           num_found++;
         }
     }
