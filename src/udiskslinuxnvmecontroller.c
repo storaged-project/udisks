@@ -66,6 +66,7 @@ struct _UDisksLinuxNVMeController
   guint64            smart_updated;
   BDNVMESmartLog    *smart_log;
 
+  GCond              selftest_cond;
   BDNVMESelfTestLog *selftest_log;
   UDisksThreadedJob *selftest_job;
 
@@ -97,6 +98,7 @@ udisks_linux_nvme_controller_finalize (GObject *object)
   if (ctrl->sanitize_log != NULL)
     bd_nvme_sanitize_log_free (ctrl->sanitize_log);
   g_mutex_clear (&ctrl->smart_lock);
+  g_cond_clear (&ctrl->selftest_cond);
 
   if (G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_nvme_controller_parent_class)->finalize (object);
@@ -106,6 +108,7 @@ static void
 udisks_linux_nvme_controller_init (UDisksLinuxNVMeController *ctrl)
 {
   g_mutex_init (&ctrl->smart_lock);
+  g_cond_init (&ctrl->selftest_cond);
 
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (ctrl),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
@@ -571,6 +574,17 @@ handle_smart_get_attributes (UDisksNVMeController  *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+selftest_job_func_done (UDisksLinuxNVMeController *ctrl)
+{
+  g_mutex_lock (&ctrl->smart_lock);
+  ctrl->selftest_job = NULL;
+  /* nobody may be listening, send the signal anyway */
+  g_cond_signal (&ctrl->selftest_cond);
+  g_mutex_unlock (&ctrl->smart_lock);
+  g_object_unref (ctrl);
+}
+
 static gboolean
 selftest_job_func (UDisksThreadedJob  *job,
                    GCancellable       *cancellable,
@@ -688,9 +702,6 @@ selftest_job_func (UDisksThreadedJob  *job,
 
  out:
   /* terminate the job */
-  g_mutex_lock (&ctrl->smart_lock);
-  ctrl->selftest_job = NULL;
-  g_mutex_unlock (&ctrl->smart_lock);
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
@@ -838,7 +849,7 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
                                                                                    caller_uid,
                                                                                    selftest_job_func,
                                                                                    g_object_ref (ctrl),
-                                                                                   g_object_unref,
+                                                                                   (GDestroyNotify) selftest_job_func_done,
                                                                                    NULL)); /* GCancellable */
       if (time_est > 0)
         {
@@ -913,14 +924,24 @@ handle_smart_selftest_abort (UDisksNVMeController  *_ctrl,
       goto out;
     }
 
-  /* This wakes up the selftest thread */
+  /* Cancel the running job */
   g_mutex_lock (&ctrl->smart_lock);
   if (ctrl->selftest_job != NULL)
     {
-      g_cancellable_cancel (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (ctrl->selftest_job)));
+      GCancellable *cancellable;
+
+      cancellable = g_object_ref (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (ctrl->selftest_job)));
+      g_mutex_unlock (&ctrl->smart_lock);
+      /* This may trigger selftest_job_func_done() to be run as a result
+       * of cancellation, leading to deadlock.
+       */
+      g_cancellable_cancel (cancellable);
+      g_object_unref (cancellable);
+      g_mutex_lock (&ctrl->smart_lock);
+      while (ctrl->selftest_job != NULL)
+        g_cond_wait (&ctrl->selftest_cond, &ctrl->smart_lock);
     }
   g_mutex_unlock (&ctrl->smart_lock);
-  /* TODO: wait for the selftest thread to terminate */
 
   if (!udisks_linux_nvme_controller_refresh_smart_sync (ctrl,
                                                         NULL,  /* cancellable */
@@ -942,6 +963,15 @@ handle_smart_selftest_abort (UDisksNVMeController  *_ctrl,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static void
+sanitize_job_func_done (UDisksLinuxNVMeController *ctrl)
+{
+  g_mutex_lock (&ctrl->smart_lock);
+  ctrl->sanitize_job = NULL;
+  g_mutex_unlock (&ctrl->smart_lock);
+  g_object_unref (ctrl);
+}
 
 static gboolean
 sanitize_job_func (UDisksThreadedJob  *job,
@@ -1049,9 +1079,6 @@ sanitize_job_func (UDisksThreadedJob  *job,
 
  out:
   /* terminate the job */
-  g_mutex_lock (&ctrl->smart_lock);
-  ctrl->sanitize_job = NULL;
-  g_mutex_unlock (&ctrl->smart_lock);
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
@@ -1247,7 +1274,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
                                                                                    caller_uid,
                                                                                    sanitize_job_func,
                                                                                    g_object_ref (ctrl),
-                                                                                   g_object_unref,
+                                                                                   (GDestroyNotify) sanitize_job_func_done,
                                                                                    NULL)); /* GCancellable */
       udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
       udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
