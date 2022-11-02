@@ -48,8 +48,20 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
     def _set_initiator_name(self):
         manager = self.get_object('/Manager')
 
+        # make backup of INITIATOR_FILE and restore it at the end
+        try:
+            initiatorname_backup = self.read_file(INITIATOR_FILE)
+            self.addCleanup(self.write_file, INITIATOR_FILE, initiatorname_backup)
+        except FileNotFoundError as e:
+            # no existing file, simply remove it once finished
+            self.addCleanup(self.remove_file, INITIATOR_FILE, True)
+
         manager.SetInitiatorName(self.initiator, self.no_options,
                                  dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')
+
+        # running iscsid needs to be restarted to reflect the change
+        self.run_command('systemctl try-reload-or-restart iscsid.service')
+        # ignore the return code in case of non-systemd distros
 
         init = manager.GetInitiatorName(self.no_options,
                                         dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator')

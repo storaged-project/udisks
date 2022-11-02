@@ -82,7 +82,12 @@
         @options: Additional options.
         @since: 2.1.3
 
-        Sets a new iSCSI initiator name.
+        Sets a new iSCSI initiator name. This is typically done by populating the
+        <filename>/etc/iscsi/initiatorname.iscsi</filename> file.
+
+        The iscsid service needs to be restarted afterwards to reflect the change
+        (if running). This is however distribution-specific and not performed
+        by UDisks at this moment.
 
         No additional options are currently defined.
     -->
