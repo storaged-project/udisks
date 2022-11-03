@@ -538,6 +538,7 @@ ensure_utf8 (const gchar *s)
 static gboolean
 add_acl (const gchar  *path,
          uid_t         uid,
+         gid_t         gid,
          GError      **error)
 {
   gboolean ret = FALSE;
@@ -558,7 +559,7 @@ add_acl (const gchar  *path,
       udisks_warning(
                    "Adding read ACL for uid %d to `%s' failed: %m",
                    (gint) uid, path);
-      chown (path, uid, -1);
+      chown (path, -1, gid);
     }
 
   ret = TRUE;
@@ -648,11 +649,7 @@ calculate_mount_point (UDisksDaemon  *daemon,
               goto out;
             }
           /* Then create the per-user MOUNT_BASE/$USER */
-#ifdef HAVE_ACL
-          if (g_mkdir (mount_dir, 0700) != 0 && errno != EEXIST)
-#else
           if (g_mkdir (mount_dir, 0750) != 0 && errno != EEXIST)
-#endif
             {
               g_set_error (error,
                            UDISKS_ERROR,
@@ -663,7 +660,7 @@ calculate_mount_point (UDisksDaemon  *daemon,
             }
           /* Finally, add the read+execute ACL for $USER */
 #ifdef HAVE_ACL
-          if (!add_acl (mount_dir, uid, error))
+          if (!add_acl (mount_dir, uid, gid, error))
             {
 #else
           if (chown (mount_dir, -1, gid) == -1)
