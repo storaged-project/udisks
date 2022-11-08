@@ -558,7 +558,7 @@ add_acl (const gchar  *path,
       udisks_warning(
                    "Adding read ACL for uid %d to `%s' failed: %m",
                    (gint) uid, path);
-      chown(path, uid, -1);
+      chown (path, uid, -1);
     }
 
   ret = TRUE;
