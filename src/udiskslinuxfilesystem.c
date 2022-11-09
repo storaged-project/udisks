@@ -970,6 +970,17 @@ handle_mount_fstab (UDisksDaemon          *daemon,
     }
 }
 
+static inline void
+free_mount_options (UDisksMountOptionsEntry **mount_options)
+{
+  UDisksMountOptionsEntry **mount_options_i;
+
+  if (mount_options == NULL)
+    return;
+  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
+    udisks_mount_options_entry_free (*mount_options_i);
+  g_free (mount_options);
+}
 
 static gboolean
 handle_mount_dynamic (UDisksDaemon          *daemon,
@@ -1080,19 +1091,6 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
       return FALSE;
     }
 
-  /* Create the mount point */
-  if (g_mkdir (*mount_point_to_use, 0700) != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating mount point `%s': %m",
-                                             *mount_point_to_use);
-      g_free (fs_signature);
-      g_free (fs_type_to_use);
-      return FALSE;
-    }
-
   /* Calculate mount options (guaranteed to be valid UTF-8) */
   mount_options = udisks_linux_calculate_mount_options (daemon,
                                                         block,
@@ -1106,6 +1104,18 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
   if (mount_options == NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
+      return FALSE;
+    }
+
+  /* Create the mount point */
+  if (g_mkdir (*mount_point_to_use, 0700) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating mount point `%s': %m",
+                                             *mount_point_to_use);
+      free_mount_options (mount_options);
       return FALSE;
     }
 
@@ -1149,9 +1159,7 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
       break;
     }
 
-  for (mount_options_i = mount_options; *mount_options_i; mount_options_i++)
-    udisks_mount_options_entry_free (*mount_options_i);
-  g_free (mount_options);
+  free_mount_options (mount_options);
   return success;
 }
 
