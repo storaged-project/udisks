@@ -2656,6 +2656,11 @@
          be made larger with Resize.
 
          If the size is unknown, the property is zero.
+
+         Please note that reading value of this property typically causes
+         some I/O to read the filesystem superblock. Unlike the rest
+         of the properties this one is set to be retrieved on-demand
+         and is not proactively cached by the daemon.
     -->
     <property name="Size" type="t" access="read"/>
 
