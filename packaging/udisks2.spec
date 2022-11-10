@@ -37,7 +37,7 @@ Release: 1%{?dist}
 %else
 Release: 0.%{build_date}git%{git_hash}%{?dist}
 %endif
-License: GPLv2+
+License: GPL-2.0-or-later
 URL:     https://github.com/storaged-project/udisks
 Source0: https://github.com/storaged-project/udisks/releases/download/udisks-%{version}/udisks-%{version}.tar.bz2
 
