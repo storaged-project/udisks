@@ -247,6 +247,37 @@ get_drive_ata (UDisksLinuxBlockObject *object)
   return ata;
 }
 
+static void
+invalidate_property (UDisksLinuxFilesystem *filesystem,
+                     const gchar           *prop_name)
+{
+  GVariantBuilder builder;
+  GVariantBuilder invalidated_builder;
+  GList *connections, *ll;
+  GVariant *signal_variant;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_init (&invalidated_builder, G_VARIANT_TYPE ("as"));
+  g_variant_builder_add (&invalidated_builder, "s", prop_name);
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("(sa{sv}as)", "org.freedesktop.UDisks2.Filesystem",
+                                       &builder, &invalidated_builder));
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (filesystem));
+  for (ll = connections; ll != NULL; ll = ll->next)
+    {
+      GDBusConnection *connection = ll->data;
+
+      g_dbus_connection_emit_signal (connection,
+                                     NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (filesystem)),
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged",
+                                     signal_variant,
+                                     NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
 /**
  * udisks_linux_filesystem_update:
  * @filesystem: A #UDisksLinuxFilesystem.
@@ -300,6 +331,10 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_clear_object (&ata);
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
+  /* The Size property is hacked to be retrieved on-demand, only need
+   * to notify subscribers that it has changed.
+   */
+  invalidate_property (filesystem, "Size");
 
   g_object_unref (device);
 }
