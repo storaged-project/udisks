@@ -4,6 +4,7 @@ import re
 import time
 import unittest
 import six
+import sys
 
 from packaging.version import Version
 
@@ -62,6 +63,13 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 
 class UdisksLVMTest(UDisksLVMTestBase):
     '''This is a basic LVM test suite'''
+
+    def tearDown(self):
+        # Bring back all vdevs that have been deleted by the test.
+        ret, out = self.run_command("for f in $(find /sys/devices -path '*tcm_loop*/scan'); do echo '- - -' >$f; done")
+        if ret != 0:
+            raise RuntimeError("Cannot rescan vdevs: %s", out)
+        super().tearDown()
 
     def test_01_manager_interface(self):
         '''Test for module D-Bus Manager interface presence'''
@@ -124,6 +132,23 @@ class UdisksLVMTest(UDisksLVMTestBase):
         dbus_type = self.get_property(lv, '.LogicalVolume', 'Type')
         dbus_type.assertEqual('block')  # type is only 'block' or 'pool'
 
+        dbus_layout = self.get_property(lv, '.LogicalVolume', 'Layout')
+        dbus_layout.assertEqual('linear')
+
+        def assertSegs(pvs):
+            # Check that there is exactly one segment per PV
+            struct = self.get_property(lv, '.LogicalVolume', 'Structure').value
+            self.assertEqual(struct["type"], "linear")
+            self.assertNotIn("data", struct)
+            self.assertNotIn("metadata", struct)
+            segs = struct["segments"]
+            self.assertEqual(len(segs), len(pvs))
+            seg_pvs = list(map(lambda s: s[2], segs))
+            for p in pvs:
+                self.assertIn(p.object_path, seg_pvs)
+
+        assertSegs(devs)
+
         _ret, sys_uuid = self.run_command('lvs -o uuid --no-heading %s' % os.path.join(vgname, lvname))
         dbus_uuid = self.get_property(lv, '.LogicalVolume', 'UUID')
         dbus_uuid.assertEqual(sys_uuid)
@@ -171,6 +196,8 @@ class UdisksLVMTest(UDisksLVMTestBase):
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertEqual(new_vgsize.value)
 
+        assertSegs(devs + [ new_dev_obj ])
+
         # rename the LV
         lvname = 'udisks_test_lv2'
         new_lvpath = lv.Rename(lvname, self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
@@ -196,6 +223,102 @@ class UdisksLVMTest(UDisksLVMTestBase):
         udisks = self.get_object('')
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(new_lvpath, objects.keys())
+
+    def test_15_raid(self):
+        '''Test raid volumes functionality'''
+
+        vgname = 'udisks_test_vg'
+
+        # Use all the virtual devices
+        devs = dbus.Array()
+        for d in self.vdevs:
+            dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
+            self.assertIsNotNone(dev_obj)
+            devs.append(dev_obj)
+        vg = self._create_vg(vgname, devs)
+        self.addCleanup(self._remove_vg, vg)
+
+        dbus_vgname = self.get_property(vg, '.VolumeGroup', 'Name')
+        dbus_vgname.assertEqual(vgname)
+
+        first_vdev_uuid = self.get_property(devs[0], '.Block', 'IdUUID').value
+
+        # Create raid1 LV on the VG
+        lvname = 'udisks_test_lv'
+        vg_freesize = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vdev_size = vg_freesize.value / len(devs)
+        lv_size = int(vdev_size * 0.75)
+        lv_path = vg.CreatePlainVolumeWithLayout(lvname, dbus.UInt64(lv_size),
+                                                 "raid1", devs[0:2],
+                                                 self.no_options,
+                                                 dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.assertIsNotNone(lv_path)
+
+        lv = self.bus.get_object(self.iface_prefix, lv_path)
+        self.get_property(lv, '.LogicalVolume', 'SyncRatio').assertEqual(1.0, timeout=60, poll_vg=vg)
+
+        _ret, sys_type = self.run_command('lvs -o seg_type --noheadings --nosuffix %s/%s' % (vgname, lvname))
+        self.assertEqual(sys_type, "raid1")
+        self.get_property(lv, '.LogicalVolume', 'Layout').assertEqual("raid1")
+
+        def assertSegs(struct, size, pv):
+            self.assertEqual(struct["type"], "linear")
+            self.assertNotIn("data", struct)
+            self.assertNotIn("metadata", struct)
+            if pv is not None:
+                self.assertEqual(len(struct["segments"]), 1)
+                if size is not None:
+                    self.assertEqual(struct["segments"][0][1], size)
+                self.assertEqual(struct["segments"][0][2], pv.object_path)
+            else:
+                self.assertEqual(len(struct["segments"]), 0)
+
+        def assertRaid1Stripes(structs, size, pv1, pv2):
+            self.assertEqual(len(structs), 2)
+            assertSegs(structs[0], size, pv1)
+            assertSegs(structs[1], size, pv2)
+
+        def assertRaid1Structure(pv1, pv2):
+            struct = self.get_property(lv, '.LogicalVolume', 'Structure').value
+            self.assertEqual(struct["type"], "raid1")
+            self.assertEqual(struct["size"], lv_size)
+            self.assertNotIn("segments", struct)
+            assertRaid1Stripes(struct["data"], lv_size, pv1, pv2)
+            assertRaid1Stripes(struct["metadata"], None, pv1, pv2)
+
+        def waitRaid1Structure(pv1, pv2):
+            for _ in range(5):
+                try:
+                    assertRaid1Structure(pv1, pv2)
+                    return
+                except AssertionError:
+                    pass
+                time.sleep(1)
+            # Once again for the error message
+            assertRaid1Structure(pv1, pv2)
+
+        waitRaid1Structure(devs[0], devs[1])
+
+        # Yank out the first vdev and repair the LV with the third
+        _ret, _output = self.run_command('echo yes >/sys/block/%s/device/delete' % os.path.basename(self.vdevs[0]))
+        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
+        _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
+        self.assertEqual(sys_health, "partial")
+
+        waitRaid1Structure(None, devs[1])
+
+        lv.Repair(devs[2:3], self.no_options,
+                  dbus_interface=self.iface_prefix + '.LogicalVolume')
+        _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
+        self.assertEqual(sys_health, "")
+        self.get_property(lv, '.LogicalVolume', 'SyncRatio').assertEqual(1.0, timeout=60, poll_vg=vg)
+
+        waitRaid1Structure(devs[2], devs[1])
+
+        # Tell the VG that everything is alright
+        vg.RemoveMissingPhysicalVolumes(self.no_options,
+                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
+        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([])
 
     def test_20_thin(self):
         '''Test thin volumes functionality'''

@@ -271,3 +271,74 @@ udisks_daemon_util_lvm2_trigger_udev (const gchar *device_file)
   if (fd >= 0)
     close (fd);
 }
+
+/* -------------------------------------------------------------------------------- */
+
+GStrv
+udisks_daemon_util_lvm2_gather_pvs (UDisksDaemon                  *daemon,
+                                    UDisksLinuxVolumeGroupObject  *vgroup_object,
+                                    const gchar *const            *arg_pvs,
+                                    GError                       **error)
+{
+  GStrv result = g_new0 (gchar *, g_strv_length ((GStrv)arg_pvs)+1);
+
+  for (int i = 0; arg_pvs[i] != NULL; i++)
+    {
+      UDisksObject *pvol_object = NULL;
+      UDisksBlock *block = NULL;
+      UDisksPhysicalVolume *pvol = NULL;
+
+      pvol_object = udisks_daemon_find_object (daemon, arg_pvs[i]);
+      if (pvol_object == NULL)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Invalid object path %s at index %u",
+                       arg_pvs[i], i);
+          goto out;
+        }
+
+      block = udisks_object_get_block (pvol_object);
+      pvol = udisks_object_get_physical_volume (pvol_object);
+      if (block == NULL || pvol == NULL)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Object path %s for index %u is not a physical volume",
+                       arg_pvs[i], i);
+          if (block)
+            g_object_unref (block);
+          if (pvol)
+            g_object_unref (pvol);
+          g_object_unref (pvol_object);
+          goto out;
+        }
+
+      if (g_strcmp0 (udisks_physical_volume_get_volume_group (pvol),
+                     g_dbus_object_get_object_path (G_DBUS_OBJECT (vgroup_object))) != 0)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Physical volume %s for index %u does not belong to this volume group",
+                       arg_pvs[i], i);
+          g_object_unref (pvol_object);
+          g_object_unref (pvol);
+          g_object_unref (block);
+          goto out;
+        }
+
+      result[i] = udisks_block_dup_device (block);
+      g_object_unref (block);
+      g_object_unref (pvol);
+      g_object_unref (pvol_object);
+    }
+
+  return result;
+
+ out:
+  g_strfreev (result);
+  return NULL;
+}

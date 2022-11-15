@@ -133,6 +133,7 @@ udisks_linux_volume_group_new (void)
 void
 udisks_linux_volume_group_update (UDisksLinuxVolumeGroup *volume_group,
                                   BDLVMVGdata            *vg_info,
+                                  GSList                 *vg_pvs,
                                   gboolean               *needs_polling_ret)
 {
   UDisksVolumeGroup *iface = UDISKS_VOLUME_GROUP (volume_group);
@@ -142,6 +143,21 @@ udisks_linux_volume_group_update (UDisksLinuxVolumeGroup *volume_group,
   udisks_volume_group_set_size (iface, vg_info->size);
   udisks_volume_group_set_free_size (iface, vg_info->free);
   udisks_volume_group_set_extent_size (iface, vg_info->extent_size);
+
+  {
+    g_autoptr(GStrvBuilder) missing_builder = g_strv_builder_new ();
+    g_auto(GStrv) missing = NULL;
+
+    for (GSList *vg_pvs_p=vg_pvs; vg_pvs_p; vg_pvs_p=vg_pvs_p->next)
+      {
+        BDLVMPVdata *pv_info = vg_pvs_p->data;
+        if (pv_info->missing)
+          g_strv_builder_add (missing_builder, pv_info->pv_uuid);
+      }
+
+    missing = g_strv_builder_end (missing_builder);
+    udisks_volume_group_set_missing_physical_volumes (iface, (const gchar *const *)missing);
+  }
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
@@ -771,6 +787,80 @@ handle_empty_device (UDisksVolumeGroup     *_group,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_remove_missing_physical_volumes (UDisksVolumeGroup     *_group,
+                                        GDBusMethodInvocation *invocation,
+                                        GVariant              *options)
+{
+  UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
+  UDisksLinuxModuleLVM2 *module;
+  UDisksDaemon *daemon;
+  UDisksLinuxVolumeGroupObject *object;
+  uid_t caller_uid;
+  GError *error = NULL;
+  VGJobData data;
+
+  object = udisks_daemon_util_dup_object (group, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  module = udisks_linux_volume_group_object_get_module (object);
+  daemon = udisks_module_get_daemon (UDISKS_MODULE (module));
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Policy check. */
+  UDISKS_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                     UDISKS_OBJECT (object),
+                                     LVM2_POLICY_ACTION_ID,
+                                     options,
+                                     N_("Authentication is required to remove missing physical volumes from a volume group"),
+                                     invocation);
+
+  data.vg_name = udisks_linux_volume_group_object_get_name (object);
+  data.pv_path = NULL;
+
+  if (!udisks_daemon_launch_threaded_job_sync (daemon,
+                                               UDISKS_OBJECT (object),
+                                               "lvm-vg-rem-device",
+                                               caller_uid,
+                                               vgreduce_job_func,
+                                               &data,
+                                               NULL, /* user_data_free_func */
+                                               NULL, /* GCancellable */
+                                               &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error removing missing physical volumes: %s",
+                                             error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  udisks_volume_group_complete_remove_missing_physical_volumes (_group, invocation);
+
+ out:
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 struct WaitData {
   UDisksLinuxVolumeGroupObject *group_object;
   const gchar *name;
@@ -839,7 +929,9 @@ handle_create_volume (UDisksVolumeGroup              *_group,
                       guint64                         arg_index_memory,
                       gboolean                        arg_compression,
                       gboolean                        arg_deduplication,
-                      const gchar                    *arg_write_policy)
+                      const gchar                    *arg_write_policy,
+                      const gchar                    *arg_layout,
+                      const gchar             *const *arg_pvs)
 {
   GError *error = NULL;
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
@@ -849,6 +941,7 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   uid_t caller_uid;
   const gchar *lv_objpath;
   LVJobData data = {0};
+  g_auto(GStrv) pvs = NULL;
   UDisksLinuxLogicalVolumeObject *pool_object = NULL;
   const gchar *auth_error_msg = NULL;
   UDisksThreadedJobFunc create_function = NULL;
@@ -910,6 +1003,31 @@ handle_create_volume (UDisksVolumeGroup              *_group,
   data.vg_name = udisks_linux_volume_group_object_get_name (object);
   data.new_lv_name = arg_name;
   data.new_lv_size = arg_size;
+
+  if (VOL_PLAIN == vol_creation_type)
+    {
+      if (arg_layout != NULL
+          && g_strcmp0 (arg_layout, "linear") != 0
+          && !g_str_has_prefix (arg_layout, "raid")
+          && g_strcmp0 (arg_layout, "mirror") != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Not a valid layout for a plain volume: %s", arg_layout);
+          goto out;
+        }
+
+      data.new_lv_layout = arg_layout;
+      if (arg_pvs)
+        {
+          pvs = udisks_daemon_util_lvm2_gather_pvs (daemon, object, arg_pvs, &error);
+          if (pvs == NULL)
+            {
+              g_dbus_method_invocation_take_error (invocation, error);
+              goto out;
+            }
+          data.new_lv_pvs = (const gchar **)pvs;
+        }
+    }
 
   if (VOL_THIN_POOL == vol_creation_type)
     data.extent_size = udisks_volume_group_get_extent_size (UDISKS_VOLUME_GROUP (group));
@@ -981,7 +1099,22 @@ handle_create_plain_volume (UDisksVolumeGroup     *_group,
                             GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_PLAIN, NULL, 0, 0, FALSE, FALSE, NULL);
+                              VOL_PLAIN, NULL, 0, 0, FALSE, FALSE, NULL,
+                              NULL, NULL);
+}
+
+static gboolean
+handle_create_plain_volume_with_layout (UDisksVolumeGroup     *_group,
+                                        GDBusMethodInvocation *invocation,
+                                        const gchar           *arg_name,
+                                        guint64                arg_size,
+                                        const gchar           *arg_layout,
+                                        const gchar *const    *arg_pvs,
+                                        GVariant              *options)
+{
+  return handle_create_volume(_group, invocation, arg_name, arg_size, options,
+                              VOL_PLAIN, NULL, 0, 0, FALSE, FALSE, NULL,
+                              arg_layout, arg_pvs);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -994,7 +1127,8 @@ handle_create_thin_pool_volume (UDisksVolumeGroup     *_group,
                                 GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_THIN_POOL, NULL, 0, 0, FALSE, FALSE, NULL);
+                              VOL_THIN_POOL, NULL, 0, 0, FALSE, FALSE, NULL,
+                              NULL, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1008,7 +1142,8 @@ handle_create_thin_volume (UDisksVolumeGroup     *_group,
                            GVariant              *options)
 {
   return handle_create_volume(_group, invocation, arg_name, arg_size, options,
-                              VOL_THIN_VOLUME, arg_pool, 0, 0, FALSE, FALSE, NULL);
+                              VOL_THIN_VOLUME, arg_pool, 0, 0, FALSE, FALSE, NULL,
+                              NULL, NULL);
 }
 
 static gboolean
@@ -1026,7 +1161,8 @@ handle_create_vdo_volume (UDisksVolumeGroup     *_group,
 {
   return handle_create_volume (_group, invocation, arg_name, arg_size, options,
                                VOL_VDO_VOLUME, arg_pool, arg_virtual_size, arg_index_memory,
-                               arg_compression, arg_deduplication, arg_write_policy);
+                               arg_compression, arg_deduplication, arg_write_policy,
+                               NULL, NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1042,8 +1178,10 @@ volume_group_iface_init (UDisksVolumeGroupIface *iface)
   iface->handle_add_device = handle_add_device;
   iface->handle_remove_device = handle_remove_device;
   iface->handle_empty_device = handle_empty_device;
+  iface->handle_remove_missing_physical_volumes = handle_remove_missing_physical_volumes;
 
   iface->handle_create_plain_volume = handle_create_plain_volume;
+  iface->handle_create_plain_volume_with_layout = handle_create_plain_volume_with_layout;
   iface->handle_create_thin_pool_volume = handle_create_thin_pool_volume;
   iface->handle_create_thin_volume = handle_create_thin_volume;
 

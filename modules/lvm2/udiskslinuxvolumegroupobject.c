@@ -611,7 +611,8 @@ update_vg (GObject      *source_obj,
   daemon = udisks_module_get_daemon (UDISKS_MODULE (object->module));
   manager = udisks_daemon_get_object_manager (daemon);
 
-  udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), vg_info, &needs_polling);
+  udisks_linux_volume_group_update (UDISKS_LINUX_VOLUME_GROUP (object->iface_volume_group), vg_info, vg_pvs,
+                                    &needs_polling);
 
   if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object)))
     g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
@@ -653,13 +654,13 @@ update_vg (GObject      *source_obj,
       if (volume == NULL)
         {
           volume = udisks_linux_logical_volume_object_new (object->module, object, lv_name);
-          udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
+          udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, lvs, vdo_info, &needs_polling);
           udisks_linux_logical_volume_object_update_etctabs (volume);
           g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
           g_hash_table_insert (object->logical_volumes, g_strdup (lv_name), volume);
         }
       else
-        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, lvs, vdo_info, &needs_polling);
 
       if (vdo_info)
         bd_lvm_vdopooldata_free (vdo_info);
@@ -805,7 +806,7 @@ poll_vg_update (GObject      *source_obj,
       update_operations (object, lv_name, lv_info, &needs_polling);
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume)
-        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, vdo_info, &needs_polling);
+        udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, lvs, vdo_info, &needs_polling);
     }
 
   lv_list_free (lvs);

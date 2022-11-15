@@ -160,6 +160,13 @@
     -->
     <property name="NeedsPolling" type="b" access="read"/>
 
+    <!-- MissingPhysicalVolumes:
+         @since: 2.10.0
+
+         A list of the UUIDs of missing physical volumes.
+    -->
+    <property name="MissingPhysicalVolumes" type="as" access="read"/>
+
     <!-- Poll:
 
          Make sure that all properties of this volume group and of all
@@ -251,19 +258,57 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!-- RemoveMissingPhysicalVolumes:
+         @since: 2.10.0
+
+         Forget about all physical volumes that went missing.
+
+         No additional options are currently defined.
+    -->
+    <method name="RemoveMissingPhysicalVolumes">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
     <!-- CreatePlainVolume:
          @name: The name of the new logical volume.
          @size: The size.
          @options: Additional options.
          @result: The object path of the new logical volume.
 
-         Create a 'normal' new logical volume.
+         Create a 'normal' new logical volume.  Calling this method is
+         equivalent to calling CreatePlainVolumeWithLayout with
+         "linear" as the layout type and an empty array of physical
+         volumes.
 
          No additional options are currently defined.
     -->
     <method name="CreatePlainVolume">
       <arg name="name" type="s" direction="in"/>
       <arg name="size" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- CreatePlainVolumeWithLayout:
+         @name: The name of the new logical volume.
+         @size: The size.
+         @layout: The layout type, like "linear", "raid5"
+         @pvs: The physical volumes to use
+         @options: Additional options.
+         @result: The object path of the new logical volume.
+         @since: 2.10.0
+
+         Create a 'normal' new logical volume with the given layout
+         type on the given physical volumes.  It is okay to leave
+         "pvs" empty; LVM2 will then choose suitable ones on its own.
+
+         No additional options are currently defined.
+    -->
+    <method name="CreatePlainVolumeWithLayout">
+      <arg name="name" type="s" direction="in"/>
+      <arg name="size" type="t" direction="in"/>
+      <arg name="layout" type="s" direction="in"/>
+      <arg name="pvs" type="ao" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
       <arg name="result" type="o" direction="out"/>
     </method>
@@ -436,6 +481,71 @@
     -->
     <property name="Type" type="s" access="read"/>
 
+    <!-- Layout:
+         @since: 2.10.0
+
+         The layout of this logical volume, such as "linear", "raid5",
+         etc.
+    -->
+    <property name="Layout" type="s" access="read"/>
+
+    <!-- Structure:
+         @since: 2.10.0
+
+         The detailed structure of how this logical volume is stored on physical volumes.
+
+         The following fields are present:
+
+         - name (s): The name of the logical volume.
+         - type (s): The layout type of the logical volume.
+         - size (t): The size in bytes of the logical volume.
+
+         If the logical volume is stored directly on physical volumes,
+         this field is present as well:
+
+         - segs (a(tto)): Information about the segments of the logical volume (see below).
+
+         A segment is represented by a "(tto)" tuple, where the fields
+         have these meanings:
+
+         - (t): The start of this segement on the physical volume, in bytes.
+         - (t): The size of the segment, in bytes.
+         - (o): The path of the org.freedesktop.UDisks.Block object of the physical volume.
+
+         For a healthy logical volume, the sizes of its segments will
+         add up exactly to its own size.  If a volume group has lost
+         some physical volumes, a affected logical volume will have a
+         list of segments here that do not add up to its full size.
+
+         If the logical volume is stored on other logical volumes,
+         these fields are present in the "Structure" value instead of
+         "segs":
+
+         - data (aa{sv}): The list of "Structure" objects for the data sub-volumes.
+         - metadata (aa{sv}): The list of "Structure" objects for the metadata sub-volumes.
+
+         For example, a minimal "raid5" layout will have three "data"
+         sub-volumes (and three parallel "metadata" sub-volumes),
+         which are the three stripes of the RAID configuration.  Each
+         of those sub-volume will be stored directly on physical
+         volumes and one can inspect the "segs" field of those to
+         figure out how many are damaged.  From that, one can deduce
+         whether the RAID is degraded (exactly one damaged), or has
+         lost data (more than one damaged).
+    -->
+    <property name="Structure" type="a{sv}" access="read"/>
+
+    <!-- SyncRatio:
+         @since: 2.10.0
+
+         How far along the logical volume is with resynchronizing.  A
+         value of 1.0 corresponds to fully synchronized and indicates
+         that no operation is in progress.  This is only relevant for
+         logical volumes with some redundancy, like "raid1" or
+         "raid5".
+    -->
+    <property name="SyncRatio" type="d" access="read"/>
+
     <!-- ThinPool:
 
          For a thin volume, the object path of its pool.
@@ -555,6 +665,23 @@
     <method name="Resize">
       <arg name="new_size" type="t" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- Repair:
+         @pvs: A list of physical volumes to use for the repair.
+         @options: Additional options.
+         @since: 2.10.0
+
+         Attempt a repair of this logical volume after it has lost
+         some physical volumes.  Space is allocated from the given
+         physical volumes as needed.  A empty list means to allocate
+         from all physical volumes.
+
+         No additional options are currently defined.
+    -->
+    <method name="Repair">
+      <arg name="pvs" type="ao" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- CreateSnapshot:
