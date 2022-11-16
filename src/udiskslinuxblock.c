@@ -3019,9 +3019,11 @@ format_wipe (UDisksDaemon  *daemon,
              GError       **error)
 {
   UDisksObject *filesystem_object;
+  UDisksPartitionTable *partition_table;
   FormatWaitData wait_data = { 0, };
   GError *l_error = NULL;
 
+  partition_table = udisks_object_peek_partition_table (object);
   if (!bd_fs_clean (udisks_block_get_device (block), FALSE, &l_error))
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -3031,7 +3033,7 @@ format_wipe (UDisksDaemon  *daemon,
     }
 
   /* wait until this change has taken effect */
-  if (udisks_object_peek_partition_table (object) != NULL &&
+  if (partition_table != NULL &&
       !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object), &l_error))
     {
       udisks_warning ("%s", l_error->message);
