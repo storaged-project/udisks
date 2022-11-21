@@ -87,9 +87,9 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
 
         self.assertEqual(properties['StartedByUID'], os.getuid())
 
-        # test start time -- should be less than ~0.5s after thread started
+        # test start time -- should be greater than the test mark
         # (dbus property is in micro seconds)
-        self.assertLessEqual(abs(properties['StartTime'] - start_time * 10**6), 0.5 * 10**6)
+        self.assertGreaterEqual(properties['StartTime'], start_time * 10**6)
 
         self.assertTrue(properties['Cancelable'])
 
