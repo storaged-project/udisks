@@ -22,8 +22,6 @@
 
   - name: Enable our copr repository with latest builds of libblockdev
     command: "dnf -y copr enable @storage/udisks-daily"
-    args:
-      warn: false
     when: ansible_distribution == 'Fedora'
 
   - name: Install dnf-plugins-core for dnf builddep (Fedora)
@@ -32,8 +30,6 @@
 
   - name: Install build dependencies (Fedora)
     command: "dnf -y builddep udisks2 --nogpgcheck"
-    args:
-      warn: false
     when: ansible_distribution == 'Fedora'
 
   - name: Install libblockdev NVMe plugin (Fedora)
