@@ -185,3 +185,4 @@ ENV{ID_PART_TABLE_TYPE}=="dos", ENV{ID_PART_ENTRY_TYPE}=="0x0|0x17", ENV{ID_PART
 
 # Explicitly ignore ram block devices, they don't work with udev
 KERNEL=="ram*", ENV{UDISKS_IGNORE}="1"
+KERNEL=="zram*", ENV{UDISKS_IGNORE}="1"
