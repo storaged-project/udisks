@@ -358,6 +358,7 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                            "No udev device");
+      g_object_unref (object);
       return FALSE;
     }
   dev_file = g_udev_device_get_device_file (device->udev_device);
@@ -365,12 +366,16 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                            "No device file available");
+      g_object_unref (device);
+      g_object_unref (object);
       return FALSE;
     }
   if (device->nvme_ctrl_info == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                            "No probed controller info available");
+      g_object_unref (device);
+      g_object_unref (object);
       return FALSE;
     }
 
