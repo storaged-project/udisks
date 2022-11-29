@@ -64,12 +64,15 @@ class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 class UdisksLVMTest(UDisksLVMTestBase):
     '''This is a basic LVM test suite'''
 
-    def tearDown(self):
-        # Bring back all vdevs that have been deleted by the test.
+    def _rescan_lio_devices(self):
+        ''' Bring back all vdevs that have been deleted by the test '''
         ret, out = self.run_command("for f in $(find /sys/devices -path '*tcm_loop*/scan'); do echo '- - -' >$f; done")
         if ret != 0:
             raise RuntimeError("Cannot rescan vdevs: %s", out)
-        super().tearDown()
+        self.udev_settle()
+        for d in self.vdevs:
+            obj = self.get_object('/block_devices/' + os.path.basename(d))
+            self.assertHasIface(obj, self.iface_prefix + '.Block')
 
     def test_01_manager_interface(self):
         '''Test for module D-Bus Manager interface presence'''
@@ -301,6 +304,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
 
         # Yank out the first vdev and repair the LV with the third
         _ret, _output = self.run_command('echo yes >/sys/block/%s/device/delete' % os.path.basename(self.vdevs[0]))
+        self.addCleanup(self._rescan_lio_devices)
         self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
         _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
         self.assertEqual(sys_health, "partial")
