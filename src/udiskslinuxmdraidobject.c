@@ -394,10 +394,11 @@ update_iface (UDisksLinuxMDRaidObject  *object,
     {
       if (!has)
         {
+          gpointer iface = g_steal_pointer (interface_pointer);
+
           g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (object),
-                                                   G_DBUS_INTERFACE_SKELETON (*interface_pointer));
-          g_object_unref (*interface_pointer);
-          *interface_pointer = NULL;
+                                                   G_DBUS_INTERFACE_SKELETON (iface));
+          g_object_unref (iface);
         }
     }
 

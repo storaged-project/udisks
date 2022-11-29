@@ -548,21 +548,20 @@ update_iface (UDisksObject                     *object,
     {
       if (!has)
         {
+          gpointer iface = g_steal_pointer (interface_pointer);
+
           /* Check before we remove interface from object  */
-          interface_info = g_dbus_interface_get_info (*interface_pointer);
-          tmp_iface = g_dbus_object_get_interface ((GDBusObject *) object,
-                                                   interface_info->name);
+          interface_info = g_dbus_interface_get_info (iface);
+          tmp_iface = g_dbus_object_get_interface ((GDBusObject *) object, interface_info->name);
 
           if (tmp_iface)
             {
-              g_dbus_object_skeleton_remove_interface
-                (G_DBUS_OBJECT_SKELETON (object),
-                 G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+              g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (object),
+                                                       G_DBUS_INTERFACE_SKELETON (iface));
               g_object_unref (tmp_iface);
             }
 
-          g_object_unref (*interface_pointer);
-          *interface_pointer = NULL;
+          g_object_unref (iface);
         }
     }
 
