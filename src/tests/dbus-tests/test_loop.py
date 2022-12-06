@@ -111,6 +111,10 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
         uid = self.get_property(loop_dev_obj, '.Loop', 'SetupByUID')
         uid.assertEqual(0)
 
+        # sector size should be 512
+        ssize = self.read_file('/sys/class/block/%s/queue/logical_block_size' % loop_dev)
+        self.assertEqual(ssize.strip(), "512")
+
     def test_20_create_with_offset(self):
         opts = dbus.Dictionary({"offset": dbus.UInt64(4096)}, signature=dbus.Signature('sv'))
         with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
@@ -239,3 +243,28 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
 
         # partitions should be scanned
         self.assertTrue(os.path.exists("/dev/%sp1" % loop_dev))
+
+    def test_50_create_4k(self):
+        opts = dbus.Dictionary({"sector-size": dbus.UInt64(4096)}, signature=dbus.Signature('sv'))
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
+        self.assertTrue(loop_dev_obj_path)
+        self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
+        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
+
+        loop_dev_obj = self.get_object(loop_dev_obj_path)
+
+        # should use the right backing file
+        raw = self.get_property(loop_dev_obj, '.Loop', 'BackingFile')
+        # transcription to array of Bytes to string plus adding the trailing \0
+        backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
+        raw.assertEqual(backing_file)
+
+        # should use the whole file
+        size = self.get_property(loop_dev_obj, ".Block", "Size")
+        size.assertEqual(10 * 1024**2)
+
+        ssize = self.read_file('/sys/class/block/%s/queue/logical_block_size' % loop_dev)
+        self.assertEqual(ssize.strip(), "4096")

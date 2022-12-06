@@ -353,6 +353,7 @@ handle_loop_setup (UDisksManager          *object,
   gboolean option_no_part_scan = FALSE;
   guint64 option_offset = 0;
   guint64 option_size = 0;
+  guint64 option_sector_size = 0;
   uid_t caller_uid;
   struct stat fd_statbuf;
   gboolean fd_statbuf_valid = FALSE;
@@ -415,6 +416,7 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "offset", "t", &option_offset);
   g_variant_lookup (options, "size", "t", &option_size);
   g_variant_lookup (options, "no-part-scan", "b", &option_no_part_scan);
+  g_variant_lookup (options, "sector-size", "t", &option_sector_size);
 
   /* it's not a problem if fstat fails... for example, this can happen if the user
    * passes a fd to a file on the GVfs fuse mount
@@ -428,7 +430,7 @@ handle_loop_setup (UDisksManager          *object,
                               option_size,
                               option_read_only,
                               !option_no_part_scan,
-                              0,
+                              option_sector_size,
                               &loop_name,
                               &error))
     {

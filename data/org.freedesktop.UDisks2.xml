@@ -130,7 +130,7 @@
     <!--
         LoopSetup:
         @fd: An index for the file descriptor to use.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>offset</parameter> (of type 't'), <parameter>size</parameter> (of type 't'), <parameter>read-only</parameter> (of type 'b') and <parameter>no-part-scan</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>offset</parameter> (of type 't'), <parameter>size</parameter> (of type 't'), <parameter>read-only</parameter> (of type 'b'), <parameter>no-part-scan</parameter> (of type 'b') and <parameter>sector-size</parameter> (of type 't').
         @resulting_device: An object path to the object implementing the #org.freedesktop.UDisks2.Block interface.
 
         Creates a block device for the file represented by @fd.
