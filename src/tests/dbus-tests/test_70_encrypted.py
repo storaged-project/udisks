@@ -628,12 +628,12 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         self.assertHasIface(device, self.iface_prefix + '.Encrypted')
 
         # the device is not opened, we need to read the UUID from LUKS metadata
-        luks_uuid = BlockDev.crypto_luks_uuid(self.vdevs[0])
+        info = BlockDev.crypto_luks_info(self.vdevs[0])
 
         luks_path = device.Unlock('test', self.no_options,
                                   dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(luks_path)
-        self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % luks_uuid))
+        self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % info.uuid))
 
         luks = self.bus.get_object(self.iface_prefix, luks_path)
         self.assertIsNotNone(luks)
