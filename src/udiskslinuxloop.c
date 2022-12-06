@@ -122,8 +122,8 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
   UDisksState *state;
   UDisksLinuxDevice *device;
   uid_t setup_by_uid;
-  gchar *backing_file = NULL;
   GError *error = NULL;
+  BDLoopInfo *info = NULL;
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   state = udisks_daemon_get_state (daemon);
@@ -131,14 +131,13 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
 
   if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "loop"))
     {
-      backing_file = bd_loop_get_backing_file (g_udev_device_get_name (device->udev_device),
-                                               &error);
+      info = bd_loop_info (g_udev_device_get_name (device->udev_device), &error);
 
-      if (backing_file == NULL)
+      if (info == NULL)
         {
           if (error != NULL)
             {
-              udisks_warning ("Error getting '%s' backing file: %s (%s, %d)",
+              udisks_warning ("Error getting '%s' information: %s (%s, %d)",
                               g_udev_device_get_name (device->udev_device),
                               error->message,
                               g_quark_to_string (error->domain),
@@ -146,36 +145,23 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
               g_clear_error (&error);
             }
           udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
+          udisks_loop_set_autoclear (UDISKS_LOOP (loop), FALSE);
         }
       else
         {
-          udisks_loop_set_backing_file (UDISKS_LOOP (loop), backing_file);
+          if (info->backing_file == NULL)
+              udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
+          else
+              udisks_loop_set_backing_file (UDISKS_LOOP (loop), info->backing_file);
+
+          udisks_loop_set_autoclear (UDISKS_LOOP (loop), info->autoclear);
         }
+
+      bd_loop_info_free (info);
     }
   else
     {
       udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
-    }
-
-  if (backing_file == NULL)
-    {
-      udisks_loop_set_autoclear (UDISKS_LOOP (loop), FALSE);
-    }
-  else
-    {
-      udisks_loop_set_autoclear (UDISKS_LOOP (loop),
-                                 bd_loop_get_autoclear (g_udev_device_get_name (device->udev_device),
-                                                        &error));
-      g_free (backing_file);
-      if (error != NULL)
-        {
-          udisks_warning ("Error getting '%s' autoclear: %s (%s, %d)",
-                          g_udev_device_get_name (device->udev_device),
-                          error->message,
-                          g_quark_to_string (error->domain),
-                          error->code);
-          g_clear_error (&error);
-        }
     }
 
   setup_by_uid = 0;

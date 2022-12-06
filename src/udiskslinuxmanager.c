@@ -428,6 +428,7 @@ handle_loop_setup (UDisksManager          *object,
                               option_size,
                               option_read_only,
                               !option_no_part_scan,
+                              0,
                               &loop_name,
                               &error))
     {
