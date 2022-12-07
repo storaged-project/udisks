@@ -1,4 +1,4 @@
-%global glib2_version                   2.50
+%global glib2_version                   2.68
 %global gobject_introspection_version   1.30.0
 %global polkit_version                  0.102
 %global systemd_version                 208
@@ -16,16 +16,9 @@
 %define git_hash                        %(git log -1 --pretty=format:"%h" || true)
 %define build_date                      %(date '+%Y%m%d')
 
-
-# btrfs is not available on RHEL > 7
-%if 0%{?rhel} > 7
+# btrfs is not available on RHEL
+%if 0%{?rhel}
 %define with_btrfs 0
-%endif
-
-# feature parity with existing RHEL 7 packages
-%if (0%{?rhel}) && (0%{?rhel} <= 7)
-%define with_lsm 0
-%define with_lvmcache 0
 %endif
 
 
@@ -48,6 +41,7 @@ BuildRequires: libatasmart-devel >= %{libatasmart_version}
 BuildRequires: polkit-devel >= %{polkit_version}
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel >= %{systemd_version}
+BuildRequires: systemd-rpm-macros
 BuildRequires: libacl-devel
 BuildRequires: chrpath
 BuildRequires: gtk-doc
@@ -73,9 +67,7 @@ Requires: libblockdev-fs     >= %{libblockdev_version}
 Requires: libblockdev-crypto >= %{libblockdev_version}
 Requires: libblockdev-nvme   >= %{libblockdev_version}
 
-# Needed for the systemd-related macros used in this file
-%{?systemd_requires}
-BuildRequires: systemd
+Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
 # Needed to pull in the system bus daemon
 Requires: dbus >= %{dbus_version}
@@ -85,34 +77,39 @@ Requires: udev >= %{systemd_version}
 Requires: libatasmart >= %{libatasmart_version}
 # For mount, umount, mkswap
 Requires: util-linux
-# For mkfs.ext3, mkfs.ext3, e2label
-Requires: e2fsprogs
-# For mkfs.xfs, xfs_admin
-Requires: xfsprogs
-# For mkfs.vfat
-Requires: dosfstools
-Requires: gdisk
 # For ejecting removable disks
 Requires: eject
-# For utab monitor
-Requires: libmount
 # The actual polkit agent
 Requires: polkit >= %{polkit_version}
 
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
-# For mkntfs (not available on rhel or on ppc/ppc64)
-%if ! 0%{?rhel}
+### Filesystem tools
+Recommends: dosfstools
+Recommends: e2fsprogs
+Recommends: exfatprogs
+Recommends: udftools
+Recommends: xfsprogs
+
+# For mkntfs (not available on rhel or on ppc/ppc64) and f2fs
+%if %{is_fedora}
+Recommends: f2fs-tools
+Recommends: nilfs-utils
 %ifnarch ppc ppc64
-Requires: ntfsprogs
+Recommends: ntfsprogs
 %endif
 %endif
+
+# btrfs
+%if 0%{?with_btrfs}
+Recommends: btrfs-progs
+%endif
+
 
 # For /proc/self/mountinfo, only available in 2.6.26 or higher
 Conflicts: kernel < 2.6.26
 
 Provides:  storaged = %{version}-%{release}
-Obsoletes: storaged
+Obsoletes: storaged < %{version}-%{release}
 
 %description
 The Udisks project provides a daemon, tools and libraries to access and
@@ -122,7 +119,7 @@ manipulate disks, storage devices and technologies.
 Summary: Dynamic library to access the udisksd daemon
 License: LGPLv2+
 Provides:  libstoraged = %{version}-%{release}
-Obsoletes: libstoraged
+Obsoletes: libstoraged < %{version}-%{release}
 
 %description -n lib%{name}
 This package contains the dynamic library, which provides
@@ -135,7 +132,7 @@ License: LGPLv2+
 Requires: iscsi-initiator-utils
 BuildRequires: iscsi-initiator-utils-devel
 Provides:  storaged-iscsi = %{version}-%{release}
-Obsoletes: storaged-iscsi
+Obsoletes: storaged-iscsi < %{version}-%{release}
 
 %description -n %{name}-iscsi
 This package contains module for iSCSI configuration.
@@ -149,7 +146,7 @@ Requires: libblockdev-lvm >= %{libblockdev_version}
 BuildRequires: lvm2-devel
 BuildRequires: libblockdev-lvm-devel >= %{libblockdev_version}
 Provides:  storaged-lvm2 = %{version}-%{release}
-Obsoletes: storaged-lvm2
+Obsoletes: storaged-lvm2 < %{version}-%{release}
 
 %description -n %{name}-lvm2
 This package contains module for LVM2 configuration.
@@ -159,7 +156,7 @@ Summary: Development files for lib%{name}
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Provides:  libstoraged-devel = %{version}-%{release}
-Obsoletes: libstoraged-devel
+Obsoletes: libstoraged-devel < %{version}-%{release}
 
 %description -n lib%{name}-devel
 This package contains the development files for the library lib%{name}, a
@@ -173,7 +170,7 @@ License: LGPLv2+
 Requires: libblockdev-btrfs >= %{libblockdev_version}
 BuildRequires: libblockdev-btrfs-devel >= %{libblockdev_version}
 Provides:  storaged-btrfs = %{version}-%{release}
-Obsoletes: storaged-btrfs
+Obsoletes: storaged-btrfs < %{version}-%{release}
 
 %description -n %{name}-btrfs
 This package contains module for BTRFS configuration.
@@ -188,7 +185,7 @@ Requires: libstoragemgmt
 BuildRequires: libstoragemgmt-devel
 BuildRequires: libconfig-devel
 Provides:  storaged-lsm = %{version}-%{release}
-Obsoletes: storaged-lsm
+Obsoletes: storaged-lsm < %{version}-%{release}
 
 %description -n %{name}-lsm
 This package contains module for LSM configuration.
