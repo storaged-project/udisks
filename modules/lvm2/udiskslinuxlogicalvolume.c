@@ -351,6 +351,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume     *logical_volume
   udisks_logical_volume_set_structure (iface, build_structure (daemon, group, lv_info, all_lv_infos));
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
+  g_clear_object (&group);
 }
 
 void

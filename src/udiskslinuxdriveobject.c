@@ -64,6 +64,7 @@ struct _UDisksLinuxDriveObject
 
   /* list of UDisksLinuxDevice objects for block objects */
   GList *devices;
+  GMutex devices_mutex;
 
   /* interfaces */
   UDisksDrive *iface_drive;
@@ -94,6 +95,7 @@ udisks_linux_drive_object_finalize (GObject *_object)
 
   /* note: we don't hold a ref to drive_object->daemon or drive_object->mount_monitor */
   g_list_free_full (object->devices, g_object_unref);
+  g_mutex_clear (&object->devices_mutex);
 
   if (object->iface_drive != NULL)
     g_object_unref (object->iface_drive);
@@ -148,7 +150,9 @@ udisks_linux_drive_object_set_property (GObject      *__object,
 
     case PROP_DEVICE:
       g_assert (object->devices == NULL);
+      g_mutex_lock (&object->devices_mutex);
       object->devices = g_list_prepend (NULL, g_value_dup_object (value));
+      g_mutex_unlock (&object->devices_mutex);
       break;
 
     default:
@@ -247,6 +251,8 @@ udisks_linux_drive_object_constructed (GObject *_object)
   gchar *model;
   gchar *serial;
   GString *str;
+
+  g_mutex_init (&object->devices_mutex);
 
   object->module_ifaces = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
 
@@ -399,7 +405,11 @@ udisks_linux_drive_object_get_devices (UDisksLinuxDriveObject *object)
 {
   GList *ret;
   g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object), NULL);
+
+  g_mutex_lock (&object->devices_mutex);
   ret = g_list_copy_deep (object->devices, (GCopyFunc) udisks_g_object_ref_copy, NULL);
+  g_mutex_unlock (&object->devices_mutex);
+
   return ret;
 }
 
@@ -424,6 +434,7 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject *object,
   UDisksLinuxDevice *ret = NULL;
   GList *devices;
 
+  g_mutex_lock (&object->devices_mutex);
   for (devices = object->devices; devices; devices = devices->next)
     {
       if (!get_hw || !is_dm_multipath (UDISKS_LINUX_DEVICE (devices->data)))
@@ -435,6 +446,8 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject *object,
 
   if (ret != NULL)
     g_object_ref (ret);
+  g_mutex_unlock (&object->devices_mutex);
+
   return ret;
 }
 
@@ -535,21 +548,20 @@ update_iface (UDisksObject                     *object,
     {
       if (!has)
         {
+          gpointer iface = g_steal_pointer (interface_pointer);
+
           /* Check before we remove interface from object  */
-          interface_info = g_dbus_interface_get_info (*interface_pointer);
-          tmp_iface = g_dbus_object_get_interface ((GDBusObject *) object,
-                                                   interface_info->name);
+          interface_info = g_dbus_interface_get_info (iface);
+          tmp_iface = g_dbus_object_get_interface ((GDBusObject *) object, interface_info->name);
 
           if (tmp_iface)
             {
-              g_dbus_object_skeleton_remove_interface
-                (G_DBUS_OBJECT_SKELETON (object),
-                 G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+              g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (object),
+                                                       G_DBUS_INTERFACE_SKELETON (iface));
               g_object_unref (tmp_iface);
             }
 
-          g_object_unref (*interface_pointer);
-          *interface_pointer = NULL;
+          g_object_unref (iface);
         }
     }
 
@@ -737,6 +749,8 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
   g_return_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object));
   g_return_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device));
 
+
+  g_mutex_lock (&object->devices_mutex);
   link = NULL;
   if (device != NULL)
     link = find_link_for_sysfs_path (object, g_udev_device_get_sysfs_path (device->udev_device));
@@ -766,6 +780,7 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
             object->devices = g_list_append (object->devices, g_object_ref (device));
         }
     }
+  g_mutex_unlock (&object->devices_mutex);
 
   conf_changed = FALSE;
   conf_changed |= update_iface (UDISKS_OBJECT (object), action, drive_check, drive_connect, drive_update,

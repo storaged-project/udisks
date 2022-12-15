@@ -531,10 +531,9 @@ class UdisksTestCase(unittest.TestCase):
 
     @classmethod
     def assertHasIface(self, obj, iface):
-        obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
-        intro_data = obj_intro.Introspect()
-
         for _ in range(20):
+            obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
+            intro_data = obj_intro.Introspect()
             if ('interface name="%s"' % iface) in intro_data:
                 return
             time.sleep(0.5)

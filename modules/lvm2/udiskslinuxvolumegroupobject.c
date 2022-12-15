@@ -889,6 +889,12 @@ udisks_linux_volume_group_object_destroy (UDisksLinuxVolumeGroupObject *object)
       g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (volume)));
     }
+
+  if (object->iface_volume_group != NULL)
+    {
+      g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (object),
+                                               G_DBUS_INTERFACE_SKELETON (object->iface_volume_group));
+    }
 }
 
 UDisksLinuxLogicalVolumeObject *

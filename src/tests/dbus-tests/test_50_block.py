@@ -373,8 +373,10 @@ class UdisksBlockRemovableTest(udiskstestcase.UdisksTestCase):
 
         self.cd_dev = os.listdir(dirs[0])
         self.assertEqual(len(self.cd_dev), 1)
+        obj = self.get_object('/block_devices/' + self.cd_dev[0])
         self.cd_dev = '/dev/' + self.cd_dev[0]
         self.assertTrue(os.path.exists(self.cd_dev))
+        self.assertHasIface(obj, self.iface_prefix + '.Block')
 
         self.cd_device = self.get_device(self.cd_dev)
 
