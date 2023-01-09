@@ -242,7 +242,7 @@ Tomas Bzatek (135):
       udiskslinuxmountoptions: Add support for config file overrides
       udiskslinuxmountoptions: Allow missing [defaults] section
       udiskslinuxmountoptions: Implement overrides from udev rules
-      udiskslinuxmountoptions: Print new mount options if overriden
+      udiskslinuxmountoptions: Print new mount options if overridden
       udiskslinuxmountoptions: Cache the builtin mount options within UDisksDaemon
       udiskslinuxmountoptions: Port final mount options computation away from GHashTable
       udiskslinuxmountoptions: Allow explicit option=value mount options
