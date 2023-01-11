@@ -593,6 +593,11 @@ GETTEXT_PACKAGE=udisks2
 AC_SUBST([GETTEXT_PACKAGE])
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
+# explicit check for msgfmt, needed for polkit files processing
+AS_IF([test -z "$MSGFMT" -o "$MSGFMT" = ":"], [
+  AC_MSG_ERROR([msgfmt not found (gettext package)])
+])
+
 AC_DEFINE([PROJECT_SYSCONF_DIR], ["udisks2"], [Project configuration directory])
 AC_DEFINE([PACKAGE_NAME_UDISKS2], ["udisks2"], [Full package name for UDisks2 compatibility])
 
