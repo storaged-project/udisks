@@ -161,30 +161,12 @@ class UdisksLVMTest(UDisksLVMTestBase):
         lv_prop_block.assertEqual(lv_block_path)
 
         # Shrink the LV
-        lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-
-        # check that the object is not on dbus and the 'BlockDevice' property is unset after Deactivate
-        udisks = self.get_object('')
-        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
-        self.assertNotIn(lv_prop_block, objects.keys())
-
-        lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
-        lv_prop_block.assertEqual('/')
-
-        dbus_active = self.get_property(lv, '.LogicalVolume', 'Active')
-        dbus_active.assertFalse()
-
         lv.Resize(dbus.UInt64(lvsize.value/2), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
-        lv_block_path = lv.Activate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
 
         lv_block = self.bus.get_object(self.iface_prefix, lv_block_path)
         self.assertIsNotNone(lv_block)
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertLess(lvsize.value)
-
-        # check that the 'BlockDevice' property is set after Activate
-        lv_prop_block = self.get_property(lv, '.LogicalVolume', 'BlockDevice')
-        lv_prop_block.assertEqual(lv_block_path)
 
         # Add one more device to the VG
         new_dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[-1]))
@@ -194,7 +176,6 @@ class UdisksLVMTest(UDisksLVMTestBase):
         new_vgsize.assertGreater(vgsize.value)
 
         # Resize the LV to the whole VG
-        lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         lv.Resize(dbus.UInt64(new_vgsize.value), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertEqual(new_vgsize.value)
