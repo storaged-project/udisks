@@ -121,7 +121,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         manager = self.get_object('/Manager')
 
         # invalid raid level
-        msg = '[uU]nknown profile raidN'
+        msg = '[uU]nknown .* profile raidN'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             manager.CreateVolume([dev.obj_path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',
