@@ -405,7 +405,7 @@
         </variablelist>
     -->
     <method name="Connect">
-      <arg name="subsysnqn" direction="in" type="s"/>
+      <arg name="subsysnqn" direction="in" type="ay"/>
       <arg name="transport" direction="in" type="s"/>
       <arg name="transport_addr" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
@@ -1157,7 +1157,7 @@
 
          The NVM Subsystem NVMe Qualified Name.
     -->
-    <property name="SubsystemNQN" type="s" access="read"/>
+    <property name="SubsystemNQN" type="ay" access="read"/>
 
     <!-- FGUID:
          @since: 2.10.0

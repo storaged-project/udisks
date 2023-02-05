@@ -251,12 +251,18 @@ find_drive (GDBusObjectManagerServer  *object_manager,
       if (parent_device && g_udev_device_has_sysfs_attr (parent_device, "subsysnqn") &&
           g_str_has_prefix (g_udev_device_get_subsystem (parent_device), "nvme"))
         {
+          gchar *subsysnqn_p;
+
           /* 'parent_device' is a nvme subsystem,
            * 'whole_disk_block_device' is a namespace
            */
-          nvme_ctrls = bd_nvme_find_ctrls_for_ns (whole_disk_block_device_sysfs_path,
-                                                  g_udev_device_get_sysfs_attr (parent_device, "subsysnqn"),
+          subsysnqn_p = g_strdup (g_udev_device_get_sysfs_attr (parent_device, "subsysnqn"));
+          if (subsysnqn_p)
+            g_strchomp (subsysnqn_p);
+
+          nvme_ctrls = bd_nvme_find_ctrls_for_ns (whole_disk_block_device_sysfs_path, subsysnqn_p,
                                                   NULL, NULL, NULL);
+          g_free (subsysnqn_p);
         }
       g_clear_object (&parent_device);
     }

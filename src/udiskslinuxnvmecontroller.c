@@ -278,8 +278,8 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
   UDisksNVMeController *iface = UDISKS_NVME_CONTROLLER (ctrl);
   UDisksLinuxDevice *device;
   gint cntl_id = 0;
-  const gchar *subsysnqn = NULL;
-  const gchar *state = NULL;
+  gchar *subsysnqn = NULL;
+  gchar *state = NULL;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -287,9 +287,9 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
   g_object_freeze_notify (G_OBJECT (object));
 
-  subsysnqn = g_udev_device_get_sysfs_attr (device->udev_device, "subsysnqn");
+  subsysnqn = g_strdup (g_udev_device_get_sysfs_attr (device->udev_device, "subsysnqn"));
   cntl_id = g_udev_device_get_sysfs_attr_as_int (device->udev_device, "cntlid");
-  state = g_udev_device_get_sysfs_attr (device->udev_device, "state");
+  state = g_strdup (g_udev_device_get_sysfs_attr (device->udev_device, "state"));
 
   if (device->nvme_ctrl_info)
     {
@@ -299,14 +299,20 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
       cntl_id = device->nvme_ctrl_info->ctrl_id;
       if (device->nvme_ctrl_info->subsysnqn && strlen (device->nvme_ctrl_info->subsysnqn) > 0)
-        subsysnqn = device->nvme_ctrl_info->subsysnqn;
+        subsysnqn = g_strdup (device->nvme_ctrl_info->subsysnqn);
     }
 
   udisks_nvme_controller_set_controller_id (iface, cntl_id);
   if (subsysnqn)
-    udisks_nvme_controller_set_subsystem_nqn (iface, subsysnqn);
+    {
+      g_strchomp (subsysnqn);
+      udisks_nvme_controller_set_subsystem_nqn (iface, subsysnqn);
+    }
   if (state)
-    udisks_nvme_controller_set_state (iface, state);
+    {
+      g_strchomp (state);
+      udisks_nvme_controller_set_state (iface, state);
+    }
 
   udisks_linux_nvme_controller_refresh_smart_sync (ctrl, NULL, NULL);
 
@@ -314,6 +320,9 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (ctrl));
   g_object_unref (device);
+
+  g_free (subsysnqn);
+  g_free (state);
 
   return FALSE;   /* don't re-apply the drive 'configuration' (PM, etc.) */
 }
