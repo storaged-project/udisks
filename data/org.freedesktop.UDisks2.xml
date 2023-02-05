@@ -1176,7 +1176,8 @@
          @since: 2.10.0
 
          The major, minor, and micro version of the NVM Express base specification
-         that the controller implementation supports.
+         that the controller implementation supports. Note that some older devices
+         (typically NVMe rev. lower than 1.2) may not always report this value.
     -->
     <property name="NVMeRevision" type="s" access="read"/>
 
