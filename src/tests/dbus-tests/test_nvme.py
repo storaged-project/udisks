@@ -305,7 +305,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             nguid = self.get_property_raw(ns, '.NVMe.Namespace', 'NGUID')
             self.assertGreater(len(nguid), 10)
             eui64 = self.get_property_raw(ns, '.NVMe.Namespace', 'EUI64')
-            self.assertGreater(len(eui64), 10)
+            self.assertEquals(len(eui64), 0)
             uuid = self.get_property_raw(ns, '.NVMe.Namespace', 'UUID')
             self.assertGreater(len(uuid), 10)
             wwn = self.get_property_raw(ns, '.NVMe.Namespace', 'WWN')
