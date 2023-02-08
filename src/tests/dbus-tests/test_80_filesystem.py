@@ -879,6 +879,82 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         part.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
+    def _test_mountpoint(self, label, expected_mountpoint):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+
+        if not self._can_label:
+            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem with label
+        d = dbus.Dictionary(signature='sv')
+        d['label'] = label
+        disk.Format(self._fs_signature, d, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
+        # mount it now
+        d = dbus.Dictionary(signature='sv')
+        d['options'] = 'ro'
+        if self._fs_name:
+            d['fstype'] = self._fs_name
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
+
+        # check that the name of the mount point matches the expectation
+        self.assertEqual(os.path.basename(mnt_path), expected_mountpoint)
+
+    def test_mountpoint(self):
+        if self._fs_signature == "xfs": # Label for XFS filesystem cannot contain spaces
+            self._test_mountpoint('TEST_LABEL', 'TEST_LABEL')
+        else:
+            self._test_mountpoint('TEST_LAB EL', 'TEST_LAB EL')
+
+    def test_mountpoint_quotes(self):
+        if self._fs_signature == "vfat": # character '"' not supported in VFAT labels
+            self._test_mountpoint('UD\'SK\'', 'UD_SK_')
+        else:
+            self._test_mountpoint('UD\'SK"', 'UD_SK_')
+
+    def test_mountpoint_slashes(self):
+        if self._fs_signature == "vfat":
+            self.skipTest("characters '/' and '\' are not supported in VFAT labels")
+
+        self._test_mountpoint('U/DISK\\S', 'U_DISK_S')
+
+    def test_mountpoint_nonprintable(self):
+        if self._fs_signature == "vfat": # Labels with characters below 0x20 are not allowed
+            self._test_mountpoint('UDI\x7fKS', 'UDI_KS')
+        else:
+            self._test_mountpoint('UDI\x01\x12SK\x7f', 'UDI__SK_')
+
+    def test_mountpoint_newline(self):
+        if self._fs_signature in ["vfat", "btrfs"]:
+            self.skipTest("Newline characters are not supported in %s labels" % self._fs_signature)
+
+        self._test_mountpoint('UD\n\rISKS', 'UD__ISKS')
+
+    def test_mountpoint_utf8(self):
+        if self._fs_signature == "vfat":
+            self.skipTest("vfat does not support UTF-8 labels")
+
+        # TODO: exFAT does support Unicode but mkfs.exfat relies on
+        # the current locale ("invalid character sequence in current locale")
+        if self._fs_signature == "exfat":
+            self.skipTest("UTF-8 labels are currently not supported in exfat")
+
+        self._test_mountpoint('УДИСКС', 'УДИСКС')
 
 class Ext2TestCase(UdisksFSTestCase):
     _fs_signature = 'ext2'
