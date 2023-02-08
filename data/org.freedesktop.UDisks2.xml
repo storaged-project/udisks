@@ -405,7 +405,7 @@
         </variablelist>
     -->
     <method name="Connect">
-      <arg name="subsysnqn" direction="in" type="s"/>
+      <arg name="subsysnqn" direction="in" type="ay"/>
       <arg name="transport" direction="in" type="s"/>
       <arg name="transport_addr" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
@@ -1157,7 +1157,7 @@
 
          The NVM Subsystem NVMe Qualified Name.
     -->
-    <property name="SubsystemNQN" type="s" access="read"/>
+    <property name="SubsystemNQN" type="ay" access="read"/>
 
     <!-- FGUID:
          @since: 2.10.0
@@ -1176,7 +1176,8 @@
          @since: 2.10.0
 
          The major, minor, and micro version of the NVM Express base specification
-         that the controller implementation supports.
+         that the controller implementation supports. Note that some older devices
+         (typically NVMe rev. lower than 1.2) may not always report this value.
     -->
     <property name="NVMeRevision" type="s" access="read"/>
 

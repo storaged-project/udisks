@@ -270,7 +270,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl_id = self.get_property_raw(drive_obj, '.NVMe.Controller', 'ControllerID')
         self.assertGreater(ctrl_id, 0)
         nqn = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SubsystemNQN')
-        self.assertEqual(nqn, self.SUBNQN)
+        self.assertEqual(nqn, self.str_to_ay(self.SUBNQN))
         fguid = self.get_property_raw(drive_obj, '.NVMe.Controller', 'FGUID')
         self.assertEqual(len(fguid), 0)
         rev = self.get_property_raw(drive_obj, '.NVMe.Controller', 'NVMeRevision')
@@ -305,7 +305,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             nguid = self.get_property_raw(ns, '.NVMe.Namespace', 'NGUID')
             self.assertGreater(len(nguid), 10)
             eui64 = self.get_property_raw(ns, '.NVMe.Namespace', 'EUI64')
-            self.assertGreater(len(eui64), 10)
+            self.assertEquals(len(eui64), 0)
             uuid = self.get_property_raw(ns, '.NVMe.Namespace', 'UUID')
             self.assertGreater(len(uuid), 10)
             wwn = self.get_property_raw(ns, '.NVMe.Namespace', 'WWN')
@@ -481,17 +481,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_fabrics_connect(self):
         manager = self.get_interface("/Manager", ".Manager.NVMe")
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
-            manager.Connect(self.SUBNQN, "notransport", "", self.no_options)
+            manager.Connect(self.str_to_ay(self.SUBNQN), "notransport", "", self.no_options)
         msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            manager.Connect(self.SUBNQN, "loop", "127.0.0.1", self.no_options)
+            manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "127.0.0.1", self.no_options)
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
-            manager.Connect("unknownsubnqn", "loop", "", self.no_options)
+            manager.Connect(self.str_to_ay("unknownsubnqn"), "loop", "", self.no_options)
 
         d = dbus.Dictionary(signature='sv')
         d['host_nqn'] = self.str_to_ay('nqn.2014-08.org.nvmexpress:uuid:01234567-8900-abcd-efff-abcdabcdabcd')
         d['host_id'] = self.str_to_ay('cccccccc-abcd-abcd-1234-1234567890ab')
-        ctrl_obj_path = manager.Connect(self.SUBNQN, "loop", "", d)
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "", d)
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
         ctrl = self.get_object(ctrl_obj_path)
