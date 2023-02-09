@@ -57,8 +57,10 @@ struct _UDisksLinuxDevice
 };
 
 GType              udisks_linux_device_get_type     (void) G_GNUC_CONST;
-UDisksLinuxDevice *udisks_linux_device_new_sync     (GUdevDevice *udev_device);
+UDisksLinuxDevice *udisks_linux_device_new_sync     (GUdevDevice        *udev_device,
+                                                     GUdevClient        *udev_client);
 gboolean           udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
+                                                     GUdevClient        *udev_client,
                                                      GCancellable       *cancellable,
                                                      GError            **error);
 
@@ -74,6 +76,9 @@ guint64            udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDev
 
 gboolean           udisks_linux_device_subsystem_is_nvme         (UDisksLinuxDevice  *device);
 gboolean           udisks_linux_device_nvme_is_fabrics           (UDisksLinuxDevice  *device);
+
+gboolean           udisks_linux_device_is_dm_multipath           (UDisksLinuxDevice  *device);
+gboolean           udisks_linux_device_is_mpath_device_path      (UDisksLinuxDevice  *device);
 
 G_END_DECLS
 
