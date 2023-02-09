@@ -331,7 +331,7 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
                                UDisksLinuxDriveObject *object)
 {
   UDisksLinuxDevice *device;
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     goto out;
 
@@ -522,7 +522,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -701,7 +701,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
   if (object == NULL)
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -782,7 +782,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -916,7 +916,7 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -1140,7 +1140,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -1291,7 +1291,7 @@ udisks_linux_drive_ata_get_pm_state (UDisksLinuxDriveAta  *drive,
 
   /* TODO: some SSD controllers may block for considerable time when trimming large amount of blocks */
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -1451,7 +1451,7 @@ handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
                                                     invocation))
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -1951,7 +1951,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
 
   daemon = udisks_linux_drive_object_get_daemon (object);
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -2336,6 +2336,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   UDisksLinuxDriveObject *object = NULL;
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
+  UDisksLinuxProvider *provider;
   GError *error = NULL;
   UDisksLinuxDevice *device = NULL;
   gint fd = -1;
@@ -2361,6 +2362,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
+  provider = udisks_daemon_get_linux_provider (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -2405,7 +2407,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
                                                     invocation))
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -2448,7 +2450,8 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   }
 
   /* Reread new IDENTIFY data */
-  if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+  if (!udisks_linux_device_reprobe_sync (device, udisks_linux_provider_get_udev_client (provider),
+                                         NULL, &error))
     {
       g_prefix_error (&error, "Error reprobing device: ");
       g_dbus_method_invocation_take_error (invocation, error);

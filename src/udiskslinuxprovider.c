@@ -319,7 +319,7 @@ probe_request_thread_func (gpointer user_data)
         continue;
 
       /* probe the device - this may take a while */
-      request->udisks_device = udisks_linux_device_new_sync (request->udev_device);
+      request->udisks_device = udisks_linux_device_new_sync (request->udev_device, provider->gudev_client);
 
       /* now that we've probed the device, post the request back to the main thread */
       g_idle_add (on_idle_with_probed_uevent, request);
@@ -529,7 +529,7 @@ get_udisks_devices (UDisksLinuxProvider *provider)
       GUdevDevice *device = G_UDEV_DEVICE (l->data);
       if (!g_udev_device_get_is_initialized (device))
         continue;
-      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
+      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device, provider->gudev_client));
     }
   udisks_devices = g_list_reverse (udisks_devices);
   g_list_free_full (devices, g_object_unref);
