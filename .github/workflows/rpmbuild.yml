@@ -1,7 +1,7 @@
 name: Build RPM packages
 
 env:
-  MOCK_CHROOTS: "fedora-rawhide fedora-37 fedora-36"
+  MOCK_CHROOTS: "fedora-rawhide fedora-38 fedora-37"
 
 on:
   pull_request:
