@@ -1,14 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Georgian translation for udisks.
+# Copyright (C) 2023 udisks' authors
+# This file is distributed under the same license as the udisks package.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2023.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2022-07-17 03:28+0000\n"
-"PO-Revision-Date: 2022-07-17 09:05+0200\n"
+"POT-Creation-Date: 2023-02-25 15:16+0100\n"
+"PO-Revision-Date: 2023-02-25 15:48+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -124,7 +124,7 @@ msgstr "მარყუჟის მოწყობილობის მარ�
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:357
+#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:379
 msgid "Authentication is required to set up a loop device"
 msgstr "მარყუჟმოწყობილობის დაყენებას ავთენტიკაცია სჭირდება"
 
@@ -275,10 +275,12 @@ msgid "Authentication is required to modify drive settings"
 msgstr "დისკის პარამეტრების შეცვლას ავთენტიკაცია სჭირდება"
 
 #: data/org.freedesktop.UDisks2.policy.in:420
+#: data/org.freedesktop.UDisks2.policy.in:528
 msgid "Update SMART data"
 msgstr "SMART მონაცემების განახლება"
 
 #: data/org.freedesktop.UDisks2.policy.in:421
+#: data/org.freedesktop.UDisks2.policy.in:529
 msgid "Authentication is required to update SMART data"
 msgstr "SMART მონაცემების განახლებას ავთენტიკაცია სჭირდება"
 
@@ -340,44 +342,78 @@ msgstr "დისკის უსაფრთხოდ წაშლა"
 msgid "Authentication is required to securely erase a hard disk"
 msgstr "დისკის უსაფრთხოდ წაშლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:528
+#: data/org.freedesktop.UDisks2.policy.in:539
+msgid "Run device self-test"
+msgstr "მოწყობილობის თვით-ტესტის გაშვება"
+
+#: data/org.freedesktop.UDisks2.policy.in:540
+msgid "Authentication is required to run a device self-test"
+msgstr "თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
+
+#: data/org.freedesktop.UDisks2.policy.in:550
+msgid "Start the sanitize operation"
+msgstr "სანიტარული დამუშავების ოპერაციის დაწყება"
+
+#: data/org.freedesktop.UDisks2.policy.in:551
+msgid "Authentication is required to perform a sanitize operation"
+msgstr "სანიტარული დამუშავების ოპერაციის ჩასატარებლად ავთენტიკაციაა საჭირო"
+
+#: data/org.freedesktop.UDisks2.policy.in:561
+msgid "Format a namespace"
+msgstr "სახელების სივრცის ფორმატი"
+
+#: data/org.freedesktop.UDisks2.policy.in:562
+msgid "Authentication is required to format a namespace"
+msgstr "სახელების სივრცის დაფორმატებას ავთენტიკაცია სჭირდება"
+
+#: data/org.freedesktop.UDisks2.policy.in:572
+msgid "NVMeoF connection"
+msgstr "NVMeoF მიერთება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests connection to a NVMeoF controller.
+#.
+#: data/org.freedesktop.UDisks2.policy.in:573 src/udiskslinuxmanagernvme.c:435
+msgid ""
+"Authentication is required to connect to an NVMe over Fabrics controller"
+msgstr ""
+"სტრუქტურის კონტროლერ $(drive)-ზე მდებარე NVMe-ზე მისაერთებლად ავთენტიკაციაა "
+"საჭირო"
+
+#: data/org.freedesktop.UDisks2.policy.in:582
+msgid "Disconnect a NVMeoF controller"
+msgstr "NVMeoF კონტროლერის გათიშვა"
+
+#: data/org.freedesktop.UDisks2.policy.in:583
+msgid "Authentication is required to disconnect a NVMe over Fabrics controller"
+msgstr "სტრუქტურის კონტროლერზე მდებარე NVMe-ის გასათიშად ავთენტიკაციაა საჭირო"
+
+#: data/org.freedesktop.UDisks2.policy.in:593
+msgid "Set a NVMe Host NQN/ID"
+msgstr "NVMe ჰოსტის NQN/ID-ის მიღება"
+
+#: data/org.freedesktop.UDisks2.policy.in:594
+msgid "Authentication is required to set NVMe Host NQN or Host ID"
+msgstr "NVMe ჰოსტის NQN-ის და ID-ის დაყენებას ავთენტიკაცია სჭირდება"
+
+#: data/org.freedesktop.UDisks2.policy.in:607
 msgid "Cancel job"
 msgstr "დავალების გაუქმება"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:529 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:608 src/udisksbasejob.c:400
 msgid "Authentication is required to cancel a job"
 msgstr "დავალების გაუქმებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:539
+#: data/org.freedesktop.UDisks2.policy.in:618
 msgid "Cancel job started by another user"
 msgstr "დავალების გაუქება სხვა მომხმარებელმა დაიწყო"
 
-#: data/org.freedesktop.UDisks2.policy.in:540
+#: data/org.freedesktop.UDisks2.policy.in:619
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "სხვა მომხმარებლის მიერ დაწყებული დავალების გაუქმებას ავთენტიკაცია სჭირდება"
-
-#: modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in:13
-msgid "Manage Bcache"
-msgstr "Bcache-ის მართვა"
-
-#: modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in:14
-msgid "Authentication is required to manage Bcache"
-msgstr "Bcache-ის მართვას ავთენტიკაცია სჭირდება"
-
-#: modules/bcache/udiskslinuxblockbcache.c:309
-msgid "Authentication is required to destroy bcache device."
-msgstr "Bcache-ის მოწყობილობის წაშლას ავთენტიკაცია სჭირდება."
-
-#: modules/bcache/udiskslinuxblockbcache.c:368
-msgid "Authentication is required to set mode of bcache device."
-msgstr "Bcache-ის მოწყობილობის რეჟიმის შეცვლას ავთენტიკაცია სჭირდება."
-
-#: modules/bcache/udiskslinuxmanagerbcache.c:238
-msgid "Authentication is required to create bcache device."
-msgstr "Bcache-ის მოწყობილობის შექმნას ავთენტიკაცია სჭირდება."
 
 #: modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in:16
 msgid "Manage BTRFS"
@@ -491,48 +527,52 @@ msgstr "LVM-ის მართვა"
 msgid "Authentication is required to manage LVM"
 msgstr "LVM-ის მართვას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:447
+#: modules/lvm2/udiskslinuxlogicalvolume.c:565
 msgid "Authentication is required to delete a logical volume"
 msgstr "ლოგიკური ტომის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:571
+#: modules/lvm2/udiskslinuxlogicalvolume.c:645
+msgid "Authentication is required to repair a logical volume"
+msgstr "ლოგიკური ტომის შეკეთებას ავთენტიკაცია სჭირდება"
+
+#: modules/lvm2/udiskslinuxlogicalvolume.c:748
 msgid "Authentication is required to rename a logical volume"
 msgstr "ლოგიკური ტომის სახელის გადარქმევას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:633
+#: modules/lvm2/udiskslinuxlogicalvolume.c:810
 msgid "Authentication is required to resize a logical volume"
 msgstr "ლოგიკური ტომის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:727
+#: modules/lvm2/udiskslinuxlogicalvolume.c:904
 msgid "Authentication is required to activate a logical volume"
 msgstr "ლოგიკური ტომის აქტივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:795
+#: modules/lvm2/udiskslinuxlogicalvolume.c:972
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "ლოგიკური ტომის დექატივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:862
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1039
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "ლოგიკური ტომის სწრაფი ასლის შექმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:919
-#: modules/lvm2/udiskslinuxlogicalvolume.c:982
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1096
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1159
 msgid "LVMCache not enabled at compile time."
 msgstr "LVMCache აგების დროს ჩართული არ იყო."
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:933
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1110
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "ლოგიკური ტომის ქეშად გარდაქმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:955
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1018
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1132
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1195
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "ტომის გადაყვანის შეცდომა: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:996
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1173
 msgid "Authentication is required to split cache pool LV off of a cache LV"
-msgstr ""
+msgstr "ქეშის LV-is ქეშის პულის LV-დან გამოსაყოფად ავთენტიკაციაა საჭირო"
 
 #: modules/lvm2/udiskslinuxmanagerlvm2.c:259
 msgid "Authentication is required to create a volume group"
@@ -547,102 +587,84 @@ msgstr "VDO ტომის დედუპლიკაციის/შეკუ
 msgid "Authentication is required to resize a VDO volume"
 msgstr "VDO ტომის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:302
+#: modules/lvm2/udiskslinuxvolumegroup.c:318
 msgid "Authentication is required to delete a volume group"
 msgstr "ტომის ჯგუფის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:417
+#: modules/lvm2/udiskslinuxvolumegroup.c:433
 msgid "Authentication is required to rename a volume group"
 msgstr "ტომის ჯგუფის სახელის გადარქმევას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:531
+#: modules/lvm2/udiskslinuxvolumegroup.c:547
 msgid "Authentication is required to add a device to a volume group"
 msgstr "ტომის ჯგუფში მოწყობილობის ჩამატებას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:630
+#: modules/lvm2/udiskslinuxvolumegroup.c:646
 msgid "Authentication is required to remove a device from a volume group"
 msgstr "ტომის ჯგუფიდან მოწყობილობის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:639
+#: modules/lvm2/udiskslinuxvolumegroup.c:655
 msgid "Authentication is required to empty a device in a volume group"
 msgstr "ტომების ჯგუფში მოწყობილობის დასაცარიელებლად ავთენტიკაციაა საჭირო"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:859
+#: modules/lvm2/udiskslinuxvolumegroup.c:830
+msgid ""
+"Authentication is required to remove missing physical volumes from a volume "
+"group"
+msgstr "ტომის ჯგუფიდან ნაკლული ფიზიკური ტომების წაშლას ავთენტიკაცია სჭირდება"
+
+#: modules/lvm2/udiskslinuxvolumegroup.c:952
 msgid "Authentication is required to create a logical volume"
 msgstr "ლოგიკური ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:865
+#: modules/lvm2/udiskslinuxvolumegroup.c:958
 msgid "Authentication is required to create a thin volume"
 msgstr "თხელი ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:871
+#: modules/lvm2/udiskslinuxvolumegroup.c:964
 msgid "Authentication is required to create a thin pool volume"
 msgstr "თხელი პულის ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:877
+#: modules/lvm2/udiskslinuxvolumegroup.c:970
 msgid "Authentication is required to create a VDO volume"
 msgstr "VDO ტომის შექმნას ავთენტიკაცია სჭირდება"
-
-#: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
-msgid "Manage zRAM"
-msgstr "ZRAM-ის მართვა"
-
-#: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:14
-msgid "Authentication is required to manage zRAM"
-msgstr "ZRAM-ის მართვას ავთენტიკაცია სჭირდება"
-
-#: modules/zram/udiskslinuxmanagerzram.c:388
-msgid "Authentication is required to add zRAM kernel module"
-msgstr "ZRAM-ის ბირთვის მოდულის ჩატვირთვას ავთენტიკაცია სჭირდება"
-
-#: modules/zram/udiskslinuxmanagerzram.c:484
-msgid "Authentication is required to remove zRAM kernel module"
-msgstr "ZRAM-ის ბირთვის მოდულის წაშლას ავთენტიკაცია სჭირდება"
-
-#: modules/zram/udiskslinuxblockzram.c:322
-msgid "Authentication is required to enable zRAM device"
-msgstr "ZRAM-ის მოწყობილობის ჩართვას ავთენტიკაცია სჭირდება"
-
-#: modules/zram/udiskslinuxblockzram.c:426
-msgid "Authentication is required to disable zRAM device"
-msgstr "ZRAM-ის მოწყობილობის გამორთვას ავთენტიკაცია სჭირდება"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1288
+#: src/udiskslinuxblock.c:1294
 msgid "Authentication is required to read system-level secrets"
 msgstr "სისტემური დონის პაროლების წაკითხვას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:1995
+#: src/udiskslinuxblock.c:2001
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "/etc/fstab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2014
+#: src/udiskslinuxblock.c:2020
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2074
+#: src/udiskslinuxblock.c:2080
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "/etc/fstab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2093
+#: src/udiskslinuxblock.c:2099
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2166
+#: src/udiskslinuxblock.c:2172
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "/etc/fstab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2185
+#: src/udiskslinuxblock.c:2191
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -659,7 +681,7 @@ msgstr "/etc/crypttab ფაილის შეცვლას ავთენ�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3089 src/udiskslinuxdriveata.c:2274
+#: src/udiskslinuxblock.c:2881 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "$(drive)-ის უსაფრთხო წაშლას ავთენტიკაცია სჭირდება"
 
@@ -670,11 +692,11 @@ msgstr "$(drive)-ის უსაფრთხო წაშლას ავთე
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3101
+#: src/udiskslinuxblock.c:2893
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive)-ის დაფორმატებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxblock.c:3143 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2921 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "სისტემის კონფიგურაციის ცვლილებისთვის ავთენტიკაცია აუცილებელია"
 
@@ -684,7 +706,7 @@ msgstr "სისტემის კონფიგურაციის ცვ�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3676
+#: src/udiskslinuxblock.c:3774
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "$(drive)-ის წასაკითხად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -694,7 +716,7 @@ msgstr "$(drive)-ის წასაკითხად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3747
+#: src/udiskslinuxblock.c:3845
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "$(drive)-ის ჩასაწერად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -704,7 +726,7 @@ msgstr "$(drive)-ის ჩასაწერად გახსნას ავ
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3821
+#: src/udiskslinuxblock.c:3919
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "$(drive)-ის დასატესტად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -714,7 +736,7 @@ msgstr "$(drive)-ის დასატესტად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3904
+#: src/udiskslinuxblock.c:4002
 msgid "Authentication is required to open $(drive)."
 msgstr "$(drive)-ის გახსნას ავთენტიკაცია სჭირდება."
 
@@ -724,7 +746,7 @@ msgstr "$(drive)-ის გახსნას ავთენტიკაცი�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3961
+#: src/udiskslinuxblock.c:4059
 msgid "Authentication is required to rescan $(drive)"
 msgstr "$(drive)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
@@ -764,7 +786,7 @@ msgstr "$(drive)-ის გამორთვას ავთენტიკა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:793
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:463
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "SMART მონაცემების $(drive)-დან განახლებას ავთენტიკაცია სჭირდება"
 
@@ -774,7 +796,7 @@ msgstr "SMART მონაცემების $(drive)-დან განა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804
+#: src/udiskslinuxdriveata.c:815
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
 "SMART მონაცემების $(drive)-სთვის ბლობიდან განახლებას ავთენტიკაცია სჭირდება"
@@ -785,7 +807,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:938
+#: src/udiskslinuxdriveata.c:949
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr "$(drive)-ზე SMART თვით-ტესტის შეჩერებას ავთენტიკაცია სჭირდება"
 
@@ -795,7 +817,7 @@ msgstr "$(drive)-ზე SMART თვით-ტესტის შეჩერე
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1186
+#: src/udiskslinuxdriveata.c:1197
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr "$(drive)-ზე SMART თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
 
@@ -805,7 +827,7 @@ msgstr "$(drive)-ზე SMART თვით-ტესტის გაშვებ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1326
+#: src/udiskslinuxdriveata.c:1337
 msgid "Authentication is required to check power state for $(drive)"
 msgstr "$(drive)-ის კვების მდგომარეობის შემოწმებას ავთენტკაცია სჭირდება"
 
@@ -816,11 +838,11 @@ msgstr "$(drive)-ის კვების მდგომარეობის 
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1422
+#: src/udiskslinuxdriveata.c:1433
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr "უქმე რეჟიმიდან $(drive)-ის გაღვიძებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxdriveata.c:1423
+#: src/udiskslinuxdriveata.c:1434
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "$(drive)-ის უქმე რეჟიმში გადართვას ავთენტკაცია სჭირდება"
 
@@ -830,7 +852,7 @@ msgstr "$(drive)-ის უქმე რეჟიმში გადართვ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2366
+#: src/udiskslinuxdriveata.c:2385
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "$(drive)-ზე SMART-ის ჩართვას ავთენტიკაცია სჭირდება"
 
@@ -840,7 +862,7 @@ msgstr "$(drive)-ზე SMART-ის ჩართვას ავთენტი
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2376
+#: src/udiskslinuxdriveata.c:2395
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "$(drive)-ზე SMART-ის გამორთვას ავთენტიკაცია სჭირდება"
 
@@ -866,6 +888,8 @@ msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
 msgstr ""
+"სხვა მომხმარებლის მიერ განბლოკილი მოწყობილობის ($(drive)) დასაბლოკად "
+"ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing a encrypted block device.
@@ -883,7 +907,7 @@ msgstr "დაშიფრული მოწყობილობის $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:961 src/udiskslinuxfilesystem.c:1143
+#: src/udiskslinuxfilesystem.c:867 src/udiskslinuxfilesystem.c:1053
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive)-ის მიმაგრებას ავთენტიკაცია სჭირდება"
 
@@ -897,7 +921,7 @@ msgstr "$(drive)-ის მიმაგრებას ავთენტიკ�
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1048
+#: src/udiskslinuxfilesystem.c:952
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -915,7 +939,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1451
+#: src/udiskslinuxfilesystem.c:1504
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -930,7 +954,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1499
+#: src/udiskslinuxfilesystem.c:1552
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr "სხვა მომხმარებლის მიერ მიმაგრებული $(drive)-ის მოხსნა შეუძლებელია"
 
@@ -940,7 +964,7 @@ msgstr "სხვა მომხმარებლის მიერ მიმ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1703
+#: src/udiskslinuxfilesystem.c:1720
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ჭდის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -950,7 +974,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ჭდი
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1892
+#: src/udiskslinuxfilesystem.c:1902
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -960,7 +984,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ზომ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2063
+#: src/udiskslinuxfilesystem.c:2073
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შეკეთებას ავთენტიკაცია სჭირდება"
 
@@ -970,7 +994,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის შეკ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2231
+#: src/udiskslinuxfilesystem.c:2241
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შემოწმებას ავთენტიკაცია სჭირდება"
 
@@ -980,7 +1004,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის შემ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2383
+#: src/udiskslinuxfilesystem.c:2401
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის მფლობელის შეცვლას ავთენტიკაცია სჭირდება"
@@ -992,7 +1016,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის მფლ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:254
+#: src/udiskslinuxloop.c:240
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) წაშლას ავთენტიკაცია სჭირდება"
 
@@ -1003,7 +1027,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) წა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:347
+#: src/udiskslinuxloop.c:333
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -1011,9 +1035,23 @@ msgstr "მარყუჟმოწყობილობის $(drive) შე�
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:557
+#: src/udiskslinuxmanager.c:581
 msgid "Authentication is required to create a RAID array"
 msgstr "RAID მასივის შექმნას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting new NVMe Host NQN value.
+#.
+#: src/udiskslinuxmanagernvme.c:549
+msgid "Authentication is required to set NVMe Host NQN"
+msgstr "NVMe ჰოსტის NQN-ის დაყენებისთვის ავთენტიკაციაა საჭირო"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting new NVMe Host ID value.
+#.
+#: src/udiskslinuxmanagernvme.c:618
+msgid "Authentication is required to set NVMe Host ID"
+msgstr "NVMe ჰოსტის ID-ის დაყენებისთვის ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -1056,6 +1094,7 @@ msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
 msgstr ""
+"RAID მასივზე write-intent-ის ბიტური რუკის მოსარგებად ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
@@ -1064,10 +1103,68 @@ msgstr ""
 #: src/udiskslinuxmdraid.c:1408
 msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
+"RAID მასივის მონაცემების სკრაბინგის გასაშვებად/გასაჩერებლად ავთენტიკაციაა "
+"საჭირო"
 
 #: src/udiskslinuxmdraid.c:1494
 msgid "Authentication is required to delete a RAID array"
 msgstr "RAID მასივის წაშლას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * initiates a device self-test.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmecontroller.c:825
+msgid "Authentication is required to start a device self-test on $(drive)"
+msgstr "$(drive)-ზე თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * aborts a running device self-test.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmecontroller.c:918
+msgid "Authentication is required to abort a device self-test on $(drive)"
+msgstr "$(drive)-ზე თვით-ტესტის შეჩერებას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * initiates a sanitize operation.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmecontroller.c:1220
+msgid "Authentication is required to perform a sanitize operation of $(drive)"
+msgstr ""
+"$(drive)-ის სანიტარული დამუშავების ოპერაციის ჩასატარებლად ავთენტიკაციაა "
+"საჭირო"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests disconnect of a NVMeoF connected controller.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmefabrics.c:201
+msgid ""
+"Authentication is required to disconnect a NVMe over Fabrics controller "
+"$(drive)"
+msgstr ""
+"სტრუქტურის კონტროლერ $(drive)-ზე მდებარე NVMe-ის გასათიშად ავთენტიკაციაა "
+"საჭირო"
+
+#. Translators: Shown in authentication dialog when the user
+#. * initiates a device self-test.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmenamespace.c:409
+msgid "Authentication is required to format a namespace on $(drive)"
+msgstr "$(drive)-ზე სახელების სივრცის დაფორმატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1751,301 +1848,909 @@ msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr "Extended Boot Partition"
 
-#. Discoverable Linux Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
+#. Discoverable Linux Partitions, see http://systemd.io/DISCOVERABLE_PARTITIONS/
 #: udisks/udisksclient.c:2348
+msgctxt "part-type"
+msgid "Linux Root Partition (Alpha)"
+msgstr "Linux Root დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2349
+msgctxt "part-type"
+msgid "Linux Root Partition (ARC)"
+msgstr "Linux Root დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2350
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit ARM)"
+msgstr "Linux Root დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2351
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit ARM/AArch64)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2352
+msgctxt "part-type"
+msgid "Linux Root Partition (Itanium/IA-64)"
+msgstr "Linux Root დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2353
+msgctxt "part-type"
+msgid "Linux Root Partition (LoongArch 64-bit)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2354
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux Root დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/mipsel)"
+
+#: udisks/udisksclient.c:2355
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/mips64el)"
+
+#: udisks/udisksclient.c:2356
+msgctxt "part-type"
+msgid "Linux Root Partition (HPPA/PARISC)"
+msgstr "Linux Root დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2357
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit PowerPC)"
+msgstr "Linux Root დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2358
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი PowerPC, მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2359
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი PowerPC, წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2360
+msgctxt "part-type"
+msgid "Linux Root Partition (RISC-V 32-bit)"
+msgstr "Linux Root დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2361
+msgctxt "part-type"
+msgid "Linux Root Partition (RISC-V 64-bit)"
+msgstr "Linux Root დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2362
+msgctxt "part-type"
+msgid "Linux Root Partition (s390)"
+msgstr "Linux Root დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2363
+#| msgctxt "part-type"
+#| msgid "Linux Root Partition (x86)"
+msgctxt "part-type"
+msgid "Linux Root Partition (s390x)"
+msgstr "Linux Root დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2364
+msgctxt "part-type"
+msgid "Linux Root Partition (TILE-Gx)"
+msgstr "Linux Root დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2365
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr "Linux Root დანაყოფი (x86)"
 
-#: udisks/udisksclient.c:2349
+#: udisks/udisksclient.c:2366
 msgctxt "part-type"
-msgid "Linux Root Partition (x86_64)"
-msgstr "Linux Root დანაყოფი (x86_64)"
+msgid "Linux Root Partition (amd64/x86_64)"
+msgstr "Linux Root დანაყოფი (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2350
+#: udisks/udisksclient.c:2367
+#| msgctxt "part-type"
+#| msgid "Linux Root Partition (x86)"
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (Alpha)"
+msgstr "Linux-ის /usr/ დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2368
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (ARC)"
+msgstr "Linux-ის /usr/ დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2369
+#| msgctxt "part-type"
+#| msgid "Linux Root Partition (x86)"
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit ARM)"
+msgstr "Linux-ის /usr/ დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2370
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/ დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2371
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (Itanium/IA-64)"
+msgstr "Linux /usr/ დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2372
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/ დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2373
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux /usr/ დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/mipsel)"
+
+#: udisks/udisksclient.c:2374
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux /usr/ დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/mips64el)"
+
+#: udisks/udisksclient.c:2375
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (HPPA/PARISC)"
+msgstr "Linux-ის /usr/ დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2376
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit PowerPC)"
+msgstr "Linux /usr/ დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2377
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux /usr/ დანაყოფი (64-ბიტიანი PowerPC, მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2378
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux /usr/ დანაყოფი (64-ბიტიანი PowerPC, წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2379
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (RISC-V 32-bit)"
+msgstr "Linux-ის /usr/ დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2380
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (RISC-V 64-bit)"
+msgstr "Linux-ის /usr/ დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2381
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (s390)"
+msgstr "Linux-ის /usr/ დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2382
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (s390x)"
+msgstr "Linux-ის /usr/ დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2383
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (TILE-Gx)"
+msgstr "Linux-ის /usr/ დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2384
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (x86)"
+msgstr "Linux-ის /usr/ დანაყოფი (x86)"
+
+#: udisks/udisksclient.c:2385
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (amd64/x86_64)"
+msgstr "Linux /usr/ დანაყოფი (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2386
+#| msgctxt "part-type"
+#| msgid "Linux Root Partition (x86)"
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (Alpha)"
+msgstr "Linux Root გადამოწმების დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2387
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (ARC)"
+msgstr "Linux Root გადამოწმების დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2388
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit ARM)"
+msgstr "Linux Root გადამოწმების დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2389
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit ARM/AArch64)"
+msgstr "Linux Root გადამოწმების დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2390
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (Itanium/IA-64)"
+msgstr "Linux Root გადამოწმების დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2391
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (LoongArch 64-bit)"
+msgstr "Linux Root გადამოწმების დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2392
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr ""
+"Linux Root გადამოწმების დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/mipsel)"
+
+#: udisks/udisksclient.c:2393
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux Root გადამოწმების დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/mips64el)"
+
+#: udisks/udisksclient.c:2394
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (HPPA/PARISC)"
+msgstr "Linux Root გადამოწმების დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2395
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux Root გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2396
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux Root გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2397
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit PowerPC)"
+msgstr "Linux Root გადამოწმების დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2398
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (RISC-V 32-bit)"
+msgstr "Linux Root გადამოწმების დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2399
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (RISC-V 64-bit)"
+msgstr "Linux Root გადამოწმების დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2400
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (s390)"
+msgstr "Linux Root გადამოწმების დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2401
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (s390x)"
+msgstr "Linux Root გადამოწმების დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2402
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (TILE-Gx)"
+msgstr "Linux Root გადამოწმების დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2403
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (amd64/x86_64)"
+msgstr "Linux Root გადამოწმების დანაყოფი (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2404
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (x86)"
+msgstr "Linux Root გადამოწმების დანაყოფი (x86)"
+
+#: udisks/udisksclient.c:2405
+#| msgctxt "part-type"
+#| msgid "Linux Root Partition (x86)"
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (Alpha)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2406
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (ARC)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2407
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit ARM)"
+msgstr "Linux-ის /usr/ გადამოწმების დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2408
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2409
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (Itanium/IA-64)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2410
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2411
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr ""
+"Linux /usr/ გადამოწმების დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/mipsel)"
+
+#: udisks/udisksclient.c:2412
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/mips64el)"
+
+#: udisks/udisksclient.c:2413
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (HPPA/PARISC)"
+msgstr "Linux-ის /usr/ გადამოწმების დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2414
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2415
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2416
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit PowerPC)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2417
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (RISC-V 32-bit)"
+msgstr "Linux-ის /usr/ გადამოწმების დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2418
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (RISC-V 64-bit)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2419
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (s390)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2420
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (s390x)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2421
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (TILE-Gx)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2422
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (amd64/x86_64)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2423
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (x86)"
+msgstr "Linux /usr/ გადამოწმების დანაყოფი (x86)"
+
+#: udisks/udisksclient.c:2424
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (Alpha)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2425
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (ARC)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2426
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit ARM)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2427
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit ARM/AArch64)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2428
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (Itanium/IA-64)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2429
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (LoongArch 64-bit)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2430
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr ""
+"Linux Root ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/"
+"mipsel)"
+
+#: udisks/udisksclient.c:2431
+msgctxt "part-type"
+msgid ""
+"Linux Root Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/"
+"mips64el)"
+
+#: udisks/udisksclient.c:2432
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (HPPA/PARISC)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2433
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit PowerPC LittleEndian)"
+msgstr ""
+"Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, "
+"წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2434
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit PowerPC BigEndian)"
+msgstr ""
+"Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, "
+"მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2435
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit PowerPC)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2436
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (RISC-V 32-bit)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2437
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (RISC-V 64-bit)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2438
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (s390)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2439
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (s390x)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2440
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (TILE-Gx)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2441
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (amd64/x86_64)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2442
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (x86)"
+msgstr "Linux Root ხელმოწერის გადამოწმების დანაყოფი (x86)"
+
+#: udisks/udisksclient.c:2443
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (Alpha)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (Alpha)"
+
+#: udisks/udisksclient.c:2444
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (ARC)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (ARC)"
+
+#: udisks/udisksclient.c:2445
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (32-bit ARM)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი ARM)"
+
+#: udisks/udisksclient.c:2446
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი ARM/AArch64)"
+
+#: udisks/udisksclient.c:2447
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (Itanium/IA-64)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2448
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი LoongArch)"
+
+#: udisks/udisksclient.c:2449
+msgctxt "part-type"
+msgid ""
+"Linux /usr/ Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr ""
+"Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი MIPS, წვრილბოლოიანი/"
+"mipsel)"
+
+#: udisks/udisksclient.c:2450
+msgctxt "part-type"
+msgid ""
+"Linux /usr/ Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი MIPS, წვრილბოლოიანი/"
+"mips64el)"
+
+#: udisks/udisksclient.c:2451
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (HPPA/PARISC)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2452
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC LittleEndian)"
+msgstr ""
+"Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, "
+"წვრილბოლოიანი)"
+
+#: udisks/udisksclient.c:2453
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC BigEndian)"
+msgstr ""
+"Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი PowerPC, "
+"მსხვილბოლოიანი)"
+
+#: udisks/udisksclient.c:2454
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (32-bit PowerPC)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი PowerPC)"
+
+#: udisks/udisksclient.c:2455
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (RISC-V 32-bit)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (32-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2456
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (RISC-V 64-bit)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (64-ბიტიანი RISC-V)"
+
+#: udisks/udisksclient.c:2457
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (s390)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (s390)"
+
+#: udisks/udisksclient.c:2458
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (s390x)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (s390x)"
+
+#: udisks/udisksclient.c:2459
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (TILE-Gx)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (TILE-Gx)"
+
+#: udisks/udisksclient.c:2460
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (amd64/x86_64)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2461
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (x86)"
+msgstr "Linux /usr/ ხელმოწერის გადამოწმების დანაყოფი (x86)"
+
+#: udisks/udisksclient.c:2462
+msgctxt "part-type"
+msgid "Linux Variable Data Partition"
+msgstr "Linux-ის ცვლადი მონაცემების დანაყოფი"
+
+#: udisks/udisksclient.c:2463
+msgctxt "part-type"
+msgid "Linux Temporary Data Partition"
+msgstr "Linux-ის დროებითი მონაცემების დანაყოფი"
+
+#: udisks/udisksclient.c:2464
+msgctxt "part-type"
+msgid "Linux Per-user Home Partition"
+msgstr "Linux-ის თითოეული მოხმარებლის Home დანაყოფი"
+
+#: udisks/udisksclient.c:2465
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr "Linux Home დანაყოფი"
 
-#: udisks/udisksclient.c:2351
+#: udisks/udisksclient.c:2466
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr "Linux Server Data დანაყოფი"
 
 #. Linux
-#: udisks/udisksclient.c:2353
+#: udisks/udisksclient.c:2468
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Linux Swap"
 
-#: udisks/udisksclient.c:2354
+#: udisks/udisksclient.c:2469
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr "Linux ფაილური სისტემა"
 
-#: udisks/udisksclient.c:2355
+#: udisks/udisksclient.c:2470
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr "Linux RAID"
 
-#: udisks/udisksclient.c:2356 udisks/udisksclient.c:2442
+#: udisks/udisksclient.c:2471 udisks/udisksclient.c:2557
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux LVM"
 
-#: udisks/udisksclient.c:2357
+#: udisks/udisksclient.c:2472
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Linux რეზერვირებული"
 
 #. Microsoft
-#: udisks/udisksclient.c:2359
+#: udisks/udisksclient.c:2474
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "ძირითადი მონაცემები"
 
-#: udisks/udisksclient.c:2360
+#: udisks/udisksclient.c:2475
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Microsoft რეზერვირებული"
 
-#: udisks/udisksclient.c:2361
+#: udisks/udisksclient.c:2476
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft LDM მეტამონაცემები"
 
-#: udisks/udisksclient.c:2362
+#: udisks/udisksclient.c:2477
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft LDM მონაცემები"
 
-#: udisks/udisksclient.c:2363
+#: udisks/udisksclient.c:2478
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Microsoft Windows აღდგენის გარემო"
 
 #. Apple OS X
-#: udisks/udisksclient.c:2365
+#: udisks/udisksclient.c:2480
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple HFS/HFS+"
 
-#: udisks/udisksclient.c:2366
+#: udisks/udisksclient.c:2481
 msgctxt "part-type"
 msgid "Apple APFS"
 msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: udisks/udisksclient.c:2367 udisks/udisksclient.c:2421
+#: udisks/udisksclient.c:2482 udisks/udisksclient.c:2536
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple UFS"
 
-#: udisks/udisksclient.c:2368
+#: udisks/udisksclient.c:2483
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple ZFS"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2369
+#: udisks/udisksclient.c:2484
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple RAID"
 
-#: udisks/udisksclient.c:2370
+#: udisks/udisksclient.c:2485
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple RAID (offline)"
 
-#: udisks/udisksclient.c:2371
+#: udisks/udisksclient.c:2486
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Apple Boot"
 
-#: udisks/udisksclient.c:2372
+#: udisks/udisksclient.c:2487
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple Label"
 
-#: udisks/udisksclient.c:2373
+#: udisks/udisksclient.c:2488
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV Recovery"
 
-#: udisks/udisksclient.c:2374
+#: udisks/udisksclient.c:2489
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Apple Core Storage"
 
 #. HP-UX
-#: udisks/udisksclient.c:2376
+#: udisks/udisksclient.c:2491
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX Data"
 
-#: udisks/udisksclient.c:2377
+#: udisks/udisksclient.c:2492
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX Service"
 
 #. FreeBSD
-#: udisks/udisksclient.c:2379
+#: udisks/udisksclient.c:2494
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "FreeBSD Boot"
 
-#: udisks/udisksclient.c:2380
+#: udisks/udisksclient.c:2495
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD Data"
 
-#: udisks/udisksclient.c:2381
+#: udisks/udisksclient.c:2496
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "FreeBSD Swap"
 
-#: udisks/udisksclient.c:2382
+#: udisks/udisksclient.c:2497
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD UFS"
 
-#: udisks/udisksclient.c:2383
+#: udisks/udisksclient.c:2498
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD Vinum"
 
-#: udisks/udisksclient.c:2384
+#: udisks/udisksclient.c:2499
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD ZFS"
 
 #. Solaris
-#: udisks/udisksclient.c:2386
+#: udisks/udisksclient.c:2501
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Solaris Boot"
 
-#: udisks/udisksclient.c:2387
+#: udisks/udisksclient.c:2502
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris Root"
 
-#: udisks/udisksclient.c:2388
+#: udisks/udisksclient.c:2503
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Solaris Swap"
 
-#: udisks/udisksclient.c:2389
+#: udisks/udisksclient.c:2504
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris Backup"
 
-#: udisks/udisksclient.c:2390
+#: udisks/udisksclient.c:2505
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris /usr"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2391
+#: udisks/udisksclient.c:2506
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris /var"
 
-#: udisks/udisksclient.c:2392
+#: udisks/udisksclient.c:2507
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris /home"
 
-#: udisks/udisksclient.c:2393
+#: udisks/udisksclient.c:2508
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris Alternate Sector"
 
-#: udisks/udisksclient.c:2394
+#: udisks/udisksclient.c:2509
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Solaris Reserved"
 
-#: udisks/udisksclient.c:2395
+#: udisks/udisksclient.c:2510
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Solaris Reserved (2)"
 
-#: udisks/udisksclient.c:2396
+#: udisks/udisksclient.c:2511
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Solaris Reserved (3)"
 
-#: udisks/udisksclient.c:2397
+#: udisks/udisksclient.c:2512
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Solaris Reserved (4)"
 
-#: udisks/udisksclient.c:2398
+#: udisks/udisksclient.c:2513
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Solaris Reserved (5)"
 
 #. NetBSD
-#: udisks/udisksclient.c:2400
+#: udisks/udisksclient.c:2515
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "NetBSD Swap"
 
-#: udisks/udisksclient.c:2401
+#: udisks/udisksclient.c:2516
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD FFS"
 
-#: udisks/udisksclient.c:2402
+#: udisks/udisksclient.c:2517
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD LFS"
 
-#: udisks/udisksclient.c:2403
+#: udisks/udisksclient.c:2518
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD RAID"
 
-#: udisks/udisksclient.c:2404
+#: udisks/udisksclient.c:2519
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "NetBSD Concatenated"
 
-#: udisks/udisksclient.c:2405
+#: udisks/udisksclient.c:2520
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD Encrypted"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html
-#: udisks/udisksclient.c:2407
+#: udisks/udisksclient.c:2522
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: udisks/udisksclient.c:2408
+#: udisks/udisksclient.c:2523
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format
-#: udisks/udisksclient.c:2410
+#: udisks/udisksclient.c:2525
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr "ChromeOS Firmware"
 
-#: udisks/udisksclient.c:2411
+#: udisks/udisksclient.c:2526
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr "ChromeOS Kernel"
 
-#: udisks/udisksclient.c:2412
+#: udisks/udisksclient.c:2527
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr "ChromeOS Root Filesystem"
 
-#: udisks/udisksclient.c:2413
+#: udisks/udisksclient.c:2528
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr "ChromeOS Reserved"
@@ -2053,399 +2758,399 @@ msgstr "ChromeOS Reserved"
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: udisks/udisksclient.c:2417
+#: udisks/udisksclient.c:2532
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr "Intel FFS Reserved"
 
-#: udisks/udisksclient.c:2422
+#: udisks/udisksclient.c:2537
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple HFS/HFS"
 
-#: udisks/udisksclient.c:2423
+#: udisks/udisksclient.c:2538
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Apple Partition Map"
 
-#: udisks/udisksclient.c:2424
+#: udisks/udisksclient.c:2539
 msgctxt "part-type"
 msgid "Unused"
 msgstr "გამოუყენებელი"
 
-#: udisks/udisksclient.c:2425
+#: udisks/udisksclient.c:2540
 msgctxt "part-type"
 msgid "Empty"
 msgstr "ცარიელი"
 
-#: udisks/udisksclient.c:2426
+#: udisks/udisksclient.c:2541
 msgctxt "part-type"
 msgid "Driver"
 msgstr "დრაივერი"
 
-#: udisks/udisksclient.c:2427
+#: udisks/udisksclient.c:2542
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Driver 4.3"
 
-#: udisks/udisksclient.c:2428
+#: udisks/udisksclient.c:2543
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "ProDOS file system"
 
-#: udisks/udisksclient.c:2429
+#: udisks/udisksclient.c:2544
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: udisks/udisksclient.c:2430
+#: udisks/udisksclient.c:2545
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: udisks/udisksclient.c:2431
+#: udisks/udisksclient.c:2546
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: udisks/udisksclient.c:2432
+#: udisks/udisksclient.c:2547
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: udisks/udisksclient.c:2433
+#: udisks/udisksclient.c:2548
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: udisks/udisksclient.c:2436
+#: udisks/udisksclient.c:2551
 msgctxt "part-type"
 msgid "Extended"
 msgstr "გაფართოებული"
 
-#: udisks/udisksclient.c:2437
+#: udisks/udisksclient.c:2552
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI GPT"
 
-#: udisks/udisksclient.c:2438
+#: udisks/udisksclient.c:2553
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: udisks/udisksclient.c:2439
+#: udisks/udisksclient.c:2554
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Linux Swap"
 
-#: udisks/udisksclient.c:2440
+#: udisks/udisksclient.c:2555
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2441
+#: udisks/udisksclient.c:2556
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Linux Extended"
 
-#: udisks/udisksclient.c:2443
+#: udisks/udisksclient.c:2558
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Linux RAID auto"
 
-#: udisks/udisksclient.c:2444
+#: udisks/udisksclient.c:2559
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: udisks/udisksclient.c:2445
+#: udisks/udisksclient.c:2560
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32M"
 
-#: udisks/udisksclient.c:2446
+#: udisks/udisksclient.c:2561
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: udisks/udisksclient.c:2447
+#: udisks/udisksclient.c:2562
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
 msgstr "NTFS/exFAT/HPFS"
 
-#: udisks/udisksclient.c:2448
+#: udisks/udisksclient.c:2563
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95 FAT32"
 
-#: udisks/udisksclient.c:2449
+#: udisks/udisksclient.c:2564
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2450
+#: udisks/udisksclient.c:2565
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2451
+#: udisks/udisksclient.c:2566
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95 Ext d (LBA)"
 
-#: udisks/udisksclient.c:2452
+#: udisks/udisksclient.c:2567
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "Hidden FAT12"
 
-#: udisks/udisksclient.c:2453
+#: udisks/udisksclient.c:2568
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "Hidden FAT16 <32M"
 
-#: udisks/udisksclient.c:2454
+#: udisks/udisksclient.c:2569
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "Hidden FAT16"
 
-#: udisks/udisksclient.c:2455
+#: udisks/udisksclient.c:2570
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "Hidden HPFS/NTFS"
 
-#: udisks/udisksclient.c:2456
+#: udisks/udisksclient.c:2571
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "Hidden W95 FAT32"
 
-#: udisks/udisksclient.c:2457
+#: udisks/udisksclient.c:2572
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "Hidden W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2458
+#: udisks/udisksclient.c:2573
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "Hidden W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2459
+#: udisks/udisksclient.c:2574
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: udisks/udisksclient.c:2460
+#: udisks/udisksclient.c:2575
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Compaq diagnostics"
 
-#: udisks/udisksclient.c:2461
+#: udisks/udisksclient.c:2576
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: udisks/udisksclient.c:2462
+#: udisks/udisksclient.c:2577
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: udisks/udisksclient.c:2463 udisks/udisksclient.c:2464
+#: udisks/udisksclient.c:2578 udisks/udisksclient.c:2579
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "Hibernation"
 
-#: udisks/udisksclient.c:2465
+#: udisks/udisksclient.c:2580
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: udisks/udisksclient.c:2466
+#: udisks/udisksclient.c:2581
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: udisks/udisksclient.c:2467 udisks/udisksclient.c:2468
+#: udisks/udisksclient.c:2582 udisks/udisksclient.c:2583
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: udisks/udisksclient.c:2469
+#: udisks/udisksclient.c:2584
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Solaris boot"
 
-#: udisks/udisksclient.c:2470
+#: udisks/udisksclient.c:2585
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: udisks/udisksclient.c:2471
+#: udisks/udisksclient.c:2586
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS BFS"
 
-#: udisks/udisksclient.c:2472
+#: udisks/udisksclient.c:2587
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS SkyFS"
 
-#: udisks/udisksclient.c:2615
+#: udisks/udisksclient.c:2730
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "SMART თვით-ტესტი"
 
-#: udisks/udisksclient.c:2616
+#: udisks/udisksclient.c:2731
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "დისკის გამოღება"
 
-#: udisks/udisksclient.c:2617
+#: udisks/udisksclient.c:2732
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "მოწყობილობის განბლოკვა"
 
-#: udisks/udisksclient.c:2618
+#: udisks/udisksclient.c:2733
 msgctxt "job"
 msgid "Locking Device"
 msgstr "მოწყობილობის დაბლოკვა"
 
-#: udisks/udisksclient.c:2619
+#: udisks/udisksclient.c:2734
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "დაშიფრული მოწყობილობის შეცვლა"
 
-#: udisks/udisksclient.c:2620
+#: udisks/udisksclient.c:2735
 msgctxt "job"
 msgid "Resizing Encrypted Device"
 msgstr "დაშიფრული მოწყობილობის ზომის შეცვლა"
 
-#: udisks/udisksclient.c:2621
+#: udisks/udisksclient.c:2736
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "სვოპის მოწყობილობის გაშვება"
 
-#: udisks/udisksclient.c:2622
+#: udisks/udisksclient.c:2737
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "სვოპის მოწყობილობის შეჩერება"
 
-#: udisks/udisksclient.c:2623
+#: udisks/udisksclient.c:2738
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "სვოპის მოწყობილობის შეცვლა"
 
-#: udisks/udisksclient.c:2624
+#: udisks/udisksclient.c:2739
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "ფაილური სისტემის შემოწმება"
 
-#: udisks/udisksclient.c:2625
+#: udisks/udisksclient.c:2740
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "ფაილური სისტემის მიმაგრება"
 
-#: udisks/udisksclient.c:2626
+#: udisks/udisksclient.c:2741
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "ფაილური სისტემის მიმაგრების მოხსნა"
 
-#: udisks/udisksclient.c:2627
+#: udisks/udisksclient.c:2742
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "ფაილური სისტემის შეცვლა"
 
-#: udisks/udisksclient.c:2628
+#: udisks/udisksclient.c:2743
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "ფაილური სისტემის გასწორება"
 
-#: udisks/udisksclient.c:2629
+#: udisks/udisksclient.c:2744
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "ფაილური სისტემის ზომის შეცვლა"
 
-#: udisks/udisksclient.c:2630
+#: udisks/udisksclient.c:2745
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "მოწყობილობის წაშლა"
 
-#: udisks/udisksclient.c:2631
+#: udisks/udisksclient.c:2746
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "ფაილური სისტემის შექმნა"
 
-#: udisks/udisksclient.c:2632
+#: udisks/udisksclient.c:2747
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "მარყუჟმოწყობილობის მორგება"
 
-#: udisks/udisksclient.c:2633
+#: udisks/udisksclient.c:2748
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "დანაყოფის შექმნა"
 
-#: udisks/udisksclient.c:2634
+#: udisks/udisksclient.c:2749
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "დანაყოფის წაშლა"
 
-#: udisks/udisksclient.c:2635
+#: udisks/udisksclient.c:2750
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "დანაყოფის შექმნა"
 
-#: udisks/udisksclient.c:2636
+#: udisks/udisksclient.c:2751
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "მოსუფთავება"
 
-#: udisks/udisksclient.c:2637
+#: udisks/udisksclient.c:2752
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "ATA უსაფრთხო წაშლა"
 
-#: udisks/udisksclient.c:2638
+#: udisks/udisksclient.c:2753
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "ATA დამატებით უსაფრთხო წაშლა"
 
-#: udisks/udisksclient.c:2639
+#: udisks/udisksclient.c:2754
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "RAID მასივის გაჩერება"
 
-#: udisks/udisksclient.c:2640
+#: udisks/udisksclient.c:2755
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "RAID მასივის გაშვება"
 
-#: udisks/udisksclient.c:2641
+#: udisks/udisksclient.c:2756
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "მოწყობილობის როგორც გაფუჭებულად მონიშვნა"
 
-#: udisks/udisksclient.c:2642
+#: udisks/udisksclient.c:2757
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "მოწყობილობის მასივიდან წაშლა"
 
-#: udisks/udisksclient.c:2643
+#: udisks/udisksclient.c:2758
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "მოწყობილობის მასივში ჩამატება"
 
-#: udisks/udisksclient.c:2644
+#: udisks/udisksclient.c:2759
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Wite-Intent ბიტური რუკის დაყენება"
 
-#: udisks/udisksclient.c:2645
+#: udisks/udisksclient.c:2760
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "RAID მასივის შექმნა"
 
-#: udisks/udisksclient.c:2652
+#: udisks/udisksclient.c:2767
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
