@@ -1091,6 +1091,21 @@ class Ext4TestCase(Ext2TestCase):
         self.assertEqual(sys_stat.st_uid, int(uid))
         self.assertEqual(sys_stat.st_gid, int(gid))
 
+    def test_create_format_mkfs_args(self):
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        options = dbus.Dictionary(signature='sv')
+        options['mkfs-args'] = ['-O', 'nonexistent']
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid filesystem option set: nonexistent'):
+            self._create_format(disk, options=options)
+
+        options['mkfs-args'] = ['-O', 'encrypt']
+        self._create_format(disk, options=options)
 
 class XFSTestCase(UdisksFSTestCase):
     _fs_signature = 'xfs'
