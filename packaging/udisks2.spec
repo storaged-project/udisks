@@ -142,7 +142,6 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 License: LGPLv2+
 Requires: lvm2
 Requires: libblockdev-lvm >= %{libblockdev_version}
-BuildRequires: lvm2-devel
 BuildRequires: libblockdev-lvm-devel >= %{libblockdev_version}
 Provides:  storaged-lvm2 = %{version}-%{release}
 Obsoletes: storaged-lvm2 < %{version}-%{release}
