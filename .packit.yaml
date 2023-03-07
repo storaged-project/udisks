@@ -1,0 +1,64 @@
+actions:
+  create-archive:
+    - 'dnf -y copr enable @storage/udisks-daily'
+    - 'dnf -y install libblockdev*devel'
+    - './autogen.sh --enable-modules'
+    - 'make'
+    - 'make dist'
+    - 'bash -c "ls *.tar*"'
+
+jobs:
+- job: copr_build
+  metadata:
+    targets:
+    - fedora-rawhide-aarch64
+    - fedora-rawhide-ppc64le
+    - fedora-rawhide-x86_64
+    - fedora-latest-aarch64
+    - fedora-latest-ppc64le
+    - fedora-latest-x86_64
+    - fedora-latest-stable-aarch64
+    - fedora-latest-stable-ppc64le
+    - fedora-latest-stable-x86_64
+    additional_repos:
+    - https://download.copr.fedorainfracloud.org/results/@storage/udisks-daily/fedora-$releasever-$basearch/
+    additional_packages:
+    - libblockdev-devel
+    - libblockdev-part-devel
+    - libblockdev-loop-devel
+    - libblockdev-swap-devel
+    - libblockdev-mdraid-devel
+    - libblockdev-fs-devel
+    - libblockdev-crypto-devel
+    - libblockdev-nvme-devel
+    - libblockdev-lvm-devel
+    - libblockdev-btrfs-devel
+  trigger: pull_request
+
+srpm_build_deps:
+ - gcc
+ - make
+ - libtool
+ - autoconf
+ - automake
+ - glib2-devel
+ - gobject-introspection-devel
+ - libgudev1-devel
+ - libatasmart-devel
+ - polkit-devel
+ - systemd
+ - systemd-devel
+ - systemd-rpm-macros
+ - libacl-devel
+ - chrpath
+ - gtk-doc
+ - gettext-devel
+ - redhat-rpm-config
+ - libmount-devel
+ - libuuid-devel
+ - iscsi-initiator-utils-devel
+ - libstoragemgmt-devel
+ - libconfig-devel
+
+downstream_package_name: udisks2
+specfile_path: packaging/udisks2.spec
