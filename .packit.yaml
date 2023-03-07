@@ -1,0 +1,54 @@
+actions:
+  create-archive:
+    - './autogen.sh --enable-modules'
+    - 'make'
+    - 'make dist'
+    - 'bash -c "ls *.tar*"'
+
+jobs:
+- job: copr_build
+  owner: "@storage"
+  project: udisks-pr
+  branch: master
+  preserve_project: true
+  trigger: pull_request
+  additional_repos:
+  - "copr://@storage/udisks-daily"
+
+srpm_build_deps:
+ - gcc
+ - make
+ - libtool
+ - autoconf
+ - automake
+ - glib2-devel
+ - gobject-introspection-devel
+ - libgudev1-devel
+ - libatasmart-devel
+ - polkit-devel
+ - systemd
+ - systemd-devel
+ - systemd-rpm-macros
+ - libacl-devel
+ - chrpath
+ - gtk-doc
+ - gettext-devel
+ - redhat-rpm-config
+ - libmount-devel
+ - libuuid-devel
+ - iscsi-initiator-utils-devel
+ - libstoragemgmt-devel
+ - libconfig-devel
+ - libblockdev-devel
+ - libblockdev-part-devel
+ - libblockdev-loop-devel
+ - libblockdev-swap-devel
+ - libblockdev-mdraid-devel
+ - libblockdev-fs-devel
+ - libblockdev-crypto-devel
+ - libblockdev-nvme-devel
+ - libblockdev-lvm-devel
+ - libblockdev-btrfs-devel
+
+downstream_package_name: udisks2
+specfile_path: packaging/udisks2.spec
