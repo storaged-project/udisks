@@ -9,7 +9,6 @@
 
 %define with_btrfs                      1
 %define with_lsm                        1
-%define with_lvmcache                   1
 
 %define is_fedora                       0%{?rhel} == 0
 %define is_git                          %(git show > /dev/null 2>&1 && echo 1 || echo 0)
@@ -208,9 +207,6 @@ autoreconf -ivf
 %endif
 %if 0%{?with_lsm}
     --enable-lsm      \
-%endif
-%if 0%{?with_lvmcache}
-    --enable-lvmcache \
 %endif
     --enable-lvm2     \
     --enable-iscsi
