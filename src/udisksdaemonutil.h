@@ -94,6 +94,12 @@ gboolean udisks_daemon_util_get_user_info (const uid_t   uid,
                                            gchar       **out_user_name,
                                            GError      **error);
 
+gboolean
+udisks_daemon_util_get_user_info_by_name (const gchar  *user_name,
+                                          uid_t        *out_uid,
+                                          gid_t        *out_gid,
+                                          GError      **error);
+
 gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                                                  GDBusMethodInvocation   *invocation,
                                                  GCancellable            *cancellable,
