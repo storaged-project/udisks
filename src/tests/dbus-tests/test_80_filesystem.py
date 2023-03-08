@@ -949,11 +949,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if self._fs_signature == "vfat":
             self.skipTest("vfat does not support UTF-8 labels")
 
-        # TODO: exFAT does support Unicode but mkfs.exfat relies on
-        # the current locale ("invalid character sequence in current locale")
-        if self._fs_signature == "exfat":
-            self.skipTest("UTF-8 labels are currently not supported in exfat")
-
         self._test_mountpoint('УДИСКС', 'УДИСКС')
 
 class Ext2TestCase(UdisksFSTestCase):
