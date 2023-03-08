@@ -2081,7 +2081,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -2146,6 +2146,20 @@
         <parameter>no-block</parameter> is %TRUE. Note that the block
         device has already been modified (wiped) when the dry run
         check is called.
+
+        If the option <parameter>mkfs-args</parameter> is set then the
+        caller can provide a list of additional command-line arguments
+        that will be passed to the mkfs program. The arguments
+        specified in this way are not validated by UDisks, and the
+        user is responsible for making sure that the available mkfs
+        program for that filesystem supports them and that they work
+        for the intended purpose. Note that UDisks can also pass its
+        own additional arguments to mkfs, and they may vary between
+        releases, with no guarantees of stability in this regard. The
+        position in which the user-provided arguments are appended to
+        the final mkfs command line is also not defined. Because of
+        all this, <parameter>mkfs-args</parameter> should only be used
+        as a last resort when no other dedicated option is available.
 
         If the option <parameter>no-discard</parameter> is set to
         %TRUE then Udisks tells the formatting utility not to issue

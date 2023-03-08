@@ -2864,6 +2864,7 @@ format_check_auth (UDisksDaemon          *daemon,
                    GVariant              *options,
                    GDBusMethodInvocation *invocation,
                    gboolean               secure_erase,
+                   gboolean               format_extra_args,
                    gboolean               modify_system_configuration)
 {
   const gchar *action_id;
@@ -2891,7 +2892,8 @@ format_check_auth (UDisksDaemon          *daemon,
        * be replaced by the name of the drive/device in question
        */
       message = N_("Authentication is required to format $(drive)");
-      action_id = "org.freedesktop.udisks2.modify-device";
+      action_id = format_extra_args ? "org.freedesktop.udisks2.modify-device-system" :
+                                      "org.freedesktop.udisks2.modify-device";
       if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
         {
           if (udisks_block_get_hint_system (block))
@@ -3254,6 +3256,7 @@ typedef struct {
   const gchar *device;
   const gchar *type;
   const gchar *label;
+  const BDExtraArg **extra_args;
   gboolean dry_run;
   gboolean no_discard;
 } FormatJobData;
@@ -3287,7 +3290,7 @@ format_job_func (UDisksThreadedJob  *job,
   options.no_discard = data->no_discard;
   options.no_pt = TRUE;  /* disable creation of a protective part table */
 
-  if (! bd_fs_mkfs (data->device, data->type, &options, NULL, &l_error))
+  if (! bd_fs_mkfs (data->device, data->type, &options, data->extra_args, &l_error))
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Error creating filesystem '%s': %s",
@@ -3333,6 +3336,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gboolean teardown_flag = FALSE;
   gboolean no_discard_flag = FALSE;
   const gchar *label = NULL;
+  gchar **mkfs_args = NULL;
+  BDExtraArg **extra_args = NULL;
 
 
   object = udisks_daemon_util_dup_object (block, &error);
@@ -3359,6 +3364,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
   g_variant_lookup (options, "no-discard", "b", &no_discard_flag);
   g_variant_lookup (options, "label", "&s", &label);
+  g_variant_lookup (options, "mkfs-args", "^a&s", &mkfs_args);
 
   partition = udisks_object_get_partition (object);
   if (partition != NULL)
@@ -3407,6 +3413,16 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       goto out;
     }
 
+  if (mkfs_args != NULL)
+    {
+      guint i, nargs = g_strv_length (mkfs_args);
+      extra_args = g_new0 (BDExtraArg *, nargs + 1);
+      for (i = 0; i < nargs; i++)
+        {
+          extra_args[i] = bd_extra_arg_new (mkfs_args[i], NULL);
+        }
+    }
+
   /* Check the required authorization */
   if (!format_check_auth (daemon,
                           block,
@@ -3415,6 +3431,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                           options,
                           invocation,
                           g_strcmp0 (erase_type, "ata-secure-erase") == 0 || g_strcmp0 (erase_type, "ata-secure-erase-enhanced") == 0,
+                          extra_args != NULL,
                           config_items != NULL || teardown_flag))
     goto out;
 
@@ -3446,6 +3463,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       format_job_data.device = udisks_block_get_device (block);
       format_job_data.type = type;
       format_job_data.label = label;
+      format_job_data.extra_args = (const BDExtraArg **) extra_args;
       format_job_data.dry_run = TRUE;
       format_job_data.no_discard = no_discard_flag;
 
@@ -3546,6 +3564,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       format_job_data.device = udisks_block_get_device (block_to_mkfs);
       format_job_data.type = type;
       format_job_data.label = label;
+      format_job_data.extra_args = (const BDExtraArg **) extra_args;
       format_job_data.dry_run = FALSE;
       format_job_data.no_discard = no_discard_flag;
 
@@ -3651,6 +3670,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   if (config_items)
     g_variant_unref (config_items);
   udisks_string_wipe_and_free (encrypt_passphrase);
+  g_free (mkfs_args);
+  bd_extra_arg_list_free (extra_args);
   g_clear_object (&block_to_mkfs);
   g_clear_object (&object_to_mkfs);
   g_clear_object (&partition_table);
