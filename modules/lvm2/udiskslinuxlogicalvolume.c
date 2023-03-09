@@ -1088,16 +1088,6 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
                      const gchar           *cache_name,
                      GVariant              *options)
 {
-#ifndef HAVE_LVMCACHE
-
-  g_dbus_method_invocation_return_error (invocation,
-                                         UDISKS_ERROR,
-                                         UDISKS_ERROR_FAILED,
-                                         N_("LVMCache not enabled at compile time."));
-  return TRUE;
-
-#else
-
   GError *error = NULL;
   UDisksLinuxLogicalVolume *volume = UDISKS_LINUX_LOGICAL_VOLUME (volume_);
   UDisksLinuxLogicalVolumeObject *object = NULL;
@@ -1140,8 +1130,6 @@ out:
   g_clear_object (&object);
 
   return TRUE;
-
-#endif /* HAVE_LVMCACHE */
 }
 
 
@@ -1151,16 +1139,6 @@ handle_cache_detach_or_split (UDisksLogicalVolume    *volume_,
                               GVariant               *options,
                               gboolean                destroy)
 {
-#ifndef HAVE_LVMCACHE
-
-  g_dbus_method_invocation_return_error (invocation,
-                                         UDISKS_ERROR,
-                                         UDISKS_ERROR_FAILED,
-                                         N_("LVMCache not enabled at compile time."));
-  return TRUE;
-
-#else
-
   GError *error = NULL;
   UDisksLinuxLogicalVolume *volume = UDISKS_LINUX_LOGICAL_VOLUME (volume_);
   UDisksLinuxLogicalVolumeObject *object = NULL;
@@ -1203,8 +1181,6 @@ out:
   g_clear_object (&object);
 
   return TRUE;
-
-#endif /* HAVE_LVMCACHE */
 }
 
 static gboolean

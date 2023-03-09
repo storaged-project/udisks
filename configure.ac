@@ -310,23 +310,6 @@ if test "x$enable_lvm2" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
 
-# LVMCache
-have_lvmcache=no
-AC_ARG_ENABLE(lvmcache, AS_HELP_STRING([--enable-lvmcache], [enable LVMCache support]))
-if test "x$enable_lvmcache" = "xyes" \
-     -o "x$enable_modules" = "xyes" \
-     -o "x$enable_available_modules" = "xyes"; then
-
-  if test "x$have_lvm2" = "xno"; then
-     if test "x$enable_lvmcache" = "xyes" -o "x$enable_modules" = "xyes"; then
-         AC_MSG_ERROR([lvmcache support requested, but lvm2 module not enabled])
-     fi
-  fi
-  have_lvmcache=yes
-  AC_DEFINE(HAVE_LVMCACHE, 1, [Define if lvmcache is available])
-fi
-AM_CONDITIONAL(HAVE_LVMCACHE, [test "$have_lvmcache" = "yes"])
-
 # iSCSI module
 have_iscsi=no
 have_libiscsi_session_info="no"
@@ -712,6 +695,5 @@ echo "
         BTRFS module:               ${have_btrfs}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
-        LVMCache:                   ${have_lvmcache}
         LibStorageMgmt module:      ${have_lsm}
 "

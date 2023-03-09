@@ -47,7 +47,7 @@ To build UDisks with (a) chosen module(s), provide or leave these
 configuration options for the `configure` script:
 
     $ ./configure --enable-btrfs --enable-iscsi --enable-lsm
-                  --enable-lvm2 --enable-lvmcache
+                  --enable-lvm2
 
 It is possible to enable all the modules at once:
 
