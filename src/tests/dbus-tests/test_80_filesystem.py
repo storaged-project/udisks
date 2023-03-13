@@ -951,6 +951,86 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         self._test_mountpoint('УДИСКС', 'УДИСКС')
 
+    def _unmount_as_user(self, pipe, uid, gid, device):
+        """ Try to unmount @device as user with given @uid and @gid."""
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+        try:
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/block_devices/' + os.path.basename(device),
+                                self.iface_prefix + '.Filesystem',
+                                'Unmount',
+                                GLib.Variant('(a{sv})', ({},)))
+        except Exception as e:
+            pipe.send([False, 'Unmount DBus call failed: %s' % str(e)])
+            pipe.close()
+            return
+
+        pipe.send([True, ''])
+        pipe.close()
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_mount_as_user(self):
+        """ Test mounting a filesystem on behalf of a different user."""
+        if not self._can_create:
+            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+
+        if not self._can_label:
+            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem with label
+        d = dbus.Dictionary(signature='sv')
+        d['label'] = 'UDISKS'
+        disk.Format(self._fs_signature, d, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
+        # create user for our test
+        self.addCleanup(self._remove_user, self.username)
+        uid, gid = self._add_user(self.username)
+
+        # prepare the mount options
+        d = dbus.Dictionary(signature='sv')
+        d['options'] = 'ro'
+        if self._fs_name:
+            d['fstype'] = self._fs_name
+
+        # try to mount it now: first with a nonexistent user
+        d['as-user'] = 'nonexistent'
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, "User with name nonexistent does not exist"):
+            block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+
+        # now mount it with the actual user
+        d['as-user'] = self.username
+        mnt_path = block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+        self.addCleanup(self.try_unmount, block_fs_dev)
+        self.addCleanup(self.try_unmount, self.vdevs[0])
+
+        # check that the name of the mount point matches the expectation
+        self.assertTrue(mnt_path.endswith("%s/UDISKS" % self.username))
+
+        # try to unmount it as the other user
+        parent_conn, child_conn = Pipe()
+        proc = Process(target=self._unmount_as_user, args=(child_conn, int(uid), int(gid), block_fs_dev))
+        proc.start()
+        res = parent_conn.recv()
+        parent_conn.close()
+        proc.join()
+
+        if not res[0]:
+            self.fail(res[1])
+
 class Ext2TestCase(UdisksFSTestCase):
     _fs_signature = 'ext2'
     _can_create = True and UdisksFSTestCase.command_exists('mke2fs')

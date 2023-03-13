@@ -44,6 +44,17 @@
     </defaults>
   </action>
 
+  <!-- mount a device on behalf of another user -->
+  <action id="org.freedesktop.udisks2.filesystem-mount-other-user">
+    <description>Mount a filesystem on behalf of another user</description>
+    <message>Authentication is required to mount the filesystem</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- mount a device referenced in the /etc/fstab file with the x-udisks-auth option -->
   <action id="org.freedesktop.udisks2.filesystem-fstab">
     <description>Mount/unmount filesystems defined in the fstab file with the x-udisks-auth option</description>

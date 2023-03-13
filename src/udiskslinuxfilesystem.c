@@ -835,6 +835,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                     UDisksObject          *object,
                     uid_t                  caller_uid,
                     gid_t                  caller_gid,
+                    gboolean               mount_other_user,
                     const gchar           *mount_point_to_use,
                     const gchar           *fstab_mount_options,
                     GDBusMethodInvocation *invocation,
@@ -865,7 +866,11 @@ handle_mount_fstab (UDisksDaemon          *daemon,
        * will be replaced by the name of the drive/device in question
        */
       message = N_("Authentication is required to mount $(drive)");
-      if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+      if (mount_other_user)
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount-other-user";
+        }
+      else if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
         {
           if (udisks_block_get_hint_system (block))
             {
@@ -992,6 +997,7 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
                       uid_t                  caller_uid,
                       gid_t                  caller_gid,
                       const gchar           *caller_user_name,
+                      gboolean               mount_other_user,
                       gchar                **mount_point_to_use,
                       gboolean              *mpoint_persistent,
                       GDBusMethodInvocation *invocation,
@@ -1051,7 +1057,11 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to mount $(drive)");
-  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+  if (mount_other_user)
+    {
+      action_id = "org.freedesktop.udisks2.filesystem-mount-other-user";
+    }
+  else if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
       if (udisks_block_get_hint_system (block))
         {
@@ -1178,6 +1188,7 @@ handle_mount (UDisksFilesystem      *filesystem,
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksState *state = NULL;
+  gchar *opt_as_user = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
   const gchar * const *existing_mount_points;
@@ -1197,6 +1208,14 @@ handle_mount (UDisksFilesystem      *filesystem,
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
+    }
+
+  if (options != NULL)
+    {
+      g_variant_lookup (options,
+                        "as-user",
+                        "&s",
+                        &opt_as_user);
     }
 
   block = udisks_object_peek_block (object);
@@ -1234,22 +1253,35 @@ handle_mount (UDisksFilesystem      *filesystem,
       goto out;
     }
 
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &error))
+  if (opt_as_user)
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
+      if (!udisks_daemon_util_get_user_info_by_name (opt_as_user, &caller_uid, &caller_gid, &error))
+        {
+          g_dbus_method_invocation_return_gerror (invocation, error);
+          g_clear_error (&error);
+          goto out;
+        }
+      caller_user_name = g_strdup (opt_as_user);
     }
-
-  if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, &caller_user_name, &error))
+  else
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
+      if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                                   invocation,
+                                                   NULL /* GCancellable */,
+                                                   &caller_uid,
+                                                   &error))
+        {
+          g_dbus_method_invocation_return_gerror (invocation, error);
+          g_clear_error (&error);
+          goto out;
+        }
+
+      if (!udisks_daemon_util_get_user_info (caller_uid, &caller_gid, &caller_user_name, &error))
+        {
+          g_dbus_method_invocation_return_gerror (invocation, error);
+          g_clear_error (&error);
+          goto out;
+        }
     }
 
   /* Mount it */
@@ -1259,6 +1291,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                object,
                                caller_uid,
                                caller_gid,
+                               opt_as_user != NULL,
                                mount_point_to_use,
                                fstab_mount_options,
                                invocation,
@@ -1272,6 +1305,7 @@ handle_mount (UDisksFilesystem      *filesystem,
                                  caller_uid,
                                  caller_gid,
                                  caller_user_name,
+                                 opt_as_user != NULL,
                                  &mount_point_to_use,
                                  &mpoint_persistent,
                                  invocation,

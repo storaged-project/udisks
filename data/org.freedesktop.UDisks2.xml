@@ -2582,7 +2582,7 @@
 
     <!--
         Mount:
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's'), <parameter>as-user</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
         @mount_path: The filesystem path where the device was mounted.
 
         Mounts the filesystem.
@@ -2606,6 +2606,12 @@
         by default determined by the #org.freedesktop.UDisks2.Block:IdType
         property. The @fstype option doesn't typically need to be
         specified, primarily intended as an override in corner cases.
+
+        If the <parameter>as-user</parameter> option is set, the
+        filesystem is mounted on behalf of the specified user instead
+        of the calling one. This has usually an effect on the returned
+        @mount_path and it also allows that user to unmount the
+        filesystem later. This option expects a user name, not a UID.
 
         If the device in question is referenced in the
         <filename>/etc/fstab</filename> file, the

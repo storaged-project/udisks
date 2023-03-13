@@ -1081,6 +1081,59 @@ out:
 }
 
 /**
+ * udisks_daemon_util_get_user_info_by_name:
+ * @out_uid: (out) (allow-none): Return location for resolved uid or %NULL.
+ * @out_gid: (out) (allow-none): Return location for resolved gid or %NULL.
+ * @error: Return location for error.
+ *
+ * Gets the UNIX id and group for a user name.
+ *
+ * Returns: %TRUE if the user information was obtained, %FALSE otherwise
+ */
+gboolean
+udisks_daemon_util_get_user_info_by_name (const gchar  *user_name,
+                                          uid_t        *out_uid,
+                                          gid_t        *out_gid,
+                                          GError      **error)
+{
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  struct passwd *pw = NULL;
+  int rc;
+
+  g_return_val_if_fail (user_name != NULL, FALSE);
+
+  rc = getpwnam_r (user_name, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc == 0 && pw == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "User with name %s does not exist", user_name);
+      goto out;
+    }
+  else if (pw == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error looking up passwd struct for user %s: %m", user_name);
+      goto out;
+    }
+
+  if (out_uid != NULL)
+    *out_uid = pw->pw_uid;
+
+  if (out_gid != NULL)
+    *out_gid = pw->pw_gid;
+
+  return TRUE;
+
+out:
+  return FALSE;
+}
+
+/**
  * udisks_daemon_util_get_caller_uid_sync:
  * @daemon: A #UDisksDaemon.
  * @invocation: A #GDBusMethodInvocation.
