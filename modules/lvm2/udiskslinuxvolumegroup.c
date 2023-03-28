@@ -1016,6 +1016,12 @@ handle_create_volume (UDisksVolumeGroup              *_group,
           goto out;
         }
 
+      data.new_lv_stripes = 0;
+      g_variant_lookup (options, "stripes", "u", &data.new_lv_stripes);
+
+      data.new_lv_mirrors = 0;
+      g_variant_lookup (options, "mirrors", "u", &data.new_lv_mirrors);
+
       data.new_lv_layout = arg_layout;
       if (arg_pvs)
         {

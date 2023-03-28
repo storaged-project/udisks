@@ -233,8 +233,8 @@ class UdisksLVMTest(UDisksLVMTestBase):
         vdev_size = vg_freesize.value / len(devs)
         lv_size = int(vdev_size * 0.75)
         lv_path = vg.CreatePlainVolumeWithLayout(lvname, dbus.UInt64(lv_size),
-                                                 "raid1", devs[0:2],
-                                                 self.no_options,
+                                                 "raid1", devs[0:3],
+                                                 dbus.Dictionary({'mirrors': dbus.UInt32(2)}, signature='sv'),
                                                  dbus_interface=self.iface_prefix + '.VolumeGroup')
         self.assertIsNotNone(lv_path)
 
@@ -257,48 +257,49 @@ class UdisksLVMTest(UDisksLVMTestBase):
             else:
                 self.assertEqual(len(struct["segments"]), 0)
 
-        def assertRaid1Stripes(structs, size, pv1, pv2):
-            self.assertEqual(len(structs), 2)
+        def assertRaid1Stripes(structs, size, pv1, pv2, pv3):
+            self.assertEqual(len(structs), 3)
             assertSegs(structs[0], size, pv1)
             assertSegs(structs[1], size, pv2)
+            assertSegs(structs[2], size, pv3)
 
-        def assertRaid1Structure(pv1, pv2):
+        def assertRaid1Structure(pv1, pv2, pv3):
             struct = self.get_property(lv, '.LogicalVolume', 'Structure').value
             self.assertEqual(struct["type"], "raid1")
             self.assertEqual(struct["size"], lv_size)
             self.assertNotIn("segments", struct)
-            assertRaid1Stripes(struct["data"], lv_size, pv1, pv2)
-            assertRaid1Stripes(struct["metadata"], None, pv1, pv2)
+            assertRaid1Stripes(struct["data"], lv_size, pv1, pv2, pv3)
+            assertRaid1Stripes(struct["metadata"], None, pv1, pv2, pv3)
 
-        def waitRaid1Structure(pv1, pv2):
+        def waitRaid1Structure(pv1, pv2, pv3):
             for _ in range(5):
                 try:
-                    assertRaid1Structure(pv1, pv2)
+                    assertRaid1Structure(pv1, pv2, pv3)
                     return
                 except AssertionError:
                     pass
                 time.sleep(1)
             # Once again for the error message
-            assertRaid1Structure(pv1, pv2)
+            assertRaid1Structure(pv1, pv2, pv3)
 
-        waitRaid1Structure(devs[0], devs[1])
+        waitRaid1Structure(devs[0], devs[1], devs[2])
 
-        # Yank out the first vdev and repair the LV with the third
+        # Yank out the first vdev and repair the LV with the fourth
         _ret, _output = self.run_command('echo yes >/sys/block/%s/device/delete' % os.path.basename(self.vdevs[0]))
         self.addCleanup(self._rescan_lio_devices)
         self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
         _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
         self.assertEqual(sys_health, "partial")
 
-        waitRaid1Structure(None, devs[1])
+        waitRaid1Structure(None, devs[1], devs[2])
 
-        lv.Repair(devs[2:3], self.no_options,
+        lv.Repair(devs[3:4], self.no_options,
                   dbus_interface=self.iface_prefix + '.LogicalVolume')
         _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
         self.assertEqual(sys_health, "")
         self.get_property(lv, '.LogicalVolume', 'SyncRatio').assertEqual(1.0, timeout=60, poll_vg=vg)
 
-        waitRaid1Structure(devs[2], devs[1])
+        waitRaid1Structure(devs[3], devs[1], devs[2])
 
         # Tell the VG that everything is alright
         vg.RemoveMissingPhysicalVolumes(self.no_options,

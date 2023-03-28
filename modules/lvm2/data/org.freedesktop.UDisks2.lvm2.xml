@@ -302,7 +302,8 @@
          type on the given physical volumes.  It is okay to leave
          "pvs" empty; LVM2 will then choose suitable ones on its own.
 
-         No additional options are currently defined.
+         The "stripes" (u) and "mirrors" (u) options work like the
+         "stripes" and "mirrors" options of "lvcreate".
     -->
     <method name="CreatePlainVolumeWithLayout">
       <arg name="name" type="s" direction="in"/>
