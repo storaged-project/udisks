@@ -302,7 +302,24 @@
          type on the given physical volumes.  It is okay to leave
          "pvs" empty; LVM2 will then choose suitable ones on its own.
 
-         No additional options are currently defined.
+         If "pvs" is not empty and the given "layout" uses subvolumes
+         (like all the raid variants), then this method will create
+         exactly one subvolume for each given physical volume.
+
+         For example, when "layout" is "raid5" and "pvs" contains four
+         entries, then this method will have the same effect as
+         "lvcreate &#45;-type raid5 &#45;-stripes 3 ...": The resulting logical volume
+         will have four subvolumes.
+
+         The "subvolumes" (i) option can be used to override the
+         number of subvolumes.  The consequences of this are hard to
+         predict and might also lead to creation of logical volumes
+         that have less redundancy than expected, so it is best to
+         always create exactly one subvolume per physical volume.
+
+         Note again that this only happens when "pvs" is not empty.
+         When "pvs" is empty, LVM2 will decide how many subvolumes to
+         create.
     -->
     <method name="CreatePlainVolumeWithLayout">
       <arg name="name" type="s" direction="in"/>

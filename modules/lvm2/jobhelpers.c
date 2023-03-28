@@ -34,7 +34,34 @@ gboolean lvcreate_job_func (UDisksThreadedJob  *job,
                             GError            **error)
 {
     LVJobData *data = user_data;
-    return bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, data->new_lv_layout, data->new_lv_pvs, NULL /* extra_args */, error);
+    gchar *stripes_string = NULL;
+    gchar *mirrors_string = NULL;
+    BDExtraArg *extra[3] = {NULL, NULL, NULL};
+    int n_extras = 0;
+    gboolean ret;
+
+    if (data->new_lv_stripes > 0)
+      {
+        stripes_string = g_strdup_printf("%u", data->new_lv_stripes);
+        extra[n_extras++] = bd_extra_arg_new ("--stripes", stripes_string);
+      }
+
+    if (data->new_lv_mirrors > 0)
+      {
+        mirrors_string = g_strdup_printf("%u", data->new_lv_mirrors);
+        extra[n_extras++] = bd_extra_arg_new ("--mirrors", mirrors_string);
+      }
+
+
+    ret = bd_lvm_lvcreate (data->vg_name, data->new_lv_name, data->new_lv_size, data->new_lv_layout, data->new_lv_pvs,
+                           (const BDExtraArg**) extra, error);
+
+    bd_extra_arg_free (extra[0]);
+    bd_extra_arg_free (extra[1]);
+    g_free (stripes_string);
+    g_free (mirrors_string);
+
+    return ret;
 }
 
 gboolean lvcreate_thin_pool_job_func (UDisksThreadedJob  *job,

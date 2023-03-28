@@ -38,6 +38,8 @@ typedef struct {
   const gchar **new_lv_pvs;
   const gchar *pool_name;
   guint64 new_lv_size;
+  guint32 new_lv_stripes;
+  guint32 new_lv_mirrors;
   guint64 virtual_size;
   guint64 extent_size;
   gboolean resize_fs;

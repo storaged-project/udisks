@@ -1017,8 +1017,31 @@ handle_create_volume (UDisksVolumeGroup              *_group,
         }
 
       data.new_lv_layout = arg_layout;
+      data.new_lv_stripes = 0;
+      data.new_lv_mirrors = 0;
+
       if (arg_pvs)
         {
+          gint32 n_subvolumes = g_strv_length ((gchar **)arg_pvs);
+          g_variant_lookup (options, "subvolumes", "i", &n_subvolumes);
+
+          if (g_strcmp0 (arg_layout, "raid0") == 0)
+            data.new_lv_stripes = n_subvolumes;
+          else if (g_strcmp0 (arg_layout, "raid1") == 0)
+            data.new_lv_mirrors = n_subvolumes - 1;
+          else if (g_strcmp0 (arg_layout, "raid10") == 0) {
+            if (n_subvolumes % 2 != 0)
+              {
+                g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                       "Number of subvolumes for raid10 must be even");
+                goto out;
+              }
+            data.new_lv_stripes = n_subvolumes / 2;
+          } else if (g_strcmp0 (arg_layout, "raid4") == 0 ||g_strcmp0 (arg_layout, "raid5") == 0)
+            data.new_lv_stripes = n_subvolumes - 1;
+          else if (g_strcmp0 (arg_layout, "raid6") == 0)
+            data.new_lv_stripes = n_subvolumes - 2;
+
           pvs = udisks_daemon_util_lvm2_gather_pvs (daemon, object, arg_pvs, &error);
           if (pvs == NULL)
             {
