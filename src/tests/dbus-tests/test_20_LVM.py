@@ -175,7 +175,15 @@ class UdisksLVMTest(UDisksLVMTestBase):
         new_vgsize = self.get_property(vg, '.VolumeGroup', 'Size')
         new_vgsize.assertGreater(vgsize.value)
 
-        # Resize the LV to the whole VG
+        # Attempt to resize the LV to the whole VG, but specify only
+        # the original PVS.  This is expected to fail.
+        msg = "Insufficient free space"
+        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            lv.Resize(dbus.UInt64(new_vgsize.value),
+                      dbus.Dictionary({'pvs': devs}, signature='sv'),
+                      dbus_interface=self.iface_prefix + '.LogicalVolume')
+
+        # Now resize the LV to the whole VG without contraints
         lv.Resize(dbus.UInt64(new_vgsize.value), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertEqual(new_vgsize.value)

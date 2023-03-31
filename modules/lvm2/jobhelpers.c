@@ -114,7 +114,7 @@ gboolean lvresize_job_func (UDisksThreadedJob  *job,
                             GError            **error)
 {
     LVJobData *data = user_data;
-    BDExtraArg *extra[4] = {NULL, NULL, NULL, NULL};
+    BDExtraArg **extra = g_new0 (BDExtraArg *, 4 + (data->new_lv_pvs ? g_strv_length ((gchar **)data->new_lv_pvs) : 0));
     gint extra_top = -1;
     gboolean ret = FALSE;
 
@@ -126,9 +126,16 @@ gboolean lvresize_job_func (UDisksThreadedJob  *job,
         extra[++extra_top] = bd_extra_arg_new ("--yes", "");
       }
 
+    if (data->new_lv_pvs)
+      {
+        for (int i = 0; data->new_lv_pvs[i]; i++)
+          extra[++extra_top] = bd_extra_arg_new (data->new_lv_pvs[i], "");
+      }
+
     ret = bd_lvm_lvresize (data->vg_name, data->lv_name, data->new_lv_size, (const BDExtraArg**) extra, error);
     for (; extra_top >= 0; extra_top--)
         bd_extra_arg_free (extra[extra_top]);
+    g_free (extra);
 
     return ret;
 }
