@@ -2618,7 +2618,7 @@ David Zeuthen (39):
       Update NEWS for release
 
 Martin Pitt (9):
-      integration-test: Fix existance test of local state dirs
+      integration-test: Fix existence test of local state dirs
       integration-test: Explicit polkit tests
       integration-test: Check polkit denial
       integration-test: Fix Polkit.test_internal_fs_nobody test case
