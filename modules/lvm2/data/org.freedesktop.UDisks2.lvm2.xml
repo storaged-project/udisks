@@ -678,6 +678,9 @@
 
          force (b):        Whether to force the resize even if it might
                            destroy data.
+
+         pvs (ao):         A list of physical volumes to allocate more space
+                           from.
     -->
     <method name="Resize">
       <arg name="new_size" type="t" direction="in"/>

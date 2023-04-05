@@ -22,6 +22,7 @@
 #include "config.h"
 #include <fcntl.h>
 #include <glib/gi18n-lib.h>
+#include <stdio.h>
 
 #include <blockdev/lvm.h>
 
@@ -805,6 +806,8 @@ handle_resize (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
   LVJobData data;
+  gchar **opt_pvs = NULL;
+  g_auto(GStrv) pvs = NULL;
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to resize a logical volume"),
@@ -820,6 +823,19 @@ handle_resize (UDisksLogicalVolume   *_volume,
   data.force = FALSE;
   g_variant_lookup (options, "resize_fsys", "b", &(data.resize_fs));
   g_variant_lookup (options, "force", "b", &(data.force));
+  g_variant_lookup (options, "pvs", "^a&o", &opt_pvs);
+
+  if (opt_pvs)
+    {
+      pvs = udisks_daemon_util_lvm2_gather_pvs (daemon, group_object, (const gchar **)opt_pvs, &error);
+      if (pvs == NULL)
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
+
+  data.new_lv_pvs = (const gchar **)pvs;
 
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
                                                UDISKS_OBJECT (object),
@@ -844,6 +860,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
 
  out:
   g_clear_object (&object);
+  g_free (opt_pvs);
   return TRUE;
 }
 
