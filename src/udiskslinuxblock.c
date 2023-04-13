@@ -3271,6 +3271,8 @@ format_job_func (UDisksThreadedJob  *job,
   BDFSMkfsOptions options = { 0, };
   GError *l_error = NULL;
 
+  udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
+
   /* special case for swap */
   if (g_strcmp0 (data->type, "swap") == 0)
     {
