@@ -336,17 +336,6 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec **plugin_p = NULL;
   error = NULL;
 
-  /* Skip runtime dependency checks when initializing libblockdev. Plugin
-     shouldn't fail to load just because some if its dependencies is missing.
-   */
-  ret = bd_switch_init_checks (FALSE, &error);
-  if (!ret)
-    {
-      udisks_error ("Error initializing libblockdev library: %s (%s, %d)",
-                    error->message, g_quark_to_string (error->domain), error->code);
-      g_clear_error (&error);
-    }
-
   ret = bd_try_init (plugins, NULL, NULL, &error);
   if (!ret)
     {
