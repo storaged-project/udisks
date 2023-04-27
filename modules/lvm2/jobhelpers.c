@@ -173,7 +173,7 @@ gboolean lvactivate_job_func (UDisksThreadedJob  *job,
                               GError            **error)
 {
     LVJobData *data = user_data;
-    return bd_lvm_lvactivate (data->vg_name, data->lv_name, TRUE /* ignore_skip */, NULL /* extra_args */, error);
+    return bd_lvm_lvactivate (data->vg_name, data->lv_name, TRUE /* ignore_skip */, FALSE /* shared */, NULL /* extra_args */, error);
 }
 
 gboolean lvdeactivate_job_func (UDisksThreadedJob  *job,
