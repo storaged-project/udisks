@@ -847,6 +847,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             # need to force creation of a protective MBR
             ret, _out = self.run_command('mkfs.vfat --mbr=y %s' % self.vdevs[0])
             self.assertEqual(ret, 0)
+            self.run_command('udevadm trigger %s' % self.vdevs[0])
+            self.udev_settle()
             time.sleep(2)
         else:
            self._create_format(disk)
