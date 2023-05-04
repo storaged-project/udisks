@@ -2081,7 +2081,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -2099,7 +2099,11 @@
         <parameter>label</parameter> option in the @options parameter;
         however, note that this may not be supported on all file
         systems and, if supported, the maximum allowed length may
-        vary.
+        vary. Similarly, you can specify filesystem UUID with the
+        <parameter>uuid</parameter> option in the @options parameter
+        given that the particular filesystem type supports this feature.
+        The format of the UUID string should match the #org.freedesktop.UDisks2.Block:IdUUID
+        property.
 
         If the file system in question supports owners and the option
         <parameter>take-ownership</parameter> is set to %TRUE then the

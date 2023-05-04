@@ -2927,9 +2927,24 @@ format_check_auth (UDisksDaemon          *daemon,
   return TRUE;
 }
 
+/* remove dashes for certain filesystem types */
+static gchar *
+reformat_uuid_string (const gchar *arg_uuid, const gchar *fs_type)
+{
+  if (arg_uuid == NULL)
+    return NULL;
+  if (g_strcmp0 (fs_type, "vfat") == 0 ||
+      g_strcmp0 (fs_type, "exfat") == 0 ||
+      g_strcmp0 (fs_type, "ntfs") == 0 ||
+      g_strcmp0 (fs_type, "udf") == 0)
+      return udisks_daemon_util_subst_str (arg_uuid, "-", NULL);
+  return g_strdup (arg_uuid);
+}
+
 static gboolean
 format_pre_checks (const gchar         *fs_type,
                    const gchar         *label,
+                   const gchar         *uuid,
                    const BDFSFeatures **fs_features,
                    GError             **error)
 {
@@ -2979,6 +2994,28 @@ format_pre_checks (const gchar         *fs_type,
           return FALSE;
         }
       if (! bd_fs_check_label (fs_type, label, &l_error))
+        {
+          if (! g_error_matches (l_error, BD_FS_ERROR, BD_FS_ERROR_NOT_SUPPORTED))
+            {
+              g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                   l_error->message);
+              g_error_free (l_error);
+              return FALSE;
+            }
+          g_clear_error (&l_error);
+        }
+    }
+
+  if (uuid != NULL)
+    {
+      if (((*fs_features)->mkfs & BD_FS_MKFS_UUID) == 0 &&
+          !bd_fs_can_set_uuid (fs_type, NULL, NULL))
+        {
+          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                       "File system type %s does not support setting UUID", fs_type);
+          return FALSE;
+        }
+      if (! bd_fs_check_uuid (fs_type, uuid, &l_error))
         {
           if (! g_error_matches (l_error, BD_FS_ERROR, BD_FS_ERROR_NOT_SUPPORTED))
             {
@@ -3256,6 +3293,7 @@ typedef struct {
   const gchar *device;
   const gchar *type;
   const gchar *label;
+  const gchar *uuid;
   const BDExtraArg **extra_args;
   gboolean dry_run;
   gboolean no_discard;
@@ -3276,7 +3314,7 @@ format_job_func (UDisksThreadedJob  *job,
   /* special case for swap */
   if (g_strcmp0 (data->type, "swap") == 0)
     {
-      if (! bd_swap_mkswap (data->device, data->label, NULL, &l_error))
+      if (! bd_swap_mkswap (data->device, data->label, data->uuid, NULL, &l_error))
         {
           g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                        "Error creating swap: %s", l_error->message);
@@ -3288,6 +3326,7 @@ format_job_func (UDisksThreadedJob  *job,
 
   /* real filesystems */
   options.label = data->label;
+  options.uuid = data->uuid;
   options.dry_run = data->dry_run;
   options.no_discard = data->no_discard;
   options.no_pt = TRUE;  /* disable creation of a protective part table */
@@ -3338,6 +3377,8 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gboolean teardown_flag = FALSE;
   gboolean no_discard_flag = FALSE;
   const gchar *label = NULL;
+  const gchar *arg_uuid = NULL;
+  gchar *uuid = NULL;
   gchar **mkfs_args = NULL;
   BDExtraArg **extra_args = NULL;
 
@@ -3366,7 +3407,9 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
   g_variant_lookup (options, "no-discard", "b", &no_discard_flag);
   g_variant_lookup (options, "label", "&s", &label);
+  g_variant_lookup (options, "uuid", "&s", &arg_uuid);
   g_variant_lookup (options, "mkfs-args", "^a&s", &mkfs_args);
+  uuid = reformat_uuid_string (arg_uuid, type);
 
   partition = udisks_object_get_partition (object);
   if (partition != NULL)
@@ -3409,7 +3452,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     }
 
   /* Check for filesystem type support */
-  if (!format_pre_checks (type, label, &fs_features, &error))
+  if (!format_pre_checks (type, label, uuid, &fs_features, &error))
     {
       handle_format_failure (invocation, error);
       goto out;
@@ -3465,6 +3508,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       format_job_data.device = udisks_block_get_device (block);
       format_job_data.type = type;
       format_job_data.label = label;
+      format_job_data.uuid = uuid;
       format_job_data.extra_args = (const BDExtraArg **) extra_args;
       format_job_data.dry_run = TRUE;
       format_job_data.no_discard = no_discard_flag;
@@ -3566,6 +3610,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
       format_job_data.device = udisks_block_get_device (block_to_mkfs);
       format_job_data.type = type;
       format_job_data.label = label;
+      format_job_data.uuid = uuid;
       format_job_data.extra_args = (const BDExtraArg **) extra_args;
       format_job_data.dry_run = FALSE;
       format_job_data.no_discard = no_discard_flag;
@@ -3579,6 +3624,18 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                    NULL, /* user_data_free_func */
                                                    NULL, /* cancellable */
                                                    &error))
+        {
+          handle_format_failure (invocation, error);
+          goto out;
+        }
+    }
+
+  /* Set filesystem UUID if not supported atomically during mkfs */
+  if (arg_uuid && fs_features &&
+      (fs_features->mkfs & BD_FS_MKFS_UUID) == 0 &&
+      bd_fs_can_set_uuid (type, NULL, NULL))
+    {
+      if (! bd_fs_set_uuid (udisks_block_get_device (block_to_mkfs), uuid, type, &error))
         {
           handle_format_failure (invocation, error);
           goto out;
@@ -3673,6 +3730,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
     g_variant_unref (config_items);
   udisks_string_wipe_and_free (encrypt_passphrase);
   g_free (mkfs_args);
+  g_free (uuid);
   bd_extra_arg_list_free (extra_args);
   g_clear_object (&block_to_mkfs);
   g_clear_object (&object_to_mkfs);
