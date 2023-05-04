@@ -2573,6 +2573,19 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the filesystem UUID value.
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
     <!-- MountPoints:
          An array of filesystems paths for where the file system on
          the device is mounted. If the device is not mounted, this

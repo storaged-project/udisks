@@ -2523,12 +2523,189 @@ handle_take_ownership (UDisksFilesystem      *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* remove dashes for certain filesystem types */
+static gchar *
+reformat_uuid_string (const gchar *arg_uuid, const gchar *fs_type)
+{
+  if (arg_uuid == NULL)
+    return NULL;
+  if (g_strcmp0 (fs_type, "vfat") == 0 ||
+      g_strcmp0 (fs_type, "exfat") == 0 ||
+      g_strcmp0 (fs_type, "ntfs") == 0 ||
+      g_strcmp0 (fs_type, "udf") == 0)
+      return udisks_daemon_util_subst_str (arg_uuid, "-", NULL);
+  return g_strdup (arg_uuid);
+}
+
+static gboolean
+handle_set_uuid (UDisksFilesystem      *filesystem,
+                 GDBusMethodInvocation *invocation,
+                 const gchar           *arg_uuid,
+                 GVariant              *options)
+{
+  UDisksBlock *block;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon;
+  UDisksState *state = NULL;
+  const gchar *probed_fs_usage;
+  const gchar *probed_fs_type;
+  const gchar *action_id;
+  const gchar *message;
+  gchar *required_utility = NULL;
+  gchar *uuid = NULL;
+  uid_t caller_uid;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+  block = udisks_object_peek_block (object);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  probed_fs_type = udisks_block_get_id_type (block);
+
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot change UUID on device of type %s",
+                                             probed_fs_usage);
+      goto out;
+    }
+
+  if (! bd_fs_can_set_uuid (probed_fs_type, &required_utility, &error))
+    {
+      if (error != NULL)
+        {
+          g_dbus_method_invocation_return_error_literal (invocation,
+                                                         UDISKS_ERROR,
+                                                         UDISKS_ERROR_FAILED,
+                                                         error->message);
+          g_error_free (error);
+        }
+      else
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Cannot change %s filesystem UUID on %s: executable %s not found",
+                                               probed_fs_type,
+                                               udisks_block_get_device (block),
+                                               required_utility);
+      goto out;
+    }
+
+  uuid = reformat_uuid_string (arg_uuid, probed_fs_type);
+  if (! bd_fs_check_uuid (probed_fs_type, uuid, &error))
+    {
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests changing the filesystem UUID.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to change the filesystem UUID on $(drive)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to change the
+   * filesystem UUID.
+   */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         object,
+                                         "filesystem-modify",
+                                         caller_uid,
+                                         NULL /* cancellable */);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (! bd_fs_set_uuid (udisks_block_get_device (block), uuid, probed_fs_type, &error))
+    {
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+  udisks_filesystem_complete_set_uuid (filesystem, invocation);
+
+ out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
+  g_free (required_utility);
+  g_free (uuid);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 filesystem_iface_init (UDisksFilesystemIface *iface)
 {
   iface->handle_mount     = handle_mount;
   iface->handle_unmount   = handle_unmount;
   iface->handle_set_label = handle_set_label;
+  iface->handle_set_uuid  = handle_set_uuid;
   iface->handle_resize    = handle_resize;
   iface->handle_repair    = handle_repair;
   iface->handle_check     = handle_check;
