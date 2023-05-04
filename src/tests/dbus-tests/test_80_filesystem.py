@@ -24,13 +24,20 @@ import udiskstestcase
 class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     _fs_signature = None
     _fs_name = None
-    _can_create = False
-    _can_label = False  # it is possible to set label when *creating* filesystem
-    _can_relabel = False  # it is possible to set label for *existing* filesystem
     _can_mount = False
     _can_query_size = False
 
     username = 'udisks_test_user'
+
+    requested_plugins = BlockDev.plugin_specs_from_names(("fs",))
+
+    @classmethod
+    def setUpClass(cls):
+        udiskstestcase.UdisksTestCase.setUpClass()
+        if not BlockDev.is_initialized():
+            BlockDev.init(cls.requested_plugins, None)
+        else:
+            BlockDev.reinit(cls.requested_plugins, True, None)
 
     def _rmtree(self, path):
         for _ in range(10):
@@ -81,6 +88,31 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         ret, _out = cls.run_command('type %s' % command)
         return ret == 0
 
+    def _check_can_create(self):
+        try:
+            avail, opts, util = BlockDev.fs_can_mkfs(self._fs_signature)
+        except Exception as e:
+            self.skipTest(e.message)
+        if util is not None:
+            self.skipTest('Cannot create filesystem %s: required command `%s` not found' % (self._fs_signature, util))
+        if not avail:
+            self.skipTest('Cannot create filesystem %s' % self._fs_signature)
+
+    def _check_can_label(self):
+        # basic mkfs checks are covered by previous _check_can_create()
+        avail, opts, util = BlockDev.fs_can_mkfs(self._fs_signature)
+        return opts & BlockDev.FSMkfsOptionsFlags.LABEL
+
+    def _check_can_relabel(self):
+        try:
+            avail, util = BlockDev.fs_can_set_label(self._fs_signature)
+        except Exception as e:
+            self.skipTest(e.message)
+        if util is not None:
+            self.skipTest('Cannot set label on an existing %s filesystem: required command `%s` not found' % (self._fs_signature, util))
+        if not avail:
+            self.skipTest('Cannot set label on an existing %s filesystem' % self._fs_signature)
+
     def _creates_protective_part_table(self):
         """ Indicates whether mkfs creates a protective partition table. """
         return False
@@ -117,8 +149,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_fstype, self._fs_signature)
 
     def test_create_format(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -130,8 +161,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self._create_format(disk)
 
     def test_create_format_nodiscard(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -147,11 +177,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         pass
 
     def test_label(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
-
-        if not self._can_label:
-            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+        self._check_can_create()
+        self._check_can_label()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -177,11 +204,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertEqual(sys_label, label)
 
     def test_relabel(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
-
-        if not self._can_relabel:
-            self.skipTest('Cannot set label on an existing %s filesystem' % self._fs_signature)
+        self._check_can_create()
+        self._check_can_relabel()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -211,8 +235,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self._invalid_label(block_fs)
 
     def test_repair_resize_check(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -258,8 +281,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size // 2, delta=1024**2)
 
     def test_size(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -294,8 +316,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size, delta=1024**2)
 
     def test_mount_auto(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -415,8 +436,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
                     self.set_udev_properties(block_fs_dev, None)
 
 
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -549,12 +569,10 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
 
     def _test_fstab_label(self, disk_obj_path, label, fstab_label_str, mount_should_fail):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if label:
-            if not self._can_label:
-                self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+            self._check_can_label()
             if self._fs_signature == 'vfat':
                 self.skipTest('VFAT has strict label rules, skipping')
 
@@ -707,8 +725,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self._test_fstab_label(part, fslabel, "PARTLABEL='%s'" % partlabel, False)
 
     def test_unmount_no_race_in_mount_points(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -754,8 +771,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if libmount_version < Version('2.30'):
             self.skipTest('userspace mount options are not supported with libmount < 2.30')
 
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -799,8 +815,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         """ Test overwriting the protective partition table header by creating new filesystem on a nested partition. """
         if not self._creates_protective_part_table():
             self.skipTest('Filesystem %s does not create protective partition table' % self._fs_signature)
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -835,8 +850,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         """ Test overwriting the master block device carrying a protective partition table having the nested partition mounted. """
         if not self._creates_protective_part_table():
             self.skipTest('Filesystem %s does not create protective partition table' % self._fs_signature)
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
 
@@ -882,11 +896,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
     def _test_mountpoint(self, label, expected_mountpoint):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
-
-        if not self._can_label:
-            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+        self._check_can_create()
+        self._check_can_label()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -975,11 +986,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_mount_as_user(self):
         """ Test mounting a filesystem on behalf of a different user."""
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
-
-        if not self._can_label:
-            self.skipTest('Cannot set label when creating %s filesystem' % self._fs_signature)
+        self._check_can_create()
+        self._check_can_label()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -1035,9 +1043,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
 class Ext2TestCase(UdisksFSTestCase):
     _fs_signature = 'ext2'
-    _can_create = True and UdisksFSTestCase.command_exists('mke2fs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('tune2fs')
     _can_mount = True
     _can_query_size = True
 
@@ -1063,8 +1068,7 @@ class Ext4TestCase(Ext2TestCase):
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_take_ownership(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -1169,8 +1173,7 @@ class Ext4TestCase(Ext2TestCase):
         self.assertEqual(sys_stat.st_gid, int(gid))
 
     def test_create_format_mkfs_args(self):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -1186,9 +1189,6 @@ class Ext4TestCase(Ext2TestCase):
 
 class XFSTestCase(UdisksFSTestCase):
     _fs_signature = 'xfs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.xfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('xfs_admin')
     _can_mount = True
     _can_query_size = True
 
@@ -1361,8 +1361,7 @@ class NonPOSIXTestCase(UdisksFSTestCase):
             return
 
     def _prepare_mount_test(self, disk, fstab, fstab_options):
-        if not self._can_create:
-            self.skipTest('Cannot create %s filesystem' % self._fs_signature)
+        self._check_can_create()
 
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
@@ -1499,9 +1498,6 @@ class NonPOSIXTestCase(UdisksFSTestCase):
 
 class VFATTestCase(NonPOSIXTestCase):
     _fs_signature = 'vfat'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.vfat')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('fatlabel')
     _can_mount = True
     _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
 
@@ -1530,9 +1526,6 @@ class VFATTestCase(NonPOSIXTestCase):
 
 class EXFATTestCase(NonPOSIXTestCase):
     _fs_signature = 'exfat'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.exfat')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('exfatlabel')
     _can_mount = True
     _can_query_size = True and UdisksFSTestCase.command_exists('fsck.exfat')
 
@@ -1540,9 +1533,6 @@ class EXFATTestCase(NonPOSIXTestCase):
 class NTFSTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _fs_name = 'ntfs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.ntfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
     _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
 
@@ -1563,9 +1553,6 @@ class NTFSTestCase(UdisksFSTestCase):
 class NTFS3TestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _fs_name = 'ntfs3'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.ntfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
     _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
     _have_ntfs3g = UdisksFSTestCase.command_exists('ntfs-3g')
@@ -1586,9 +1573,6 @@ class NTFS3TestCase(UdisksFSTestCase):
 
 class NTFSCommonTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.ntfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('ntfslabel')
     _can_mount = True
     _have_ntfs3g = UdisksFSTestCase.command_exists('ntfs-3g')
 
@@ -1611,17 +1595,11 @@ class NTFSCommonTestCase(UdisksFSTestCase):
 
 class BTRFSTestCase(UdisksFSTestCase):
     _fs_signature = 'btrfs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.btrfs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('btrfs')
     _can_mount = True
 
 
 class NILFS2TestCase(UdisksFSTestCase):
     _fs_signature = 'nilfs2'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.nilfs2')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('nilfs-tune')
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('nilfs2')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
@@ -1631,17 +1609,11 @@ class NILFS2TestCase(UdisksFSTestCase):
 
 class F2FSTestCase(UdisksFSTestCase):
     _fs_signature = 'f2fs'
-    _can_create = True and UdisksFSTestCase.command_exists('mkfs.f2fs')
-    _can_label = True
-    _can_relabel = False
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
     _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs')
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_signature = 'udf'
-    _can_create = True and UdisksFSTestCase.command_exists('mkudffs')
-    _can_label = True
-    _can_relabel = True and UdisksFSTestCase.command_exists('udflabel')
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('udf')
 
     def _get_mkudffs_version(self):
@@ -1659,6 +1631,7 @@ class UDFTestCase(UdisksFSTestCase):
 
 class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'
+    _fs_signature = 'definitely-nonexisting-fs'
 
     def test_create_format(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -1674,9 +1647,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         # we need some filesystem that doesn't support setting label after creating it
         fs = F2FSTestCase
 
-        if not fs._can_create:
-            self.skipTest('Cannot create %s filesystem to test not supported '
-                          'labelling.' % fs._fs_signature)
+        fs._check_can_create(fs)
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -1693,9 +1664,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         # we need some mountable filesystem, ext4 should do the trick
         fs = Ext4TestCase
 
-        if not fs._can_create:
-            self.skipTest('Cannot create %s filesystem to test not supported '
-                          'mount options.' % fs._fs_signature)
+        fs._check_can_create(fs)
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
@@ -1901,4 +1870,6 @@ class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
             self.assertIn("fmode=600", out)
             self.assertIn("dmode=500", out)
 
-del UdisksFSTestCase  # skip UdisksFSTestCase
+# skip meta-classes
+del UdisksFSTestCase
+del NonPOSIXTestCase
