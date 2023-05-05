@@ -16,16 +16,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2022-09-08 15:27+0000\n"
-"PO-Revision-Date: 2022-09-08 17:54+0200\n"
+"POT-Creation-Date: 2023-04-20 03:29+0000\n"
+"PO-Revision-Date: 2023-05-04 00:59+0200\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
-"Language-Team: Swedish\n"
+"Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -34,6 +34,7 @@ msgstr "Montera ett filsystem"
 #: data/org.freedesktop.UDisks2.policy.in:17
 #: data/org.freedesktop.UDisks2.policy.in:28
 #: data/org.freedesktop.UDisks2.policy.in:39
+#: data/org.freedesktop.UDisks2.policy.in:50
 msgid "Authentication is required to mount the filesystem"
 msgstr "Autentisering krävs för att montera filsystemet"
 
@@ -46,6 +47,10 @@ msgid "Mount a filesystem from a device plugged into another seat"
 msgstr "Montera ett filsystem från en enhet ansluten på en annan plats"
 
 #: data/org.freedesktop.UDisks2.policy.in:49
+msgid "Mount a filesystem on behalf of another user"
+msgstr "Montera ett filsystem å en annan användares vägnar"
+
+#: data/org.freedesktop.UDisks2.policy.in:60
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
@@ -53,49 +58,49 @@ msgstr ""
 "Montera/avmontera filsystem som angivits i filen fstab med flaggan x-udisks-"
 "auth"
 
-#: data/org.freedesktop.UDisks2.policy.in:50
+#: data/org.freedesktop.UDisks2.policy.in:61
 msgid "Authentication is required to mount/unmount the filesystem"
 msgstr "Autentisering krävs för att montera/avmontera filsystemet"
 
-#: data/org.freedesktop.UDisks2.policy.in:63
+#: data/org.freedesktop.UDisks2.policy.in:74
 msgid "Unmount a device mounted by another user"
 msgstr "Avmontera en enhet som monterats av en annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:64
+#: data/org.freedesktop.UDisks2.policy.in:75
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
 "Autentisering krävs för att avmontera ett filsystem som monterats av en "
 "annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:76
+#: data/org.freedesktop.UDisks2.policy.in:87
 msgid "Take ownership of a filesystem"
 msgstr "Ta över ägandet av ett filsystem"
 
-#: data/org.freedesktop.UDisks2.policy.in:77
+#: data/org.freedesktop.UDisks2.policy.in:88
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr "Autentisering krävs för att ta över ägandet av ett filsystem."
 
-#: data/org.freedesktop.UDisks2.policy.in:89
+#: data/org.freedesktop.UDisks2.policy.in:100
 msgid "Unlock an encrypted device"
 msgstr "Lås upp en krypterad enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:90
 #: data/org.freedesktop.UDisks2.policy.in:101
 #: data/org.freedesktop.UDisks2.policy.in:112
 #: data/org.freedesktop.UDisks2.policy.in:123
+#: data/org.freedesktop.UDisks2.policy.in:134
 msgid "Authentication is required to unlock an encrypted device"
 msgstr "Autentisering krävs för att låsa upp en krypterad enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:100
+#: data/org.freedesktop.UDisks2.policy.in:111
 msgid "Unlock an encrypted system device"
 msgstr "Lås upp en krypterad systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:111
+#: data/org.freedesktop.UDisks2.policy.in:122
 msgid "Unlock an encrypted device plugged into another seat"
 msgstr "Lås upp en krypterad enhet ansluten på en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:122
+#: data/org.freedesktop.UDisks2.policy.in:133
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
@@ -103,11 +108,11 @@ msgstr ""
 "Lås upp en krypterad enhet som angivits i filen crypttab med flaggan x-"
 "udisks-auth"
 
-#: data/org.freedesktop.UDisks2.policy.in:136
+#: data/org.freedesktop.UDisks2.policy.in:147
 msgid "Lock an encrypted device unlocked by another user"
 msgstr "Lås en krypterad enhet som låsts upp av en annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:137
+#: data/org.freedesktop.UDisks2.policy.in:148
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
@@ -115,106 +120,106 @@ msgstr ""
 "Autentisering krävs för att låsa en krypterad enhet som låsts upp av en "
 "annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:149
 #: data/org.freedesktop.UDisks2.policy.in:160
+#: data/org.freedesktop.UDisks2.policy.in:171
 msgid "Change passphrase for an encrypted device"
 msgstr "Byt lösenfras för en krypterad enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:150
 #: data/org.freedesktop.UDisks2.policy.in:161
+#: data/org.freedesktop.UDisks2.policy.in:172
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr "Autentisering krävs för att ändra lösenfrasen för en krypterad enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:173
+#: data/org.freedesktop.UDisks2.policy.in:184
 msgid "Manage loop devices"
 msgstr "Hantera loop-enheter"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:384
+#: data/org.freedesktop.UDisks2.policy.in:185 src/udiskslinuxmanager.c:379
 msgid "Authentication is required to set up a loop device"
 msgstr "Autentisering krävs för att konfigurera en loop-enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:187
+#: data/org.freedesktop.UDisks2.policy.in:198
 msgid "Delete loop devices"
 msgstr "Ta bort loop-enheter"
 
-#: data/org.freedesktop.UDisks2.policy.in:188
+#: data/org.freedesktop.UDisks2.policy.in:199
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
 "Autentisering krävs för att ta bort en loop-enhet som konfigurerats av en "
 "annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:197
+#: data/org.freedesktop.UDisks2.policy.in:208
 msgid "Modify loop devices"
 msgstr "Ändra loop-enheter"
 
-#: data/org.freedesktop.UDisks2.policy.in:198
+#: data/org.freedesktop.UDisks2.policy.in:209
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
 "Autentisering krävs för att ändra en loop-enhet uppsatt av en annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:210
+#: data/org.freedesktop.UDisks2.policy.in:221
 msgid "Manage swapspace"
 msgstr "Hantera växlingsutrymme"
 
-#: data/org.freedesktop.UDisks2.policy.in:211
+#: data/org.freedesktop.UDisks2.policy.in:222
 msgid "Authentication is required to manage swapspace"
 msgstr "Autentisering krävs för att hantera växlingsutrymme"
 
-#: data/org.freedesktop.UDisks2.policy.in:223
+#: data/org.freedesktop.UDisks2.policy.in:234
 msgid "Manage RAID arrays"
 msgstr "Hantera RAID-uppsättningar"
 
-#: data/org.freedesktop.UDisks2.policy.in:224
+#: data/org.freedesktop.UDisks2.policy.in:235
 msgid "Authentication is required to manage RAID arrays"
 msgstr "Autentisering krävs för att hantera RAID-uppsättningar"
 
-#: data/org.freedesktop.UDisks2.policy.in:236
+#: data/org.freedesktop.UDisks2.policy.in:247
 msgid "Power off drive"
 msgstr "Stäng av enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:237
 #: data/org.freedesktop.UDisks2.policy.in:248
+#: data/org.freedesktop.UDisks2.policy.in:259
 msgid "Authentication is required to power off a drive"
 msgstr "Autentisering krävs för att stänga av en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:247
+#: data/org.freedesktop.UDisks2.policy.in:258
 msgid "Power off a system drive"
 msgstr "Stäng av en systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:258
+#: data/org.freedesktop.UDisks2.policy.in:269
 msgid "Power off a drive attached to another seat"
 msgstr "Stäng av en enhet ansluten till en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:259
+#: data/org.freedesktop.UDisks2.policy.in:270
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
 msgstr ""
 "Autentisering krävs för att stänga av en enhet ansluten till en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:271
+#: data/org.freedesktop.UDisks2.policy.in:282
 msgid "Eject media"
 msgstr "Mata ut media"
 
-#: data/org.freedesktop.UDisks2.policy.in:272
 #: data/org.freedesktop.UDisks2.policy.in:283
+#: data/org.freedesktop.UDisks2.policy.in:294
 msgid "Authentication is required to eject media"
 msgstr "Autentisering krävs för att mata ut media"
 
-#: data/org.freedesktop.UDisks2.policy.in:282
+#: data/org.freedesktop.UDisks2.policy.in:293
 msgid "Eject media from a system drive"
 msgstr "Mata ut media från en systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:293
+#: data/org.freedesktop.UDisks2.policy.in:304
 msgid "Eject media from a drive attached to another seat"
 msgstr "Mata ut media från en enhet ansluten till en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:294
+#: data/org.freedesktop.UDisks2.policy.in:305
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
@@ -222,200 +227,209 @@ msgstr ""
 "Autentisering krävs för att mata ut media från en enhet ansluten till en "
 "annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:306
-#: data/org.freedesktop.UDisks2.policy.in:328
+#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:339
 msgid "Modify a device"
 msgstr "Ändra en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:307
 #: data/org.freedesktop.UDisks2.policy.in:318
+#: data/org.freedesktop.UDisks2.policy.in:329
 msgid "Authentication is required to modify a device"
 msgstr "Autentisering krävs för att ändra en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:328
 msgid "Modify a system device"
 msgstr "Ändra en systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:329
+#: data/org.freedesktop.UDisks2.policy.in:340
 msgid "Authentication is required to modify a device plugged into another seat"
 msgstr ""
 "Autentisering krävs för att ändra en enhet ansluten till en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:339
+#: data/org.freedesktop.UDisks2.policy.in:350
 msgid "Rescan a device"
 msgstr "Sök om en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:340
+#: data/org.freedesktop.UDisks2.policy.in:351
 msgid "Authentication is required to rescan a device"
 msgstr "Autentisering krävs för att söka av en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:352
+#: data/org.freedesktop.UDisks2.policy.in:363
 msgid "Open a device"
 msgstr "Öppna en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:353
-#: data/org.freedesktop.UDisks2.policy.in:363
+#: data/org.freedesktop.UDisks2.policy.in:364
+#: data/org.freedesktop.UDisks2.policy.in:374
 msgid "Authentication is required to open a device"
 msgstr "Autentisering krävs för att öppna en enhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:362
+#: data/org.freedesktop.UDisks2.policy.in:373
 msgid "Open a system device"
 msgstr "Öppna en systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:382
 #: data/org.freedesktop.UDisks2.policy.in:393
+#: data/org.freedesktop.UDisks2.policy.in:404
 msgid "Modify system-wide configuration"
 msgstr "Ändra systemkonfigurationen"
 
-#: data/org.freedesktop.UDisks2.policy.in:383
+#: data/org.freedesktop.UDisks2.policy.in:394
 msgid "Authentication is required to modify system-wide configuration"
 msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 
-#: data/org.freedesktop.UDisks2.policy.in:394
+#: data/org.freedesktop.UDisks2.policy.in:405
 msgid ""
 "Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "Autentisering krävs för att hämta hemligheter från systemkonfigurationen"
 
-#: data/org.freedesktop.UDisks2.policy.in:406
+#: data/org.freedesktop.UDisks2.policy.in:417
 msgid "Modify drive settings"
 msgstr "Ändra enhetsinställningar"
 
-#: data/org.freedesktop.UDisks2.policy.in:407
+#: data/org.freedesktop.UDisks2.policy.in:418
 msgid "Authentication is required to modify drive settings"
 msgstr "Autentisering krävs för att ändra enhetsinställningar"
 
-#: data/org.freedesktop.UDisks2.policy.in:420
-#: data/org.freedesktop.UDisks2.policy.in:528
+#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:539
 msgid "Update SMART data"
 msgstr "Uppdatera SMART-data"
 
-#: data/org.freedesktop.UDisks2.policy.in:421
-#: data/org.freedesktop.UDisks2.policy.in:529
+#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:540
 msgid "Authentication is required to update SMART data"
 msgstr "Autentisering krävs för att uppdatera SMART-data"
 
-#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:442
 msgid "Set SMART data from blob"
 msgstr "Sätt SMART-data från blob"
 
-#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:443
 msgid "Authentication is required to set SMART data from blob"
 msgstr "Autentisering krävs för att sätta SMART-data från blob"
 
-#: data/org.freedesktop.UDisks2.policy.in:442
+#: data/org.freedesktop.UDisks2.policy.in:453
 msgid "Run SMART self-test"
 msgstr "Kör SMART-självtest"
 
-#: data/org.freedesktop.UDisks2.policy.in:443
+#: data/org.freedesktop.UDisks2.policy.in:454
 msgid "Authentication is required to run a SMART self-test"
 msgstr "Autentisering krävs för att köra ett SMART-självtest"
 
-#: data/org.freedesktop.UDisks2.policy.in:453
+#: data/org.freedesktop.UDisks2.policy.in:464
 msgid "Enable/Disable SMART"
 msgstr "Aktivera/inaktivera SMART"
 
-#: data/org.freedesktop.UDisks2.policy.in:454
+#: data/org.freedesktop.UDisks2.policy.in:465
 msgid "Authentication is required to enable/disable SMART"
 msgstr "Autentisering krävs för att aktivera/inaktivera SMART"
 
-#: data/org.freedesktop.UDisks2.policy.in:467
+#: data/org.freedesktop.UDisks2.policy.in:478
 msgid "Check power state"
 msgstr "Kontrollera strömtillstånd"
 
-#: data/org.freedesktop.UDisks2.policy.in:468
+#: data/org.freedesktop.UDisks2.policy.in:479
 msgid "Authentication is required to check the power state"
 msgstr "Autentisering krävs för att kontrollera strömtillstånd"
 
-#: data/org.freedesktop.UDisks2.policy.in:478
+#: data/org.freedesktop.UDisks2.policy.in:489
 msgid "Send standby command"
 msgstr "Sätt väntelägekommando"
 
-#: data/org.freedesktop.UDisks2.policy.in:479
 #: data/org.freedesktop.UDisks2.policy.in:490
 #: data/org.freedesktop.UDisks2.policy.in:501
+#: data/org.freedesktop.UDisks2.policy.in:512
 msgid "Authentication is required to put a drive into standby mode"
 msgstr "Autentisering krävs för att försätta en enhet i vänteläge"
 
-#: data/org.freedesktop.UDisks2.policy.in:489
+#: data/org.freedesktop.UDisks2.policy.in:500
 msgid "Send standby command to a system drive"
 msgstr "Skicka väntelägekommando till en systemenhet"
 
-#: data/org.freedesktop.UDisks2.policy.in:500
+#: data/org.freedesktop.UDisks2.policy.in:511
 msgid "Send standby command to drive on other seat"
 msgstr "Skicka väntelägekommando till enhet på en annan plats"
 
-#: data/org.freedesktop.UDisks2.policy.in:514
+#: data/org.freedesktop.UDisks2.policy.in:525
 msgid "Securely erase a hard disk"
 msgstr "Radera en hårddisk säkert"
 
-#: data/org.freedesktop.UDisks2.policy.in:515
+#: data/org.freedesktop.UDisks2.policy.in:526
 msgid "Authentication is required to securely erase a hard disk"
 msgstr "Autentisering krävs för att radera en hårddisk säkert"
 
-#: data/org.freedesktop.UDisks2.policy.in:539
+#: data/org.freedesktop.UDisks2.policy.in:550
 msgid "Run device self-test"
 msgstr "Kör enhetssjälvtest"
 
-#: data/org.freedesktop.UDisks2.policy.in:540
+#: data/org.freedesktop.UDisks2.policy.in:551
 msgid "Authentication is required to run a device self-test"
 msgstr "Autentisering krävs för att köra ett enhetssjälvtest"
 
-#: data/org.freedesktop.UDisks2.policy.in:550
+#: data/org.freedesktop.UDisks2.policy.in:561
 msgid "Start the sanitize operation"
 msgstr "Starta saneringsoperationen"
 
-#: data/org.freedesktop.UDisks2.policy.in:551
+#: data/org.freedesktop.UDisks2.policy.in:562
 msgid "Authentication is required to perform a sanitize operation"
 msgstr "Autentisering krävs för att utföra en saneringsoperation"
 
-#: data/org.freedesktop.UDisks2.policy.in:561
+#: data/org.freedesktop.UDisks2.policy.in:572
 msgid "Format a namespace"
 msgstr "Formatera en namnrymd"
 
-#: data/org.freedesktop.UDisks2.policy.in:562
+#: data/org.freedesktop.UDisks2.policy.in:573
 msgid "Authentication is required to format a namespace"
 msgstr "Autentisering krävs för att formatera en namnrymd"
 
-#: data/org.freedesktop.UDisks2.policy.in:575
+#: data/org.freedesktop.UDisks2.policy.in:583
+msgid "NVMeoF connection"
+msgstr "NVMeoF-anslutning"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests connection to a NVMeoF controller.
+#.
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
+msgid ""
+"Authentication is required to connect to an NVMe over Fabrics controller"
+msgstr ""
+"Autentisering krävs för att ansluta till en NVMe over Fabrics-styrenhet"
+
+#: data/org.freedesktop.UDisks2.policy.in:593
+msgid "Disconnect a NVMeoF controller"
+msgstr "Koppla från en NVMeoF-styrenhet"
+
+#: data/org.freedesktop.UDisks2.policy.in:594
+msgid "Authentication is required to disconnect a NVMe over Fabrics controller"
+msgstr "Autentisering krävs för att koppla från en NVMe over Fabrics-styrenhet"
+
+#: data/org.freedesktop.UDisks2.policy.in:604
+msgid "Set a NVMe Host NQN/ID"
+msgstr "Sätt en NVMe-värds NQN/ID"
+
+#: data/org.freedesktop.UDisks2.policy.in:605
+msgid "Authentication is required to set NVMe Host NQN or Host ID"
+msgstr "Autentisering krävs för att sätta värd-NQN eller värd-ID för NVMe"
+
+#: data/org.freedesktop.UDisks2.policy.in:618
 msgid "Cancel job"
 msgstr "Avbryt jobb"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:576 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:400
 msgid "Authentication is required to cancel a job"
 msgstr "Autentisering krävs för att avbryta ett jobb"
 
-#: data/org.freedesktop.UDisks2.policy.in:586
+#: data/org.freedesktop.UDisks2.policy.in:629
 msgid "Cancel job started by another user"
 msgstr "Avbryt jobb som startats av annan användare"
 
-#: data/org.freedesktop.UDisks2.policy.in:587
+#: data/org.freedesktop.UDisks2.policy.in:630
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Autentisering krävs för att avbryta ett jobb som startats av en annan "
 "användare"
-
-#: modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in:13
-msgid "Manage Bcache"
-msgstr "Hantera Bcache"
-
-#: modules/bcache/data/org.freedesktop.UDisks2.bcache.policy.in:14
-msgid "Authentication is required to manage Bcache"
-msgstr "Autentisering krävs för att hantera Bcache"
-
-#: modules/bcache/udiskslinuxblockbcache.c:309
-msgid "Authentication is required to destroy bcache device."
-msgstr "Autentisering krävs för att förstöra en bcache-enhet"
-
-#: modules/bcache/udiskslinuxblockbcache.c:368
-msgid "Authentication is required to set mode of bcache device."
-msgstr "Autentisering krävs för att sätta rättigheter på en bcache-enhet."
-
-#: modules/bcache/udiskslinuxmanagerbcache.c:238
-msgid "Authentication is required to create bcache device."
-msgstr "Autentisering krävs för att skapa en bcache-enhet"
 
 #: modules/btrfs/data/org.freedesktop.UDisks2.btrfs.policy.in:16
 msgid "Manage BTRFS"
@@ -484,7 +498,7 @@ msgstr "Fel vid tolkning av iSCSI-initierarnamnet"
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:414
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
-msgstr "Fel när %s skrevs när iSCSI-initierarnamnet sattes:"
+msgstr "Fel när %s skrevs när iSCSI-initierarnamnet sattes: "
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:494
 msgid "Authentication is required to discover targets"
@@ -529,46 +543,45 @@ msgstr "Hantera LVM"
 msgid "Authentication is required to manage LVM"
 msgstr "Autentisering krävs för att hantera LVM"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:447
+#: modules/lvm2/udiskslinuxlogicalvolume.c:566
 msgid "Authentication is required to delete a logical volume"
 msgstr "Autentisering krävs för att ta bort en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:571
+#: modules/lvm2/udiskslinuxlogicalvolume.c:646
+msgid "Authentication is required to repair a logical volume"
+msgstr "Autentisering krävs för att reparera en logisk volym"
+
+#: modules/lvm2/udiskslinuxlogicalvolume.c:749
 msgid "Authentication is required to rename a logical volume"
 msgstr "Autentisering krävs för att byta namn på en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:633
+#: modules/lvm2/udiskslinuxlogicalvolume.c:813
 msgid "Authentication is required to resize a logical volume"
 msgstr "Autentisering krävs för att ändra storlek på en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:727
+#: modules/lvm2/udiskslinuxlogicalvolume.c:921
 msgid "Authentication is required to activate a logical volume"
 msgstr "Autentisering krävs för att aktivera en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:795
+#: modules/lvm2/udiskslinuxlogicalvolume.c:989
 msgid "Authentication is required to deactivate a logical volume"
-msgstr "Autentisering krävs för att avaktivera en logisk volym"
+msgstr "Autentisering krävs för att inaktivera en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:862
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "Autentisering krävs för att skapa en ögonblicksbild av en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:919
-#: modules/lvm2/udiskslinuxlogicalvolume.c:982
-msgid "LVMCache not enabled at compile time."
-msgstr "LVMCache är inte aktiverat vid kompileringen."
-
-#: modules/lvm2/udiskslinuxlogicalvolume.c:933
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "Autentisering krävs för att konvertera en logisk volym till cache"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:955
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1018
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Fel vid konvertering av volymen: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:996
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr "Autentisering krävs för att dela en cache-pool-LV från en cache-LV"
 
@@ -586,103 +599,87 @@ msgstr ""
 msgid "Authentication is required to resize a VDO volume"
 msgstr "Autentisering krävs för att ändra storlek på en VDO-volym"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:302
+#: modules/lvm2/udiskslinuxvolumegroup.c:318
 msgid "Authentication is required to delete a volume group"
 msgstr "Autentisering krävs för att ta bort en volymgrupp"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:417
+#: modules/lvm2/udiskslinuxvolumegroup.c:433
 msgid "Authentication is required to rename a volume group"
 msgstr "Autentisering krävs för att byta namn på en volymgrupp"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:531
+#: modules/lvm2/udiskslinuxvolumegroup.c:547
 msgid "Authentication is required to add a device to a volume group"
 msgstr "Autentisering krävs för att lägga till en enhet till en volymgrupp"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:630
+#: modules/lvm2/udiskslinuxvolumegroup.c:646
 msgid "Authentication is required to remove a device from a volume group"
 msgstr "Autentisering krävs för att ta bort en enhet från en volymgrupp"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:639
+#: modules/lvm2/udiskslinuxvolumegroup.c:655
 msgid "Authentication is required to empty a device in a volume group"
 msgstr "Autentisering krävs för att tömma en enhet i en volymgrupp"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:859
+#: modules/lvm2/udiskslinuxvolumegroup.c:830
+msgid ""
+"Authentication is required to remove missing physical volumes from a volume "
+"group"
+msgstr ""
+"Autentisering krävs för att ta bort saknade fysiska volymer från en "
+"volymgrupp"
+
+#: modules/lvm2/udiskslinuxvolumegroup.c:952
 msgid "Authentication is required to create a logical volume"
 msgstr "Autentisering krävs för att skapa en logisk volym"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:865
+#: modules/lvm2/udiskslinuxvolumegroup.c:958
 msgid "Authentication is required to create a thin volume"
 msgstr "Autentisering krävs för att skapa en tunn volym"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:871
+#: modules/lvm2/udiskslinuxvolumegroup.c:964
 msgid "Authentication is required to create a thin pool volume"
 msgstr "Autentisering krävs för att skapa en tunn pool-volym"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:877
+#: modules/lvm2/udiskslinuxvolumegroup.c:970
 msgid "Authentication is required to create a VDO volume"
 msgstr "Autentisering krävs för att skapa en VDO-volym"
-
-#: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:13
-msgid "Manage zRAM"
-msgstr "Hantera zRAM"
-
-#: modules/zram/data/org.freedesktop.UDisks2.zram.policy.in:14
-msgid "Authentication is required to manage zRAM"
-msgstr "Autentisering krävs för att hantera zRAM"
-
-#: modules/zram/udiskslinuxmanagerzram.c:388
-msgid "Authentication is required to add zRAM kernel module"
-msgstr "Autentisering krävs för att lägga till en zRAM-kärnmodul"
-
-#: modules/zram/udiskslinuxmanagerzram.c:484
-msgid "Authentication is required to remove zRAM kernel module"
-msgstr "Autentisering krävs för att ta bort en zRAM-kärnmodul"
-
-#: modules/zram/udiskslinuxblockzram.c:322
-msgid "Authentication is required to enable zRAM device"
-msgstr "Autentisering krävs för att aktivera en zRAM-enhet"
-
-#: modules/zram/udiskslinuxblockzram.c:426
-msgid "Authentication is required to disable zRAM device"
-msgstr "Autentisering krävs för att avaktivera en zRAM-enhet"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1288
+#: src/udiskslinuxblock.c:1294
 msgid "Authentication is required to read system-level secrets"
 msgstr "Autentisering krävs för att läsa hemligheter på systemnivå"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:1995
+#: src/udiskslinuxblock.c:2001
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Autentisering krävs för att lägga till en post till filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2014
+#: src/udiskslinuxblock.c:2020
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
 "Autentisering krävs för att lägga till en post till filen /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2074
+#: src/udiskslinuxblock.c:2080
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Autentisering krävs för att ta bort en post från filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2093
+#: src/udiskslinuxblock.c:2099
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "Autentisering krävs för att ta bort en post från filen /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2166
+#: src/udiskslinuxblock.c:2172
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Autentisering krävs för att ändra filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2185
+#: src/udiskslinuxblock.c:2191
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Autentisering krävs för att ändra filen /etc/crypttab"
 
@@ -699,7 +696,7 @@ msgstr "Autentisering krävs för att ändra filen /etc/crypttab"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2875 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2882 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Autentisering krävs för att utföra en säker radering av $(drive)"
 
@@ -710,11 +707,11 @@ msgstr "Autentisering krävs för att utföra en säker radering av $(drive)"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2887
+#: src/udiskslinuxblock.c:2894
 msgid "Authentication is required to format $(drive)"
 msgstr "Autentisering krävs för att formatera $(drive)"
 
-#: src/udiskslinuxblock.c:2915 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2923 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 
@@ -724,7 +721,7 @@ msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3766
+#: src/udiskslinuxblock.c:3797
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 
@@ -734,7 +731,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3837
+#: src/udiskslinuxblock.c:3868
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 
@@ -744,7 +741,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3911
+#: src/udiskslinuxblock.c:3942
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 
@@ -754,7 +751,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3994
+#: src/udiskslinuxblock.c:4025
 msgid "Authentication is required to open $(drive)."
 msgstr "Autentisering krävs för att öppna $(drive)."
 
@@ -764,7 +761,7 @@ msgstr "Autentisering krävs för att öppna $(drive)."
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4051
+#: src/udiskslinuxblock.c:4082
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Autentisering krävs för att söka om $(drive)"
 
@@ -804,7 +801,7 @@ msgstr "Autentisering krävs för att stänga av $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:436
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:463
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Autentisering krävs för att uppdatera SMART-data från $(drive)"
 
@@ -925,7 +922,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:866 src/udiskslinuxfilesystem.c:1041
+#: src/udiskslinuxfilesystem.c:903 src/udiskslinuxfilesystem.c:1094
 msgid "Authentication is required to mount $(drive)"
 msgstr "Autentisering krävs för att montera $(drive)"
 
@@ -939,7 +936,7 @@ msgstr "Autentisering krävs för att montera $(drive)"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:951
+#: src/udiskslinuxfilesystem.c:992
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -956,7 +953,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1496
+#: src/udiskslinuxfilesystem.c:1573
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -971,7 +968,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1544
+#: src/udiskslinuxfilesystem.c:1621
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Autentisering krävs för att avmontera $(drive) monterad av en annan användare"
@@ -982,7 +979,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1712
+#: src/udiskslinuxfilesystem.c:1789
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "Autentisering krävs för att ändra filsystemsetiketten på $(drive)"
 
@@ -992,7 +989,7 @@ msgstr "Autentisering krävs för att ändra filsystemsetiketten på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1894
+#: src/udiskslinuxfilesystem.c:1971
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr "Autentisering krävs för att ändra storlek på filsystemet på $(drive)"
 
@@ -1002,7 +999,7 @@ msgstr "Autentisering krävs för att ändra storlek på filsystemet på $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2065
+#: src/udiskslinuxfilesystem.c:2142
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "Autentisering krävs för att reparera filsystemet på $(drive)"
 
@@ -1012,7 +1009,7 @@ msgstr "Autentisering krävs för att reparera filsystemet på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2233
+#: src/udiskslinuxfilesystem.c:2310
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "Autentisering krävs för att kontrollera filsystemet på $(drive)"
 
@@ -1022,7 +1019,7 @@ msgstr "Autentisering krävs för att kontrollera filsystemet på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2393
+#: src/udiskslinuxfilesystem.c:2470
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr "Autentisering krävs för att ändra ägandet av filsystemet på $(drive)"
@@ -1034,7 +1031,7 @@ msgstr "Autentisering krävs för att ändra ägandet av filsystemet på $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:254
+#: src/udiskslinuxloop.c:240
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Autentisering krävs för att ta bort loop-enheten $(drive)"
 
@@ -1045,7 +1042,7 @@ msgstr "Autentisering krävs för att ta bort loop-enheten $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:347
+#: src/udiskslinuxloop.c:333
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Autentisering krävs för att ändra loop-enheten $(drive)"
 
@@ -1053,9 +1050,23 @@ msgstr "Autentisering krävs för att ändra loop-enheten $(drive)"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:584
+#: src/udiskslinuxmanager.c:581
 msgid "Authentication is required to create a RAID array"
 msgstr "Autentisering krävs för att skapa en RAID-uppsättning"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting new NVMe Host NQN value.
+#.
+#: src/udiskslinuxmanagernvme.c:549
+msgid "Authentication is required to set NVMe Host NQN"
+msgstr "Autentisering krävs för att sätta värd-NQN för NVMe"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting new NVMe Host ID value.
+#.
+#: src/udiskslinuxmanagernvme.c:618
+msgid "Authentication is required to set NVMe Host ID"
+msgstr "Autentisering krävs för att sätta värd-ID för NVMe"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -1121,7 +1132,7 @@ msgstr "Autentisering krävs för att ta bort en RAID-uppsättning"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:770
+#: src/udiskslinuxnvmecontroller.c:825
 msgid "Authentication is required to start a device self-test on $(drive)"
 msgstr "Autentisering krävs för att starta ett enhetssjälvtest på $(drive)"
 
@@ -1131,7 +1142,7 @@ msgstr "Autentisering krävs för att starta ett enhetssjälvtest på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:885
+#: src/udiskslinuxnvmecontroller.c:918
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr "Autentisering krävs för att avbryta ett enhetssjälvtest på $(drive)"
 
@@ -1141,9 +1152,23 @@ msgstr "Autentisering krävs för att avbryta ett enhetssjälvtest på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1139
+#: src/udiskslinuxnvmecontroller.c:1220
 msgid "Authentication is required to perform a sanitize operation of $(drive)"
 msgstr "Autentisering krävs för att utföra en saneringsoperation för $(drive)"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests disconnect of a NVMeoF connected controller.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxnvmefabrics.c:201
+msgid ""
+"Authentication is required to disconnect a NVMe over Fabrics controller "
+"$(drive)"
+msgstr ""
+"Autentisering krävs för att koppla från en NVMe over Fabrics-styrenhet "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
@@ -1151,7 +1176,7 @@ msgstr "Autentisering krävs för att utföra en saneringsoperation för $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmenamespace.c:373
+#: src/udiskslinuxnvmenamespace.c:409
 msgid "Authentication is required to format a namespace on $(drive)"
 msgstr "Autentisering krävs för att formatera en namnrymd på $(drive)"
 
@@ -1838,301 +1863,881 @@ msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr "Utökad startpartition"
 
-#. Discoverable Linux Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
+#. Discoverable Linux Partitions, see http://systemd.io/DISCOVERABLE_PARTITIONS/
 #: udisks/udisksclient.c:2348
+msgctxt "part-type"
+msgid "Linux Root Partition (Alpha)"
+msgstr "Linux root-partition (Alpha)"
+
+#: udisks/udisksclient.c:2349
+msgctxt "part-type"
+msgid "Linux Root Partition (ARC)"
+msgstr "Linux root-partition (ARC)"
+
+#: udisks/udisksclient.c:2350
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit ARM)"
+msgstr "Linux root-partition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2351
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit ARM/AArch64)"
+msgstr "Linux root-partition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2352
+msgctxt "part-type"
+msgid "Linux Root Partition (Itanium/IA-64)"
+msgstr "Linux root-partition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2353
+msgctxt "part-type"
+msgid "Linux Root Partition (LoongArch 64-bit)"
+msgstr "Linux root-partition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2354
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux root-partition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2355
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux root-partition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2356
+msgctxt "part-type"
+msgid "Linux Root Partition (HPPA/PARISC)"
+msgstr "Linux root-partition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2357
+msgctxt "part-type"
+msgid "Linux Root Partition (32-bit PowerPC)"
+msgstr "Linux root-partition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2358
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux root-partition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2359
+msgctxt "part-type"
+msgid "Linux Root Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux root-partition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2360
+msgctxt "part-type"
+msgid "Linux Root Partition (RISC-V 32-bit)"
+msgstr "Linux root-partition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2361
+msgctxt "part-type"
+msgid "Linux Root Partition (RISC-V 64-bit)"
+msgstr "Linux root-partition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2362
+msgctxt "part-type"
+msgid "Linux Root Partition (s390)"
+msgstr "Linux root-partition (s390)"
+
+#: udisks/udisksclient.c:2363
+msgctxt "part-type"
+msgid "Linux Root Partition (s390x)"
+msgstr "Linux root-partition (s390x)"
+
+#: udisks/udisksclient.c:2364
+msgctxt "part-type"
+msgid "Linux Root Partition (TILE-Gx)"
+msgstr "Linux root-partition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2365
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr "Linux root-partition (x86)"
 
-#: udisks/udisksclient.c:2349
+#: udisks/udisksclient.c:2366
 msgctxt "part-type"
-msgid "Linux Root Partition (x86_64)"
-msgstr "Linux root-partition (x86_64)"
+msgid "Linux Root Partition (amd64/x86_64)"
+msgstr "Linux root-partition (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2350
+#: udisks/udisksclient.c:2367
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (Alpha)"
+msgstr "Linux /usr/-partition (Alpha)"
+
+#: udisks/udisksclient.c:2368
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (ARC)"
+msgstr "Linux /usr/-partition (ARC)"
+
+#: udisks/udisksclient.c:2369
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit ARM)"
+msgstr "Linux /usr/-partition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2370
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/-partition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2371
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (Itanium/IA-64)"
+msgstr "Linux /usr/-partition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2372
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/-partition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2373
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux /usr/-partition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2374
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux /usr/-partition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2375
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (HPPA/PARISC)"
+msgstr "Linux /usr/-partition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2376
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (32-bit PowerPC)"
+msgstr "Linux /usr/-partition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2377
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux /usr/-partition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2378
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux /usr/-partition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2379
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (RISC-V 32-bit)"
+msgstr "Linux /usr/-partition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2380
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (RISC-V 64-bit)"
+msgstr "Linux /usr/-partition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2381
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (s390)"
+msgstr "Linux /usr/-partition (s390)"
+
+#: udisks/udisksclient.c:2382
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (s390x)"
+msgstr "Linux /usr/-partition (s390x)"
+
+#: udisks/udisksclient.c:2383
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (TILE-Gx)"
+msgstr "Linux /usr/-partition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2384
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (x86)"
+msgstr "Linux /usr/-partition (x86)"
+
+#: udisks/udisksclient.c:2385
+msgctxt "part-type"
+msgid "Linux /usr/ Partition (amd64/x86_64)"
+msgstr "Linux /usr/-partition (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2386
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (Alpha)"
+msgstr "Linux Root Verity-partition (Alpha)"
+
+#: udisks/udisksclient.c:2387
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (ARC)"
+msgstr "Linux Root Verity-partition (ARC)"
+
+#: udisks/udisksclient.c:2388
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit ARM)"
+msgstr "Linux Root Verity-partition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2389
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit ARM/AArch64)"
+msgstr "Linux Root Verity-partition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2390
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (Itanium/IA-64)"
+msgstr "Linux Root Verity-partition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2391
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (LoongArch 64-bit)"
+msgstr "Linux Root Verity-partition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2392
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux Root Verity-partition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2393
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux Root Verity-partition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2394
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (HPPA/PARISC)"
+msgstr "Linux Root Verity-partition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2395
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux Root Verity-partition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2396
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux Root Verity-partition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2397
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (32-bit PowerPC)"
+msgstr "Linux Root Verity-partition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2398
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (RISC-V 32-bit)"
+msgstr "Linux Root Verity-partition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2399
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (RISC-V 64-bit)"
+msgstr "Linux Root Verity-partition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2400
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (s390)"
+msgstr "Linux Root Verity-partition (s390)"
+
+#: udisks/udisksclient.c:2401
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (s390x)"
+msgstr "Linux Root Verity-partition (s390x)"
+
+#: udisks/udisksclient.c:2402
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (TILE-Gx)"
+msgstr "Linux Root Verity-partition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2403
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (amd64/x86_64)"
+msgstr "Linux Root Verity-partition (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2404
+msgctxt "part-type"
+msgid "Linux Root Verity Partition (x86)"
+msgstr "Linux Root Verity-partition (x86)"
+
+#: udisks/udisksclient.c:2405
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (Alpha)"
+msgstr "Linux /usr/ Verity-partition (Alpha)"
+
+#: udisks/udisksclient.c:2406
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (ARC)"
+msgstr "Linux /usr/ Verity-partition (ARC)"
+
+#: udisks/udisksclient.c:2407
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit ARM)"
+msgstr "Linux /usr/ Verity-partition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2408
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/ Verity-partition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2409
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (Itanium/IA-64)"
+msgstr "Linux /usr/ Verity-partition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2410
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/ Verity-partition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2411
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux /usr/ Verity-partition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2412
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr "Linux /usr/ Verity-partition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2413
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (HPPA/PARISC)"
+msgstr "Linux /usr/ Verity-partition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2414
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux /usr/ Verity-partition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2415
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux /usr/ Verity-partition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2416
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (32-bit PowerPC)"
+msgstr "Linux /usr/ Verity-partition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2417
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (RISC-V 32-bit)"
+msgstr "Linux /usr/ Verity-partition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2418
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (RISC-V 64-bit)"
+msgstr "Linux /usr/ Verity-partition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2419
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (s390)"
+msgstr "Linux /usr/ Verity-partition (s390)"
+
+#: udisks/udisksclient.c:2420
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (s390x)"
+msgstr "Linux /usr/ Verity-partition (s390x)"
+
+#: udisks/udisksclient.c:2421
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (TILE-Gx)"
+msgstr "Linux /usr/ Verity-partition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2422
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (amd64/x86_64)"
+msgstr "Linux /usr/ Verity-partition (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2423
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Partition (x86)"
+msgstr "Linux /usr/ Verity-partition (x86)"
+
+#: udisks/udisksclient.c:2424
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (Alpha)"
+msgstr "Linux Root Verity-signaturpartition (Alpha)"
+
+#: udisks/udisksclient.c:2425
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (ARC)"
+msgstr "Linux Root Verity-signaturpartition (ARC)"
+
+#: udisks/udisksclient.c:2426
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit ARM)"
+msgstr "Linux Root Verity-signaturpartition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2427
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit ARM/AArch64)"
+msgstr "Linux Root Verity-signaturpartition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2428
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (Itanium/IA-64)"
+msgstr "Linux Root Verity-signaturpartition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2429
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (LoongArch 64-bit)"
+msgstr "Linux Root Verity-signaturpartition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2430
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux Root Verity-signaturpartition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2431
+msgctxt "part-type"
+msgid ""
+"Linux Root Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux Root Verity-signaturpartition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2432
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (HPPA/PARISC)"
+msgstr "Linux Root Verity-signaturpartition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2433
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux Root Verity-signaturpartition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2434
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux Root Verity-signaturpartition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2435
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (32-bit PowerPC)"
+msgstr "Linux Root Verity-signaturpartition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2436
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (RISC-V 32-bit)"
+msgstr "Linux Root Verity-signaturpartition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2437
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (RISC-V 64-bit)"
+msgstr "Linux Root Verity-signaturpartition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2438
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (s390)"
+msgstr "Linux Root Verity-signaturpartition (s390)"
+
+#: udisks/udisksclient.c:2439
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (s390x)"
+msgstr "Linux Root Verity-signaturpartition (s390x)"
+
+#: udisks/udisksclient.c:2440
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (TILE-Gx)"
+msgstr "Linux Root Verity-signaturpartition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2441
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (amd64/x86_64)"
+msgstr "Linux Root Verity-signaturpartition (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2442
+msgctxt "part-type"
+msgid "Linux Root Verity Signature Partition (x86)"
+msgstr "Linux Root Verity-signaturpartition (x86)"
+
+#: udisks/udisksclient.c:2443
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (Alpha)"
+msgstr "Linux /usr/ Verity-signaturpartition (Alpha)"
+
+#: udisks/udisksclient.c:2444
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (ARC)"
+msgstr "Linux /usr/ Verity-signaturpartition (ARC)"
+
+#: udisks/udisksclient.c:2445
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (32-bit ARM)"
+msgstr "Linux /usr/ Verity-signaturpartition (32-bit ARM)"
+
+#: udisks/udisksclient.c:2446
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit ARM/AArch64)"
+msgstr "Linux /usr/ Verity-signaturpartition (64-bit ARM/AArch64)"
+
+#: udisks/udisksclient.c:2447
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (Itanium/IA-64)"
+msgstr "Linux /usr/ Verity-signaturpartition (Itanium/IA-64)"
+
+#: udisks/udisksclient.c:2448
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (LoongArch 64-bit)"
+msgstr "Linux /usr/ Verity-signaturpartition (LoongArch 64-bit)"
+
+#: udisks/udisksclient.c:2449
+msgctxt "part-type"
+msgid ""
+"Linux /usr/ Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
+msgstr "Linux /usr/ Verity-signaturpartition (32-bit MIPS LittleEndian/mipsel)"
+
+#: udisks/udisksclient.c:2450
+msgctxt "part-type"
+msgid ""
+"Linux /usr/ Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
+msgstr ""
+"Linux /usr/ Verity-signaturpartition (64-bit MIPS LittleEndian/mips64el)"
+
+#: udisks/udisksclient.c:2451
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (HPPA/PARISC)"
+msgstr "Linux /usr/ Verity-signaturpartition (HPPA/PARISC)"
+
+#: udisks/udisksclient.c:2452
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC LittleEndian)"
+msgstr "Linux /usr/ Verity-signaturpartition (64-bit PowerPC LittleEndian)"
+
+#: udisks/udisksclient.c:2453
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC BigEndian)"
+msgstr "Linux /usr/ Verity-signaturpartition (64-bit PowerPC BigEndian)"
+
+#: udisks/udisksclient.c:2454
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (32-bit PowerPC)"
+msgstr "Linux /usr/ Verity-signaturpartition (32-bit PowerPC)"
+
+#: udisks/udisksclient.c:2455
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (RISC-V 32-bit)"
+msgstr "Linux /usr/ Verity-signaturpartition (RISC-V 32-bit)"
+
+#: udisks/udisksclient.c:2456
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (RISC-V 64-bit)"
+msgstr "Linux /usr/ Verity-signaturpartition (RISC-V 64-bit)"
+
+#: udisks/udisksclient.c:2457
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (s390)"
+msgstr "Linux /usr/ Verity-signaturpartition (s390)"
+
+#: udisks/udisksclient.c:2458
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (s390x)"
+msgstr "Linux /usr/ Verity-signaturpartition (s390x)"
+
+#: udisks/udisksclient.c:2459
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (TILE-Gx)"
+msgstr "Linux /usr/ Verity-signaturpartition (TILE-Gx)"
+
+#: udisks/udisksclient.c:2460
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (amd64/x86_64)"
+msgstr "Linux /usr/ Verity-signaturpartition (amd64/x86_64)"
+
+#: udisks/udisksclient.c:2461
+msgctxt "part-type"
+msgid "Linux /usr/ Verity Signature Partition (x86)"
+msgstr "Linux /usr/ Verity-signaturpartition (x86)"
+
+#: udisks/udisksclient.c:2462
+msgctxt "part-type"
+msgid "Linux Variable Data Partition"
+msgstr "Linux variabeldatapartition"
+
+#: udisks/udisksclient.c:2463
+msgctxt "part-type"
+msgid "Linux Temporary Data Partition"
+msgstr "Linux temporärdatapartition"
+
+#: udisks/udisksclient.c:2464
+msgctxt "part-type"
+msgid "Linux Per-user Home Partition"
+msgstr "Linux hempartition per användare"
+
+#: udisks/udisksclient.c:2465
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr "Linux hempartition"
 
-#: udisks/udisksclient.c:2351
+#: udisks/udisksclient.c:2466
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr "Linux serverdatapartition"
 
 #. Linux
-#: udisks/udisksclient.c:2353
+#: udisks/udisksclient.c:2468
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Linux växlingsutrymme"
 
-#: udisks/udisksclient.c:2354
+#: udisks/udisksclient.c:2469
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr "Linux filsystem"
 
-#: udisks/udisksclient.c:2355
+#: udisks/udisksclient.c:2470
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr "Linux RAID"
 
-#: udisks/udisksclient.c:2356 udisks/udisksclient.c:2442
+#: udisks/udisksclient.c:2471 udisks/udisksclient.c:2557
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux LVM"
 
-#: udisks/udisksclient.c:2357
+#: udisks/udisksclient.c:2472
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Linux reserverad"
 
 #. Microsoft
-#: udisks/udisksclient.c:2359
+#: udisks/udisksclient.c:2474
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "Grundläggande data"
 
-#: udisks/udisksclient.c:2360
+#: udisks/udisksclient.c:2475
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Microsoft reserverad"
 
-#: udisks/udisksclient.c:2361
+#: udisks/udisksclient.c:2476
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft LDM-metadata"
 
-#: udisks/udisksclient.c:2362
+#: udisks/udisksclient.c:2477
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft LDM-data"
 
-#: udisks/udisksclient.c:2363
+#: udisks/udisksclient.c:2478
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Microsoft Windows återställningsmiljö"
 
 #. Apple OS X
-#: udisks/udisksclient.c:2365
+#: udisks/udisksclient.c:2480
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple HFS/HFS+"
 
-#: udisks/udisksclient.c:2366
+#: udisks/udisksclient.c:2481
 msgctxt "part-type"
 msgid "Apple APFS"
 msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: udisks/udisksclient.c:2367 udisks/udisksclient.c:2421
+#: udisks/udisksclient.c:2482 udisks/udisksclient.c:2536
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple UFS"
 
-#: udisks/udisksclient.c:2368
+#: udisks/udisksclient.c:2483
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple ZFS"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2369
+#: udisks/udisksclient.c:2484
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple RAID"
 
-#: udisks/udisksclient.c:2370
+#: udisks/udisksclient.c:2485
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple RAID (frånkopplad)"
 
-#: udisks/udisksclient.c:2371
+#: udisks/udisksclient.c:2486
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Apple uppstart"
 
-#: udisks/udisksclient.c:2372
+#: udisks/udisksclient.c:2487
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple etikett"
 
-#: udisks/udisksclient.c:2373
+#: udisks/udisksclient.c:2488
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV-återställning"
 
-#: udisks/udisksclient.c:2374
+#: udisks/udisksclient.c:2489
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Apple huvudlagring"
 
 #. HP-UX
-#: udisks/udisksclient.c:2376
+#: udisks/udisksclient.c:2491
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX Data"
 
-#: udisks/udisksclient.c:2377
+#: udisks/udisksclient.c:2492
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX tjänst"
 
 #. FreeBSD
-#: udisks/udisksclient.c:2379
+#: udisks/udisksclient.c:2494
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "FreeBSD start"
 
-#: udisks/udisksclient.c:2380
+#: udisks/udisksclient.c:2495
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD data"
 
-#: udisks/udisksclient.c:2381
+#: udisks/udisksclient.c:2496
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "FreeBSD växlingsutrymme"
 
-#: udisks/udisksclient.c:2382
+#: udisks/udisksclient.c:2497
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD UFS"
 
-#: udisks/udisksclient.c:2383
+#: udisks/udisksclient.c:2498
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD Vinum"
 
-#: udisks/udisksclient.c:2384
+#: udisks/udisksclient.c:2499
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD ZFS"
 
 #. Solaris
-#: udisks/udisksclient.c:2386
+#: udisks/udisksclient.c:2501
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Solaris uppstart"
 
-#: udisks/udisksclient.c:2387
+#: udisks/udisksclient.c:2502
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris root"
 
-#: udisks/udisksclient.c:2388
+#: udisks/udisksclient.c:2503
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Solaris växlingsutrymme"
 
-#: udisks/udisksclient.c:2389
+#: udisks/udisksclient.c:2504
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris säkerhetskopia"
 
-#: udisks/udisksclient.c:2390
+#: udisks/udisksclient.c:2505
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris /usr"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2391
+#: udisks/udisksclient.c:2506
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris /var"
 
-#: udisks/udisksclient.c:2392
+#: udisks/udisksclient.c:2507
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris /home"
 
-#: udisks/udisksclient.c:2393
+#: udisks/udisksclient.c:2508
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris alternativ sektor"
 
-#: udisks/udisksclient.c:2394
+#: udisks/udisksclient.c:2509
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Solaris reserverad"
 
-#: udisks/udisksclient.c:2395
+#: udisks/udisksclient.c:2510
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Solaris reserverad (2)"
 
-#: udisks/udisksclient.c:2396
+#: udisks/udisksclient.c:2511
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Solaris reserverad (3)"
 
-#: udisks/udisksclient.c:2397
+#: udisks/udisksclient.c:2512
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Solaris reserverad (4)"
 
-#: udisks/udisksclient.c:2398
+#: udisks/udisksclient.c:2513
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Solaris reserverad (5)"
 
 #. NetBSD
-#: udisks/udisksclient.c:2400
+#: udisks/udisksclient.c:2515
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "NetBSD växlingsutrymme"
 
-#: udisks/udisksclient.c:2401
+#: udisks/udisksclient.c:2516
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD FFS"
 
-#: udisks/udisksclient.c:2402
+#: udisks/udisksclient.c:2517
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD LFS"
 
-#: udisks/udisksclient.c:2403
+#: udisks/udisksclient.c:2518
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD RAID"
 
-#: udisks/udisksclient.c:2404
+#: udisks/udisksclient.c:2519
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "NetBSD konkatenerad"
 
-#: udisks/udisksclient.c:2405
+#: udisks/udisksclient.c:2520
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD krypterad"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html
-#: udisks/udisksclient.c:2407
+#: udisks/udisksclient.c:2522
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: udisks/udisksclient.c:2408
+#: udisks/udisksclient.c:2523
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format
-#: udisks/udisksclient.c:2410
+#: udisks/udisksclient.c:2525
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr "ChromeOS fast programvara"
 
-#: udisks/udisksclient.c:2411
+#: udisks/udisksclient.c:2526
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr "ChromeOS kärna"
 
-#: udisks/udisksclient.c:2412
+#: udisks/udisksclient.c:2527
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr "ChromeOS root-filsystem"
 
-#: udisks/udisksclient.c:2413
+#: udisks/udisksclient.c:2528
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr "ChromeOS reserverad"
@@ -2140,399 +2745,399 @@ msgstr "ChromeOS reserverad"
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: udisks/udisksclient.c:2417
+#: udisks/udisksclient.c:2532
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr "Intel FFS reserverad"
 
-#: udisks/udisksclient.c:2422
+#: udisks/udisksclient.c:2537
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple HFS/HFS"
 
-#: udisks/udisksclient.c:2423
+#: udisks/udisksclient.c:2538
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Apple partitionstabell"
 
-#: udisks/udisksclient.c:2424
+#: udisks/udisksclient.c:2539
 msgctxt "part-type"
 msgid "Unused"
 msgstr "Oanvänt"
 
-#: udisks/udisksclient.c:2425
+#: udisks/udisksclient.c:2540
 msgctxt "part-type"
 msgid "Empty"
 msgstr "Tom"
 
-#: udisks/udisksclient.c:2426
+#: udisks/udisksclient.c:2541
 msgctxt "part-type"
 msgid "Driver"
 msgstr "Drivrutin"
 
-#: udisks/udisksclient.c:2427
+#: udisks/udisksclient.c:2542
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Drivrutin 4.3"
 
-#: udisks/udisksclient.c:2428
+#: udisks/udisksclient.c:2543
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "ProDOS filsystem"
 
-#: udisks/udisksclient.c:2429
+#: udisks/udisksclient.c:2544
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: udisks/udisksclient.c:2430
+#: udisks/udisksclient.c:2545
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: udisks/udisksclient.c:2431
+#: udisks/udisksclient.c:2546
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: udisks/udisksclient.c:2432
+#: udisks/udisksclient.c:2547
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: udisks/udisksclient.c:2433
+#: udisks/udisksclient.c:2548
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: udisks/udisksclient.c:2436
+#: udisks/udisksclient.c:2551
 msgctxt "part-type"
 msgid "Extended"
 msgstr "Utökad"
 
-#: udisks/udisksclient.c:2437
+#: udisks/udisksclient.c:2552
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI GPT"
 
-#: udisks/udisksclient.c:2438
+#: udisks/udisksclient.c:2553
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: udisks/udisksclient.c:2439
+#: udisks/udisksclient.c:2554
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Linux växlingsutrymme"
 
-#: udisks/udisksclient.c:2440
+#: udisks/udisksclient.c:2555
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2441
+#: udisks/udisksclient.c:2556
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Linux extended"
 
-#: udisks/udisksclient.c:2443
+#: udisks/udisksclient.c:2558
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Linux RAID auto"
 
-#: udisks/udisksclient.c:2444
+#: udisks/udisksclient.c:2559
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: udisks/udisksclient.c:2445
+#: udisks/udisksclient.c:2560
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32M"
 
-#: udisks/udisksclient.c:2446
+#: udisks/udisksclient.c:2561
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: udisks/udisksclient.c:2447
+#: udisks/udisksclient.c:2562
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
 msgstr "NTFS/exFAT/HPFS"
 
-#: udisks/udisksclient.c:2448
+#: udisks/udisksclient.c:2563
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95 FAT32"
 
-#: udisks/udisksclient.c:2449
+#: udisks/udisksclient.c:2564
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2450
+#: udisks/udisksclient.c:2565
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2451
+#: udisks/udisksclient.c:2566
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95 utökad (LBA)"
 
-#: udisks/udisksclient.c:2452
+#: udisks/udisksclient.c:2567
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "Dold FAT12"
 
-#: udisks/udisksclient.c:2453
+#: udisks/udisksclient.c:2568
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "Dold FAT16 <32M"
 
-#: udisks/udisksclient.c:2454
+#: udisks/udisksclient.c:2569
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "Dold FAT16"
 
-#: udisks/udisksclient.c:2455
+#: udisks/udisksclient.c:2570
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "Dold HPFS/NTFS"
 
-#: udisks/udisksclient.c:2456
+#: udisks/udisksclient.c:2571
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "Dold W95 FAT32"
 
-#: udisks/udisksclient.c:2457
+#: udisks/udisksclient.c:2572
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "Dold W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2458
+#: udisks/udisksclient.c:2573
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "Dold W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2459
+#: udisks/udisksclient.c:2574
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: udisks/udisksclient.c:2460
+#: udisks/udisksclient.c:2575
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Compaq-diagnostik"
 
-#: udisks/udisksclient.c:2461
+#: udisks/udisksclient.c:2576
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: udisks/udisksclient.c:2462
+#: udisks/udisksclient.c:2577
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: udisks/udisksclient.c:2463 udisks/udisksclient.c:2464
+#: udisks/udisksclient.c:2578 udisks/udisksclient.c:2579
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "Viloläge"
 
-#: udisks/udisksclient.c:2465
+#: udisks/udisksclient.c:2580
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: udisks/udisksclient.c:2466
+#: udisks/udisksclient.c:2581
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: udisks/udisksclient.c:2467 udisks/udisksclient.c:2468
+#: udisks/udisksclient.c:2582 udisks/udisksclient.c:2583
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: udisks/udisksclient.c:2469
+#: udisks/udisksclient.c:2584
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Solaris uppstart"
 
-#: udisks/udisksclient.c:2470
+#: udisks/udisksclient.c:2585
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: udisks/udisksclient.c:2471
+#: udisks/udisksclient.c:2586
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS BFS"
 
-#: udisks/udisksclient.c:2472
+#: udisks/udisksclient.c:2587
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS SkyFS"
 
-#: udisks/udisksclient.c:2615
+#: udisks/udisksclient.c:2730
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "SMART-självtest"
 
-#: udisks/udisksclient.c:2616
+#: udisks/udisksclient.c:2731
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "Matar ut media"
 
-#: udisks/udisksclient.c:2617
+#: udisks/udisksclient.c:2732
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "Låser upp enhet"
 
-#: udisks/udisksclient.c:2618
+#: udisks/udisksclient.c:2733
 msgctxt "job"
 msgid "Locking Device"
 msgstr "Låser enhet"
 
-#: udisks/udisksclient.c:2619
+#: udisks/udisksclient.c:2734
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "Ändrar krypterad enhet"
 
-#: udisks/udisksclient.c:2620
+#: udisks/udisksclient.c:2735
 msgctxt "job"
 msgid "Resizing Encrypted Device"
 msgstr "Ändrar storlek på krypterad enhet"
 
-#: udisks/udisksclient.c:2621
+#: udisks/udisksclient.c:2736
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Startar växlingsenhet"
 
-#: udisks/udisksclient.c:2622
+#: udisks/udisksclient.c:2737
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Stoppar växlingsenhet"
 
-#: udisks/udisksclient.c:2623
+#: udisks/udisksclient.c:2738
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "Ändrar enhet för växlingsutrymme"
 
-#: udisks/udisksclient.c:2624
+#: udisks/udisksclient.c:2739
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "Kontrollerar filsystem"
 
-#: udisks/udisksclient.c:2625
+#: udisks/udisksclient.c:2740
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "Monterar filsystem"
 
-#: udisks/udisksclient.c:2626
+#: udisks/udisksclient.c:2741
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "Avmonterar filsystem"
 
-#: udisks/udisksclient.c:2627
+#: udisks/udisksclient.c:2742
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "Ändrar filsystem"
 
-#: udisks/udisksclient.c:2628
+#: udisks/udisksclient.c:2743
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "Reparerar filsystem"
 
-#: udisks/udisksclient.c:2629
+#: udisks/udisksclient.c:2744
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "Ändrar storlek på filsystem"
 
-#: udisks/udisksclient.c:2630
+#: udisks/udisksclient.c:2745
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "Raderar enhet"
 
-#: udisks/udisksclient.c:2631
+#: udisks/udisksclient.c:2746
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Skapar filsystem"
 
-#: udisks/udisksclient.c:2632
+#: udisks/udisksclient.c:2747
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Sätter upp loop-enhet"
 
-#: udisks/udisksclient.c:2633
+#: udisks/udisksclient.c:2748
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Ändrar partition"
 
-#: udisks/udisksclient.c:2634
+#: udisks/udisksclient.c:2749
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Tar bort partition"
 
-#: udisks/udisksclient.c:2635
+#: udisks/udisksclient.c:2750
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Skapar partition"
 
-#: udisks/udisksclient.c:2636
+#: udisks/udisksclient.c:2751
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Städar upp"
 
-#: udisks/udisksclient.c:2637
+#: udisks/udisksclient.c:2752
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "ATA säker borttagning"
 
-#: udisks/udisksclient.c:2638
+#: udisks/udisksclient.c:2753
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "ATA förbättrad säker borttagning"
 
-#: udisks/udisksclient.c:2639
+#: udisks/udisksclient.c:2754
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "Stoppar RAID-uppsättning"
 
-#: udisks/udisksclient.c:2640
+#: udisks/udisksclient.c:2755
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "Startar RAID-uppsättning"
 
-#: udisks/udisksclient.c:2641
+#: udisks/udisksclient.c:2756
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "Markerar enhet som felaktig"
 
-#: udisks/udisksclient.c:2642
+#: udisks/udisksclient.c:2757
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "Tar bort enhet från uppsättning"
 
-#: udisks/udisksclient.c:2643
+#: udisks/udisksclient.c:2758
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "Lägger till enhet till uppsättning"
 
-#: udisks/udisksclient.c:2644
+#: udisks/udisksclient.c:2759
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "Sätter Write-Intent Bitmap"
 
-#: udisks/udisksclient.c:2645
+#: udisks/udisksclient.c:2760
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "Skapar RAID-uppsättning"
 
-#: udisks/udisksclient.c:2652
+#: udisks/udisksclient.c:2767
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
@@ -3020,6 +3625,42 @@ msgstr "%s — %s [%s] (%s)"
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
 msgstr "%s — %s (%s)"
+
+#~ msgid "LVMCache not enabled at compile time."
+#~ msgstr "LVMCache är inte aktiverat vid kompileringen."
+
+#~ msgid "Manage Bcache"
+#~ msgstr "Hantera Bcache"
+
+#~ msgid "Authentication is required to manage Bcache"
+#~ msgstr "Autentisering krävs för att hantera Bcache"
+
+#~ msgid "Authentication is required to destroy bcache device."
+#~ msgstr "Autentisering krävs för att förstöra en bcache-enhet"
+
+#~ msgid "Authentication is required to set mode of bcache device."
+#~ msgstr "Autentisering krävs för att sätta rättigheter på en bcache-enhet."
+
+#~ msgid "Authentication is required to create bcache device."
+#~ msgstr "Autentisering krävs för att skapa en bcache-enhet"
+
+#~ msgid "Manage zRAM"
+#~ msgstr "Hantera zRAM"
+
+#~ msgid "Authentication is required to manage zRAM"
+#~ msgstr "Autentisering krävs för att hantera zRAM"
+
+#~ msgid "Authentication is required to add zRAM kernel module"
+#~ msgstr "Autentisering krävs för att lägga till en zRAM-kärnmodul"
+
+#~ msgid "Authentication is required to remove zRAM kernel module"
+#~ msgstr "Autentisering krävs för att ta bort en zRAM-kärnmodul"
+
+#~ msgid "Authentication is required to enable zRAM device"
+#~ msgstr "Autentisering krävs för att aktivera en zRAM-enhet"
+
+#~ msgid "Authentication is required to disable zRAM device"
+#~ msgstr "Autentisering krävs för att avaktivera en zRAM-enhet"
 
 #~ msgid "Manage VDO"
 #~ msgstr "Hantera VDO"
