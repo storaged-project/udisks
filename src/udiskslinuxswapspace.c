@@ -323,6 +323,8 @@ handle_stop (UDisksSwapspace        *swapspace,
   return TRUE;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 handle_set_label (UDisksSwapspace        *swapspace,
                   GDBusMethodInvocation  *invocation,
@@ -356,7 +358,6 @@ handle_set_label (UDisksSwapspace        *swapspace,
       goto out;
     }
 
-  /* Now, check that the user is actually authorized to stop the swap space. */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     "org.freedesktop.udisks2.manage-swapspace",
@@ -410,10 +411,97 @@ handle_set_label (UDisksSwapspace        *swapspace,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_set_uuid (UDisksSwapspace       *swapspace,
+                 GDBusMethodInvocation *invocation,
+                 const gchar           *arg_uuid,
+                 GVariant              *arg_options)
+{
+  UDisksObject *object;
+  UDisksDaemon *daemon;
+  UDisksBaseJob *job = NULL;
+  GError *error = NULL;
+  UDisksBlock *block = NULL;
+  uid_t caller_uid;
+
+  object = udisks_daemon_util_dup_object (swapspace, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_peek_block (object);
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    "org.freedesktop.udisks2.manage-swapspace",
+                                                    arg_options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests setting UUID of a swap device.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to set swapspace UUID on $(drive)"),
+                                                    invocation))
+    goto out;
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "swapspace-modify",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (!bd_swap_set_uuid (udisks_block_get_device (block),
+                         arg_uuid,
+                         &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error taking setting UUID on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+  udisks_swapspace_complete_set_uuid (swapspace, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  g_clear_object (&object);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 swapspace_iface_init (UDisksSwapspaceIface *iface)
 {
   iface->handle_start     = handle_start;
   iface->handle_stop      = handle_stop;
   iface->handle_set_label = handle_set_label;
+  iface->handle_set_uuid  = handle_set_uuid;
 }

@@ -2806,6 +2806,19 @@
       <arg name="label" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Set UUID for the swap device.
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
