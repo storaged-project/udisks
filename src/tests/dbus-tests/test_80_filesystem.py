@@ -4,6 +4,8 @@ import errno
 import re
 import six
 import shutil
+import uuid
+import random
 import tempfile
 import unittest
 import time
@@ -112,6 +114,16 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             self.skipTest('Cannot set label on an existing %s filesystem: required command `%s` not found' % (self._fs_signature, util))
         if not avail:
             self.skipTest('Cannot set label on an existing %s filesystem' % self._fs_signature)
+
+    def _check_can_set_uuid(self):
+        try:
+            avail, util = BlockDev.fs_can_set_uuid(self._fs_signature)
+        except Exception as e:
+            self.skipTest(e.message)
+        if util is not None:
+            self.skipTest('Cannot set UUID on an existing %s filesystem: required command `%s` not found' % (self._fs_signature, util))
+        if not avail:
+            self.skipTest('Cannot set UUID on an existing %s filesystem' % self._fs_signature)
 
     def _creates_protective_part_table(self):
         """ Indicates whether mkfs creates a protective partition table. """
@@ -233,6 +245,57 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # test invalid label behaviour
         self._invalid_label(block_fs)
+
+    def _gen_uuid(self):
+        return str(uuid.uuid4())
+
+    def _invalid_uuid(self, block):
+        msg = r'org.freedesktop.UDisks2.Error.Failed: (Provided UUID is not a valid RFC-4122 UUID.|UUID for .* filesystem must be a hexadecimal number.|.*volume ID must be a hexadecimal number|UUID for .* filesystem must be .* characters long.)'
+        for u in ['garbage', self._gen_uuid() + 'garbage',
+                  '12345678-zzzz-xxxx-yyyy-567812345678', 'ABCD-EFGH']:
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                block.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+    def test_uuid(self):
+        self._check_can_create()
+        self._check_can_set_uuid()
+
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # create filesystem with UUID
+        u = self._gen_uuid()
+        d = dbus.Dictionary(signature='sv')
+        d['uuid'] = u
+        disk.Format(self._fs_signature, d, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+
+        # get real block object for the newly created filesystem
+        block_fs, block_fs_dev = self._get_formatted_block_object(self.vdevs[0])
+        self.assertIsNotNone(block_fs)
+        self.assertIsNotNone(block_fs_dev)
+
+        # test dbus properties
+        dbus_uuid = self.get_property(block_fs, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual(u)
+        # test system values
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % block_fs_dev)
+        self.assertEqual(sys_uuid, u)
+
+        # generate new UUID
+        u = self._gen_uuid()
+        block_fs.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+
+        # test dbus properties
+        dbus_uuid = self.get_property(block_fs, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual(u)
+
+        # test system values
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % block_fs_dev)
+        self.assertEqual(sys_uuid, u)
+
+        # test invalid uuid behaviour
+        self._invalid_uuid(block_fs)
 
     def test_repair_resize_check(self):
         self._check_can_create()
@@ -1507,6 +1570,9 @@ class VFATTestCase(NonPOSIXTestCase):
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
+    def _gen_uuid(self):
+        return str.format("%04X-%04X" % (random.randint(0, 0xffff), random.randint(0, 0xffff)))
+
     def _get_dosfstools_version(self):
         _ret, out = self.run_command("mkfs.vfat --help")
         # mkfs.fat 4.1 (2017-01-24)
@@ -1529,6 +1595,9 @@ class EXFATTestCase(NonPOSIXTestCase):
     _can_mount = True
     _can_query_size = True and UdisksFSTestCase.command_exists('fsck.exfat')
 
+    def _gen_uuid(self):
+        return str.format("%04X-%04X" % (random.randint(0, 0xffff), random.randint(0, 0xffff)))
+
 
 class NTFSTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
@@ -1538,7 +1607,7 @@ class NTFSTestCase(UdisksFSTestCase):
 
     @classmethod
     def setUpClass(cls):
-        udiskstestcase.UdisksTestCase.setUpClass()
+        super(NTFSTestCase, cls).setUpClass()
         if not cls.command_exists('ntfs-3g'):
             raise unittest.SkipTest('ntfs-3g binary not available, skipping.')
 
@@ -1550,6 +1619,9 @@ class NTFSTestCase(UdisksFSTestCase):
     def test_userspace_mount_options(self):
         super(NTFSTestCase, self).test_userspace_mount_options()
 
+    def _gen_uuid(self):
+        return str.format("%016X" % random.randint(0, 0xffffffffffffffff))
+
 class NTFS3TestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _fs_name = 'ntfs3'
@@ -1559,7 +1631,7 @@ class NTFS3TestCase(UdisksFSTestCase):
 
     @classmethod
     def setUpClass(cls):
-        udiskstestcase.UdisksTestCase.setUpClass()
+        super(NTFS3TestCase, cls).setUpClass()
         if not BlockDev.utils_have_kernel_module('ntfs3'):
             raise unittest.SkipTest('ntfs3 kernel module not available, skipping.')
 
@@ -1571,6 +1643,9 @@ class NTFS3TestCase(UdisksFSTestCase):
     def test_userspace_mount_options(self):
         super(NTFS3TestCase, self).test_userspace_mount_options()
 
+    def _gen_uuid(self):
+        return str.format("%016X" % random.randint(0, 0xffffffffffffffff))
+
 class NTFSCommonTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _can_mount = True
@@ -1578,7 +1653,7 @@ class NTFSCommonTestCase(UdisksFSTestCase):
 
     @classmethod
     def setUpClass(cls):
-        udiskstestcase.UdisksTestCase.setUpClass()
+        super(NTFSCommonTestCase, cls).setUpClass()
         if not BlockDev.utils_have_kernel_module('ntfs3') and not BlockDev.utils_have_kernel_module('ntfs3') and not cls._have_ntfs3g:
             raise unittest.SkipTest('No ntfs/ntfs3/ntfs3g implementation available, skipping.')
 
@@ -1592,6 +1667,9 @@ class NTFSCommonTestCase(UdisksFSTestCase):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_userspace_mount_options(self):
         super(NTFSCommonTestCase, self).test_userspace_mount_options()
+
+    def _gen_uuid(self):
+        return str.format("%016X" % random.randint(0, 0xffffffffffffffff))
 
 class BTRFSTestCase(UdisksFSTestCase):
     _fs_signature = 'btrfs'
@@ -1627,6 +1705,9 @@ class UDFTestCase(UdisksFSTestCase):
     def _creates_protective_part_table(self):
         # udftools >= 2.0 create fake MBR partition table
         return self._get_mkudffs_version() >= Version('2.0')
+
+    def _gen_uuid(self):
+        return str.format("%016x" % random.randint(0, 0xffffffffffffffff))
 
 
 class FailsystemTestCase(UdisksFSTestCase):
