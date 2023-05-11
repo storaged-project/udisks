@@ -2497,10 +2497,23 @@
          @name: New name to set.
          @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-         Sets the partition name.
+         Sets the partition name (label).
     -->
     <method name="SetName">
       <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the partition UUID (GPT only).
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
