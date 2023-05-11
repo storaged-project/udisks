@@ -440,7 +440,7 @@ handle_set_flags (UDisksPartition       *partition,
         g_dbus_method_invocation_return_error (invocation,
                                                UDISKS_ERROR,
                                                UDISKS_ERROR_NOT_SUPPORTED,
-                                               "No support for modifying a partition a table of type `%s'",
+                                               "No support for setting partition flags on a partition table of type `%s'",
                                                udisks_partition_table_get_type_ (partition_table));
         udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
         goto out;
@@ -568,7 +568,7 @@ handle_set_name (UDisksPartition       *partition,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_NOT_SUPPORTED,
-                                             "No support for modifying a partition a table of type `%s'",
+                                             "No support for setting partition name on a partition table of type `%s'",
                                              udisks_partition_table_get_type_ (partition_table));
       goto out;
     }
@@ -655,7 +655,7 @@ handle_set_uuid (UDisksPartition       *partition,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_NOT_SUPPORTED,
-                                             "Setting partition UUID is not supported on partition table of type %s",
+                                             "Setting partition UUID is not supported on a partition table of type %s",
                                              udisks_partition_table_get_type_ (partition_table));
       goto out;
     }
@@ -850,7 +850,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_NOT_SUPPORTED,
-                   "No support for modifying a partition a table of type `%s'",
+                   "No support for setting partition type on a partition table of type `%s'",
                    udisks_partition_table_get_type_ (partition_table));
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
       goto out;
