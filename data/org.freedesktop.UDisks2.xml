@@ -2343,7 +2343,7 @@
         @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's') and <parameter>partition-uuid</parameter> (of type 's').
         @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
 
         Creates a new partition.
@@ -2359,6 +2359,9 @@
         For <literal>dos</literal> partition tables, the partition type can be
         set with the @partition-type option. Possible values are: "primary",
         "extended" or "logical".
+
+        An optional parameter <parameter>partition-uuid</parameter> denotes
+        the partition UUID to set for the newly created partition (GPT only).
 
         The newly created partition will be wiped of known filesystem
         signatures using the
@@ -2380,7 +2383,7 @@
         @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's') and <parameter>partition-uuid</parameter> (of type 's').
         @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
         @format_type: The type to use for Format.
         @format_options: Options for Format.

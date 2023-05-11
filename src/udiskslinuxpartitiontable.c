@@ -273,6 +273,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
   const gchar *partition_type = NULL;
+  const gchar *partition_uuid = NULL;
 
   object = udisks_daemon_util_dup_object (table, &error);
   if (object == NULL)
@@ -284,6 +285,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   g_variant_lookup (options, "partition-type", "&s", &partition_type);
+  g_variant_lookup (options, "partition-uuid", "&s", &partition_uuid);
 
   block = udisks_object_get_block (object);
   if (block == NULL)
@@ -456,15 +458,28 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
       goto out;
     }
 
-  /* set name if given */
-  if (g_strcmp0 (table_type, "gpt") == 0 && strlen (name) > 0)
+  /* set name and UUID if given */
+  if (g_strcmp0 (table_type, "gpt") == 0)
     {
-      if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
+      if (strlen (name) > 0)
         {
-          g_prefix_error (&error, "Error setting name for newly created partition: ");
-          g_dbus_method_invocation_return_gerror (invocation, error);
-          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-          goto out;
+          if (!bd_part_set_part_name (device_name, part_spec->path, name, &error))
+            {
+              g_prefix_error (&error, "Error setting name for newly created partition: ");
+              g_dbus_method_invocation_return_gerror (invocation, error);
+              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+              goto out;
+            }
+        }
+      else if (partition_uuid)
+        {
+          if (!bd_part_set_part_uuid (device_name, part_spec->path, partition_uuid, &error))
+            {
+              g_prefix_error (&error, "Error setting partition UUID for newly created partition: ");
+              g_dbus_method_invocation_return_gerror (invocation, error);
+              udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+              goto out;
+            }
         }
     }
 
