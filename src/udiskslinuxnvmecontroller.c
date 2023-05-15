@@ -299,7 +299,10 @@ udisks_linux_nvme_controller_update (UDisksLinuxNVMeController *ctrl,
 
       cntl_id = device->nvme_ctrl_info->ctrl_id;
       if (device->nvme_ctrl_info->subsysnqn && strlen (device->nvme_ctrl_info->subsysnqn) > 0)
-        subsysnqn = g_strdup (device->nvme_ctrl_info->subsysnqn);
+        {
+          g_free (subsysnqn);
+          subsysnqn = g_strdup (device->nvme_ctrl_info->subsysnqn);
+        }
     }
 
   udisks_nvme_controller_set_controller_id (iface, cntl_id);
