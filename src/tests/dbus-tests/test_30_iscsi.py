@@ -161,6 +161,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertEqual(port, self.port)
 
         options = dbus.Dictionary(signature='sv')
+        options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
 
         msg = 'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
@@ -227,6 +228,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertEqual(port, self.port)
 
         options = dbus.Dictionary(signature='sv')
+        options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
         options['password'] = self.password
         options['reverse-username'] = self.mutual_iqn
@@ -335,6 +337,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         # first attempt - wrong password
         options = dbus.Dictionary(signature='sv')
+        options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
         msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
