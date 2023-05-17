@@ -557,7 +557,7 @@ handle_delete (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   gboolean teardown_flag = FALSE;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
+  LVJobData data = {0,};
   struct WaitData wait_data;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
@@ -639,7 +639,7 @@ handle_repair (UDisksLogicalVolume   *_volume,
   UDisksDaemon *daemon = NULL;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data = {0};
+  LVJobData data = {0,};
   g_auto(GStrv) pvs = NULL;
 
   if (!common_setup (volume, invocation, options,
@@ -743,7 +743,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
   const gchar *lv_objpath;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to rename a logical volume"),
@@ -805,7 +805,7 @@ handle_resize (UDisksLogicalVolume   *_volume,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
+  LVJobData data = {0,};
   gchar **opt_pvs = NULL;
   g_auto(GStrv) pvs = NULL;
 
@@ -915,7 +915,7 @@ handle_activate (UDisksLogicalVolume *_volume,
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
   UDisksObject *block_object = NULL;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to activate a logical volume"),
@@ -983,7 +983,7 @@ handle_deactivate (UDisksLogicalVolume   *_volume,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to deactivate a logical volume"),
@@ -1050,7 +1050,7 @@ handle_create_snapshot (UDisksLogicalVolume   *_volume,
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
   const gchar *lv_objpath = NULL;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to create a snapshot of a logical volume"),
@@ -1111,7 +1111,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to convert logical volume to cache"),
@@ -1162,7 +1162,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume    *volume_,
   UDisksDaemon *daemon;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object;
-  LVJobData data;
+  LVJobData data = {0,};
 
   if (!common_setup (volume, invocation, options,
                      N_("Authentication is required to split cache pool LV off of a cache LV"),
