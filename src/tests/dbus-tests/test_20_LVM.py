@@ -575,6 +575,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         self.addCleanup(self._remove_vg, vg)
 
         vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_free.assertGreater(0)
         lv_name = 'udisks_test_vdovlv'
         pool_name = 'udisks_test_vdopool'
         psize = vg_free.value
@@ -637,6 +638,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         self.addCleanup(self._remove_vg, vg)
 
         vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_free.assertGreater(0)
         lv_name = 'udisks_test_vdovlv'
         pool_name = 'udisks_test_vdopool'
         psize = vg_free.value
@@ -688,10 +690,11 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         self.addCleanup(self._remove_vg, vg)
 
         vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_free.assertGreater(0)
         lv_name = 'udisks_test_vdovlv'
         pool_name = 'udisks_test_vdopool'
         psize = vg_free.value
-        vsize = psize
+        vsize = psize * 2
         lv_path = vg.CreateVDOVolume(lv_name, pool_name, dbus.UInt64(psize), dbus.UInt64(vsize),
                                      dbus.UInt64(0), True, True, "auto", self.no_options,
                                      dbus_interface=self.iface_prefix + '.VolumeGroup')
@@ -714,6 +717,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
         self.addCleanup(self._remove_vg, vg)
 
         vg_free = self.get_property(vg, '.VolumeGroup', 'FreeSize')
+        vg_free.assertGreater(2 * 1024**3)
         lv_name = 'udisks_test_vdovlv'
         pool_name = 'udisks_test_vdopool'
         psize = vg_free.value - 2 * 1024**3
