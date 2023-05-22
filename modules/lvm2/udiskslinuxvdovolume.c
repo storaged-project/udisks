@@ -236,7 +236,7 @@ _set_compression_deduplication (UDisksVDOVolume       *_volume,
   UDisksDaemon *daemon = NULL;
   uid_t caller_uid;
   UDisksLinuxVolumeGroupObject *group_object = NULL;
-  LVJobData data;
+  LVJobData data = {0,};
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -318,7 +318,7 @@ _vdo_resize (UDisksLinuxLogicalVolumeObject *object,
   UDisksDaemon *daemon = NULL;
   UDisksLinuxVolumeGroupObject *group_object = NULL;
   uid_t caller_uid;
-  LVJobData data;
+  LVJobData data = {0,};
   gboolean success = FALSE;
 
   if (!common_setup (object, invocation, options,
