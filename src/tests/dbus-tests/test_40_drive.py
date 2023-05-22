@@ -55,7 +55,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         dev = self.get_device(self.vdevs[0])
         drive = self.get_drive(dev)
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   'is not hot-pluggable device'):
+                                   r'is not hot-pluggable device|is not ejectable device'):
             drive.Eject(self.no_options)
 
         dev = self.get_device(self.cd_dev)

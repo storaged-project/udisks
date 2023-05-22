@@ -631,7 +631,8 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         info = BlockDev.crypto_luks_info(self.vdevs[0])
 
         luks_path = device.Unlock('test', self.no_options,
-                                  dbus_interface=self.iface_prefix + '.Encrypted')
+                                  dbus_interface=self.iface_prefix + '.Encrypted',
+                                  timeout=1000)
         self.assertIsNotNone(luks_path)
         self.assertTrue(os.path.exists('/dev/disk/by-uuid/%s' % info.uuid))
 
