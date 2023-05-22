@@ -2081,7 +2081,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -2099,7 +2099,11 @@
         <parameter>label</parameter> option in the @options parameter;
         however, note that this may not be supported on all file
         systems and, if supported, the maximum allowed length may
-        vary.
+        vary. Similarly, you can specify filesystem UUID with the
+        <parameter>uuid</parameter> option in the @options parameter
+        given that the particular filesystem type supports this feature.
+        The format of the UUID string should match the #org.freedesktop.UDisks2.Block:IdUUID
+        property.
 
         If the file system in question supports owners and the option
         <parameter>take-ownership</parameter> is set to %TRUE then the
@@ -2339,7 +2343,7 @@
         @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's') and <parameter>partition-uuid</parameter> (of type 's').
         @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
 
         Creates a new partition.
@@ -2355,6 +2359,9 @@
         For <literal>dos</literal> partition tables, the partition type can be
         set with the @partition-type option. Possible values are: "primary",
         "extended" or "logical".
+
+        An optional parameter <parameter>partition-uuid</parameter> denotes
+        the partition UUID to set for the newly created partition (GPT only).
 
         The newly created partition will be wiped of known filesystem
         signatures using the
@@ -2376,7 +2383,7 @@
         @size: The desired size of the partition, in bytes (0 for maximal size).
         @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
         @name: The name for the new partition or blank if the partition table do not support names.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>partition-type</parameter> (of type 's') and <parameter>partition-uuid</parameter> (of type 's').
         @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
         @format_type: The type to use for Format.
         @format_options: Options for Format.
@@ -2493,10 +2500,23 @@
          @name: New name to set.
          @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-         Sets the partition name.
+         Sets the partition name (label).
     -->
     <method name="SetName">
       <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the partition UUID (GPT only).
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
@@ -2570,6 +2590,19 @@
     -->
     <method name="SetLabel">
       <arg name="label" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Sets the filesystem UUID value.
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
@@ -2787,6 +2820,19 @@
     -->
     <method name="SetLabel">
       <arg name="label" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetUUID:
+        @uuid: The UUID to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.10.0
+
+        Set UUID for the swap device.
+    -->
+    <method name="SetUUID">
+      <arg name="uuid" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>

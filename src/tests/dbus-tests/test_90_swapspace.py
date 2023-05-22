@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import os
+import uuid
 import dbus
 import udiskstestcase
 
@@ -26,6 +27,7 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
     def test_10_create(self):
         # test creating of the swap device
         self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.dev)
 
         fstype = self.get_property(self.device, '.Block', 'IdType')
         fstype.assertEqual('swap')
@@ -39,6 +41,7 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
 
     def test_20_start_stop(self):
         self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.dev)
 
         fstype = self.get_property(self.device, '.Block', 'IdType')
         fstype.assertEqual('swap')
@@ -62,6 +65,7 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_30_set_label(self):
         self.device.Format('swap', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.dev)
 
         fstype = self.get_property(self.device, '.Block', 'IdType')
         fstype.assertEqual('swap')
@@ -73,3 +77,28 @@ class UdisksSwapSpaceTest(udiskstestcase.UdisksTestCase):
 
         _ret, out = self.run_command('lsblk -noLABEL %s' % self.dev)
         self.assertEqual('udisks_swap', out.strip())
+
+    def test_40_set_uuid(self):
+        u = str(uuid.uuid4())
+        d = dbus.Dictionary(signature='sv')
+        d['uuid'] = u
+        self.device.Format('swap', d, dbus_interface=self.iface_prefix + '.Block')
+        self.addCleanup(self.wipe_fs, self.dev)
+
+        fstype = self.get_property(self.device, '.Block', 'IdType')
+        fstype.assertEqual('swap')
+        dbus_uuid = self.get_property(self.device, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual(u)
+
+        # test system values
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % self.dev)
+        self.assertEqual(sys_uuid, u)
+
+        # generate new UUID
+        u = str(uuid.uuid4())
+        self.device.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Swapspace')
+
+        dbus_uuid = self.get_property(self.device, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual(u)
+        _ret, sys_uuid = self.run_command('lsblk -d -no UUID %s' % self.dev)
+        self.assertEqual(sys_uuid, u)

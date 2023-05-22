@@ -2,6 +2,7 @@ import dbus
 import os
 import six
 import time
+import uuid
 
 import udiskstestcase
 
@@ -710,3 +711,53 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_name = self.run_command('lsblk -d -no PARTLABEL /dev/%s' % part_name)
         self.assertEqual(sys_name, 'test')
+
+    def test_uuid(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        self._create_format(disk, 'gpt')
+        self.addCleanup(self._remove_format, disk)
+
+        u = str(uuid.uuid4())
+        d = dbus.Dictionary(signature='sv')
+        d['partition-uuid'] = u
+        path = disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2),
+                                    '', '', d,
+                                    dbus_interface=self.iface_prefix + '.PartitionTable')
+
+        self.udev_settle()
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+        self.addCleanup(self._remove_partition, part)
+
+        # test dbus properties
+        dbus_uuid = self.get_property(part, '.Partition', 'UUID')
+        dbus_uuid.assertEqual(u)
+        # test flags value from system
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_uuid = self.run_command('lsblk -d -no PARTUUID /dev/%s' % part_name)
+        self.assertEqual(sys_uuid, u)
+
+        self._create_format(part, 'ext4')
+        self.addCleanup(self._remove_format, part)
+
+        # try setting invalid UUID
+        msg = 'Provided UUID is not a valid RFC-4122 UUID'
+        for uu in ['garbage', str(uuid.uuid4()) + 'garbage',
+                   '12345678-zzzz-xxxx-yyyy-567812345678', 'ABCD-EFGH']:
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                part.SetUUID(uu, self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+
+        # set new valid UUID
+        u = str(uuid.uuid4())
+        part.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+        self.udev_settle()
+
+        # test dbus properties
+        dbus_uuid = self.get_property(part, '.Partition', 'UUID')
+        dbus_uuid.assertEqual(u)
+        # test flags value from system
+        part_name = str(part.object_path).split('/')[-1]
+        _ret, sys_uuid = self.run_command('lsblk -d -no PARTUUID /dev/%s' % part_name)
+        self.assertEqual(sys_uuid, u)

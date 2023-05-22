@@ -29,8 +29,8 @@
 #include <sys/sysmacros.h>
 #include <sys/ioctl.h>
 #include <linux/fs.h>
+#include <uuid.h>
 #include <glib-unix.h>
-
 #include <glib/gstdio.h>
 
 #include <blockdev/part.h>
@@ -173,6 +173,23 @@ out:
   g_clear_object (&object);
 
   return rc;
+}
+
+static gboolean
+is_valid_uuid (const gchar *str)
+{
+  gchar *lowercase;
+  gint ret;
+  uuid_t uu;
+
+  if (!g_str_is_ascii (str))
+    return FALSE;
+
+  lowercase = g_ascii_strdown (str, -1);
+  ret = uuid_parse (lowercase, uu);
+  g_free (lowercase);
+
+  return ret == 0;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -423,7 +440,7 @@ handle_set_flags (UDisksPartition       *partition,
         g_dbus_method_invocation_return_error (invocation,
                                                UDISKS_ERROR,
                                                UDISKS_ERROR_NOT_SUPPORTED,
-                                               "No support for modifying a partition a table of type `%s'",
+                                               "No support for setting partition flags on a partition table of type `%s'",
                                                udisks_partition_table_get_type_ (partition_table));
         udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
         goto out;
@@ -551,7 +568,7 @@ handle_set_name (UDisksPartition       *partition,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_NOT_SUPPORTED,
-                                             "No support for modifying a partition a table of type `%s'",
+                                             "No support for setting partition name on a partition table of type `%s'",
                                              udisks_partition_table_get_type_ (partition_table));
       goto out;
     }
@@ -584,35 +601,124 @@ handle_set_name (UDisksPartition       *partition,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-is_valid_uuid (const gchar *str)
+handle_set_uuid (UDisksPartition       *partition,
+                 GDBusMethodInvocation *invocation,
+                 const gchar           *arg_uuid,
+                 GVariant              *arg_options)
 {
-  gboolean ret = FALSE;
-  guint groups[] = {8, 4, 4, 4, 12, 0};
-  guint pos, n, m;
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksState *state = NULL;
+  gchar *device_name = NULL;
+  gchar *partition_name = NULL;
+  UDisksObject *partition_table_object = NULL;
+  UDisksPartitionTable *partition_table = NULL;
+  UDisksBlock *partition_table_block = NULL;
+  gint fd = -1;
+  uid_t caller_uid;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
 
-  if (strlen (str) != 36)
-    goto out;
-
-  pos = 0;
-  for (n = 0; groups[n] != 0; n++)
+  if (!check_authorization (partition, invocation, arg_options, &caller_uid))
     {
-      if (pos > 0)
-        {
-          if (str[pos++] != '-')
-            goto out;
-        }
-      for (m = 0; m < groups[n]; m++)
-        {
-          if (!g_ascii_isxdigit (str[pos++]))
-            goto out;
-        }
+      goto out;
     }
 
-  ret = TRUE;
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+  block = udisks_object_get_block (object);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
+
+  partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+  partition_table = udisks_object_get_partition_table (partition_table_object);
+  partition_table_block = udisks_object_get_block (partition_table_object);
+
+  if (!is_valid_uuid (arg_uuid))
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Provided UUID is not a valid RFC-4122 UUID");
+      goto out;
+    }
+
+  if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Setting partition UUID is not supported on a partition table of type %s",
+                                             udisks_partition_table_get_type_ (partition_table));
+      goto out;
+    }
+
+  partition_name = udisks_block_dup_device (block);
+
+  /* hold a file descriptor open to suppress BLKRRPART generated by the tools */
+  fd = open (partition_name, O_RDONLY);
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "partition-modify",
+                                         caller_uid,
+                                         NULL);
+
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  if (!bd_part_set_part_uuid (udisks_block_get_device (partition_table_block),
+                              partition_name,
+                              arg_uuid,
+                              &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error setting partition UUID on %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      goto out;
+    }
+
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+  udisks_partition_complete_set_uuid (partition, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
 
  out:
-  return ret;
+  if (fd != -1)
+    close (fd);
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
+  g_free (device_name);
+  g_free (partition_name);
+  g_clear_error (&error);
+  g_clear_object (&object);
+  g_clear_object (&block);
+  g_clear_object (&partition_table_object);
+  g_clear_object (&partition_table);
+  g_clear_object (&partition_table_block);
+  g_clear_object (&object);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 /**
  * udisks_linux_partition_set_type_sync:
@@ -744,7 +850,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_NOT_SUPPORTED,
-                   "No support for modifying a partition a table of type `%s'",
+                   "No support for setting partition type on a partition table of type `%s'",
                    udisks_partition_table_get_type_ (partition_table));
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
       goto out;
@@ -799,7 +905,6 @@ handle_set_type (UDisksPartition       *partition,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
 
 typedef struct
 {
@@ -1061,6 +1166,7 @@ partition_iface_init (UDisksPartitionIface *iface)
 {
   iface->handle_set_flags = handle_set_flags;
   iface->handle_set_name  = handle_set_name;
+  iface->handle_set_uuid  = handle_set_uuid;
   iface->handle_set_type  = handle_set_type;
   iface->handle_resize    = handle_resize;
   iface->handle_delete    = handle_delete;
