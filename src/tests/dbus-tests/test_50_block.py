@@ -12,6 +12,8 @@ import udiskstestcase
 class UdisksBlockTest(udiskstestcase.UdisksTestCase):
     '''This is a basic block device test suite'''
 
+    LUKS_PASSPHRASE = 'shouldnotseeme'
+
     def _close_luks(self, disk):
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -241,7 +243,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+        disk.Format('xfs', {'encrypt.passphrase': self.LUKS_PASSPHRASE}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
         self.addCleanup(self.wipe_fs, self.vdevs[0])
@@ -249,7 +251,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         # configuration items as arrays of dbus.Byte
         opts = self.str_to_ay('verify')
-        passwd = self.str_to_ay('test')
+        passwd = self.str_to_ay(self.LUKS_PASSPHRASE)
 
         # set the new configuration
         conf = dbus.Dictionary({'passphrase-contents': passwd,
@@ -294,7 +296,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        disk.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+        disk.Format('xfs', {'encrypt.passphrase': self.LUKS_PASSPHRASE}, dbus_interface=self.iface_prefix + '.Block')
 
         # cleanup -- close the luks and remove format
         self.addCleanup(self.wipe_fs, self.vdevs[0])
@@ -318,17 +320,17 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
 
         # format the disk
         disk1 = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        disk1.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+        disk1.Format('xfs', {'encrypt.passphrase': self.LUKS_PASSPHRASE}, dbus_interface=self.iface_prefix + '.Block')
 
-        # cleanup -- close the luks and remove format
+        # cleanup (run in reverse order) -- close the luks and remove format
         self.addCleanup(self.wipe_fs, self.vdevs[0])
         self.addCleanup(self._close_luks, disk1)
 
         # format the disk
         disk2 = self.get_object('/block_devices/' + os.path.basename(self.vdevs[1]))
-        disk2.Format('xfs', {'encrypt.passphrase': 'test'}, dbus_interface=self.iface_prefix + '.Block')
+        disk2.Format('xfs', {'encrypt.passphrase': self.LUKS_PASSPHRASE}, dbus_interface=self.iface_prefix + '.Block')
 
-        # cleanup -- close the luks and remove format
+        # cleanup (run in reverse order) -- close the luks and remove format
         self.addCleanup(self.wipe_fs, self.vdevs[1])
         self.addCleanup(self._close_luks, disk2)
 
