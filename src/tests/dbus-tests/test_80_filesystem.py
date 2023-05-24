@@ -72,13 +72,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         if ret != 0:
             self.fail('Failed to remove user user %s: %s' % (username, out))
 
-    def _get_libmount_version(self):
-        _ret, out = self.run_command('mount --version')
-        m = re.search(r'libmount ([\d\.]+)', out)
-        if not m or len(m.groups()) != 1:
-            raise RuntimeError('Failed to determine libmount version from: %s' % out)
-        return Version(m.groups()[0])
-
     def _get_mount_options_conf_path(self):
         if os.environ["UDISKS_TESTS_ARG_SYSTEM"] == "1":
             return "/etc/udisks2/mount_options.conf"
@@ -89,6 +82,14 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
     def command_exists(cls, command):
         ret, _out = cls.run_command('type %s' % command)
         return ret == 0
+
+    @classmethod
+    def _get_fstool_version(cls, cmd, match):
+        _ret, out = cls.run_command(cmd)
+        m = re.search(match, out)
+        if not m or len(m.groups()) != 1:
+            return Version("0")
+        return Version(m.groups()[0])
 
     def _check_can_create(self):
         try:
@@ -830,8 +831,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         self.assertEqual(len(mounts_after_unmount), 0)
 
     def test_userspace_mount_options(self):
-        libmount_version = self._get_libmount_version()
-        if libmount_version < Version('2.30'):
+        if self._get_fstool_version('mount --version', r'libmount ([\d\.]+)') < Version('2.30'):
             self.skipTest('userspace mount options are not supported with libmount < 2.30')
 
         self._check_can_create()
@@ -1573,17 +1573,9 @@ class VFATTestCase(NonPOSIXTestCase):
     def _gen_uuid(self):
         return str.format("%04X-%04X" % (random.randint(0, 0xffff), random.randint(0, 0xffff)))
 
-    def _get_dosfstools_version(self):
-        _ret, out = self.run_command("mkfs.vfat --help")
-        # mkfs.fat 4.1 (2017-01-24)
-        m = re.search(r"mkfs\.fat ([\d\.]+)", out)
-        if not m or len(m.groups()) != 1:
-            raise RuntimeError("Failed to determine dosfstools version from: %s" % out)
-        return Version(m.groups()[0])
-
     def _creates_protective_part_table(self):
         # dosfstools >= 4.2 create fake MBR partition table
-        return self._get_dosfstools_version() >= Version('4.2')
+        return self._get_fstool_version('mkfs.vfat --help', r'mkfs\.fat ([\d\.]+)') >= Version('4.2')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_repair_resize_check(self):
@@ -1688,23 +1680,17 @@ class NILFS2TestCase(UdisksFSTestCase):
 class F2FSTestCase(UdisksFSTestCase):
     _fs_signature = 'f2fs'
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
-    _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs')
+    _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs') and \
+                      UdisksFSTestCase._get_fstool_version('dump.f2fs -V', r'dump.f2fs ([\d\.]+)') <= Version('1.14.0')
+
 
 class UDFTestCase(UdisksFSTestCase):
     _fs_signature = 'udf'
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('udf')
 
-    def _get_mkudffs_version(self):
-        """ Detect mkudffs version, fall back to zero in case of failure. """
-        _ret, out = self.run_command('mkudffs 2>&1 | grep "mkudffs from udftools"')
-        m = re.search(r'from udftools ([\d\.]+)', out)
-        if not m or len(m.groups()) != 1:
-            return Version("0")
-        return Version(m.groups()[0])
-
     def _creates_protective_part_table(self):
         # udftools >= 2.0 create fake MBR partition table
-        return self._get_mkudffs_version() >= Version('2.0')
+        return self._get_fstool_version('mkudffs 2>&1 | grep "mkudffs from udftools"', r'from udftools ([\d\.]+)') >= Version('2.0')
 
     def _gen_uuid(self):
         return str.format("%016x" % random.randint(0, 0xffffffffffffffff))
