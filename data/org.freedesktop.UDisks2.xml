@@ -402,6 +402,10 @@
           <listitem><para>Enable TLS encryption (TCP).</para></listitem></varlistentry>
         <varlistentry><term>hostsymname (type 'ay')</term>
           <listitem><para>TP8010: NVMe host symbolic name.</para></listitem></varlistentry>
+        <varlistentry><term>keyring (type 'ay')</term>
+          <listitem><para>Keyring to store and lookup keys.</para></listitem></varlistentry>
+        <varlistentry><term>tls_key (type 'ay')</term>
+          <listitem><para>TLS PSK for the connection.</para></listitem></varlistentry>
         </variablelist>
     -->
     <method name="Connect">
