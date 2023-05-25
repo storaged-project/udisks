@@ -1712,15 +1712,14 @@ class FailsystemTestCase(UdisksFSTestCase):
 
     def test_relabel(self):
         # we need some filesystem that doesn't support setting label after creating it
-        fs = F2FSTestCase
-
-        fs._check_can_create(fs)
+        self._fs_signature = 'f2fs'
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
         # create minix filesystem without label and try to set it later
-        disk.Format(fs._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         msg = "org.freedesktop.UDisks2.Error.Failed: Setting the label of filesystem 'f2fs' is not supported."
@@ -1729,14 +1728,13 @@ class FailsystemTestCase(UdisksFSTestCase):
 
     def test_mount_auto(self):
         # we need some mountable filesystem, ext4 should do the trick
-        fs = Ext4TestCase
-
-        fs._check_can_create(fs)
+        self._fs_signature = 'ext4'
+        self._check_can_create()
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
 
-        disk.Format(fs._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+        disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.addCleanup(self.wipe_fs, self.vdevs[0])
         self.addCleanup(self.try_unmount, self.vdevs[0])  # paranoid cleanup
 
@@ -1765,11 +1763,6 @@ class FailsystemTestCase(UdisksFSTestCase):
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
-    def test_mount_fstab(self):
-        pass
-
-    def test_size(self):
-        pass
 
 class UdisksISO9660TestCase(udiskstestcase.UdisksTestCase):
     def _create_iso9660_on_dev(self, dev):
