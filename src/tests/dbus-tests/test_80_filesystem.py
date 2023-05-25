@@ -873,13 +873,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
         self.assertFalse(os.path.ismount(mnt_path))
 
-    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
-    def test_protective_part_overwrite(self):
-        """ Test overwriting the protective partition table header by creating new filesystem on a nested partition. """
-        if not self._creates_protective_part_table():
-            self.skipTest('Filesystem %s does not create protective partition table' % self._fs_signature)
-        self._check_can_create()
-
+    def _create_protective_part(self):
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
         self.assertIsNotNone(disk)
         self.addCleanup(self.wipe_fs, self.vdevs[0])
@@ -887,21 +881,41 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             # need to force creation of a protective MBR
             ret, _out = self.run_command('mkfs.vfat --mbr=y %s' % self.vdevs[0])
             self.assertEqual(ret, 0)
+            # NOTE: Do NOT issue partprobe on the device as it will likely hide the protective
+            #       partition table even if detected previously, right after mkfs
+            self.run_command('udevadm trigger %s %s' % (self.vdevs[0], self.vdevs[0] + '1'))
+            self.udev_settle()
             time.sleep(2)
         else:
            self._create_format(disk)
 
-        # verify that there's a partition table and partition with the expected filesystem
+        # see if there's a partition table and one partition
+        try:
+            self.assertHasIface(disk, 'org.freedesktop.UDisks2.PartitionTable')
+            parts = self.get_property(disk, '.PartitionTable', 'Partitions')
+            parts.assertLen(1)
+        except:
+            self.skipTest('Known protective partition table detection deficiencies on the kernel side, no parttable found this time, skipping...')
+
         pttype = self.get_property(disk, '.PartitionTable', 'Type')
+        pttype.assertIsNotNone()
         pttype.assertNotEqual('gpt')
-        parts = self.get_property(disk, '.PartitionTable', 'Partitions')
-        parts.assertLen(1)
 
         part = self.get_object(parts.value[0])
         self.assertIsNotNone(part)
         part_offset = self.get_property(part, '.Partition', 'Offset')
         # expect a partition starting with offset 0
         part_offset.assertEqual(0)
+        return (disk, part)
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_protective_part_overwrite(self):
+        """ Test overwriting the protective partition table header by creating new filesystem on a nested partition """
+        if not self._creates_protective_part_table():
+            self.skipTest('Filesystem %s does not create protective partition table' % self._fs_signature)
+        self._check_can_create()
+
+        disk, part = self._create_protective_part()
 
         # attempt to create another filesystem on the partition
         msg = 'This partition cannot be modified because it contains a partition table; please reinitialize layout of the whole device.'
@@ -910,37 +924,14 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_protective_part_overwrite_mounted(self):
-        """ Test overwriting the master block device carrying a protective partition table having the nested partition mounted. """
+        """ Test overwriting the master block device carrying a protective partition table having the nested partition mounted """
         if not self._creates_protective_part_table():
             self.skipTest('Filesystem %s does not create protective partition table' % self._fs_signature)
         self._check_can_create()
         if not self._can_mount:
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
 
-        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
-        self.assertIsNotNone(disk)
-        self.addCleanup(self.wipe_fs, self.vdevs[0])
-        if self._fs_signature == "vfat":
-            # need to force creation of a protective MBR
-            ret, _out = self.run_command('mkfs.vfat --mbr=y %s' % self.vdevs[0])
-            self.assertEqual(ret, 0)
-            self.run_command('udevadm trigger %s' % self.vdevs[0])
-            self.udev_settle()
-            time.sleep(2)
-        else:
-           self._create_format(disk)
-
-        # verify that there's a partition table and partition with the expected filesystem
-        pttype = self.get_property(disk, '.PartitionTable', 'Type')
-        pttype.assertNotEqual('gpt')
-        parts = self.get_property(disk, '.PartitionTable', 'Partitions')
-        parts.assertLen(1)
-
-        part = self.get_object(parts.value[0])
-        self.assertIsNotNone(part)
-        part_offset = self.get_property(part, '.Partition', 'Offset')
-        # expect a partition starting with offset 0
-        part_offset.assertEqual(0)
+        disk, part = self._create_protective_part()
 
         # mount the filesystem
         d = dbus.Dictionary(signature='sv')
