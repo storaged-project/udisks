@@ -1334,7 +1334,7 @@ class Luks(UDisksTestCase):
 
     def setup_crypto_device(self):
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('s', 's3kr1t'),
+            'encrypt.passphrase': GLib.Variant('s', 's3kr1ts3kr1t'),
             'label': GLib.Variant('s', 'treasure')}))
         self.client.settle()
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
@@ -1345,7 +1345,7 @@ class Luks(UDisksTestCase):
     @staticmethod
     def unlock_crypto_device(encrypted):
         return encrypted.call_unlock_sync(
-            's3kr1t', no_options, None)
+            's3kr1ts3kr1t', no_options, None)
 
     def tearDown(self):
         """clean up behind failed test cases"""
@@ -1413,7 +1413,7 @@ class Luks(UDisksTestCase):
             udev_dump = subprocess.Popen(['udevadm', 'info', '--export-db'],
                                          stdout=subprocess.PIPE)
             out = udev_dump.communicate()[0]
-            self.assertFalse(b's3kr1t' in out, 'password in udev properties')
+            self.assertFalse(b's3kr1ts3kr1t' in out, 'password in udev properties')
             self.assertFalse(b'essiv:sha' in out, 'key information in udev properties')
 
         finally:
@@ -1523,18 +1523,18 @@ class Luks(UDisksTestCase):
         encrypted = self.setup_crypto_device()
         # wrong password, has bytes after a trailing '\0'
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', Luks.keyfile_options(b's3kr1t\0X'), None)
+                          '', Luks.keyfile_options(b's3kr1ts3kr1t\0X'), None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', Luks.keyfile_options(b's3kr1t\n'), None)
+                          '', Luks.keyfile_options(b's3kr1ts3kr1t\n'), None)
         # correct password, specified as keyfile
-        encrypted.call_unlock_sync('', Luks.keyfile_options(b's3kr1t'), None)
+        encrypted.call_unlock_sync('', Luks.keyfile_options(b's3kr1ts3kr1t'), None)
         encrypted.call_lock_sync(no_options, None)
 
     def test_plaintext_keyfile(self):
         """Setup a device using a plaintext keyfile."""
         # Using a plaintext keyfile should be equivalent to passphrase
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
-            'encrypt.passphrase': GLib.Variant('ay', _bytes_to_ay(b's3kr1t')),
+            'encrypt.passphrase': GLib.Variant('ay', _bytes_to_ay(b's3kr1ts3kr1t')),
             'label': GLib.Variant('s', 'treasure')}))
 
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
@@ -1545,16 +1545,16 @@ class Luks(UDisksTestCase):
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           'h4ckpassword', no_options, None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', Luks.keyfile_options(b's3kr1t\0X'), None)
+                          '', Luks.keyfile_options(b's3kr1ts3kr1t\0X'), None)
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          '', Luks.keyfile_options(b's3kr1t\n'), None)
+                          '', Luks.keyfile_options(b's3kr1ts3kr1t\n'), None)
 
         # correct password
-        encrypted.call_unlock_sync('', Luks.keyfile_options(b's3kr1t'), None)
+        encrypted.call_unlock_sync('', Luks.keyfile_options(b's3kr1ts3kr1t'), None)
         encrypted.call_lock_sync(no_options, None)
 
         # correct password, specified as passphrase
-        encrypted.call_unlock_sync('s3kr1t', no_options, None)
+        encrypted.call_unlock_sync('s3kr1ts3kr1t', no_options, None)
         encrypted.call_lock_sync(no_options, None)
 
     def test_binary_keyfile(self):
@@ -1620,11 +1620,11 @@ class Luks(UDisksTestCase):
         encrypted = self.setup_crypto_device()
 
         # change: passphrase -> passphrase
-        encrypted.call_change_passphrase_sync('s3kr1t', 'passphrase', no_options, None)
+        encrypted.call_change_passphrase_sync('s3kr1ts3kr1t', 'passphrase', no_options, None)
 
         # verify new password:
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
-                          's3kr1t', no_options, None)
+                          's3kr1ts3kr1t', no_options, None)
         encrypted.call_unlock_sync('passphrase', no_options, None)
         encrypted.call_lock_sync(no_options, None)
 
@@ -1657,7 +1657,7 @@ class Luks(UDisksTestCase):
 
         # change: keyfile -> passphrase
         encrypted.call_change_passphrase_sync(
-            '', 's3kr1t', GLib.Variant('a{sv}', {
+            '', 's3kr1ts3kr1t', GLib.Variant('a{sv}', {
                 'old_keyfile_contents': GLib.Variant('ay', _bytes_to_ay(key_file_1)),
             }),
             None)
@@ -1665,7 +1665,7 @@ class Luks(UDisksTestCase):
         # verify new password:
         self.assertRaises(GLib.GError, encrypted.call_unlock_sync,
                           '', Luks.keyfile_options(key_file_1), None)
-        encrypted.call_unlock_sync('s3kr1t', no_options, None)
+        encrypted.call_unlock_sync('s3kr1ts3kr1t', no_options, None)
         encrypted.call_lock_sync(no_options, None)
 
 
