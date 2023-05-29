@@ -117,21 +117,17 @@ void
 udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
                                      UDisksLinuxBlockObject     *object)
 {
-  const gchar *type = NULL;
   UDisksLinuxDevice *device = NULL;
   UDisksDaemon *daemon = NULL;
   guint num_parts = 0;
   const gchar **partition_object_paths = NULL;
+  const gchar *part_type = NULL;
   GList *partition_objects = NULL;
   GList *object_p = NULL;
   guint i = 0;
-
-  /* update partition table type */
-  device = udisks_linux_block_object_get_device (object);
-  if (device != NULL)
-    type = g_udev_device_get_property (device->udev_device, "ID_PART_TABLE_TYPE");
-
-  udisks_partition_table_set_type_ (UDISKS_PARTITION_TABLE (table), type);
+  const gchar *device_file;
+  BDPartDiskSpec *spec;
+  GError *error = NULL;
 
   /* update list of partitions */
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -146,8 +142,36 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
 
   udisks_partition_table_set_partitions (UDISKS_PARTITION_TABLE (table),
                                          partition_object_paths);
-  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (table));
 
+  /* update partition table type */
+  device = udisks_linux_block_object_get_device (object);
+  if (device)
+    {
+      part_type = g_udev_device_get_property (device->udev_device, "ID_PART_TABLE_TYPE");
+      if (!part_type && num_parts > 0)
+        {
+          /* probe the device in case no cached udev property is available */
+          device_file = g_udev_device_get_device_file (device->udev_device);
+          if (device_file)
+            {
+              spec = bd_part_get_disk_spec (device_file, &error);
+              if (spec)
+                {
+                  part_type = bd_part_get_part_table_type_str (spec->table_type, NULL);
+                  bd_part_disk_spec_free (spec);
+                }
+              else
+                {
+                  udisks_warning ("Partitions found on device '%s' but couldn't read partition table signature: %s",
+                                  device_file, error->message);
+                  g_clear_error (&error);
+                }
+            }
+        }
+    }
+  udisks_partition_table_set_type_ (UDISKS_PARTITION_TABLE (table), part_type);
+
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (table));
 
   g_free (partition_object_paths);
   g_clear_object (&device);
