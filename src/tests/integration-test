@@ -1096,6 +1096,7 @@ class FS(UDisksTestCase):
             time.sleep(5)
             self.sync()
             cd_fs = self.udisks_filesystem(cd=True)
+            subprocess.call(['blockdev', '--setro', self.cd_device])
 
             # forcing mount CD drive as 'rw' should fail
             try:
@@ -1748,6 +1749,7 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         try:
             fs = self.udisks_filesystem(cd=True)
             self.assertNotEqual(fs, None)
+            subprocess.call(['blockdev', '--setro', self.cd_device])
             mount_path = fs.call_mount_sync(no_options, None)
             self.assertIn('/media/', mount_path)
 
