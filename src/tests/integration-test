@@ -74,7 +74,10 @@ sys.path.insert(0, dirname(__file__))
 import test_polkitd
 
 # GI_TYPELIB_PATH=udisks LD_LIBRARY_PATH=udisks/.libs
-VDEV_SIZE = 64000000  # size of virtual test device
+
+# size of virtual test device
+# XFS needs at least 300 MB
+VDEV_SIZE = 317718528
 
 
 # Those file systems are known to have a broken handling of permissions, in
@@ -1083,7 +1086,7 @@ class FS(UDisksTestCase):
         # https://github.com/karelzak/util-linux/issues/17
         # https://github.com/karelzak/util-linux/issues/18
         # exfat can be mounted with '-o rw' even if read-only
-        if fs_type not in ['reiserfs', 'xfs', 'exfat']:
+        if fs_type not in ['reiserfs', 'exfat']:
             # the scsi_debug CD drive content is the same as for the HD drive, but
             # udev does not know about this; so give it a nudge to re-probe
             subprocess.call(['partprobe', self.cd_device])
@@ -1096,6 +1099,7 @@ class FS(UDisksTestCase):
             time.sleep(5)
             self.sync()
             cd_fs = self.udisks_filesystem(cd=True)
+            subprocess.call(['blockdev', '--setro', self.cd_device])
 
             # forcing mount CD drive as 'rw' should fail
             try:
@@ -1748,6 +1752,7 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         try:
             fs = self.udisks_filesystem(cd=True)
             self.assertNotEqual(fs, None)
+            subprocess.call(['blockdev', '--setro', self.cd_device])
             mount_path = fs.call_mount_sync(no_options, None)
             self.assertIn('/media/', mount_path)
 

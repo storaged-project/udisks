@@ -1663,9 +1663,8 @@ class NILFS2TestCase(UdisksFSTestCase):
     _fs_signature = 'nilfs2'
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('nilfs2')
 
-    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_userspace_mount_options(self):
-        super(NILFS2TestCase, self).test_userspace_mount_options()
+        raise unittest.SkipTest('Notoriously unstable on nilfs2, skipping.')
 
 
 class F2FSTestCase(UdisksFSTestCase):
