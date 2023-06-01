@@ -692,6 +692,13 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
     def test_open_close(self):
         self.assertHasIface(self.loop, self.iface_prefix + '.Encrypted')
 
+        dbus_idusage = self.get_property(self.loop, '.Block', 'IdUsage')
+        dbus_idusage.assertEqual('crypto')
+        dbus_idtype = self.get_property(self.loop, '.Block', 'IdType')
+        dbus_idtype.assertEqual('BitLocker')
+        dbus_uuid = self.get_property(self.loop, '.Block', 'IdUUID')
+        dbus_uuid.assertEqual('8f595209-f5b9-49a0-85d4-cb8f80258c27')
+
         crypt_path = self.loop.Unlock(self.passphrase, self.no_options,
                                       dbus_interface=self.iface_prefix + '.Encrypted')
         self.assertIsNotNone(crypt_path)

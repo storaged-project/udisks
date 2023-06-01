@@ -1236,6 +1236,24 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
   g_free (s);
   s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_UUID_ENC"),
                                  g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
+  if ((!s || strlen (s) == 0) && udisks_linux_block_is_bitlk (iface))
+    {
+      BDCryptoBITLKInfo *bitlk_info;
+
+      /* Attempt to retrieve bitlk uuid from the on-disk header */
+      bitlk_info = bd_crypto_bitlk_info (device_file, &error);
+      if (bitlk_info)
+        {
+          s = g_strdup (bitlk_info->uuid);
+          bd_crypto_bitlk_info_free (bitlk_info);
+        }
+      else
+        {
+          g_warning ("Crypto bitlk container detected on %s but failed to parse the header: %s",
+                     device_file, error->message);
+          g_error_free (error);
+        }
+    }
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
