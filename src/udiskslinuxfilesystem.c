@@ -161,7 +161,7 @@ udisks_linux_filesystem_set_property (GObject      *object,
   switch (prop_id)
     {
     case PROP_SIZE:
-      g_warning ("udisks_linux_filesystem_set_property() should never be called, value = %lu", g_value_get_uint64 (value));
+      g_warning ("udisks_linux_filesystem_set_property() should never be called, value = %" G_GUINT64_FORMAT, g_value_get_uint64 (value));
       break;
 
     default:
@@ -205,6 +205,9 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
 {
   guint64 size = 0;
 
+  if (filesystem->cached_fs_size > 0)
+    return filesystem->cached_fs_size;
+
   if (!filesystem->cached_device_file || !filesystem->cached_fs_type)
     return 0;
 
@@ -216,8 +219,8 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
       guchar pm_state = 0;
 
       if (udisks_ata_get_pm_state (filesystem->cached_device_file, NULL, &pm_state))
-        if (!UDISKS_ATA_PM_STATE_AWAKE (pm_state) && filesystem->cached_fs_size > 0)
-          return filesystem->cached_fs_size;
+        if (!UDISKS_ATA_PM_STATE_AWAKE (pm_state))
+          return 0;
     }
 
   size = bd_fs_get_size (filesystem->cached_device_file, filesystem->cached_fs_type, NULL);
@@ -331,8 +334,18 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_clear_object (&ata);
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
-  /* The Size property is hacked to be retrieved on-demand, only need
-   * to notify subscribers that it has changed.
+
+  /* The ID_FS_SIZE property only contains data part of the total filesystem
+   * size while 'ID_FS_LASTBLOCK * ID_FS_BLOCKSIZE' typically marks the size
+   * boundary of the filesystem. This is the approach of libblockdev fs size
+   * reporting.
+   */
+  filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
+                               g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
+  if (filesystem->cached_fs_size == 0)
+    filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_SIZE");
+  /* The Size property is hacked to be retrieved on-demand, only need to
+   * notify subscribers that it has changed.
    */
   invalidate_property (filesystem, "Size");
 
