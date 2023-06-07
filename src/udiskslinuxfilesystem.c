@@ -342,8 +342,6 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
    */
   filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
                                g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
-  if (filesystem->cached_fs_size == 0)
-    filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_SIZE");
   /* The Size property is hacked to be retrieved on-demand, only need to
    * notify subscribers that it has changed.
    */
