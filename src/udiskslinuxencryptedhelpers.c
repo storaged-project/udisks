@@ -33,6 +33,8 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
 {
   BDCryptoLUKSVersion luks_version;
   CryptoJobData *data = (CryptoJobData*) user_data;
+  BDCryptoKeyslotContext *context = NULL;
+  gboolean ret = FALSE;
 
   if (g_strcmp0 (data->type, "luks1") == 0)
     luks_version = BD_CRYPTO_LUKS_VERSION_LUKS1;
@@ -48,10 +50,15 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
       return FALSE;
     }
 
-  /* device, cipher, key_size, passphrase, key_file, min_entropy, luks_version, extra, error */
-  return bd_crypto_luks_format_luks2_blob (data->device, NULL, 0,
-                                           (const guint8*) data->passphrase->str, data->passphrase->len, 0,
-                                           luks_version, NULL, error);
+  context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
+                                                      data->passphrase->len, error);
+  if (!context)
+    return FALSE;
+
+  /* device, cipher, key_size, context, min_entropy, luks_version, extra, error */
+  ret = bd_crypto_luks_format (data->device, NULL, 0, context, 0, luks_version, NULL, error);
+  bd_crypto_keyslot_context_free (context);
+  return ret;
 }
 
 gboolean luks_open_job_func (UDisksThreadedJob  *job,
@@ -60,11 +67,18 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
                     GError            **error)
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
+  BDCryptoKeyslotContext *context = NULL;
+  gboolean ret = FALSE;
 
-  /* device, name, passphrase, key_file, read_only, error */
-  return bd_crypto_luks_open_blob (data->device, data->map_name,
-                                   (const guint8*) data->passphrase->str, data->passphrase->len, data->read_only,
-                                   error);
+  context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
+                                                      data->passphrase->len, error);
+  if (!context)
+    return FALSE;
+
+  /* device, name, context, read_only, error */
+  ret = bd_crypto_luks_open (data->device, data->map_name, context, data->read_only, error);
+  bd_crypto_keyslot_context_free (context);
+  return ret;
 }
 
 gboolean luks_close_job_func (UDisksThreadedJob  *job,
@@ -82,10 +96,26 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
                           GError            **error)
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
-  return bd_crypto_luks_change_key_blob (data->device,
-                                         (const guint8*) data->passphrase->str, data->passphrase->len,
-                                         (const guint8*) data->new_passphrase->str, data->new_passphrase->len,
-                                         error);
+  BDCryptoKeyslotContext *context = NULL;
+  BDCryptoKeyslotContext *ncontext = NULL;
+  gboolean ret = FALSE;
+
+  context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
+                                                      data->passphrase->len, error);
+  if (!context)
+    return FALSE;
+  ncontext = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->new_passphrase->str,
+                                                       data->new_passphrase->len, error);
+  if (!context)
+    {
+      bd_crypto_keyslot_context_free (context);
+      return FALSE;
+    }
+
+  ret = bd_crypto_luks_change_key (data->device, context, ncontext, error);
+  bd_crypto_keyslot_context_free (context);
+  bd_crypto_keyslot_context_free (ncontext);
+  return ret;
 }
 
 gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
@@ -94,14 +124,26 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
                                GError            **error)
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
+  BDCryptoKeyslotContext *context = NULL;
+  gboolean ret = FALSE;
 
   /* We always use the veracrypt option, because it can unlock both VeraCrypt and legacy TrueCrypt volumes */
   gboolean  veracrypt = TRUE;
 
-  return bd_crypto_tc_open_full (data->device, data->map_name,
-                                 (const guint8*) data->passphrase->str, data->passphrase->len,
-                                 data->keyfiles, data->hidden, data->system, veracrypt, data->pim,
-                                 data->read_only, error);
+  /* passphrase can be empty for veracrypt with keyfiles */
+  if (data->passphrase->len > 0)
+    {
+      context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
+                                                          data->passphrase->len, error);
+      if (!context)
+        return FALSE;
+    }
+
+  ret = bd_crypto_tc_open (data->device, data->map_name, context,
+                           data->keyfiles, data->hidden, data->system, veracrypt, data->pim,
+                           data->read_only, error);
+  bd_crypto_keyslot_context_free (context);
+  return ret;
 }
 
 gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
@@ -119,9 +161,17 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
                               GError            **error)
 {
   CryptoJobData *data = (CryptoJobData*) user_data;
-  return bd_crypto_bitlk_open (data->device, data->map_name,
-                               (const guint8*) data->passphrase->str, data->passphrase->len,
-                               data->read_only, error);
+  BDCryptoKeyslotContext *context = NULL;
+  gboolean ret = FALSE;
+
+  context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
+                                                      data->passphrase->len, error);
+  if (!context)
+    return FALSE;
+
+  ret = bd_crypto_bitlk_open (data->device, data->map_name, context, data->read_only, error);
+  bd_crypto_keyslot_context_free (context);
+  return ret;
 }
 
 gboolean bitlk_close_job_func (UDisksThreadedJob  *job,

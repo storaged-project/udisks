@@ -162,15 +162,14 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
                       UDisksLinuxBlockObject *object)
 {
   UDisksLinuxDevice *device;
-  guint64 metadata_size;
+  BDCryptoLUKSInfo *info = NULL;
   GError *error = NULL;
 
   device = udisks_linux_block_object_get_device (object);
 
-  metadata_size = bd_crypto_luks_get_metadata_size (g_udev_device_get_device_file (device->udev_device),
-                                                    &error);
-
-  if (error != NULL)
+  info = bd_crypto_luks_info (g_udev_device_get_device_file (device->udev_device),
+                              &error);
+  if (!info)
     {
       udisks_warning ("Error getting '%s' metadata_size: %s (%s, %d)",
                       g_udev_device_get_device_file (device->udev_device),
@@ -178,10 +177,13 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
                       g_quark_to_string (error->domain),
                       error->code);
       g_clear_error (&error);
+      udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), 0);
     }
+  else
+    udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), info->metadata_size);
 
   g_object_unref (device);
-  udisks_encrypted_set_metadata_size (UDISKS_ENCRYPTED (encrypted), metadata_size);
+  bd_crypto_luks_info_free (info);
 }
 
 static void
@@ -1036,6 +1038,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
   GString *effective_passphrase = NULL;
+  BDCryptoKeyslotContext *context = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -1116,6 +1119,30 @@ handle_resize (UDisksEncrypted       *encrypted,
                                                      invocation))
     goto out;
 
+  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
+    ;
+  else if (udisks_variant_lookup_binary (options, "passphrase", &effective_passphrase))
+    ;
+  else
+    effective_passphrase = NULL;
+
+  if (effective_passphrase)
+    {
+      context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) effective_passphrase->str,
+                                                          effective_passphrase->len,
+                                                          &error);
+      if (!context)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error resizing encrypted device %s: %s",
+                                             udisks_block_get_device (cleartext_block),
+                                             error->message);
+          goto out;
+        }
+    }
+
   job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (object),
                                          "encrypted-resize",
@@ -1128,21 +1155,13 @@ handle_resize (UDisksEncrypted       *encrypted,
       goto out;
     }
 
-  if (udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
-    ;
-  else if (udisks_variant_lookup_binary (options, "passphrase", &effective_passphrase))
-    ;
-  else
-    effective_passphrase = NULL;
-
   udisks_linux_block_encrypted_lock (block);
 
   /* TODO: implement progress parsing for udisks_job_set_progress(_valid) */
-  if (! bd_crypto_luks_resize_luks2_blob (udisks_block_get_device (cleartext_block),
-                                          size / 512,
-                                          effective_passphrase ? (const guint8*) effective_passphrase->str : NULL,
-                                          effective_passphrase ? effective_passphrase->len : 0,
-                                          &error))
+  if (! bd_crypto_luks_resize (udisks_block_get_device (cleartext_block),
+                               size / 512,
+                               context,
+                               &error))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1169,6 +1188,7 @@ handle_resize (UDisksEncrypted       *encrypted,
   g_clear_object (&object);
   g_clear_error (&error);
   udisks_string_wipe_and_free (effective_passphrase);
+  bd_crypto_keyslot_context_free (context);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
