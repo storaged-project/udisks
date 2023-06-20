@@ -148,7 +148,7 @@
         @level: The RAID level for the array.
         @name: The name for the array.
         @chunk: The chunk size (in bytes) or 0 if @level is <quote>raid1</quote>.
-        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>bitmap</parameter> (of type 'ay')
         @resulting_array: An object path to the object implementing the #org.freedesktop.UDisks2.MDRaid interface.
         @since: 2.0.0
 
@@ -165,6 +165,9 @@
         Before the array is created, all devices in @blocks are
         erased. Once created (but before the method returns), the RAID
         array will be erased.
+
+        The @bitmap option can have the same values as are accepted by
+        SetBitmapLocation.
     -->
     <method name="MDRaidCreate">
       <arg name="blocks" direction="in" type="ao"/>

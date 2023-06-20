@@ -561,6 +561,7 @@ handle_mdraid_create (UDisksManager         *_object,
   const gchar **disks = NULL;
   guint disks_top = 0;
   gboolean success = FALSE;
+  const gchar *option_bitmap = NULL;
 
   if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon,
                                                invocation,
@@ -765,7 +766,16 @@ handle_mdraid_create (UDisksManager         *_object,
     }
   disks[disks_top] = NULL;
 
-  if (!bd_md_create (array_name, arg_level, disks, 0, NULL, FALSE, arg_chunk, NULL, &error))
+  g_variant_lookup (arg_options, "bitmap", "^&ay", &option_bitmap);
+  if (!(g_strcmp0 (option_bitmap, "none") == 0 || g_strcmp0 (option_bitmap, "internal") == 0))
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Only values 'none' and 'internal' are currently supported for 'bitmap'.");
+      success = FALSE;
+      goto out;
+    }
+
+  if (!bd_md_create (array_name, arg_level, disks, 0, NULL, g_strcmp0 (option_bitmap, "internal") == 0, arg_chunk, NULL, &error))
     {
       g_prefix_error (&error, "Error creating RAID array: ");
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
