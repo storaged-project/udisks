@@ -486,8 +486,9 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         extra = BlockDev.CryptoLUKSExtra()
         extra.integrity = 'hmac(sha256)'
 
-        BlockDev.crypto_luks_format(device, 'aes-cbc-essiv:sha256', 512, passphrase,
-                                    None, 0, BlockDev.CryptoLUKSVersion.LUKS2, extra)
+        ctx = BlockDev.CryptoKeyslotContext(passphrase=passphrase)
+        BlockDev.crypto_luks_format(device, 'aes-cbc-essiv:sha256', 512, ctx,
+                                    0, BlockDev.CryptoLUKSVersion.LUKS2, extra)
 
     def _get_metadata_size_from_dump(self, disk):
         ret, out = self.run_command("cryptsetup luksDump %s" % disk)
