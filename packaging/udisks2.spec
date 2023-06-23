@@ -5,7 +5,7 @@
 %global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             2.99
+%global libblockdev_version             3.0
 
 %define with_btrfs                      1
 %define with_lsm                        1

@@ -153,7 +153,7 @@ initable_init (GInitable     *initable,
                GCancellable  *cancellable,
                GError       **error)
 {
-  BDPluginSpec lvm_plugin = { BD_PLUGIN_LVM, "libbd_lvm.so.2" };
+  BDPluginSpec lvm_plugin = { BD_PLUGIN_LVM, "libbd_lvm.so.3" };
   BDPluginSpec *plugins[] = { &lvm_plugin, NULL };
 
   if (! bd_is_plugin_available (BD_PLUGIN_LVM))
