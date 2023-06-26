@@ -1063,7 +1063,7 @@ handle_can_resize (UDisksManager         *object,
 {
   GError *error = NULL;
   gchar *required_utility = NULL;
-  BDFsResizeFlags mode;
+  BDFSResizeFlags mode;
   gboolean ret;
 
   ret = bd_fs_can_resize (type, &mode, &required_utility, &error);
