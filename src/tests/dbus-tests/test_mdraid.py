@@ -77,16 +77,21 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
     def _zero_superblock(self, device):
         self.run_command('mdadm --zero-superblock --force %s' % device)
 
-    def _array_create(self, array_name):
+    def _array_create(self, array_name, bitmap=None):
         # set the 'force' cleanup now in case create fails
         self.addCleanup(self._force_remove, array_name, [m.path for m in self.members])
 
+        d = self.no_options
+        if bitmap:
+            d = dbus.Dictionary(signature='sv')
+            d['bitmap'] = self.str_to_ay(bitmap)
+
         manager = self.get_object('/Manager')
         with wait_for_action('resync'):
+
             array_path = manager.MDRaidCreate(dbus.Array(m.obj for m in self.members),
                                               self.level, array_name, self.chunk_size,
-                                              self.no_options,
-                                              dbus_interface=self.iface_prefix + '.Manager')
+                                              d, dbus_interface=self.iface_prefix + '.Manager')
 
         array = self.bus.get_object(self.iface_prefix, array_path)
         self.assertIsNotNone(array)
@@ -355,21 +360,18 @@ class RAID1TestCase(RAIDLevel):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_bitmap_location(self):
         array_name = 'udisks_test_bitmap'
-        array = self._array_create(array_name)
+        array = self._array_create(array_name, bitmap='internal')
 
         # get md_name ('/dev/md12X')
         md_name = os.path.realpath('/dev/md/%s' % array_name).split('/')[-1]
 
-        # change bitmap location to 'internal'
-        loc = self.str_to_ay('internal')
-
-        array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
-
+        # check that internal bitmap was forced
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
+        self.assertStartswith(sys_bitmap, '+')
 
-        # change bitmap location back to 'none'
+        # change bitmap location to 'none'
         loc = self.str_to_ay('none')
 
         array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
@@ -377,6 +379,17 @@ class RAID1TestCase(RAIDLevel):
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
+        self.assertEqual(sys_bitmap, 'none')
+
+        # change bitmap location back to 'internal'
+        loc = self.str_to_ay('internal')
+
+        array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
+
+        dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
+        sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
+        dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
+        self.assertStartswith(sys_bitmap, '+')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_request_action(self):
