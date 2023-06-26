@@ -1881,7 +1881,7 @@ handle_resize (UDisksFilesystem      *filesystem,
   UDisksState *state = NULL;
   const gchar *probed_fs_usage = NULL;
   const gchar *probed_fs_type = NULL;
-  BDFsResizeFlags mode = 0;
+  BDFSResizeFlags mode = 0;
   const gchar *action_id = NULL;
   const gchar *message = NULL;
   uid_t caller_uid;

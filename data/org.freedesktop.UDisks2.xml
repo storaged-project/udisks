@@ -87,7 +87,7 @@
 
         Tests for availability to resize the given filesystem.
         The mode flags indicate if growing and/or shriking resize is available if mounted/unmounted.
-        The mode corresponds to bitwise-OR combined BDFsResizeFlags of the libblockdev FS plugin:
+        The mode corresponds to bitwise-OR combined BDFSResizeFlags of the libblockdev FS plugin:
         BD_FS_OFFLINE_SHRINK = 2, shrinking resize allowed when unmounted
         BD_FS_OFFLINE_GROW = 4, growing resize allowed when unmounted
         BD_FS_ONLINE_SHRINK = 8, shrinking resize allowed when mounted
