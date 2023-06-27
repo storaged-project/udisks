@@ -1,22 +1,12 @@
 LOCALIZATION
 ============
 
-UDisks localization is done in the Zanata translation platform.
-UDisks project is located here:
+UDisks localization is currently in transition to the GNOME Project Translation
+Platform. While new strings are synchronized to the translation system automatically,
+pushing finished translations back to the UDisks git repository currently doesn't
+work. Please open a pull request (on Github) manually in the meantime.
 
-  https://fedora.zanata.org/project/view/udisks
+  https://l10n.gnome.org/module/udisks/
 
-You need a Fedora account (FAS) to login, if you don't have one, you can create
-it here:
-
-  https://admin.fedoraproject.org/accounts/
-
-Documentation for translators on Zanata:
-
-  http://docs.zanata.org/en/latest/user-guide/translator-guide/
-
-PO files in this repository (directory "po") are downloaded from Zanata for
-every release just for archive generation and as a backup. Please don't open
-pull requests or send patches with new translations here. We can't manually
-upload translation files to Zanata and deal with conflicts in languages we
-don't speak.
+The transition progress can be tracked in this ticket:
+https://gitlab.gnome.org/Infrastructure/damned-lies/-/issues/383
