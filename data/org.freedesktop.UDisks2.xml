@@ -2749,9 +2749,9 @@
          @consistent: Whether the filesystem is undamaged.
          @since: 2.7.2
 
-         Checks the filesystem for consistency.
+         Checks the filesystem for consistency avoiding any modifications or repairs.
 
-         Unsupported filesystems result in an error.
+         Mounted or unsupported filesystems will result in an error.
     -->
     <method name="Check">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -2765,7 +2765,7 @@
 
          Tries to repair the filesystem.
 
-         Unsupported filesystems result in an error.
+         Mounted or unsupported filesystems will result in an error.
     -->
     <method name="Repair">
       <arg name="options" direction="in" type="a{sv}"/>
