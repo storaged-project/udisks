@@ -10,10 +10,6 @@ from packaging.version import Version
 
 import udiskstestcase
 
-import gi
-gi.require_version('BlockDev', '2.0')
-from gi.repository import BlockDev
-
 
 class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 
