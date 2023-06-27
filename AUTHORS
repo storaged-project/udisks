@@ -8,7 +8,10 @@ Contributors (In alphabetical order):
   A-Shahbazi <a.shahbazi@yandex.com>
   Adam Williamson <awilliam@redhat.com>
   Alban Browaeys <prahal@yahoo.com>
+  Alberto Garcia <berto@igalia.com>
+  alfsamsung <alfsamsung@hotmail.com>
   Andrea Azzarone <andrea.azzarone@canonical.com>
+  Anders Jonsson <anders.jonsson@norsjovallen.se>
   Andreas Müller <schnitzeltony@gmail.com>
   Andrey Jr. Melnikov <temnota.am@gmail.com>
   Ayan George <ayan.george@canonical.com>
@@ -23,11 +26,15 @@ Contributors (In alphabetical order):
   Denis Kasak <dkasak@termina.org.uk>
   Dick Marinus <dick@mrns.nl>
   Dmitrijs Ledkovs <dmitrijs.ledkovs@canonical.com>
+  Dmitry V. Levin <ldv@strace.io>
   Dominika Hodovska <dhodovsk@redhat.com>
   Edward Sheldrake <ejsheldrake@gmail.com>
   Evan Dandrea <evand@ubuntu.com>
   Evan Nemerson <evan@coeus-group.com>
   Felix Yan <felixonmars@archlinux.org>
+  Fernando Ramos <greenfoo@u92.eu>
+  Florian Ziegler <florian.ziegler@posteo.de>
+  Frederick Grose <fgrose@sugarlabs.org>
   Gris Ge <fge@redhat.com>
   Harry Mallon <hjmallon@gmail.com>
   Hielke Christian Braun <hcb@unco.de>
@@ -41,6 +48,7 @@ Contributors (In alphabetical order):
   João Paulo Rechi Vita <jprvita@endlessm.com>
   Kai Lüke <kailueke@riseup.net>
   Kylie McClain <somasis@exherbo.org>
+  lilinjie <lilinjie@uniontech.com>
   Linus Torvalds <torvalds@linux-foundation.org>
   Lubomir Rintel <lkundrak@v3.sk>
   Malte Kraus <malte.kraus@suse.com>
@@ -50,6 +58,7 @@ Contributors (In alphabetical order):
   Martin Blanchard <tchaik@gmx.com>
   Martin Hatina <mhatina@redhat.com>
   Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
+  Matheus Barbosa <mdpb.matheus@gmail.com>
   Mathieu Trudel-Lapierre <mathieu.trudel-lapierre@canonical.com>
   Matt Zimmerman <mdz@ubuntu.com>
   Matthew Leeds <matthew.leeds@endlessm.com>
@@ -59,7 +68,11 @@ Contributors (In alphabetical order):
   Michael Catanzaro <mcatanzaro@gnome.org>
   Mike Frysinger <vapier@gentoo.org>
   Nicolas Lécureuil <nicolas.lecureuil@free.fr>
+  NorwayFun <72336380+NorwayFun@users.noreply.github.com>
+  olf <Olf0@users.noreply.github.com>
+  Oliver Kiddle <okiddle@yahoo.co.uk>
   Ondrej Holy <oholy@redhat.com>
+  orbea <orbea@riseup.net>
   Pawel Baldysiak <pawel.baldysiak@intel.com>
   Pawel Wieczorkiewicz <pwieczorkiewicz@suse.de>
   Peter Hatina <phatina@gmail.com>, <phatina@redhat.com>
@@ -87,16 +100,17 @@ Contributors (In alphabetical order):
   Timo Gurr <timo.gurr@gmail.com>
   Ting-Wei Lan <lantw@src.gnome.org>
   Tom Yan <tom.ty89@gmail.com>
-  Tomas Bzatek <tbzatek@redhat.com>
   Tomas Smetana <tomas@smetana.name>, <tsmetana@redhat.com>
   Tony Asleson <tasleson@redhat.com>
   Torstein Husebø <torstein@huseboe.net>
   Tristan Van Berkom <tristan.vanberkom@codethink.co.uk>
   tuxce <tuxce.net@gmail.com>
   udeved <artoo@manjaro.org>
+  videlanicolas <videlanicolas@gmail.com>
   Vincent Untz <vuntz@gnome.org>
   Ville Skyttä <ville.skytta@iki.fi>
   Vojtech Trefny <vtrefny@redhat.com>
-  Vratislav Podzimek <vpodzime@redhat.com>
-  Will Thompson <will@willthompson.co.uk>
+  Vratislav Podzimek <v.podzimek@mykolab.com>, <vpodzime@redhat.com>
+  Will Thompson <will@willthompson.co.uk>, <wjt@endlessm.com>, <wjt@endlessos.org>
+  Yuri Chornoivan <yurchor@ukr.net>
   zhmars <18466397+zhmars@users.noreply.github.com>
