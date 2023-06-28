@@ -330,6 +330,9 @@ fi
 %endif
 
 %changelog
+* Wed Jun 28 2023 Tomas Bzatek <tbzatek@redhat.com> - 2.10.0-1
+- Version 2.10.0
+
 * Thu Feb 04 2021 Tomas Bzatek <tbzatek@redhat.com> - 2.9.2-1
 - Version 2.9.2
 
