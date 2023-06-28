@@ -1,17 +1,402 @@
 ---------------------------
-udisks 2.10.0 (unreleased)
+udisks 2.10.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
+This release brings large number of internal changes, while keeping the promise
+of API stability. This development cycle was mostly driven by libblockdev 3.0
+API overhaul that brought these notable changes:
+ - Partitioning was ported to libfdisk
+ - kbd and vdo libblockdev plugins were removed and so were zram, bcache
+   and vdo udisks modules
+ - Definition of supported filesystems was moved to libblockdev and filesystem
+   operations were unified
+
+Native NVMe support has been added through libnvme bringing feature parity with
+ATA drives such as health monitoring, device self-tests, secure erase and
+extended identification. Basic awareness for NVMe over Fabrics and a simple
+initiator were added as well. In a simplified D-Bus interface view, NVMe
+controllers are mapped to drive objects and NVMe namespaces to block objects.
+
+Syntax of configurable mount options was extended to separate filesystem
+signature and filesystem driver used for mounting. A new optional key was
+introduced to define priorities of filesystem drivers.
+
+A number of workarounds was placed around the org.freedesktop.UDisks2.Filesystem.Size
+property value retrieval to avoid excessive I/O traffic whenever possible.
+Support for the new ID_FS_LASTBLOCK and ID_FS_BLOCKSIZE properties brought
+by util-linux-2.39 release was added to further lower the need for any I/O.
+
+The org.freedesktop.UDisks2.Block.Format() method now takes optional arguments
+that are passed down to the corresponding 'mkfs' tool. It is a caller
+responsibility to provide sane arguments that mix correctly with libblockdev
+defaults.
+
+The org.freedesktop.UDisks2.Filesystem.Mount() method now offers mounting
+on behalf of a foreign UID. A new polkit rule was introduced for such a case.
+
+Further notable fixes and improvements:
+ - bash and zsh completion enhancements
+ - lvm2 module uevent handling improvements
+ - ATA Secure Erase is now allowed only on top-level block objects
+ - extra iSCSI node parameters are now honoured properly
+ - FIPS mode fixes
+ - added support for resolving devices by PARTLABEL and PARTUUID
+ - full support for setting filesystem and partition UUIDs
+ - dynamic mountpoint name sanitization and ACL fixes
+ - added support for LVM2 RAID
+ - UUID of Bitlocker volumes is now properly exposed
+ - added an option to force/avoid creation of mdraid write-intent bitmap
+
 Changes since 2.9.2:
-(TODO: make shortlog)
+
+Alberto Garcia (5):
+      udiskslinuxfilesystem: Sanitize label when creating the mount point
+      tests: Test that labels are sanitized when creating mount points
+      Add 'mkfs-args' to Block.Format()
+      Extend Filesystem.Mount() to allow mounting on behalf of another user
+      tests: Fix test_mountpoint_utf8 with EXFAT
+
+Anders Jonsson (2):
+      Update Swedish translation
+      Update Swedish translation
+
+Debarshi Ray (2):
+      udiskslinuxfilesystem: Fix formatting
+      udiskslinuxfilesystem: Tighten the fallback for kernels without ACL
+
+Dmitry V. Levin (1):
+      80-udisks2.rules: fix warnings reported by udevadm verify
+
+Fernando Ramos (2):
+      udisksctl: fix segfault
+      udisksctl: fix autocomplete for power-off command
+
+Florian Ziegler (1):
+      Ignore "Extended Boot Loader" GPT partition
+
+Frederick Grose (1):
+      80-udisks2.rules: Ignore macboot partition from livecd-tools
+
+Kai Lüke (1):
+      Update GPT partition types from the Discoverable Partitions Spec
+
+Karl Ove Hufthammer (1):
+      Add Norwegian Nynorsk translation
+
+Marius Vollmer (7):
+      lvm2: Only install results of most recently started udpates
+      lvm: Enhancements for LVM2 RAID support
+      udev: Also ignore "zram*" block devices
+      lvm2: Make as many subvolumes as PVs are given during creation
+      lvm2: Add "pvs" option to LogicalVolume.Resize
+      block: Mark format-mkfs jobs as not cancellable
+      mdraid: Add 'bitmap' option to MDRaidCreate method
+
+Matheus Barbosa (1):
+      Update Brazilian Portuguese translation
+
+NorwayFun (2):
+      Georgian translation
+      Update ka.po
+
+Oliver Kiddle (2):
+      add a completion function for zsh
+      when printing options for completion iterate over existing structures
+
+Piotr Drąg (3):
+      Update POTFILES.in
+      Update POTFILES.in
+      Update Polish translation
+
+Sebastien Bacher (1):
+      Use the mkfs command to format exfat partitions
+
+Tomas Bzatek (211):
+      spec: Remove VDO support
+      udiskslinuxdevice: Provide a way to read arbitrary sysfs attributes
+      mdraid: Use newly added udisks_linux_device_read_sysfs_attr()
+      udisksstate: Use udisks_daemon_util_trigger_uevent()
+      Remove the standalone VDO module
+      udiskslinuxblockobject: Add safety checks for UDisksLinuxBlock interface
+      udiskslinuxfsinfo: Add dosfstools >= 4.2 quirks
+      udiskslinuxblock: Re-read partition table after creating FAT filesystem
+      udiskslinuxdriveata: Use GTask to apply configuration in a thread
+      modules: Limit module name to alphanumeric characters and -_ separators
+      tests: Extend module tests with invalid characters
+      tests: Do not dist config_h.py
+      doc: Remove lingering references to VDO
+      spec: Do not build udisks2-zram for any RHEL release
+      udiskslinuxfilesystemhelpers: Fix leaking string in case g_mkdtemp() fails
+      udiskslinuxmdraidobject: Optimize unused data out from the g_io_channel_read_to_end() call
+      udiskslinuxmdraidobject: Handle source attach failure gracefully
+      tests: Mark Drive.ATA tests as unstable
+      tests: Handle missing /dev/disk/by-path gracefully
+      daemon: Link with libblkid
+      udiskslinuxblock: Port block identifiers matching to libblkid
+      tests: Add complex filesystem labels fstab mount tests
+      tests: Add complex partlabel fstab filesystem tests
+      tests: Enable f2fs label tests
+      udiskslinuxprovider: Filter out spurious uevents
+      tests: Respect custom method call timeouts
+      tests: Extend iscsi method call timeouts
+      udiskslinuxmanager: Trigger uevent on a newly created mdraid array
+      build: Introduce the HAVE_LIBBLOCKDEV3 define
+      udiskslinuxblock: Do not force wipe when exclusive lock on a block device cannot be acquired
+      daemon: Adapt to bd_fs_wipe() API changes
+      udiskslinuxblockobject: Report success from udisks_linux_block_object_reread_partition_table()
+      udiskslinuxfsinfo: Add udisks_linux_fsinfo_creates_protective_parttable()
+      udiskslinuxblock: Trigger uevent on nested partitions after mkfs
+      data: Clarify org.freedesktop.UDisks2.Block.Format() corner cases
+      tests: Add filesystem tests for protective MBR table overwrite (udf, vfat)
+      tests: Sleep after external mount operation
+      udiskslinuxswapspace: Trigger uevent after setting label
+      udiskslinuxblock: Handle missing parent device while looking up drive for block
+      udisksmountmonitor: Tweak the mount list update and difference
+      udisksmountmonitor: Skip mount_path checks for swap records when comparing
+      mount options: Always use errors=remount-ro for ext filesystems
+      mount options: Add ntfs3 kernel driver options
+      udiskslinuxfilesystem: Add quirk to prefer the new 'ntfs3' driver
+      lvm2: Fix jobhelpers.h header guard
+      udiskslinuxencryptedhelpers: Fix the header guard typo
+      udiskslinuxmdraidhelpers: Fix the header guard typo
+      udiskslinuxfilesystemhelpers: Fix the header guard typo
+      udisksdaemonutil: Silence the alignment warning
+      build: Remove warnings unknown to clang
+      tests: Adapt to clang differences when causing a segfault
+      lvm2: Fix insufficient list allocation
+      udiskslinuxblockobject: Hold object reference within UDisksMountMonitor signal handlers
+      udiskslinuxmanager: Fix access to unowned GError
+      udiskslinuxmanager: Prevent double free of UDisksSimpleJob on error
+      spec: Require polkit for the daemon
+      udiskslinuxblock: Fix leaking cleartext block interface
+      tests: Add LVM2 teardown object existence checks
+      udiskslinuxmountoptions: Do not free static daemon resources
+      udisksctl: Add extra guards around retrieved objects
+      lvm2: Document empty pool_name allowance for CreateVDOVolume()
+      udiskslinuxpartitiontable: Fix GError ownership
+      udiskslinuxpartition: Fix GError ownership
+      udiskslinuxencrypted: Fix GError ownership
+      udiskslinuxfilesystem: Fix GError ownership
+      udiskslinuxfilesystembtrfs: Trigger explicit uevent on added/removed volume
+      udisksstate: Remove udisks_state_check_sync()
+      btrfs: Fix completion of the GDBus method invocation handler
+      udisksata: Move the low-level PM state call
+      udiskslinuxdriveata: Move the low-level PM state call away
+      udiskslinuxswapspace: Trigger uevent on swap start/stop
+      udiskslinuxprovider: Only update related objects on utab changes
+      udiskslinuxfilesystem: Make the 'size' property retrieval on-demand
+      tests: Remove filesystem _test_fstab_label external mount tests
+      daemon: Require libmount >= 2.30
+      doc: Fix @since: annotations
+      modules/iscsi: Add missing linker dependency
+      modules/lsm: Add missing linker dependency
+      modules/zram: Add missing linker dependency
+      Revert "build: Introduce the HAVE_LIBBLOCKDEV3 define"
+      build: Require libblockdev-3.0
+      daemon: Require libblockdev-nvme
+      daemon: Make libblockdev plugin initialization error fatal
+      nvme: Add basic NVMe support
+      tests: Add basic NVMe tests
+      doc: Add NVMe Controller and NVMe Namespace interfaces
+      doc: Misc. fixes
+      udiskslinuxprovider: Catch unhandled change uevents for unmatched drive objects
+      nvme: Add Health Information retrieval
+      Revert "udiskslinuxfilesystem: Add quirk to prefer the new 'ntfs3' driver"
+      Revert "mount options: Add ntfs3 kernel driver options"
+      udiskslinuxfilesystem: Refactor fstab mounting
+      udiskslinuxfilesystem: Refactor dynamic mounting out
+      udiskslinuxfilesystem: Accept multiple mount options entries
+      udiskslinuxmountoptions: Implement filesystem signature vs. drivers awareness
+      udiskslinuxfilesystem: Add ntfs3 to well-known filesystems
+      udiskslinuxfilesystem: Add some more well-known filesystems
+      builtin_mount_options: Add ntfs3 definitions
+      tests: Reflect fs signature vs. fs driver changes
+      doc: Stress that the @fstype argument for Mount() acts as an override
+      doc: Document the enhanced configurable mount options
+      nvme: Add controller self-test operations and status
+      nvme: Add controller sanitize operation
+      tests: Add nvme SMART/health and sanitize tests
+      nvme: Add namespace Format method
+      tests: Add namespace Format tests
+      daemon: Return proper error on NULL GUdevDevice instead of an assert
+      docs: Clarify the Manager.SupportedFilesystems property
+      tests: Mark loop partscan tests as unstable
+      Drop the zram and bcache modules
+      udisksstate: Provide more context on realpath() errors
+      udiskslinuxblock: Refactor handle_format()
+      doc: Clarify Block.Format() dry-run option
+      udiskslinuxblock: Handle special fs types 'dos', 'gpt' and 'empty' in handle_format() separately
+      udiskslinuxblock: Only permit ATA Secure Erase during Format() on a whole block device
+      udiskslinuxdriveata: Acquire a BSD lock for ATA Secure Erase
+      tests: Create required directories for integration tests
+      udiskslinuxblock: Use bd_fs_clean() instead of bd_fs_wipe()
+      udiskslinuxmanager: Port CanFormat() to bd_fs_can_mkfs()
+      udiskslinuxmanager: Port SupportedFilesystems to bd_fs_supported_filesystems()
+      udisksconfigmanager: Move get_supported_encryption_types() from udiskslinuxfsinfo
+      udiskslinuxblock: Port Format() to the new libblockdev 3.0 filesystem API
+      udiskslinuxfilesystem: Port SetLabel() to the new libblockdev 3.0 filesystem API
+      daemon: Drop udiskslinuxfsinfo
+      tests: Adapt filesystem tests to the new libblockdev 3.0 filesystem API
+      tests: Adapt basic Manager tests to the new libblockdev 3.0 filesystem API
+      udiskslinuxnvmenamespace: Fix FormatNamespace() error check
+      udiskslinuxmanager: Remove unused mutex
+      nvme: Basic fabrics support
+      tests: Add basic NVMeoF connection test
+      nvme: Move the Transport property from Controller to the Fabrics interface
+      nvme: Add methods to set system-wide Host NQN and Host ID
+      tests: Add basic NVMe Host NQN tests
+      tests: Drop the NVMe Host NQN discovery for simple connect
+      tests: Skip NVMe HostNQN tests on non-system prefixes
+      udiskslinuxnvmenamespace: Add metadata_size LBAFormat property
+      udiskslinuxnvmecontroller: Check capabilities for self-test and sanitize log retrieval
+      udiskslinuxnvmenamespace: Avoid retrieving namespace info when format progress reporting is unsupported
+      udiskslinuxnvmenamespace: Avoid reading the 'uuid' sysfs attr
+      udiskslinuxfilesystem: Fix filesystem driver list iteration
+      tests: Fix NTFSCommonTestCase ntfs implementation detection
+      udiskslinuxnvmenamespace: Fix a memory leak
+      iscsi: Always set auth info
+      tests: Add bad auth test for iscsi
+      nvme: Fix progress jobs cleanup
+      udiskslinuxmanager: Add resolving devices by partuuid/partlabel
+      tests: Add tests for resolving partlabel/partuuid
+      tests: Fix LIO target config auth
+      tests: Clean the discovered test target iscsid node cache
+      tests: Test iscsi noauth in test_login_chap_auth
+      tests: Restart iscsid on every InitiatorName change
+      iscsi: Document the need of iscsid service restart after changing InitiatorName
+      tests: Remove resolve_device tests involving partition creation
+      udiskslinuxfilesystem: Create mounpoint only after mount options computation
+      udiskslinuxfilesystem: Send explicit Size property invalidation on uevent
+      doc: Clarify the org.freedesktop.UDisks2.Filesystem.Size property value retrieval
+      udiskslinuxblock: Fix partition table detection in the initial format wipe
+      udiskslinuxnvmecontroller: Fix some memleaks
+      udiskslinuxdriveobject: Guard the internal device list
+      tests: Remove the job start time check
+      tests: Fix UdisksTestCase.assertHasIface()
+      tests: Wait for the modprobed scsi_debug drives to appear
+      tests: Narrow LIO devices rescan to specific lvm raid test cases
+      daemon: Remove UDisksObject interfaces more atomically
+      lvm2: Fix leaking UDisksLogicalVolume
+      spec: Tweak the filesystem tools deps
+      build: Add explicit check for msgfmt
+      udiskslinuxnvmecontroller: Turn subsysnqn into a bytestring
+      nvme: Clarify Controller.NVMeRevision values
+      tests: Fix nvme eui64 string check
+      tests: Fix vfat protective MBR table detection
+      tests: Use libblockdev filesystem definitions
+      udiskslinuxfilesystem: Add support for setting filesystem UUID
+      udiskslinuxblock: Add support for setting filesystem UUID during Format()
+      udiskslinuxswapspace: Add support for setting UUID
+      tests: Add filesystem UUID tests
+      tests: Add swapspace UUID tests
+      udiskslinuxpartition: Add support for setting partition UUID
+      udiskslinuxpartitiontable: Add support for setting UUID on partition creation
+      tests: Add partition UUID tests
+      udiskslinuxpartition: Reword some error messages
+      udiskslinuxnvmecontroller: Fix a memleak
+      iscsi: Set node parameters before the Login/Logout action
+      tests: Disallow MD5 for iscsi CHAP login
+      tests: Fix `eject` message matching
+      tests: Extend timeout for LUKS integrity tests
+      lvm2: Properly initialize stack-allocated structs
+      tests: Make sure the new VG for LVM VDO tests properly reports free space
+      lvm2: Trigger uevent sync on block devices when creating new VG
+      tests: Use longer LUKS passphrases
+      integration-test: Use longer LUKS passphrases
+      tests: Fix FailsystemTestCase availability detection
+      nvme: Sync fabrics options with libblockdev
+      Add DOAP project definition file
+      tests: Skip f2fs sector size tests on newer f2fs-tools
+      udiskslinuxpartitiontable: Reprobe the device in case of missing udev attributes
+      tests: Skip protective parttable tests if none was created
+      tests: Forcefully set scsi_debug cd drive as read-only
+      tests: Increase device size for XFS integration tests
+      tests: Skip nilfs2 test_userspace_mount_options
+      udiskslinuxblock: Read Bitlk UUID from the device if not provided by udev
+      tests: Add Bitlk UUID check
+      udiskslinuxfilesystem: Use udev ID_FS_SIZE if available
+      udiskslinuxfilesystem: Do not use ID_FS_SIZE
+      mount options: Sync ntfs3 options with kernel 6.4-rc7
+      docs: Clarify mounted filesystem check/repair scenarios
+      tests: Enhance mdraid bitmap tests
+
+Vojtech Trefny (43):
+      tests: Fix checking if VFAT is resizable
+      udiskslinuxpartition: Trigger uevent after changing partition type
+      Set default LUKS version to LUKS2
+      dbus_tests: Fix including non-existing tests based on tags
+      Add (no)autodefrag to list of allowed btrfs mount options
+      tests: Use packaging.version instead of distutils.version
+      tests: Use shutil.which instead of distutils.spawn.find_executable
+      tests: Use BlockDev.utils_get_linux_version instead of os.uname
+      Fix checking for VFAT resize support with older libblockdev
+      Fix tests config with no modules enabled
+      Set LogicalVolume.Type to "vdopool" for LVM VDO pools
+      tests: Do not check that writeAmplificationRatio is bigger than 0
+      Fix parsing key file from /etc/crypttab
+      misc: Add a playbook for installing test dependencies
+      ci: Add GitHub actions for running csmock and rpmbuild tests
+      Adjust to new libblockdev API for generic FS functions
+      Use bd_fs_get_size to get filesystem size
+      udiskslinuxnvmenamespace: Include errno.h to fix compilation on CentOS 8
+      tests: Use ext4 instead of xfs in non-filesystem tests
+      tests: Create a bigger partition for test_mount_fstab_partlabel
+      ci: Update Fedora versions for RPM build tests
+      Do not use bd_crypto_luks_uuid to get UUID of LUKS devices
+      Fix some expected error messages in FS integration tests
+      tests: Fix test for CanFormat
+      tests: Skip _test_fstab_label with VFAT on all versions
+      Adjust to new libblockdev part API
+      spec: Change license string to the SPDX format required by Fedora
+      misc: Remove "warn: false" from Ansible "command"
+      tests: Use bd_crypto_luks_info instead of bd_crypto_luks_uuid
+      Use bd_loop_info to get autoclear and backing file for loop devices
+      Allow specifying sector size for LoopSetup
+      tests: Do not deactivate LVs before resize in test_10_linear
+      tests: Fix expected error when creating an invalid btrfs RAID
+      ci: Update chroots for RPM builds
+      Remove the separate configure option for LVM cache support
+      Use 0 instead of BD_LVM_DEFAULT_CHUNK_SIZE for default chunk size
+      packaging: Remove lvm2-devel from build dependencies
+      Do not disable libblockdev init checks
+      Adjust to the latest bd_lvm_lvactivate API change
+      Adjust to libblockdev 3.0 crypto plugin API changes
+      Use BDFSResizeFlags instead of BDFsResizeFlags
+      Bump required version of libblockdev to 3.0
+      tests: Require BlockDev 3.0 from GI
+
+Will Thompson (1):
+      udisksclient: Make get_block_for_drive deterministic
+
+Yuri Chornoivan (1):
+      Update Ukrainian translation
+
+alfsamsung (2):
+      udiskslinuxdriveata:Fix reading IO stats on ata_refresh_smart_sync
+      udiskslinuxdriveata:Fix updating IO stats on ata_refresh_smart_sync
+
+lilinjie (2):
+      fix typo
+      fix typo
+
+olf (1):
+      Fix two comments (one copy'o, one typo)
+
+orbea (3):
+      modules/btrfs: Add missing dependency
+      modules/bcache: Add missing dependency
+      modules/lvm2: Add missing dependency
+
+videlanicolas (1):
+      Fix typo
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2023-06-28
 
 ---------------------------
 udisks 2.9.2

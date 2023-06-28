@@ -25,11 +25,6 @@ MAKING RELEASES
 
 Checklist for making a release:
 
- - Pull translations from Zatana ("zanata-cli pull")
-   - Remember to add new po/*.po files and update po/LINGUAS
-   - Make sure that you pushed the POT file a couple of weeks before
-     this and that no new strings has been added
-
  - Update the NEWS file
 
  - Update the AUTHORS file if we have any new authors since last release.  The
@@ -80,14 +75,12 @@ TRANSLATIONS
 
 - Don't use VPATH build (To be fixed)
 
-- Push new strings for translation to Zanata:
-  - Run 'make -C po udisks2.pot' to extract translatable strings
-  - Run 'zanata-cli push' to submit the template
+- Check that Github -> Damned Lies synchronization works and that new strings
+  show up on the l10n module page: https://l10n.gnome.org/module/udisks/
 
-- Pull translations from Zanata:
-  - Run 'zanata-cli pull'
-
-- Commit those changes in po/
+- Check that recent commits to the po/ directory done by the GNOME
+  Infrastructure Automation Bot (@gnomesysadmins) reflect the translation
+  status on the l10n page
 
 COMMITTING CODE
 ===============
