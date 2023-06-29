@@ -120,7 +120,11 @@ AC_ARG_ENABLE(daemon,
               enable_daemon=yes)
 AM_CONDITIONAL(ENABLE_DAEMON, test "$enable_daemon" != no)
 
-GOBJECT_INTROSPECTION_CHECK([0.6.2])
+# GObject-introspection
+found_introspection=no
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK],
+         [GOBJECT_INTROSPECTION_CHECK([0.6.2])],
+         [AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = "xyes")])
 
 # Behavior
 #
