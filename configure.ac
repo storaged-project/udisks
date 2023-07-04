@@ -28,10 +28,8 @@ AM_SILENT_RULES([yes])
 AX_CHECK_ENABLE_DEBUG([no], [DEBUG], [NDEBUG])
 
 AC_PROG_CC
-AC_PROG_CC_C99
-AC_ISC_POSIX
-AC_HEADER_STDC
-AC_PROG_LIBTOOL
+
+LT_INIT
 
 AC_PATH_PROG([BASH], [bash])
 if test -z "$BASH"; then
@@ -120,7 +118,11 @@ AC_ARG_ENABLE(daemon,
               enable_daemon=yes)
 AM_CONDITIONAL(ENABLE_DAEMON, test "$enable_daemon" != no)
 
-GOBJECT_INTROSPECTION_CHECK([0.6.2])
+# GObject-introspection
+found_introspection=no
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK],
+         [GOBJECT_INTROSPECTION_CHECK([0.6.2])],
+         [AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = "xyes")])
 
 # Behavior
 #
@@ -294,10 +296,8 @@ if test "x$enable_lvm2" = "xyes" \
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-lvm presence])
-  AC_TRY_COMPILE([#include <blockdev/lvm.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_lvm2=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/lvm.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_lvm2=yes],[AC_MSG_RESULT([no])
                  have_lvm2=no])
   CFLAGS=$SAVE_CFLAGS
   LDFLAGS=$SAVE_LDFLAGS
@@ -325,11 +325,8 @@ if test "x$enable_iscsi" = "xyes" \
                   [have_iscsi=no])
   if test "x$have_iscsi" = "xyes"; then
     AC_MSG_CHECKING([whether libiscsi.h defines iscsi_err])
-    AC_TRY_COMPILE([#include <libiscsi.h>],
-                   [int err = ISCSI_SUCCESS;],
-                   [AC_MSG_RESULT([yes])
-                    AC_DEFINE([HAVE_LIBISCSI_ERR], [1], [libiscsi error states])],
-                   [AC_MSG_RESULT([no])])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <libiscsi.h>]], [[int err = ISCSI_SUCCESS;]])],[AC_MSG_RESULT([yes])
+                    AC_DEFINE([HAVE_LIBISCSI_ERR], [1], [libiscsi error states])],[AC_MSG_RESULT([no])])
   fi
 
   # libiscsi
@@ -372,11 +369,9 @@ if test "x$enable_btrfs" = "xyes" \
     #   - accepted by the compiler, rejected by the preprocessor!
     #   - proceeding with the compiler's result
     AC_MSG_CHECKING(["libblockdev-btrfs presence"])
-    AC_TRY_COMPILE([#include <blockdev/btrfs.h>], [],
-                   [AC_MSG_RESULT([yes])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/btrfs.h>]], [[]])],[AC_MSG_RESULT([yes])
                     AC_DEFINE(HAVE_BTRFS, 1, [Define, if libblockdev-btrfs is available])
-                    have_btrfs=yes],
-                   [AC_MSG_RESULT([no])
+                    have_btrfs=yes],[AC_MSG_RESULT([no])
                     have_btrfs=no])
     CFLAGS=$SAVE_CFLAGS
     LDFLAGS=$SAVE_LDFLAGS
@@ -431,10 +426,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-part presence])
-  AC_TRY_COMPILE([#include <blockdev/part.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_part=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/part.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_part=yes],[AC_MSG_RESULT([no])
                  have_part=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -451,10 +444,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-loop presence])
-  AC_TRY_COMPILE([#include <blockdev/loop.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_loop=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/loop.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_loop=yes],[AC_MSG_RESULT([no])
                  have_loop=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -471,10 +462,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-swap presence])
-  AC_TRY_COMPILE([#include <blockdev/swap.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_swap=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/swap.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_swap=yes],[AC_MSG_RESULT([no])
                  have_swap=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -491,10 +480,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-mdraid presence])
-  AC_TRY_COMPILE([#include <blockdev/mdraid.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_mdraid=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/mdraid.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_mdraid=yes],[AC_MSG_RESULT([no])
                  have_mdraid=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -511,10 +498,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-fs presence])
-  AC_TRY_COMPILE([#include <blockdev/fs.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_fs=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/fs.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_fs=yes],[AC_MSG_RESULT([no])
                  have_fs=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -531,10 +516,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-crypto presence])
-  AC_TRY_COMPILE([#include <blockdev/crypto.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_crypto=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/crypto.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_crypto=yes],[AC_MSG_RESULT([no])
                  have_crypto=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -551,10 +534,8 @@ if test "x$enable_daemon" = "xyes"; then
   CFLAGS="$GLIB_CFLAGS"
   LDFLAGS="$GLIB_LIBS"
   AC_MSG_CHECKING([libblockdev-nvme presence])
-  AC_TRY_COMPILE([#include <blockdev/nvme.h>], [],
-                 [AC_MSG_RESULT([yes])
-                 have_nvme=yes],
-                 [AC_MSG_RESULT([no])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/nvme.h>]], [[]])],[AC_MSG_RESULT([yes])
+                 have_nvme=yes],[AC_MSG_RESULT([no])
                  have_nvme=no])
 
   CFLAGS=$SAVE_CFLAGS
@@ -595,7 +576,7 @@ else
   enable_modules_info=no
 fi
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 data/Makefile
 data/tmpfiles.d/Makefile
@@ -656,6 +637,7 @@ doc/udisks2-sections.txt.btrfs.sections
 doc/udisks2.types.btrfs
 po/Makefile.in
 ])
+AC_OUTPUT
 
 dnl ==========================================================================
 echo "
