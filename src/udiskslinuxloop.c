@@ -137,11 +137,14 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
         {
           if (error != NULL)
             {
-              udisks_warning ("Error getting '%s' information: %s (%s, %d)",
-                              g_udev_device_get_name (device->udev_device),
-                              error->message,
-                              g_quark_to_string (error->domain),
-                              error->code);
+              if (! g_error_matches (error, BD_LOOP_ERROR, BD_LOOP_ERROR_DEVICE))
+                {
+                  udisks_warning ("Error getting '%s' information: %s (%s, %d)",
+                                  g_udev_device_get_name (device->udev_device),
+                                  error->message,
+                                  g_quark_to_string (error->domain),
+                                  error->code);
+                }
               g_clear_error (&error);
             }
           udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
