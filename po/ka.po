@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-02-25 15:16+0100\n"
-"PO-Revision-Date: 2023-02-25 15:48+0100\n"
+"POT-Creation-Date: 2023-07-23 05:51+0200\n"
+"PO-Revision-Date: 2023-07-23 05:53+0200\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.3.2\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -25,6 +25,7 @@ msgstr "ფაილური სისტემის მიმაგრებ�
 #: data/org.freedesktop.UDisks2.policy.in:17
 #: data/org.freedesktop.UDisks2.policy.in:28
 #: data/org.freedesktop.UDisks2.policy.in:39
+#: data/org.freedesktop.UDisks2.policy.in:50
 msgid "Authentication is required to mount the filesystem"
 msgstr "ფაილური სისტემის მისამაგრებლად საჭიროა ავტორიზაცია"
 
@@ -37,6 +38,10 @@ msgid "Mount a filesystem from a device plugged into another seat"
 msgstr "ფაილური სისტემის სხვა შესაერთებელში შეერთებული მოწყობილობდან მიმაგრება"
 
 #: data/org.freedesktop.UDisks2.policy.in:49
+msgid "Mount a filesystem on behalf of another user"
+msgstr "ფაილური სისტემის მიმაგრება სხვა მომხმარებლის სახელით"
+
+#: data/org.freedesktop.UDisks2.policy.in:60
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
@@ -44,49 +49,49 @@ msgstr ""
 "ფაილური სისტემების, რომლებიც fstab-ში მონიშნულები არიან, როგორც x-udisks-"
 "auth, მიმაგრება/მოხსნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:50
+#: data/org.freedesktop.UDisks2.policy.in:61
 msgid "Authentication is required to mount/unmount the filesystem"
 msgstr "ფაილური სისტემის მისამაგრებლად/მოსახსნელად საჭიროა ავტორიზაცია"
 
-#: data/org.freedesktop.UDisks2.policy.in:63
+#: data/org.freedesktop.UDisks2.policy.in:74
 msgid "Unmount a device mounted by another user"
 msgstr "სხვა მომხმარებლის მიერ მიმაგრებული მოწყობილობის მოხსნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:64
+#: data/org.freedesktop.UDisks2.policy.in:75
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
 "სხვა მომხმარებლის მიერ მიმაგრებული მოწყობილობის მოხსნას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:76
+#: data/org.freedesktop.UDisks2.policy.in:87
 msgid "Take ownership of a filesystem"
 msgstr "ფაილური სისტემის მფლობლობის აღება"
 
-#: data/org.freedesktop.UDisks2.policy.in:77
+#: data/org.freedesktop.UDisks2.policy.in:88
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr "ფაილური სისტემის მფლობელის მიღებას ავთენტიკაცია სჭირდება."
 
-#: data/org.freedesktop.UDisks2.policy.in:89
+#: data/org.freedesktop.UDisks2.policy.in:100
 msgid "Unlock an encrypted device"
 msgstr "დაშიფრული მოწყობილობის გაშიფვრა"
 
-#: data/org.freedesktop.UDisks2.policy.in:90
 #: data/org.freedesktop.UDisks2.policy.in:101
 #: data/org.freedesktop.UDisks2.policy.in:112
 #: data/org.freedesktop.UDisks2.policy.in:123
+#: data/org.freedesktop.UDisks2.policy.in:134
 msgid "Authentication is required to unlock an encrypted device"
 msgstr "დაშიფრული მოწყობილობის გაშიფვრას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:100
+#: data/org.freedesktop.UDisks2.policy.in:111
 msgid "Unlock an encrypted system device"
 msgstr "დაშიფრული სისტემური მოწყობილობის განბლოკვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:111
+#: data/org.freedesktop.UDisks2.policy.in:122
 msgid "Unlock an encrypted device plugged into another seat"
 msgstr ""
 "სხვა შესაერთებელში მიერთებული დაშიფრული სისტემური მოწყობილობის განბლოკვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:122
+#: data/org.freedesktop.UDisks2.policy.in:133
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
@@ -94,11 +99,11 @@ msgstr ""
 "სხვა შესაერთებელში მიერთებული, fstab-ში x-udisks-auth -ით მონიშნული, "
 "დაშიფრული სისტემური მოწყობილობის განბლოკვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:136
+#: data/org.freedesktop.UDisks2.policy.in:147
 msgid "Lock an encrypted device unlocked by another user"
 msgstr "სხვა მომხმარებლის მიერ განბლოკილი დაშიფრული მოწყობილობის დაბლოკვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:137
+#: data/org.freedesktop.UDisks2.policy.in:148
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
@@ -106,311 +111,311 @@ msgstr ""
 "სხვა მომხმარებლის მიერ განბლოკილი დაშიფრული მოწყობილობის დაბლოკვას "
 "ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:149
 #: data/org.freedesktop.UDisks2.policy.in:160
+#: data/org.freedesktop.UDisks2.policy.in:171
 msgid "Change passphrase for an encrypted device"
 msgstr "დაშიფრული მოწყობილობის საკვანძრო ფრაზის შეცვლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:150
 #: data/org.freedesktop.UDisks2.policy.in:161
+#: data/org.freedesktop.UDisks2.policy.in:172
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr "დაშიფრული მოწყობილობის საკვანძო ფრაზის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:173
+#: data/org.freedesktop.UDisks2.policy.in:184
 msgid "Manage loop devices"
 msgstr "მარყუჟის მოწყობილობის მართვა"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:379
+#: data/org.freedesktop.UDisks2.policy.in:185 src/udiskslinuxmanager.c:379
 msgid "Authentication is required to set up a loop device"
 msgstr "მარყუჟმოწყობილობის დაყენებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:187
+#: data/org.freedesktop.UDisks2.policy.in:198
 msgid "Delete loop devices"
 msgstr "მარყუჟის მოწყობილობის წაშლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:188
+#: data/org.freedesktop.UDisks2.policy.in:199
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
 "სხვა მომხმარებლის მიერ აწყობილი მარყუჟმოწყობილობის წაშლას ავთენტიკაცია "
 "სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:197
+#: data/org.freedesktop.UDisks2.policy.in:208
 msgid "Modify loop devices"
 msgstr "მარყუჟის მოწყობილობის  შეცვლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:198
+#: data/org.freedesktop.UDisks2.policy.in:209
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
 "სხვა მომხმარებლის მიერ აწყობილი მარყუჟმოწყობილობის შეცვლას ავთენტიკაცია "
 "სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:210
+#: data/org.freedesktop.UDisks2.policy.in:221
 msgid "Manage swapspace"
 msgstr "სვოპის მართვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:211
+#: data/org.freedesktop.UDisks2.policy.in:222
 msgid "Authentication is required to manage swapspace"
 msgstr "სვოპის მართვას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:223
+#: data/org.freedesktop.UDisks2.policy.in:234
 msgid "Manage RAID arrays"
 msgstr "RAID მასივების მართვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:224
+#: data/org.freedesktop.UDisks2.policy.in:235
 msgid "Authentication is required to manage RAID arrays"
 msgstr "RAID მასივების მართვას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:236
+#: data/org.freedesktop.UDisks2.policy.in:247
 msgid "Power off drive"
 msgstr "დისკის კვების გამორთვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:237
 #: data/org.freedesktop.UDisks2.policy.in:248
+#: data/org.freedesktop.UDisks2.policy.in:259
 msgid "Authentication is required to power off a drive"
 msgstr "დისკის კვების გამორთვას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:247
+#: data/org.freedesktop.UDisks2.policy.in:258
 msgid "Power off a system drive"
 msgstr "სისტემური დისკის კვების გამორთცა"
 
-#: data/org.freedesktop.UDisks2.policy.in:258
+#: data/org.freedesktop.UDisks2.policy.in:269
 msgid "Power off a drive attached to another seat"
 msgstr "სხვა შესაერთებელზე მიერთებული დისკს გამორთვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:259
+#: data/org.freedesktop.UDisks2.policy.in:270
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
 msgstr "სხვა პორტში შეერთებული დისკის კვების გამოსართავად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:271
+#: data/org.freedesktop.UDisks2.policy.in:282
 msgid "Eject media"
 msgstr "დისკის გამოღება"
 
-#: data/org.freedesktop.UDisks2.policy.in:272
 #: data/org.freedesktop.UDisks2.policy.in:283
+#: data/org.freedesktop.UDisks2.policy.in:294
 msgid "Authentication is required to eject media"
 msgstr "წამყვანიდან დისკის ამოღებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:282
+#: data/org.freedesktop.UDisks2.policy.in:293
 msgid "Eject media from a system drive"
 msgstr "წამყვანიდან დისკის ამოღება"
 
-#: data/org.freedesktop.UDisks2.policy.in:293
+#: data/org.freedesktop.UDisks2.policy.in:304
 msgid "Eject media from a drive attached to another seat"
 msgstr "სხვა შესაერთებულზე მიერთებული დისკის გამოღება"
 
-#: data/org.freedesktop.UDisks2.policy.in:294
+#: data/org.freedesktop.UDisks2.policy.in:305
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr ""
 "სხვა პორტში შეერთებული ამძრავიდან დისკის გამოსაღებად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:306
-#: data/org.freedesktop.UDisks2.policy.in:328
+#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:339
 msgid "Modify a device"
 msgstr "მოწყობილობის შეცვლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:307
 #: data/org.freedesktop.UDisks2.policy.in:318
+#: data/org.freedesktop.UDisks2.policy.in:329
 msgid "Authentication is required to modify a device"
 msgstr "მოწყობილობის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:328
 msgid "Modify a system device"
 msgstr "სისტემური მოწყობილობის შეცვლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:329
+#: data/org.freedesktop.UDisks2.policy.in:340
 msgid "Authentication is required to modify a device plugged into another seat"
 msgstr "სხვა პორტში შეერთებული მოწყობლობის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:339
+#: data/org.freedesktop.UDisks2.policy.in:350
 msgid "Rescan a device"
 msgstr "მოწყობილობის თავიდან სკანირება"
 
-#: data/org.freedesktop.UDisks2.policy.in:340
+#: data/org.freedesktop.UDisks2.policy.in:351
 msgid "Authentication is required to rescan a device"
 msgstr "მოწყობილობის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:352
+#: data/org.freedesktop.UDisks2.policy.in:363
 msgid "Open a device"
 msgstr "მოწყობილობის გახსნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:353
-#: data/org.freedesktop.UDisks2.policy.in:363
+#: data/org.freedesktop.UDisks2.policy.in:364
+#: data/org.freedesktop.UDisks2.policy.in:374
 msgid "Authentication is required to open a device"
 msgstr "მოწყობილობის გახსნას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:362
+#: data/org.freedesktop.UDisks2.policy.in:373
 msgid "Open a system device"
 msgstr "სისტემური მოწყობილობის გახსნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:382
 #: data/org.freedesktop.UDisks2.policy.in:393
+#: data/org.freedesktop.UDisks2.policy.in:404
 msgid "Modify system-wide configuration"
 msgstr "მთელ სისტემის კონფიგურაცია"
 
-#: data/org.freedesktop.UDisks2.policy.in:383
+#: data/org.freedesktop.UDisks2.policy.in:394
 msgid "Authentication is required to modify system-wide configuration"
 msgstr "მთელ სისტემის კონფიგურაციის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:394
+#: data/org.freedesktop.UDisks2.policy.in:405
 msgid ""
 "Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "მთელი სისტემის კონფიგურაციიდან პაროლების მისაღებად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:406
+#: data/org.freedesktop.UDisks2.policy.in:417
 msgid "Modify drive settings"
 msgstr "დისკის პარამეტრების შეცვლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:407
+#: data/org.freedesktop.UDisks2.policy.in:418
 msgid "Authentication is required to modify drive settings"
 msgstr "დისკის პარამეტრების შეცვლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:420
-#: data/org.freedesktop.UDisks2.policy.in:528
+#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:539
 msgid "Update SMART data"
 msgstr "SMART მონაცემების განახლება"
 
-#: data/org.freedesktop.UDisks2.policy.in:421
-#: data/org.freedesktop.UDisks2.policy.in:529
+#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:540
 msgid "Authentication is required to update SMART data"
 msgstr "SMART მონაცემების განახლებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:442
 msgid "Set SMART data from blob"
 msgstr "SMART-ის მონაცემების ბლობიდან დაყენება"
 
-#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:443
 msgid "Authentication is required to set SMART data from blob"
 msgstr "SMART-ის მონაცემების ბლობიდან დაყენებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:442
+#: data/org.freedesktop.UDisks2.policy.in:453
 msgid "Run SMART self-test"
 msgstr "SMART თვით-ტესტის გაშვება"
 
-#: data/org.freedesktop.UDisks2.policy.in:443
+#: data/org.freedesktop.UDisks2.policy.in:454
 msgid "Authentication is required to run a SMART self-test"
 msgstr "SMART თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:453
+#: data/org.freedesktop.UDisks2.policy.in:464
 msgid "Enable/Disable SMART"
 msgstr "SMART-ის ჩართ/გამორთ"
 
-#: data/org.freedesktop.UDisks2.policy.in:454
+#: data/org.freedesktop.UDisks2.policy.in:465
 msgid "Authentication is required to enable/disable SMART"
 msgstr "SMART-ის ჩართ/გამორთ-ს ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:467
+#: data/org.freedesktop.UDisks2.policy.in:478
 msgid "Check power state"
 msgstr "კვების მდგომარეობის შემოწმება"
 
-#: data/org.freedesktop.UDisks2.policy.in:468
+#: data/org.freedesktop.UDisks2.policy.in:479
 msgid "Authentication is required to check the power state"
 msgstr "კვების მდგომარეობის შემოწმებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:478
+#: data/org.freedesktop.UDisks2.policy.in:489
 msgid "Send standby command"
 msgstr "შეჩერების ბრძანების გაგზავნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:479
 #: data/org.freedesktop.UDisks2.policy.in:490
 #: data/org.freedesktop.UDisks2.policy.in:501
+#: data/org.freedesktop.UDisks2.policy.in:512
 msgid "Authentication is required to put a drive into standby mode"
 msgstr "დისკის ძილის რეჟიმში გადასართავად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:489
+#: data/org.freedesktop.UDisks2.policy.in:500
 msgid "Send standby command to a system drive"
 msgstr "სისტემური დისკისთვის შეჩერების ბრძანების გაგზავნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:500
+#: data/org.freedesktop.UDisks2.policy.in:511
 msgid "Send standby command to drive on other seat"
 msgstr "სხვა პორტში შეერთებული დისკისთვის შეჩერების ბრძანების გაგზავნა"
 
-#: data/org.freedesktop.UDisks2.policy.in:514
+#: data/org.freedesktop.UDisks2.policy.in:525
 msgid "Securely erase a hard disk"
 msgstr "დისკის უსაფრთხოდ წაშლა"
 
-#: data/org.freedesktop.UDisks2.policy.in:515
+#: data/org.freedesktop.UDisks2.policy.in:526
 msgid "Authentication is required to securely erase a hard disk"
 msgstr "დისკის უსაფრთხოდ წაშლას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:539
+#: data/org.freedesktop.UDisks2.policy.in:550
 msgid "Run device self-test"
 msgstr "მოწყობილობის თვით-ტესტის გაშვება"
 
-#: data/org.freedesktop.UDisks2.policy.in:540
+#: data/org.freedesktop.UDisks2.policy.in:551
 msgid "Authentication is required to run a device self-test"
 msgstr "თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:550
+#: data/org.freedesktop.UDisks2.policy.in:561
 msgid "Start the sanitize operation"
 msgstr "სანიტარული დამუშავების ოპერაციის დაწყება"
 
-#: data/org.freedesktop.UDisks2.policy.in:551
+#: data/org.freedesktop.UDisks2.policy.in:562
 msgid "Authentication is required to perform a sanitize operation"
 msgstr "სანიტარული დამუშავების ოპერაციის ჩასატარებლად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:561
+#: data/org.freedesktop.UDisks2.policy.in:572
 msgid "Format a namespace"
 msgstr "სახელების სივრცის ფორმატი"
 
-#: data/org.freedesktop.UDisks2.policy.in:562
+#: data/org.freedesktop.UDisks2.policy.in:573
 msgid "Authentication is required to format a namespace"
 msgstr "სახელების სივრცის დაფორმატებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:572
+#: data/org.freedesktop.UDisks2.policy.in:583
 msgid "NVMeoF connection"
 msgstr "NVMeoF მიერთება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:573 src/udiskslinuxmanagernvme.c:435
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr ""
 "სტრუქტურის კონტროლერ $(drive)-ზე მდებარე NVMe-ზე მისაერთებლად ავთენტიკაციაა "
 "საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:582
+#: data/org.freedesktop.UDisks2.policy.in:593
 msgid "Disconnect a NVMeoF controller"
 msgstr "NVMeoF კონტროლერის გათიშვა"
 
-#: data/org.freedesktop.UDisks2.policy.in:583
+#: data/org.freedesktop.UDisks2.policy.in:594
 msgid "Authentication is required to disconnect a NVMe over Fabrics controller"
 msgstr "სტრუქტურის კონტროლერზე მდებარე NVMe-ის გასათიშად ავთენტიკაციაა საჭირო"
 
-#: data/org.freedesktop.UDisks2.policy.in:593
+#: data/org.freedesktop.UDisks2.policy.in:604
 msgid "Set a NVMe Host NQN/ID"
 msgstr "NVMe ჰოსტის NQN/ID-ის მიღება"
 
-#: data/org.freedesktop.UDisks2.policy.in:594
+#: data/org.freedesktop.UDisks2.policy.in:605
 msgid "Authentication is required to set NVMe Host NQN or Host ID"
 msgstr "NVMe ჰოსტის NQN-ის და ID-ის დაყენებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:607
+#: data/org.freedesktop.UDisks2.policy.in:618
 msgid "Cancel job"
 msgstr "დავალების გაუქმება"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:608 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:400
 msgid "Authentication is required to cancel a job"
 msgstr "დავალების გაუქმებას ავთენტიკაცია სჭირდება"
 
-#: data/org.freedesktop.UDisks2.policy.in:618
+#: data/org.freedesktop.UDisks2.policy.in:629
 msgid "Cancel job started by another user"
 msgstr "დავალების გაუქება სხვა მომხმარებელმა დაიწყო"
 
-#: data/org.freedesktop.UDisks2.policy.in:619
+#: data/org.freedesktop.UDisks2.policy.in:630
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "სხვა მომხმარებლის მიერ დაწყებული დავალების გაუქმებას ავთენტიკაცია სჭირდება"
@@ -527,50 +532,45 @@ msgstr "LVM-ის მართვა"
 msgid "Authentication is required to manage LVM"
 msgstr "LVM-ის მართვას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:565
+#: modules/lvm2/udiskslinuxlogicalvolume.c:566
 msgid "Authentication is required to delete a logical volume"
 msgstr "ლოგიკური ტომის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:645
+#: modules/lvm2/udiskslinuxlogicalvolume.c:646
 msgid "Authentication is required to repair a logical volume"
 msgstr "ლოგიკური ტომის შეკეთებას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:748
+#: modules/lvm2/udiskslinuxlogicalvolume.c:749
 msgid "Authentication is required to rename a logical volume"
 msgstr "ლოგიკური ტომის სახელის გადარქმევას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:810
+#: modules/lvm2/udiskslinuxlogicalvolume.c:813
 msgid "Authentication is required to resize a logical volume"
 msgstr "ლოგიკური ტომის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:904
+#: modules/lvm2/udiskslinuxlogicalvolume.c:921
 msgid "Authentication is required to activate a logical volume"
 msgstr "ლოგიკური ტომის აქტივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:972
+#: modules/lvm2/udiskslinuxlogicalvolume.c:989
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "ლოგიკური ტომის დექატივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1039
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "ლოგიკური ტომის სწრაფი ასლის შექმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1096
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1159
-msgid "LVMCache not enabled at compile time."
-msgstr "LVMCache აგების დროს ჩართული არ იყო."
-
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1110
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "ლოგიკური ტომის ქეშად გარდაქმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1132
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1195
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "ტომის გადაყვანის შეცდომა: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1173
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr "ქეშის LV-is ქეშის პულის LV-დან გამოსაყოფად ავთენტიკაციაა საჭირო"
 
@@ -633,38 +633,38 @@ msgstr "VDO ტომის შექმნას ავთენტიკაც
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1294
+#: src/udiskslinuxblock.c:1312
 msgid "Authentication is required to read system-level secrets"
 msgstr "სისტემური დონის პაროლების წაკითხვას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2001
+#: src/udiskslinuxblock.c:2019
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "/etc/fstab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2020
+#: src/udiskslinuxblock.c:2038
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2080
+#: src/udiskslinuxblock.c:2098
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "/etc/fstab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2099
+#: src/udiskslinuxblock.c:2117
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2172
+#: src/udiskslinuxblock.c:2190
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "/etc/fstab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2191
+#: src/udiskslinuxblock.c:2209
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -681,7 +681,7 @@ msgstr "/etc/crypttab ფაილის შეცვლას ავთენ�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2881 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "$(drive)-ის უსაფრთხო წაშლას ავთენტიკაცია სჭირდება"
 
@@ -692,11 +692,11 @@ msgstr "$(drive)-ის უსაფრთხო წაშლას ავთე
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2893
+#: src/udiskslinuxblock.c:2912
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive)-ის დაფორმატებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxblock.c:2921 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2941 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "სისტემის კონფიგურაციის ცვლილებისთვის ავთენტიკაცია აუცილებელია"
 
@@ -706,7 +706,7 @@ msgstr "სისტემის კონფიგურაციის ცვ�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3774
+#: src/udiskslinuxblock.c:3873
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "$(drive)-ის წასაკითხად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -716,7 +716,7 @@ msgstr "$(drive)-ის წასაკითხად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3845
+#: src/udiskslinuxblock.c:3944
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "$(drive)-ის ჩასაწერად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -726,7 +726,7 @@ msgstr "$(drive)-ის ჩასაწერად გახსნას ავ
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3919
+#: src/udiskslinuxblock.c:4018
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "$(drive)-ის დასატესტად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -736,7 +736,7 @@ msgstr "$(drive)-ის დასატესტად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4002
+#: src/udiskslinuxblock.c:4101
 msgid "Authentication is required to open $(drive)."
 msgstr "$(drive)-ის გახსნას ავთენტიკაცია სჭირდება."
 
@@ -746,7 +746,7 @@ msgstr "$(drive)-ის გახსნას ავთენტიკაცი�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4059
+#: src/udiskslinuxblock.c:4158
 msgid "Authentication is required to rescan $(drive)"
 msgstr "$(drive)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
@@ -786,7 +786,7 @@ msgstr "$(drive)-ის გამორთვას ავთენტიკა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:463
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:466
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "SMART მონაცემების $(drive)-დან განახლებას ავთენტიკაცია სჭირდება"
 
@@ -872,7 +872,7 @@ msgstr "$(drive)-ზე SMART-ის გამორთვას ავთენ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:496 src/udiskslinuxencrypted.c:964
+#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "დაშიფრული მოწყობილობის, $(drive)-ის განბლოკვას ავთენტიკაცია სჭირდება"
 
@@ -883,7 +883,7 @@ msgstr "დაშიფრული მოწყობილობის, $(driv
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:776
+#: src/udiskslinuxencrypted.c:778
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -897,7 +897,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1097
+#: src/udiskslinuxencrypted.c:1100
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr "დაშიფრული მოწყობილობის $(drive) ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -907,7 +907,7 @@ msgstr "დაშიფრული მოწყობილობის $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:867 src/udiskslinuxfilesystem.c:1053
+#: src/udiskslinuxfilesystem.c:914 src/udiskslinuxfilesystem.c:1105
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive)-ის მიმაგრებას ავთენტიკაცია სჭირდება"
 
@@ -921,7 +921,7 @@ msgstr "$(drive)-ის მიმაგრებას ავთენტიკ�
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:952
+#: src/udiskslinuxfilesystem.c:1003
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -939,7 +939,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1504
+#: src/udiskslinuxfilesystem.c:1584
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -954,7 +954,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1552
+#: src/udiskslinuxfilesystem.c:1632
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr "სხვა მომხმარებლის მიერ მიმაგრებული $(drive)-ის მოხსნა შეუძლებელია"
 
@@ -964,7 +964,7 @@ msgstr "სხვა მომხმარებლის მიერ მიმ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1720
+#: src/udiskslinuxfilesystem.c:1800
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ჭდის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -974,7 +974,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ჭდი
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1902
+#: src/udiskslinuxfilesystem.c:1982
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -984,7 +984,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ზომ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2073
+#: src/udiskslinuxfilesystem.c:2153
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შეკეთებას ავთენტიკაცია სჭირდება"
 
@@ -994,7 +994,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის შეკ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2241
+#: src/udiskslinuxfilesystem.c:2321
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შემოწმებას ავთენტიკაცია სჭირდება"
 
@@ -1004,10 +1004,20 @@ msgstr "$(drive)-ზე ფაილური სისტემის შემ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2401
+#: src/udiskslinuxfilesystem.c:2481
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის მფლობელის შეცვლას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing the filesystem UUID.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxfilesystem.c:2648
+msgid "Authentication is required to change the filesystem UUID on $(drive)"
+msgstr "$(drive)-ზე ფაილური სისტემის UUID-ის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1016,7 +1026,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის მფლ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:240
+#: src/udiskslinuxloop.c:243
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) წაშლას ავთენტიკაცია სჭირდება"
 
@@ -1027,7 +1037,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) წა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:333
+#: src/udiskslinuxloop.c:336
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -1035,7 +1045,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) შე�
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:581
+#: src/udiskslinuxmanager.c:582
 msgid "Authentication is required to create a RAID array"
 msgstr "RAID მასივის შექმნას ავთენტიკაცია სჭირდება"
 
@@ -1116,7 +1126,7 @@ msgstr "RAID მასივის წაშლას ავთენტიკ�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:825
+#: src/udiskslinuxnvmecontroller.c:828
 msgid "Authentication is required to start a device self-test on $(drive)"
 msgstr "$(drive)-ზე თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
 
@@ -1126,7 +1136,7 @@ msgstr "$(drive)-ზე თვით-ტესტის გაშვებას
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:918
+#: src/udiskslinuxnvmecontroller.c:921
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr "$(drive)-ზე თვით-ტესტის შეჩერებას ავთენტიკაცია სჭირდება"
 
@@ -1136,7 +1146,7 @@ msgstr "$(drive)-ზე თვით-ტესტის შეჩერება
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1220
+#: src/udiskslinuxnvmecontroller.c:1223
 msgid "Authentication is required to perform a sanitize operation of $(drive)"
 msgstr ""
 "$(drive)-ის სანიტარული დამუშავების ოპერაციის ჩასატარებლად ავთენტიკაციაა "
@@ -1182,7 +1192,7 @@ msgstr "დისკზე $(drive) დანაყოფების შეს�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:313
+#: src/udiskslinuxpartitiontable.c:339
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "$(drive)-ზე დანაყოფის შექმნას ავთენტიკაცია სჭირდება"
 
@@ -1212,9 +1222,19 @@ msgstr "$(drive)-ზე სვოპის დეაქტივაციას 
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:370
+#: src/udiskslinuxswapspace.c:371
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr "$(drive)-ზე სვოპის ჭდის დაყენებას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting UUID of a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxswapspace.c:457
+msgid "Authentication is required to set swapspace UUID on $(drive)"
+msgstr "$(drive)-ზე სვოპის UUID-ის დაყენებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: udisks/udisksclient.c:1194
@@ -1925,8 +1945,6 @@ msgid "Linux Root Partition (s390)"
 msgstr "Linux Root დანაყოფი (s390)"
 
 #: udisks/udisksclient.c:2363
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (s390x)"
 msgstr "Linux Root დანაყოფი (s390x)"
@@ -1947,8 +1965,6 @@ msgid "Linux Root Partition (amd64/x86_64)"
 msgstr "Linux Root დანაყოფი (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2367
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (Alpha)"
 msgstr "Linux-ის /usr/ დანაყოფი (Alpha)"
@@ -1959,8 +1975,6 @@ msgid "Linux /usr/ Partition (ARC)"
 msgstr "Linux-ის /usr/ დანაყოფი (ARC)"
 
 #: udisks/udisksclient.c:2369
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (32-bit ARM)"
 msgstr "Linux-ის /usr/ დანაყოფი (32-ბიტიანი ARM)"
@@ -2046,8 +2060,6 @@ msgid "Linux /usr/ Partition (amd64/x86_64)"
 msgstr "Linux /usr/ დანაყოფი (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2386
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Alpha)"
 msgstr "Linux Root გადამოწმების დანაყოფი (Alpha)"
@@ -2145,8 +2157,6 @@ msgid "Linux Root Verity Partition (x86)"
 msgstr "Linux Root გადამოწმების დანაყოფი (x86)"
 
 #: udisks/udisksclient.c:2405
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Alpha)"
 msgstr "Linux /usr/ გადამოწმების დანაყოფი (Alpha)"
@@ -3638,3 +3648,39 @@ msgstr "%s — %s [%s] (%s)"
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
 msgstr "%s — %s (%s)"
+
+#~ msgid "LVMCache not enabled at compile time."
+#~ msgstr "LVMCache აგების დროს ჩართული არ იყო."
+
+#~ msgid "Manage Bcache"
+#~ msgstr "Bcache-ის მართვა"
+
+#~ msgid "Authentication is required to manage Bcache"
+#~ msgstr "Bcache-ის მართვას ავთენტიკაცია სჭირდება"
+
+#~ msgid "Authentication is required to destroy bcache device."
+#~ msgstr "Bcache-ის მოწყობილობის წაშლას ავთენტიკაცია სჭირდება."
+
+#~ msgid "Authentication is required to set mode of bcache device."
+#~ msgstr "Bcache-ის მოწყობილობის რეჟიმის შეცვლას ავთენტიკაცია სჭირდება."
+
+#~ msgid "Authentication is required to create bcache device."
+#~ msgstr "Bcache-ის მოწყობილობის შექმნას ავთენტიკაცია სჭირდება."
+
+#~ msgid "Manage zRAM"
+#~ msgstr "ZRAM-ის მართვა"
+
+#~ msgid "Authentication is required to manage zRAM"
+#~ msgstr "ZRAM-ის მართვას ავთენტიკაცია სჭირდება"
+
+#~ msgid "Authentication is required to add zRAM kernel module"
+#~ msgstr "ZRAM-ის ბირთვის მოდულის ჩატვირთვას ავთენტიკაცია სჭირდება"
+
+#~ msgid "Authentication is required to remove zRAM kernel module"
+#~ msgstr "ZRAM-ის ბირთვის მოდულის წაშლას ავთენტიკაცია სჭირდება"
+
+#~ msgid "Authentication is required to enable zRAM device"
+#~ msgstr "ZRAM-ის მოწყობილობის ჩართვას ავთენტიკაცია სჭირდება"
+
+#~ msgid "Authentication is required to disable zRAM device"
+#~ msgstr "ZRAM-ის მოწყობილობის გამორთვას ავთენტიკაცია სჭირდება"
