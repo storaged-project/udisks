@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-04-08 13:51+0000\n"
-"PO-Revision-Date: 2023-04-08 17:15+0200\n"
+"POT-Creation-Date: 2023-07-12 03:28+0000\n"
+"PO-Revision-Date: 2023-07-16 12:55+0200\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <trans-pl@lists.fedoraproject.org>\n"
 "Language: pl\n"
@@ -666,38 +666,38 @@ msgstr "Wymagane jest uwierzytelnienie, aby utworzyć wolumin VDO"
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1294
+#: src/udiskslinuxblock.c:1312
 msgid "Authentication is required to read system-level secrets"
 msgstr "Wymagane jest uwierzytelnienie, aby odczytać hasła systemu"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2001
+#: src/udiskslinuxblock.c:2019
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Wymagane jest uwierzytelnienie, aby dodać wpis do pliku /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2020
+#: src/udiskslinuxblock.c:2038
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "Wymagane jest uwierzytelnienie, aby dodać wpis do pliku /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2080
+#: src/udiskslinuxblock.c:2098
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć wpis z pliku /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2099
+#: src/udiskslinuxblock.c:2117
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć wpis z pliku /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2172
+#: src/udiskslinuxblock.c:2190
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować plik /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2191
+#: src/udiskslinuxblock.c:2209
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować plik /etc/crypttab"
 
@@ -714,7 +714,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować plik /etc/crypttab"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2882 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wykonać bezpieczne usunięcie zawartości "
@@ -727,11 +727,11 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2894
+#: src/udiskslinuxblock.c:2912
 msgid "Authentication is required to format $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby sformatować urządzenie $(drive)"
 
-#: src/udiskslinuxblock.c:2923 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2941 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować konfigurację systemu"
 
@@ -741,7 +741,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować konfigurację systemu"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3795
+#: src/udiskslinuxblock.c:3873
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) do "
@@ -753,7 +753,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3866
+#: src/udiskslinuxblock.c:3944
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) do zapisania"
@@ -764,7 +764,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3940
+#: src/udiskslinuxblock.c:4018
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) w celu "
@@ -776,7 +776,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4023
+#: src/udiskslinuxblock.c:4101
 msgid "Authentication is required to open $(drive)."
 msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive)."
 
@@ -786,7 +786,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive)."
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4080
+#: src/udiskslinuxblock.c:4158
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby ponownie przeskanować urządzenie $(drive)"
@@ -829,7 +829,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:463
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:466
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zaktualizować dane SMART z urządzenia "
@@ -928,7 +928,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć SMART w napędzie $(dri
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:496 src/udiskslinuxencrypted.c:964
+#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby odblokować zaszyfrowane urządzenie "
@@ -941,7 +941,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:776
+#: src/udiskslinuxencrypted.c:778
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -955,7 +955,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1097
+#: src/udiskslinuxencrypted.c:1100
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić rozmiar zaszyfrowanego "
@@ -967,7 +967,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:903 src/udiskslinuxfilesystem.c:1094
+#: src/udiskslinuxfilesystem.c:914 src/udiskslinuxfilesystem.c:1105
 msgid "Authentication is required to mount $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 
@@ -981,7 +981,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:992
+#: src/udiskslinuxfilesystem.c:1003
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -999,7 +999,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1573
+#: src/udiskslinuxfilesystem.c:1584
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1014,7 +1014,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1621
+#: src/udiskslinuxfilesystem.c:1632
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby odmontować urządzenie $(drive) "
@@ -1026,7 +1026,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1789
+#: src/udiskslinuxfilesystem.c:1800
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić etykietę systemu plików na "
@@ -1038,7 +1038,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1971
+#: src/udiskslinuxfilesystem.c:1982
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić rozmiar systemu plików na "
@@ -1050,7 +1050,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2142
+#: src/udiskslinuxfilesystem.c:2153
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby naprawić system plików na urządzeniu "
@@ -1062,7 +1062,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2310
+#: src/udiskslinuxfilesystem.c:2321
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby sprawdzić system plików na urządzeniu "
@@ -1074,11 +1074,23 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2470
+#: src/udiskslinuxfilesystem.c:2481
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić właściciela systemu plików na "
+"urządzeniu $(drive)"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing the filesystem UUID.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxfilesystem.c:2648
+msgid "Authentication is required to change the filesystem UUID on $(drive)"
+msgstr ""
+"Wymagane jest uwierzytelnienie, aby zmienić UUID systemu plików na "
 "urządzeniu $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
@@ -1108,7 +1120,7 @@ msgstr ""
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:581
+#: src/udiskslinuxmanager.c:582
 msgid "Authentication is required to create a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby utworzyć macierz RAID"
 
@@ -1191,7 +1203,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby usunąć macierz RAID"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:825
+#: src/udiskslinuxnvmecontroller.c:828
 msgid "Authentication is required to start a device self-test on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby rozpocząć test na urządzeniu $(drive)"
@@ -1202,7 +1214,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:918
+#: src/udiskslinuxnvmecontroller.c:921
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby przerwać test na urządzeniu $(drive)"
@@ -1213,7 +1225,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1220
+#: src/udiskslinuxnvmecontroller.c:1223
 msgid "Authentication is required to perform a sanitize operation of $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wykonać działanie sanityzacji urządzenia "
@@ -1263,7 +1275,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:313
+#: src/udiskslinuxpartitiontable.c:339
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby utworzyć partycję na urządzeniu $(drive)"
@@ -1298,10 +1310,22 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:370
+#: src/udiskslinuxswapspace.c:371
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby ustawić etykietę przestrzeni wymiany na "
+"urządzeniu $(drive)"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting UUID of a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxswapspace.c:457
+msgid "Authentication is required to set swapspace UUID on $(drive)"
+msgstr ""
+"Wymagane jest uwierzytelnienie, aby ustawić UUID przestrzeni wymiany na "
 "urządzeniu $(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
