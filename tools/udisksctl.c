@@ -1999,6 +1999,7 @@ handle_command_smart_simulate (gint        *argc,
     {
       UDisksObject *block_object;
       UDisksDrive *drive;
+
       block_object = lookup_object_by_device (opt_smart_simulate_device);
       if (block_object == NULL)
         {
@@ -2006,7 +2007,19 @@ handle_command_smart_simulate (gint        *argc,
           goto out;
         }
       drive = udisks_client_get_drive_for_block (client, udisks_object_peek_block (block_object));
+      if (drive == NULL)
+        {
+          g_printerr ("Error looking up drive for device %s\n", opt_smart_simulate_device);
+          g_object_unref (block_object);
+          goto out;
+        }
       object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (drive));
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_smart_simulate_device);
+          g_object_unref (block_object);
+          goto out;
+        }
       g_object_unref (block_object);
     }
   else
@@ -2254,6 +2267,7 @@ handle_command_power_off (gint        *argc,
     {
       UDisksObject *block_object;
       UDisksDrive *drive;
+
       block_object = lookup_object_by_device (opt_power_off_device);
       if (block_object == NULL)
         {
@@ -2261,7 +2275,19 @@ handle_command_power_off (gint        *argc,
           goto out;
         }
       drive = udisks_client_get_drive_for_block (client, udisks_object_peek_block (block_object));
+      if (drive == NULL)
+        {
+          g_printerr ("Error looking up drive for device %s\n", opt_power_off_device);
+          g_object_unref (block_object);
+          goto out;
+        }
       object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (drive));
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_power_off_device);
+          g_object_unref (block_object);
+          goto out;
+        }
       g_object_unref (block_object);
     }
   else
