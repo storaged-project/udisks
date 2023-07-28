@@ -965,14 +965,19 @@ handle_enable_modules (UDisksManager         *object,
       return TRUE;
     }
 
-  if (! udisks_daemon_get_disable_modules (manager->daemon))
+  if (udisks_daemon_get_disable_modules (manager->daemon))
     {
-      data = g_new0 (EnableModulesData, 1);
-      data->object = g_object_ref (object);
-      data->invocation = g_object_ref (invocation);
-      /* push to idle, process in main thread */
-      g_idle_add (load_modules_in_idle_cb, data);
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                                     "Modules are disabled by a commandline switch.");
+      return TRUE;
     }
+
+  data = g_new0 (EnableModulesData, 1);
+  data->object = g_object_ref (object);
+  data->invocation = g_object_ref (invocation);
+  /* push to idle, process in main thread */
+  g_idle_add (load_modules_in_idle_cb, data);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1004,15 +1009,20 @@ handle_enable_module (UDisksManager         *object,
       return TRUE;
     }
 
-  if (! udisks_daemon_get_disable_modules (manager->daemon))
+  if (udisks_daemon_get_disable_modules (manager->daemon))
     {
-      data = g_new0 (EnableModulesData, 1);
-      data->object = g_object_ref (object);
-      data->invocation = g_object_ref (invocation);
-      data->module_name = g_strdup (arg_name);
-      /* push to idle, process in main thread */
-      g_idle_add (load_modules_in_idle_cb, data);
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                                     "Modules are disabled by a commandline switch.");
+      return TRUE;
     }
+
+  data = g_new0 (EnableModulesData, 1);
+  data->object = g_object_ref (object);
+  data->invocation = g_object_ref (invocation);
+  data->module_name = g_strdup (arg_name);
+  /* push to idle, process in main thread */
+  g_idle_add (load_modules_in_idle_cb, data);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
