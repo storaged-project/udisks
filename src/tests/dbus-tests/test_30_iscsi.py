@@ -374,3 +374,57 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         udisks = self.get_object('')
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(dbus_path, objects.keys())
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_ibft(self):
+        """
+        Test iBFT discovery and login if available
+        """
+        if not os.path.exists('/sys/firmware/acpi/tables/iBFT'):
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            self.skipTest('No iBFT ACPI table detected')
+        ret, out = udiskstestcase.run_command('modprobe iscsi_ibft')
+        if ret != 0:
+            udiskstestcase.UdisksTestCase.tearDownClass()
+            self.skipTest('iscsi_ibft kernel module unavailable')
+
+        manager = self.get_object('/Manager')
+        nodes, _ = manager.DiscoverFirmware(self.no_options,
+                                            dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                                            timeout=self.iscsi_timeout)
+        self.addCleanup(self._clean_iscsid_node_dir)
+
+        # let's try to connect in whatever was discovered
+        for node in nodes:
+            (iqn, tpg, host, port, iface) = node
+            self.assertIsNotNone(iqn)
+            self.assertIsNotNone(host)
+            self.assertIsNotNone(port)
+
+            self.addCleanup(self._force_lougout, iqn)
+
+            # no password
+            options = dbus.Dictionary(signature='sv')
+            options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
+            manager.Login(iqn, tpg, host, port, iface, options,
+                          dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                          timeout=self.iscsi_timeout)
+
+            devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
+            self.assertGreater(len(devs), 0)
+
+            manager.Logout(iqn, tpg, host, port, iface, self.no_options,
+                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                           timeout=self.iscsi_timeout)
+
+            devs = glob.glob('/dev/disk/by-path/*%s*' % iqn)
+            self.assertEqual(len(devs), 0)
+
+            # second attempt - wrong password
+            msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
+            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                options['username'] = 'nonsenseuser'
+                options['password'] = '12345'
+                manager.Login(iqn, tpg, host, port, iface, options,
+                              dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
+                              timeout=self.iscsi_timeout)
