@@ -163,7 +163,8 @@ class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
             # now call each of the LED control methods and let them fail
             for method_name in UdisksLSMTestCase._LED_CONTROL_METHOD_NAMES:
                 method = drive_lsm_local.get_dbus_method(method_name)
-                with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'Specified disk does not support this action'):
+                msg = r'(Specified disk does not support this action|Unable to find block device for drive)'
+                with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
                     method(self.no_options)
 
     def test_drive_lsm(self):
