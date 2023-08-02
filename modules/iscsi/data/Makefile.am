@@ -1,10 +1,11 @@
 
 NULL =
 
+polkit_in_files  = org.freedesktop.UDisks2.iscsi.policy.in
+
 if ENABLE_DAEMON
 
 polkitdir        = $(datadir)/polkit-1/actions
-polkit_in_files  = org.freedesktop.UDisks2.iscsi.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 $(polkit_DATA): $(polkit_in_files)
