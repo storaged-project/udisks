@@ -1,0 +1,44 @@
+actions:
+  create-archive:
+    - './autogen.sh --disable-modules --disable-daemon'
+    # FIXME: just calling `make dist` doesn't build udisks/libudisks2.la for gtk-doc
+    - 'make'
+    - 'make dist'
+    - 'bash -c "ls *.tar*"'
+
+jobs:
+- job: copr_build
+  branch: master
+  trigger: pull_request
+  targets:
+    - fedora-rawhide-aarch64
+    - fedora-rawhide-ppc64le
+    - fedora-rawhide-x86_64
+    - fedora-latest-aarch64
+    - fedora-latest-ppc64le
+    - fedora-latest-x86_64
+    - fedora-latest-stable-aarch64
+    - fedora-latest-stable-ppc64le
+    - fedora-latest-stable-x86_64
+  additional_repos:
+  - "copr://@storage/udisks-daily"
+
+srpm_build_deps:
+ - gcc
+ - make
+ - libtool
+ - autoconf
+ - automake
+ - glib2-devel
+ - gtk-doc
+ - gobject-introspection-devel
+ - polkit-devel
+ - systemd
+ - systemd-devel
+ - systemd-rpm-macros
+ - gettext-devel
+ - redhat-rpm-config
+ - libmount-devel
+
+downstream_package_name: udisks2
+specfile_path: packaging/udisks2.spec

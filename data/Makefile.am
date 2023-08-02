@@ -1,24 +1,25 @@
 
 NULL =
 
+dbusconf_in_files = org.freedesktop.UDisks2.conf.in
+dbusservice_in_files = org.freedesktop.UDisks2.service.in
+polkit_in_files  = org.freedesktop.UDisks2.policy.in
+systemdservice_in_files = udisks2.service.in
+
 if ENABLE_DAEMON
 SUBDIRS = tmpfiles.d
 
 dbusservicedir       = $(datadir)/dbus-1/system-services
-dbusservice_in_files = org.freedesktop.UDisks2.service.in
 dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
 
 $(dbusservice_DATA): $(dbusservice_in_files) Makefile
 	@sed -e "s|\@udisksdprivdir\@|$(libexecdir)/udisks2|" $< > $@
 
 dbusconfdir = $(datadir)/dbus-1/system.d
-dbusconf_in_files = org.freedesktop.UDisks2.conf.in
 dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
 
 $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 	cp $< $@
-
-systemdservice_in_files = udisks2.service.in
 
 if HAVE_SYSTEMD
 systemdservicedir       = $(systemdsystemunitdir)
@@ -32,7 +33,6 @@ udevrulesdir = $(udevdir)/rules.d
 udevrules_DATA = 80-udisks2.rules
 
 polkitdir        = $(datadir)/polkit-1/actions
-polkit_in_files  = org.freedesktop.UDisks2.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 $(polkit_DATA): $(polkit_in_files)
