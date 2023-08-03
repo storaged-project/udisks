@@ -212,6 +212,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(new_lvpath, objects.keys())
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_15_raid(self):
         '''Test raid volumes functionality'''
 
