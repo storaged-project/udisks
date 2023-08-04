@@ -109,6 +109,45 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_
 #define MOUNT_BASE_PERSISTENT FALSE
 #endif
 
+/* required for kernel module autoloading */
+static const gchar *well_known_filesystems[] =
+{
+  "bcache",
+  "bcachefs",
+  "btrfs",
+  "erofs",
+  "exfat",
+  "ext2",
+  "ext3",
+  "ext4",
+  "f2fs",
+  "hfs",
+  "hfsplus",
+  "iso9660",
+  "jfs",
+  "msdos",
+  "nilfs",
+  "nilfs2",
+  "ntfs",
+  "ntfs3",
+  "udf",
+  "reiserfs",
+  "reiser4",
+  "reiser5",
+  "umsdos",
+  "vfat",
+  "xfs",
+};
+
+/* filesystems known to report their outer boundaries */
+static const gchar *fs_lastblock_list[] =
+{
+  "ext2",
+  "ext3",
+  "ext4",
+  "xfs",
+};
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -199,6 +238,17 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+in_fs_lastblock_list (const gchar *fstype)
+{
+  guint n;
+
+  for (n = 0; n < G_N_ELEMENTS (fs_lastblock_list); n++)
+    if (g_strcmp0 (fs_lastblock_list[n], fstype) == 0)
+      return TRUE;
+  return FALSE;
+}
+
 /* WARNING: called with GDBusObjectManager lock held, avoid any object lookup */
 static guint64
 get_filesystem_size (UDisksLinuxFilesystem *filesystem)
@@ -212,11 +262,8 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
     return 0;
 
   /* manually getting size is supported only for Ext and XFS */
-  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "ext3") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "ext4") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "xfs") != 0)
-      return 0;
+  if (!in_fs_lastblock_list (filesystem->cached_fs_type))
+    return 0;
 
   /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
    * drive waking up - nothing has changed anyway since it's been sleeping...
@@ -359,37 +406,6 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* required for kernel module autoloading */
-static const gchar *well_known_filesystems[] =
-{
-  "bcache",
-  "bcachefs",
-  "btrfs",
-  "erofs",
-  "exfat",
-  "ext2",
-  "ext3",
-  "ext4",
-  "f2fs",
-  "hfs",
-  "hfsplus",
-  "iso9660",
-  "jfs",
-  "msdos",
-  "nilfs",
-  "nilfs2",
-  "ntfs",
-  "ntfs3",
-  "udf",
-  "reiserfs",
-  "reiser4",
-  "reiser5",
-  "umsdos",
-  "vfat",
-  "xfs",
-  NULL,
-};
-
 static gboolean
 is_in_filesystem_file (const gchar *filesystems_file,
                        const gchar *fstype)
@@ -439,19 +455,12 @@ is_in_filesystem_file (const gchar *filesystems_file,
 static gboolean
 is_well_known_filesystem (const gchar *fstype)
 {
-  gboolean ret = FALSE;
   guint n;
 
-  for (n = 0; well_known_filesystems[n] != NULL; n++)
-    {
-      if (g_strcmp0 (well_known_filesystems[n], fstype) == 0)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
- out:
-  return ret;
+  for (n = 0; n < G_N_ELEMENTS (well_known_filesystems); n++)
+    if (g_strcmp0 (well_known_filesystems[n], fstype) == 0)
+      return TRUE;
+  return FALSE;
 }
 
 /* this is not a very efficient implementation but it's very rarely
