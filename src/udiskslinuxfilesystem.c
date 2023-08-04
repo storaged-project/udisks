@@ -352,6 +352,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   GPtrArray *p;
   GList *mounts;
   GList *l;
+  gboolean mounted;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -370,6 +371,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_add (p, NULL);
   udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
                                       (const gchar *const *) p->pdata);
+  mounted = p->len > 0;
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
@@ -389,13 +391,19 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
 
-  /* The ID_FS_SIZE property only contains data part of the total filesystem
-   * size while 'ID_FS_LASTBLOCK * ID_FS_BLOCKSIZE' typically marks the size
-   * boundary of the filesystem. This is the approach of libblockdev fs size
-   * reporting.
-   */
-  filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
-                               g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
+  if (mounted && g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
+    /* Force native filesystem tools for mounted XFS as superblock might
+     * not have been written right after the grow.
+     */
+    filesystem->cached_fs_size = 0;
+  else
+    /* The ID_FS_SIZE property only contains data part of the total filesystem
+     * size and comes with no guarantees while 'ID_FS_LASTBLOCK * ID_FS_BLOCKSIZE'
+     * typically marks the boundary of the filesystem.
+     */
+    filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
+                                 g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
+
   /* The Size property is hacked to be retrieved on-demand, only need to
    * notify subscribers that it has changed.
    */
