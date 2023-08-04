@@ -1313,8 +1313,8 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
               for (ll = instances_to_remove; ll; ll = ll->next)
                 {
                   object = ll->data;
-                  g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
-                                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+                  g_warn_if_fail (g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
+                                                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object))));
                   g_warn_if_fail (g_hash_table_remove (inst_table, object));
                 }
               if (g_hash_table_size (inst_table) == 0)
@@ -1328,7 +1328,7 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
         }
 
       /* No module object claimed or was interested in this device, try creating new instance for the current module. */
-      if (! handled)
+      if (! handled && g_strcmp0 (action, "remove") != 0)
         {
           GDBusObjectSkeleton **objects, **ll;
 

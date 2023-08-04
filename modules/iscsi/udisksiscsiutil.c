@@ -264,6 +264,31 @@ iscsi_params_pop_chap_data (GVariant      *params,
   return g_variant_dict_end (&dict);
 }
 
+static gboolean
+is_auth_required (struct libiscsi_context   *ctx,
+                  struct libiscsi_node      *node,
+                  struct libiscsi_auth_info *auth_info)
+{
+  char val[LIBISCSI_VALUE_MAXLEN + 1] = {'\0',};
+  int ret;
+
+  /* TODO: No way to distinguish between the "no auth requested" and
+   *       "retain discovered auth info" scenarios from the D-Bus API.
+   */
+
+  /* In case CHAP auth is requested, let's use it unconditionally */
+  if (auth_info->method != libiscsi_auth_none)
+    return TRUE;
+
+  /* Avoid auth override on firmware-discovered nodes */
+  ret = libiscsi_node_get_parameter (ctx, node, "node.discovery_type", val);
+  if (ret == 0 && g_strcmp0 (val, "fw") == 0)
+    return FALSE;
+
+  /* Not a firmware-discovered node, maintain legacy rules */
+  return TRUE;
+}
+
 gint
 iscsi_login (UDisksLinuxModuleISCSI *module,
              const gchar            *name,
@@ -317,7 +342,7 @@ iscsi_login (UDisksLinuxModuleISCSI *module,
       err = iscsi_perform_login_action (module,
                                         ACTION_LOGIN,
                                         &node,
-                                        &auth_info,
+                                        is_auth_required (ctx, &node, &auth_info) ? &auth_info : NULL,
                                         errorstr);
     }
 

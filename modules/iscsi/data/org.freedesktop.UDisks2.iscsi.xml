@@ -162,6 +162,9 @@
         <parameter>reverse-password</parameter> will be used for CHAP
         authentication.
 
+        Firmware-discovered nodes retain their authentication info unless
+        overriden with specified credentials (see above).
+
         All the additional options are transformed into the interface
         parameters.  For example, if an automatic node startup is desired, the
         <parameter>node.startup</parameter> needs to be set to

@@ -49,6 +49,8 @@ struct _UDisksLinuxISCSISessionObject {
   UDisksLinuxModuleISCSI *module;
   gchar                  *session_id;
 
+  GHashTable             *sysfs_paths;
+
   /* Interface(s) */
   UDisksLinuxISCSISession *iface_iscsi_session;
 };
@@ -151,6 +153,7 @@ udisks_linux_iscsi_session_object_finalize (GObject *object)
 
   g_free (session_object->session_id);
   g_object_unref (session_object->module);
+  g_hash_table_destroy (session_object->sysfs_paths);
 
   if (G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->finalize)
     G_OBJECT_CLASS (udisks_linux_iscsi_session_object_parent_class)->finalize (object);
@@ -205,6 +208,7 @@ udisks_linux_iscsi_session_object_init (UDisksLinuxISCSISessionObject *session_o
   g_return_if_fail (UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT (session_object));
 
   session_object->module = NULL;
+  session_object->sysfs_paths = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 /**
@@ -336,7 +340,7 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
   if (libiscsi_get_session_info_by_id (ctx, &session_info, session_object->session_id) != 0)
     {
       udisks_linux_module_iscsi_unlock_libiscsi_context (session_object->module);
-      udisks_critical ("Can not retrieve session information for %s", session_object->session_id);
+      udisks_warning ("Cannot retrieve session information for %s", session_object->session_id);
       return;
     }
 
@@ -359,7 +363,7 @@ udisks_linux_iscsi_session_object_update_iface (UDisksLinuxISCSISessionObject *s
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (iface));
 }
 
-static gboolean
+gboolean
 udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_object,
                                                   const gchar        *action,
                                                   UDisksLinuxDevice  *device,
@@ -382,12 +386,14 @@ udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_obj
       g_free (session_id);
       if (g_strcmp0 (action, "remove") == 0)
         {
-          *keep = FALSE;
+          g_warn_if_fail (g_hash_table_remove (session_object->sysfs_paths, sysfs_path));
+          *keep = g_hash_table_size (session_object->sysfs_paths) > 0;
           return TRUE;
         }
       else
         {
           *keep = TRUE;
+          g_hash_table_add (session_object->sysfs_paths, g_strdup (sysfs_path));
           return TRUE;
         }
     }

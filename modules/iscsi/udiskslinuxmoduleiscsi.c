@@ -210,37 +210,23 @@ udisks_linux_module_iscsi_new_object (UDisksModule      *module,
 #ifdef HAVE_LIBISCSI_GET_SESSION_INFOS
   GDBusObjectSkeleton **objects;
   UDisksLinuxISCSISessionObject *session_object = NULL;
-  GDBusObjectManagerServer *object_manager_server;
-  GDBusObject *object;
-  UDisksDaemon *daemon;
   const gchar *sysfs_path;
   gchar *session_id;
-  gchar *object_path;
+  gboolean keep = FALSE;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_ISCSI (module), NULL);
 
   /* Session ID */
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
   session_id = udisks_linux_iscsi_session_object_get_session_id_from_sysfs_path (sysfs_path);
-  daemon = udisks_module_get_daemon (module);
 
   if (session_id)
     {
-      /* check if such object exists */
-      object_manager_server = udisks_daemon_get_object_manager (daemon);
-      object_path = udisks_linux_iscsi_session_object_make_object_path (session_id);
-      object = g_dbus_object_manager_get_object (G_DBUS_OBJECT_MANAGER (object_manager_server),
-                                                 object_path);
-      g_free (object_path);
-
-      if (! object)
-        {
-          /* create a new DBus object */
-          session_object = udisks_linux_iscsi_session_object_new (UDISKS_LINUX_MODULE_ISCSI (module), session_id);
-        }
+       session_object = udisks_linux_iscsi_session_object_new (UDISKS_LINUX_MODULE_ISCSI (module), session_id);
+       udisks_linux_iscsi_session_object_process_uevent (UDISKS_MODULE_OBJECT (session_object), "add", device, &keep);
+       g_warn_if_fail (keep == TRUE);
+       g_free (session_id);
     }
-
-  g_free (session_id);
 
   if (session_object)
     {

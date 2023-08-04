@@ -21,6 +21,7 @@
 #define __UDISKS_LINUX_ISCSI_SESSION_OBJECT_H__
 
 #include <src/udisksdaemontypes.h>
+#include <src/udisksmoduleobject.h>
 #include "udisksiscsitypes.h"
 #include "udiskslinuxmoduleiscsi.h"
 
@@ -36,12 +37,14 @@ G_BEGIN_DECLS
 GType                           udisks_linux_iscsi_session_object_get_type  (void) G_GNUC_CONST;
 UDisksLinuxISCSISessionObject  *udisks_linux_iscsi_session_object_new (UDisksLinuxModuleISCSI *module,
                                                                        const gchar            *session_id);
-UDisksLinuxModuleISCSI         *udisks_linux_iscsi_session_object_get_module
-                                                            (UDisksLinuxISCSISessionObject *session_object);
-const gchar                    *udisks_linux_iscsi_session_object_get_session_id
-                                                            (UDisksLinuxISCSISessionObject *session_object);
-gchar                          *udisks_linux_iscsi_session_object_get_object_path
-                                                            (UDisksLinuxISCSISessionObject *session_object);
+UDisksLinuxModuleISCSI         *udisks_linux_iscsi_session_object_get_module      (UDisksLinuxISCSISessionObject *session_object);
+const gchar                    *udisks_linux_iscsi_session_object_get_session_id  (UDisksLinuxISCSISessionObject *session_object);
+gchar                          *udisks_linux_iscsi_session_object_get_object_path (UDisksLinuxISCSISessionObject *session_object);
+
+gboolean                        udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_object,
+                                                                                  const gchar        *action,
+                                                                                  UDisksLinuxDevice  *device,
+                                                                                  gboolean           *keep);
 
 gchar                          *udisks_linux_iscsi_session_object_make_object_path
                                                             (const gchar *session_id);
