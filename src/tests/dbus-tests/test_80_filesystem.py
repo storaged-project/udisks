@@ -1553,7 +1553,6 @@ class NonPOSIXTestCase(UdisksFSTestCase):
 class VFATTestCase(NonPOSIXTestCase):
     _fs_signature = 'vfat'
     _can_mount = True
-    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.vfat')
 
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
@@ -1576,7 +1575,6 @@ class VFATTestCase(NonPOSIXTestCase):
 class EXFATTestCase(NonPOSIXTestCase):
     _fs_signature = 'exfat'
     _can_mount = True
-    _can_query_size = True and UdisksFSTestCase.command_exists('fsck.exfat')
 
     def _gen_uuid(self):
         return str.format("%04X-%04X" % (random.randint(0, 0xffff), random.randint(0, 0xffff)))
@@ -1586,7 +1584,6 @@ class NTFSTestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _fs_name = 'ntfs'
     _can_mount = True
-    _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
 
     @classmethod
     def setUpClass(cls):
@@ -1609,7 +1606,6 @@ class NTFS3TestCase(UdisksFSTestCase):
     _fs_signature = 'ntfs'
     _fs_name = 'ntfs3'
     _can_mount = True
-    _can_query_size = True and UdisksFSTestCase.command_exists('ntfscluster')
     _have_ntfs3g = UdisksFSTestCase.command_exists('ntfs-3g')
 
     @classmethod
@@ -1670,8 +1666,6 @@ class NILFS2TestCase(UdisksFSTestCase):
 class F2FSTestCase(UdisksFSTestCase):
     _fs_signature = 'f2fs'
     _can_mount = True and udiskstestcase.UdisksTestCase.module_available('f2fs')
-    _can_query_size = True and UdisksFSTestCase.command_exists('dump.f2fs') and \
-                      UdisksFSTestCase._get_fstool_version('dump.f2fs -V', r'dump.f2fs ([\d\.]+)') <= Version('1.14.0')
 
 
 class UDFTestCase(UdisksFSTestCase):

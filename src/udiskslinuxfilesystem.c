@@ -211,6 +211,13 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
   if (!filesystem->cached_device_file || !filesystem->cached_fs_type)
     return 0;
 
+  /* manually getting size is supported only for Ext and XFS */
+  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") != 0 &&
+      g_strcmp0 (filesystem->cached_fs_type, "ext3") != 0 &&
+      g_strcmp0 (filesystem->cached_fs_type, "ext4") != 0 &&
+      g_strcmp0 (filesystem->cached_fs_type, "xfs") != 0)
+      return 0;
+
   /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
    * drive waking up - nothing has changed anyway since it's been sleeping...
    */
