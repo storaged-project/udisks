@@ -164,7 +164,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
 
-        msg = 'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
+        msg = r'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
         # missing auth info
         with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
             manager.Login(iqn, tpg, host, port, iface, self.no_options,
