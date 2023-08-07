@@ -21,6 +21,7 @@ import argparse
 import unittest
 import signal
 import time
+import pwd
 
 import dbus
 import dbus.service
@@ -194,4 +195,10 @@ def main():
     _run(args.allowed_actions.split(','), args.bus_address)
 
 if __name__ == '__main__':
+    # use the right user to start the service
+    try:
+        uid = pwd.getpwnam('polkitd').pw_uid
+        os.setuid(uid)
+    except KeyError:
+        pass
     main()
