@@ -1402,6 +1402,7 @@ static gboolean opt_loop_no_user_interaction = FALSE;
 static gboolean opt_loop_read_only = FALSE;
 static gint64   opt_loop_offset = 0;
 static gint64   opt_loop_size = 0;
+static gboolean opt_loop_no_partition_scan = FALSE;
 
 static const GOptionEntry command_loop_setup_entries[] =
 {
@@ -1448,6 +1449,15 @@ static const GOptionEntry command_loop_setup_entries[] =
     G_OPTION_ARG_NONE,
     &opt_loop_no_user_interaction,
     "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    "no-partition-scan",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_loop_no_partition_scan,
+    "Do not scan the loop device for partitions",
     NULL
   },
   {
@@ -1645,6 +1655,10 @@ handle_command_loop (gint        *argc,
         g_variant_builder_add (&builder,
                                "{sv}",
                                "size", g_variant_new_uint64 (opt_loop_size));
+      if (opt_loop_no_partition_scan)
+        g_variant_builder_add (&builder,
+                               "{sv}",
+                               "no-part-scan", g_variant_new_boolean (TRUE));
     }
   options = g_variant_builder_end (&builder);
   g_variant_ref_sink (options);
