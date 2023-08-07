@@ -387,7 +387,7 @@ class UDisksTestCase(unittest.TestCase):
 
         # read make variables
         make_vars = {}
-        var_re = re.compile('^([a-zA-Z_]+) = (.*)$')
+        var_re = re.compile(r'^([a-zA-Z_]+) = (.*)$')
         make = subprocess.Popen(['make', '-p', '/dev/null'],
                                 stdout=subprocess.PIPE)
         for l in make.stdout:
@@ -398,7 +398,7 @@ class UDisksTestCase(unittest.TestCase):
         make.wait()
 
         # expand make variables
-        subst_re = re.compile('\${([a-zA-Z_]+)}')
+        subst_re = re.compile(r'${([a-zA-Z_]+)}')
         for (k, v) in make_vars.items():
             while True:
                 m = subst_re.search(v)
@@ -1044,13 +1044,13 @@ class FS(UDisksTestCase):
 
         # change label
         supported = True
-        l = 'n"a\m\\"e' + fs_type
+        l = r'n"a$m\"e' + fs_type
         if fs_type == 'vfat':
             # VFAT does not support some characters
             self.assertRaises(GLib.GError, fs.call_set_label_sync, l, no_options, None)
-            l = "n@a$me"
+            l = r'n@a$me'
         elif fs_type == 'exfat':
-            l = 'n"a\m\\"exft'
+            l = r'n"a$m\"exft'
         try:
             fs.call_set_label_sync(l, no_options, None)
         except GLib.GError as e:
