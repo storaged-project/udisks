@@ -23,6 +23,13 @@ jobs:
   additional_repos:
   - "copr://@storage/udisks-daily"
 
+- job: copr_build
+  trigger: commit
+  owner: "@storage"
+  project: udisks-daily
+  branch: master
+  preserve_project: true
+
 srpm_build_deps:
  - gcc
  - make
