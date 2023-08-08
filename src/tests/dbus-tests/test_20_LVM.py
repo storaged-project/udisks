@@ -5,6 +5,7 @@ import time
 import unittest
 import six
 import sys
+import glob
 
 from packaging.version import Version
 
@@ -66,6 +67,9 @@ class UdisksLVMTest(UDisksLVMTestBase):
         if ret != 0:
             raise RuntimeError("Cannot rescan vdevs: %s", out)
         self.udev_settle()
+        # device names might have changed, need to find our vdevs again
+        tcmdevs = glob.glob('/sys/devices/*tcm_loop*/tcm_loop_adapter_*/*/*/*/block/sd*')
+        udiskstestcase.test_devs = self.vdevs = ['/dev/%s' % os.path.basename(p) for p in tcmdevs]
         for d in self.vdevs:
             obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertHasIface(obj, self.iface_prefix + '.Block')
