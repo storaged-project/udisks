@@ -482,7 +482,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
                 else:
                     mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
                     self.assertTrue(os.path.ismount(mnt_path))
-                    _ret, out = self.run_command('mount | grep %s | sed "s/.*(\(.*\))/\\1/"' % block_fs_dev)
+                    _ret, out = self.run_command(r'mount | grep %s | sed "s/.*(\(.*\))/\\1/"' % block_fs_dev)
                     if dbus_option is not None:
                         if should_be_present:
                             self.assertIn(dbus_option, out)
