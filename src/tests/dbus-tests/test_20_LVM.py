@@ -296,11 +296,14 @@ class UdisksLVMTest(UDisksLVMTestBase):
         # Yank out the first vdev and repair the LV with the fourth
         _ret, _output = self.run_command('echo yes >/sys/block/%s/device/delete' % os.path.basename(self.vdevs[0]))
         self.addCleanup(self._rescan_lio_devices)
-        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
+        # give udisks some time to register the change
+        self.run_command('udevadm trigger %s' % self.vdevs[0])
+        self.udev_settle()
         _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
         self.assertEqual(sys_health, "partial")
 
         waitRaid1Structure(None, devs[1], devs[2])
+        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
 
         lv.Repair(devs[3:4], self.no_options,
                   dbus_interface=self.iface_prefix + '.LogicalVolume')
