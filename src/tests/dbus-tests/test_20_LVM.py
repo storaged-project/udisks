@@ -244,6 +244,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
             dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
+            self.addCleanup(self.wipe_fs, d)
         vg = self._create_vg(vgname, devs)
         self.addCleanup(self._remove_vg, vg)
 
