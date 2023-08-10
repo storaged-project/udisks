@@ -1,10 +1,13 @@
 actions:
-  create-archive:
+  post-upstream-clone:
     - './autogen.sh --disable-modules --disable-daemon'
+  create-archive:
     # FIXME: just calling `make dist` doesn't build udisks/libudisks2.la for gtk-doc
     - 'make'
     - 'make dist'
     - 'bash -c "ls *.tar*"'
+  get-current-version:
+    - 'bash -c "./configure --version | head -n1 | cut -f3 -d\" \""'
 
 jobs:
 - job: copr_build
