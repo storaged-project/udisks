@@ -517,20 +517,20 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         HOSTNQN_PATH = '/etc/nvme/hostnqn'
         HOSTID_PATH = '/etc/nvme/hostid'
         FAKE_HOSTNQN = 'nqn.2014-08.org.nvmexpress:uuid:beefbeef-beef-beef-beef-beefdeadbeef'
-        FAKE_HOSTID = 'beefbeef-beef-beef-beef-beefdeadbeef'
+        FAKE_HOSTID = 'beeeeeef-beef-beef-beef-beefdeadbeef'
 
         if PACKAGE_SYSCONF_DIR != '/etc':
             self.skipTest("UDisks has been configured in non-system prefix, skipping...")
 
         # save hostnqn and hostid files
         try:
-            saved_hostnqn = read_file(HOSTNQN_PATH)
-            self.addCleanup(write_file, HOSTNQN_PATH, saved_hostnqn)
+            saved_hostnqn = self.read_file(HOSTNQN_PATH)
+            self.addCleanup(self.write_file, HOSTNQN_PATH, saved_hostnqn)
         except:
             self.addCleanup(self.remove_file, HOSTNQN_PATH, ignore_nonexistent=True)
         try:
-            saved_hostid = read_file(HOSTID_PATH)
-            self.addCleanup(write_file, HOSTID_PATH, saved_hostid)
+            saved_hostid = self.read_file(HOSTID_PATH)
+            self.addCleanup(self.write_file, HOSTID_PATH, saved_hostid)
         except:
             self.addCleanup(self.remove_file, HOSTID_PATH, ignore_nonexistent=True)
         self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
