@@ -2715,11 +2715,12 @@
     </method>
 
     <!-- Size: The size of the filesystem.  This is the amount of
-         bytes used on the block device.  If this is smaller than
-         org.freedesktop.Udisks2.Block.Size, then the filesystem can
-         be made larger with Resize.
+         bytes used on the block device representing an outer filesystem
+         boundary. If this is smaller than org.freedesktop.Udisks2.Block.Size,
+         then the filesystem can be made larger with Resize.
 
-         If the size is unknown, the property is zero.
+         If the size is unknown, the property is zero. Currently limited
+         to xfs and ext filesystems only.
 
          Please note that reading value of this property typically causes
          some I/O to read the filesystem superblock. Unlike the rest
