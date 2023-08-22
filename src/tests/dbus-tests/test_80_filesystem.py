@@ -314,7 +314,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
           rpr, _ = manager.CanRepair(self._fs_signature)
         except:
           rpr = chk = rep = False
-        if not (rpr and chk and rep) or mode & (1 << 1) == 0:
+        if not (rpr and chk and rep) or mode & BlockDev.FSResizeFlags.OFFLINE_SHRINK == 0:
             self.skipTest('Cannot check, offline-shrink and repair %s filesystem' % self._fs_signature)
 
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -343,6 +343,85 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             self.assertTrue(block_fs.Repair(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         self.assertTrue(block_fs.Check(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem'))
         self.get_property(block_fs, '.Filesystem', 'Size').assertAlmostEqual(size // 2, delta=1024**2)
+
+    def _test_grow(self, online):
+        TMP_SIZE_1 = 500 * 1024**2
+        TMP_SIZE_2 = 2 * TMP_SIZE_1
+
+        self._check_can_create()
+
+        if not self._can_mount:
+            self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
+
+        if not self._can_query_size:
+            self.skipTest('Cannot determine size of %s filesystem' % self._fs_signature)
+
+        manager = self.get_interface(self.get_object('/Manager'), '.Manager')
+        try:
+            res, mode, _ = manager.CanResize(self._fs_signature)
+        except:
+            res = False
+            mode = 0
+        if not res:
+            self.skipTest('Cannot resize %s filesystem' % self._fs_signature)
+        if online and mode & BlockDev.FSResizeFlags.ONLINE_GROW == 0:
+            self.skipTest('Cannot online-grow %s filesystem' % self._fs_signature)
+        if not online and mode & BlockDev.FSResizeFlags.OFFLINE_GROW == 0:
+            self.skipTest('Cannot offline-grow %s filesystem' % self._fs_signature)
+
+        with tempfile.NamedTemporaryFile(prefix="udisks_test", delete=True, mode='w+b') as temp:
+            temp.truncate(TMP_SIZE_1)
+            loop_dev_obj_path = manager.LoopSetup(temp.fileno(), self.no_options)
+            loop_dev_obj = self.get_object(loop_dev_obj_path)
+            _, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+            self.addCleanup(self.run_command, 'losetup --detach /dev/%s' % loop_dev)
+
+            # check the initial size
+            bsize = self.get_property(loop_dev_obj, '.Block', 'Size')
+            bsize.assertEqual(TMP_SIZE_1)
+
+            # create filesystem
+            loop_dev_obj.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
+            fssize = self.get_property(loop_dev_obj, '.Filesystem', 'Size')
+            fssize.assertAlmostEqual(TMP_SIZE_1, delta=1024**2)
+
+            # not mounted
+            mounts = self.get_property(loop_dev_obj, '.Filesystem', 'MountPoints')
+            mounts.assertLen(0)
+
+            # mount it
+            if online:
+                d = dbus.Dictionary(signature='sv')
+                if self._fs_name:
+                    d['fstype'] = self._fs_name
+                mnt_path = loop_dev_obj.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
+                self.addCleanup(self.try_unmount, mnt_path)
+                self.addCleanup(self.try_unmount, '/dev/%s' % loop_dev)
+
+            # resize the loop device
+            temp.truncate(TMP_SIZE_2)
+            self.run_command('losetup -c /dev/%s' % loop_dev)
+            time.sleep(2)
+            bsize = self.get_property(loop_dev_obj, '.Block', 'Size')
+            bsize.assertEqual(TMP_SIZE_2)
+            fssize = self.get_property(loop_dev_obj, '.Filesystem', 'Size')
+            fssize.assertAlmostEqual(TMP_SIZE_1, delta=1024**2)
+
+            # perform the grow
+            loop_dev_obj.Resize(dbus.UInt64(TMP_SIZE_2), self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+            fssize = self.get_property(loop_dev_obj, '.Filesystem', 'Size')
+            fssize.assertAlmostEqual(TMP_SIZE_2, delta=1024**2)
+
+            # unmount
+            if online:
+                loop_dev_obj.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
+                self.assertFalse(os.path.ismount(mnt_path))
+
+    def test_online_grow(self):
+        self._test_grow(True)
+
+    def test_offline_grow(self):
+        self._test_grow(True)
 
     def test_size(self):
         self._check_can_create()
