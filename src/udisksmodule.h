@@ -94,6 +94,7 @@ typedef UDisksModule* (*UDisksModuleNewFunc) (UDisksDaemon  *daemon,
  * @get_drive_object_interface_types: Virtual function for udisks_module_get_drive_object_interface_types(). The default implementation returns %NULL.
  * @new_block_object_interface: Virtual function for udisks_module_new_block_object_interface(). The default implementation returns %NULL.
  * @new_drive_object_interface: Virtual function for udisks_module_new_drive_object_interface(). The default implementation returns %NULL.
+ * @handle_uevent: Virtual function for udisks_module_handle_uevent(). The default implementation returns %NULL.
  *
  * Class structure for #UDisksModule.
  */
@@ -115,6 +116,8 @@ struct _UDisksModuleClass
   GDBusInterfaceSkeleton  * (*new_drive_object_interface)       (UDisksModule           *module,
                                                                  UDisksLinuxDriveObject *object,
                                                                  GType                   interface_type);
+  void                      (*handle_uevent)                    (UDisksModule           *module,
+                                                                 UDisksLinuxDevice      *device);
 };
 
 
@@ -139,6 +142,8 @@ GDBusInterfaceSkeleton  *udisks_module_new_block_object_interface       (UDisksM
 GDBusInterfaceSkeleton  *udisks_module_new_drive_object_interface       (UDisksModule           *module,
                                                                          UDisksLinuxDriveObject *object,
                                                                          GType                   interface_type);
+void                     udisks_module_handle_uevent                    (UDisksModule           *module,
+                                                                         UDisksLinuxDevice      *device);
 
 
 G_END_DECLS

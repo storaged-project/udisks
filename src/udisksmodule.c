@@ -228,6 +228,13 @@ udisks_module_new_drive_object_interface_default (UDisksModule           *module
   return NULL;
 }
 
+static void
+udisks_module_handle_uevent_default (UDisksModule      *module,
+                                     UDisksLinuxDevice *device)
+{
+  return;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -247,6 +254,7 @@ udisks_module_class_init (UDisksModuleClass *klass)
   klass->get_drive_object_interface_types = udisks_module_get_drive_object_interface_types_default;
   klass->new_block_object_interface       = udisks_module_new_block_object_interface_default;
   klass->new_drive_object_interface       = udisks_module_new_drive_object_interface_default;
+  klass->handle_uevent                    = udisks_module_handle_uevent_default;
 
   /**
    * UDisksModule:daemon:
@@ -555,4 +563,28 @@ udisks_module_new_drive_object_interface (UDisksModule           *module,
   g_return_val_if_fail (UDISKS_IS_MODULE (module), NULL);
 
   return UDISKS_MODULE_GET_CLASS (module)->new_drive_object_interface (module, object, interface_type);
+}
+
+/**
+ * udisks_module_handle_uevent:
+ * @module: A #UDisksModule.
+ * @device: A #UDisksLinuxDevice device object.
+ *
+ * This is a generic uevent processing handler for special cases where
+ * none of the regular interface methods really fit the needs of the module.
+ * Every single uevent is routed this way and care must be taken
+ * to minimize the processing time as it's run sync in the main thread.
+ *
+ * Added for the LVM2 module as a temporary workaround. Subject
+ * to removal in the future.
+ *
+ * Since: 2.11.0
+ */
+void
+udisks_module_handle_uevent (UDisksModule      *module,
+                             UDisksLinuxDevice *device)
+{
+  g_return_if_fail (UDISKS_IS_MODULE (module));
+
+  UDISKS_MODULE_GET_CLASS (module)->handle_uevent (module, device);
 }
