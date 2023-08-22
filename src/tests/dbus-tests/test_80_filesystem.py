@@ -1758,6 +1758,18 @@ class UDFTestCase(UdisksFSTestCase):
     def _gen_uuid(self):
         return str.format("%016x" % random.randint(0, 0xffffffffffffffff))
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
+    def test_mount_fstab_complex_label(self):
+        super(UDFTestCase, self).test_mount_fstab_complex_label()
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
+    def test_mount_fstab_complex_label2(self):
+        super(UDFTestCase, self).test_mount_fstab_complex_label2()
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
+    def test_mount_fstab_complex_label_bad(self):
+        super(UDFTestCase, self).test_mount_fstab_complex_label_bad()
+
 
 class FailsystemTestCase(UdisksFSTestCase):
     # test that not supported operations fail 'nicely'
