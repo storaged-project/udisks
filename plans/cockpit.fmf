@@ -1,0 +1,22 @@
+# reverse dependency test for https://github.com/cockpit-project/cockpit
+# if this fails in a non-obvious way, please contact the cockpit team in your PR for investigation:
+# @martinpitt, @marusak, @mvollmer
+enabled: false
+
+adjust+:
+  when: revdeps == yes
+  enabled: true
+
+discover:
+    how: fmf
+    url: https://github.com/cockpit-project/cockpit
+    ref: main
+
+execute:
+    how: tmt
+
+# this includes the storage tests
+/optional:
+    summary: Run tests for optional packages
+    discover+:
+        test: /test/browser/optional
