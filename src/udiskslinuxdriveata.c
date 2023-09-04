@@ -37,7 +37,7 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#include <atasmart.h>
+#include <blockdev/smart.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
@@ -76,16 +76,7 @@ struct _UDisksLinuxDriveAta
 
   gboolean     smart_is_from_blob;
   guint64      smart_updated;
-  gboolean     smart_failing;
-  gdouble      smart_temperature;
-  guint64      smart_power_on_seconds;
-  gint         smart_num_attributes_failing;
-  gint         smart_num_attributes_failed_in_the_past;
-  gint64       smart_num_bad_sectors;
-  const gchar *smart_selftest_status;
-  gint         smart_selftest_percent_remaining;
-
-  GVariant    *smart_attributes;
+  BDSmartATA  *smart_data;
 
   UDisksThreadedJob *selftest_job;
 
@@ -104,8 +95,6 @@ static void drive_ata_iface_init (UDisksDriveAtaIface *iface);
 G_DEFINE_TYPE_WITH_CODE (UDisksLinuxDriveAta, udisks_linux_drive_ata, UDISKS_TYPE_DRIVE_ATA_SKELETON,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_DRIVE_ATA, drive_ata_iface_init));
 
-G_LOCK_DEFINE_STATIC (object_lock);
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -113,13 +102,11 @@ udisks_linux_drive_ata_finalize (GObject *object)
 {
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (object);
 
-  if (drive->smart_attributes != NULL)
-    g_variant_unref (drive->smart_attributes);
+  bd_smart_ata_free (drive->smart_data);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize (object);
 }
-
 
 static void
 udisks_linux_drive_ata_init (UDisksLinuxDriveAta *drive)
@@ -153,6 +140,53 @@ udisks_linux_drive_ata_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+G_LOCK_DEFINE_STATIC (object_lock);
+
+static const gchar *
+selftest_status_to_string (BDSmartATASelfTestStatus status)
+{
+  static const gchar * self_test_status_str[] = {
+    "success",           /* BD_SMART_ATA_SELF_TEST_STATUS_COMPLETED_NO_ERROR */
+    "aborted",           /* BD_SMART_ATA_SELF_TEST_STATUS_ABORTED_HOST */
+    "interrupted",       /* BD_SMART_ATA_SELF_TEST_STATUS_INTR_HOST_RESET */
+    "fatal",             /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_FATAL */
+    "error_unknown",     /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_UNKNOWN */
+    "error_electrical",  /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_ELECTRICAL */
+    "error_servo",       /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_SERVO */
+    "error_read",        /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_READ */
+    "error_handling",    /* BD_SMART_ATA_SELF_TEST_STATUS_ERROR_HANDLING */
+  };
+
+  if (status == BD_SMART_ATA_SELF_TEST_STATUS_IN_PROGRESS)
+    return "inprogress";
+  if (status <= BD_SMART_ATA_SELF_TEST_STATUS_ERROR_HANDLING)
+    return self_test_status_str[status];
+  return "";
+}
+
+static void
+count_failing_attrs (BDSmartATAAttribute **a,
+                     gint *num_attributes_failing,
+                     gint *num_attributes_failed_in_the_past,
+                     gint64 *num_bad_sectors)
+{
+  *num_attributes_failing = 0;
+  *num_attributes_failed_in_the_past = 0;
+  *num_bad_sectors = 0;
+
+  for (; *a; a++)
+    {
+      if ((*a)->failing_now)
+        *num_attributes_failing += 1;
+      if ((*a)->failed_past)
+        *num_attributes_failed_in_the_past += 1;
+
+      if (g_strcmp0 ((*a)->well_known_name, "reallocated-sector-count") == 0 ||
+          g_strcmp0 ((*a)->well_known_name, "current-pending-sector") == 0)
+        *num_bad_sectors += (*a)->value_raw;
+    }
+}
+
 /* may be called from *any* thread when the SMART data has been updated */
 static void
 update_smart (UDisksLinuxDriveAta *drive,
@@ -168,15 +202,19 @@ update_smart (UDisksLinuxDriveAta *drive,
   gint selftest_percent_remaining = -1;
   gint num_attributes_failing = -1;
   gint num_attributes_failed_in_the_past = -1;
-  gint64 num_bad_sectors = 1;
+  gint64 num_bad_sectors = -1;
   guint16 word_82 = 0;
   guint16 word_85 = 0;
 
+#ifdef HAVE_SMART
   /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
   word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
   word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
   supported = word_82 & (1<<0);
   enabled = word_85 & (1<<0);
+#else
+  supported = enabled = FALSE;
+#endif
 
   G_LOCK (object_lock);
   if ((drive->smart_is_from_blob || enabled) && drive->smart_updated > 0)
@@ -184,14 +222,17 @@ update_smart (UDisksLinuxDriveAta *drive,
       if (drive->smart_is_from_blob)
         supported = enabled = TRUE;
       updated = drive->smart_updated;
-      failing = drive->smart_failing;
-      temperature = drive->smart_temperature;
-      power_on_seconds = drive->smart_power_on_seconds;
-      num_attributes_failing = drive->smart_num_attributes_failing;
-      num_attributes_failed_in_the_past = drive->smart_num_attributes_failed_in_the_past;
-      num_bad_sectors = drive->smart_num_bad_sectors;
-      selftest_status = drive->smart_selftest_status;
-      selftest_percent_remaining = drive->smart_selftest_percent_remaining;
+      supported = drive->smart_data->smart_supported;
+      enabled  = drive->smart_data->smart_enabled;
+      failing = !drive->smart_data->overall_status_passed;
+      temperature = drive->smart_data->temperature;
+      power_on_seconds = drive->smart_data->power_on_time /* minutes */ * 60;
+      selftest_status = selftest_status_to_string (drive->smart_data->self_test_status);
+      selftest_percent_remaining = drive->smart_data->self_test_percent_remaining;
+      count_failing_attrs (drive->smart_data->attributes,
+                           &num_attributes_failing,
+                           &num_attributes_failed_in_the_past,
+                           &num_bad_sectors);
     }
   G_UNLOCK (object_lock);
 
@@ -350,94 +391,6 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef struct
-{
-  GVariantBuilder builder;
-  gint num_attributes_failing;
-  gint num_attributes_failed_in_the_past;
-} ParseData;
-
-static void
-parse_attr_cb (SkDisk                           *d,
-               const SkSmartAttributeParsedData *a,
-               void                             *user_data)
-{
-  ParseData *data = user_data;
-  gboolean failed = FALSE;
-  gboolean failed_in_the_past = FALSE;
-  gint current, worst, threshold;
-
-  current =   a->current_value_valid ? a->current_value : -1;
-  worst =     a->worst_value_valid   ? a->worst_value : -1;
-  threshold = a->threshold_valid     ? a->threshold : -1;
-
-  g_variant_builder_add (&data->builder,
-                         "(ysqiiixia{sv})",
-                         a->id,
-                         a->name,
-                         a->flags,
-                         current,
-                         worst,
-                         threshold,
-                         a->pretty_value,     a->pretty_unit,
-                         NULL); /* expansion unused for now */
-
-  if (current > 0 && threshold > 0 && current <= threshold)
-    failed = TRUE;
-
-  if (worst > 0 && threshold > 0 && worst <= threshold)
-    failed_in_the_past = TRUE;
-
-  if (failed)
-    data->num_attributes_failing += 1;
-
-  if (failed_in_the_past)
-    data->num_attributes_failed_in_the_past += 1;
-}
-
-static const gchar *
-selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
-{
-  const gchar *ret;
-  switch (status)
-    {
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_SUCCESS_OR_NEVER:
-      ret = "success";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ABORTED:
-      ret = "aborted";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_INTERRUPTED:
-      ret = "interrupted";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_FATAL:
-      ret = "fatal";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ERROR_UNKNOWN:
-      ret = "error_unknown";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ERROR_ELECTRICAL:
-      ret = "error_electrical";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ERROR_SERVO:
-      ret = "error_servo";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ERROR_READ:
-      ret = "error_read";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_ERROR_HANDLING:
-      ret = "error_handling";
-      break;
-    case SK_SMART_SELF_TEST_EXECUTION_STATUS_INPROGRESS:
-      ret = "inprogress";
-      break;
-    default:
-      ret = "";
-      break;
-    }
-  return ret;
-}
-
 static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *device)
 {
   const gchar *drivepath = g_udev_device_get_sysfs_path (device->udev_device);
@@ -501,15 +454,9 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
 {
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device = NULL;
+  GError *l_error = NULL;
+  BDSmartATA *data;
   gboolean ret = FALSE;
-  SkDisk *d = NULL;
-  SkBool awake;
-  SkBool good;
-  uint64_t temp_mkelvin = 0;
-  uint64_t power_on_msec = 0;
-  uint64_t num_bad_sectors = 0;
-  const SkSmartParsedData *data;
-  ParseData parse_data;
 
   object = udisks_daemon_util_dup_object (drive, error);
   if (object == NULL)
@@ -534,42 +481,28 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
 
   if (simulate_path != NULL)
     {
-      gchar *blob;
+      guint8 *blob;
       gsize blob_len;
 
       if (!g_file_get_contents (simulate_path,
-                                &blob,
+                                (gchar **)&blob,
                                 &blob_len,
                                 error))
         {
           goto out;
         }
 
-      if (sk_disk_open (NULL, &d) != 0)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "sk_disk_open: %m");
-          g_free (blob);
-          goto out;
-        }
-
-      if (sk_disk_set_blob (d, blob, blob_len) != 0)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "sk_disk_set_blob: %m");
-          g_free (blob);
-          goto out;
-        }
+      data = bd_smart_ata_get_info_from_data (blob,
+                                              blob_len,
+                                              &l_error);
       g_free (blob);
     }
   else
     {
       guchar count;
       gboolean noio = FALSE;
+      gboolean awake;
+
       if (drive->standby_enabled)
         noio = update_io_stats (drive, device);
       if (!udisks_ata_get_pm_state (g_udev_device_get_device_file (device->udev_device), error, &count))
@@ -584,67 +517,23 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                        "Disk is in sleep mode and the nowakeup option was passed");
           goto out_io;
         }
+
+      data = bd_smart_ata_get_info (g_udev_device_get_device_file (device->udev_device),
+                                    &l_error);
     }
 
-  if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
+  if (data == NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_open: %m");
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED, l_error->message);
+      g_clear_error (&l_error);
       goto out;
     }
-
-  if (sk_disk_smart_read_data (d) != 0)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_smart_read_data: %m");
-      goto out;
-    }
-
-  if (sk_disk_smart_status (d, &good) != 0)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_smart_status: %m");
-      goto out;
-    }
-
-  if (sk_disk_smart_parse (d, &data) != 0)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_smart_parse: %m");
-      goto out;
-    }
-
-  /* don't care if these are failing or not */
-  sk_disk_smart_get_temperature (d, &temp_mkelvin);
-  sk_disk_smart_get_power_on (d, &power_on_msec);
-  sk_disk_smart_get_bad (d, &num_bad_sectors);
-
-  memset (&parse_data, 0, sizeof (ParseData));
-  g_variant_builder_init (&parse_data.builder, G_VARIANT_TYPE ("a(ysqiiixia{sv})"));
-  sk_disk_smart_parse_attributes (d, parse_attr_cb, &parse_data);
 
   G_LOCK (object_lock);
+  bd_smart_ata_free (drive->smart_data);
+  drive->smart_data = data;
   drive->smart_is_from_blob = (simulate_path != NULL);
   drive->smart_updated = time (NULL);
-  drive->smart_failing = !good;
-  drive->smart_temperature = temp_mkelvin / 1000.0;
-  drive->smart_power_on_seconds = power_on_msec / 1000.0;
-  drive->smart_num_attributes_failing = parse_data.num_attributes_failing;
-  drive->smart_num_attributes_failed_in_the_past = parse_data.num_attributes_failed_in_the_past;
-  drive->smart_num_bad_sectors = num_bad_sectors;
-  drive->smart_selftest_status = selftest_status_to_string (data->self_test_execution_status);
-  drive->smart_selftest_percent_remaining = data->self_test_execution_percent_remaining;
-  if (drive->smart_attributes != NULL)
-    g_variant_unref (drive->smart_attributes);
-  drive->smart_attributes = g_variant_ref_sink (g_variant_builder_end (&parse_data.builder));
   G_UNLOCK (object_lock);
 
   update_smart (drive, device);
@@ -661,8 +550,6 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
 
  out:
   g_clear_object (&device);
-  if (d != NULL)
-    sk_disk_free (d);
   g_clear_object (&object);
   return ret;
 }
@@ -685,17 +572,17 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
  *
  * Returns: %TRUE if the operation succeed, %FALSE if @error is set.
  */
-gboolean
+static gboolean
 udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
                                             const gchar          *type,
                                             GCancellable         *cancellable,
                                             GError              **error)
 {
-  UDisksLinuxDriveObject  *object;
+  UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device = NULL;
-  SkDisk *d = NULL;
+  GError *l_error = NULL;
   gboolean ret = FALSE;
-  SkSmartSelfTest test;
+  BDSmartSelfTestOp op;
 
   object = udisks_daemon_util_dup_object (drive, error);
   if (object == NULL)
@@ -710,13 +597,15 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
     }
 
   if (g_strcmp0 (type, "short") == 0)
-    test = SK_SMART_SELF_TEST_SHORT;
+    op = BD_SMART_SELF_TEST_OP_SHORT;
   else if (g_strcmp0 (type, "extended") == 0)
-    test = SK_SMART_SELF_TEST_EXTENDED;
+    op = BD_SMART_SELF_TEST_OP_LONG;
+  else if (g_strcmp0 (type, "offline") == 0)
+    op = BD_SMART_SELF_TEST_OP_OFFLINE;
   else if (g_strcmp0 (type, "conveyance") == 0)
-    test = SK_SMART_SELF_TEST_CONVEYANCE;
+    op = BD_SMART_SELF_TEST_OP_CONVEYANCE;
   else if (g_strcmp0 (type, "abort") == 0)
-    test = SK_SMART_SELF_TEST_ABORT;
+    op = BD_SMART_SELF_TEST_OP_ABORT;
   else
     {
       g_set_error (error,
@@ -726,21 +615,13 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
-  if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
+  if (!bd_smart_device_self_test (g_udev_device_get_device_file (device->udev_device),
+                                  op, &l_error))
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_open: %m");
-      goto out;
-    }
-
-  if (sk_disk_smart_self_test (d, test) != 0)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "sk_disk_smart_self_test: %m");
+      g_set_error_literal (error,
+                           UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           l_error->message);
+      g_clear_error (&l_error);
       goto out;
     }
 
@@ -748,8 +629,6 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
 
  out:
   g_clear_object (&device);
-  if (d != NULL)
-    sk_disk_free (d);
   g_clear_object (&object);
   return ret;
 }
@@ -875,9 +754,11 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
                              GVariant              *options)
 {
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
+  GVariantBuilder builder;
+  BDSmartATAAttribute **a;
 
   G_LOCK (object_lock);
-  if (drive->smart_attributes == NULL)
+  if (drive->smart_data == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -886,8 +767,29 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
     }
   else
     {
+      g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(ysqiiixia{sv})"));
+      for (a = drive->smart_data->attributes; *a; a++)
+        {
+          gchar *well_known_name = NULL;
+
+          if ((*a)->well_known_name == NULL)
+            well_known_name = g_strdup_printf ("attribute-%d", (*a)->id);
+
+          g_variant_builder_add (&builder,
+                                 "(ysqiiixia{sv})",
+                                 (*a)->id,
+                                 well_known_name ? well_known_name : (*a)->well_known_name,
+                                 (*a)->flags,
+                                 (*a)->value,
+                                 (*a)->worst,
+                                 (*a)->threshold,
+                                 (*a)->pretty_value,
+                                 (*a)->pretty_value_unit,
+                                 NULL); /* expansion unused for now */
+          g_free (well_known_name);
+        }
       udisks_drive_ata_complete_smart_get_attributes (UDISKS_DRIVE_ATA (drive), invocation,
-                                                      drive->smart_attributes);
+                                                      g_variant_builder_end (&builder));
     }
   G_UNLOCK (object_lock);
 
@@ -1034,8 +936,8 @@ selftest_job_func (UDisksThreadedJob  *job,
       /* TODO: set estimation properties etc. on the Job object */
 
       G_LOCK (object_lock);
-      still_in_progress = (g_strcmp0 (drive->smart_selftest_status, "inprogress") == 0);
-      progress = (100.0 - drive->smart_selftest_percent_remaining) / 100.0;
+      still_in_progress = drive->smart_data && drive->smart_data->self_test_status == BD_SMART_ATA_SELF_TEST_STATUS_IN_PROGRESS;
+      progress = (100.0 - (drive->smart_data ? drive->smart_data->self_test_percent_remaining : 0)) / 100.0;
       G_UNLOCK (object_lock);
       if (!still_in_progress)
         {
@@ -1230,6 +1132,182 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
  out:
   g_clear_object (&object);
   g_clear_object (&block_object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+handle_smart_set_enabled (UDisksDriveAta        *_drive,
+                          GDBusMethodInvocation *invocation,
+                          gboolean               value,
+                          GVariant              *options)
+{
+  UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
+  UDisksLinuxDriveObject *object = NULL;
+  UDisksLinuxBlockObject *block_object = NULL;
+  UDisksDaemon *daemon;
+  GError *error = NULL;
+  UDisksLinuxDevice *device = NULL;
+  const gchar *message;
+  const gchar *action_id;
+  uid_t caller_uid;
+
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find block device for drive");
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  if (value)
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * requests enabling SMART on a disk.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to enable SMART on $(drive)");
+    }
+  else
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * requests enabling SMART on a disk.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to disable SMART on $(drive)");
+    }
+  action_id = "org.freedesktop.udisks2.ata-smart-enable-disable";
+
+  /* Check that the user is authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
+
+  if (!bd_smart_set_enabled (g_udev_device_get_device_file (device->udev_device),
+                             value, &error))
+    {
+      if (g_error_matches (error, BD_SMART_ERROR, BD_SMART_ERROR_TECH_UNAVAIL))
+        {
+          UDisksAtaCommandInput input = {.command = 0xb0};
+          UDisksAtaCommandOutput output = {0};
+          gint fd;
+
+          /* not supported by the libblockdev smart plugin */
+          g_clear_error (&error);
+
+          fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
+          if (fd == -1)
+            {
+              g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Error opening device file %s while changing SMART status: %m",
+                                                     g_udev_device_get_device_file (device->udev_device));
+              goto out;
+            }
+
+          /* ATA8: 7.53.4 SMART ENABLE OPERATIONS - B0h/D8h, Non-Data
+           *       7.53.2 SMART DISABLE OPERATIONS - B0h/D9h, Non-Data
+           */
+          if (value)
+            input.feature = 0xd8;
+          else
+            input.feature = 0xd9;
+          input.lba = 0x004fc2; /* will be encoded as 0xc2 0x4f 0x00 as per the ATA spec */
+          if (!udisks_ata_send_command_sync (fd,
+                                             -1,
+                                             UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                             &input,
+                                             &output,
+                                             &error))
+            {
+              g_prefix_error (&error, "Error sending ATA command SMART, sub-command %s OPERATIONS: ",
+                              value ? "ENABLE" : "DISABLE");
+              g_dbus_method_invocation_take_error (invocation, error);
+              close (fd);
+              goto out;
+            }
+          close (fd);
+        }
+      else
+        {
+          g_dbus_method_invocation_return_error_literal (invocation,
+                                                         UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                         error->message);
+          g_clear_error (&error);
+          goto out;
+        }
+    }
+
+  /* Reread new IDENTIFY data */
+  if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+    {
+      g_prefix_error (&error, "Error reprobing device: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* if we just enabled SMART, re-read SMART data before returning */
+  if (value)
+    {
+      if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
+                                                      FALSE, /* nowakeup */
+                                                      NULL, /* simulate_path */
+                                                      NULL, /* cancellable */
+                                                      &error))
+        {
+          g_prefix_error (&error, "Error updating SMART data: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
+  else
+    {
+      update_smart (drive, device);
+    }
+  /* ensure property changes are sent before the method return */
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
+
+  udisks_drive_ata_complete_smart_set_enabled (_drive, invocation);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&block_object);
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -2327,168 +2405,6 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-handle_smart_set_enabled (UDisksDriveAta        *_drive,
-                          GDBusMethodInvocation *invocation,
-                          gboolean               value,
-                          GVariant              *options)
-{
-  UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
-  UDisksLinuxDriveObject *object = NULL;
-  UDisksLinuxBlockObject *block_object = NULL;
-  UDisksDaemon *daemon;
-  GError *error = NULL;
-  UDisksLinuxDevice *device = NULL;
-  gint fd = -1;
-  const gchar *message;
-  const gchar *action_id;
-  uid_t caller_uid;
-
-  object = udisks_daemon_util_dup_object (drive, &error);
-  if (object == NULL)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  block_object = udisks_linux_drive_object_get_block (object, FALSE);
-  if (block_object == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Unable to find block device for drive");
-      goto out;
-    }
-
-  daemon = udisks_linux_drive_object_get_daemon (object);
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_uid,
-                                               &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
-      goto out;
-    }
-
-  if (value)
-    {
-      /* Translators: Shown in authentication dialog when the user
-       * requests enabling SMART on a disk.
-       *
-       * Do not translate $(drive), it's a placeholder and
-       * will be replaced by the name of the drive/device in question
-       */
-      message = N_("Authentication is required to enable SMART on $(drive)");
-    }
-  else
-    {
-      /* Translators: Shown in authentication dialog when the user
-       * requests enabling SMART on a disk.
-       *
-       * Do not translate $(drive), it's a placeholder and
-       * will be replaced by the name of the drive/device in question
-       */
-      message = N_("Authentication is required to disable SMART on $(drive)");
-    }
-  action_id = "org.freedesktop.udisks2.ata-smart-enable-disable";
-
-  /* Check that the user is authorized */
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    UDISKS_OBJECT (object),
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
-
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
-  if (device == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No udev device");
-      goto out;
-    }
-
-  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
-  if (fd == -1)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening device file %s while changing SMART status: %m",
-                                             g_udev_device_get_device_file (device->udev_device));
-      goto out;
-    }
-
-  {
-    /* ATA8: 7.53.4 SMART ENABLE OPERATIONS - B0h/D8h, Non-Data
-     *       7.53.2 SMART DISABLE OPERATIONS - B0h/D9h, Non-Data
-     */
-    UDisksAtaCommandInput input = {.command = 0xb0};
-    UDisksAtaCommandOutput output = {0};
-    if (value)
-      input.feature = 0xd8;
-    else
-      input.feature = 0xd9;
-    input.lba = 0x004fc2; /* will be encoded as 0xc2 0x4f 0x00 as per the ATA spec */
-    if (!udisks_ata_send_command_sync (fd,
-                                       -1,
-                                       UDISKS_ATA_COMMAND_PROTOCOL_NONE,
-                                       &input,
-                                       &output,
-                                       &error))
-      {
-        g_prefix_error (&error, "Error sending ATA command SMART, sub-command %s OPERATIONS: ",
-                        value ? "ENABLE" : "DISABLE");
-        g_dbus_method_invocation_take_error (invocation, error);
-        goto out;
-      }
-  }
-
-  /* Reread new IDENTIFY data */
-  if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
-    {
-      g_prefix_error (&error, "Error reprobing device: ");
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  /* if we just enabled SMART, re-read SMART data before returning */
-  if (value)
-    {
-      if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
-                                                      FALSE, /* nowakeup */
-                                                      NULL, /* simulate_path */
-                                                      NULL, /* cancellable */
-                                                      &error))
-        {
-          g_prefix_error (&error, "Error updating SMART data: ");
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
-    }
-  else
-    {
-      update_smart (drive, device);
-    }
-  /* ensure property changes are sent before the method return */
-  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
-
-  udisks_drive_ata_complete_smart_set_enabled (_drive, invocation);
-
- out:
-  if (fd != -1)
-    close (fd);
-  g_clear_object (&device);
-  g_clear_object (&block_object);
-  g_clear_object (&object);
-  return TRUE; /* returning TRUE means that we handled the method invocation */
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
 
 static void
 drive_ata_iface_init (UDisksDriveAtaIface *iface)
