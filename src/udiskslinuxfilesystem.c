@@ -109,6 +109,45 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_
 #define MOUNT_BASE_PERSISTENT FALSE
 #endif
 
+/* required for kernel module autoloading */
+static const gchar *well_known_filesystems[] =
+{
+  "bcache",
+  "bcachefs",
+  "btrfs",
+  "erofs",
+  "exfat",
+  "ext2",
+  "ext3",
+  "ext4",
+  "f2fs",
+  "hfs",
+  "hfsplus",
+  "iso9660",
+  "jfs",
+  "msdos",
+  "nilfs",
+  "nilfs2",
+  "ntfs",
+  "ntfs3",
+  "udf",
+  "reiserfs",
+  "reiser4",
+  "reiser5",
+  "umsdos",
+  "vfat",
+  "xfs",
+};
+
+/* filesystems known to report their outer boundaries */
+static const gchar *fs_lastblock_list[] =
+{
+  "ext2",
+  "ext3",
+  "ext4",
+  "xfs",
+};
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -199,6 +238,17 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+in_fs_lastblock_list (const gchar *fstype)
+{
+  guint n;
+
+  for (n = 0; n < G_N_ELEMENTS (fs_lastblock_list); n++)
+    if (g_strcmp0 (fs_lastblock_list[n], fstype) == 0)
+      return TRUE;
+  return FALSE;
+}
+
 /* WARNING: called with GDBusObjectManager lock held, avoid any object lookup */
 static guint64
 get_filesystem_size (UDisksLinuxFilesystem *filesystem)
@@ -212,11 +262,8 @@ get_filesystem_size (UDisksLinuxFilesystem *filesystem)
     return 0;
 
   /* manually getting size is supported only for Ext and XFS */
-  if (g_strcmp0 (filesystem->cached_fs_type, "ext2") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "ext3") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "ext4") != 0 &&
-      g_strcmp0 (filesystem->cached_fs_type, "xfs") != 0)
-      return 0;
+  if (!in_fs_lastblock_list (filesystem->cached_fs_type))
+    return 0;
 
   /* if the drive is ATA and is sleeping, skip filesystem size check to prevent
    * drive waking up - nothing has changed anyway since it's been sleeping...
@@ -305,6 +352,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   GPtrArray *p;
   GList *mounts;
   GList *l;
+  gboolean mounted;
 
   mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
   device = udisks_linux_block_object_get_device (object);
@@ -323,6 +371,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_add (p, NULL);
   udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
                                       (const gchar *const *) p->pdata);
+  mounted = p->len > 0;
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
@@ -342,13 +391,19 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (filesystem));
 
-  /* The ID_FS_SIZE property only contains data part of the total filesystem
-   * size while 'ID_FS_LASTBLOCK * ID_FS_BLOCKSIZE' typically marks the size
-   * boundary of the filesystem. This is the approach of libblockdev fs size
-   * reporting.
-   */
-  filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
-                               g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
+  if (mounted && g_strcmp0 (filesystem->cached_fs_type, "xfs") == 0)
+    /* Force native filesystem tools for mounted XFS as superblock might
+     * not have been written right after the grow.
+     */
+    filesystem->cached_fs_size = 0;
+  else
+    /* The ID_FS_SIZE property only contains data part of the total filesystem
+     * size and comes with no guarantees while 'ID_FS_LASTBLOCK * ID_FS_BLOCKSIZE'
+     * typically marks the boundary of the filesystem.
+     */
+    filesystem->cached_fs_size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_LASTBLOCK") *
+                                 g_udev_device_get_property_as_uint64 (device->udev_device, "ID_FS_BLOCKSIZE");
+
   /* The Size property is hacked to be retrieved on-demand, only need to
    * notify subscribers that it has changed.
    */
@@ -358,37 +413,6 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-/* required for kernel module autoloading */
-static const gchar *well_known_filesystems[] =
-{
-  "bcache",
-  "bcachefs",
-  "btrfs",
-  "erofs",
-  "exfat",
-  "ext2",
-  "ext3",
-  "ext4",
-  "f2fs",
-  "hfs",
-  "hfsplus",
-  "iso9660",
-  "jfs",
-  "msdos",
-  "nilfs",
-  "nilfs2",
-  "ntfs",
-  "ntfs3",
-  "udf",
-  "reiserfs",
-  "reiser4",
-  "reiser5",
-  "umsdos",
-  "vfat",
-  "xfs",
-  NULL,
-};
 
 static gboolean
 is_in_filesystem_file (const gchar *filesystems_file,
@@ -439,19 +463,12 @@ is_in_filesystem_file (const gchar *filesystems_file,
 static gboolean
 is_well_known_filesystem (const gchar *fstype)
 {
-  gboolean ret = FALSE;
   guint n;
 
-  for (n = 0; well_known_filesystems[n] != NULL; n++)
-    {
-      if (g_strcmp0 (well_known_filesystems[n], fstype) == 0)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
- out:
-  return ret;
+  for (n = 0; n < G_N_ELEMENTS (well_known_filesystems); n++)
+    if (g_strcmp0 (well_known_filesystems[n], fstype) == 0)
+      return TRUE;
+  return FALSE;
 }
 
 /* this is not a very efficient implementation but it's very rarely
