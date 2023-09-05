@@ -392,25 +392,16 @@ is_recorded_as_physical_volume (UDisksLinuxModuleLVM2 *module,
   return ret;
 }
 
-static GDBusObjectSkeleton **
-udisks_linux_module_lvm2_new_object (UDisksModule      *module,
-                                     UDisksLinuxDevice *device)
+static void
+udisks_linux_module_lvm2_handle_uevent (UDisksModule      *module,
+                                        UDisksLinuxDevice *device)
 {
-  /* This is bit of a hack. We never return any instance and thus effectively
-   * taking the #UDisksLinuxProvider module uevent machinery out of sight. We
-   * only get an uevent and related #UDisksLinuxDevice where we perform basic
-   * checks if the device could be related to LVM and schedule a probe. We take
-   * reference to #UDisksModule instance though for manually performing dbus
-   * stuff onto. */
-
-  g_return_val_if_fail (UDISKS_IS_LINUX_MODULE_LVM2 (module), NULL);
+  g_return_if_fail (UDISKS_IS_LINUX_MODULE_LVM2 (module));
 
   if (is_logical_volume (device)
       || has_physical_volume_label (device)
       || is_recorded_as_physical_volume (UDISKS_LINUX_MODULE_LVM2 (module), device))
     trigger_delayed_lvm_update (UDISKS_LINUX_MODULE_LVM2 (module));
-
-  return NULL;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -473,6 +464,6 @@ udisks_linux_module_lvm2_class_init (UDisksLinuxModuleLVM2Class *klass)
 
   module_class = UDISKS_MODULE_CLASS (klass);
   module_class->new_manager = udisks_linux_module_lvm2_new_manager;
-  module_class->new_object = udisks_linux_module_lvm2_new_object;
+  module_class->handle_uevent = udisks_linux_module_lvm2_handle_uevent;
   module_class->track_parent = udisks_linux_module_lvm2_track_parent;
 }

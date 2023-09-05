@@ -200,8 +200,24 @@ class UdisksLVMTest(UDisksLVMTestBase):
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))
         self.assertEqual(ret, 0)
 
-        # lvremove
+        # deactivate/activate check
+        dbus_prop_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_prop_active.assertTrue()
+        ret, _out = self.run_command('lvchange %s --activate n' % os.path.join(vgname, lvname))
+        self.assertEqual(ret, 0)
+        time.sleep(3)
+        dbus_prop_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_prop_active.assertFalse()
+        ret, _out = self.run_command('lvchange %s --activate y' % os.path.join(vgname, lvname))
+        self.assertEqual(ret, 0)
+        time.sleep(3)
+        dbus_prop_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_prop_active.assertTrue()
         lv.Deactivate(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
+        dbus_prop_active = self.get_property(lv, '.LogicalVolume', 'Active')
+        dbus_prop_active.assertFalse()
+
+        # lvremove
         lv.Delete(self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
 
         ret, _out = self.run_command('lvs %s' % os.path.join(vgname, lvname))

@@ -1349,6 +1349,9 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
             }
           g_free (objects);
         }
+
+      /* Generic module uevent handler */
+      udisks_module_handle_uevent (module, device);
     }
 
   /* Remove empty module instance tables. */
