@@ -5,6 +5,7 @@ import time
 import unittest
 import six
 import sys
+import glob
 
 from packaging.version import Version
 
@@ -66,6 +67,9 @@ class UdisksLVMTest(UDisksLVMTestBase):
         if ret != 0:
             raise RuntimeError("Cannot rescan vdevs: %s", out)
         self.udev_settle()
+        # device names might have changed, need to find our vdevs again
+        tcmdevs = glob.glob('/sys/devices/*tcm_loop*/tcm_loop_adapter_*/*/*/*/block/sd*')
+        udiskstestcase.test_devs = self.vdevs = ['/dev/%s' % os.path.basename(p) for p in tcmdevs]
         for d in self.vdevs:
             obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertHasIface(obj, self.iface_prefix + '.Block')
@@ -240,6 +244,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
             dev_obj = self.get_object('/block_devices/' + os.path.basename(d))
             self.assertIsNotNone(dev_obj)
             devs.append(dev_obj)
+            self.addCleanup(self.wipe_fs, d)
         vg = self._create_vg(vgname, devs)
         self.addCleanup(self._remove_vg, vg)
 
@@ -308,11 +313,14 @@ class UdisksLVMTest(UDisksLVMTestBase):
         # Yank out the first vdev and repair the LV with the fourth
         _ret, _output = self.run_command('echo yes >/sys/block/%s/device/delete' % os.path.basename(self.vdevs[0]))
         self.addCleanup(self._rescan_lio_devices)
-        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
+        # give udisks some time to register the change
+        self.run_command('udevadm trigger %s' % self.vdevs[0])
+        self.udev_settle()
         _ret, sys_health = self.run_command('lvs -o health_status --noheadings --nosuffix %s/%s' % (vgname, lvname))
         self.assertEqual(sys_health, "partial")
 
         waitRaid1Structure(None, devs[1], devs[2])
+        self.get_property(vg, '.VolumeGroup', 'MissingPhysicalVolumes').assertEqual([first_vdev_uuid])
 
         lv.Repair(devs[3:4], self.no_options,
                   dbus_interface=self.iface_prefix + '.LogicalVolume')
