@@ -10,13 +10,13 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2017. #zanata.
 # Yuri Chornoivan <yurchor@ukr.net>, 2018. #zanata.
 # Yuri Chornoivan <yurchor@ukr.net>, 2019. #zanata.
-# Yuri Chornoivan <yurchor@ukr.net>, 2020, 2022.
+# Yuri Chornoivan <yurchor@ukr.net>, 2020, 2022, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2022-11-15 15:29+0000\n"
-"PO-Revision-Date: 2022-12-28 17:11+0200\n"
+"POT-Creation-Date: 2023-09-06 07:00+0000\n"
+"PO-Revision-Date: 2023-09-06 20:30+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <kde-i18n-uk@kde.org>\n"
 "Language: uk\n"
@@ -34,6 +34,7 @@ msgstr "Змонтувати файлову систему"
 #: data/org.freedesktop.UDisks2.policy.in:17
 #: data/org.freedesktop.UDisks2.policy.in:28
 #: data/org.freedesktop.UDisks2.policy.in:39
+#: data/org.freedesktop.UDisks2.policy.in:50
 msgid "Authentication is required to mount the filesystem"
 msgstr "Щоб змонтувати файлову систему, слід пройти розпізнавання"
 
@@ -46,6 +47,11 @@ msgid "Mount a filesystem from a device plugged into another seat"
 msgstr "Змонтувати файлову систему на пристрої, з’єднаному з іншого місця"
 
 #: data/org.freedesktop.UDisks2.policy.in:49
+#| msgid "Mount a filesystem from a device plugged into another seat"
+msgid "Mount a filesystem on behalf of another user"
+msgstr "Змонтувати файлову систему від імені іншого користувача"
+
+#: data/org.freedesktop.UDisks2.policy.in:60
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
@@ -53,54 +59,54 @@ msgstr ""
 "Змонтувати або демонтувати файлові системи, визначені у файлі fstab за "
 "допомогою параметра x-udisks-auth"
 
-#: data/org.freedesktop.UDisks2.policy.in:50
+#: data/org.freedesktop.UDisks2.policy.in:61
 msgid "Authentication is required to mount/unmount the filesystem"
 msgstr ""
 "Щоб отримати доступ до монтування та демонтування файлових систем, слід "
 "пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:63
+#: data/org.freedesktop.UDisks2.policy.in:74
 msgid "Unmount a device mounted by another user"
 msgstr "Демонтувати пристрій, змонтований іншим користувачем"
 
-#: data/org.freedesktop.UDisks2.policy.in:64
+#: data/org.freedesktop.UDisks2.policy.in:75
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
 "Щоб отримати доступ до демонтування файлової системи, змонтованої іншим "
 "користувачем, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:76
+#: data/org.freedesktop.UDisks2.policy.in:87
 msgid "Take ownership of a filesystem"
 msgstr "Перебирання право власності на файлову систему"
 
-#: data/org.freedesktop.UDisks2.policy.in:77
+#: data/org.freedesktop.UDisks2.policy.in:88
 msgid "Authentication is required to take ownership of a filesystem."
 msgstr ""
 "Для набуття права власності на файлову систему слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:89
+#: data/org.freedesktop.UDisks2.policy.in:100
 msgid "Unlock an encrypted device"
 msgstr "Розблокувати зашифрований пристрій"
 
-#: data/org.freedesktop.UDisks2.policy.in:90
 #: data/org.freedesktop.UDisks2.policy.in:101
 #: data/org.freedesktop.UDisks2.policy.in:112
 #: data/org.freedesktop.UDisks2.policy.in:123
+#: data/org.freedesktop.UDisks2.policy.in:134
 msgid "Authentication is required to unlock an encrypted device"
 msgstr ""
 "Щоб отримати доступ до розблокування зашифрованого пристрою, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:100
+#: data/org.freedesktop.UDisks2.policy.in:111
 msgid "Unlock an encrypted system device"
 msgstr "Розблокувати зашифрований пристрій системи"
 
-#: data/org.freedesktop.UDisks2.policy.in:111
+#: data/org.freedesktop.UDisks2.policy.in:122
 msgid "Unlock an encrypted device plugged into another seat"
 msgstr "Розблокувати зашифрований пристрій, з’єднаний з іншого місця"
 
-#: data/org.freedesktop.UDisks2.policy.in:122
+#: data/org.freedesktop.UDisks2.policy.in:133
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
@@ -108,11 +114,11 @@ msgstr ""
 "Розблокувати зашифрований пристрій, вказаний у файлі crypttab з параметром x-"
 "udisks-auth"
 
-#: data/org.freedesktop.UDisks2.policy.in:136
+#: data/org.freedesktop.UDisks2.policy.in:147
 msgid "Lock an encrypted device unlocked by another user"
 msgstr "Заблокувати зашифрований пристрій, розблокований іншим користувачем"
 
-#: data/org.freedesktop.UDisks2.policy.in:137
+#: data/org.freedesktop.UDisks2.policy.in:148
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
@@ -120,116 +126,116 @@ msgstr ""
 "Щоб заблокувати зашифрований пристрій, розблокований іншим користувачем, "
 "слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:149
 #: data/org.freedesktop.UDisks2.policy.in:160
+#: data/org.freedesktop.UDisks2.policy.in:171
 msgid "Change passphrase for an encrypted device"
 msgstr "Змінити пароль до зашифрованого пристрою"
 
-#: data/org.freedesktop.UDisks2.policy.in:150
 #: data/org.freedesktop.UDisks2.policy.in:161
+#: data/org.freedesktop.UDisks2.policy.in:172
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr ""
 "Щоб внести зміни до пароля зашифрованого пристрою, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:173
+#: data/org.freedesktop.UDisks2.policy.in:184
 msgid "Manage loop devices"
 msgstr "Керування петльовими пристроями"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:174 src/udiskslinuxmanager.c:378
+#: data/org.freedesktop.UDisks2.policy.in:185 src/udiskslinuxmanager.c:379
 msgid "Authentication is required to set up a loop device"
 msgstr ""
 "Щоб отримати доступ до визначення петльового пристрою, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:187
+#: data/org.freedesktop.UDisks2.policy.in:198
 msgid "Delete loop devices"
 msgstr "Вилучити петльові (loop) пристрої"
 
-#: data/org.freedesktop.UDisks2.policy.in:188
+#: data/org.freedesktop.UDisks2.policy.in:199
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
 "Щоб вилучити петльовий пристрій, визначений іншим користувачем, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:197
+#: data/org.freedesktop.UDisks2.policy.in:208
 msgid "Modify loop devices"
 msgstr "Внести зміни до петльових (loop) пристроїв"
 
-#: data/org.freedesktop.UDisks2.policy.in:198
+#: data/org.freedesktop.UDisks2.policy.in:209
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
 "Щоб внести зміни до параметрів петльового пристрою, визначеного іншим "
 "користувачем, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:210
+#: data/org.freedesktop.UDisks2.policy.in:221
 msgid "Manage swapspace"
 msgstr "Керування резервним об’ємом пам’яті (свопінґом)"
 
-#: data/org.freedesktop.UDisks2.policy.in:211
+#: data/org.freedesktop.UDisks2.policy.in:222
 msgid "Authentication is required to manage swapspace"
 msgstr ""
 "Щоб отримати доступ до керування розділами резервної пам’яті (свопінґу), "
 "слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:223
+#: data/org.freedesktop.UDisks2.policy.in:234
 msgid "Manage RAID arrays"
 msgstr "Керування масивами RAID"
 
-#: data/org.freedesktop.UDisks2.policy.in:224
+#: data/org.freedesktop.UDisks2.policy.in:235
 msgid "Authentication is required to manage RAID arrays"
 msgstr ""
 "Щоб отримати доступ до керування масивами RAID, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:236
+#: data/org.freedesktop.UDisks2.policy.in:247
 msgid "Power off drive"
 msgstr "Вимикання живлення диска"
 
-#: data/org.freedesktop.UDisks2.policy.in:237
 #: data/org.freedesktop.UDisks2.policy.in:248
+#: data/org.freedesktop.UDisks2.policy.in:259
 msgid "Authentication is required to power off a drive"
 msgstr ""
 "Щоб отримати доступ до вимикання живлення диска, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:247
+#: data/org.freedesktop.UDisks2.policy.in:258
 msgid "Power off a system drive"
 msgstr "Вимикання живлення системного диска"
 
-#: data/org.freedesktop.UDisks2.policy.in:258
+#: data/org.freedesktop.UDisks2.policy.in:269
 msgid "Power off a drive attached to another seat"
 msgstr "Вимкнути живлення диска, з’єднаного з іншого місця"
 
-#: data/org.freedesktop.UDisks2.policy.in:259
+#: data/org.freedesktop.UDisks2.policy.in:270
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
 msgstr ""
 "Щоб отримати доступ до вимикання живлення диска, з’єднаного з іншого місця, "
 "слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:271
+#: data/org.freedesktop.UDisks2.policy.in:282
 msgid "Eject media"
 msgstr "Від’єднати носій даних"
 
-#: data/org.freedesktop.UDisks2.policy.in:272
 #: data/org.freedesktop.UDisks2.policy.in:283
+#: data/org.freedesktop.UDisks2.policy.in:294
 msgid "Authentication is required to eject media"
 msgstr ""
 "Щоб отримати доступ до від’єднання носія даних, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:282
+#: data/org.freedesktop.UDisks2.policy.in:293
 msgid "Eject media from a system drive"
 msgstr "Від’єднати носій даних від системного диска"
 
-#: data/org.freedesktop.UDisks2.policy.in:293
+#: data/org.freedesktop.UDisks2.policy.in:304
 msgid "Eject media from a drive attached to another seat"
 msgstr "Від’єднати носій даних від диска, з’єднаного з іншого місця"
 
-#: data/org.freedesktop.UDisks2.policy.in:294
+#: data/org.freedesktop.UDisks2.policy.in:305
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
@@ -237,241 +243,233 @@ msgstr ""
 "Щоб отримати доступ до від’єднання носія даних від диска, з’єднаного з "
 "іншого місця, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:306
-#: data/org.freedesktop.UDisks2.policy.in:328
+#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:339
 msgid "Modify a device"
 msgstr "Внести зміни до параметрів пристрою"
 
-#: data/org.freedesktop.UDisks2.policy.in:307
 #: data/org.freedesktop.UDisks2.policy.in:318
+#: data/org.freedesktop.UDisks2.policy.in:329
 msgid "Authentication is required to modify a device"
 msgstr "Для внесення змін до параметрів пристрою слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:317
+#: data/org.freedesktop.UDisks2.policy.in:328
 msgid "Modify a system device"
 msgstr "Внести зміни до параметрів системного пристрою"
 
-#: data/org.freedesktop.UDisks2.policy.in:329
+#: data/org.freedesktop.UDisks2.policy.in:340
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
 msgstr ""
 "Щоб отримати доступ до внесення змін до пристрою, з’єднаного з іншого місця, "
 "слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:339
+#: data/org.freedesktop.UDisks2.policy.in:350
 msgid "Rescan a device"
 msgstr "Повторне сканування пристрою"
 
-#: data/org.freedesktop.UDisks2.policy.in:340
+#: data/org.freedesktop.UDisks2.policy.in:351
 msgid "Authentication is required to rescan a device"
 msgstr ""
 "Для виконання повторного сканування пристрою слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:352
+#: data/org.freedesktop.UDisks2.policy.in:363
 msgid "Open a device"
 msgstr "Відкрити пристрій"
 
-#: data/org.freedesktop.UDisks2.policy.in:353
-#: data/org.freedesktop.UDisks2.policy.in:363
+#: data/org.freedesktop.UDisks2.policy.in:364
+#: data/org.freedesktop.UDisks2.policy.in:374
 msgid "Authentication is required to open a device"
 msgstr "Щоб відкрити пристрій, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:362
+#: data/org.freedesktop.UDisks2.policy.in:373
 msgid "Open a system device"
 msgstr "Відкрити пристрій системи"
 
-#: data/org.freedesktop.UDisks2.policy.in:382
 #: data/org.freedesktop.UDisks2.policy.in:393
+#: data/org.freedesktop.UDisks2.policy.in:404
 msgid "Modify system-wide configuration"
 msgstr "Внести зміни до загальносистемних налаштувань"
 
-#: data/org.freedesktop.UDisks2.policy.in:383
+#: data/org.freedesktop.UDisks2.policy.in:394
 msgid "Authentication is required to modify system-wide configuration"
 msgstr ""
 "Щоб отримати доступ до внесення змін до загальносистемних налаштувань, слід "
 "пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:394
+#: data/org.freedesktop.UDisks2.policy.in:405
 msgid ""
 "Authentication is required to retrieve secrets from system-wide configuration"
 msgstr ""
 "Щоб отримати реєстраційні дані з загальносистемних налаштувань, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:406
+#: data/org.freedesktop.UDisks2.policy.in:417
 msgid "Modify drive settings"
 msgstr "Внести зміни до параметрів диска"
 
-#: data/org.freedesktop.UDisks2.policy.in:407
+#: data/org.freedesktop.UDisks2.policy.in:418
 msgid "Authentication is required to modify drive settings"
 msgstr ""
 "Щоб отримати доступ до внесення змін до параметрів диска, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:420
-#: data/org.freedesktop.UDisks2.policy.in:528
+#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:539
 msgid "Update SMART data"
 msgstr "Оновити дані SMART"
 
-#: data/org.freedesktop.UDisks2.policy.in:421
-#: data/org.freedesktop.UDisks2.policy.in:529
+#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:540
 msgid "Authentication is required to update SMART data"
 msgstr ""
 "Щоб отримати доступ до оновлення даних SMART, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:431
+#: data/org.freedesktop.UDisks2.policy.in:442
 msgid "Set SMART data from blob"
 msgstr "Встановити дані SMART на основі бінарних кодів"
 
-#: data/org.freedesktop.UDisks2.policy.in:432
+#: data/org.freedesktop.UDisks2.policy.in:443
 msgid "Authentication is required to set SMART data from blob"
 msgstr ""
 "Щоб отримати доступ до встановлення даних SMART на основі бінарних кодів, "
 "слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:442
+#: data/org.freedesktop.UDisks2.policy.in:453
 msgid "Run SMART self-test"
 msgstr "Виконати самоперевірку SMART"
 
-#: data/org.freedesktop.UDisks2.policy.in:443
+#: data/org.freedesktop.UDisks2.policy.in:454
 msgid "Authentication is required to run a SMART self-test"
 msgstr ""
 "Щоб отримати доступ до запуску самоперевірки SMART, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:453
+#: data/org.freedesktop.UDisks2.policy.in:464
 msgid "Enable/Disable SMART"
 msgstr "Вмикання або вимикання SMART"
 
-#: data/org.freedesktop.UDisks2.policy.in:454
+#: data/org.freedesktop.UDisks2.policy.in:465
 msgid "Authentication is required to enable/disable SMART"
 msgstr ""
 "Щоб отримати доступ до вмикання або вимикання SMART, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:467
+#: data/org.freedesktop.UDisks2.policy.in:478
 msgid "Check power state"
 msgstr "Перевірити стан живлення"
 
-#: data/org.freedesktop.UDisks2.policy.in:468
+#: data/org.freedesktop.UDisks2.policy.in:479
 msgid "Authentication is required to check the power state"
 msgstr ""
 "Щоб отримати доступ до перевірки стану живлення, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:478
+#: data/org.freedesktop.UDisks2.policy.in:489
 msgid "Send standby command"
 msgstr "Надіслати команду переходу до стану очікування"
 
-#: data/org.freedesktop.UDisks2.policy.in:479
 #: data/org.freedesktop.UDisks2.policy.in:490
 #: data/org.freedesktop.UDisks2.policy.in:501
+#: data/org.freedesktop.UDisks2.policy.in:512
 msgid "Authentication is required to put a drive into standby mode"
 msgstr "Щоб перевести диск у стан очікування, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:489
+#: data/org.freedesktop.UDisks2.policy.in:500
 msgid "Send standby command to a system drive"
 msgstr ""
 "Надіслати команду переходу у стан очікування диску з операційною системою"
 
-#: data/org.freedesktop.UDisks2.policy.in:500
+#: data/org.freedesktop.UDisks2.policy.in:511
 msgid "Send standby command to drive on other seat"
 msgstr ""
 "Надіслати команду переходу у стан очікування диску на іншому терміналі"
 
-#: data/org.freedesktop.UDisks2.policy.in:514
+#: data/org.freedesktop.UDisks2.policy.in:525
 msgid "Securely erase a hard disk"
 msgstr "Безпечно витерти жорсткий диск"
 
-#: data/org.freedesktop.UDisks2.policy.in:515
+#: data/org.freedesktop.UDisks2.policy.in:526
 msgid "Authentication is required to securely erase a hard disk"
 msgstr ""
 "Щоб отримати доступ до безпечного витирання жорсткого диска, слід пройти "
 "розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:539
-#| msgid "Run SMART self-test"
+#: data/org.freedesktop.UDisks2.policy.in:550
 msgid "Run device self-test"
 msgstr "Виконати самоперевірку пристрою"
 
-#: data/org.freedesktop.UDisks2.policy.in:540
-#| msgid "Authentication is required to run a SMART self-test"
+#: data/org.freedesktop.UDisks2.policy.in:551
 msgid "Authentication is required to run a device self-test"
 msgstr ""
-"Щоб отримати доступ до запуску самоперевірки пристрою, слід пройти"
-" розпізнавання"
+"Щоб отримати доступ до запуску самоперевірки пристрою, слід пройти "
+"розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:550
+#: data/org.freedesktop.UDisks2.policy.in:561
 msgid "Start the sanitize operation"
 msgstr "Почати дію з очищення"
 
-#: data/org.freedesktop.UDisks2.policy.in:551
-#| msgid "Authentication is required to perform iSCSI login"
+#: data/org.freedesktop.UDisks2.policy.in:562
 msgid "Authentication is required to perform a sanitize operation"
 msgstr "Щоб отримати доступ до дії із очищення, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:561
+#: data/org.freedesktop.UDisks2.policy.in:572
 msgid "Format a namespace"
 msgstr "Форматувати простір назв"
 
-#: data/org.freedesktop.UDisks2.policy.in:562
-#| msgid "Authentication is required to manage swapspace"
+#: data/org.freedesktop.UDisks2.policy.in:573
 msgid "Authentication is required to format a namespace"
 msgstr ""
-"Щоб отримати доступ до форматування простору назв, "
-"слід пройти розпізнавання"
+"Щоб отримати доступ до форматування простору назв, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:572
+#: data/org.freedesktop.UDisks2.policy.in:583
 msgid "NVMeoF connection"
 msgstr "З'єднання NVMeoF"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:573 src/udiskslinuxmanagernvme.c:435
-#| msgid "Authentication is required to check the power state"
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr ""
-"Щоб отримати доступ до з'єднання із NVMe за допомогою контролера Fabrics,"
-" слід пройти розпізнавання"
+"Щоб отримати доступ до з'єднання із NVMe за допомогою контролера Fabrics, "
+"слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:582
+#: data/org.freedesktop.UDisks2.policy.in:593
 msgid "Disconnect a NVMeoF controller"
 msgstr "Від'єднати контролер NVMeoF"
 
-#: data/org.freedesktop.UDisks2.policy.in:583
-#| msgid "Authentication is required to discover targets"
+#: data/org.freedesktop.UDisks2.policy.in:594
 msgid ""
 "Authentication is required to disconnect a NVMe over Fabrics controller"
 msgstr ""
-"Щоб отримати доступ до від'єднання NVMe за допомогою контролера Fabrics,"
-" слід пройти розпізнавання"
+"Щоб отримати доступ до від'єднання NVMe за допомогою контролера Fabrics, "
+"слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:593
+#: data/org.freedesktop.UDisks2.policy.in:604
 msgid "Set a NVMe Host NQN/ID"
 msgstr "Встановити NQN/ID вузла NVMe"
 
-#: data/org.freedesktop.UDisks2.policy.in:594
-#| msgid "Authentication is required to set SMART data from blob"
+#: data/org.freedesktop.UDisks2.policy.in:605
 msgid "Authentication is required to set NVMe Host NQN or Host ID"
 msgstr ""
-"Щоб отримати доступ до встановлення NQN або ідентифікатора вузла NVMe, слід"
-" пройти розпізнавання"
+"Щоб отримати доступ до встановлення NQN або ідентифікатора вузла NVMe, слід "
+"пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:607
+#: data/org.freedesktop.UDisks2.policy.in:618
 msgid "Cancel job"
 msgstr "Скасувати завдання"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:608 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:400
 msgid "Authentication is required to cancel a job"
 msgstr "Щоб скасувати завдання, слід пройти розпізнавання"
 
-#: data/org.freedesktop.UDisks2.policy.in:618
+#: data/org.freedesktop.UDisks2.policy.in:629
 msgid "Cancel job started by another user"
 msgstr "Скасувати завдання, розпочате іншим користувачем"
 
-#: data/org.freedesktop.UDisks2.policy.in:619
+#: data/org.freedesktop.UDisks2.policy.in:630
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
 "Щоб скасувати завдання, розпочате іншим користувачем, слід пройти "
@@ -581,7 +579,6 @@ msgid "Authentication is required to manage disk drive LED"
 msgstr "Для керування лампочкою дискового пристрою слід пройти розпізнавання"
 
 #: modules/lsm/lsm_linux_drive_local.c:278
-#| msgid "Authentication is required to rescan $(drive)"
 msgid "Authentication is required to change $(drive) LED"
 msgstr "Щоб змінити лампочку $(drive), слід пройти розпізнавання"
 
@@ -593,53 +590,47 @@ msgstr "Керування LVM"
 msgid "Authentication is required to manage LVM"
 msgstr "Щоб отримати доступ до керування LVM, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:564
+#: modules/lvm2/udiskslinuxlogicalvolume.c:566
 msgid "Authentication is required to delete a logical volume"
 msgstr "Щоб вилучити логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:644
-#| msgid "Authentication is required to rename a logical volume"
+#: modules/lvm2/udiskslinuxlogicalvolume.c:646
 msgid "Authentication is required to repair a logical volume"
 msgstr "Щоб виправити логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:747
+#: modules/lvm2/udiskslinuxlogicalvolume.c:749
 msgid "Authentication is required to rename a logical volume"
 msgstr "Щоб перейменувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:809
+#: modules/lvm2/udiskslinuxlogicalvolume.c:813
 msgid "Authentication is required to resize a logical volume"
 msgstr "Щоб змінити розміри логічного тому, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:903
+#: modules/lvm2/udiskslinuxlogicalvolume.c:921
 msgid "Authentication is required to activate a logical volume"
 msgstr "Щоб активувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:971
+#: modules/lvm2/udiskslinuxlogicalvolume.c:989
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "Щоб деактивувати логічний том, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1038
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "Щоб створити знімок логічного тому, слід пройти розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1095
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1158
-msgid "LVMCache not enabled at compile time."
-msgstr "LVMCache не було увімкнено під час збирання програми."
-
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1109
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 "Щоб отримати доступ до перетворення логічного тому на кеш, слід пройти "
 "розпізнавання"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1131
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1194
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Помилка під час спроби перетворення тому: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1172
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Щоб отримати доступ до виділення буфера кешу буфера кешування логічного тому "
@@ -681,7 +672,6 @@ msgid "Authentication is required to empty a device in a volume group"
 msgstr "Щоб спорожнити пристрій у групі томів, слід пройти розпізнавання"
 
 #: modules/lvm2/udiskslinuxvolumegroup.c:830
-#| msgid "Authentication is required to remove a device from a volume group"
 msgid ""
 "Authentication is required to remove missing physical volumes from a volume "
 "group"
@@ -711,35 +701,35 @@ msgstr "Для створення тому VDO слід пройти розпі�
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1288
+#: src/udiskslinuxblock.c:1312
 msgid "Authentication is required to read system-level secrets"
 msgstr ""
 "Щоб отримати доступ до загальносистемних реєстраційних даних, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:1995
+#: src/udiskslinuxblock.c:2019
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до додавання запису до файла /etc/fstab, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2014
+#: src/udiskslinuxblock.c:2038
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
 "Щоб отримати доступ до додавання запису до файла /etc/crypttab, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2074
+#: src/udiskslinuxblock.c:2098
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до вилучення запису з файла /etc/fstab, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2093
+#: src/udiskslinuxblock.c:2117
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
@@ -747,14 +737,14 @@ msgstr ""
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2166
+#: src/udiskslinuxblock.c:2190
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr ""
 "Щоб отримати доступ до внесення змін до файла /etc/fstab, слід пройти "
 "розпізнавання"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2185
+#: src/udiskslinuxblock.c:2209
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr ""
 "Щоб отримати доступ до внесення змін до файла /etc/crypttab, слід пройти "
@@ -773,7 +763,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2875 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Щоб отримати доступ до безпечного витирання $(drive), слід пройти "
@@ -786,12 +776,12 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2887
+#: src/udiskslinuxblock.c:2912
 msgid "Authentication is required to format $(drive)"
 msgstr ""
 "Щоб отримати доступ до форматування $(drive), слід пройти розпізнавання"
 
-#: src/udiskslinuxblock.c:2915 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2941 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "Щоб внести зміни до налаштувань системи, слід пройти розпізнавання"
 
@@ -801,7 +791,7 @@ msgstr "Щоб внести зміни до налаштувань систем�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3766
+#: src/udiskslinuxblock.c:3873
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Щоб відкрити пристрій $(drive) для читання, слід пройти розпізнавання"
 
@@ -811,7 +801,7 @@ msgstr "Щоб відкрити пристрій $(drive) для читання,
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3837
+#: src/udiskslinuxblock.c:3944
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Щоб відкрити пристрій $(drive) для запису, слід пройти розпізнавання"
 
@@ -821,7 +811,7 @@ msgstr "Щоб відкрити пристрій $(drive) для запису, �
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3911
+#: src/udiskslinuxblock.c:4018
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Щоб відкрити пристрій $(drive) для тестування, слід пройти розпізнавання"
@@ -832,7 +822,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3994
+#: src/udiskslinuxblock.c:4101
 msgid "Authentication is required to open $(drive)."
 msgstr "Щоб відкрити $(drive), слід пройти розпізнавання"
 
@@ -842,7 +832,7 @@ msgstr "Щоб відкрити $(drive), слід пройти розпізна
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4051
+#: src/udiskslinuxblock.c:4158
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 "Для виконання повторного сканування $(drive) слід пройти розпізнавання"
@@ -887,7 +877,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:449
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:466
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr ""
 "Щоб отримати доступ до оновлення даних SMART з $(drive), слід пройти "
@@ -986,7 +976,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:496 src/udiskslinuxencrypted.c:964
+#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Щоб отримати доступ до розблокування зашифрованого пристрою $(drive), слід "
@@ -999,7 +989,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:776
+#: src/udiskslinuxencrypted.c:778
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -1013,7 +1003,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1097
+#: src/udiskslinuxencrypted.c:1100
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
 "Для зміни розмірів зашифрованого пристрою $(drive) слід пройти розпізнавання"
@@ -1024,7 +1014,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:863 src/udiskslinuxfilesystem.c:1049
+#: src/udiskslinuxfilesystem.c:938 src/udiskslinuxfilesystem.c:1129
 msgid "Authentication is required to mount $(drive)"
 msgstr "Щоб отримати доступ до монтування $(drive), слід пройти розпізнавання"
 
@@ -1038,7 +1028,7 @@ msgstr "Щоб отримати доступ до монтування $(drive),
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:948
+#: src/udiskslinuxfilesystem.c:1027
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1056,7 +1046,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1500
+#: src/udiskslinuxfilesystem.c:1608
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1071,7 +1061,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1548
+#: src/udiskslinuxfilesystem.c:1656
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Щоб отримати доступ до демонтування $(drive), змонтованого іншим "
@@ -1083,7 +1073,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1716
+#: src/udiskslinuxfilesystem.c:1824
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Щоб змінити мітку файлової системи на $(drive), слід пройти розпізнавання"
@@ -1094,7 +1084,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1898
+#: src/udiskslinuxfilesystem.c:2006
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Щоб змінити розмір файлової системи на $(drive), слід пройти розпізнавання"
@@ -1105,7 +1095,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2069
+#: src/udiskslinuxfilesystem.c:2177
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "Щоб відновити файлову систему на $(drive), слід пройти розпізнавання"
 
@@ -1115,7 +1105,7 @@ msgstr "Щоб відновити файлову систему на $(drive), �
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2237
+#: src/udiskslinuxfilesystem.c:2345
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "Щоб перевірити файлову систему на $(drive), слід пройти розпізнавання"
 
@@ -1125,12 +1115,25 @@ msgstr "Щоб перевірити файлову систему на $(drive),
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2397
+#: src/udiskslinuxfilesystem.c:2505
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
 "Щоб змінити права власності на файлову систему на $(drive), слід пройти "
 "розпізнавання"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing the filesystem UUID.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxfilesystem.c:2672
+#| msgid ""
+#| "Authentication is required to change the filesystem label on $(drive)"
+msgid "Authentication is required to change the filesystem UUID on $(drive)"
+msgstr ""
+"Щоб змінити UUID файлової системи на $(drive), слід пройти розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1139,7 +1142,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:254
+#: src/udiskslinuxloop.c:243
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Щоб вилучити петльовий пристрій $(drive), слід пройти розпізнавання"
 
@@ -1150,7 +1153,7 @@ msgstr "Щоб вилучити петльовий пристрій $(drive), с
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:347
+#: src/udiskslinuxloop.c:336
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
 "Щоб внести зміни до параметрів петльового пристрою $(drive), слід пройти "
@@ -1160,7 +1163,7 @@ msgstr ""
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:578
+#: src/udiskslinuxmanager.c:582
 msgid "Authentication is required to create a RAID array"
 msgstr ""
 "Щоб отримати доступ до створення масиву RAID, слід пройти розпізнавання"
@@ -1169,7 +1172,6 @@ msgstr ""
 #. * requests setting new NVMe Host NQN value.
 #.
 #: src/udiskslinuxmanagernvme.c:549
-#| msgid "Authentication is required to manage LVM"
 msgid "Authentication is required to set NVMe Host NQN"
 msgstr ""
 "Щоб отримати доступ до встановлення NQN вузла NVMe, слід пройти розпізнавання"
@@ -1178,11 +1180,10 @@ msgstr ""
 #. * requests setting new NVMe Host ID value.
 #.
 #: src/udiskslinuxmanagernvme.c:618
-#| msgid "Authentication is required to manage LVM"
 msgid "Authentication is required to set NVMe Host ID"
 msgstr ""
-"Щоб отримати доступ до встановлення ідентифікатора вузла NVMe, слід пройти"
-" розпізнавання"
+"Щоб отримати доступ до встановлення ідентифікатора вузла NVMe, слід пройти "
+"розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -1256,13 +1257,11 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:811
-#| msgid "Authentication is required to start a SMART self-test on $(drive)"
+#: src/udiskslinuxnvmecontroller.c:828
 msgid "Authentication is required to start a device self-test on $(drive)"
 msgstr ""
-"Щоб отримати доступ до запуску самоперевірки пристрою на $(drive), слід"
-" пройти "
-"розпізнавання"
+"Щоб отримати доступ до запуску самоперевірки пристрою на $(drive), слід "
+"пройти розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
@@ -1270,8 +1269,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:904
-#| msgid "Authentication is required to abort a SMART self-test on $(drive)"
+#: src/udiskslinuxnvmecontroller.c:921
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr ""
 "Щоб отримати доступ до переривання самоперевірки пристрою на $(drive), слід "
@@ -1283,12 +1281,11 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1206
-#| msgid "Authentication is required to perform a secure erase of $(drive)"
+#: src/udiskslinuxnvmecontroller.c:1223
 msgid "Authentication is required to perform a sanitize operation of $(drive)"
 msgstr ""
-"Щоб отримати доступ до дії із очищення пристрою $(drive), слід пройти"
-" розпізнавання"
+"Щоб отримати доступ до дії із очищення пристрою $(drive), слід пройти "
+"розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests disconnect of a NVMeoF connected controller.
@@ -1297,13 +1294,12 @@ msgstr ""
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmefabrics.c:201
-#| msgid "Authentication is required to check power state for $(drive)"
 msgid ""
 "Authentication is required to disconnect a NVMe over Fabrics controller "
 "$(drive)"
 msgstr ""
-"Щоб отримати доступ до від'єднання NVMe за допомогою контролера Fabrics"
-" $(drive), слід пройти розпізнавання)"
+"Щоб отримати доступ до від'єднання NVMe за допомогою контролера Fabrics "
+"$(drive), слід пройти розпізнавання)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
@@ -1312,11 +1308,8 @@ msgstr ""
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmenamespace.c:409
-#| msgid "Authentication is required to activate swapspace on $(drive)"
 msgid "Authentication is required to format a namespace on $(drive)"
-msgstr ""
-"Щоб форматувати простір назв на $(drive), слід пройти "
-"розпізнавання"
+msgstr "Щоб форматувати простір назв на $(drive), слід пройти розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1335,7 +1328,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:313
+#: src/udiskslinuxpartitiontable.c:339
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Щоб створити розділ на $(drive), слід пройти розпізнавання"
 
@@ -1369,10 +1362,23 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:370
+#: src/udiskslinuxswapspace.c:371
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
 "Щоб встановити мітку для резервної пам’яті (свопінґу) на $(drive), слід "
+"пройти розпізнавання"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting UUID of a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxswapspace.c:457
+#| msgid "Authentication is required to set swapspace label on $(drive)"
+msgid "Authentication is required to set swapspace UUID on $(drive)"
+msgstr ""
+"Щоб встановити UUID для резервної пам’яті (свопінґу) на $(drive), слід "
 "пройти розпізнавання"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
@@ -2009,43 +2015,31 @@ msgstr "Розширений завантажувальний розділ"
 
 #. Discoverable Linux Partitions, see http://systemd.io/DISCOVERABLE_PARTITIONS/
 #: udisks/udisksclient.c:2348
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (Alpha)"
 msgstr "Кореневий розділ Linux (Alpha)"
 
 #: udisks/udisksclient.c:2349
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (ARC)"
 msgstr "Кореневий розділ Linux (ARC)"
 
 #: udisks/udisksclient.c:2350
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (32-bit ARM)"
 msgstr "Кореневий розділ Linux (ARM, 32-бітова)"
 
 #: udisks/udisksclient.c:2351
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit ARM/AArch64)"
 msgstr "Кореневий розділ Linux (ARM/AArch64, 64-бітова)"
 
 #: udisks/udisksclient.c:2352
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (Itanium/IA-64)"
 msgstr "Кореневий розділ Linux (Itanium/IA-64)"
 
 #: udisks/udisksclient.c:2353
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (LoongArch 64-bit)"
 msgstr "Кореневий розділ Linux (LoongArch, 64-бітова)"
@@ -2056,71 +2050,51 @@ msgid "Linux Root Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Кореневий розділ Linux (32-бітова MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2355
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Кореневий розділ Linux (64-бітова MIPS LittleEndian/mips64el)"
 
 #: udisks/udisksclient.c:2356
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (HPPA/PARISC)"
 msgstr "Кореневий розділ Linux (HPPA/PARISC)"
 
 #: udisks/udisksclient.c:2357
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (32-bit PowerPC)"
 msgstr "Кореневий розділ Linux (PowerPC, 32-бітова)"
 
 #: udisks/udisksclient.c:2358
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit PowerPC BigEndian)"
 msgstr "Кореневий розділ Linux (PowerPC BigEndian, 64-бітова)"
 
 #: udisks/udisksclient.c:2359
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit PowerPC LittleEndian)"
 msgstr "Кореневий розділ Linux (64-бітова PowerPC LittleEndian)"
 
 #: udisks/udisksclient.c:2360
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (RISC-V 32-bit)"
 msgstr "Кореневий розділ Linux (32-бітова, RISC-V)"
 
 #: udisks/udisksclient.c:2361
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (RISC-V 64-bit)"
 msgstr "Кореневий розділ Linux (64-бітова, RISC-V)"
 
 #: udisks/udisksclient.c:2362
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (s390)"
 msgstr "Кореневий розділ Linux (s390)"
 
 #: udisks/udisksclient.c:2363
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (s390x)"
 msgstr "Кореневий розділ Linux (s390x)"
 
 #: udisks/udisksclient.c:2364
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Partition (TILE-Gx)"
 msgstr "Кореневий розділ Linux (TILE-Gx)"
@@ -2131,50 +2105,36 @@ msgid "Linux Root Partition (x86)"
 msgstr "Кореневий розділ Linux (x86)"
 
 #: udisks/udisksclient.c:2366
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Partition (amd64/x86_64)"
 msgstr "Кореневий розділ Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2367
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (Alpha)"
 msgstr "Розділ /usr/ Linux (Alpha)"
 
 #: udisks/udisksclient.c:2368
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (ARC)"
 msgstr "Розділ /usr/ Linux (ARC)"
 
 #: udisks/udisksclient.c:2369
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (32-bit ARM)"
 msgstr "Розділ /usr/ Linux (ARM, 32-бітова)"
 
 #: udisks/udisksclient.c:2370
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (64-bit ARM/AArch64)"
 msgstr "Розділ /usr/ Linux (ARM/AArch64, 64-бітова)"
 
 #: udisks/udisksclient.c:2371
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (Itanium/IA-64)"
 msgstr "Розділ /usr/ Linux (Itanium/IA-64)"
 
 #: udisks/udisksclient.c:2372
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (LoongArch 64-bit)"
 msgstr "Розділ /usr/ Linux (64-бітова, LoongArch)"
@@ -2190,8 +2150,6 @@ msgid "Linux /usr/ Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Розділ /usr/ Linux (64-бітова MIPS LittleEndian/mips64el)"
 
 #: udisks/udisksclient.c:2375
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (HPPA/PARISC)"
 msgstr "Розділ /usr/ Linux (HPPA/PARISC)"
@@ -2212,92 +2170,66 @@ msgid "Linux /usr/ Partition (64-bit PowerPC LittleEndian)"
 msgstr "Розділ /usr/ Linux (64-бітова PowerPC LittleEndian)"
 
 #: udisks/udisksclient.c:2379
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (RISC-V 32-bit)"
 msgstr "Розділ /usr/ Linux (32-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2380
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (RISC-V 64-bit)"
 msgstr "Розділ /usr/ Linux (64-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2381
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (s390)"
 msgstr "Розділ /usr/ Linux (s390)"
 
 #: udisks/udisksclient.c:2382
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (s390x)"
 msgstr "Розділ /usr/ Linux (s390x)"
 
 #: udisks/udisksclient.c:2383
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (TILE-Gx)"
 msgstr "Розділ /usr/ Linux (TILE-Gx)"
 
 #: udisks/udisksclient.c:2384
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (x86)"
 msgstr "Розділ /usr/ Linux (x86)"
 
 #: udisks/udisksclient.c:2385
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (amd64/x86_64)"
 msgstr "Розділ /usr/ Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2386
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Alpha)"
 msgstr "Кореневий розділ Verity Linux (Alpha)"
 
 #: udisks/udisksclient.c:2387
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (ARC)"
 msgstr "Кореневий розділ Verity Linux (ARC)"
 
 #: udisks/udisksclient.c:2388
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit ARM)"
 msgstr "Кореневий розділ Verity Linux (ARM, 32-бітова)"
 
 #: udisks/udisksclient.c:2389
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit ARM/AArch64)"
 msgstr "Кореневий розділ Verity Linux (ARM/AArch64, 64-бітова)"
 
 #: udisks/udisksclient.c:2390
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Itanium/IA-64)"
 msgstr "Кореневий розділ Verity Linux (Itanium/IA-64)"
 
 #: udisks/udisksclient.c:2391
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (LoongArch 64-bit)"
 msgstr "Кореневий розділ Verity Linux (64-бітова, LoongArch)"
@@ -2313,8 +2245,6 @@ msgid "Linux Root Verity Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Кореневий розділ Verity Linux (64-бітова MIPS LittleEndian/mips64el)"
 
 #: udisks/udisksclient.c:2394
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (HPPA/PARISC)"
 msgstr "Кореневий розділ Verity Linux (HPPA/PARISC)"
@@ -2325,78 +2255,56 @@ msgid "Linux Root Verity Partition (64-bit PowerPC LittleEndian)"
 msgstr "Кореневий розділ Verity Linux (64-бітова PowerPC LittleEndian)"
 
 #: udisks/udisksclient.c:2396
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit PowerPC BigEndian)"
 msgstr "Кореневий розділ Verity Linux (PowerPC BigEndian, 64-бітова)"
 
 #: udisks/udisksclient.c:2397
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit PowerPC)"
 msgstr "Кореневий розділ Verity Linux (PowerPC, 32-бітова)"
 
 #: udisks/udisksclient.c:2398
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 32-bit)"
 msgstr "Кореневий розділ Verity Linux (32-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2399
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 64-bit)"
 msgstr "Кореневий розділ Verity Linux (64-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2400
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390)"
 msgstr "Кореневий розділ Verity Linux (s390)"
 
 #: udisks/udisksclient.c:2401
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390x)"
 msgstr "Кореневий розділ Verity Linux (s390x)"
 
 #: udisks/udisksclient.c:2402
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (TILE-Gx)"
 msgstr "Кореневий розділ Verity Linux (TILE-Gx)"
 
 #: udisks/udisksclient.c:2403
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (amd64/x86_64)"
 msgstr "Кореневий розділ Verity Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2404
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (x86)"
 msgstr "Кореневий розділ Verity Linux (x86)"
 
 #: udisks/udisksclient.c:2405
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Alpha)"
 msgstr "Розділ /usr/ Verity Linux (Alpha)"
 
 #: udisks/udisksclient.c:2406
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (ARC)"
 msgstr "Розділ /usr/ Verity Linux (ARC)"
@@ -2412,8 +2320,6 @@ msgid "Linux /usr/ Verity Partition (64-bit ARM/AArch64)"
 msgstr "Розділ /usr/ Verity Linux (ARM/AArch64, 64-бітова)"
 
 #: udisks/udisksclient.c:2409
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Itanium/IA-64)"
 msgstr "Розділ /usr/ Verity Linux (Itanium/IA-64)"
@@ -2459,64 +2365,46 @@ msgid "Linux /usr/ Verity Partition (RISC-V 32-bit)"
 msgstr "Розділ /usr/ Verity Linux (32-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2418
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (RISC-V 64-bit)"
 msgstr "Розділ /usr/ Verity Linux (64-бітова RISC-V)"
 
 #: udisks/udisksclient.c:2419
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390)"
 msgstr "Розділ /usr/ Verity Linux (s390)"
 
 #: udisks/udisksclient.c:2420
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390x)"
 msgstr "Розділ /usr/ Verity Linux (s390x)"
 
 #: udisks/udisksclient.c:2421
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (TILE-Gx)"
 msgstr "Розділ /usr/ Verity Linux (TILE-Gx)"
 
 #: udisks/udisksclient.c:2422
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (amd64/x86_64)"
 msgstr "Розділ /usr/ Verity Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2423
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (x86)"
 msgstr "Розділ /usr/ Verity Linux (x86)"
 
 #: udisks/udisksclient.c:2424
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (Alpha)"
 msgstr "Кореневий розділ підпису Verity Linux (Alpha)"
 
 #: udisks/udisksclient.c:2425
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (ARC)"
 msgstr "Кореневий розділ підпису Verity Linux (ARC)"
 
 #: udisks/udisksclient.c:2426
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit ARM)"
 msgstr "Кореневий розділ підпису Verity Linux (ARM, 32-бітова)"
@@ -2527,8 +2415,6 @@ msgid "Linux Root Verity Signature Partition (64-bit ARM/AArch64)"
 msgstr "Кореневий розділ підпису Verity Linux (ARM/AArch64, 64-бітова)"
 
 #: udisks/udisksclient.c:2428
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (Itanium/IA-64)"
 msgstr "Кореневий розділ підпису Verity Linux (Itanium/IA-64)"
@@ -2579,57 +2465,41 @@ msgid "Linux Root Verity Signature Partition (RISC-V 32-bit)"
 msgstr "Кореневий розділ підпису Verity Linux (RISC-V, 32-бітова)"
 
 #: udisks/udisksclient.c:2437
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (RISC-V 64-bit)"
 msgstr "Кореневий розділ підпису Verity Linux (RISC-V, 64-бітова)"
 
 #: udisks/udisksclient.c:2438
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (s390)"
 msgstr "Кореневий розділ підпису Verity Linux (s390)"
 
 #: udisks/udisksclient.c:2439
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (s390x)"
 msgstr "Кореневий розділ підпису Verity Linux (s390x)"
 
 #: udisks/udisksclient.c:2440
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (TILE-Gx)"
 msgstr "Кореневий розділ підпису Verity Linux (TILE-Gx)"
 
 #: udisks/udisksclient.c:2441
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (amd64/x86_64)"
 msgstr "Кореневий розділ підпису Verity Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2442
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (x86)"
 msgstr "Кореневий розділ підпису Verity Linux (x86)"
 
 #: udisks/udisksclient.c:2443
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (Alpha)"
 msgstr "Розділ підпису /usr/ Verity Linux (Alpha)"
 
 #: udisks/udisksclient.c:2444
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (ARC)"
 msgstr "Розділ підпису /usr/ Verity Linux (ARC)"
@@ -2699,15 +2569,11 @@ msgid "Linux /usr/ Verity Signature Partition (RISC-V 64-bit)"
 msgstr "Розділ підпису /usr/ Verity Linux (RISC-V, 64-бітова)"
 
 #: udisks/udisksclient.c:2457
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (s390)"
 msgstr "Розділ підпису /usr/ Verity Linux (s390)"
 
 #: udisks/udisksclient.c:2458
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (s390x)"
 msgstr "Розділ підпису /usr/ Verity Linux (s390x)"
@@ -2718,36 +2584,26 @@ msgid "Linux /usr/ Verity Signature Partition (TILE-Gx)"
 msgstr "Розділ підпису /usr/ Verity Linux (TILE-Gx)"
 
 #: udisks/udisksclient.c:2460
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (amd64/x86_64)"
 msgstr "Розділ підпису /usr/ Verity Linux (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2461
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (x86)"
 msgstr "Розділ підпису /usr/ Verity Linux (x86)"
 
 #: udisks/udisksclient.c:2462
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux Variable Data Partition"
 msgstr "Розділ змінних даних Linux"
 
 #: udisks/udisksclient.c:2463
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux Temporary Data Partition"
 msgstr "Розділ тимчасових даних Linux"
 
 #: udisks/udisksclient.c:2464
-#| msgctxt "part-type"
-#| msgid "Linux Home Partition"
 msgctxt "part-type"
 msgid "Linux Per-user Home Partition"
 msgstr "Розділ домівки окремого користувача Linux"
