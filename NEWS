@@ -1,4 +1,62 @@
 ---------------------------
+udisks 2.10.1
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+This is a bugfix release incorporating feedback from early adopters
+and distributors.
+
+Changes since 2.10.0:
+
+Christian Kirbach (1):
+      Update German translation
+
+NorwayFun (1):
+      Update ka.po
+
+Piotr Drąg (1):
+      Update Polish translation
+
+Sebastien Bacher (1):
+      tests: start the polkitd mock with the corresponding user if it exists
+
+Tomas Bzatek (17):
+      build: Check for gobject-introspection m4 macro presence
+      udiskslinuxloop: Avoid warnings on empty loop devices
+      udisksctl: Guard object lookup
+      udiskslinuxmanager: Properly handle disabled modules
+      iscsi: Fix login on firmware-discovered nodes
+      tests: Fix LSM drive objects crawl
+      tests: Mark LVM RAID tests as unstable
+      integration-test: Fix invalid escaping
+      tests: Fix regex escaping
+      tests: Fix Python class invocation in nvme tests
+      udiskslinuxfilesystem: Refactor internal whitelists
+      udiskslinuxfilesystem: Force native tools for mounted XFS fs size retrieval
+      doc: Clarify the Filesystem.Size property presence
+      tests: Mark UDF fstab filesystem tests as unstable
+      tests: Rescan vdevs after lvm raid tests
+      tests: Settle down before checking the LVM RAID MissingPhysicalVolumes property
+      tests: Wipe used devices for LVM2 RAID tests
+
+Vojtech Trefny (2):
+      Limit getting filesystem size only to Ext and XFS
+      tests: Replace deprecated unittest assert calls
+
+Yuri Chornoivan (1):
+      Update Ukrainian translation
+
+sid (1):
+      udisksctl: Add "--no-partition-scan" option for "loop-setup" command
+
+Thanks to all our contributors.
+
+Tomas Bzatek
+2023-09-07
+
+---------------------------
 udisks 2.10.0
 ---------------------------
 
