@@ -1196,8 +1196,11 @@ handle_get_block_devices (UDisksManager         *object,
   blocks = get_block_objects (object, &num_blocks);
   block_paths = g_new0 (const gchar *, num_blocks + 1);
 
-  for (i = 0,blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next, i++)
-      block_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (blocks_p->data)));
+  for (blocks_p = blocks; blocks_p != NULL; blocks_p = blocks_p->next) {
+	  GDBusObject * block_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (blocks_p->data));
+	  if (block_object)
+		  block_paths[i++] = g_dbus_object_get_object_path (block_object);
+  }
 
   udisks_manager_complete_get_block_devices  (object,
                                               invocation,
@@ -1284,9 +1287,11 @@ handle_resolve_device (UDisksManager         *object,
     }
 
   ret_paths = g_new0 (const gchar *, num_found + 1);
-  for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next, i++)
+  for (i = 0,ret_p = ret; ret_p != NULL; ret_p = ret_p->next)
     {
-      ret_paths[i] = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data)));
+      GDBusObject *block_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (ret_p->data));
+      if (block_object)
+        ret_paths[i++] = g_dbus_object_get_object_path (block_object);
     }
 
   udisks_manager_complete_resolve_device (object,
