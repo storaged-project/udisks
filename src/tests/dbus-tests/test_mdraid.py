@@ -77,14 +77,17 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
     def _zero_superblock(self, device):
         self.run_command('mdadm --zero-superblock --force %s' % device)
 
-    def _array_create(self, array_name, bitmap=None):
+    def _array_create(self, array_name, bitmap=None, version=None):
         # set the 'force' cleanup now in case create fails
         self.addCleanup(self._force_remove, array_name, [m.path for m in self.members])
 
         d = self.no_options
-        if bitmap:
+        if bitmap or version:
             d = dbus.Dictionary(signature='sv')
-            d['bitmap'] = self.str_to_ay(bitmap)
+            if bitmap:
+                d['bitmap'] = self.str_to_ay(bitmap)
+            if version:
+                d['version'] = self.str_to_ay(version)
 
         manager = self.get_object('/Manager')
         with wait_for_action('resync'):
@@ -390,6 +393,25 @@ class RAID1TestCase(RAIDLevel):
         sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
         self.assertStartswith(sys_bitmap, '+')
+
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
+    def test_metadata_version(self):
+        array_name = 'udisks_test_version'
+        array = self._array_create(array_name, version='0.90')
+
+        # check IdVersion on the Block interface
+        for member in self.members:
+            md_version = self.get_property(member.obj, '.Block', 'IdVersion')
+            md_version.assertEqual('0.90.0')
+
+        array.Delete(self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
+        self.udev_settle()
+
+        array = self._array_create(array_name)
+        # check IdVersion on the Block interface
+        for member in self.members:
+            md_version = self.get_property(member.obj, '.Block', 'IdVersion')
+            md_version.assertEqual('1.2')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_request_action(self):

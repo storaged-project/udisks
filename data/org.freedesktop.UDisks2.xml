@@ -148,7 +148,7 @@
         @level: The RAID level for the array.
         @name: The name for the array.
         @chunk: The chunk size (in bytes) or 0 if @level is <quote>raid1</quote>.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>bitmap</parameter> (of type 'ay').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) include <parameter>bitmap</parameter> (of type 'ay') and <parameter>version</parameter> (of type 'ay').
         @resulting_array: An object path to the object implementing the #org.freedesktop.UDisks2.MDRaid interface.
         @since: 2.0.0
 
@@ -171,6 +171,10 @@
         is not present, it is up to <literal>mdadm</literal> to decide
         whether to create an internal bitmap (typically for arrays larger
         than 100 GB) or not.
+
+        The @version option specifies the MD metadata version, for example
+        '0.90'. If not specified the default medata version specified by
+        <literal>mdadm</literal> is used. (since 2.11)
     -->
     <method name="MDRaidCreate">
       <arg name="blocks" direction="in" type="ao"/>

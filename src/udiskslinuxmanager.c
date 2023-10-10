@@ -562,6 +562,7 @@ handle_mdraid_create (UDisksManager         *_object,
   guint disks_top = 0;
   gboolean success = FALSE;
   const gchar *option_bitmap = NULL;
+  const gchar *option_version = NULL;
 
   if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon,
                                                invocation,
@@ -767,7 +768,8 @@ handle_mdraid_create (UDisksManager         *_object,
   disks[disks_top] = NULL;
 
   g_variant_lookup (arg_options, "bitmap", "^&ay", &option_bitmap);
-  if (!bd_md_create (array_name, arg_level, disks, 0, NULL, option_bitmap, arg_chunk, NULL, &error))
+  g_variant_lookup (arg_options, "version", "^&ay", &option_version);
+  if (!bd_md_create (array_name, arg_level, disks, 0, option_version, option_bitmap, arg_chunk, NULL, &error))
     {
       g_prefix_error (&error, "Error creating RAID array: ");
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
