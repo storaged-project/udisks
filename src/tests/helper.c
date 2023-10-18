@@ -27,6 +27,11 @@
 
 #include "testutil.h"
 
+#ifdef __clang__
+__attribute__((optnone))  
+#else
+__attribute__((optimize((0))))
+#endif
 int
 main (int argc, char *argv[])
 {
