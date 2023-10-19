@@ -323,11 +323,7 @@ test_spawned_job_abnormal_termination (void)
   job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   udisks_spawned_job_start (job);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-#ifdef __clang__
-                             (gpointer) "Command-line `./udisks-test-helper 4' was signaled with signal SIGILL (4): "
-#else
                              (gpointer) "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11): "
-#endif
                              "OK, deliberately causing a segfault\n");
   g_object_unref (job);
   g_free (s);
