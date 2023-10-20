@@ -97,6 +97,9 @@ UDisksObject             *udisks_daemon_find_block            (UDisksDaemon     
 UDisksObject             *udisks_daemon_find_block_by_device_file (UDisksDaemon *daemon,
                                                                    const gchar  *device_file);
 
+UDisksObject             *udisks_daemon_find_block_by_device_file_and_symlinks (UDisksDaemon *daemon,
+                                                                                const gchar  *device_file);
+
 UDisksObject             *udisks_daemon_find_block_by_sysfs_path (UDisksDaemon *daemon,
                                                                   const gchar  *sysfs_path);
 

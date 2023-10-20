@@ -145,14 +145,21 @@ build_segment (UDisksDaemon *daemon,
   g_variant_builder_init (&seg_builder, G_VARIANT_TYPE ("(tto)"));
   g_variant_builder_add (&seg_builder, "t", seg->pv_start_pe * extent_size);
   g_variant_builder_add (&seg_builder, "t", seg->size_pe * extent_size);
-  block_object = udisks_daemon_find_block_by_device_file (daemon, seg->pvdev);
-  if (block_object)
+  if (seg->pvdev == NULL)
     {
-      g_variant_builder_add (&seg_builder, "o", g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object)));
-      g_object_unref (block_object);
+      g_variant_builder_add (&seg_builder, "o", "/");
     }
   else
-    g_variant_builder_add (&seg_builder, "o", "/");
+    {
+      block_object = udisks_daemon_find_block_by_device_file_and_symlinks (daemon, seg->pvdev);
+      if (block_object)
+        {
+          g_variant_builder_add (&seg_builder, "o", g_dbus_object_get_object_path (G_DBUS_OBJECT (block_object)));
+          g_object_unref (block_object);
+        }
+      else
+        g_variant_builder_add (&seg_builder, "o", "/notfound");
+    }
   return g_variant_builder_end (&seg_builder);
 }
 
