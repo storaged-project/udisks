@@ -1633,6 +1633,52 @@ udisks_daemon_find_block_by_device_file (UDisksDaemon *daemon,
   return ret;
 }
 
+/**
+ * udisks_daemon_find_block_by_device_file_and_symlinks:
+ * @daemon: A #UDisksDaemon.
+ * @device_file: A device file.
+ *
+ * Like udisks_daemon_find_block_by_device_file, but also checks all
+ * symlinks for the device.
+ *
+ * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
+ */
+UDisksObject *
+udisks_daemon_find_block_by_device_file_and_symlinks (UDisksDaemon *daemon,
+                                                      const gchar  *device_file)
+{
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
+
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (daemon->object_manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+      const gchar *const *symlinks;
+
+      block = udisks_object_peek_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_device (block), device_file) == 0)
+        {
+          ret = g_object_ref (object);
+          goto out;
+        }
+
+      symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+      if (symlinks && g_strv_contains (symlinks, device_file))
+        {
+          ret = g_object_ref (object);
+          goto out;
+        }
+    }
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
