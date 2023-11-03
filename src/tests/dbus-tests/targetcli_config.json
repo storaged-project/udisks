@@ -331,7 +331,6 @@
             "demo_mode_write_protect": 0,
             "generate_node_acls": 1,
             "login_timeout": 15,
-            "netif_timeout": 2,
             "prod_mode_write_protect": 0,
             "t10_pi": 0,
             "tpg_enabled_sendtargets": 1
@@ -393,7 +392,6 @@
             "demo_mode_write_protect": 1,
             "generate_node_acls": 0,
             "login_timeout": 15,
-            "netif_timeout": 2,
             "prod_mode_write_protect": 0,
             "t10_pi": 0,
             "tpg_enabled_sendtargets": 1
@@ -479,7 +477,6 @@
             "demo_mode_write_protect": 1,
             "generate_node_acls": 0,
             "login_timeout": 15,
-            "netif_timeout": 2,
             "prod_mode_write_protect": 0,
             "t10_pi": 0,
             "tpg_enabled_sendtargets": 1
