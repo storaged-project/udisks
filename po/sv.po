@@ -16,8 +16,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-04-20 03:29+0000\n"
-"PO-Revision-Date: 2023-05-04 00:59+0200\n"
+"POT-Creation-Date: 2023-05-22 15:29+0000\n"
+"PO-Revision-Date: 2023-05-22 20:48+0200\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -721,7 +721,7 @@ msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3797
+#: src/udiskslinuxblock.c:3855
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 
@@ -731,7 +731,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3868
+#: src/udiskslinuxblock.c:3926
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 
@@ -741,7 +741,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3942
+#: src/udiskslinuxblock.c:4000
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 
@@ -751,7 +751,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4025
+#: src/udiskslinuxblock.c:4083
 msgid "Authentication is required to open $(drive)."
 msgstr "Autentisering krävs för att öppna $(drive)."
 
@@ -761,7 +761,7 @@ msgstr "Autentisering krävs för att öppna $(drive)."
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4082
+#: src/udiskslinuxblock.c:4140
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Autentisering krävs för att söka om $(drive)"
 
@@ -801,7 +801,7 @@ msgstr "Autentisering krävs för att stänga av $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:463
+#: src/udiskslinuxdriveata.c:804 src/udiskslinuxnvmecontroller.c:466
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Autentisering krävs för att uppdatera SMART-data från $(drive)"
 
@@ -1025,6 +1025,16 @@ msgid ""
 msgstr "Autentisering krävs för att ändra ägandet av filsystemet på $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
+#. * requests changing the filesystem UUID.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxfilesystem.c:2637
+msgid "Authentication is required to change the filesystem UUID on $(drive)"
+msgstr "Autentisering krävs för att ändra UUID för filsystemet på $(drive)"
+
+#. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
 #. * another user.
 #. *
@@ -1132,7 +1142,7 @@ msgstr "Autentisering krävs för att ta bort en RAID-uppsättning"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:825
+#: src/udiskslinuxnvmecontroller.c:828
 msgid "Authentication is required to start a device self-test on $(drive)"
 msgstr "Autentisering krävs för att starta ett enhetssjälvtest på $(drive)"
 
@@ -1142,7 +1152,7 @@ msgstr "Autentisering krävs för att starta ett enhetssjälvtest på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:918
+#: src/udiskslinuxnvmecontroller.c:921
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr "Autentisering krävs för att avbryta ett enhetssjälvtest på $(drive)"
 
@@ -1152,7 +1162,7 @@ msgstr "Autentisering krävs för att avbryta ett enhetssjälvtest på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1220
+#: src/udiskslinuxnvmecontroller.c:1223
 msgid "Authentication is required to perform a sanitize operation of $(drive)"
 msgstr "Autentisering krävs för att utföra en saneringsoperation för $(drive)"
 
@@ -1196,7 +1206,7 @@ msgstr "Autentisering krävs för att ändra partitionen på enheten $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:313
+#: src/udiskslinuxpartitiontable.c:315
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Autentisering krävs för att skapa en partition på $(drive)"
 
@@ -1226,10 +1236,20 @@ msgstr "Autentisering krävs för att inaktivera växlingsutrymme på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:370
+#: src/udiskslinuxswapspace.c:371
 msgid "Authentication is required to set swapspace label on $(drive)"
 msgstr ""
 "Autentisering krävs för att ange etiketten på växlingsutrymmet på $(drive)"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting UUID of a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxswapspace.c:457
+msgid "Authentication is required to set swapspace UUID on $(drive)"
+msgstr "Autentisering krävs för att ange UUID för växlingsutrymmet på $(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: udisks/udisksclient.c:1194
