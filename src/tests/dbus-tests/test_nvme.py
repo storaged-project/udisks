@@ -190,17 +190,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         if ret != 0:
             raise unittest.SkipTest("nvme-fabrics kernel module unavailable, skipping.")
 
-        manager = cls.get_interface("/Manager", ".Manager")
-        cls.loop_devs = []
+        cls.dev_files = []
 
         for i in range(cls.NUM_NS):
-            with tempfile.NamedTemporaryFile(prefix="udisks_test", delete=True, mode='w+b') as temp:
+            with tempfile.NamedTemporaryFile(prefix="udisks_test", delete=False, mode='w+b', dir='/var/tmp') as temp:
                 temp.truncate(cls.NS_SIZE)
-                loop_dev_obj_path = manager.LoopSetup(temp.fileno(), cls.no_options)
-                path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
-                cls.loop_devs += ["/dev/%s" % loop_dev]
+                cls.dev_files += [temp.name]
 
-        setup_nvme_target(cls.loop_devs, cls.SUBNQN)
+        setup_nvme_target(cls.dev_files, cls.SUBNQN)
+
+        for d in cls.dev_files:
+            os.unlink(d)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
         ret, out = self.run_command("nvme disconnect --nqn=%s" % subnqn)
@@ -224,9 +224,11 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ret, out = udiskstestcase.run_command("nvmetcli clear")
         if ret != 0:
             raise RuntimeError("Error clearing the NVMe target: %s" % out)
-        # detach loop devices
-        for i in cls.loop_devs:
-            cls.run_command("losetup --detach %s" % i)
+        for d in cls.dev_files:
+            try:
+                os.unlink(d)
+            except FileNotFoundError:
+                pass
         udiskstestcase.UdisksTestCase.tearDownClass()
 
 
@@ -312,9 +314,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertTrue(wwn.startswith('uuid.'))
             lbaf = self.get_property_raw(ns, '.NVMe.Namespace', 'LBAFormats')
             self.assertEqual(len(lbaf), 1)
-            self.assertEqual(lbaf[0], (512, 0, 1))
+            self.assertEqual(lbaf[0], (4096, 0, 1))
             lbaf_curr = self.get_property_raw(ns, '.NVMe.Namespace', 'FormattedLBASize')
-            self.assertEqual(lbaf_curr, (512, 0, 1))
+            self.assertEqual(lbaf_curr, (4096, 0, 1))
             nsize = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceSize')
             self.assertEqual(nsize, self.NS_SIZE / lbaf_curr[0])
             ncap = self.get_property_raw(ns, '.NVMe.Namespace', 'NamespaceCapacity')
