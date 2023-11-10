@@ -644,6 +644,66 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         dbus_cleartext = self.get_property(device, '.Encrypted', 'CleartextDevice')
         dbus_cleartext.assertEqual('/')
 
+    @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
+    def test_teardown_locked(self):
+        # based on https://github.com/storaged-project/udisks/issues/1204
+        crypttab = self.read_file('/etc/crypttab')
+        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+        fstab = self.read_file('/etc/fstab')
+        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+
+        disk_name = os.path.basename(self.vdevs[0])
+        disk = self.get_object('/block_devices/' + disk_name)
+
+        disk.Format('gpt', self.no_options, dbus_interface=self.iface_prefix + '.Block')
+
+        # create LUKS and ext4 filesystem
+        options = dbus.Dictionary(signature='sv')
+        options['encrypt.passphrase'] = self.PASSPHRASE
+        options['encrypt.type'] = 'luks2'
+        options['tear-down'] = dbus.Boolean(True)
+
+        conf_fstab = dbus.Dictionary({'dir': self.str_to_ay('fakemountpoint'),
+                                      'type': self.str_to_ay('ext4'),
+                                      'opts': self.str_to_ay('noauto,nofail'),
+                                      'freq': 0, 'passno': 0,
+                                      'track-parents': True},
+                                     signature=dbus.Signature('sv'))
+        conf_crypttab = dbus.Dictionary({'name': self.str_to_ay('udisks_luks_teardown'),
+                                         'passphrase-contents': self.str_to_ay(self.PASSPHRASE),
+                                         'options': self.str_to_ay('noauto,nofail'),
+                                         'track-parents': True},
+                                         signature=dbus.Signature('sv'))
+        options['config-items'] = dbus.Array([('fstab', conf_fstab), ('crypttab', conf_crypttab)])
+
+        path = disk.CreatePartitionAndFormat(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), '', '',
+                                             self.no_options,'ext4', options,
+                                             dbus_interface=self.iface_prefix + '.PartitionTable')
+        self.addCleanup(self.remove_file, '/etc/luks-keys/udisks_luks_teardown', ignore_nonexistent=True)
+        part = self.bus.get_object(self.iface_prefix, path)
+        self.assertIsNotNone(part)
+        self.udev_settle()
+
+        # Now lock the device (without that step, everything works)
+        luks_path = self.get_property(part, '.Encrypted', 'CleartextDevice')
+        luks_dev = self.bus.get_object(self.iface_prefix, luks_path.value)
+        self.assertIsNotNone(luks_dev)
+        luks_uuid = self.get_property_raw(luks_dev, '.Block', 'IdUUID')
+        self.assertIsNotNone(luks_uuid)
+        part.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # Try to reformat the drive
+        options = dbus.Dictionary(signature='sv')
+        options['tear-down'] = dbus.Boolean(True)
+        disk.Format('gpt', options, dbus_interface=self.iface_prefix + '.Block')
+
+        # Check that crypttab and fstab records are gone
+        crypttab = self.read_file('/etc/crypttab')
+        self.assertNotIn('udisks_luks_teardown', crypttab)
+
+        fstab = self.read_file('/etc/fstab')
+        self.assertNotIn(luks_uuid, fstab)
+
 
 class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
 
