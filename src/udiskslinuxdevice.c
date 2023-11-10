@@ -164,7 +164,10 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
   /* Get IDENTIFY DEVICE / IDENTIFY PACKET DEVICE data for ATA devices */
   if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
       g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
-      g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
+      g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA") &&
+      !g_udev_device_has_property (device->udev_device, "ID_USB_TYPE") &&
+      !g_udev_device_has_property (device->udev_device, "ID_USB_DRIVER") &&
+      !g_udev_device_has_property (device->udev_device, "ID_USB_MODEL"))
     {
       if (!probe_ata (device, cancellable, error))
         goto out;
