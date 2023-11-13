@@ -35,6 +35,7 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 
+#include <blockdev/fs.h>
 #include <blockdev/lvm.h>
 
 #include <limits.h>
@@ -79,63 +80,6 @@ udisks_daemon_util_lvm2_block_is_unused (UDisksBlock  *block,
   return TRUE;
 }
 
-static gboolean
-run_sync (const gchar *prog, ...)
-{
-  va_list ap;
-  GError **error;
-  enum { max_argc = 20 };
-  const gchar *argv[max_argc+1];
-  int argc = 0;
-  const gchar *arg;
-  gchar *standard_output;
-  gchar *standard_error;
-  gint exit_status;
-
-  argv[argc++] = prog;
-  va_start (ap, prog);
-  while ((arg = va_arg (ap, const gchar *)))
-    {
-      if (argc < max_argc)
-        argv[argc] = arg;
-      argc++;
-    }
-  error = va_arg (ap, GError **);
-  va_end (ap);
-
-  if (argc > max_argc)
-    {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Too many arguments.");
-      return FALSE;
-    }
-
-  argv[argc] = NULL;
-  if (!g_spawn_sync (NULL,
-                     (gchar **)argv,
-                     NULL,
-                     G_SPAWN_SEARCH_PATH,
-                     NULL,
-                     NULL,
-                     &standard_output,
-                     &standard_error,
-                     &exit_status,
-                     error))
-    return FALSE;
-
-  if (!g_spawn_check_exit_status (exit_status, error))
-    {
-      g_prefix_error (error, "stdout: '%s', stderr: '%s', ", standard_output, standard_error);
-      g_free (standard_output);
-      g_free (standard_error);
-      return FALSE;
-    }
-
-  g_free (standard_output);
-  g_free (standard_error);
-  return TRUE;
-}
-
 gboolean
 udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
                                     UDisksBlock   *block,
@@ -148,18 +92,19 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
   UDisksVolumeGroup *volume_group;
   gchar *volume_group_name = NULL;
   gboolean was_partitioned;
-
   const gchar *device_file;
-  int fd = -1;
-  gchar zeroes[512];
   gboolean ret = TRUE;
   GError *local_error = NULL;
 
   /* Find the name of the volume group that this device is a physical
    * member of, if any.  Easy.
    */
-
-  block_object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  block_object = udisks_daemon_util_dup_object (block, error);
+  if (block_object == NULL)
+    {
+      ret = FALSE;
+      goto out;
+    }
   physical_volume = udisks_object_peek_physical_volume (block_object);
   if (physical_volume)
     {
@@ -177,48 +122,26 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
 
   device_file = udisks_block_get_device (block);
 
-  /* Remove partition table */
-  memset (zeroes, 0, 512);
-  fd = open (device_file, O_RDWR | O_EXCL);
-  if (fd < 0)
+  if (!bd_fs_clean (device_file, FALSE, &local_error))
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error opening device %s for wiping: %m",
-                   device_file);
+                   "%s", local_error->message);
+      g_clear_error (&local_error);
       ret = FALSE;
       goto out;
     }
 
-  if (write (fd, zeroes, 512) != 512)
-    {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error erasing device %s: %m",
-                   device_file);
-      ret = FALSE;
-      goto out;
-    }
-
-  if (was_partitioned && ioctl (fd, BLKRRPART, NULL) < 0)
-    {
-      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "Error removing partition devices of %s: %m",
-                   device_file);
-      ret = FALSE;
-      goto out;
-    }
-  close (fd);
-  fd = -1;
-
-  /* wipe other labels */
-  if (!run_sync ("wipefs", "-a", device_file, NULL, error))
+  if (was_partitioned &&
+      !udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object), error))
     {
       ret = FALSE;
       goto out;
     }
 
   /* Try to bring affected volume group back into consistency. */
-  if (volume_group_name != NULL)
-    if (!bd_lvm_vgreduce (volume_group_name, NULL /* device */, NULL /* extra */, &local_error)) {
+  if (volume_group_name != NULL &&
+      !bd_lvm_vgreduce (volume_group_name, NULL /* device */, NULL /* extra */, &local_error))
+    {
       udisks_warning ("%s", local_error->message);
       g_clear_error (&local_error);
     }
@@ -230,16 +153,15 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon  *daemon,
    *
    * https://bugzilla.redhat.com/show_bug.cgi?id=1063813
    */
-  if (!run_sync ("pvscan", "--cache", device_file, NULL, &local_error))
+  if (!bd_lvm_pvscan (device_file, TRUE, NULL, &local_error))
     {
       udisks_warning ("%s", local_error->message);
       g_clear_error (&local_error);
     }
 
  out:
-  if (fd >= 0)
-    close (fd);
   g_clear_object (&volume_group_object);
+  g_clear_object (&block_object);
   g_free (volume_group_name);
   return ret;
 }
