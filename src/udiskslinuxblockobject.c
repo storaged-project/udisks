@@ -1098,23 +1098,31 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject  *objec
     }
   else
     {
-      gint num_tries = 0;
+      gint num_tries;
 
       /* acquire an exclusive BSD lock to prevent udev probes.
        * See also https://systemd.io/BLOCK_DEVICE_LOCKING
        */
+      num_tries = 10;
       while (flock (fd, LOCK_EX | LOCK_NB) != 0)
         {
           g_usleep (100 * 1000); /* microseconds */
-          if (num_tries++ > 5)
+          if (num_tries-- < 0)
             break;
         }
 
-      if (ioctl (fd, BLKRRPART) != 0)
+      num_tries = 5;
+      while (ioctl (fd, BLKRRPART) != 0)
         {
+          if (errno == EBUSY && num_tries-- >= 0)
+            {
+              g_usleep (200 * 1000); /* microseconds */
+              continue;
+            }
           g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
                        "Error re-reading partition table (BLKRRPART ioctl) on %s: %m", device_file);
           ret = FALSE;
+          break;
         }
       close (fd);
     }
