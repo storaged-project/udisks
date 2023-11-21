@@ -661,6 +661,51 @@ out:
 }
 
 static gboolean
+handle_get_default_subvolume_id (UDisksFilesystemBTRFS *fs_btrfs,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *arg_options)
+{
+  UDisksLinuxFilesystemBTRFS *l_fs_btrfs = UDISKS_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  UDisksLinuxBlockObject *object = NULL;
+  GError *error = NULL;
+  gchar *mount_point = NULL;
+  guint64 default_id;
+
+  object = udisks_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Get the mount point for this volume. */
+  mount_point = udisks_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  default_id = bd_btrfs_get_default_subvolume_id (mount_point, &error);
+  if (! default_id && error)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  udisks_filesystem_btrfs_complete_get_default_subvolume_id (fs_btrfs, invocation, default_id);
+
+out:
+  /* Release the resources */
+  g_clear_object (&object);
+  g_free (mount_point);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
 handle_create_snapshot (UDisksFilesystemBTRFS  *fs_btrfs,
                         GDBusMethodInvocation  *invocation,
                         const gchar            *arg_source,
@@ -849,6 +894,7 @@ udisks_linux_filesystem_btrfs_iface_init (UDisksFilesystemBTRFSIface *iface)
   iface->handle_create_subvolume = handle_create_subvolume;
   iface->handle_remove_subvolume = handle_remove_subvolume;
   iface->handle_get_subvolumes = handle_get_subvolumes;
+  iface->handle_get_default_subvolume_id = handle_get_default_subvolume_id;
   iface->handle_create_snapshot = handle_create_snapshot;
   iface->handle_repair = handle_repair;
   iface->handle_resize = handle_resize;
