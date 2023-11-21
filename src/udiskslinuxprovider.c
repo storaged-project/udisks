@@ -64,6 +64,9 @@ struct _UDisksLinuxProvider
   UDisksProvider parent_instance;
 
   GUdevClient *gudev_client;
+  GMainContext *uevent_monitor_context;
+  GMainLoop *uevent_monitor_loop;
+  GThread *uevent_monitor_thread;
   GAsyncQueue *probe_request_queue;
   GThread *probe_request_thread;
 
@@ -141,8 +144,6 @@ static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
                                                 GFileMonitorEvent event_type,
                                                 gpointer          user_data);
 
-gpointer probe_request_thread_func (gpointer user_data);
-
 static void detach_module_interfaces (UDisksLinuxProvider *provider);
 static void ensure_modules (UDisksLinuxProvider *provider);
 
@@ -162,6 +163,12 @@ udisks_linux_provider_finalize (GObject *object)
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
   UDisksDaemon *daemon;
   UDisksModuleManager *module_manager;
+
+  /* stop the uevent monitor thread and wait for it */
+  g_main_loop_quit (provider->uevent_monitor_loop);
+  g_thread_join (provider->uevent_monitor_thread);
+  g_main_loop_unref (provider->uevent_monitor_loop);
+  g_main_context_unref (provider->uevent_monitor_context);
 
   /* stop the request thread and wait for it */
   g_async_queue_push (provider->probe_request_queue, (gpointer) 0xdeadbeef);
@@ -241,6 +248,7 @@ static gboolean
 on_idle_with_probed_uevent (gpointer user_data)
 {
   ProbeRequest *request = user_data;
+
   udisks_linux_provider_handle_uevent (request->provider,
                                        g_udev_device_get_action (request->udev_device),
                                        request->udisks_device);
@@ -279,7 +287,7 @@ uevent_is_spurious (GUdevDevice *dev)
   return FALSE;
 }
 
-gpointer
+static gpointer
 probe_request_thread_func (gpointer user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
@@ -308,11 +316,11 @@ probe_request_thread_func (gpointer user_data)
        *
        * */
       dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
-      for (n_tries=5; !dev_initialized && (n_tries > 0); n_tries--)
-      {
-        g_usleep (100000);      /* microseconds */
-        dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
-      }
+      for (n_tries = 5; !dev_initialized && (n_tries > 0); n_tries--)
+        {
+          g_usleep (100000);      /* microseconds */
+          dev_initialized = g_udev_device_get_is_initialized (request->udev_device);
+        }
 
       /* ignore spurious uevents */
       if (!request->known_block && uevent_is_spurious (request->udev_device))
@@ -353,6 +361,34 @@ on_uevent (GUdevClient  *client,
   g_async_queue_push (provider->probe_request_queue, request);
 }
 
+
+static const gchar *udev_subsystems[] = {"block", "iscsi_connection", "scsi", "nvme", NULL};
+
+static gpointer
+uevent_monitor_thread_func (gpointer user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  GUdevClient *gudev_client;
+
+  g_main_context_push_thread_default (provider->uevent_monitor_context);
+
+  gudev_client = g_udev_client_new (udev_subsystems);
+  g_signal_connect (gudev_client,
+                    "uevent",
+                    G_CALLBACK (on_uevent),
+                    provider);
+
+  g_main_loop_run (provider->uevent_monitor_loop);
+
+  g_signal_handlers_disconnect_by_func (gudev_client,
+                                        G_CALLBACK (on_uevent),
+                                        provider);
+  g_main_context_pop_thread_default (provider->uevent_monitor_context);
+  g_object_unref (gudev_client);
+
+  return NULL;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -363,7 +399,6 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
 static void
 udisks_linux_provider_constructed (GObject *object)
 {
-  const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", "nvme", NULL};
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
   UDisksDaemon *daemon;
   UDisksConfigManager *config_manager;
@@ -374,17 +409,18 @@ udisks_linux_provider_constructed (GObject *object)
   config_manager = udisks_daemon_get_config_manager (daemon);
 
   /* get ourselves an udev client */
-  provider->gudev_client = g_udev_client_new (subsystems);
-
-  g_signal_connect (provider->gudev_client,
-                    "uevent",
-                    G_CALLBACK (on_uevent),
-                    provider);
+  provider->gudev_client = g_udev_client_new (udev_subsystems);
 
   provider->probe_request_queue = g_async_queue_new ();
-  provider->probe_request_thread = g_thread_new ("probing-thread",
+  provider->probe_request_thread = g_thread_new ("udisks-probing-thread",
                                                  probe_request_thread_func,
                                                  provider);
+
+  provider->uevent_monitor_context = g_main_context_new ();
+  provider->uevent_monitor_loop = g_main_loop_new (provider->uevent_monitor_context, FALSE);
+  provider->uevent_monitor_thread = g_thread_new ("udisks-uevent-monitor-thread",
+                                                  uevent_monitor_thread_func,
+                                                  provider);
 
   provider->mount_monitor = g_unix_mount_monitor_get ();
 
