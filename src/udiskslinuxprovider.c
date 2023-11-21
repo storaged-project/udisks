@@ -944,6 +944,7 @@ perform_initial_housekeeping_for_drive (GTask           *task,
                       error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
+  g_task_return_boolean (task, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1588,6 +1589,7 @@ housekeeping_thread_func (GTask           *task,
   G_LOCK (provider_lock);
   provider->housekeeping_running = FALSE;
   G_UNLOCK (provider_lock);
+  g_task_return_boolean (task, TRUE);
 }
 
 /* called from the main thread on start-up and every 10 minutes or so */
