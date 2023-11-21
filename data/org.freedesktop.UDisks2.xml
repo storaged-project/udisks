@@ -285,7 +285,7 @@
           </varlistentry>
         </variablelist>
 
-        It is possbile to specify multiple keys. In this case, only devices matching all values will be returned.
+        It is possible to specify multiple keys. In this case, only devices matching all values will be returned.
 
     -->
     <method name="ResolveDevice">
@@ -1218,7 +1218,7 @@
          @since: 2.10.0
 
          Critical warnings issued for the current state of the controller. An empty array
-         indicates a healthy state. This is the primary health assesment property to watch for.
+         indicates a healthy state. This is the primary health assessment property to watch for.
 
          Known values include:
          <variablelist>
