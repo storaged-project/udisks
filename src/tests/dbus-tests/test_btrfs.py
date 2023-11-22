@@ -382,7 +382,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, mnt_path)
 
-    def test_get_default_subvolume_id(self):
+    def test_default_subvolume_id(self):
         dev = self._get_devices(1)[0]
         self.addCleanup(self._clean_format, dev.obj)
 
@@ -396,6 +396,13 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         fstype.assertEqual('btrfs')
 
         with self._temp_mount(dev.path):
+            default_id = dev.obj.GetDefaultSubvolumeID(self.no_options,
+                             dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+            self.assertEqual(default_id, 5)
+
+            dev.obj.SetDefaultSubvolumeID(dbus.UInt32(5), self.no_options,
+                                          dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
             default_id = dev.obj.GetDefaultSubvolumeID(self.no_options,
                              dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
             self.assertEqual(default_id, 5)

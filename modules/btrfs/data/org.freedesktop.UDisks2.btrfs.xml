@@ -233,6 +233,21 @@
       <arg name="options" type="a{sv}" direction="in"/>
     </method>
 
+    <!--
+        SetDefaultSubvolumeID:
+        @id: New default subvolume id.
+        @options: Additional options.
+        @since: 2.11.0
+
+        Sets the default subvolume id.
+
+        No additional options are currently defined.
+    -->
+    <method name="SetDefaultSubvolumeID">
+      <arg name="id" direction="in" type="u"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
     <property name="label" type="s" access="read"/>
     <property name="uuid" type="s" access="read"/>
     <property name="num_devices" type="t" access="read"/>
