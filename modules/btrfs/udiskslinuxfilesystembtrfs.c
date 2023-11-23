@@ -620,7 +620,7 @@ handle_get_subvolumes (UDisksFilesystemBTRFS *fs_btrfs,
                                      UDISKS_OBJECT (object),
                                      BTRFS_POLICY_ACTION_ID,
                                      arg_options,
-                                     N_("Authentication is required to change label for BTRFS volume"),
+                                     N_("Authentication is required to get BTRFS subvolumes"),
                                      invocation);
 
   /* Get the mount point for this volume. */
