@@ -1779,6 +1779,7 @@ apply_configuration_thread_func (GTask        *task,
  out:
   if (fd != -1)
     close (fd);
+  g_task_return_boolean (task, TRUE);
 }
 
 /**
