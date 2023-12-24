@@ -19,8 +19,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-08-30 03:29+0000\n"
-"PO-Revision-Date: 2023-08-30 15:12+0200\n"
+"POT-Creation-Date: 2023-09-29 15:29+0000\n"
+"PO-Revision-Date: 2023-10-01 18:29+0200\n"
 "Last-Translator: Philipp Kiemle <philipp.kiemle@gmail.com>\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -408,7 +408,7 @@ msgstr "Legitimierung ist erforderlich, um einen Namensraum zu formatieren"
 
 #: data/org.freedesktop.UDisks2.policy.in:583
 msgid "NVMeoF connection"
-msgstr ""
+msgstr "NVMeoF-Verbindung"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
@@ -529,12 +529,14 @@ msgstr "Leerer Initiatorname"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:410
 msgid "Error parsing the iSCSI initiator name"
-msgstr ""
+msgstr "Fehler bei der Verarbeitung des iSCSI-Initiatornamens"
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:414
 #, c-format
 msgid "Error writing to %s while setting iSCSI initiator name: "
 msgstr ""
+"Fehler beim Schreiben auf %s während des Festlegens des iSCSI-"
+"Initiatornamens: "
 
 #: modules/iscsi/udiskslinuxmanageriscsiinitiator.c:494
 msgid "Authentication is required to discover targets"
@@ -1003,7 +1005,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:921 src/udiskslinuxfilesystem.c:1112
+#: src/udiskslinuxfilesystem.c:938 src/udiskslinuxfilesystem.c:1129
 msgid "Authentication is required to mount $(drive)"
 msgstr "Legitimierung ist zum Einhängen von $(drive) notwendig"
 
@@ -1017,7 +1019,7 @@ msgstr "Legitimierung ist zum Einhängen von $(drive) notwendig"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1010
+#: src/udiskslinuxfilesystem.c:1027
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1035,7 +1037,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1591
+#: src/udiskslinuxfilesystem.c:1608
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1050,7 +1052,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1639
+#: src/udiskslinuxfilesystem.c:1656
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Legitimierung ist zum Aushängen von $(drive) notwendig, welches von einem "
@@ -1062,7 +1064,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1807
+#: src/udiskslinuxfilesystem.c:1824
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Legitimierung ist zum Ändern der Dateisystem-Bezeichnung auf $(drive) "
@@ -1074,7 +1076,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1989
+#: src/udiskslinuxfilesystem.c:2006
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Legitimierung ist für eine Größenänderung des Dateisystems auf $(drive) "
@@ -1086,7 +1088,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2160
+#: src/udiskslinuxfilesystem.c:2177
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 "Legitimierung ist zum Reparieren des Dateisystems auf Laufwerk $(drive) "
@@ -1098,7 +1100,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2328
+#: src/udiskslinuxfilesystem.c:2345
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 "Legitimierung ist zum Prüfen des Dateisystems auf Laufwerk $(drive) notwendig"
@@ -1109,7 +1111,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2488
+#: src/udiskslinuxfilesystem.c:2505
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1122,7 +1124,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2655
+#: src/udiskslinuxfilesystem.c:2672
 #, fuzzy
 #| msgid ""
 #| "Authentication is required to change the filesystem label on $(drive)"
@@ -2710,28 +2712,19 @@ msgid "Linux /usr/ Verity Signature Partition (x86)"
 msgstr "Linux Haupt-Partition (x86)"
 
 #: udisks/udisksclient.c:2462
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux Variable Data Partition"
-msgstr "Linux Server Daten-Partition"
+msgstr "Linux variable Daten-Partition"
 
 #: udisks/udisksclient.c:2463
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Server Data Partition"
 msgctxt "part-type"
 msgid "Linux Temporary Data Partition"
-msgstr "Linux Server Daten-Partition"
+msgstr "Linux temporäre Daten-Partition"
 
 #: udisks/udisksclient.c:2464
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Home Partition"
 msgctxt "part-type"
 msgid "Linux Per-user Home Partition"
-msgstr "Linux Home-Partition"
+msgstr "Linux individuelle Home-Partition"
 
 #: udisks/udisksclient.c:2465
 msgctxt "part-type"
