@@ -81,6 +81,32 @@ class UdisksLVMTest(UDisksLVMTestBase):
         intro_data = manager.Introspect(self.no_options, dbus_interface='org.freedesktop.DBus.Introspectable')
         self.assertIn('interface name="%s.Manager.LVM2"' % self.iface_prefix, intro_data)
 
+    def test_05_vg(self):
+        '''Test basic VG functionality'''
+
+        vgname = 'udisks_test_vg'
+
+        dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(dev_obj)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        vg = self._create_vg(vgname, [dev_obj])
+        self.addCleanup(self._remove_vg, vg, ignore_removed=True)
+
+        # remove the VG without removing the PV signatures
+        vg.Delete(False, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+
+        fstype = self.get_property(dev_obj, '.Block', 'IdType')
+        fstype.assertEqual('LVM2_member')
+
+        # create new VG
+        vg = self._create_vg(vgname, [dev_obj])
+
+        # remove the VG and wipe the PVs
+        vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+
+        fstype = self.get_property(dev_obj, '.Block', 'IdType')
+        fstype.assertEqual('')
+
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''
 
