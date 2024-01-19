@@ -365,8 +365,8 @@ ntfs_allow=uid=$UID,gid=$GID,umask,dmask,fmask,locale,norecover,ignore_case,wind
 
 # ntfs3 kernel driver
 # different filesystem driver for a common filesystem signature
-ntfs:ntfs3_defaults=uid=$UID,gid=$GID
-ntfs:ntfs3_allow=uid=$UID,gid=$GID,umask,dmask,fmask,iocharset,discard,nodiscard,sparse,nosparse,hidden,nohidden,sys_immutable,nosys_immutable,showmeta,noshowmeta,prealloc,noprealloc
+ntfs:ntfs3_defaults=uid=$UID,gid=$GID,windows_names
+ntfs:ntfs3_allow=uid=$UID,gid=$GID,umask,dmask,fmask,iocharset,discard,nodiscard,sparse,nosparse,hidden,nohidden,sys_immutable,nosys_immutable,showmeta,noshowmeta,prealloc,noprealloc,hide_dot_files,nohide_dot_files,windows_names,nocase,case
 
 # filesystem driver order for the specified filesystem signature
 # required to actually use the extra definitions
