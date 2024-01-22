@@ -445,6 +445,34 @@ ptr_str_array_compare (const gchar **a,
   return g_strcmp0 (*a, *b);
 }
 
+static gboolean
+find_removable (GUdevDevice *device)
+{
+  GUdevDevice *parent;
+
+  parent = g_object_ref (device);
+  while (parent)
+  {
+    GUdevDevice *d;
+    const gchar * const *removable;
+    removable = g_udev_device_get_sysfs_attr_as_strv (parent, "removable");
+    if (removable && removable[0])
+    {
+      if (g_strcmp0 (removable[0], "removable") == 0)
+      {
+        g_object_unref (parent);
+        return TRUE;
+      }
+    }
+
+    d = parent;
+    parent = g_udev_device_get_parent (d);
+    g_object_unref (d);
+  }
+
+  return FALSE;
+}
+
 static void
 set_media (UDisksDrive       *iface,
            UDisksLinuxDevice *device,
@@ -479,7 +507,16 @@ set_media (UDisksDrive       *iface,
   g_ptr_array_sort (media_compat_array, (GCompareFunc) ptr_str_array_compare);
   g_ptr_array_add (media_compat_array, NULL);
 
-  removable = ejectable = g_udev_device_get_sysfs_attr_as_boolean (device->udev_device, "removable");
+  if (udisks_linux_device_subsystem_is_nvme (device))
+    {
+      removable = find_removable (device->udev_device);
+      ejectable = FALSE;
+    }
+  else
+    {
+      removable = ejectable = g_udev_device_get_sysfs_attr_as_boolean (device->udev_device, "removable");
+    }
+
   if (force_non_removable)
     removable = FALSE;
   if (force_removable)
