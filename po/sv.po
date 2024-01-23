@@ -16,8 +16,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-05-22 15:29+0000\n"
-"PO-Revision-Date: 2023-05-22 20:48+0200\n"
+"POT-Creation-Date: 2023-12-24 15:29+0000\n"
+"PO-Revision-Date: 2023-12-24 20:18+0100\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.4.1\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -440,7 +440,6 @@ msgid "Authentication is required to manage BTRFS"
 msgstr "Autentisering krävs för att hantera BTRFS"
 
 #: modules/btrfs/udiskslinuxfilesystembtrfs.c:351
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
 msgid "Authentication is required to change label for BTRFS volume"
 msgstr "Autentisering krävs för att ändra etikett på en BTRFS-volym"
 
@@ -448,15 +447,23 @@ msgstr "Autentisering krävs för att ändra etikett på en BTRFS-volym"
 msgid "Authentication is required to add the device to the volume"
 msgstr "Autentisering krävs för att lägga till en enhet till volymen"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:693
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
+msgid "Authentication is required to get BTRFS subvolumes"
+msgstr "Autentisering krävs för att erhålla BTRFS-undervolymer"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:734
+msgid "Authentication is required to set the default BTRFS subvolume"
+msgstr "Autentisering krävs för att ställa in BTRFS-standardundervolymen"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:793
 msgid "Authentication is required to create a new snapshot"
 msgstr "Autentisering krävs för att skapa en ny ögonblicksbild"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:754
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:854
 msgid "Authentication is required to check and repair the volume"
 msgstr "Autentisering krävs för att kontrollera och reparera volymen"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:812
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:912
 msgid "Authentication is required to resize the volume"
 msgstr "Autentisering krävs för att ändra storlek på volymen"
 
@@ -543,45 +550,45 @@ msgstr "Hantera LVM"
 msgid "Authentication is required to manage LVM"
 msgstr "Autentisering krävs för att hantera LVM"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:566
+#: modules/lvm2/udiskslinuxlogicalvolume.c:573
 msgid "Authentication is required to delete a logical volume"
 msgstr "Autentisering krävs för att ta bort en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:646
+#: modules/lvm2/udiskslinuxlogicalvolume.c:653
 msgid "Authentication is required to repair a logical volume"
 msgstr "Autentisering krävs för att reparera en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:749
+#: modules/lvm2/udiskslinuxlogicalvolume.c:756
 msgid "Authentication is required to rename a logical volume"
 msgstr "Autentisering krävs för att byta namn på en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:813
+#: modules/lvm2/udiskslinuxlogicalvolume.c:820
 msgid "Authentication is required to resize a logical volume"
 msgstr "Autentisering krävs för att ändra storlek på en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:921
+#: modules/lvm2/udiskslinuxlogicalvolume.c:928
 msgid "Authentication is required to activate a logical volume"
 msgstr "Autentisering krävs för att aktivera en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:989
+#: modules/lvm2/udiskslinuxlogicalvolume.c:996
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "Autentisering krävs för att inaktivera en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1063
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "Autentisering krävs för att skapa en ögonblicksbild av en logisk volym"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1124
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "Autentisering krävs för att konvertera en logisk volym till cache"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1146
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1197
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Fel vid konvertering av volymen: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1175
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr "Autentisering krävs för att dela en cache-pool-LV från en cache-LV"
 
@@ -647,39 +654,39 @@ msgstr "Autentisering krävs för att skapa en VDO-volym"
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1294
+#: src/udiskslinuxblock.c:1312
 msgid "Authentication is required to read system-level secrets"
 msgstr "Autentisering krävs för att läsa hemligheter på systemnivå"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2001
+#: src/udiskslinuxblock.c:2019
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Autentisering krävs för att lägga till en post till filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2020
+#: src/udiskslinuxblock.c:2038
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
 "Autentisering krävs för att lägga till en post till filen /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2080
+#: src/udiskslinuxblock.c:2098
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Autentisering krävs för att ta bort en post från filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2099
+#: src/udiskslinuxblock.c:2117
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "Autentisering krävs för att ta bort en post från filen /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2172
+#: src/udiskslinuxblock.c:2190
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Autentisering krävs för att ändra filen /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2191
+#: src/udiskslinuxblock.c:2209
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Autentisering krävs för att ändra filen /etc/crypttab"
 
@@ -696,7 +703,7 @@ msgstr "Autentisering krävs för att ändra filen /etc/crypttab"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2882 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2294
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Autentisering krävs för att utföra en säker radering av $(drive)"
 
@@ -707,11 +714,11 @@ msgstr "Autentisering krävs för att utföra en säker radering av $(drive)"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2894
+#: src/udiskslinuxblock.c:2912
 msgid "Authentication is required to format $(drive)"
 msgstr "Autentisering krävs för att formatera $(drive)"
 
-#: src/udiskslinuxblock.c:2923 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2941 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 
@@ -721,7 +728,7 @@ msgstr "Autentisering krävs för att ändra systemkonfigurationen"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3855
+#: src/udiskslinuxblock.c:3873
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 
@@ -731,7 +738,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för läsning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3926
+#: src/udiskslinuxblock.c:3944
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 
@@ -741,7 +748,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för skrivning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4000
+#: src/udiskslinuxblock.c:4018
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 
@@ -751,7 +758,7 @@ msgstr "Autentisering krävs för att öppna $(drive) för prestandamätning"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4083
+#: src/udiskslinuxblock.c:4101
 msgid "Authentication is required to open $(drive)."
 msgstr "Autentisering krävs för att öppna $(drive)."
 
@@ -761,7 +768,7 @@ msgstr "Autentisering krävs för att öppna $(drive)."
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4140
+#: src/udiskslinuxblock.c:4158
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Autentisering krävs för att söka om $(drive)"
 
@@ -866,7 +873,7 @@ msgstr "Autentisering krävs för att försätta $(drive) i vänteläge"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2385
+#: src/udiskslinuxdriveata.c:2386
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Autentisering krävs för att aktivera SMART på $(drive)"
 
@@ -876,7 +883,7 @@ msgstr "Autentisering krävs för att aktivera SMART på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2395
+#: src/udiskslinuxdriveata.c:2396
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Autentisering krävs för att inaktivera SMART på $(drive)"
 
@@ -886,7 +893,7 @@ msgstr "Autentisering krävs för att inaktivera SMART på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:496 src/udiskslinuxencrypted.c:964
+#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "Autentisering krävs för att låsa upp den krypterade enheten $(drive)"
 
@@ -897,7 +904,7 @@ msgstr "Autentisering krävs för att låsa upp den krypterade enheten $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:776
+#: src/udiskslinuxencrypted.c:778
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -911,7 +918,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1097
+#: src/udiskslinuxencrypted.c:1100
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr ""
 "Autentisering krävs för att ändra storlek på den krypterade enheten $(drive)"
@@ -922,7 +929,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:903 src/udiskslinuxfilesystem.c:1094
+#: src/udiskslinuxfilesystem.c:938 src/udiskslinuxfilesystem.c:1129
 msgid "Authentication is required to mount $(drive)"
 msgstr "Autentisering krävs för att montera $(drive)"
 
@@ -936,7 +943,7 @@ msgstr "Autentisering krävs för att montera $(drive)"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:992
+#: src/udiskslinuxfilesystem.c:1027
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -953,7 +960,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1573
+#: src/udiskslinuxfilesystem.c:1608
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -968,7 +975,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1621
+#: src/udiskslinuxfilesystem.c:1656
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Autentisering krävs för att avmontera $(drive) monterad av en annan användare"
@@ -979,7 +986,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1789
+#: src/udiskslinuxfilesystem.c:1824
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "Autentisering krävs för att ändra filsystemsetiketten på $(drive)"
 
@@ -989,7 +996,7 @@ msgstr "Autentisering krävs för att ändra filsystemsetiketten på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1971
+#: src/udiskslinuxfilesystem.c:2006
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr "Autentisering krävs för att ändra storlek på filsystemet på $(drive)"
 
@@ -999,7 +1006,7 @@ msgstr "Autentisering krävs för att ändra storlek på filsystemet på $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2142
+#: src/udiskslinuxfilesystem.c:2177
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "Autentisering krävs för att reparera filsystemet på $(drive)"
 
@@ -1009,7 +1016,7 @@ msgstr "Autentisering krävs för att reparera filsystemet på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2310
+#: src/udiskslinuxfilesystem.c:2345
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "Autentisering krävs för att kontrollera filsystemet på $(drive)"
 
@@ -1019,7 +1026,7 @@ msgstr "Autentisering krävs för att kontrollera filsystemet på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2470
+#: src/udiskslinuxfilesystem.c:2505
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr "Autentisering krävs för att ändra ägandet av filsystemet på $(drive)"
@@ -1030,7 +1037,7 @@ msgstr "Autentisering krävs för att ändra ägandet av filsystemet på $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2637
+#: src/udiskslinuxfilesystem.c:2672
 msgid "Authentication is required to change the filesystem UUID on $(drive)"
 msgstr "Autentisering krävs för att ändra UUID för filsystemet på $(drive)"
 
@@ -1041,7 +1048,7 @@ msgstr "Autentisering krävs för att ändra UUID för filsystemet på $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:240
+#: src/udiskslinuxloop.c:243
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Autentisering krävs för att ta bort loop-enheten $(drive)"
 
@@ -1052,7 +1059,7 @@ msgstr "Autentisering krävs för att ta bort loop-enheten $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:333
+#: src/udiskslinuxloop.c:336
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Autentisering krävs för att ändra loop-enheten $(drive)"
 
@@ -1060,7 +1067,7 @@ msgstr "Autentisering krävs för att ändra loop-enheten $(drive)"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:581
+#: src/udiskslinuxmanager.c:583
 msgid "Authentication is required to create a RAID array"
 msgstr "Autentisering krävs för att skapa en RAID-uppsättning"
 
@@ -1206,7 +1213,7 @@ msgstr "Autentisering krävs för att ändra partitionen på enheten $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:315
+#: src/udiskslinuxpartitiontable.c:339
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Autentisering krävs för att skapa en partition på $(drive)"
 
