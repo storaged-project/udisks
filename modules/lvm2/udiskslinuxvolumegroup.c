@@ -270,6 +270,7 @@ handle_delete (UDisksVolumeGroup     *_group,
   GList *objects_to_wipe = NULL;
   GList *l;
   VGJobData data;
+  const gchar *device_file = NULL;
 
   g_variant_lookup (arg_options, "tear-down", "b", &teardown_flag);
 
@@ -354,7 +355,14 @@ handle_delete (UDisksVolumeGroup     *_group,
     {
       UDisksBlock *block = udisks_object_peek_block (l->data);
       if (block)
-        udisks_daemon_util_lvm2_wipe_block (daemon, block, NULL);
+        {
+          device_file = udisks_block_get_device (block);
+          if (!bd_lvm_pvremove (device_file, NULL, &error))
+            {
+              udisks_warning ("Failed to wipe PV %s: %s", device_file, error->message);
+              g_clear_error (&error);
+            }
+        }
     }
 
   udisks_volume_group_complete_delete (_group, invocation);
