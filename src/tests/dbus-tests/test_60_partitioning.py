@@ -1,6 +1,5 @@
 import dbus
 import os
-import six
 import time
 import uuid
 
@@ -49,7 +48,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
         # first try to create partition with name -> should fail because mbr
         # doesn't support partition names
         msg = 'MBR partition table does not support names'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.CreatePartition(dbus.UInt64(1024**2), dbus.UInt64(100 * 1024**2), part_type, 'name',
                                         self.no_options, dbus_interface=self.iface_prefix + '.PartitionTable')
 
@@ -565,7 +564,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid guid
         msg = 'org.freedesktop.UDisks2.Error.Failed: .* is not a valid UUID'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             part.SetType('aaaa', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -599,7 +598,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # try to set part type to an extended partition type -- should fail
         msg = 'Refusing to change partition type to that of an extended partition'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             part.SetType('0x05', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -693,7 +692,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
 
         # first try some invalid name (longer than 36 characters)
         msg = 'Max partition name length is 36 characters'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             part.SetName('a' * 37, self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
@@ -746,7 +745,7 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         msg = 'Provided UUID is not a valid RFC-4122 UUID'
         for uu in ['garbage', str(uuid.uuid4()) + 'garbage',
                    '12345678-zzzz-xxxx-yyyy-567812345678', 'ABCD-EFGH']:
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 part.SetUUID(uu, self.no_options, dbus_interface=self.iface_prefix + '.Partition')
 
         # set new valid UUID

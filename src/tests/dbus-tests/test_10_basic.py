@@ -1,7 +1,6 @@
 import udiskstestcase
 import dbus
 import os
-import six
 import shutil
 
 from config_h import UDISKS_MODULES_ENABLED
@@ -73,20 +72,20 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
             with self.assertRaises(dbus.exceptions.DBusException):
                 manager.EnableModule(module, dbus.Boolean(False))
             manager.EnableModule(module, dbus.Boolean(True))
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'cannot open shared object file: No such file or directory'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'cannot open shared object file: No such file or directory'):
             manager.EnableModule("non-exist_ent", dbus.Boolean(True))
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'Module unloading is not currently supported.'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'Module unloading is not currently supported.'):
             manager.EnableModule("nonexistent", dbus.Boolean(False))
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'Requested module name .* is not a valid udisks2 module name.'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'Requested module name .* is not a valid udisks2 module name.'):
             manager.EnableModule("inváálěd", dbus.Boolean(True))
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'Requested module name .* is not a valid udisks2 module name.'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'Requested module name .* is not a valid udisks2 module name.'):
             manager.EnableModule("inváálěd", dbus.Boolean(False))
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'Requested module name .* is not a valid udisks2 module name.'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'Requested module name .* is not a valid udisks2 module name.'):
             manager.EnableModule("module/../intruder", dbus.Boolean(True))
 
     def test_30_supported_filesystems(self):
@@ -218,10 +217,10 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         # empty/invalid devspec supplied
         spec = dbus.Dictionary({}, signature='sv')
         msg = r'Invalid device specification provided'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.ResolveDevice(spec, self.no_options)
         spec = dbus.Dictionary({'PATH': '/dev/i-dont-exist'}, signature='sv')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.ResolveDevice(spec, self.no_options)
 
         # try some non-existing device first

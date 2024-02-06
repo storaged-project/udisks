@@ -1,7 +1,6 @@
 import os
 import stat
 import re
-import six
 import tempfile
 import time
 import sys
@@ -379,12 +378,12 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # Try trigerring a self-test operation
         msg = 'The NVMe controller has no support for self-test operations'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestStart('short', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         msg = 'NVMe Device Self-test command error: Invalid Command Opcode'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestAbort(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
 
@@ -414,14 +413,14 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # Try trigerring a sanitize operation
         msg = 'Unknown sanitize action xxx'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         msg = r'The NVMe controller has no support for the .* sanitize operation'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('block-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('crypto-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
 
@@ -444,50 +443,50 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             state.assertEqual('live', timeout=10)
 
             msg = 'Format NVM command error: Invalid Command Opcode: A reserved coded value or an unsupported value in the command opcode field'
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 ns.FormatNamespace(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
             d = dbus.Dictionary(signature='sv')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Unknown secure erase type xxx'):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Unknown secure erase type xxx'):
                 d['secure_erase'] = 'xxx'
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['secure_erase'] = 'user_data'
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['secure_erase'] = 'crypto_erase'
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
             d = dbus.Dictionary(signature='sv')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = 0
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
             lbaf_curr = self.get_property_raw(ns, '.NVMe.Namespace', 'FormattedLBASize')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = lbaf_curr[0]
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = lbaf_curr[0]
                 d['metadata_size'] = lbaf_curr[1]
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
             msg = "Couldn't match desired LBA data block size in a device supported LBA format data sizes"
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = dbus.UInt16(666)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 d['lba_data_size'] = lbaf_curr[0]
                 d['metadata_size'] = dbus.UInt16(5)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
     def test_fabrics_connect(self):
         manager = self.get_interface("/Manager", ".Manager.NVMe")
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
             manager.Connect(self.str_to_ay(self.SUBNQN), "notransport", "", self.no_options)
         msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "127.0.0.1", self.no_options)
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.Connect(self.str_to_ay("unknownsubnqn"), "loop", "", self.no_options)
 
         d = dbus.Dictionary(signature='sv')
@@ -511,7 +510,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
         ctrl = self.get_object(ctrl_obj_path)
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
 
 

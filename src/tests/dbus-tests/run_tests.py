@@ -14,7 +14,6 @@ import shutil
 import tempfile
 import pdb
 import re
-import six
 import atexit
 import traceback
 import yaml
@@ -161,7 +160,7 @@ def _get_test_tags(test):
     # in the test file, just return empty list and let it fail
     # with python2 the loader will raise an exception directly without returning
     # a "fake" FailedTest test case
-    if six.PY3 and isinstance(test, unittest.loader._FailedTest):
+    if isinstance(test, unittest.loader._FailedTest):
         return tags
 
     test_fn = getattr(test, test._testMethodName)

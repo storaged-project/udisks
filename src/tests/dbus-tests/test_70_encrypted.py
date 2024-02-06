@@ -1,7 +1,6 @@
 import dbus
 import os
 import re
-import six
 import shutil
 import tarfile
 import tempfile
@@ -156,13 +155,13 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # no password
         msg = 'org.freedesktop.UDisks2.Error.Failed: No key available.*'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Unlock("", self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 
         # wrong password
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error unlocking %s *' % self.vdevs[0]
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Unlock('abcdefghijklmn', self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -304,7 +303,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # should not be possible to close mounted luks
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error locking'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
         # now unmount it and try to close it again
@@ -326,7 +325,7 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
 
         # old password, should fail
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error unlocking %s *' % self.vdevs[0]
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Unlock(self.PASSPHRASE, self.no_options,
                         dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -531,7 +530,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         # kernel keyring support and no passphrase for LUKS 2 given = fail
         if self._get_key_location('/dev/' + clear_dev) == 'keyring':
             msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: Insufficient (permissions|persmissions) to resize device. *'
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 device.Resize(dbus.UInt64(100*1024*1024), self.no_options,
                               dbus_interface=self.iface_prefix + '.Encrypted')
 
@@ -540,7 +539,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         d['passphrase'] = 'wrongpassphrase'
         msg = 'org.freedesktop.UDisks2.Error.Failed: Error resizing encrypted device /dev/dm-[0-9]+: '\
               'Failed to activate device: (Operation not permitted|Incorrect passphrase)'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             device.Resize(dbus.UInt64(100*1024*1024), d,
                           dbus_interface=self.iface_prefix + '.Encrypted')
 

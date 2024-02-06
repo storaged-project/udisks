@@ -2,7 +2,6 @@ import time
 import dbus
 import glob
 import os
-import six
 import unittest
 import udiskstestcase
 
@@ -54,8 +53,8 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
 
         dev = self.get_device(self.vdevs[0])
         drive = self.get_drive(dev)
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                   r'is not hot-pluggable device|is not ejectable device'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                    r'is not hot-pluggable device|is not ejectable device'):
             drive.Eject(self.no_options)
 
         dev = self.get_device(self.cd_dev)
@@ -70,8 +69,8 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
 
             # check should fail since device cannot be powered off
             # sadly this is so far the only way we can test this function
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException,
-                                       'Failed: No usb device'):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException,
+                                        'Failed: No usb device'):
                 drive.PowerOff(self.no_options)
 
     def test_30_setconfiguration(self):

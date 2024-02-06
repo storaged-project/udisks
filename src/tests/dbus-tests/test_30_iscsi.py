@@ -4,7 +4,6 @@ import dbus
 import glob
 import os
 import re
-import six
 import time
 import shutil
 import unittest
@@ -166,13 +165,13 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         msg = r'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
         # missing auth info
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.Login(iqn, tpg, host, port, iface, self.no_options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                           timeout=self.iscsi_timeout)
 
         # wrong password
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
@@ -340,7 +339,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
         msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
@@ -422,7 +421,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
             # second attempt - wrong password
             msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 options['username'] = 'nonsenseuser'
                 options['password'] = '12345'
                 manager.Login(iqn, tpg, host, port, iface, options,

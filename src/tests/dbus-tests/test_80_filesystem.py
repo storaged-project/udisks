@@ -2,7 +2,6 @@ import dbus
 import os
 import errno
 import re
-import six
 import shutil
 import uuid
 import random
@@ -254,7 +253,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
         msg = r'org.freedesktop.UDisks2.Error.Failed: (Provided UUID is not a valid RFC-4122 UUID.|UUID for .* filesystem must be a hexadecimal number.|.*volume ID must be a hexadecimal number|UUID for .* filesystem must be .* characters long.)'
         for u in ['garbage', self._gen_uuid() + 'garbage',
                   '12345678-zzzz-xxxx-yyyy-567812345678', 'ABCD-EFGH']:
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 block.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def test_uuid(self):
@@ -529,7 +528,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
                 mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
                 self.assertTrue(os.path.ismount(mnt_path))
                 if should_be_readonly:
-                    with six.assertRaisesRegex(self, OSError, "Read-only file system"):
+                    with self.assertRaisesRegex(OSError, "Read-only file system"):
                         fd, _tmpfile = tempfile.mkstemp(dir=mnt_path)
                         os.close(fd)
                 else:
@@ -556,7 +555,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
                         msg="org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option `%s' is not allowed" % dbus_option
                     else:
                         msg="org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option `.*' is not allowed"
-                    with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                    with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                         mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
                 else:
                     mnt_path = block_fs.Mount(dd, dbus_interface=self.iface_prefix + '.Filesystem')
@@ -998,7 +997,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # attempt to create another filesystem on the partition
         msg = 'This partition cannot be modified because it contains a partition table; please reinitialize layout of the whole device.'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             part.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
@@ -1022,7 +1021,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # now try formatting the master block device
         msg = r"Error wiping device:.*Failed to open the device|Error synchronizing after initial wipe: Timed out waiting for object"
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
 
         part.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
@@ -1151,7 +1150,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # try to mount it now: first with a nonexistent user
         d['as-user'] = 'nonexistent'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, "User with name nonexistent does not exist"):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, "User with name nonexistent does not exist"):
             block_fs.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
 
         # now mount it with the actual user
@@ -1182,7 +1181,7 @@ class Ext2TestCase(UdisksFSTestCase):
     def _invalid_label(self, disk):
         label = 'a' * 17  # at most 16 characters, longer should be truncated
         msg = 'org.freedesktop.UDisks2.Error.Failed: Label for ext filesystem must be at most 16 characters long.'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
@@ -1314,7 +1313,7 @@ class Ext4TestCase(Ext2TestCase):
 
         options = dbus.Dictionary(signature='sv')
         options['mkfs-args'] = ['-O', 'nonexistent']
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, 'Invalid filesystem option set: nonexistent'):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Invalid filesystem option set: nonexistent'):
             self._create_format(disk, options=options)
 
         options['mkfs-args'] = ['-O', 'encrypt']
@@ -1328,7 +1327,7 @@ class XFSTestCase(UdisksFSTestCase):
     def _invalid_label(self, disk):
         label = 'a a'  # space not allowed
         msg = 'org.freedesktop.UDisks2.Error.Failed: Label for XFS filesystem cannot contain spaces.'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
@@ -1636,7 +1635,7 @@ class VFATTestCase(NonPOSIXTestCase):
     def _invalid_label(self, disk):
         label = 'a' * 12  # at most 11 characters
         msg = 'org.freedesktop.UDisks2.Error.Failed: Label for VFAT filesystem must be at most 11 characters long.'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.SetLabel(label, self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def _gen_uuid(self):
@@ -1781,7 +1780,7 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         # try to create some nonexisting filesystem
         msg = 'org.freedesktop.UDisks2.Error.NotSupported: Filesystem \'definitely-nonexisting-fs\' is not supported.'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Format('definitely-nonexisting-fs', self.no_options,
                         dbus_interface=self.iface_prefix + '.Block')
 
@@ -1798,7 +1797,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         self.addCleanup(self.wipe_fs, self.vdevs[0])
 
         msg = "org.freedesktop.UDisks2.Error.Failed: Setting the label of filesystem 'f2fs' is not supported."
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.SetLabel('test', self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
     def test_mount_auto(self):
@@ -1818,7 +1817,7 @@ class FailsystemTestCase(UdisksFSTestCase):
         d['fstype'] = 'xfs'
 
         msg = '[Ww]rong fs type'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)
 
@@ -1828,14 +1827,14 @@ class FailsystemTestCase(UdisksFSTestCase):
 
         msg = 'org.freedesktop.UDisks2.Error.OptionNotPermitted: Mount option '\
               '`definitely-nonexisting-option\' is not allowed'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             mnt_path = disk.Mount(d, dbus_interface=self.iface_prefix + '.Filesystem')
             self.assertIsNone(mnt_path)
 
         # should not be mounted -- so lets try to unmount it
         msg = 'org.freedesktop.UDisks2.Error.NotMounted: Device `%s\' is not '\
               'mounted' % self.vdevs[0]
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             disk.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')
 
 
