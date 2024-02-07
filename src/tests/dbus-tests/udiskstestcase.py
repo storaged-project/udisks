@@ -91,53 +91,6 @@ def get_version():
     return (distro, version)
 
 
-def skip_on(skip_on_distros, skip_on_version="", reason=""):
-    """A function returning a decorator to skip some test on a given distribution-version combination
-
-    :param skip_on_distros: distro(s) to skip the test on
-    :type skip_on_distros: str or tuple of str
-    :param str skip_on_version: version of distro(s) to skip the tests on (only
-                                checked on distribution match)
-
-    """
-    if isinstance(skip_on_distros, str):
-        skip_on_distros = (skip_on_distros,)
-
-    distro, version = get_version()
-
-    def decorator(func):
-        if distro in skip_on_distros and (not skip_on_version or skip_on_version == version):
-            msg = "not supported on this distribution in this version" + (": %s" % reason if reason else "")
-            return unittest.skip(msg)(func)
-        else:
-            return func
-
-    return decorator
-
-
-def unstable_test(test):
-    """Decorator for unstable tests
-
-    Failures of tests decorated with this decorator are silently ignored unless
-    the ``UNSTABLE_TESTS_FATAL`` environment variable is defined.
-    """
-
-    def decorated_test(*args):
-        try:
-            test(*args)
-        except unittest.SkipTest:
-            # make sure skipped tests are just skipped as usual
-            raise
-        except Exception as e:
-            # and swallow everything else, just report a failure of an unstable
-            # test, unless told otherwise
-            if "UNSTABLE_TESTS_FATAL" in os.environ:
-                raise
-            print("unstable-fail: Ignoring exception '%s'\n" % e, end="", file=sys.stderr)
-
-    return decorated_test
-
-
 class DBusProperty(object):
 
     TIMEOUT = 5
