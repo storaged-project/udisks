@@ -465,8 +465,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  /* fallback mechanism: keyfile_contents (for LUKS) -> passphrase -> crypttab_passphrase -> TCRYPT keyfiles -> error (no key) */
-  if (is_luks && udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
+  /* fallback mechanism: keyfile_contents (for LUKS and BITLK) -> passphrase -> crypttab_passphrase -> TCRYPT keyfiles -> error (no key) */
+  if ((is_luks || is_bitlk) && udisks_variant_lookup_binary (options, "keyfile_contents", &effective_passphrase))
     {
       /* effective_passphrase was set to keyfile_contents, nothing more to do here */
     }
