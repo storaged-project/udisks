@@ -14,21 +14,22 @@
 # Thomas Eichhorn <tomislav@posteo.de>, 2017. #zanata
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2019. #zanata
 # Philipp Kiemle <philipp.kiemle@gmail.com>, 2023.
+# Jürgen Benvenuti <gastornis@posteo.org>, 2024.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-09-29 15:29+0000\n"
-"PO-Revision-Date: 2023-10-01 18:29+0200\n"
-"Last-Translator: Philipp Kiemle <philipp.kiemle@gmail.com>\n"
+"POT-Creation-Date: 2024-02-05 15:29+0000\n"
+"PO-Revision-Date: 2024-02-06 20:01+0100\n"
+"Last-Translator: Jürgen Benvenuti <gastornis@posteo.org>\n"
 "Language-Team: German\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.3.2\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -414,22 +415,21 @@ msgstr "NVMeoF-Verbindung"
 #. * requests connection to a NVMeoF controller.
 #.
 #: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
-#, fuzzy
-#| msgid "Authentication is required to check the power state"
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr ""
-"Um die Leistungsstufe zu überprüfen, ist eine Legitimierung erforderlich"
+"Legitimierung ist zum Verbinden mit einem NVMe over Fabrics-Controller "
+"erforderlich"
 
 #: data/org.freedesktop.UDisks2.policy.in:593
 msgid "Disconnect a NVMeoF controller"
 msgstr ""
 
 #: data/org.freedesktop.UDisks2.policy.in:594
-#, fuzzy
-#| msgid "Authentication is required to discover targets"
 msgid "Authentication is required to disconnect a NVMe over Fabrics controller"
-msgstr "Legitimierung ist zum Suchen von Zielen notwendig"
+msgstr ""
+"Legitimierung ist zum Trennen von einem NVMe over Fabrics-Controller "
+"erforderlich"
 
 #: data/org.freedesktop.UDisks2.policy.in:604
 msgid "Set a NVMe Host NQN/ID"
@@ -471,7 +471,6 @@ msgid "Authentication is required to manage BTRFS"
 msgstr "Legitimierung ist zum Verwalten von BTRFS erforderlich"
 
 #: modules/btrfs/udiskslinuxfilesystembtrfs.c:351
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
 msgid "Authentication is required to change label for BTRFS volume"
 msgstr ""
 "Legitimierung ist zum Ändern der Bezeichnung eines BTRFS-Datenträgers "
@@ -482,17 +481,26 @@ msgid "Authentication is required to add the device to the volume"
 msgstr ""
 "Legitimierung ist zum Hinzufügen des Geräts zu einem Datenträger notwendig"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:693
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
+msgid "Authentication is required to get BTRFS subvolumes"
+msgstr "Legitimierung ist zum Ermitteln von BTRFS Subvolumes erforderlich"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:734
+msgid "Authentication is required to set the default BTRFS subvolume"
+msgstr ""
+"Legitimierung ist zum Festlegen des Standard BTRFS-Subvolume erforderlich"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:793
 msgid "Authentication is required to create a new snapshot"
 msgstr ""
 "Legitimierung ist zum Erstellen eines neuen Schnappschusses erforderlich"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:754
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:854
 msgid "Authentication is required to check and repair the volume"
 msgstr ""
 "Legitimierung ist zum Prüfen und Reparieren des Datenträgers erforderlich"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:812
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:912
 msgid "Authentication is required to resize the volume"
 msgstr "Legitimierung ist zur Größenänderung des Datenträgers erforderlich"
 
@@ -583,56 +591,56 @@ msgstr "LVM verwalten"
 msgid "Authentication is required to manage LVM"
 msgstr "Legitimierung ist zum Verwalten von LVM-Datenträgern erforderlich"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:566
+#: modules/lvm2/udiskslinuxlogicalvolume.c:573
 msgid "Authentication is required to delete a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger zu löschen"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:646
+#: modules/lvm2/udiskslinuxlogicalvolume.c:653
 msgid "Authentication is required to repair a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger zu reparieren"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:749
+#: modules/lvm2/udiskslinuxlogicalvolume.c:756
 msgid "Authentication is required to rename a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger umzubenennen"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:813
+#: modules/lvm2/udiskslinuxlogicalvolume.c:820
 msgid "Authentication is required to resize a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um die Größe eines logischen Datenträgers zu "
 "ändern"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:921
+#: modules/lvm2/udiskslinuxlogicalvolume.c:928
 msgid "Authentication is required to activate a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger zu aktivieren"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:989
+#: modules/lvm2/udiskslinuxlogicalvolume.c:996
 msgid "Authentication is required to deactivate a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger zu "
 "deaktivieren"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1063
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 "Legitimierung ist erforderlich, um einen logischen Datenträger zu erstellen"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1124
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 "Legitimierung ist erforderlich, um  einen logischen Datenträger in einen "
 "Zwischenspeicher umzuwandeln"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1146
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1197
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Fehler beim Konvertieren des Datenträgers:%s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1175
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Eine Legitimierung wird benötigt, um einen Cache-Pool-LV von einem Cache-LV "
@@ -765,7 +773,7 @@ msgstr "Legitimierung ist zum Verändern der Datei /etc/crypttab notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2294
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Legitimierung ist erforderlich, um $(drive) sicher zu löschen"
 
@@ -841,7 +849,7 @@ msgstr "Legitimierung ist zum erneuten Einlesen von $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1081
+#: src/udiskslinuxdrive.c:1118
 msgid "Authentication is required to eject $(drive)"
 msgstr "Legitimierung ist zum Auswerfen von $(drive) notwendig"
 
@@ -851,7 +859,7 @@ msgstr "Legitimierung ist zum Auswerfen von $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1169
+#: src/udiskslinuxdrive.c:1206
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
 "Legitimierung ist zum Festlegen von Einstellungen für $(drive) notwendig"
@@ -862,7 +870,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1484
+#: src/udiskslinuxdrive.c:1521
 msgid "Authentication is required to power off $(drive)"
 msgstr "Legitimierung ist zum Ausschalten von $(drive) notwendig"
 
@@ -946,7 +954,7 @@ msgstr "Legitimierung ist zum Aktivieren des Ruhemodus auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2385
+#: src/udiskslinuxdriveata.c:2386
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Legitimierung ist zum Aktivieren von SMART auf $(drive) notwendig"
 
@@ -956,7 +964,7 @@ msgstr "Legitimierung ist zum Aktivieren von SMART auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2395
+#: src/udiskslinuxdriveata.c:2396
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Legitimierung ist zum Deaktivieren von SMART auf $(drive) notwendig"
 
@@ -1160,7 +1168,7 @@ msgstr ""
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:582
+#: src/udiskslinuxmanager.c:583
 msgid "Authentication is required to create a RAID array"
 msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 
@@ -1251,11 +1259,8 @@ msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:828
-#, fuzzy
-#| msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgid "Authentication is required to start a device self-test on $(drive)"
-msgstr ""
-"Legitimierung ist zum Starten des SMART-Selbsttests auf $(drive) notwendig"
+msgstr "Legitimierung ist zum Starten eines Selbsttests auf $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
@@ -1264,11 +1269,9 @@ msgstr ""
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:921
-#, fuzzy
-#| msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgid "Authentication is required to abort a device self-test on $(drive)"
 msgstr ""
-"Legitimierung ist zum Abbrechen des SMART-Selbsttests auf $(drive) notwendig"
+"Legitimierung ist zum Abbrechen eines Selbsttests auf $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a sanitize operation.
@@ -2206,269 +2209,196 @@ msgid "Linux /usr/ Partition (amd64/x86_64)"
 msgstr "Linux /usr/-Partition (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2386
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Alpha)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (Alpha)"
 
 #: udisks/udisksclient.c:2387
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (ARC)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (ARC)"
 
 #: udisks/udisksclient.c:2388
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit ARM)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (32-Bit ARM)"
 
 #: udisks/udisksclient.c:2389
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit ARM/AArch64)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux Root Verity-Partition (64-Bit ARM/AArch64)"
 
 #: udisks/udisksclient.c:2390
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Itanium/IA-64)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (Itanium/IA-64)"
 
 #: udisks/udisksclient.c:2391
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (LoongArch 64-bit)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (LoongArch 64-Bit)"
 
+# Verity steht im Zusammenhang mit DeviceMapper (DM)
+# https://wiki.archlinux.org/title/Dm-verity
 #: udisks/udisksclient.c:2392
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit MIPS LittleEndian/mipsel)"
-msgstr ""
+msgstr "Linux Root Verity-Partition (32-Bit MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2393
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit MIPS LittleEndian/mips64el)"
-msgstr ""
+msgstr "Linux Root Verity-Partition (64-Bit MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2394
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (HPPA/PARISC)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (HPPA/PARISC)"
 
 #: udisks/udisksclient.c:2395
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit PowerPC LittleEndian)"
-msgstr ""
+msgstr "Linux Root Verity-Partition (64-Bit PowerPC LittleEndian)"
 
 #: udisks/udisksclient.c:2396
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit PowerPC BigEndian)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux Root Verity-Partition (64-Bit PowerPC BigEndian)"
 
 #: udisks/udisksclient.c:2397
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit PowerPC)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (32-Bit PowerPC)"
 
 #: udisks/udisksclient.c:2398
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 32-bit)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (RISC-V 32-Bit)"
 
 #: udisks/udisksclient.c:2399
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 64-bit)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (RISC-V 64-Bit)"
 
 #: udisks/udisksclient.c:2400
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (s390)"
 
 #: udisks/udisksclient.c:2401
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390x)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (s390x)"
 
 #: udisks/udisksclient.c:2402
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (TILE-Gx)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (TILE-Gx)"
 
 #: udisks/udisksclient.c:2403
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (amd64/x86_64)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux Root Verity-Partition (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2404
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (x86)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux Root Verity-Partition (x86)"
 
 #: udisks/udisksclient.c:2405
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Alpha)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (Alpha)"
 
 #: udisks/udisksclient.c:2406
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (ARC)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (ARC)"
 
 #: udisks/udisksclient.c:2407
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit ARM)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (32-Bit ARM)"
 
 #: udisks/udisksclient.c:2408
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit ARM/AArch64)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (64-Bit ARM/AArch64)"
 
 #: udisks/udisksclient.c:2409
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Itanium/IA-64)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux /usr/ Verity-Partition (Itanium/IA-64)"
 
 #: udisks/udisksclient.c:2410
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (LoongArch 64-bit)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (LoongArch 64-Bit)"
 
 #: udisks/udisksclient.c:2411
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit MIPS LittleEndian/mipsel)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (32-Bit MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2412
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit MIPS LittleEndian/mips64el)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (64-Bit MIPS LittleEndian/mips64el)"
 
 #: udisks/udisksclient.c:2413
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (HPPA/PARISC)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (HPPA/PARISC)"
 
 #: udisks/udisksclient.c:2414
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit PowerPC LittleEndian)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (64-Bit PowerPC LittleEndian)"
 
 #: udisks/udisksclient.c:2415
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit PowerPC BigEndian)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (64-Bit PowerPC BigEndian)"
 
 #: udisks/udisksclient.c:2416
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit PowerPC)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (32-Bit PowerPC)"
 
 #: udisks/udisksclient.c:2417
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (RISC-V 32-bit)"
-msgstr ""
+msgstr "Linux /usr/ Verity-Partition (RISC-V 32-Bit)"
 
 #: udisks/udisksclient.c:2418
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (RISC-V 64-bit)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux /usr/ Verity-Partition (RISC-V 64-Bit)"
 
 #: udisks/udisksclient.c:2419
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (s390)"
 
 #: udisks/udisksclient.c:2420
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390x)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (s390x)"
 
 #: udisks/udisksclient.c:2421
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (TILE-Gx)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (TILE-Gx)"
 
 #: udisks/udisksclient.c:2422
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86_64)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (amd64/x86_64)"
-msgstr "Linux Haupt-Partition (x86_64)"
+msgstr "Linux /usr/ Verity-Partition (amd64/x86_64)"
 
 #: udisks/udisksclient.c:2423
-#, fuzzy
-#| msgctxt "part-type"
-#| msgid "Linux Root Partition (x86)"
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (x86)"
-msgstr "Linux Haupt-Partition (x86)"
+msgstr "Linux /usr/ Verity-Partition (x86)"
 
 #: udisks/udisksclient.c:2424
 #, fuzzy
@@ -2515,13 +2445,13 @@ msgstr ""
 #: udisks/udisksclient.c:2430
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
-msgstr ""
+msgstr "Linux Root Verity Signatur-Partition (32-Bit MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2431
 msgctxt "part-type"
 msgid ""
 "Linux Root Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
-msgstr ""
+msgstr "Linux Root Verity Signatur-Partition (64-Bit MIPS LittleEndian/mipsel)"
 
 #: udisks/udisksclient.c:2432
 msgctxt "part-type"
@@ -2541,7 +2471,7 @@ msgstr ""
 #: udisks/udisksclient.c:2435
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit PowerPC)"
-msgstr ""
+msgstr "Linux Root Verity Signatur-Partition (32-bit PowerPC)"
 
 #: udisks/udisksclient.c:2436
 msgctxt "part-type"
