@@ -7,6 +7,7 @@ import shutil
 
 import udiskstestcase
 
+
 class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
     """
     Provide as much LSM module code coverage as possible using the libstoragemgmt 'sim' plugin.

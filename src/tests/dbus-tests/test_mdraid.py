@@ -91,7 +91,6 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
 
         manager = self.get_object('/Manager')
         with wait_for_action('resync'):
-
             array_path = manager.MDRaidCreate(dbus.Array(m.obj for m in self.members),
                                               self.level, array_name, self.chunk_size,
                                               d, dbus_interface=self.iface_prefix + '.Manager')

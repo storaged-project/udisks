@@ -3,7 +3,6 @@ import os
 import re
 import time
 import unittest
-import sys
 import glob
 
 from packaging.version import Version

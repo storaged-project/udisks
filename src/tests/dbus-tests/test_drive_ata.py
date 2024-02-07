@@ -49,6 +49,7 @@ for disk in _get_sata_disks():
     else:
         smart_unsupported.add(disk)
 
+
 class UdisksDriveAtaTest(udiskstestcase.UdisksTestCase):
     '''Noninvasive tests for the Drive.Ata interface'''
 
@@ -87,7 +88,6 @@ class UdisksDriveAtaTest(udiskstestcase.UdisksTestCase):
                 attrs[int(fields[0])] = tuple(fields[1:])
 
         return attrs
-
 
     @unittest.skipUnless(smart_supported, "No disks supporting S.M.A.R.T. available")
     def test_iface_present(self):

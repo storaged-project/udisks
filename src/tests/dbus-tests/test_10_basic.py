@@ -5,6 +5,7 @@ import shutil
 
 from config_h import UDISKS_MODULES_ENABLED
 
+
 class UdisksBaseTest(udiskstestcase.UdisksTestCase):
     '''This is a base test suite'''
 
@@ -47,7 +48,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         self.udisks2_conf_contents = None
         try:
             self.udisks2_conf_contents = self.read_file(self._get_udisks2_conf_path())
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # no existing udisks2.conf, simply remove the file once finished
             pass
 

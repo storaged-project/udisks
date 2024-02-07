@@ -2,7 +2,6 @@ import time
 import dbus
 import glob
 import os
-import unittest
 import udiskstestcase
 
 

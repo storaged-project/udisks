@@ -4,7 +4,6 @@ import dbus
 import glob
 import os
 import re
-import time
 import shutil
 import unittest
 
@@ -51,7 +50,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         try:
             initiatorname_backup = self.read_file(INITIATOR_FILE)
             self.addCleanup(self.write_file, INITIATOR_FILE, initiatorname_backup)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # no existing file, simply remove it once finished
             self.addCleanup(self.remove_file, INITIATOR_FILE, True)
 
@@ -345,7 +344,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                           timeout=self.iscsi_timeout)
 
-        # second atttempt - no password
+        # second attempt - no password
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                       timeout=self.iscsi_timeout)
@@ -382,7 +381,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         if not os.path.exists('/sys/firmware/acpi/tables/iBFT'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             self.skipTest('No iBFT ACPI table detected')
-        ret, out = udiskstestcase.run_command('modprobe iscsi_ibft')
+        ret, _out = udiskstestcase.run_command('modprobe iscsi_ibft')
         if ret != 0:
             udiskstestcase.UdisksTestCase.tearDownClass()
             self.skipTest('iscsi_ibft kernel module unavailable')

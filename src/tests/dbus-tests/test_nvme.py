@@ -1,9 +1,7 @@
 import os
 import stat
-import re
 import tempfile
 import time
-import sys
 import shutil
 import json
 import uuid
@@ -103,6 +101,7 @@ def find_nvme_ns_devs_for_subnqn(subnqn):
 
     return ns_dev_paths
 
+
 def setup_nvme_target(dev_paths, subnqn):
     """
     Sets up a new NVMe target loop device (using nvmetcli) on top of the
@@ -185,13 +184,13 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         if not shutil.which("nvmetcli"):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest("nvmetcli executable not found in $PATH, skipping.")
-        ret, out = udiskstestcase.run_command("modprobe nvme-fabrics")
+        ret, _out = udiskstestcase.run_command("modprobe nvme-fabrics")
         if ret != 0:
             raise unittest.SkipTest("nvme-fabrics kernel module unavailable, skipping.")
 
         cls.dev_files = []
 
-        for i in range(cls.NUM_NS):
+        for _ in range(cls.NUM_NS):
             with tempfile.NamedTemporaryFile(prefix="udisks_test", delete=False, mode='w+b', dir='/var/tmp') as temp:
                 temp.truncate(cls.NS_SIZE)
                 cls.dev_files += [temp.name]
@@ -229,7 +228,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             except FileNotFoundError:
                 pass
         udiskstestcase.UdisksTestCase.tearDownClass()
-
 
     def test_controller_info(self):
         self._nvme_connect()
@@ -279,7 +277,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         unalloc_cap = self.get_property_raw(drive_obj, '.NVMe.Controller', 'UnallocatedCapacity')
         self.assertEqual(unalloc_cap, 0)
 
-
     def test_namespace_info(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
@@ -324,7 +321,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(nutl, self.NS_SIZE / lbaf_curr[0])
             format_progress = self.get_property_raw(ns, '.NVMe.Namespace', 'FormatPercentRemaining')
             self.assertEqual(format_progress, -1)
-
 
     def test_health_info(self):
         self._nvme_connect()
@@ -386,7 +382,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestAbort(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
-
     def test_sanitize(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
@@ -422,7 +417,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             drive_obj.SanitizeStart('crypto-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
-
 
     def test_format_ns(self):
         self._nvme_connect()
@@ -512,7 +506,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl = self.get_object(ctrl_obj_path)
         with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
-
 
     def test_hostnqn(self):
         HOSTNQN_PATH = '/etc/nvme/hostnqn'
