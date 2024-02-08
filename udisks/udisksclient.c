@@ -1423,7 +1423,8 @@ udisks_client_get_partitions (UDisksClient         *client,
  *
  * Gets the #UDisksPartitionTable corresponding to @partition.
  *
- * Returns: (transfer full): A #UDisksPartitionTable. Free with g_object_unref().
+ * Returns: (transfer full): A #UDisksPartitionTable or %NULL if there is no #UDisksPartitionTable for @partition.
+ * Free with g_object_unref().
  */
 UDisksPartitionTable *
 udisks_client_get_partition_table (UDisksClient     *client,
