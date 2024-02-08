@@ -452,9 +452,8 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
       if (block != NULL)
         {
           /* Translators: String used for one-liner description of running RAID array w/o a name.
-           *              The first %s is the array name (e.g. "AlphaGo").
-           *              The second %s is the size and level (e.g. "2 TB RAID-5").
-           *              The third %s is the special device file (e.g. "/dev/sda").
+           *              The first %s is the size and level (e.g. "2 TB RAID-5").
+           *              The second %s is the special device file (e.g. "/dev/sda").
            */
           info->one_liner = g_strdup_printf (C_("one-liner-mdraid-no-name-running", "%s — %s"),
                                              info->description,
@@ -463,8 +462,7 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
       else
         {
           /* Translators: String used for one-liner description of non-running RAID array w/o a name.
-           *              The first %s is the array name (e.g. "AlphaGo").
-           *              The second %s is the size and level (e.g. "2 TB RAID-5").
+           *              The %s is the size and level (e.g. "2 TB RAID-5").
            */
           info->one_liner = g_strdup_printf (C_("one-liner-mdraid-no-name-not-running", "%s"),
                                              info->description);
