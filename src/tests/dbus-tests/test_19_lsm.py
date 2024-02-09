@@ -1,12 +1,12 @@
 import os
 import re
-import six
 import dbus
 import unittest
 import tempfile
 import shutil
 
 import udiskstestcase
+
 
 class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
     """
@@ -164,7 +164,7 @@ class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
             for method_name in UdisksLSMTestCase._LED_CONTROL_METHOD_NAMES:
                 method = drive_lsm_local.get_dbus_method(method_name)
                 msg = r'(Specified disk does not support this action|Unable to find block device for drive)'
-                with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+                with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                     method(self.no_options)
 
     def test_drive_lsm(self):
@@ -199,5 +199,5 @@ class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
                 self.assertEqual(self.get_property_raw(drive, '.Drive.LSM', 'RaidDiskCount'), 2)
             else:
                 # no .Drive.LSM interface should be present on other objects
-                with six.assertRaisesRegex(self, dbus.exceptions.DBusException, r'org.freedesktop.DBus.Error.InvalidArgs: No such interface'):
+                with self.assertRaisesRegex(dbus.exceptions.DBusException, r'org.freedesktop.DBus.Error.InvalidArgs: No such interface'):
                     self.get_property_raw(drive_lsm, '.Drive.LSM', 'IsOK')

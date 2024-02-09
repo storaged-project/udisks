@@ -4,7 +4,6 @@ import glob
 import fcntl
 import os
 import time
-import unittest
 
 import udiskstestcase
 

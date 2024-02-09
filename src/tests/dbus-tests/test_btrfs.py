@@ -1,6 +1,5 @@
 import dbus
 import os
-import six
 import shutil
 import re
 import tempfile
@@ -122,7 +121,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         # invalid raid level
         msg = '[uU]nknown .* profile raidN'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.CreateVolume([dev.obj_path for dev in devs],
                                  'test_raidN', 'raidN', 'raidN',
                                  self.no_options,
@@ -181,7 +180,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         # not mounted, should fail
         msg = 'org.freedesktop.UDisks2.Error.NotMounted: Volume not mounted'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             dev.obj.CreateSubvolume('test_sub1', self.no_options,
                                     dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 
@@ -227,7 +226,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         # shouldn't be possible to remove only device
         with self._temp_mount(dev1.path):
             msg = 'unable to remove the only writeable device'
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 dev1.obj.RemoveDevice(dev1.obj_path, self.no_options,
                                       dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
 

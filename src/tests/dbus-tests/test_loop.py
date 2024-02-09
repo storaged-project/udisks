@@ -71,6 +71,7 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
         uid.assertEqual(0)  # uid should be 0 since device is not created by Udisks
 
+
 class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
     """Unit tests for the loop-related methods of the Manager object"""
 

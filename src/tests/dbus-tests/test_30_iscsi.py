@@ -4,8 +4,6 @@ import dbus
 import glob
 import os
 import re
-import six
-import time
 import shutil
 import unittest
 
@@ -52,7 +50,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         try:
             initiatorname_backup = self.read_file(INITIATOR_FILE)
             self.addCleanup(self.write_file, INITIATOR_FILE, initiatorname_backup)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # no existing file, simply remove it once finished
             self.addCleanup(self.remove_file, INITIATOR_FILE, True)
 
@@ -166,13 +164,13 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
         msg = r'Login failed: initiator reported error \(24 - iSCSI login failed due to authorization failure\)'
         # missing auth info
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             manager.Login(iqn, tpg, host, port, iface, self.no_options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                           timeout=self.iscsi_timeout)
 
         # wrong password
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
@@ -340,13 +338,13 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         options['node.session.auth.chap_algs'] = 'SHA3-256,SHA256,SHA1'  # disallow MD5
         options['username'] = self.initiator
         msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             options['password'] = '12345'
             manager.Login(iqn, tpg, host, port, iface, options,
                           dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                           timeout=self.iscsi_timeout)
 
-        # second atttempt - no password
+        # second attempt - no password
         manager.Login(iqn, tpg, host, port, iface, self.no_options,
                       dbus_interface=self.iface_prefix + '.Manager.ISCSI.Initiator',
                       timeout=self.iscsi_timeout)
@@ -383,7 +381,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         if not os.path.exists('/sys/firmware/acpi/tables/iBFT'):
             udiskstestcase.UdisksTestCase.tearDownClass()
             self.skipTest('No iBFT ACPI table detected')
-        ret, out = udiskstestcase.run_command('modprobe iscsi_ibft')
+        ret, _out = udiskstestcase.run_command('modprobe iscsi_ibft')
         if ret != 0:
             udiskstestcase.UdisksTestCase.tearDownClass()
             self.skipTest('iscsi_ibft kernel module unavailable')
@@ -422,7 +420,7 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
 
             # second attempt - wrong password
             msg = r'Login failed: initiator reported error \((19 - encountered non-retryable iSCSI login failure|24 - iSCSI login failed due to authorization failure)\)'
-            with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
                 options['username'] = 'nonsenseuser'
                 options['password'] = '12345'
                 manager.Login(iqn, tpg, host, port, iface, options,

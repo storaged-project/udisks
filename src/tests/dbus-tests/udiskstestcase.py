@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import unittest
 import dbus
 import subprocess
@@ -10,11 +8,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from systemd import journal
-
-if sys.version_info.major == 3 and sys.version_info.minor >= 3:
-    from time import monotonic
-else:
-    from monotonic import monotonic
+from time import monotonic
 
 import gi
 gi.require_version('GUdev', '1.0')
@@ -22,6 +16,7 @@ from gi.repository import GUdev
 
 test_devs = None
 FLIGHT_RECORD_FILE = "flight_record.log"
+
 
 def run_command(command):
     res = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
@@ -33,6 +28,7 @@ def run_command(command):
     else:
         output = out.decode().strip()
     return (res.returncode, output)
+
 
 def get_call_long(call):
     def call_long(*args, **kwargs):
@@ -93,52 +89,6 @@ def get_version():
         distro, version = get_version_from_pretty_name(pretty_name)
 
     return (distro, version)
-
-
-def skip_on(skip_on_distros, skip_on_version="", reason=""):
-    """A function returning a decorator to skip some test on a given distribution-version combination
-
-    :param skip_on_distros: distro(s) to skip the test on
-    :type skip_on_distros: str or tuple of str
-    :param str skip_on_version: version of distro(s) to skip the tests on (only
-                                checked on distribution match)
-
-    """
-    if isinstance(skip_on_distros, str):
-        skip_on_distros = (skip_on_distros,)
-
-    distro, version = get_version()
-
-    def decorator(func):
-        if distro in skip_on_distros and (not skip_on_version or skip_on_version == version):
-            msg = "not supported on this distribution in this version" + (": %s" % reason if reason else "")
-            return unittest.skip(msg)(func)
-        else:
-            return func
-
-    return decorator
-
-def unstable_test(test):
-    """Decorator for unstable tests
-
-    Failures of tests decorated with this decorator are silently ignored unless
-    the ``UNSTABLE_TESTS_FATAL`` environment variable is defined.
-    """
-
-    def decorated_test(*args):
-        try:
-            test(*args)
-        except unittest.SkipTest:
-            # make sure skipped tests are just skipped as usual
-            raise
-        except Exception as e:
-            # and swallow everything else, just report a failure of an unstable
-            # test, unless told otherwise
-            if "UNSTABLE_TESTS_FATAL" in os.environ:
-                raise
-            print("unstable-fail: Ignoring exception '%s'\n" % e, end="", file=sys.stderr)
-
-    return decorated_test
 
 
 class DBusProperty(object):
@@ -218,7 +168,6 @@ class DBusProperty(object):
                 raise AssertionError('%s is not almost equal to %s (delta = %s)' % (self._value,
                                                                                     value, delta))
 
-
     def assertGreater(self, value, timeout=TIMEOUT):
         check_fn = lambda x: x > value
         ret = self._check(timeout, check_fn)
@@ -293,6 +242,7 @@ class DBusProperty(object):
         if not ret:
             raise AssertionError('%s does not contain %s' % (self._value, member))
 
+
 class UdisksTestCase(unittest.TestCase):
     iface_prefix = None
     path_prefix = None
@@ -300,7 +250,6 @@ class UdisksTestCase(unittest.TestCase):
     vdevs = None
     distro = (None, None, None)       # (project, distro_name, version)
     no_options = dbus.Dictionary(signature="sv")
-
 
     @classmethod
     def setUpClass(self):
@@ -315,14 +264,12 @@ class UdisksTestCase(unittest.TestCase):
         self.bus.call_async = get_call_long(self._orig_call_async)
         self.bus.call_blocking = get_call_long(self._orig_call_blocking)
         self.vdevs = test_devs
-        assert len(self.vdevs) > 3;
-
+        assert len(self.vdevs) > 3
 
     @classmethod
     def tearDownClass(self):
         self.bus.call_async = self._orig_call_async
         self.bus.call_blocking = self._orig_call_blocking
-
 
     def run(self, *args):
         record = []
@@ -371,11 +318,9 @@ class UdisksTestCase(unittest.TestCase):
             obj = self.get_object(obj)
         return dbus.Interface(obj, self.iface_prefix + iface_suffix)
 
-
     @classmethod
     def get_property(self, obj, iface_suffix, prop):
         return DBusProperty(obj, self.iface_prefix + iface_suffix, prop)
-
 
     @classmethod
     def get_property_raw(self, obj, iface_suffix, prop):
@@ -425,7 +370,6 @@ class UdisksTestCase(unittest.TestCase):
         with open(filename, 'r') as f:
             content = f.read()
         return content
-
 
     @classmethod
     def write_file(self, filename, content, ignore_nonexistent=False, binary=False):
@@ -534,7 +478,7 @@ class UdisksTestCase(unittest.TestCase):
         for _ in range(20):
             obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
             intro_data = obj_intro.Introspect()
-            if ('interface name="%s"' % iface) in intro_data:
+            if 'interface name="%s"' % iface in intro_data:
                 return
             time.sleep(0.5)
 
@@ -582,6 +526,7 @@ class FlightRecorder(object):
         # given as arguments was not handled
         return False
 
+
 class CmdFlightRecorder(FlightRecorder):
     """Flight recorder running a command and gathering its standard and error output"""
 
@@ -609,6 +554,7 @@ class CmdFlightRecorder(FlightRecorder):
         out, _err = self._proc.communicate()
         rec = '<<<<< ' + self._desc + ' >>>>>' + '\n' + out.decode() + '\n\n'
         self._store.append(rec)
+
 
 class JournalRecorder(FlightRecorder):
     """Flight recorder for gathering logs (journal)"""

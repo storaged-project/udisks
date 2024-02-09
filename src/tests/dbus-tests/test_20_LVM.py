@@ -3,8 +3,6 @@ import os
 import re
 import time
 import unittest
-import six
-import sys
 import glob
 
 from packaging.version import Version
@@ -204,7 +202,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
         # Attempt to resize the LV to the whole VG, but specify only
         # the original PVS.  This is expected to fail.
         msg = "Insufficient free space"
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             lv.Resize(dbus.UInt64(new_vgsize.value),
                       dbus.Dictionary({'pvs': devs}, signature='sv'),
                       dbus_interface=self.iface_prefix + '.LogicalVolume')
@@ -906,18 +904,18 @@ class UdisksLVMTeardownTest(UDisksLVMTestBase):
     def _check_torn_down_stack(self, name):
         # check that all created objects don't exist anymore
         msg = r'Object does not exist at path|No such interface'
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             luks_block = self.get_object(self.luks_block_path)
             self.get_property_raw(luks_block, '.Block', 'DeviceNumber')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             lv_block = self.get_object(self.lv_block_path)
             self.get_property_raw(lv_block, '.Block', 'DeviceNumber')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             # the lvm2 udisks module is not fully synchronous, see https://github.com/storaged-project/udisks/pull/814
             time.sleep(2)
             lv = self.get_object(self.lv_path)
             self.get_property_raw(lv, '.LogicalVolume', 'Name')
-        with six.assertRaisesRegex(self, dbus.exceptions.DBusException, msg):
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             vg = self.get_object(self.vg_path)
             self.get_property_raw(vg, '.VolumeGroup', 'Name')
 
