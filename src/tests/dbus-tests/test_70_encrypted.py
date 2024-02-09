@@ -786,5 +786,21 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
         objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
         self.assertNotIn(str(crypt_path), objects.keys())
 
+        # unlock with keyfile contents
+        d = dbus.Dictionary(signature='sv')
+        d['keyfile_contents'] = self.str_to_ay(self.passphrase, False)
+        crypt_path = self.loop.Unlock("", d,
+                                      dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(crypt_path)
+        crypt_dev = self.bus.get_object(self.iface_prefix, crypt_path)
+        self.assertIsNotNone(crypt_dev)
+
+        dbus_cleartext = self.get_property(self.loop, '.Encrypted', 'CleartextDevice')
+        dbus_cleartext.assertEqual(str(crypt_path))
+        dbus_type = self.get_property(self.loop, '.Encrypted', 'HintEncryptionType')
+        dbus_type.assertEqual("BITLK")
+
+        self.loop.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
 
 del UdisksEncryptedTest  # skip UdisksEncryptedTest
