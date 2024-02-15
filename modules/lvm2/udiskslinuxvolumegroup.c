@@ -362,6 +362,12 @@ handle_delete (UDisksVolumeGroup     *_group,
               udisks_warning ("Failed to wipe PV %s: %s", device_file, error->message);
               g_clear_error (&error);
             }
+          if (bd_lvm_is_tech_avail (BD_LVM_TECH_DEVICES, 0, NULL) &&
+              !bd_lvm_devices_delete (device_file, NULL, NULL, &error))
+            {
+              udisks_warning ("Failed to remove %s from LVM devices file: %s", device_file, error->message);
+              g_clear_error (&error);
+            }
         }
     }
 

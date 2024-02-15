@@ -10,6 +10,9 @@ from packaging.version import Version
 import udiskstestcase
 
 
+LVM_DEVICES_FILE = "/etc/lvm/devices/system.devices"
+
+
 class UDisksLVMTestBase(udiskstestcase.UdisksTestCase):
 
     @classmethod
@@ -104,6 +107,11 @@ class UdisksLVMTest(UDisksLVMTestBase):
 
         fstype = self.get_property(dev_obj, '.Block', 'IdType')
         fstype.assertEqual('')
+
+        # check that PV was removed from the LVM devices file
+        if os.path.exists(LVM_DEVICES_FILE):
+            devices_file = self.read_file(LVM_DEVICES_FILE)
+            self.assertNotIn(self.vdevs[0], devices_file)
 
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''

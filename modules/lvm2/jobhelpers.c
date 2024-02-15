@@ -25,8 +25,10 @@
 #include <blockdev/utils.h>
 
 #include <src/udisksthreadedjob.h>
+#include <src/udiskslogging.h>
 
 #include "jobhelpers.h"
+
 
 gboolean lvcreate_job_func (UDisksThreadedJob  *job,
                             GCancellable       *cancellable,
@@ -310,7 +312,18 @@ gboolean pvremove_job_func (UDisksThreadedJob  *job,
                             GError            **error)
 {
     VGJobData *data = user_data;
-    return bd_lvm_pvremove (data->pv_path, NULL /* extra_args */, error);
+    gboolean succ = FALSE;
+    succ = bd_lvm_pvremove (data->pv_path, NULL /* extra_args */, error);
+    if (!succ)
+      return FALSE;
+
+    if (bd_lvm_is_tech_avail (BD_LVM_TECH_DEVICES, 0, NULL) &&
+        !bd_lvm_devices_delete (data->pv_path, NULL, NULL, error))
+      {
+        udisks_warning ("Failed to remove %s from LVM devices file: %s", data->pv_path, (*error)->message);
+        g_clear_error (error);
+      }
+    return TRUE;
 }
 
 gboolean pvmove_job_func (UDisksThreadedJob  *job,
