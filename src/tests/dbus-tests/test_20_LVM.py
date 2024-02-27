@@ -108,11 +108,6 @@ class UdisksLVMTest(UDisksLVMTestBase):
         fstype = self.get_property(dev_obj, '.Block', 'IdType')
         fstype.assertEqual('')
 
-        # check that PV was removed from the LVM devices file
-        if os.path.exists(LVM_DEVICES_FILE):
-            devices_file = self.read_file(LVM_DEVICES_FILE)
-            self.assertNotIn(self.vdevs[0], devices_file)
-
     def test_10_linear(self):
         '''Test linear (plain) LV functionality'''
 
@@ -580,6 +575,33 @@ class UdisksLVMTest(UDisksLVMTestBase):
 
         _ret, out = self.run_command('pvs --noheadings -o vg_name %s' % self.vdevs[0])
         self.assertEqual(out, '')
+
+    def test_devices_file(self):
+        '''Test that we correctly handle the LVM devices file'''
+
+        # get the devices file content before running the test
+        if os.path.exists(LVM_DEVICES_FILE):
+            df_pre = self.read_file(LVM_DEVICES_FILE)
+        else:
+            df_pre = ''
+
+        dev_obj = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(dev_obj)
+        self.addCleanup(self.wipe_fs, self.vdevs[0])
+        vg = self._create_vg('udisks_test_vg', [dev_obj])
+        self.addCleanup(self._remove_vg, vg, ignore_removed=True)
+
+        # remove the VG and wipe the PVs
+        vg.Delete(True, self.no_options, dbus_interface=self.iface_prefix + '.VolumeGroup')
+
+        fstype = self.get_property(dev_obj, '.Block', 'IdType')
+        fstype.assertEqual('')
+
+        # check that PV was removed from the LVM devices file
+        if os.path.exists(LVM_DEVICES_FILE):
+            df_post = self.read_file(LVM_DEVICES_FILE)
+            if df_post.count(self.vdevs[0]) > df_pre.count(self.vdevs[0]):
+                self.fail("Device %s not removed from the devices file" % self.vdevs[0])
 
 
 class UdisksLVMVDOTest(UDisksLVMTestBase):
