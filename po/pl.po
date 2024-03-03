@@ -1,14 +1,14 @@
 # Polish translation for udisks.
-# Copyright © 2012-2023 the udisks authors.
+# Copyright © 2012-2024 the udisks authors.
 # This file is distributed under the same license as the udisks package.
-# Piotr Drąg <piotrdrag@gmail.com>, 2012-2023.
+# Piotr Drąg <piotrdrag@gmail.com>, 2012-2024.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-07-12 03:28+0000\n"
-"PO-Revision-Date: 2023-07-16 12:55+0200\n"
+"POT-Creation-Date: 2023-12-24 15:29+0000\n"
+"PO-Revision-Date: 2024-03-03 14:42+0100\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <trans-pl@lists.fedoraproject.org>\n"
 "Language: pl\n"
@@ -446,7 +446,6 @@ msgid "Authentication is required to manage BTRFS"
 msgstr "Wymagane jest uwierzytelnienie, aby zarządzać btrfs"
 
 #: modules/btrfs/udiskslinuxfilesystembtrfs.c:351
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
 msgid "Authentication is required to change label for BTRFS volume"
 msgstr "Wymagane jest uwierzytelnienie, aby zmienić etykietę woluminu btrfs"
 
@@ -454,15 +453,23 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmienić etykietę woluminu btrfs"
 msgid "Authentication is required to add the device to the volume"
 msgstr "Wymagane jest uwierzytelnienie, aby dodać urządzenie do woluminu"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:693
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:623
+msgid "Authentication is required to get BTRFS subvolumes"
+msgstr "Wymagane jest uwierzytelnienie, aby uzyskać podwoluminy btrfs"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:734
+msgid "Authentication is required to set the default BTRFS subvolume"
+msgstr "Wymagane jest uwierzytelnienie, aby ustawić domyślny podwolumin btrfs"
+
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:793
 msgid "Authentication is required to create a new snapshot"
 msgstr "Wymagane jest uwierzytelnienie, aby utworzyć nową migawkę"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:754
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:854
 msgid "Authentication is required to check and repair the volume"
 msgstr "Wymagane jest uwierzytelnienie, aby sprawdzić i naprawić wolumin"
 
-#: modules/btrfs/udiskslinuxfilesystembtrfs.c:812
+#: modules/btrfs/udiskslinuxfilesystembtrfs.c:912
 msgid "Authentication is required to resize the volume"
 msgstr "Wymagane jest uwierzytelnienie, aby zmienić nazwę woluminu"
 
@@ -551,49 +558,49 @@ msgstr "Zarządzanie LVM"
 msgid "Authentication is required to manage LVM"
 msgstr "Wymagane jest uwierzytelnienie, aby zarządzać LVM"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:566
+#: modules/lvm2/udiskslinuxlogicalvolume.c:573
 msgid "Authentication is required to delete a logical volume"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć wolumin logiczny"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:646
+#: modules/lvm2/udiskslinuxlogicalvolume.c:653
 msgid "Authentication is required to repair a logical volume"
 msgstr "Wymagane jest uwierzytelnienie, aby naprawić wolumin logiczny"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:749
+#: modules/lvm2/udiskslinuxlogicalvolume.c:756
 msgid "Authentication is required to rename a logical volume"
 msgstr "Wymagane jest uwierzytelnienie, aby zmienić nazwę woluminu logicznego"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:813
+#: modules/lvm2/udiskslinuxlogicalvolume.c:820
 msgid "Authentication is required to resize a logical volume"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić rozmiar woluminu logicznego"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:921
+#: modules/lvm2/udiskslinuxlogicalvolume.c:928
 msgid "Authentication is required to activate a logical volume"
 msgstr "Wymagane jest uwierzytelnienie, aby aktywować wolumin logiczny"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:989
+#: modules/lvm2/udiskslinuxlogicalvolume.c:996
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "Wymagane jest uwierzytelnienie, aby dezaktywować wolumin logiczny"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1056
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1063
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby utworzyć migawkę woluminu logicznego"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1117
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1124
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby konwertować wolumin logiczny na pamięć "
 "podręczną"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1139
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1190
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1146
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1197
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Błąd podczas konwertowania woluminu: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1168
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1175
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wydzielić pamięć podręczną puli "
@@ -714,7 +721,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować plik /etc/crypttab"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2294
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wykonać bezpieczne usunięcie zawartości "
@@ -908,7 +915,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2385
+#: src/udiskslinuxdriveata.c:2386
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby włączyć SMART w napędzie $(drive)"
 
@@ -918,7 +925,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby włączyć SMART w napędzie $(driv
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:2395
+#: src/udiskslinuxdriveata.c:2396
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć SMART w napędzie $(drive)"
 
@@ -967,7 +974,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:914 src/udiskslinuxfilesystem.c:1105
+#: src/udiskslinuxfilesystem.c:938 src/udiskslinuxfilesystem.c:1129
 msgid "Authentication is required to mount $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 
@@ -981,7 +988,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1003
+#: src/udiskslinuxfilesystem.c:1027
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -999,7 +1006,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1584
+#: src/udiskslinuxfilesystem.c:1608
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1014,7 +1021,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1632
+#: src/udiskslinuxfilesystem.c:1656
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby odmontować urządzenie $(drive) "
@@ -1026,7 +1033,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1800
+#: src/udiskslinuxfilesystem.c:1824
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić etykietę systemu plików na "
@@ -1038,7 +1045,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1982
+#: src/udiskslinuxfilesystem.c:2006
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić rozmiar systemu plików na "
@@ -1050,7 +1057,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2153
+#: src/udiskslinuxfilesystem.c:2177
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby naprawić system plików na urządzeniu "
@@ -1062,7 +1069,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2321
+#: src/udiskslinuxfilesystem.c:2345
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby sprawdzić system plików na urządzeniu "
@@ -1074,7 +1081,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2481
+#: src/udiskslinuxfilesystem.c:2505
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1087,7 +1094,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2648
+#: src/udiskslinuxfilesystem.c:2672
 msgid "Authentication is required to change the filesystem UUID on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić UUID systemu plików na "
@@ -1100,7 +1107,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:240
+#: src/udiskslinuxloop.c:243
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć urządzenie zwrotne $(drive)"
 
@@ -1111,7 +1118,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby usunąć urządzenie zwrotne $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:333
+#: src/udiskslinuxloop.c:336
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmodyfikować urządzenie zwrotne $(drive)"
@@ -1120,7 +1127,7 @@ msgstr ""
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:582
+#: src/udiskslinuxmanager.c:583
 msgid "Authentication is required to create a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby utworzyć macierz RAID"
 
