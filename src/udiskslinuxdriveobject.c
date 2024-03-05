@@ -1167,7 +1167,8 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
         }
     }
   /* NVMe */
-  if (object->iface_nvme_ctrl != NULL)
+  if (object->iface_nvme_ctrl != NULL &&
+      g_strcmp0 (udisks_nvme_controller_get_state (UDISKS_NVME_CONTROLLER (object->iface_nvme_ctrl)), "live") == 0)
     {
       GError *local_error = NULL;
 
