@@ -390,6 +390,15 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
       g_object_unref (object);
       return FALSE;
     }
+  if (device->nvme_ctrl_info->controller_type != BD_NVME_CTRL_TYPE_UNKNOWN &&
+      device->nvme_ctrl_info->controller_type != BD_NVME_CTRL_TYPE_IO)
+    {
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "NVMe Health Information is only supported on I/O controllers");
+      g_object_unref (device);
+      g_object_unref (object);
+      return FALSE;
+    }
 
   /* Controller capabilities check - there's no authoritative way to find out which
    * log pages are actually supported, taking controller feature flags in account instead.
