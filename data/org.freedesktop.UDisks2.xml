@@ -2975,6 +2975,21 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+
+    <!--
+        Convert:
+        @target_version: The LUKS version to convert to. Either 'luks1' or 'luks2'.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.11.0
+
+        Converts the encrypted device to a different version of LUKS. Other encryption formats are not supported.
+        The device must be locked.
+    -->
+    <method name="Convert">
+      <arg name="target_version" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -3396,6 +3411,8 @@
              <listitem><para>Modifying encrypted device.</para></listitem></varlistentry>
            <varlistentry><term>encrypted-resize</term>
              <listitem><para>Resizing encrypted device.</para></listitem></varlistentry>
+           <varlistentry><term>encrypted-convert</term>
+             <listitem><para>Converting encrypted device.</para></listitem></varlistentry>
            <varlistentry><term>swapspace-start</term>
              <listitem><para>Starting swapspace.</para></listitem></varlistentry>
            <varlistentry><term>swapspace-stop</term>

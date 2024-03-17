@@ -1194,6 +1194,142 @@ handle_resize (UDisksEncrypted       *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_convert (UDisksEncrypted       *encrypted,
+                GDBusMethodInvocation *invocation,
+                const gchar           *target_version,
+                GVariant              *options)
+{
+  UDisksObject *object = NULL;
+  UDisksBlock *block;
+  UDisksDaemon *daemon;
+  UDisksState *state = NULL;
+  uid_t caller_uid;
+  const gchar *action_id = NULL;
+  const gchar *message = NULL;
+  GError *error = NULL;
+  UDisksBaseJob *job = NULL;
+  BDCryptoLUKSVersion bd_target_version;
+
+  object = udisks_daemon_util_dup_object (encrypted, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  block = udisks_object_peek_block (object);
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  state = udisks_daemon_get_state (daemon);
+
+  udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+  udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
+
+  /* Fail if the device is not a LUKS device */
+  if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+        g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device %s does not appear to be a LUKS device",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      goto out;
+    }
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests conversion of an encrypted block device.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to convert device $(drive) to a different LUKS version.");
+  if (! udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (! udisks_daemon_util_on_user_seat (daemon, UDISKS_OBJECT (object), caller_uid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
+    }
+
+  /* Check that the user is actually authorized to convert the device. */
+  if (! udisks_daemon_util_check_authorization_sync (daemon,
+                                                     object,
+                                                     action_id,
+                                                     options,
+                                                     message,
+                                                     invocation))
+    goto out;
+
+  if (g_strcmp0 (target_version, "luks1") == 0) {
+      bd_target_version = BD_CRYPTO_LUKS_VERSION_LUKS1;
+    } else if (g_strcmp0 (target_version, "luks2") == 0) {
+      bd_target_version = BD_CRYPTO_LUKS_VERSION_LUKS2;
+    } else {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Unsupported target LUKS version: '%s'. Only 'luks1' and 'luks2' are supported.",
+                                             target_version);
+      goto out;
+    }
+
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         "encrypted-convert",
+                                         caller_uid,
+                                         NULL);
+  if (job == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Failed to create a job object");
+      goto out;
+    }
+
+  udisks_linux_block_encrypted_lock (block);
+
+  if (! bd_crypto_luks_convert (udisks_block_get_device (block),
+                                bd_target_version,
+                                &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error converting encrypted device %s: %s",
+                                             udisks_block_get_device (block),
+                                             error->message);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      udisks_linux_block_encrypted_unlock (block);
+      goto out;
+    }
+
+  udisks_linux_block_encrypted_unlock (block);
+
+  udisks_encrypted_complete_convert (encrypted, invocation);
+  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+ out:
+  if (object != NULL)
+    udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (state != NULL)
+    udisks_state_check (state);
+  g_clear_object (&object);
+  g_clear_error (&error);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 encrypted_iface_init (UDisksEncryptedIface *iface)
 {
@@ -1201,4 +1337,5 @@ encrypted_iface_init (UDisksEncryptedIface *iface)
   iface->handle_lock                = handle_lock;
   iface->handle_change_passphrase   = handle_change_passphrase;
   iface->handle_resize              = handle_resize;
+  iface->handle_convert             = handle_convert;
 }
