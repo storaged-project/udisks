@@ -33,6 +33,13 @@ def _get_blkid_version():
         raise RuntimeError('Failed to determine blkid version from: %s' % out)
     return Version(m.groups()[0])
 
+def _get_luks_version(disk):
+    ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+    m = re.search(r'Version:\s*([1-2])', out)
+    if not m or len(m.groups()) != 1:
+        raise RuntimeError('Failed to determine LUKS version of device: %s.' % disk)
+    return int(m.groups()[0])
+
 
 class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     '''This is an encrypted device test suite'''
@@ -449,6 +456,24 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
         # offset value is in 512B blocks; we need to multiply to get the real metadata size
         return  int(m.group(1)) * 512
 
+    def test_convert(self):
+        disk = self.vdevs[0]
+        device = self.get_device(disk)
+        self._create_luks(device, self.PASSPHRASE)
+        self.assertEqual(1, _get_luks_version(disk))
+
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+        device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        device.Convert("luks2", self.no_options,
+                       dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertEqual(2, _get_luks_version(disk))
+
+        device.Convert("luks1", self.no_options,
+                       dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertEqual(1, _get_luks_version(disk))
+
 class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     '''This is a LUKS2 encrypted device test suite'''
 
@@ -558,6 +583,31 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         clear_size3 = self.get_block_size(clear_dev)
         self.assertEqual(clear_size3, clear_size)
+
+    def test_convert_xfail(self):
+        disk = self.vdevs[0]
+        device = self.get_device(disk)
+        self._create_luks(device, self.PASSPHRASE)
+        self.assertEqual(2, _get_luks_version(disk))
+
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+        device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # check that the device is not LUKS1 compatible
+        ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+        m = re.search(r'PBKDF:\s*(.*)', out)
+        if not m or len(m.groups()) != 1:
+            raise RuntimeError('Failed to determine PBKDF of LUKS device: %s.' % disk)
+        self.assertEqual("argon2id", m.groups()[0])
+
+        # check that conversion fails
+        msg = 'org.freedesktop.UDisks2.Error.Failed: Error converting encrypted device /dev/.+: Conversion failed: Invalid argument'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            device.Convert("luks1", self.no_options,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+
+        self.assertEqual(2, _get_luks_version(disk))
 
     def _get_default_luks_version(self):
         manager = self.get_object('/Manager')
