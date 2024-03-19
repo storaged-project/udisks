@@ -172,6 +172,7 @@ def setup_nvme_target(dev_paths, subnqn):
 
 class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     SUBNQN = 'udisks_test_subnqn'
+    DISCOVERY_NQN = 'nqn.2014-08.org.nvmexpress.discovery'
     NUM_NS = 2
     NS_SIZE = 1024**3
 
@@ -501,6 +502,68 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(transport, 'loop')
         tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
         self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        ctrl = self.get_object(ctrl_obj_path)
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
+            self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
+    def test_persistent_dc(self):
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
+            manager.Connect(self.str_to_ay(self.DISCOVERY_NQN), "notransport", "", self.no_options)
+        msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.Connect(self.str_to_ay(self.DISCOVERY_NQN), "loop", "127.0.0.1", self.no_options)
+
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.DISCOVERY_NQN), "loop", "", self.no_options)
+        self.addCleanup(self._nvme_disconnect, self.DISCOVERY_NQN, ignore_errors=True)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        # health information should never be updated on a discovery controller
+        smart_timestamp = self.get_property_raw(ctrl, '.NVMe.Controller', 'SmartUpdated')
+        self.assertEqual(smart_timestamp, 0)
+        nqn = self.get_property_raw(ctrl, '.NVMe.Controller', 'SubsystemNQN')
+        self.assertEqual(nqn, self.str_to_ay(self.DISCOVERY_NQN))
+        transport = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'Transport')
+        self.assertEqual(transport, 'loop')
+        tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
+
+        # make sure that no block device object references this drive object
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        block_paths = [p for p in list(objects.keys()) if '/block_devices/' in p]
+        for p in block_paths:
+            self.assertNotEqual(str(objects[p]['org.freedesktop.UDisks2.Block']['Drive']), str(ctrl_obj_path))
+
+        # the following methods should fail on discovery controllers
+        msg = 'NVMe Health Information is only supported on I/O controllers'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SmartUpdate(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        msg = 'SMART data not collected'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SmartGetAttributes(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+
+        msg = 'The NVMe controller has no support for self-test operations'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SmartSelftestStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SmartSelftestStart('short', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        msg = 'NVMe Device Self-test command error: Invalid Command Opcode'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SmartSelftestAbort(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+
+        msg = r'The NVMe controller has no support for the .* sanitize operation'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SanitizeStart('block-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SanitizeStart('crypto-erase', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            ctrl.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
         ctrl = self.get_object(ctrl_obj_path)

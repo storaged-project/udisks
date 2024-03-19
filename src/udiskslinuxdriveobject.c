@@ -1116,9 +1116,8 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
                                         GCancellable            *cancellable,
                                         GError                 **error)
 {
-  gboolean ret;
-
-  ret = FALSE;
+  UDisksLinuxDevice *device = NULL;
+  gboolean ret = FALSE;
 
   /* ATA */
   if (object->iface_drive_ata != NULL &&
@@ -1172,20 +1171,28 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
     {
       GError *local_error = NULL;
 
-      udisks_info ("Refreshing Health Information on %s",
-                   g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-
-      if (!udisks_linux_nvme_controller_refresh_smart_sync (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl),
-                                                            cancellable, &local_error))
+      /* Only perform health check on I/O controllers */
+      device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+      if (device && device->nvme_ctrl_info &&
+          (device->nvme_ctrl_info->controller_type == BD_NVME_CTRL_TYPE_IO ||
+           device->nvme_ctrl_info->controller_type == BD_NVME_CTRL_TYPE_UNKNOWN))
         {
-          g_propagate_prefixed_error (error, local_error, "Error updating Health Information: ");
-          goto out;
+          udisks_info ("Refreshing Health Information on %s",
+                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+
+          if (!udisks_linux_nvme_controller_refresh_smart_sync (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl),
+                                                                cancellable, &local_error))
+            {
+              g_propagate_prefixed_error (error, local_error, "Error updating Health Information: ");
+              goto out;
+            }
         }
     }
 
   ret = TRUE;
 
  out:
+  g_clear_object (&device);
   return ret;
 }
 
