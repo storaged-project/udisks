@@ -2,7 +2,6 @@
 %global gobject_introspection_version   1.30.0
 %global polkit_version                  0.102
 %global systemd_version                 208
-%global libatasmart_version             0.17
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
 %global libblockdev_version             3.0
@@ -36,7 +35,6 @@ Source0: https://github.com/storaged-project/udisks/releases/download/udisks-%{v
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: gobject-introspection-devel >= %{gobject_introspection_version}
 BuildRequires: libgudev1-devel >= %{systemd_version}
-BuildRequires: libatasmart-devel >= %{libatasmart_version}
 BuildRequires: polkit-devel >= %{polkit_version}
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel >= %{systemd_version}
@@ -54,6 +52,7 @@ BuildRequires: libblockdev-mdraid-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-fs-devel     >= %{libblockdev_version}
 BuildRequires: libblockdev-crypto-devel >= %{libblockdev_version}
 BuildRequires: libblockdev-nvme-devel   >= %{libblockdev_version}
+BuildRequires: libblockdev-smart-devel  >= %{libblockdev_version}
 BuildRequires: libmount-devel
 BuildRequires: libuuid-devel
 
@@ -65,6 +64,7 @@ Requires: libblockdev-mdraid >= %{libblockdev_version}
 Requires: libblockdev-fs     >= %{libblockdev_version}
 Requires: libblockdev-crypto >= %{libblockdev_version}
 Requires: libblockdev-nvme   >= %{libblockdev_version}
+Requires: libblockdev-smart  >= %{libblockdev_version}
 
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 
@@ -72,8 +72,6 @@ Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: dbus >= %{dbus_version}
 # Needed to pull in the udev daemon
 Requires: udev >= %{systemd_version}
-# We need at least this version for bugfixes/features etc.
-Requires: libatasmart >= %{libatasmart_version}
 # For mount, umount, mkswap
 Requires: util-linux
 # For ejecting removable disks
@@ -201,6 +199,7 @@ autoreconf -ivf
 %else
     --disable-gtk-doc \
 %endif
+    --enable-smart    \
 %if 0%{?with_btrfs}
     --enable-btrfs    \
 %endif

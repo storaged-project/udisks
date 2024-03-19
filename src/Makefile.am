@@ -119,7 +119,6 @@ libudisks_daemon_la_CFLAGS =                                                   \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
 	$(GUDEV_CFLAGS)                                                        \
-	$(LIBATASMART_CFLAGS)                                                  \
 	$(LIBBLKID_CFLAGS)                                                     \
 	$(LIBMOUNT_CFLAGS)                                                     \
 	$(LIBUUID_CFLAGS)                                                      \
@@ -138,7 +137,6 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(GUDEV_LIBS)                                                          \
 	$(BLOCKDEV_LIBS)                                                       \
 	-lbd_utils                                                             \
-	$(LIBATASMART_LIBS)                                                    \
 	$(LIBBLKID_LIBS)                                                       \
 	$(LIBMOUNT_LIBS)                                                       \
 	$(LIBUUID_LIBS)                                                        \
