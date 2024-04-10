@@ -85,6 +85,9 @@ class UdisksISCSITest(udiskstestcase.UdisksTestCase):
         self.assertIn('interface name="%s.Manager.ISCSI.Initiator"' % self.iface_prefix, intro_data)
 
     def test_initiator_name(self):
+        if not os.path.exists(INITIATOR_FILE):
+            self._set_initiator_name()
+
         manager = self.get_object('/Manager')
 
         initiator_dbus = manager.GetInitiatorName(self.no_options,
