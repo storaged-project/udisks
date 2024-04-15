@@ -2324,6 +2324,20 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        RestoreEncryptedHeader:
+        @backup_file: Path from where to backup header and keyslots.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.11.0
+
+        Writes header and keyslots from the specified file to the specified device.
+        The specified file must exist.
+    -->
+    <method name="RestoreEncryptedHeader">
+      <arg name="backup_file" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -2975,7 +2989,6 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
-
     <!--
         Convert:
         @target_version: The LUKS version to convert to. Either 'luks1' or 'luks2'.
@@ -2987,6 +3000,20 @@
     -->
     <method name="Convert">
       <arg name="target_version" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        HeaderBackup:
+        @backup_file: Path where to backup header and keyslots to.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.11.0
+
+        Saves header and keyslots to the specified file.
+        The target file is not overwritten if exists, and an error is returned.
+    -->
+    <method name="HeaderBackup">
+      <arg name="backup_file" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 

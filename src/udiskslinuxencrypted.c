@@ -1330,6 +1330,97 @@ handle_convert (UDisksEncrypted       *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_header_backup (UDisksEncrypted       *encrypted,
+                      GDBusMethodInvocation *invocation,
+                      const gchar           *backup_file,
+                      GVariant              *options)
+{
+    UDisksObject *object = NULL;
+    UDisksBlock *block;
+    UDisksDaemon *daemon;
+    UDisksState *state = NULL;
+    uid_t caller_uid;
+    GError *error = NULL;
+    UDisksBaseJob *job = NULL;
+
+    object = udisks_daemon_util_dup_object (encrypted, &error);
+    if (object == NULL)
+      {
+        g_dbus_method_invocation_return_gerror (invocation, error);
+        goto out;
+      }
+
+    block = udisks_object_peek_block (object);
+    daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+    state = udisks_daemon_get_state (daemon);
+
+    udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
+    udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
+
+    /* Fail if the device is not a LUKS device */
+    if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+          g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
+      {
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Device %s does not appear to be a LUKS device",
+                                               udisks_block_get_device (block));
+        goto out;
+      }
+
+    if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+      {
+        g_dbus_method_invocation_return_gerror (invocation, error);
+        goto out;
+      }
+
+    job = udisks_daemon_launch_simple_job (daemon,
+                                           UDISKS_OBJECT (object),
+                                           "encrypted-header-backup",
+                                           caller_uid,
+                                           NULL);
+    if (job == NULL)
+      {
+        g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                               "Failed to create a job object");
+        goto out;
+      }
+
+    udisks_linux_block_encrypted_lock (block);
+
+    if (!bd_crypto_luks_header_backup (udisks_block_get_device (block), backup_file, &error))
+      {
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Error backing up header of encrypted device %s: %s",
+                                               udisks_block_get_device (block),
+                                               error->message);
+        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+        udisks_linux_block_encrypted_unlock (block);
+        goto out;
+      }
+
+    udisks_linux_block_encrypted_unlock (block);
+
+    udisks_encrypted_complete_header_backup (encrypted, invocation);
+    udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
+
+    out:
+    if (object != NULL)
+        udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
+    if (state != NULL)
+        udisks_state_check (state);
+    g_clear_object (&object);
+    g_clear_error (&error);
+    return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 encrypted_iface_init (UDisksEncryptedIface *iface)
 {
@@ -1338,4 +1429,5 @@ encrypted_iface_init (UDisksEncryptedIface *iface)
   iface->handle_change_passphrase   = handle_change_passphrase;
   iface->handle_resize              = handle_resize;
   iface->handle_convert             = handle_convert;
+  iface->handle_header_backup       = handle_header_backup;
 }
