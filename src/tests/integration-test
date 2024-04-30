@@ -1106,12 +1106,13 @@ class FS(UDisksTestCase):
                 ro_options = GLib.Variant('a{sv}', {'options': GLib.Variant('s', 'rw')})
                 cd_fs.call_mount_sync(ro_options, None)
             except GLib.GError as e:
-                new_msg = 'is write-protected but explicit read-write mode requested'
-                old_msg = 'is write-protected but `rw\' option given'
-                if not (old_msg in str(e) or new_msg  in str(e)):
-                    self.fail('Mounting read-only device with \'rw\' option failed'
+                msg = r"(is write-protected but `rw' option given|" \
+                        "is write-protected but explicit read-write mode requested|" \
+                        "fsconfig system call failed: /dev/sr.*: Can't open blockdev)"
+                if not re.search(msg, str(e)):
+                    self.fail('Mounting read-only device with \'rw\' option failed '
                               'with an unexpected error.\nGot: %s\nExpected: \'%s\''
-                              ' or \'%s\'' % (str(e), new_msg, old_msg))
+                              % (str(e), msg))
             else:
                 self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
                 self.fail('Mounting read-only device didn\'t fail with \'rw\' option.')
