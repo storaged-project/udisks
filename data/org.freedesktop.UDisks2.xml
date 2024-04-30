@@ -3141,6 +3141,18 @@
     -->
     <property name="Degraded" type="u" access="read"/>
 
+    <!-- ConsistencyPolicy:
+         @since: 2.11.0
+         The consistency policy of the array.
+
+         If the RAID array does not support consistency policies (for
+         example RAID-0 arrays), this is empty.
+
+         This property corresponds to the
+         <literal>consistency_policy</literal> sysfs file.
+    -->
+    <property name="ConsistencyPolicy" type="s" access="read"/>
+
     <!-- BitmapLocation:
          The location of a write-intent bitmap (empty if the array is not running), if any.
 

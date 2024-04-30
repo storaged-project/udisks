@@ -237,6 +237,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   const gchar *name = NULL;
   gchar *sync_action = NULL;
   gchar *sync_completed = NULL;
+  gchar *consistency_policy = NULL;
   gchar *bitmap_location = NULL;
   guint degraded = 0;
   guint64 chunk_size = 0;
@@ -316,6 +317,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           degraded = udisks_linux_device_read_sysfs_attr_as_int (raid_device, "md/degraded", NULL);
           sync_action = udisks_linux_device_read_sysfs_attr (raid_device, "md/sync_action", NULL);
           sync_completed = udisks_linux_device_read_sysfs_attr (raid_device, "md/sync_completed", NULL);
+          consistency_policy = udisks_linux_device_read_sysfs_attr (raid_device, "md/consistency_policy", NULL);
           bitmap_location = udisks_linux_device_read_sysfs_attr (raid_device, "md/bitmap/location", NULL);
         }
 
@@ -326,6 +328,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
+  udisks_mdraid_set_consistency_policy (iface, consistency_policy);
   udisks_mdraid_set_bitmap_location (iface, bitmap_location);
   udisks_mdraid_set_chunk_size (iface, chunk_size);
 
@@ -517,6 +520,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       bd_md_examine_data_free (raid_data);
   g_free (sync_completed);
   g_free (sync_action);
+  g_free (consistency_policy);
   g_free (bitmap_location);
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
