@@ -271,22 +271,22 @@ class UdisksTestCase(unittest.TestCase):
         self.bus.call_async = self._orig_call_async
         self.bus.call_blocking = self._orig_call_blocking
 
-    def run(self, *args):
-        record = []
-        now = datetime.now()
-        now_mono = monotonic()
-        with open(FLIGHT_RECORD_FILE, "a") as record_f:
-            record_f.write("================%s[%0.8f] %s.%s.%s================\n" % (now.strftime('%Y-%m-%d %H:%M:%S'),
-                                                                                     now_mono,
-                                                                                     self.__class__.__module__,
-                                                                                     self.__class__.__name__,
-                                                                                     self._testMethodName))
-            with JournalRecorder("journal", record):
-                with CmdFlightRecorder("udisksctl monitor", ["udisksctl", "monitor"], record):
-                    with CmdFlightRecorder("udevadm monitor", ["udevadm", "monitor"], record):
-                        super(UdisksTestCase, self).run(*args)
-            record_f.write("".join(record))
-        self.udev_settle()
+    # def run(self, *args):
+    #     record = []
+    #     now = datetime.now()
+    #     now_mono = monotonic()
+    #     with open(FLIGHT_RECORD_FILE, "a") as record_f:
+    #         record_f.write("================%s[%0.8f] %s.%s.%s================\n" % (now.strftime('%Y-%m-%d %H:%M:%S'),
+    #                                                                                  now_mono,
+    #                                                                                  self.__class__.__module__,
+    #                                                                                  self.__class__.__name__,
+    #                                                                                  self._testMethodName))
+    #         with JournalRecorder("journal", record):
+    #             with CmdFlightRecorder("udisksctl monitor", ["udisksctl", "monitor"], record):
+    #                 with CmdFlightRecorder("udevadm monitor", ["udevadm", "monitor"], record):
+    #                     super(UdisksTestCase, self).run(*args)
+    #         record_f.write("".join(record))
+    #     self.udev_settle()
 
     @classmethod
     def get_object(self, path_suffix):
