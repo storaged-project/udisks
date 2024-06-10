@@ -29,3 +29,9 @@
     - distro: ["centos", "enterprise_linux"]
       version: "7"
       reason: "SCSI debug bug causing kernel panic on CentOS/RHEL 7"
+
+- test: test_80_filesystem.EXFATTestCase.test_uuid
+  skip_on:
+    - distro: "fedora"
+      version: ["40", "41"]
+      reason: Setting UUID with LC_ALL=C.UTF-8 is broken with recent exfatprogs
