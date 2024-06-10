@@ -571,20 +571,19 @@ class JournalRecorder(FlightRecorder):
         self._stopped = None
 
     def _start(self):
-        self._started = monotonic()
+        self._started = time.time()
 
     def _stop(self):
-        self._stopped = monotonic()
+        self._stopped = time.time()
 
     def _save(self):
         j = journal.Reader(converters={"MESSAGE": lambda x: x.decode(errors="replace")})
         j.this_boot()
-        j.seek_monotonic(self._started)
+        j.seek_realtime(self._started)
         journal_data = ""
 
         entry = j.get_next()
-        # entry["__MONOTONIC_TIMESTAMP"] is a tuple of (datetime.timedelta, boot_id)
-        while entry and entry["__MONOTONIC_TIMESTAMP"][0].seconds <= int(self._stopped):
+        while entry and int(entry["__REALTIME_TIMESTAMP"].timestamp()) <= int(self._stopped):
             if "_COMM" in entry and "_PID" in entry:
                 source = "%s[%d]" % (entry["_COMM"], entry["_PID"])
             else:
