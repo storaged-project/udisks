@@ -15,6 +15,7 @@ import re
 import atexit
 import traceback
 import yaml
+import gzip
 from datetime import datetime
 
 
@@ -445,6 +446,12 @@ if __name__ == '__main__':
             subprocess.call(['journalctl', '-S', start_time], stdout=outfile)
         except Exception as e:
             print('Failed to save journal: %s' % str(e), file=outfile)
+
+    # compress the flight record log
+    with open(udiskstestcase.FLIGHT_RECORD_FILE, "rb") as f_in:
+        with gzip.open(udiskstestcase.FLIGHT_RECORD_FILE + ".gz", "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    os.unlink(udiskstestcase.FLIGHT_RECORD_FILE)
 
     if result.wasSuccessful():
         sys.exit(0)
