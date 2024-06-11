@@ -327,12 +327,18 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
   BDPluginSpec nvme_plugin = {BD_PLUGIN_NVME, NULL};
-
+#ifdef HAVE_SMART
+  BDPluginSpec smart_plugin = {BD_PLUGIN_SMART, NULL};
+#endif
   /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
      Additional plugins are required by various modules, but they make sure
      plugins are loaded themselves. */
   BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
-                             &fs_plugin, &crypto_plugin, &nvme_plugin, NULL};
+                             &fs_plugin, &crypto_plugin, &nvme_plugin,
+#ifdef HAVE_SMART
+                             &smart_plugin,
+#endif
+                             NULL};
   BDPluginSpec **plugin_p = NULL;
   error = NULL;
 

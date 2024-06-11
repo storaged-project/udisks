@@ -170,10 +170,6 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(BLOCKDEV_CFLAGS)
   AC_SUBST(BLOCKDEV_LIBS)
 
-  PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
-  AC_SUBST(LIBATASMART_CFLAGS)
-  AC_SUBST(LIBATASMART_LIBS)
-
   PKG_CHECK_MODULES(LIBBLKID, [blkid])
   AC_SUBST(LIBBLKID_CFLAGS)
   AC_SUBST(LIBBLKID_LIBS)
@@ -215,6 +211,7 @@ if test "x$enable_daemon" = "xyes"; then
 else
   have_libsystemd_login=no
   have_libelogind=no
+  AM_CONDITIONAL(HAVE_SMART, [0])
 fi
 AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)
 AM_CONDITIONAL(HAVE_LIBELOGIND, test x$have_libelogind = xyes)
@@ -544,6 +541,28 @@ if test "x$enable_daemon" = "xyes"; then
   if test "x$have_nvme" = "xno"; then
     AC_MSG_ERROR([BLOCKDEV NVMe support requested but header or library not found])
   fi
+
+  # libblockdev smart
+  have_smart=no
+  AC_ARG_ENABLE(smart, AS_HELP_STRING([--disable-smart], [disable ATA SMART support]))
+  if test "x$enable_smart" != "xno"; then
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+
+    CFLAGS="$GLIB_CFLAGS"
+    LDFLAGS="$GLIB_LIBS"
+    AC_MSG_CHECKING([libblockdev-smart presence])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/smart.h>]], [[]])],
+                      [AC_MSG_RESULT([yes])
+                       AC_DEFINE(HAVE_SMART, 1, [Define, if libblockdev-smart is available])
+                       have_smart=yes],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([libblockdev-smart requested but not found.])
+                       have_smart=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+  fi
+  AM_CONDITIONAL(HAVE_SMART, [test "$have_smart" = "yes"])
 fi
 
 
@@ -674,6 +693,7 @@ echo "
         Enable daemon:              ${enable_daemon}
         Enable modules:             ${enable_modules_info}
 
+        ATA SMART support:          ${have_smart}
         BTRFS module:               ${have_btrfs}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}

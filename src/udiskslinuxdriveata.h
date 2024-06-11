@@ -38,10 +38,6 @@ gboolean        udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  
                                                            const gchar             *simulate_path,
                                                            GCancellable            *cancellable,
                                                            GError                 **error);
-gboolean        udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
-                                                            const gchar             *type,
-                                                            GCancellable            *cancellable,
-                                                            GError                 **error);
 gboolean        udisks_linux_drive_ata_secure_erase_sync   (UDisksLinuxDriveAta     *drive,
                                                             uid_t                    caller_uid,
                                                             gboolean                 enhanced,
