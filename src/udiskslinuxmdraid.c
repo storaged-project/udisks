@@ -599,15 +599,13 @@ handle_start (UDisksMDRaid           *_mdraid,
 
   g_variant_lookup (options, "start-degraded", "b", &opt_start_degraded);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -657,8 +655,8 @@ handle_start (UDisksMDRaid           *_mdraid,
   if (!bd_md_activate (NULL, NULL, udisks_mdraid_get_uuid (UDISKS_MDRAID (mdraid)), opt_start_degraded, NULL, &error))
     {
       g_prefix_error (&error, "Error starting RAID array: ");
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -747,14 +745,12 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
   UDisksLinuxDevice *raid_device = NULL;
   UDisksBaseJob *job = NULL;
   const gchar *device_file = NULL;
-  gboolean ret;
+  GError *local_error = NULL;
+  gboolean ret = FALSE;
 
   object = udisks_daemon_util_dup_object (mdraid, error);
   if (object == NULL)
-    {
-      ret = FALSE;
-      goto out;
-    }
+    goto out;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
   state = udisks_daemon_get_state (daemon);
@@ -764,19 +760,13 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                error))
-    {
-      ret = FALSE;
-      goto out;
-    }
+    goto out;
 
   raid_device = udisks_linux_mdraid_object_get_device (object);
   if (raid_device == NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "RAID Array is not running");
-      ret = FALSE;
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "RAID Array is not running");
       goto out;
     }
 
@@ -806,10 +796,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
                                                                    message,
                                                                    invocation,
                                                                    error))
-        {
-          ret = FALSE;
-          goto out;
-        }
+        goto out;
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
@@ -822,18 +809,16 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
 
   if (job == NULL)
     {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Failed to create a job object");
-      ret = FALSE;
+      g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                           "Failed to create a job object");
       goto out;
     }
 
-  if (!bd_md_deactivate (device_file, error))
+  if (!bd_md_deactivate (device_file, &local_error))
     {
-      g_prefix_error (error, "Error stopping RAID array '%s': ", device_file);
-      g_dbus_method_invocation_take_error (invocation, *error);
-      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
-      ret = FALSE;
+      g_prefix_error (&local_error, "Error stopping RAID array '%s': ", device_file);
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, local_error->message);
+      g_propagate_error (error, local_error);
       goto out;
     }
 
@@ -854,9 +839,9 @@ handle_stop (UDisksMDRaid          *_mdraid,
   GError *error = NULL;
 
   if (!udisks_linux_mdraid_stop (_mdraid,
-                                   invocation,
-                                   options,
-                                   &error))
+                                 invocation,
+                                 options,
+                                 &error))
     g_dbus_method_invocation_take_error (invocation, error);
   else
     udisks_mdraid_complete_stop (_mdraid, invocation);
@@ -962,15 +947,13 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   g_variant_lookup (options, "wipe", "b", &opt_wipe);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1055,8 +1038,8 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   if (!bd_md_remove (device_file, member_device_file, set_faulty, NULL, &error))
     {
       g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", device_file, member_device_file);
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1120,15 +1103,13 @@ handle_add_device (UDisksMDRaid           *_mdraid,
   daemon = udisks_linux_mdraid_object_get_daemon (object);
   state = udisks_daemon_get_state (daemon);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1201,8 +1182,8 @@ handle_add_device (UDisksMDRaid           *_mdraid,
   if (!bd_md_add (device_file, new_member_device_file, 0, NULL, &error))
     {
       g_prefix_error (&error, "Error adding '%s' to RAID array '%s': ", new_member_device_file, device_file);
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1248,15 +1229,13 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   daemon = udisks_linux_mdraid_object_get_daemon (object);
   state = udisks_daemon_get_state (daemon);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1319,8 +1298,8 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   if (!bd_md_set_bitmap_location (device_file, value, &error))
     {
       g_prefix_error (&error, "Error setting bitmap on RAID array '%s': ", device_file);
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1365,15 +1344,13 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   daemon = udisks_linux_mdraid_object_get_daemon (object);
   state = udisks_daemon_get_state (daemon);
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
                                                &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1438,8 +1415,8 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   if (!bd_md_request_sync_action (device_file, sync_action, &error))
     {
       g_prefix_error (&error, "Error requesting '%s' action on RAID array '%s': ", sync_action, device_file);
-      g_dbus_method_invocation_take_error (invocation, error);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1455,10 +1432,9 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
-                            GDBusMethodInvocation  *invocation,
-                            GVariant               *options,
-                            GError                **error)
+handle_delete (UDisksMDRaid           *mdraid,
+               GDBusMethodInvocation  *invocation,
+               GVariant               *options)
 {
   UDisksLinuxMDRaidObject *object;
   UDisksDaemon *daemon;
@@ -1469,17 +1445,17 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
   GList *member_devices = NULL;
   GList *l;
   UDisksLinuxDevice *raid_device = NULL;
-  gboolean ret;
+  GError *error = NULL;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
   /* Delete is just stop followed by wiping of all members.
    */
 
-  object = udisks_daemon_util_dup_object (mdraid, error);
+  object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
     {
-      ret = FALSE;
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1489,9 +1465,9 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
-                                               error))
+                                               &error))
     {
-      ret = FALSE;
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1503,9 +1479,9 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
                                                                options,
                                                                message,
                                                                invocation,
-                                                               error))
+                                                               &error))
     {
-      ret = FALSE;
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1522,9 +1498,9 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
                                                                    options,
                                                                    message,
                                                                    invocation,
-                                                                   error))
+                                                                   &error))
         {
-          ret = FALSE;
+          g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
 
@@ -1532,31 +1508,33 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
         {
           /* The array is running, teardown its block device.
           */
-          UDisksObject *block_object =
-            udisks_daemon_find_block_by_device_file (daemon,
-                                                     g_udev_device_get_device_file (raid_device->udev_device));
-          UDisksBlock *block = block_object? udisks_object_peek_block (block_object) : NULL;
+          UDisksObject *block_object;
+          UDisksBlock *block;
+
+          block_object = udisks_daemon_find_block_by_device_file (daemon,
+                                                                  g_udev_device_get_device_file (raid_device->udev_device));
+          block = block_object ? udisks_object_peek_block (block_object) : NULL;
           if (block &&
               !udisks_linux_block_teardown (block,
                                             invocation,
                                             options,
-                                            error))
+                                            &error))
             {
-              g_clear_object (&block_object);
-              ret = FALSE;
+              g_object_unref (block_object);
+              g_dbus_method_invocation_take_error (invocation, error);
               goto out;
             }
 
-          g_clear_object (&block_object);
+          g_object_unref (block_object);
         }
       else
         {
           /* The array is not running, remove the ChildConfiguration.
           */
           if (!udisks_linux_remove_configuration (udisks_mdraid_get_child_configuration (mdraid),
-                                                  error))
+                                                  &error))
             {
-              ret = FALSE;
+              g_dbus_method_invocation_take_error (invocation, error);
               goto out;
             }
         }
@@ -1566,9 +1544,9 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
       !udisks_linux_mdraid_stop (mdraid,
                                  invocation,
                                  options,
-                                 error))
+                                 &error))
     {
-      ret = FALSE;
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1577,39 +1555,21 @@ udisks_linux_mdraid_delete (UDisksMDRaid           *mdraid,
       UDisksLinuxDevice *member_device = UDISKS_LINUX_DEVICE (l->data);
       const gchar *device = g_udev_device_get_device_file (member_device->udev_device);
 
-      if (!bd_md_destroy (device, error))
+      if (!bd_md_destroy (device, &error))
         {
-          g_prefix_error (error, "Error wiping device '%s': ", device);
-          ret = FALSE;
+          g_prefix_error (&error, "Error wiping device '%s': ", device);
+          g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
     }
 
-  ret = TRUE;
+  udisks_mdraid_complete_delete (mdraid, invocation);
 
  out:
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
   g_clear_object (&object);
-  return ret;
-}
-
-static gboolean
-handle_delete (UDisksMDRaid           *_mdraid,
-               GDBusMethodInvocation  *invocation,
-               GVariant               *options)
-{
-  GError *error = NULL;
-
-  if (!udisks_linux_mdraid_delete (_mdraid,
-                                     invocation,
-                                     options,
-                                     &error))
-    g_dbus_method_invocation_take_error (invocation, error);
-  else
-    udisks_mdraid_complete_delete (_mdraid, invocation);
-
-  return TRUE;
+  return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
