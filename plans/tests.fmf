@@ -1,0 +1,20 @@
+summary: Run tests
+
+adjust+:
+  when: revdeps == yes
+  enabled: false
+
+prepare:
+  - name: copr
+    how: shell
+    script:
+      - sudo dnf install -y 'dnf-command(copr)'
+      - sudo dnf copr enable -y @storage/udisks-daily
+
+  - name: ansible
+    how: ansible
+    playbook: misc/install-test-dependencies.yml
+
+execute:
+    how: tmt
+    script: ./autogen.sh --enable-modules && make -j && sudo make dbus-tests

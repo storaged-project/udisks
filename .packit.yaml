@@ -26,6 +26,16 @@ jobs:
   additional_repos:
   - "copr://@storage/udisks-daily"
 
+- job: tests
+  trigger: pull_request
+  targets:
+    - fedora-latest-stable
+  tf_extra_params:
+    environments:
+      - artifacts:
+        - type: repository-file
+          id: https://copr.fedorainfracloud.org/coprs/g/storage/udisks-daily/repo/fedora-$releasever/group_storage-udisks-daily-fedora-$releasever.repo
+
 # run tests for udisks consumers, see plans/ with `revdeps == yes`
 - job: tests
   identifier: revdeps
