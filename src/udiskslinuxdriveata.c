@@ -372,7 +372,7 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
                                UDisksLinuxDriveObject *object)
 {
   UDisksLinuxDevice *device;
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     goto out;
 
@@ -423,6 +423,24 @@ static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *
   return noio;
 }
 
+static BDExtraArg **
+build_smart_extra_args (UDisksLinuxDevice *device)
+{
+  BDExtraArg **extra;
+
+  if (!udisks_linux_device_is_dm_multipath (device))
+    return NULL;
+
+  /* Now that we're in UDisksLinuxDriveAta it means the device already passed
+   * earlier selection for hardware type. The most likely scenario here are
+   * SATA drives connected to a SAS HBA, so hardcode the SCSI to ATA Translation (SAT)
+   * protocol for ATA PASS THROUGH SCSI.
+   */
+  extra = g_new0 (BDExtraArg *, 2);
+  extra[0] = bd_extra_arg_new ("--device=sat,auto", NULL);
+  return extra;
+}
+
 /**
  * udisks_linux_drive_ata_refresh_smart_sync:
  * @drive: The #UDisksLinuxDriveAta to refresh.
@@ -469,7 +487,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -499,6 +517,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     }
   else
     {
+      BDExtraArg **extra;
       guchar count;
       gboolean noio = FALSE;
       gboolean awake;
@@ -518,8 +537,11 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
           goto out_io;
         }
 
+      extra = build_smart_extra_args (device);
       data = bd_smart_ata_get_info (g_udev_device_get_device_file (device->udev_device),
+                                    (const BDExtraArg **) extra,
                                     &l_error);
+      bd_extra_arg_list_free (extra);
     }
 
   if (data == NULL)
@@ -583,12 +605,13 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
   GError *l_error = NULL;
   gboolean ret = FALSE;
   BDSmartSelfTestOp op;
+  BDExtraArg **extra = NULL;
 
   object = udisks_daemon_util_dup_object (drive, error);
   if (object == NULL)
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -615,8 +638,11 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
+  extra = build_smart_extra_args (device);
   if (!bd_smart_device_self_test (g_udev_device_get_device_file (device->udev_device),
-                                  op, &l_error))
+                                  op,
+                                  (const BDExtraArg **) extra,
+                                  &l_error))
     {
       g_set_error_literal (error,
                            UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -628,6 +654,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
   ret = TRUE;
 
  out:
+  bd_extra_arg_list_free (extra);
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
@@ -661,7 +688,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -818,7 +845,7 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -1042,7 +1069,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -1145,11 +1172,13 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   UDisksLinuxDriveObject *object = NULL;
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
+  UDisksLinuxProvider *provider;
   GError *error = NULL;
   UDisksLinuxDevice *device = NULL;
   const gchar *message;
   const gchar *action_id;
   uid_t caller_uid;
+  BDExtraArg **extra = NULL;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -1169,6 +1198,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
+  provider = udisks_daemon_get_linux_provider (daemon);
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
@@ -1219,8 +1249,11 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
       goto out;
     }
 
+  extra = build_smart_extra_args (device);
   if (!bd_smart_set_enabled (g_udev_device_get_device_file (device->udev_device),
-                             value, &error))
+                             value,
+                             (const BDExtraArg **) extra,
+                             &error))
     {
       if (g_error_matches (error, BD_SMART_ERROR, BD_SMART_ERROR_TECH_UNAVAIL))
         {
@@ -1274,7 +1307,9 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
     }
 
   /* Reread new IDENTIFY data */
-  if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+  if (!udisks_linux_device_reprobe_sync (device,
+                                         udisks_linux_provider_get_udev_client (provider),
+                                         NULL, &error))
     {
       g_prefix_error (&error, "Error reprobing device: ");
       g_dbus_method_invocation_take_error (invocation, error);
@@ -1305,6 +1340,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   udisks_drive_ata_complete_smart_set_enabled (_drive, invocation);
 
  out:
+  bd_extra_arg_list_free (extra);
   g_clear_object (&device);
   g_clear_object (&block_object);
   g_clear_object (&object);
@@ -1369,7 +1405,7 @@ udisks_linux_drive_ata_get_pm_state (UDisksLinuxDriveAta  *drive,
 
   /* TODO: some SSD controllers may block for considerable time when trimming large amount of blocks */
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -1529,7 +1565,7 @@ handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
                                                     invocation))
     goto out;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -2030,7 +2066,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
 
   daemon = udisks_linux_drive_object_get_daemon (object);
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -2404,7 +2440,6 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
 
 static void
 drive_ata_iface_init (UDisksDriveAtaIface *iface)

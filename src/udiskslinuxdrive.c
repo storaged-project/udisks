@@ -1630,7 +1630,7 @@ handle_power_off (UDisksDrive           *_drive,
     }
   fd = -1;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = udisks_linux_drive_object_get_device (object, FALSE /* get_hw */);
   if (device == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,

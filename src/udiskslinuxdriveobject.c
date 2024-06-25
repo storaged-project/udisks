@@ -234,15 +234,6 @@ strip_and_replace_with_uscore (gchar *s)
   ;
 }
 
-static gboolean
-is_dm_multipath (UDisksLinuxDevice *device)
-{
-  const gchar *dm_uuid;
-
-  dm_uuid = g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
-  return dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath-");
-}
-
 static void
 udisks_linux_drive_object_constructed (GObject *_object)
 {
@@ -437,7 +428,7 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject *object,
   g_mutex_lock (&object->devices_mutex);
   for (devices = object->devices; devices; devices = devices->next)
     {
-      if (!get_hw || !is_dm_multipath (UDISKS_LINUX_DEVICE (devices->data)))
+      if (!get_hw || !udisks_linux_device_is_dm_multipath (UDISKS_LINUX_DEVICE (devices->data)))
         {
           ret = devices->data;
           break;
@@ -486,7 +477,7 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject *object,
 
       device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (iter_object));
       skip = (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0
-              || (get_hw && is_dm_multipath (device)));
+              || (get_hw && udisks_linux_device_is_dm_multipath (device)));
       g_object_unref (device);
 
       if (skip)
@@ -1049,7 +1040,7 @@ udisks_linux_drive_object_should_include_device (GUdevClient        *client,
         }
 
       /* dm-multipath */
-      if (is_dm_multipath (device))
+      if (udisks_linux_device_is_dm_multipath (device))
         {
           gchar **slaves;
           guint n;

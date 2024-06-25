@@ -99,6 +99,7 @@ static gboolean probe_ata (UDisksLinuxDevice  *device,
 /**
  * udisks_linux_device_new_sync:
  * @udev_device: A #GUdevDevice.
+ * @udev_client: A #GUdevClient.
  *
  * Creates a new #UDisksLinuxDevice from @udev_device which includes
  * probing the device for more information, if applicable.
@@ -109,7 +110,7 @@ static gboolean probe_ata (UDisksLinuxDevice  *device,
  * Returns: A #UDisksLinuxDevice.
  */
 UDisksLinuxDevice *
-udisks_linux_device_new_sync (GUdevDevice *udev_device)
+udisks_linux_device_new_sync (GUdevDevice *udev_device, GUdevClient *udev_client)
 {
   UDisksLinuxDevice *device;
   GError *error = NULL;
@@ -122,7 +123,7 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
   /* No point in probing on remove events */
   if (!(g_strcmp0 (g_udev_device_get_action (udev_device), "remove") == 0))
     {
-      if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+      if (!udisks_linux_device_reprobe_sync (device, udev_client, NULL, &error))
         goto out;
     }
 
@@ -142,6 +143,7 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
 /**
  * udisks_linux_device_reprobe_sync:
  * @device: A #UDisksLinuxDevice.
+ * @udev_client: A #GUdevClient.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
@@ -149,10 +151,14 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
  * blocked for a non-trivial amount of time while the probing is
  * underway.
  *
+ * Probing is dm-multipath aware in which case an active path
+ * is looked up and udev attributes are fetched from there.
+ *
  * Returns: %TRUE if reprobing succeeded, %FALSE otherwise.
  */
 gboolean
 udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
+                                  GUdevClient        *udev_client,
                                   GCancellable       *cancellable,
                                   GError            **error)
 {
@@ -167,7 +173,8 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
       g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA") &&
       !g_udev_device_has_property (device->udev_device, "ID_USB_TYPE") &&
       !g_udev_device_has_property (device->udev_device, "ID_USB_DRIVER") &&
-      !g_udev_device_has_property (device->udev_device, "ID_USB_MODEL"))
+      !g_udev_device_has_property (device->udev_device, "ID_USB_MODEL") &&
+      !udisks_linux_device_is_mpath_device_path (device))
     {
       if (!probe_ata (device, cancellable, error))
         goto out;
@@ -216,6 +223,34 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
     {
       device->nvme_ns_info = bd_nvme_get_namespace_info (device_file, error);
       if (!device->nvme_ns_info)
+        goto out;
+    }
+  else
+  /* Probe the dm-multipath devices */
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
+      g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
+      udisks_linux_device_is_dm_multipath (device))
+    {
+      gboolean is_ata = FALSE;
+      gchar **slaves;
+      guint n;
+
+      slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device), "slaves");
+      for (n = 0; slaves[n] != NULL; n++)
+        {
+          GUdevDevice *slave;
+
+          slave = g_udev_client_query_by_sysfs_path (udev_client, slaves[n]);
+          if (slave != NULL)
+            {
+              is_ata |= g_udev_device_get_property_as_boolean (slave, "ID_ATA");
+              g_object_unref (slave);
+            }
+          if (is_ata)
+            break;
+        }
+      g_strfreev (slaves);
+      if (is_ata && !probe_ata (device, cancellable, error))
         goto out;
     }
 
@@ -462,4 +497,36 @@ udisks_linux_device_nvme_is_fabrics (UDisksLinuxDevice *device)
     return TRUE;
 
   return FALSE;
+}
+
+/**
+ * udisks_linux_device_is_dm_multipath:
+ * @device: A #UDisksLinuxDevice.
+ *
+ * Returns: %TRUE if @device represents a dm-multipath block device,
+ *          %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_is_dm_multipath (UDisksLinuxDevice *device)
+{
+  const gchar *dm_uuid;
+
+  if (g_udev_device_get_property_as_int (device->udev_device, "MPATH_DEVICE_READY") == 1)
+    return TRUE;
+
+  dm_uuid = g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
+  return dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath-");
+}
+
+/**
+ * udisks_linux_device_is_mpath_device_path:
+ * @device: A #UDisksLinuxDevice.
+ *
+ * Returns: %TRUE if @device is an I/O path that is part of a dm-multipath
+ *          device, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_is_mpath_device_path (UDisksLinuxDevice *device)
+{
+  return g_udev_device_get_property_as_int (device->udev_device, "DM_MULTIPATH_DEVICE_PATH") == 1;
 }
