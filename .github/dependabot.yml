@@ -1,0 +1,10 @@
+version: 2
+updates:
+
+  # Set update schedule for GitHub actions.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "infra"
