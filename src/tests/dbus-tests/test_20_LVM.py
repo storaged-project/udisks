@@ -613,7 +613,7 @@ class UdisksLVMVDOTest(UDisksLVMTestBase):
     def setUpClass(cls):
         UDisksLVMTestBase.setUpClass()
 
-        if not cls.module_available("kvdo"):
+        if not cls.module_available("dm-vdo"):
             udiskstestcase.UdisksTestCase.tearDownClass()
             raise unittest.SkipTest('VDO kernel module not available, skipping.')
 
