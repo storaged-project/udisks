@@ -35,3 +35,9 @@
     - distro: "fedora"
       version: ["39", "40", "41"]
       reason: Setting UUID with LC_ALL=C.UTF-8 is broken with recent exfatprogs
+
+- test: test_20_LVM.UdisksLVMVDOTest
+  skip_on:
+    - distro: "centos"
+      version: "10"
+      reason: "vdo userspace tools are not yet available on RHEL/CentOS 10"
