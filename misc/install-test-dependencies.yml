@@ -64,4 +64,5 @@
       - python3-systemd
       - python3-monotonic
       - cryptsetup
+      - vdo
     when: ansible_distribution == 'Fedora'
