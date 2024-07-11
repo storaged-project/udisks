@@ -1244,6 +1244,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
       bitlk_info = bd_crypto_bitlk_info (device_file, &error);
       if (bitlk_info)
         {
+          g_free (s);
           s = g_strdup (bitlk_info->uuid);
           bd_crypto_bitlk_info_free (bitlk_info);
         }
