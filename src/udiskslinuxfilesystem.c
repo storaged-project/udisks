@@ -134,6 +134,7 @@ static const gchar *well_known_filesystems[] =
   "reiserfs",
   "reiser4",
   "reiser5",
+  "squashfs",
   "umsdos",
   "vfat",
   "xfs",
