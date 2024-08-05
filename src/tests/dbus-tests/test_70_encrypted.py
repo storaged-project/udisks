@@ -609,6 +609,52 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         self.assertEqual(2, _get_luks_version(disk))
 
+    def test_header_backup_restore(self):
+        disk = self.vdevs[0]
+        device = self.get_device(disk)
+        self._create_luks(device, self.PASSPHRASE)
+
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        # check that backup normally works
+        with tempfile.TemporaryDirectory() as temp_dir:
+            backup_file_path = os.path.join(temp_dir, "udisks_encrypted_header_backup.luks")
+
+            device.HeaderBackup(backup_file_path, self.no_options,
+                                dbus_interface=self.iface_prefix + '.Encrypted')
+            self.assertTrue(os.path.exists(backup_file_path))
+
+            # check that backup will fail if there is already a file under the specified path
+            msg = 'org.freedesktop.UDisks2.Error.Failed: Error backing up header of encrypted device /dev/.+: Failed to backup LUKS header: Invalid argument'
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+                device.HeaderBackup(backup_file_path, self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Encrypted')
+
+            self.assertTrue(os.path.exists(backup_file_path))
+
+            # check that after reaping device and restoring header, cryptsetup will recognize header
+            device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+            DISK_SIZE = 100 # magic number from `targetcli_config.json`
+            ret, out = udiskstestcase.UdisksTestCase.run_command("dd if=/dev/zero of=%s bs=1M count=%d" % (disk, DISK_SIZE))
+            self.assertEqual(ret, 0)
+            ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+            self.assertEqual(1, ret)
+            self.assertTrue(("Device %s is not a valid LUKS device." % disk) in out)
+            # wait for changes to propagate from udev to udisks
+            fstype = self.get_property(device, '.Block', 'IdType')
+            fstype.assertEqual('') # this method waits
+
+            device = self.get_device(disk)
+            device.RestoreEncryptedHeader(backup_file_path, self.no_options,
+                                 dbus_interface=self.iface_prefix + '.Block')
+            ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+            self.assertEqual(ret, 0)
+
+        # get the Encrypted interface back
+        device = self.get_device(disk)
+        self.assertHasIface(device, "org.freedesktop.UDisks2.Encrypted")
+
     def _get_default_luks_version(self):
         manager = self.get_object('/Manager')
         default_encryption_type = self.get_property(manager, '.Manager', 'DefaultEncryptionType')
