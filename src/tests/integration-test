@@ -1047,10 +1047,14 @@ class FS(UDisksTestCase):
         l = r'n"a$m\"e' + fs_type
         if fs_type == 'vfat':
             # VFAT does not support some characters
+            # Also, the maximum length of the label is 11 characters (22 bytes)
             self.assertRaises(GLib.GError, fs.call_set_label_sync, l, no_options, None)
             l = r'n@a$me'
         elif fs_type == 'exfat':
-            l = r'n"a$m\"exft'
+            # EXFAT does not support some characters, but exfatprogs < 1.2.5 will still allow them.
+            # We cannot assert that the call would throw without knowing the exfatprogs version.
+            # Also, the maximum length of the label is 11 characters (22 bytes)
+            l = r'n@a$me'
         try:
             fs.call_set_label_sync(l, no_options, None)
         except GLib.GError as e:
