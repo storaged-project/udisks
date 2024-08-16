@@ -10,6 +10,9 @@ prepare:
     script:
       - sudo dnf install -y 'dnf-command(copr)'
       - sudo dnf copr enable -y @storage/udisks-daily
+      # TF prioritizes Fedora tag repo over all others, in particular our daily COPR
+      - for f in $(grep -l -r 'testing-farm-tag-repository' /etc/yum.repos.d); do sed -i '/priority/d' "$f" ;done
+      - sudo dnf -y update
 
   - name: ansible
     how: ansible
