@@ -797,6 +797,33 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         fstab = self.read_file('/etc/fstab')
         self.assertNotIn(luks_uuid, fstab)
 
+    def test_create_pbkdf_extra(self):
+        disk_name = os.path.basename(self.vdevs[0])
+        disk = self.get_object('/block_devices/' + disk_name)
+
+        # create LUKS without specifying version
+        options = dbus.Dictionary(signature='sv')
+        options['encrypt.passphrase'] = self.PASSPHRASE
+        options['encrypt.pbkdf'] = 'pbkdf2'
+        options['encrypt.iterations'] = dbus.UInt32(10000)
+
+        disk.Format('ext4', options,
+                    dbus_interface=self.iface_prefix + '.Block')
+
+        self.addCleanup(self._remove_luks, disk)
+        self.udev_settle()
+
+        _ret, out = self.run_command("cryptsetup luksDump %s" % self.vdevs[0])
+        m = re.search(r"PBKDF:\s*(\S+)\s*", out)
+        if not m or len(m.groups()) != 1:
+            self.fail("Failed to get pbkdf information from:\n%s" % out)
+        self.assertEqual(m.group(1), "pbkdf2")
+
+        m = re.search(r"Iterations:\s*(\S+)\s*", out)
+        if not m or len(m.groups()) != 1:
+            self.fail("Failed to get pbkdf information from:\n%s" % out)
+        self.assertEqual(m.group(1), "10000")
+
 
 class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
 

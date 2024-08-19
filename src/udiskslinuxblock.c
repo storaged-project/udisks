@@ -3139,6 +3139,11 @@ format_create_luks (UDisksDaemon  *daemon,
                     uid_t          caller_uid,
                     GString       *encrypt_passphrase,
                     const gchar   *encrypt_type,
+                    const gchar   *encrypt_pbkdf,
+                    guint32        encrypt_memory,
+                    guint32        encrypt_iterations,
+                    guint32        encrypt_time,
+                    guint32        encrypt_threads,
                     UDisksBlock  **block_to_mkfs,
                     UDisksObject **object_to_mkfs,
                     GError       **error)
@@ -3162,6 +3167,11 @@ format_create_luks (UDisksDaemon  *daemon,
     crypto_job_data.type = encrypt_type;
   else
     crypto_job_data.type = udisks_config_manager_get_encryption (config_manager);
+  crypto_job_data.pbkdf = encrypt_pbkdf;
+  crypto_job_data.memory = encrypt_memory;
+  crypto_job_data.iterations = encrypt_iterations;
+  crypto_job_data.time = encrypt_time;
+  crypto_job_data.threads = encrypt_threads;
 
   /* Create it */
   udisks_linux_block_encrypted_lock (block);
@@ -3396,6 +3406,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gboolean take_ownership = FALSE;
   GString *encrypt_passphrase = NULL;
   const gchar *encrypt_type = NULL;
+  const gchar *encrypt_pbkdf = NULL;
+  guint32 encrypt_memory = 0;
+  guint32 encrypt_iterations = 0;
+  guint32 encrypt_time = 0;
+  guint32 encrypt_threads = 0;
   const gchar *erase_type = NULL;
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
@@ -3408,7 +3423,6 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   gchar *uuid = NULL;
   gchar **mkfs_args = NULL;
   BDExtraArg **extra_args = NULL;
-
 
   object = udisks_daemon_util_dup_object (block, &error);
   if (object == NULL)
@@ -3426,6 +3440,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   udisks_variant_lookup_binary (options, "encrypt.passphrase", &encrypt_passphrase);
   g_variant_lookup (options, "encrypt.type", "&s", &encrypt_type);
+  g_variant_lookup (options, "encrypt.pbkdf", "&s", &encrypt_pbkdf);
+  g_variant_lookup (options, "encrypt.memory", "u", &encrypt_memory);
+  g_variant_lookup (options, "encrypt.iterations", "u", &encrypt_iterations);
+  g_variant_lookup (options, "encrypt.time", "u", &encrypt_time);
+  g_variant_lookup (options, "encrypt.threads", "u", &encrypt_threads);
   g_variant_lookup (options, "erase", "&s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
@@ -3564,6 +3583,11 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                caller_uid,
                                encrypt_passphrase,
                                encrypt_type,
+                               encrypt_pbkdf,
+                               encrypt_memory,
+                               encrypt_iterations,
+                               encrypt_time,
+                               encrypt_threads,
                                &block_to_mkfs,
                                &object_to_mkfs,
                                &error))
