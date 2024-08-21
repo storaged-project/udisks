@@ -35,6 +35,7 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
+  BDCryptoLUKSExtra *extra = NULL;
 
   if (g_strcmp0 (data->type, "luks1") == 0)
     luks_version = BD_CRYPTO_LUKS_VERSION_LUKS1;
@@ -55,9 +56,17 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
   if (!context)
     return FALSE;
 
+  if (data->pbkdf || data->memory || data->iterations || data->time || data->threads)
+    {
+      extra = g_new0 (BDCryptoLUKSExtra, 1);
+      extra->pbkdf = bd_crypto_luks_pbkdf_new (data->pbkdf, NULL, data->memory, data->iterations,
+                                               data->time, data->threads);
+    }
+
   /* device, cipher, key_size, context, min_entropy, luks_version, extra, error */
-  ret = bd_crypto_luks_format (data->device, NULL, 0, context, 0, luks_version, NULL, error);
+  ret = bd_crypto_luks_format (data->device, NULL, 0, context, 0, luks_version, extra, error);
   bd_crypto_keyslot_context_free (context);
+  bd_crypto_luks_extra_free (extra);
   return ret;
 }
 

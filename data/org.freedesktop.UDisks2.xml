@@ -2099,7 +2099,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>encrypt.pbkdf</parameter> (of type 's'), <parameter>encrypt.memory</parameter> (of type 'u'), <parameter>encrypt.iterations</parameter> (of type 'u'), <parameter>encrypt.time</parameter> (of type 'u'), <parameter>encrypt.threads</parameter> (of type 'u'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -2137,6 +2137,26 @@
         Option <parameter>encrypt.type</parameter> can be used to
         specify encryption "technology" that will be used. Currently
         only <quote>luks1</quote> and <quote>luks2</quote> are supported.
+        Following additional options for LUKS key derivation function can
+        be used:
+
+        <variablelist>
+        <varlistentry><term>encrypt.pbkdf</term>
+          <listitem><para>key derivation function, one of "pbkdf2", "argon2i", "argon2id"</para></listitem>
+        </varlistentry>
+        <varlistentry><term>encrypt.iterations</term>
+          <listitem><para>number of iterations for PBKDF</para></listitem>
+        </varlistentry>
+        <varlistentry><term>encrypt.memory</term>
+          <listitem><para>memory cost in KiB for Argon2</para></listitem>
+        </varlistentry>
+        <varlistentry><term>encrypt.time</term>
+          <listitem><para>time cost for PBKDF in ms</para></listitem>
+        </varlistentry>
+        <varlistentry><term>encrypt.threads</term>
+          <listitem><para>parallel cost for PBKDF (number of threads, up to 4)</para></listitem>
+        </varlistentry>
+        </variablelist>
 
         If the option <parameter>erase</parameter> is used then the
         underlying device will be erased. Valid values include
