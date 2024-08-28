@@ -151,6 +151,7 @@ parse_config_file (UDisksConfigManager         *manager,
   gchar *module_i;
   gchar **modules;
   gchar **modules_tmp;
+  GError *l_error = NULL;
 
   /* Get modules and means of loading */
   conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
@@ -163,7 +164,7 @@ parse_config_file (UDisksConfigManager         *manager,
   /* Load config */
   config_file = g_key_file_new ();
   g_key_file_set_list_separator (config_file, ',');
-  if (g_key_file_load_from_file (config_file, conf_filename, G_KEY_FILE_NONE, NULL))
+  if (g_key_file_load_from_file (config_file, conf_filename, G_KEY_FILE_NONE, &l_error))
     {
       if (out_modules != NULL)
         {
@@ -225,7 +226,16 @@ parse_config_file (UDisksConfigManager         *manager,
     }
   else
     {
-      udisks_warning ("Can't load configuration file %s", conf_filename);
+      if (l_error != NULL)
+        {
+          udisks_warning ("Can't load configuration file %s: %s", conf_filename, l_error->message);
+          g_error_free (l_error);
+        }
+      else
+        {
+          udisks_warning ("Can't load configuration file %s", conf_filename);
+        }
+
     }
 
   g_key_file_free (config_file);
