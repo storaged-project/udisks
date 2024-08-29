@@ -95,6 +95,8 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         ret_code, wwn = self.run_command('lsblk -d -no WWN %s' % self.cd_dev)
         self.assertEqual(ret_code, 0)
 
+        rotational = read_sys_file("block/%s/queue/rotational" % os.path.basename(self.cd_dev))
+
         # values expected are preset by scsi_debug and do not change
         expected_prop_vals = {
             'MediaCompatibility': ['optical_cd'],
@@ -104,7 +106,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
             'MediaRemovable': 1,
             'Optical': 1,
             'Removable': 1,
-            'RotationRate': -1,
+            'RotationRate': -1 if rotational == "1" else 0,
             'Media': 'optical_cd',
             'Model': read_sys_file('model'),
             'Revision': read_sys_file('rev'),
