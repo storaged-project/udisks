@@ -279,7 +279,8 @@ udisks_ata_send_command_sync (gint                       fd,
         }
     }
 
-  if (!(sense[0] == 0x72 && desc[0] == 0x9 && desc[1] == 0x0c))
+  if (!((sense[0] & 0x7f) == 0x72 && desc[0] == 0x9 && desc[1] == 0x0c) &&
+      !((sense[0] & 0x7f) == 0x70 && sense[12] == 0x00 && sense[13] == 0x1d))
     {
       gchar *s = udisks_daemon_util_hexdump (sense, 32);
       g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
