@@ -1346,6 +1346,9 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
         }
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (block_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+
   /* Reread new IDENTIFY data */
   if (!udisks_linux_device_reprobe_sync (device,
                                          udisks_linux_provider_get_udev_client (provider),
