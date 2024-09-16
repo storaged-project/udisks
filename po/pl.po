@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2024-08-04 15:28+0000\n"
-"PO-Revision-Date: 2024-09-09 18:28+0200\n"
+"POT-Creation-Date: 2024-09-16 16:23+0000\n"
+"PO-Revision-Date: 2024-09-16 18:25+0200\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <trans-pl@lists.fedoraproject.org>\n"
 "Language: pl\n"
@@ -748,7 +748,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować konfigurację systemu"
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3882
+#: src/udiskslinuxblock.c:3906
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) do "
@@ -760,7 +760,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3953
+#: src/udiskslinuxblock.c:3977
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) do zapisania"
@@ -771,7 +771,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4027
+#: src/udiskslinuxblock.c:4051
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive) w celu "
@@ -783,7 +783,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4110
+#: src/udiskslinuxblock.c:4134
 msgid "Authentication is required to open $(drive)."
 msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive)."
 
@@ -793,7 +793,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie $(drive)."
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4167
+#: src/udiskslinuxblock.c:4191
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby ponownie przeskanować urządzenie $(drive)"
@@ -3176,130 +3176,140 @@ msgstr "Konwertowanie zaszyfrowanego urządzenia"
 
 #: udisks/udisksclient.c:2738
 msgctxt "job"
+msgid "Backing Up Header of an Encrypted Device"
+msgstr "Wykonywanie kopii zapasowej nagłówka zaszyfrowanego urządzenia"
+
+#: udisks/udisksclient.c:2739
+msgctxt "job"
+msgid "Restoring Header of an Encrypted Device"
+msgstr "Przywracanie nagłówka zaszyfrowanego urządzenia"
+
+#: udisks/udisksclient.c:2740
+msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Uruchamianie urządzenia wymiany"
 
-#: udisks/udisksclient.c:2739
+#: udisks/udisksclient.c:2741
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Zatrzymywanie urządzenia wymiany"
 
-#: udisks/udisksclient.c:2740
+#: udisks/udisksclient.c:2742
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "Modyfikowanie urządzenia wymiany"
 
-#: udisks/udisksclient.c:2741
+#: udisks/udisksclient.c:2743
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "Sprawdzanie systemów plików"
 
-#: udisks/udisksclient.c:2742
+#: udisks/udisksclient.c:2744
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "Montowanie systemu plików"
 
-#: udisks/udisksclient.c:2743
+#: udisks/udisksclient.c:2745
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "Odmontowywanie systemu plików"
 
-#: udisks/udisksclient.c:2744
+#: udisks/udisksclient.c:2746
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "Modyfikowanie systemu plików"
 
-#: udisks/udisksclient.c:2745
+#: udisks/udisksclient.c:2747
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "Naprawianie systemu plików"
 
-#: udisks/udisksclient.c:2746
+#: udisks/udisksclient.c:2748
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "Zmienianie rozmiaru systemu plików"
 
-#: udisks/udisksclient.c:2747
+#: udisks/udisksclient.c:2749
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "Usuwanie zawartości urządzenia"
 
-#: udisks/udisksclient.c:2748
+#: udisks/udisksclient.c:2750
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Tworzenie systemu plików"
 
-#: udisks/udisksclient.c:2749
+#: udisks/udisksclient.c:2751
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Ustawianie urządzenia zwrotnego"
 
-#: udisks/udisksclient.c:2750
+#: udisks/udisksclient.c:2752
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Modyfikowanie partycji"
 
-#: udisks/udisksclient.c:2751
+#: udisks/udisksclient.c:2753
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Usuwanie partycji"
 
-#: udisks/udisksclient.c:2752
+#: udisks/udisksclient.c:2754
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Tworzenie partycji"
 
-#: udisks/udisksclient.c:2753
+#: udisks/udisksclient.c:2755
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Czyszczenie"
 
-#: udisks/udisksclient.c:2754
+#: udisks/udisksclient.c:2756
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "Bezpieczne usuwanie zawartości ATA"
 
-#: udisks/udisksclient.c:2755
+#: udisks/udisksclient.c:2757
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "Ulepszone bezpieczne usuwanie zawartości ATA"
 
-#: udisks/udisksclient.c:2756
+#: udisks/udisksclient.c:2758
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "Zatrzymywanie macierzy RAID"
 
-#: udisks/udisksclient.c:2757
+#: udisks/udisksclient.c:2759
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "Uruchamianie macierzy RAID"
 
-#: udisks/udisksclient.c:2758
+#: udisks/udisksclient.c:2760
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "Oznaczanie urządzenia jako wadliwe"
 
-#: udisks/udisksclient.c:2759
+#: udisks/udisksclient.c:2761
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "Usuwanie urządzenia z macierzy"
 
-#: udisks/udisksclient.c:2760
+#: udisks/udisksclient.c:2762
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "Dodawanie urządzenia do macierzy"
 
-#: udisks/udisksclient.c:2761
+#: udisks/udisksclient.c:2763
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "Ustawianie mapy bitowej celów zapisu"
 
-#: udisks/udisksclient.c:2762
+#: udisks/udisksclient.c:2764
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "Tworzenie macierzy RAID"
 
-#: udisks/udisksclient.c:2769
+#: udisks/udisksclient.c:2771
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
