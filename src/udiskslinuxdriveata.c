@@ -521,6 +521,16 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       guchar count;
       gboolean noio = FALSE;
       gboolean awake;
+      const gchar *smart_access;
+
+      smart_access = g_udev_device_get_property (device->udev_device, "ID_ATA_SMART_ACCESS");
+      if (g_strcmp0 (smart_access, "none") == 0)
+        {
+          /* FIXME: find a better error code */
+          g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_CANCELLED,
+                               "Refusing any I/O due to ID_ATA_SMART_ACCESS being set to 'none'");
+          goto out;
+        }
 
       if (drive->standby_enabled)
         noio = update_io_stats (drive, device);
@@ -530,10 +540,8 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       /* don't wake up disk unless specically asked to */
       if (nowakeup && (!awake || noio))
         {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_WOULD_WAKEUP,
-                       "Disk is in sleep mode and the nowakeup option was passed");
+          g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_WOULD_WAKEUP,
+                               "Disk is in sleep mode and the nowakeup option was passed");
           goto out_io;
         }
 
