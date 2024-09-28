@@ -2736,6 +2736,7 @@ udisks_client_get_job_description_from_operation (const gchar *operation)
       g_hash_table_insert (hash, (gpointer) "encrypted-resize",     (gpointer) C_("job", "Resizing Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "encrypted-convert",    (gpointer) C_("job", "Converting Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "encrypted-header-backup",    (gpointer) C_("job", "Backing Up Header of an Encrypted Device"));
+      g_hash_table_insert (hash, (gpointer) "encrypted-reencrypt",  (gpointer) C_("job", "Reencrypting an Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "block-restore-encrypted-header",    (gpointer) C_("job", "Restoring Header of an Encrypted Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
       g_hash_table_insert (hash, (gpointer) "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
