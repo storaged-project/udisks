@@ -280,6 +280,15 @@
           </para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term><option>ID_ATA_SMART_ACCESS</option></term>
+        <listitem>
+          <para>
+            Override the access method for SMART data retrieval. Valid values include: <literal>sat16</literal>, <literal>sat12</literal>, <literal>linux-ide</literal>, <literal>sunplus</literal>, <literal>jmicron</literal>, <literal>none</literal> and <literal>auto</literal> (default).
+            Specify <literal>none</literal> to avoid any I/O, in such a case the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive-Ata.SmartUpdated">SmartUpdated</link> property will always equal to <quote>0</quote>.
+          </para>
+        </listitem>
+      </varlistentry>
     </variablelist>
   </refsect1>
 

@@ -1134,23 +1134,29 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
                                                       cancellable,
                                                       &local_error))
         {
-          if (nowakeup && (local_error->domain == UDISKS_ERROR &&
-                           local_error->code == UDISKS_ERROR_WOULD_WAKEUP))
+          if (nowakeup && g_error_matches (local_error, UDISKS_ERROR, UDISKS_ERROR_WOULD_WAKEUP))
             {
               udisks_info ("Drive %s is in a sleep state",
                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_clear_error (&local_error);
             }
-          else if (nowakeup && (local_error->domain == UDISKS_ERROR &&
-                                local_error->code == UDISKS_ERROR_DEVICE_BUSY))
+          else if (nowakeup && g_error_matches (local_error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY))
             {
               /* typically because a "secure erase" operation is pending */
               udisks_info ("Drive %s is busy",
                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_clear_error (&local_error);
             }
+          else if (g_error_matches (local_error, UDISKS_ERROR, UDISKS_ERROR_CANCELLED))
+            {
+              /* typically because the device indicates it refuses any I/O intentionally */
+              udisks_info ("Drive %s is refusing any I/O intentionally",
+                           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+              g_clear_error (&local_error);
+            }
           else
             {
+              /* all other errors are reported within the BD_SMART_ERROR domain */
               g_propagate_prefixed_error (error, local_error, "Error updating SMART data: ");
               goto out;
             }
