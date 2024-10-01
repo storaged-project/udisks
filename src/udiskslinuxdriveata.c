@@ -207,13 +207,16 @@ update_smart (UDisksLinuxDriveAta *drive,
   guint16 word_85 = 0;
 
 #ifdef HAVE_SMART
-  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
-  word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
-  word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
-  supported = word_82 & (1<<0);
-  enabled = word_85 & (1<<0);
-#else
-  supported = enabled = FALSE;
+  supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART");
+  enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
+  if (!supported && device->ata_identify_device_data)
+    {
+      /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+      word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+      word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+      supported = word_82 & (1<<0);
+      enabled = word_85 & (1<<0);
+    }
 #endif
 
   G_LOCK (object_lock);
@@ -277,25 +280,52 @@ update_pm (UDisksLinuxDriveAta *drive,
   guint16 word_86 = 0;
   guint16 word_94 = 0;
 
-  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
-  word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
-  word_83 = udisks_ata_identify_get_word (device->ata_identify_device_data, 83);
-  word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
-  word_86 = udisks_ata_identify_get_word (device->ata_identify_device_data, 86);
-  word_94 = udisks_ata_identify_get_word (device->ata_identify_device_data, 94);
+  pm_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM");
+  pm_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM_ENABLED");
+  apm_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM");
+  apm_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM_ENABLED");
+  aam_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM");
+  aam_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM_ENABLED");
+  write_cache_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_WRITE_CACHE");
+  write_cache_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_WRITE_CACHE_ENABLED");
+  read_lookahead_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_READ_LOOKAHEAD");
+  read_lookahead_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_READ_LOOKAHEAD_ENABLED");
+  aam_vendor_recommended_value = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE");
 
-  pm_supported  = word_82 & (1<<3);
-  pm_enabled    = word_85 & (1<<3);
-  apm_supported = word_83 & (1<<3);
-  apm_enabled   = word_86 & (1<<3);
-  aam_supported = word_83 & (1<<9);
-  aam_enabled   = word_86 & (1<<9);
-  if (aam_supported)
-    aam_vendor_recommended_value = (word_94 >> 8);
-  write_cache_supported    = word_82 & (1<<5);
-  write_cache_enabled      = word_85 & (1<<5);
-  read_lookahead_supported = word_82 & (1<<6);
-  read_lookahead_enabled   = word_85 & (1<<6);
+  if (device->ata_identify_device_data)
+    {
+      /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+      word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+      word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+
+      /* available in udev since < 2012 */
+      if (!g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
+        {
+          word_83 = udisks_ata_identify_get_word (device->ata_identify_device_data, 83);
+          word_86 = udisks_ata_identify_get_word (device->ata_identify_device_data, 86);
+          word_94 = udisks_ata_identify_get_word (device->ata_identify_device_data, 94);
+
+          pm_supported  = word_82 & (1<<3);
+          pm_enabled    = word_85 & (1<<3);
+          apm_supported = word_83 & (1<<3);
+          apm_enabled   = word_86 & (1<<3);
+          aam_supported = word_83 & (1<<9);
+          aam_enabled   = word_86 & (1<<9);
+          if (aam_supported)
+            aam_vendor_recommended_value = (word_94 >> 8);
+          write_cache_supported    = word_82 & (1<<5);
+          write_cache_enabled      = word_85 & (1<<5);
+        }
+
+      /* added recently, unable to distinguish between "not supported by device"
+       * and "not implemented by udev"
+       */
+      if (!read_lookahead_supported)
+        {
+          read_lookahead_supported = word_82 & (1<<6);
+          read_lookahead_enabled   = word_85 & (1<<6);
+        }
+    }
 
   g_object_freeze_notify (G_OBJECT (drive));
   udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), !!pm_supported);
@@ -329,21 +359,31 @@ update_security (UDisksLinuxDriveAta *drive,
   guint16 word_90 = 0;
   guint16 word_128 = 0;
 
-  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
-  word_82  = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
-  word_85  = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
-  word_89  = udisks_ata_identify_get_word (device->ata_identify_device_data, 89);
-  word_90  = udisks_ata_identify_get_word (device->ata_identify_device_data, 90);
-  word_128 = udisks_ata_identify_get_word (device->ata_identify_device_data, 128);
+  security_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY");
+  security_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ENABLED");
+  erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN");
+  enhanced_erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN");
+  frozen = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_FROZEN");
 
-  security_supported  = word_82 & (1<<1);
-  security_enabled    = word_85 & (1<<1);
-  if (security_supported)
+  if (!g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA")
+      && device->ata_identify_device_data)
     {
-      erase_unit = (word_89 & 0xff) * 2;
-      enhanced_erase_unit = (word_90 & 0xff) * 2;
+      /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+      word_82  = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+      word_85  = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+      word_89  = udisks_ata_identify_get_word (device->ata_identify_device_data, 89);
+      word_90  = udisks_ata_identify_get_word (device->ata_identify_device_data, 90);
+      word_128 = udisks_ata_identify_get_word (device->ata_identify_device_data, 128);
+
+      security_supported  = word_82 & (1<<1);
+      security_enabled    = word_85 & (1<<1);
+      if (security_supported)
+        {
+          erase_unit = (word_89 & 0xff) * 2;
+          enhanced_erase_unit = (word_90 & 0xff) * 2;
+        }
+      frozen = word_128 & (1<<3);
     }
-  frozen = word_128 & (1<<3);
 
   g_object_freeze_notify (G_OBJECT (drive));
   /* TODO: export Security{Supported,Enabled} properties
@@ -1313,6 +1353,9 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
           goto out;
         }
     }
+
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (block_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   /* Reread new IDENTIFY data */
   if (!udisks_linux_device_reprobe_sync (device,

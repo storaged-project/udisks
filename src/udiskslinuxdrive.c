@@ -583,7 +583,9 @@ set_rotation_rate (UDisksDrive       *iface,
   else
     {
       rate = -1;
-      if (device->ata_identify_device_data != NULL)
+      if (g_udev_device_has_property (device->udev_device, "ID_ATA_ROTATION_RATE_RPM"))
+        rate = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_ROTATION_RATE_RPM");
+      else if (device->ata_identify_device_data != NULL)
         {
           guint word_217 = 0;
 

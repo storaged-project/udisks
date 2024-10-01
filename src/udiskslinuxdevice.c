@@ -93,6 +93,7 @@ udisks_linux_device_class_init (UDisksLinuxDeviceClass *klass)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean probe_ata (UDisksLinuxDevice  *device,
+                           gboolean            force_probe,
                            GCancellable       *cancellable,
                            GError            **error);
 
@@ -176,7 +177,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
       !g_udev_device_has_property (device->udev_device, "ID_USB_MODEL") &&
       !udisks_linux_device_is_mpath_device_path (device))
     {
-      if (!probe_ata (device, cancellable, error))
+      if (!probe_ata (device, FALSE, cancellable, error))
         goto out;
     }
   else
@@ -250,7 +251,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
             break;
         }
       g_strfreev (slaves);
-      if (is_ata && !probe_ata (device, cancellable, error))
+      if (is_ata && !probe_ata (device, TRUE, cancellable, error))
         goto out;
     }
 
@@ -264,6 +265,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
 
 static gboolean
 probe_ata (UDisksLinuxDevice  *device,
+           gboolean            force_probe,
            GCancellable       *cancellable,
            GError            **error)
 {
@@ -272,6 +274,18 @@ probe_ata (UDisksLinuxDevice  *device,
   gint fd = -1;
   UDisksAtaCommandInput input = {0};
   UDisksAtaCommandOutput output = {0};
+
+  if (!force_probe
+#ifndef HAVE_UDEV_257
+      /* added in https://github.com/systemd/systemd/pull/34343,
+       * skip probing if present (e.g. backported)
+       */
+      && g_udev_device_has_property (device->udev_device, "ID_ATA_READ_LOOKAHEAD")
+#else
+      /* udev >= 257 carries everything we need, no need for explicit probing */
+#endif
+     )
+    return TRUE;
 
   device_file = g_udev_device_get_device_file (device->udev_device);
   fd = open (device_file, O_RDONLY|O_NONBLOCK);
@@ -282,7 +296,6 @@ probe_ata (UDisksLinuxDevice  *device,
                    device_file);
       goto out;
     }
-
 
   if (ioctl (fd, CDROM_GET_CAPABILITY, NULL) == -1)
     {

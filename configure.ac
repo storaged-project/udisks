@@ -162,6 +162,12 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(GUDEV_CFLAGS)
   AC_SUBST(GUDEV_LIBS)
 
+  PKG_CHECK_MODULES(UDEV, [udev >= 257], [have_udev_257=yes], [have_udev_257=no])
+  if test "x$have_udev_257" = "xyes"; then
+    AC_DEFINE([HAVE_UDEV_257], 1, [Define to 1 if udev >= 257 is available])
+  fi
+  AC_SUBST(HAVE_UDEV_257)
+
   PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
   AC_SUBST(GMODULE_CFLAGS)
   AC_SUBST(GMODULE_LIBS)
