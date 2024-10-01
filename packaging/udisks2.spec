@@ -4,7 +4,7 @@
 %global systemd_version                 208
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             3.0
+%global libblockdev_version             3.2
 
 %define with_btrfs                      1
 %define with_lsm                        1
@@ -22,7 +22,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.11.0
+Version: 2.10.90
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
@@ -329,6 +329,9 @@ fi
 %endif
 
 %changelog
+* Tue Oct 01 2024 Tomas Bzatek <tbzatek@redhat.com> - 2.10.90-1
+- Version 2.10.90 (pre-release)
+
 * Wed Jun 28 2023 Tomas Bzatek <tbzatek@redhat.com> - 2.10.0-1
 - Version 2.10.0
 

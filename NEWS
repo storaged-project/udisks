@@ -1,17 +1,240 @@
----------------------------
-udisks 2.11.0 (unreleased)
----------------------------
+----------------------------
+udisks 2.10.90 (pre-release)
+----------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
+This is a beta release to solicit feedback from early adopters.
+This release brings several intrusive changes:
+- ATA SMART handling has been ported over to libblockdev which now offers
+  two plugins, based on libatasmart (default, recommended) and
+  smartmontools (experimental). There is an additional attribute
+  validation layer in place in libblockdev, some attributes may now
+  be reported as 'unknown' or 'untrusted'. Drive temperature reporting
+  has been reworked as well.
+- ATA SMART functionality has been made optional through the --disable-smart
+  configure switch (default: Enabled). ATA SMART can be also selectively
+  turned off for some drives by setting ID_ATA_SMART_ACCESS udev property
+  to 'none'. In such a case, the Drive.Ata.SmartUpdated property will remain
+  set to zero to indicate it was never updated for a particular drive.
+- ATA feature flags are now mostly retrieved from udev, skipping additional
+  probing done by UDisks in case of udev >= 257.
+
+API changes and additions:
+
+- Manager.MDRaidCreate(): added option 'version' to specify MD metadata version
+- new MDRaid.ConsistencyPolicy property
+- Block.Format(): new 'encrypt.pbkdf', 'encrypt.memory', 'encrypt.iterations',
+  'encrypt.time' and 'encrypt.threads' options
+- new Block.RestoreEncryptedHeader() method
+- new Encrypted.Convert() method
+- new Encrypted.HeaderBackup() method
+- Drive.Ata.SmartUpdate(): deprecated the 'atasmart_blob' option
+- Drive.Ata.SmartSelftestStart(): added the 'offline' value for
+  the 'type' parameter
+- VDOVolume.GetStatistics(): aligned key names to follow the dm-vdo module
+  first upstream release (kernel 6.9)
+- new Filesystem.BTRFS.GetDefaultSubvolumeID() method
+- new Filesystem.BTRFS.SetDefaultSubvolumeID() method
+
 Changes since 2.10.0:
-(TODO: make shortlog)
+
+Alessandro Astone (1):
+      integration-test: Fix change label test with exfatprogs 1.2.5
+
+Alexandre Franke (1):
+      Update French translation
+
+Alexmelman88 (2):
+      Update Russian translation
+      Update Russian translation
+
+Anders Jonsson (3):
+      Update Swedish translation
+      Update Swedish translation
+      Update Swedish translation
+
+Andika Triwidada (1):
+      Update Indonesian translation
+
+Christian Kirbach (4):
+      Update German translation
+      Update German translation
+      Update German translation
+      Update German translation
+
+FineFindus (3):
+      doc: fix typos
+      objectinfo: adjust translator comment
+      client: document NULL return for udisks_client_get_partition_table
+
+Jelle van der Waa (3):
+      modules/btrfs: add GetDefaultSubvolumeID
+      modules/btrfs: fix copy paste typo in auth message
+      modules/btrfs: add SetDefaultSubvolumeID
+
+Kai-Heng Feng (1):
+      udiskslinuxdrive: Mark external NVMe removable
+
+Marius Vollmer (3):
+      lvm: Also look at symlinks for segment PVs
+      udiskslinuxblock: Survive a missing /etc/fstab
+      mdraid: Expose "consistency_policy" sysfs value
+
+Martin (4):
+      Update Slovenian translation
+      Update Slovenian translation
+      Update Slovenian translation
+      Update Slovenian translation
+
+Martin Pitt (3):
+      build: Fix missing dist files when configuring with --disable-daemon
+      ci: Packit: Run cockpit storage tests in PRs
+      ci: Packit: Enable failure notifications for cockpit tests
+
+Michael Biebl (1):
+      Do not overwrite CPPFLAGS
+
+NorwayFun (1):
+      Update ka.po
+
+Piotr Drąg (4):
+      Update Polish translation
+      Update Polish translation
+      Update Polish translation
+      Update Polish translation
+
+Scrambled 777 (2):
+      Update Hindi translation
+      Update Hindi translation
+
+Sebastien Bacher (1):
+      tests: start the polkitd mock with the corresponding user if it exists
+
+Stepan "Sciapan" Yakimovich (2):
+      core: Add Encrypted.Convert method
+      Core: Add support for LUKS header backup.
+
+Tomas Bzatek (58):
+      Post-release version bump to 2.11.0
+      build: Enable gobject_introspection in distcheck
+      build: Check for gobject-introspection m4 macro presence
+      build: Modernize our automake project
+      udiskslinuxloop: Avoid warnings on empty loop devices
+      udisksctl: Guard object lookup
+      udiskslinuxmanager: Properly handle disabled modules
+      iscsi: Fix login on firmware-discovered nodes
+      iscsi: Track sysfs paths in session objects
+      udiskslinuxprovider: Avoid creating module objects on 'remove' uevent
+      tests: Add a simple iSCSI iBFT test
+      tests: Fix LSM drive objects crawl
+      tests: Mark LVM RAID tests as unstable
+      integration-test: Fix invalid escaping
+      tests: Fix regex escaping
+      tests: Fix Python class invocation in nvme tests
+      udiskslinuxfilesystem: Refactor internal whitelists
+      udiskslinuxfilesystem: Force native tools for mounted XFS fs size retrieval
+      doc: Clarify the Filesystem.Size property presence
+      tests: Add offline and online filesystem grow tests
+      tests: Mark UDF fstab filesystem tests as unstable
+      udisksmodule: Add generic uevent handler
+      lvm2: Use the new generic uevent handler
+      tests: Add LVM2 LV activate/deactivate tests
+      tests: Rescan vdevs after lvm raid tests
+      tests: Settle down before checking the LVM RAID MissingPhysicalVolumes property
+      tests: Wipe used devices for LVM2 RAID tests
+      tests: Fix targetcli_config.json
+      tests: Avoid creating intermediary loop devices for nvme target devices
+      tests: Add locked LUKS teardown test
+      lvm2: Refactor udisks_daemon_util_lvm2_wipe_block()
+      udiskslinuxdevice: Ignore ID_ATA on USB devices
+      udiskslinuxblockobject: Try issuing BLKRRPART ioctl harder
+      udiskslinuxprovider: Move udev monitor in a separate thread
+      udiskslinuxprovider: Properly finalize GTaskThreadFunc
+      mount options: Add some more f2fs options to the allow list
+      mount options: Add 'map' and 'check' ISO9660 options
+      mount options: Allow 'commit' option for ext3/ext4
+      spec: Use SPDX license tags for subpackages
+      udiskslinuxdriveobject: Only refresh health information on live NVMe controllers
+      udiskslinuxdriveobject: Avoid refreshing NVMe health data on non-I/O controllers
+      udiskslinuxnvmecontroller: Check for controller type on fetching health info
+      tests: Add NVMe persistent discovery controller tests
+      integration-test: Adapt to the new libmount context error messages
+      udiskslinuxdevice: Lower the severity of ATA IDENTIFY command errors
+      udiskslinuxdriveata: Port to libblockdev SMART plugin
+      udiskslinuxloop: Fix GError use-after-free
+      udiskslinuxmdraid: Refactor error reporting
+      udiskslinuxdevice: Fix dm-multipath ATA drives handling
+      udiskslinuxblock: Fix leaking string
+      udiskslinuxfilesystem: Add squashfs to well_known_filesystems
+      udisksata: Fix sense code format check
+      udiskslinuxdriveata: Respect ID_ATA_SMART_ACCESS=none
+      man: Document ID_ATA_SMART_ACCESS
+      udiskslinuxdriveata: Prefer udev ID_ATA_* attributes
+      udiskslinuxdriveata: Trigger uevent after enabling/disabling SMART
+      doc: Fix a typo
+      build: Fix 'make shortlog'
+
+Tomasz Kłoczko (1):
+      update Docbook DTD version to latest stable 4.5
+
+Vojtech Trefny (35):
+      Limit getting filesystem size only to Ext and XFS
+      tests: Replace deprecated unittest assert calls
+      ci: Add Packit configuration for RPM builds on PRs
+      ci: Enable daily builds in Packit
+      ci: Add custom function to get version for Packit builds
+      ci: Bump actions/checkout from v3 to v4
+      ci: Remove the custom GH action for RPM builds
+      Add option to specify metadata version when creating MD RAID
+      lvm: Use pvremove when removing PVs after deleting a VG
+      tests: Remove usage of python-six
+      tests: Various small Python fixes
+      tests: Remove unused helper functions
+      Allow using key files with BITLK devices
+      Remove beakerlib tests
+      lvm: Manually remove removed PVs from the LVM devices file
+      lvm2: Add a sync udev trigger after removing PV signatures
+      tests: Add a more robust test case for LVM devices file
+      tests: Make sure /etc/iscsi/initiatorname.iscsi exists for tests
+      tests: Use seek_realtime when saving journal data
+      tests: Compress the flight_recorder.log when running tests
+      tests: Skip ExFAT UUID tests with recent exfatprogs
+      ci: Fix running Cockpit reverse dependency tests
+      ci: Add a simple tmt test and run it via packit
+      misc: Add cryptsetup to test dependencies
+      tests: Skip exFAT UUID tests also on Fedora 39
+      infra: Add dependabot to automatically update GH actions
+      lvm: Change the known keys for GetStatistics for VDO volumes
+      tests: Check for dm-vdo kernel module instead of kvdo
+      tests: Skip vdo tests on RHEL/CentOS 10
+      misc: Add vdo to the test dependencies
+      Add gzipped log files to .gitignore
+      ci: Remove priority from Testing farm repositories
+      Add support for specifying extra PBKDF options for LUKS format
+      tests: Fix expected rotation rate for SCSI debug drives in tests
+      Include error message when loading config file fails
+
+Yuri Chornoivan (1):
+      Update Ukrainian translation
+
+dependabot[bot] (1):
+      infra: bump actions/upload-artifact from 3 to 4
+
+sid (1):
+      udisksctl: Add "--no-partition-scan" option for "loop-setup" command
+
+xinpeng wang (1):
+      udiskslinuxmanager:use dbus interface after free
+
+zhoujing (1):
+      tests: Adapt to clang differences when causing a segfault
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2024-10-01
 
 ---------------------------
 udisks 2.10.0

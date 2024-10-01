@@ -9,14 +9,19 @@ Contributors (In alphabetical order):
   Adam Williamson <awilliam@redhat.com>
   Alban Browaeys <prahal@yahoo.com>
   Alberto Garcia <berto@igalia.com>
+  Alessandro Astone <alessandro.astone@canonical.com>
+  Alexandre Franke <afranke@gnome.org>
+  Alexmelman88 <99257010+Alexmelman88@users.noreply.github.com>
   alfsamsung <alfsamsung@hotmail.com>
   Andrea Azzarone <andrea.azzarone@canonical.com>
   Anders Jonsson <anders.jonsson@norsjovallen.se>
+  Andika Triwidada <atriwidada@gnome.org>
   Andreas Müller <schnitzeltony@gmail.com>
   Andrey Jr. Melnikov <temnota.am@gmail.com>
   Ayan George <ayan.george@canonical.com>
   Bastien Nocera <hadess@hadess.net>
   Benedikt Morbach <benedikt.morbach@googlemail.com>
+  Christian Kirbach <christian.kirbach@gmail.com>
   Claudio Saavedra <csaavedra@igalia.com>
   Colin Walters <walters@verbum.org>
   Daniele Napolitano <dnax88@gmail.com>
@@ -33,6 +38,7 @@ Contributors (In alphabetical order):
   Evan Nemerson <evan@coeus-group.com>
   Felix Yan <felixonmars@archlinux.org>
   Fernando Ramos <greenfoo@u92.eu>
+  FineFindus <FineFindus@proton.me>
   Florian Ziegler <florian.ziegler@posteo.de>
   Frederick Grose <fgrose@sugarlabs.org>
   Gris Ge <fge@redhat.com>
@@ -42,11 +48,13 @@ Contributors (In alphabetical order):
   Iain Lane <iainl@gnome.org>
   intrigeri <intrigeri@debian.org>
   Jan Pokorny <japokorn@redhat.com>
+  Jelle van der Waa <jvanderwaa@redhat.com>
   Jindřich Makovička <makovick@gmail.com>
   Jiro SEKIBA <jir@unicus.jp>
   John Keeping <john@metanate.com>
   João Paulo Rechi Vita <jprvita@endlessm.com>
   Kai Lüke <kailueke@riseup.net>
+  Kai-Heng Feng <kai.heng.feng@canonical.com>
   Kylie McClain <somasis@exherbo.org>
   lilinjie <lilinjie@uniontech.com>
   Linus Torvalds <torvalds@linux-foundation.org>
@@ -55,6 +63,7 @@ Contributors (In alphabetical order):
   Mantas Mikulėnas <grawity@gmail.com>
   Marius Vollmer <mvollmer@redhat.com>
   Marti Raudsepp <marti@juffo.org>
+  Martin <miles@filmsi.net>
   Martin Blanchard <tchaik@gmx.com>
   Martin Hatina <mhatina@redhat.com>
   Martin Pitt <martin.pitt@ubuntu.com>, <martinpitt@gnome.org>
@@ -86,8 +95,10 @@ Contributors (In alphabetical order):
   Ross Lagerwall <rosslagerwall@gmail.com>
   Samikshan Bairagya <samikshan@gmail.com>
   Samuli Suominen <ssuominen@gentoo.org>
+  Scrambled 777 <weblate.scrambled777@simplelogin.com>
   Sébastien Bacher <seb128@ubuntu.com>
   segfault <segfault@riseup.net>
+  sid <sidtosh4@gmail.com>
   Simon McVittie <simon.mcvittie@collabora.co.uk>
   Sitsofe Wheeler <sitsofe@yahoo.com>
   Sjoerd Simons <sjoerd.simons@collabora.co.uk>
@@ -95,12 +106,14 @@ Contributors (In alphabetical order):
   Stef Walter <stefw@redhat.com>
   Stefan Bruens <stefan.bruens@rwth-aachen.de>
   Stefan Sauer <ensonic@users.sf.net>
+  Stepan "Sciapan" Yakimovich <xyakimo1@fi.muni.cz>
   Sunjin Yang <lethean@emstone.com>
   Thomas Gläßle <t_glaessle@gmx.de>
   Timo Gurr <timo.gurr@gmail.com>
   Ting-Wei Lan <lantw@src.gnome.org>
   Tom Yan <tom.ty89@gmail.com>
   Tomas Smetana <tomas@smetana.name>, <tsmetana@redhat.com>
+  Tomasz Kłoczko <kloczek@github.com>
   Tony Asleson <tasleson@redhat.com>
   Torstein Husebø <torstein@huseboe.net>
   Tristan Van Berkom <tristan.vanberkom@codethink.co.uk>
@@ -112,5 +125,7 @@ Contributors (In alphabetical order):
   Vojtech Trefny <vtrefny@redhat.com>
   Vratislav Podzimek <v.podzimek@mykolab.com>, <vpodzime@redhat.com>
   Will Thompson <will@willthompson.co.uk>, <wjt@endlessm.com>, <wjt@endlessos.org>
+  xinpeng wang <wangxinpeng@uniontech.com>
   Yuri Chornoivan <yurchor@ukr.net>
   zhmars <18466397+zhmars@users.noreply.github.com>
+  zhoujing <zhoujing106@huawei.com>
