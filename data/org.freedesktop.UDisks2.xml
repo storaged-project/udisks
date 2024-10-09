@@ -2024,7 +2024,7 @@
         If 'fsname' is omitted in a 'fstab' entry, or 'device' is
         omitted in a 'crypttab' entry, it defaults to "UUID=..." when
         the block device has a filesystem UUID, or to the name of the
-        device in the filesystem..
+        device in the filesystem.
 
         If 'name' is omitted in a 'crypttab' entry, it defaults to
         "luks-&lt;UUID&gt;".
