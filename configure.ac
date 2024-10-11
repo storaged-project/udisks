@@ -138,6 +138,12 @@ if test "x$fhs_media" = "xyes"; then
   AC_DEFINE([HAVE_FHS_MEDIA], 1, [Define to 1 to use /media for mounting])
 fi
 
+housekeeping_interval=10
+AC_ARG_WITH([housekeeping_interval],
+            AS_HELP_STRING([--with-housekeeping-interval=MIN], [Housekeeping interval in minutes [default=10]]),
+            [housekeeping_interval=$withval], [])
+AC_DEFINE_UNQUOTED([HOUSEKEEPING_INTERVAL], [$housekeeping_interval], [Housekeeping interval])
+
 # Libraries
 #
 

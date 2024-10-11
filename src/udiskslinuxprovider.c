@@ -795,7 +795,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   udisks_info ("Initialization complete");
 
   /* schedule housekeeping for every 10 minutes */
-  provider->housekeeping_timeout = g_timeout_add_seconds (10*60,
+  provider->housekeeping_timeout = g_timeout_add_seconds (HOUSEKEEPING_INTERVAL * 60,
                                                           on_housekeeping_timeout,
                                                           provider);
   /* ... and also do an initial run */
