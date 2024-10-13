@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2023-07-23 05:51+0200\n"
-"PO-Revision-Date: 2023-07-23 05:53+0200\n"
+"POT-Creation-Date: 2023-05-22 15:29+0000\n"
+"PO-Revision-Date: 2023-05-22 18:46+0200\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.3.2\n"
+"X-Generator: Poedit 3.3.1\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -633,38 +633,38 @@ msgstr "VDO ტომის შექმნას ავთენტიკაც
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1312
+#: src/udiskslinuxblock.c:1294
 msgid "Authentication is required to read system-level secrets"
 msgstr "სისტემური დონის პაროლების წაკითხვას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2019
+#: src/udiskslinuxblock.c:2001
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "/etc/fstab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2038
+#: src/udiskslinuxblock.c:2020
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2098
+#: src/udiskslinuxblock.c:2080
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "/etc/fstab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2117
+#: src/udiskslinuxblock.c:2099
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2190
+#: src/udiskslinuxblock.c:2172
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "/etc/fstab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2209
+#: src/udiskslinuxblock.c:2191
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -681,7 +681,7 @@ msgstr "/etc/crypttab ფაილის შეცვლას ავთენ�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2900 src/udiskslinuxdriveata.c:2293
+#: src/udiskslinuxblock.c:2882 src/udiskslinuxdriveata.c:2293
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "$(drive)-ის უსაფრთხო წაშლას ავთენტიკაცია სჭირდება"
 
@@ -692,11 +692,11 @@ msgstr "$(drive)-ის უსაფრთხო წაშლას ავთე
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2912
+#: src/udiskslinuxblock.c:2894
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive)-ის დაფორმატებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxblock.c:2941 src/udiskslinuxmdraid.c:1513
+#: src/udiskslinuxblock.c:2923 src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to modify the system configuration"
 msgstr "სისტემის კონფიგურაციის ცვლილებისთვის ავთენტიკაცია აუცილებელია"
 
@@ -706,7 +706,7 @@ msgstr "სისტემის კონფიგურაციის ცვ�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3873
+#: src/udiskslinuxblock.c:3855
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "$(drive)-ის წასაკითხად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -716,7 +716,7 @@ msgstr "$(drive)-ის წასაკითხად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3944
+#: src/udiskslinuxblock.c:3926
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "$(drive)-ის ჩასაწერად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -726,7 +726,7 @@ msgstr "$(drive)-ის ჩასაწერად გახსნას ავ
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4018
+#: src/udiskslinuxblock.c:4000
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "$(drive)-ის დასატესტად გახსნას ავთენტიკაცია სჭირდება"
 
@@ -736,7 +736,7 @@ msgstr "$(drive)-ის დასატესტად გახსნას ა
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4101
+#: src/udiskslinuxblock.c:4083
 msgid "Authentication is required to open $(drive)."
 msgstr "$(drive)-ის გახსნას ავთენტიკაცია სჭირდება."
 
@@ -746,7 +746,7 @@ msgstr "$(drive)-ის გახსნას ავთენტიკაცი�
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4158
+#: src/udiskslinuxblock.c:4140
 msgid "Authentication is required to rescan $(drive)"
 msgstr "$(drive)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
@@ -872,7 +872,7 @@ msgstr "$(drive)-ზე SMART-ის გამორთვას ავთენ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
+#: src/udiskslinuxencrypted.c:496 src/udiskslinuxencrypted.c:964
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "დაშიფრული მოწყობილობის, $(drive)-ის განბლოკვას ავთენტიკაცია სჭირდება"
 
@@ -883,7 +883,7 @@ msgstr "დაშიფრული მოწყობილობის, $(driv
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:778
+#: src/udiskslinuxencrypted.c:776
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -897,7 +897,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1100
+#: src/udiskslinuxencrypted.c:1097
 msgid "Authentication is required to resize the encrypted device $(drive)"
 msgstr "დაშიფრული მოწყობილობის $(drive) ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -907,7 +907,7 @@ msgstr "დაშიფრული მოწყობილობის $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:914 src/udiskslinuxfilesystem.c:1105
+#: src/udiskslinuxfilesystem.c:903 src/udiskslinuxfilesystem.c:1094
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive)-ის მიმაგრებას ავთენტიკაცია სჭირდება"
 
@@ -921,7 +921,7 @@ msgstr "$(drive)-ის მიმაგრებას ავთენტიკ�
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1003
+#: src/udiskslinuxfilesystem.c:992
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -939,7 +939,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1584
+#: src/udiskslinuxfilesystem.c:1573
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -954,7 +954,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1632
+#: src/udiskslinuxfilesystem.c:1621
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr "სხვა მომხმარებლის მიერ მიმაგრებული $(drive)-ის მოხსნა შეუძლებელია"
 
@@ -964,7 +964,7 @@ msgstr "სხვა მომხმარებლის მიერ მიმ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1800
+#: src/udiskslinuxfilesystem.c:1789
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ჭდის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -974,7 +974,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ჭდი
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1982
+#: src/udiskslinuxfilesystem.c:1971
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -984,7 +984,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის ზომ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2153
+#: src/udiskslinuxfilesystem.c:2142
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შეკეთებას ავთენტიკაცია სჭირდება"
 
@@ -994,7 +994,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის შეკ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2321
+#: src/udiskslinuxfilesystem.c:2310
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის შემოწმებას ავთენტიკაცია სჭირდება"
 
@@ -1004,7 +1004,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის შემ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2481
+#: src/udiskslinuxfilesystem.c:2470
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის მფლობელის შეცვლას ავთენტიკაცია სჭირდება"
@@ -1015,7 +1015,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის მფლ
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2648
+#: src/udiskslinuxfilesystem.c:2637
 msgid "Authentication is required to change the filesystem UUID on $(drive)"
 msgstr "$(drive)-ზე ფაილური სისტემის UUID-ის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -1026,7 +1026,7 @@ msgstr "$(drive)-ზე ფაილური სისტემის UUID-ი�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:243
+#: src/udiskslinuxloop.c:240
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) წაშლას ავთენტიკაცია სჭირდება"
 
@@ -1037,7 +1037,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) წა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:336
+#: src/udiskslinuxloop.c:333
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -1045,7 +1045,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) შე�
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:582
+#: src/udiskslinuxmanager.c:581
 msgid "Authentication is required to create a RAID array"
 msgstr "RAID მასივის შექმნას ავთენტიკაცია სჭირდება"
 
@@ -1192,7 +1192,7 @@ msgstr "დისკზე $(drive) დანაყოფების შეს�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxpartitiontable.c:339
+#: src/udiskslinuxpartitiontable.c:315
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "$(drive)-ზე დანაყოფის შექმნას ავთენტიკაცია სჭირდება"
 
@@ -3651,36 +3651,3 @@ msgstr "%s — %s (%s)"
 
 #~ msgid "LVMCache not enabled at compile time."
 #~ msgstr "LVMCache აგების დროს ჩართული არ იყო."
-
-#~ msgid "Manage Bcache"
-#~ msgstr "Bcache-ის მართვა"
-
-#~ msgid "Authentication is required to manage Bcache"
-#~ msgstr "Bcache-ის მართვას ავთენტიკაცია სჭირდება"
-
-#~ msgid "Authentication is required to destroy bcache device."
-#~ msgstr "Bcache-ის მოწყობილობის წაშლას ავთენტიკაცია სჭირდება."
-
-#~ msgid "Authentication is required to set mode of bcache device."
-#~ msgstr "Bcache-ის მოწყობილობის რეჟიმის შეცვლას ავთენტიკაცია სჭირდება."
-
-#~ msgid "Authentication is required to create bcache device."
-#~ msgstr "Bcache-ის მოწყობილობის შექმნას ავთენტიკაცია სჭირდება."
-
-#~ msgid "Manage zRAM"
-#~ msgstr "ZRAM-ის მართვა"
-
-#~ msgid "Authentication is required to manage zRAM"
-#~ msgstr "ZRAM-ის მართვას ავთენტიკაცია სჭირდება"
-
-#~ msgid "Authentication is required to add zRAM kernel module"
-#~ msgstr "ZRAM-ის ბირთვის მოდულის ჩატვირთვას ავთენტიკაცია სჭირდება"
-
-#~ msgid "Authentication is required to remove zRAM kernel module"
-#~ msgstr "ZRAM-ის ბირთვის მოდულის წაშლას ავთენტიკაცია სჭირდება"
-
-#~ msgid "Authentication is required to enable zRAM device"
-#~ msgstr "ZRAM-ის მოწყობილობის ჩართვას ავთენტიკაცია სჭირდება"
-
-#~ msgid "Authentication is required to disable zRAM device"
-#~ msgstr "ZRAM-ის მოწყობილობის გამორთვას ავთენტიკაცია სჭირდება"
