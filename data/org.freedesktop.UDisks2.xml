@@ -2360,6 +2360,19 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+      Encrypt:
+      @passphrase: Future passphrase of the LUKS2 device.
+      @options: Options. TODO
+      @since: 2.11.0
+
+      Encrypts a block device to the LUKS2 format.
+    -->
+    <method name="Encrypt">
+      <arg name="passphrase" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
