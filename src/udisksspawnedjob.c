@@ -897,7 +897,7 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
  * Connect to the #UDisksSpawnedJob::spawned-job-completed or
  * #UDisksJob::completed signals to get notified when the job is done.
  *
- * */
+ */
 void udisks_spawned_job_start (UDisksSpawnedJob *job)
 {
   GError *error;
