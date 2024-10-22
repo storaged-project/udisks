@@ -311,6 +311,34 @@ check_modules_state_in_idle_cb (gpointer user_data)
 }
 
 static void
+bd_log_redirect (gint level, const gchar *msg)
+{
+  switch (level)
+    {
+      case BD_UTILS_LOG_EMERG:
+      case BD_UTILS_LOG_ALERT:
+      case BD_UTILS_LOG_CRIT:
+      case BD_UTILS_LOG_ERR:
+        udisks_critical ("[blockdev] %s", msg);
+        break;
+      case BD_UTILS_LOG_WARNING:
+        udisks_warning ("[blockdev] %s", msg);
+        break;
+      case BD_UTILS_LOG_NOTICE:
+        udisks_notice ("[blockdev] %s", msg);
+        break;
+      case BD_UTILS_LOG_INFO:
+        udisks_info ("[blockdev] %s", msg);
+        break;
+      case BD_UTILS_LOG_DEBUG:
+        udisks_debug ("[blockdev] %s", msg);
+        break;
+      default:
+        break;
+    }
+}
+
+static void
 udisks_daemon_constructed (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
@@ -342,7 +370,7 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec **plugin_p = NULL;
   error = NULL;
 
-  ret = bd_try_init (plugins, NULL, NULL, &error);
+  ret = bd_try_init (plugins, bd_log_redirect, NULL, &error);
   if (!ret)
     {
       if (error)
@@ -359,6 +387,12 @@ udisks_daemon_constructed (GObject *object)
                           bd_get_plugin_name ((*plugin_p)->name));
       }
     }
+
+#ifdef DEBUG
+  bd_utils_set_log_level(BD_UTILS_LOG_DEBUG);
+#else
+  bd_utils_set_log_level(BD_UTILS_LOG_INFO);
+#endif
 
   /* Generate global UUID */
   uuid_generate (uuid);
