@@ -1821,7 +1821,7 @@
           <listitem><para><ulink url="http://en.wikipedia.org/wiki/RAID">RAID</ulink> or similar. Known values include <literal>LVM2_member</literal> (for LVM2 components), <literal>linux_raid_member</literal> (for MD-RAID components.)</para></listitem>
         </varlistentry>
         <varlistentry><term>other</term>
-          <listitem><para>Something else. Known values include <literal>swap</literal> (for swap space), <literal>suspend</literal> (data used when resuming from suspend-to-disk.</para></listitem>
+          <listitem><para>Something else. Known values include <literal>swap</literal> (for swap space), <literal>suspend</literal> (data used when resuming from suspend-to-disk).</para></listitem>
         </varlistentry>
         </variablelist>
         See the note for the #org.freedesktop.UDisks2.Block:IdUsage property about usage.
@@ -2024,7 +2024,7 @@
         If 'fsname' is omitted in a 'fstab' entry, or 'device' is
         omitted in a 'crypttab' entry, it defaults to "UUID=..." when
         the block device has a filesystem UUID, or to the name of the
-        device in the filesystem..
+        device in the filesystem.
 
         If 'name' is omitted in a 'crypttab' entry, it defaults to
         "luks-&lt;UUID&gt;".
