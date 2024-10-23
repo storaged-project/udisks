@@ -489,7 +489,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
         super(UdisksEncryptedTestLUKS2, cls).setUpClass()
 
-    def _create_luks(self, device, passphrase, binary=False):
+    def _create_luks(self, device, passphrase, binary=False, label=None):
         options = dbus.Dictionary(signature='sv')
         if binary:
             options['encrypt.passphrase'] = self.bytes_to_ay(passphrase)
@@ -497,6 +497,8 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         else:
             options['encrypt.passphrase'] = passphrase
             options['encrypt.type'] = 'luks2'
+        if label:
+            options['encrypt.label'] = label
         device.Format('ext4', options,
                       dbus_interface=self.iface_prefix + '.Block')
 
@@ -823,6 +825,29 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         if not m or len(m.groups()) != 1:
             self.fail("Failed to get pbkdf information from:\n%s" % out)
         self.assertEqual(m.group(1), "10000")
+
+    def test_create_open_label(self):
+        disk = self.vdevs[0]
+        device = self.get_device(disk)
+        self._create_luks(device, self.PASSPHRASE, label="TESTLUKS")
+
+        self.addCleanup(self._remove_luks, device)
+        self.udev_settle()
+
+        dbus_label = self.get_property(device, '.Block', 'IdLabel')
+        dbus_label.assertEqual("TESTLUKS")
+        self.assertTrue(os.path.exists('/dev/mapper/TESTLUKS'))
+
+        device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        crypt_path = device.Unlock(self.PASSPHRASE, self.no_options,
+                                      dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(crypt_path)
+        crypt_dev = self.bus.get_object(self.iface_prefix, crypt_path)
+        self.assertIsNotNone(crypt_dev)
+        pref_device = self.get_property(crypt_dev, ".Block", "PreferredDevice")
+        pref_device.assertEqual(self.str_to_ay('/dev/mapper/TESTLUKS'))
+        self.assertTrue(os.path.exists('/dev/mapper/TESTLUKS'))
 
 
 class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
