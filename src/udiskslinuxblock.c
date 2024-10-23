@@ -1670,6 +1670,7 @@ static gchar *
 make_block_luksname (UDisksBlock *block, GError **error)
 {
   BDCryptoLUKSInfo *info = NULL;
+  gchar *ret = NULL;
 
   udisks_linux_block_encrypted_lock (block);
   info = bd_crypto_luks_info (udisks_block_get_device (block), error);
@@ -1677,7 +1678,10 @@ make_block_luksname (UDisksBlock *block, GError **error)
 
   if (info)
     {
-      gchar *ret = g_strdup_printf ("luks-%s", info->uuid);
+      if (info->label && g_strcmp0 (info->label, "") != 0)
+        ret = g_strdup (info->label);
+      else
+        ret = g_strdup_printf ("luks-%s", info->uuid);
       bd_crypto_luks_info_free (info);
 
       return ret;
@@ -3144,6 +3148,7 @@ format_create_luks (UDisksDaemon  *daemon,
                     guint32        encrypt_iterations,
                     guint32        encrypt_time,
                     guint32        encrypt_threads,
+                    const gchar   *encrypt_label,
                     UDisksBlock  **block_to_mkfs,
                     UDisksObject **object_to_mkfs,
                     GError       **error)
@@ -3172,6 +3177,7 @@ format_create_luks (UDisksDaemon  *daemon,
   crypto_job_data.iterations = encrypt_iterations;
   crypto_job_data.time = encrypt_time;
   crypto_job_data.threads = encrypt_threads;
+  crypto_job_data.label = encrypt_label;
 
   /* Create it */
   udisks_linux_block_encrypted_lock (block);
@@ -3411,6 +3417,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   guint32 encrypt_iterations = 0;
   guint32 encrypt_time = 0;
   guint32 encrypt_threads = 0;
+  const gchar *encrypt_label = NULL;
   const gchar *erase_type = NULL;
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
@@ -3445,6 +3452,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
   g_variant_lookup (options, "encrypt.iterations", "u", &encrypt_iterations);
   g_variant_lookup (options, "encrypt.time", "u", &encrypt_time);
   g_variant_lookup (options, "encrypt.threads", "u", &encrypt_threads);
+  g_variant_lookup (options, "encrypt.label", "&s", &encrypt_label);
   g_variant_lookup (options, "erase", "&s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
@@ -3588,6 +3596,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                encrypt_iterations,
                                encrypt_time,
                                encrypt_threads,
+                               encrypt_label,
                                &block_to_mkfs,
                                &object_to_mkfs,
                                &error))
