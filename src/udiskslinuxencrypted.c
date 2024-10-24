@@ -365,6 +365,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gboolean handle_as_tcrypt;
   void *open_func;
   const gchar *uuid = NULL;
+  const gchar *label = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -524,19 +525,26 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (is_in_crypttab && crypttab_name != NULL)
     name = g_strdup (crypttab_name);
   else {
-    if (is_luks)
-      name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
-    else if (is_bitlk)
-      {
-        uuid = udisks_block_get_id_uuid (block);
-        if (uuid && g_strcmp0 (uuid, "") != 0)
-          name = g_strdup_printf ("bitlk-%s", uuid);
-        else
-          name = g_strdup_printf ("bitlk-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
-      }
+    label = udisks_block_get_id_label (block);
+    if (label)
+      name = g_strdup (label);
     else
-      /* TCRYPT devices don't have a UUID, so we use the device number instead */
-      name = g_strdup_printf ("tcrypt-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
+      {
+        if (is_luks)
+          name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
+        else if (is_bitlk)
+          {
+            uuid = udisks_block_get_id_uuid (block);
+            if (uuid && g_strcmp0 (uuid, "") != 0)
+              name = g_strdup_printf ("bitlk-%s", uuid);
+            else
+              name = g_strdup_printf ("bitlk-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
+          }
+        else
+          /* TCRYPT devices don't have a UUID, so we use the device number instead */
+          name = g_strdup_printf ("tcrypt-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
+      }
+
   }
 
   /* save old encryption type to be able to restore it */

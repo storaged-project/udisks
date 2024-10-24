@@ -56,11 +56,12 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
   if (!context)
     return FALSE;
 
-  if (data->pbkdf || data->memory || data->iterations || data->time || data->threads)
+  if (data->pbkdf || data->memory || data->iterations || data->time || data->threads || data->label)
     {
       extra = g_new0 (BDCryptoLUKSExtra, 1);
       extra->pbkdf = bd_crypto_luks_pbkdf_new (data->pbkdf, NULL, data->memory, data->iterations,
                                                data->time, data->threads);
+      extra->label = g_strdup (data->label);
     }
 
   /* device, cipher, key_size, context, min_entropy, luks_version, extra, error */

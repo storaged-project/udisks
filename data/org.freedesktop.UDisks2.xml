@@ -2099,7 +2099,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>encrypt.pbkdf</parameter> (of type 's'), <parameter>encrypt.memory</parameter> (of type 'u'), <parameter>encrypt.iterations</parameter> (of type 'u'), <parameter>encrypt.time</parameter> (of type 'u'), <parameter>encrypt.threads</parameter> (of type 'u'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>uuid</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's' or 'ay'), <parameter>encrypt.type</parameter> (of type 's'), <parameter>encrypt.label</parameter> (of type 's'), <parameter>encrypt.pbkdf</parameter> (of type 's'), <parameter>encrypt.memory</parameter> (of type 'u'), <parameter>encrypt.iterations</parameter> (of type 'u'), <parameter>encrypt.time</parameter> (of type 'u'), <parameter>encrypt.threads</parameter> (of type 'u'), <parameter>erase</parameter> (of type 's'), <parameter>mkfs-args</parameter> (of type 'as'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -2137,6 +2137,8 @@
         Option <parameter>encrypt.type</parameter> can be used to
         specify encryption "technology" that will be used. Currently
         only <quote>luks1</quote> and <quote>luks2</quote> are supported.
+        Option <parameter>encrypt.label</parameter> can be used to specify
+        label for the LUKS format.
         Following additional options for LUKS key derivation function can
         be used:
 
