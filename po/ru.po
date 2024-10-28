@@ -16,9 +16,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks master\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2024-07-19 03:30+0000\n"
-"PO-Revision-Date: 2024-07-19 15:33+0300\n"
-"Last-Translator: Aleksandr Melman <Alexmelman88@gmail.com>\n"
+"POT-Creation-Date: 2024-09-16 16:23+0000\n"
+"PO-Revision-Date: 2024-10-12 12:41+0300\n"
+"Last-Translator: Artur So <arturios2005@mail.ru>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.5\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -865,7 +865,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3882
+#: src/udiskslinuxblock.c:3906
 msgid "Authentication is required to open $(drive) for reading"
 msgstr ""
 "Для открытия $(drive) для чтения требуется подтверждение подлинности "
@@ -877,7 +877,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3953
+#: src/udiskslinuxblock.c:3977
 msgid "Authentication is required to open $(drive) for writing"
 msgstr ""
 "Для открытия $(drive) для записи требуется подтверждение подлинности "
@@ -889,7 +889,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4027
+#: src/udiskslinuxblock.c:4051
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
 "Для открытия $(drive) для проверки производительности требуется "
@@ -901,7 +901,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4110
+#: src/udiskslinuxblock.c:4134
 msgid "Authentication is required to open $(drive)."
 msgstr ""
 "Для открытия $(drive) требуется подтверждение подлинности пользователя."
@@ -912,7 +912,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4167
+#: src/udiskslinuxblock.c:4191
 msgid "Authentication is required to rescan $(drive)"
 msgstr ""
 "Для повторного сканирования $(drive) требуется подтверждение подлинности "
@@ -1096,12 +1096,26 @@ msgstr ""
 "подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
+#. * requests conversion of an encrypted block device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxencrypted.c:1254
+msgid ""
+"Authentication is required to convert device $(drive) to a different LUKS "
+"version."
+msgstr ""
+"Для преобразования устройства $(drive) в другую версию LUKS требуется "
+"подтверждение подлинности пользователя."
+
+#. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:938 src/udiskslinuxfilesystem.c:1129
+#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1130
 msgid "Authentication is required to mount $(drive)"
 msgstr ""
 "Для монтирования $(drive) требуется подтверждение подлинности пользователя"
@@ -1116,7 +1130,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1027
+#: src/udiskslinuxfilesystem.c:1028
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1134,7 +1148,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1608
+#: src/udiskslinuxfilesystem.c:1609
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -1149,7 +1163,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1656
+#: src/udiskslinuxfilesystem.c:1657
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Для демонтирования $(drive), смонтированного другим пользователем, требуется "
@@ -1161,7 +1175,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1824
+#: src/udiskslinuxfilesystem.c:1825
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Для изменения метки файловой системы на $(drive) требуется подтверждение "
@@ -1173,7 +1187,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2006
+#: src/udiskslinuxfilesystem.c:2007
 msgid "Authentication is required to resize the filesystem on $(drive)"
 msgstr ""
 "Для изменения размера файловой системы на $(drive) требуется подтверждение "
@@ -1185,7 +1199,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2177
+#: src/udiskslinuxfilesystem.c:2178
 msgid "Authentication is required to repair the filesystem on $(drive)"
 msgstr ""
 "Для восстановления файловой системы на $(drive) требуется подтверждение "
@@ -1197,7 +1211,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2345
+#: src/udiskslinuxfilesystem.c:2346
 msgid "Authentication is required to check the filesystem on $(drive)"
 msgstr ""
 "Для проверки файловой системы на $(drive) требуется подтверждение "
@@ -1209,7 +1223,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2505
+#: src/udiskslinuxfilesystem.c:2506
 msgid ""
 "Authentication is required to change ownership of the filesystem on $(drive)"
 msgstr ""
@@ -1222,7 +1236,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2672
+#: src/udiskslinuxfilesystem.c:2673
 msgid "Authentication is required to change the filesystem UUID on $(drive)"
 msgstr ""
 "Для изменения UUID файловой системы на $(drive) требуется подтверждение "
@@ -3291,130 +3305,145 @@ msgstr "Изменение размера зашифрованного устр�
 
 #: udisks/udisksclient.c:2737
 msgctxt "job"
+msgid "Converting Encrypted Device"
+msgstr "Преобразование зашифрованного устройства"
+
+#: udisks/udisksclient.c:2738
+msgctxt "job"
+msgid "Backing Up Header of an Encrypted Device"
+msgstr "Резервное копирование заголовка зашифрованного устройства"
+
+#: udisks/udisksclient.c:2739
+msgctxt "job"
+msgid "Restoring Header of an Encrypted Device"
+msgstr "Восстановление заголовка зашифрованного устройства"
+
+#: udisks/udisksclient.c:2740
+msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Запуск устройства подкачки"
 
-#: udisks/udisksclient.c:2738
+#: udisks/udisksclient.c:2741
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Остановка устройства подкачки"
 
-#: udisks/udisksclient.c:2739
+#: udisks/udisksclient.c:2742
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "Изменение устройства подкачки"
 
-#: udisks/udisksclient.c:2740
+#: udisks/udisksclient.c:2743
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "Проверка файловой системы"
 
-#: udisks/udisksclient.c:2741
+#: udisks/udisksclient.c:2744
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "Монтирование файловой системы"
 
-#: udisks/udisksclient.c:2742
+#: udisks/udisksclient.c:2745
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "Демонтирование файловой системы"
 
-#: udisks/udisksclient.c:2743
+#: udisks/udisksclient.c:2746
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "Изменение файловой системы"
 
-#: udisks/udisksclient.c:2744
+#: udisks/udisksclient.c:2747
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "Восстановление файловой системы"
 
-#: udisks/udisksclient.c:2745
+#: udisks/udisksclient.c:2748
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "Изменение размера файловой системы"
 
-#: udisks/udisksclient.c:2746
+#: udisks/udisksclient.c:2749
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "Очистка устройства"
 
-#: udisks/udisksclient.c:2747
+#: udisks/udisksclient.c:2750
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Создание файловой системы"
 
-#: udisks/udisksclient.c:2748
+#: udisks/udisksclient.c:2751
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Настройка петлевого устройства"
 
-#: udisks/udisksclient.c:2749
+#: udisks/udisksclient.c:2752
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Изменение раздела"
 
-#: udisks/udisksclient.c:2750
+#: udisks/udisksclient.c:2753
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Удаление раздела"
 
-#: udisks/udisksclient.c:2751
+#: udisks/udisksclient.c:2754
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Создание раздела"
 
-#: udisks/udisksclient.c:2752
+#: udisks/udisksclient.c:2755
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Очистка"
 
-#: udisks/udisksclient.c:2753
+#: udisks/udisksclient.c:2756
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "Надёжная очистка ATA"
 
-#: udisks/udisksclient.c:2754
+#: udisks/udisksclient.c:2757
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "Улучшенная надёжная очистка ATA"
 
-#: udisks/udisksclient.c:2755
+#: udisks/udisksclient.c:2758
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "Остановка массива RAID"
 
-#: udisks/udisksclient.c:2756
+#: udisks/udisksclient.c:2759
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "Запуск массива RAID"
 
-#: udisks/udisksclient.c:2757
+#: udisks/udisksclient.c:2760
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "Маркировка устройства как неисправного"
 
-#: udisks/udisksclient.c:2758
+#: udisks/udisksclient.c:2761
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "Удаление устройства из массива"
 
-#: udisks/udisksclient.c:2759
+#: udisks/udisksclient.c:2762
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "Добавление устройства в массив"
 
-#: udisks/udisksclient.c:2760
+#: udisks/udisksclient.c:2763
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "Установка битовых карт записей (write-intent bitmap)"
 
-#: udisks/udisksclient.c:2761
+#: udisks/udisksclient.c:2764
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "Создание массива RAID"
 
-#: udisks/udisksclient.c:2768
+#: udisks/udisksclient.c:2771
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
