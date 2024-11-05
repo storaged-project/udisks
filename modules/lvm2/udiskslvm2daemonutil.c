@@ -65,9 +65,16 @@ udisks_daemon_util_lvm2_block_is_unused (UDisksBlock  *block,
 {
   const gchar *device_file;
   int fd;
+  gint num_tries = 0;
 
   device_file = udisks_block_get_device (block);
-  fd = open (device_file, O_RDONLY | O_EXCL);
+
+  while ((fd = open (device_file, O_RDONLY | O_EXCL)) < 0)
+    {
+      g_usleep (100 * 1000); /* microseconds */
+      if (num_tries++ > 10)
+        break;
+    }
   if (fd < 0)
     {
       g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
