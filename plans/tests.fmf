@@ -8,7 +8,7 @@ prepare:
   - name: copr
     how: shell
     script:
-      - sudo dnf install -y 'dnf-command(copr)'
+      - sudo dnf install -y python3-libdnf5 'dnf-command(copr)'
       - sudo dnf copr enable -y @storage/udisks-daily
       # TF prioritizes Fedora tag repo over all others, in particular our daily COPR
       - for f in $(grep -l -r 'testing-farm-tag-repository' /etc/yum.repos.d); do sed -i '/priority/d' "$f" ;done
