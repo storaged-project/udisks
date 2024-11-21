@@ -372,7 +372,7 @@ udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
  * Start the @job. Connect to the #UDisksThreadedJob::threaded-job-completed or
  * #UDisksJob::completed signals to get notified when the job is done.
  *
- * */
+ */
 void
 udisks_threaded_job_start (UDisksThreadedJob *job)
 {
