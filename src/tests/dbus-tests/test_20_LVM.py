@@ -434,7 +434,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
         # Create the origin LV
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         lvname = 'udisks_test_origin_lv'
-        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize / 2), self.no_options,
+        lv_path = vg.CreatePlainVolume(lvname, dbus.UInt64(vgsize // 3), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
@@ -477,7 +477,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
         # Create the origin LV
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         orig_lvname = 'udisks_test_origin_lv'
-        lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize / 2), self.no_options,
+        lv_path = vg.CreatePlainVolume(orig_lvname, dbus.UInt64(vgsize // 3), self.no_options,
                                        dbus_interface=self.iface_prefix + '.VolumeGroup')
         lv = self.bus.get_object(self.iface_prefix, lv_path)
         self.assertIsNotNone(lv)
@@ -489,7 +489,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
         cache_lvname = 'udisks_test_cache_lv'
         vgsize = int(self.get_property_raw(vg, '.VolumeGroup', 'FreeSize'))
         # 8 MiB reserved for the cache metadata created automatically by LVM
-        lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64((vgsize / 2) - 8 * 1024**2), self.no_options,
+        lv_cache_path = vg.CreatePlainVolume(cache_lvname, dbus.UInt64((vgsize // 3) - 8 * 1024**2), self.no_options,
                                              dbus_interface=self.iface_prefix + '.VolumeGroup')
         cache_lv = self.bus.get_object(self.iface_prefix, lv_cache_path)
         self.assertIsNotNone(cache_lv)
