@@ -68,7 +68,7 @@ libudisks2_iscsi_la_CFLAGS =                                                   \
 	$(NULL)
 
 libudisks2_iscsi_la_LDFLAGS =                                                  \
-	-export_dynamic                                                        \
+	-export-dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
