@@ -64,7 +64,7 @@ libudisks2_btrfs_la_CFLAGS =                                                   \
 	$(NULL)
 
 libudisks2_btrfs_la_LDFLAGS =                                                  \
-	-export_dynamic                                                        \
+	-export-dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
