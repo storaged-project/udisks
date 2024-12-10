@@ -62,7 +62,7 @@ libudisks2_lsm_la_CFLAGS =                                                     \
 	$(NULL)
 
 libudisks2_lsm_la_LDFLAGS =                                                    \
-	-export_dynamic                                                        \
+	-export-dynamic                                                        \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
