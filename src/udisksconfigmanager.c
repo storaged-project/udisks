@@ -22,6 +22,10 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
+#if defined (HAVE_LIBECONF) && defined (USE_VENDORDIR)
+#include <libeconf.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udisksdaemontypes.h"
@@ -91,6 +95,43 @@ udisks_config_manager_get_property (GObject    *object,
     }
 }
 
+static void
+set_module_list (GList **out_modules, gchar **modules)
+{
+  gchar **modules_tmp = modules;
+
+  for (gchar * module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
+    {
+      g_strstrip (module_i);
+      if (! udisks_module_validate_name (module_i) && !g_str_equal (module_i, MODULES_ALL_ARG))
+        {
+          g_warning ("Invalid module name '%s' specified in the config file.",
+                     module_i);
+          continue;
+        }
+      *out_modules = g_list_append (*out_modules, g_strdup (module_i));
+    }
+}
+
+static void
+set_load_preference (UDisksModuleLoadPreference *out_load_preference, const gchar *load_preference)
+{
+  /* Check the key value */
+  if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
+    {
+      *out_load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+    }
+  else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
+    {
+      *out_load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
+    }
+  else
+    {
+      udisks_warning ("Unknown value used for 'modules_load_preference': %s; defaulting to 'ondemand'",
+                      load_preference);
+    }
+}
+
 static const gchar *
 get_encryption_config (const gchar *encryption)
 {
@@ -138,6 +179,136 @@ udisks_config_manager_set_property (GObject      *object,
     }
 }
 
+#if defined (HAVE_LIBECONF) && defined (USE_VENDORDIR)
+
+static void
+parse_config_file (UDisksConfigManager         *manager,
+                   UDisksModuleLoadPreference  *out_load_preference,
+                   const gchar                **out_encryption,
+                   GList                      **out_modules)
+{
+  gchar *conf_dir;
+  gchar *conf_filename;
+  gchar *load_preference;
+  gchar *encryption;
+  gchar **modules;
+  econf_err econf_ret = ECONF_SUCCESS;
+  econf_file *key_file = NULL;
+  gchar *val;
+
+  /* Get modules and means of loading */
+  conf_dir = g_build_path (G_DIR_SEPARATOR_S,
+                           PACKAGE_SYSCONF_DIR,
+                           PROJECT_SYSCONF_DIR,
+                           NULL);
+
+  if (manager->uninstalled || !g_str_equal(conf_dir,manager->config_dir))
+    {
+      /* Taking this file only and not parsing e.g. vendor files */
+      conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
+                                        manager->config_dir,
+                                        PACKAGE_NAME_UDISKS2 ".conf",
+                                        NULL);
+      udisks_debug ("Loading configuration file: %s", conf_filename);
+      if ((econf_ret = econf_readFile (&key_file, conf_filename, "=", "#")))
+        {
+          udisks_warning ("Error cannot read file %s: %s", conf_filename, econf_errString(econf_ret));
+        }
+      g_free (conf_filename);
+    }
+  else
+    {
+      /* Parsing vendor, run and syscconf dir */
+      udisks_debug ("Loading configuration files (%s.conf)", PACKAGE_NAME_UDISKS2);
+
+      if (econf_ret == ECONF_SUCCESS)
+        {
+          econf_ret = econf_readConfig(&key_file,
+                                       PROJECT_SYSCONF_DIR,
+                                       _PATH_VENDORDIR,
+                                       PACKAGE_NAME_UDISKS2,
+                                       ".conf",
+                                       "=",
+                                       "#");
+        }
+      else
+        {
+          udisks_warning ("Error cannot read file %s.conf: %s",
+                          PACKAGE_NAME_UDISKS2, econf_errString(econf_ret));
+        }
+    }
+
+  if (econf_ret != ECONF_SUCCESS)
+    return;
+
+  if (out_modules != NULL)
+    {
+      /* Read the list of modules to load. */
+      econf_ret = econf_getStringValue (key_file, MODULES_GROUP_NAME, MODULES_KEY, &val);
+      if (econf_ret != ECONF_SUCCESS)
+        {
+          if (econf_ret != ECONF_NOKEY) {
+            udisks_warning ("Error cannot read value %s/%s: %s",
+                            MODULES_GROUP_NAME, MODULES_KEY, econf_errString(econf_ret));
+          }
+        }
+      else
+        {
+          modules = g_strsplit (val, ",", -1);
+          if (modules)
+            {
+              set_module_list (out_modules, modules);
+              g_strfreev (modules);
+            }
+          g_free(val);
+        }
+    }
+
+  if (out_load_preference != NULL)
+    {
+      /* Read the load preference configuration option. */
+      econf_ret = econf_getStringValue (key_file, MODULES_GROUP_NAME, MODULES_LOAD_PREFERENCE_KEY,
+                                        &load_preference);
+      if (econf_ret != ECONF_SUCCESS) {
+        if (econf_ret != ECONF_NOKEY)
+          udisks_warning ("Error cannot read value%s/%s: %s",
+                          MODULES_GROUP_NAME, MODULES_LOAD_PREFERENCE_KEY, econf_errString(econf_ret));
+	}
+      else
+        {
+          if (load_preference)
+            {
+              set_load_preference (out_load_preference, load_preference);
+              g_free (load_preference);
+            }
+        }
+    }
+
+  if (out_encryption != NULL)
+    {
+      /* Read the encryption option. */
+      econf_ret = econf_getStringValue (key_file, DEFAULTS_GROUP_NAME, DEFAULTS_ENCRYPTION_KEY,
+                                        &encryption);
+      if (econf_ret != ECONF_SUCCESS) {
+        if (econf_ret != ECONF_NOKEY)
+          udisks_warning ("Error cannot read value %s/%s: %s",
+                          DEFAULTS_GROUP_NAME, DEFAULTS_ENCRYPTION_KEY, econf_errString(econf_ret));
+	}
+      else
+        {
+          if (encryption)
+            {
+              *out_encryption = get_encryption_config (encryption);
+              g_free (encryption);
+            }
+        }
+    }
+
+  econf_free (key_file);
+}
+
+#else /* using vendordir and libeconf */
+
 static void
 parse_config_file (UDisksConfigManager         *manager,
                    UDisksModuleLoadPreference  *out_load_preference,
@@ -148,9 +319,7 @@ parse_config_file (UDisksConfigManager         *manager,
   gchar *conf_filename;
   gchar *load_preference;
   gchar *encryption;
-  gchar *module_i;
   gchar **modules;
-  gchar **modules_tmp;
   GError *l_error = NULL;
 
   /* Get modules and means of loading */
@@ -172,18 +341,7 @@ parse_config_file (UDisksConfigManager         *manager,
           /* Read the list of modules to load. */
           if (modules)
             {
-              modules_tmp = modules;
-              for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
-                {
-                  g_strstrip (module_i);
-                  if (! udisks_module_validate_name (module_i) && !g_str_equal (module_i, MODULES_ALL_ARG))
-                    {
-                      g_warning ("Invalid module name '%s' specified in the %s config file.",
-                                 module_i, conf_filename);
-                      continue;
-                    }
-                  *out_modules = g_list_append (*out_modules, g_strdup (module_i));
-                }
+              set_module_list (out_modules, modules);
               g_strfreev (modules);
             }
         }
@@ -194,28 +352,14 @@ parse_config_file (UDisksConfigManager         *manager,
           load_preference = g_key_file_get_string (config_file, MODULES_GROUP_NAME, MODULES_LOAD_PREFERENCE_KEY, NULL);
           if (load_preference)
             {
-              /* Check the key value */
-              if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
-                {
-                  *out_load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
-                }
-              else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
-                {
-                  *out_load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
-                }
-              else
-                {
-                  udisks_warning ("Unknown value used for 'modules_load_preference': %s; defaulting to 'ondemand'",
-                                  load_preference);
-                }
-
+              set_load_preference (out_load_preference, load_preference);
               g_free (load_preference);
             }
         }
 
       if (out_encryption != NULL)
         {
-          /* Read the load preference configuration option. */
+          /* Read the encryption option. */
           encryption = g_key_file_get_string (config_file, DEFAULTS_GROUP_NAME, DEFAULTS_ENCRYPTION_KEY, NULL);
           if (encryption)
             {
@@ -241,6 +385,7 @@ parse_config_file (UDisksConfigManager         *manager,
   g_key_file_free (config_file);
   g_free (conf_filename);
 }
+#endif
 
 static void
 udisks_config_manager_constructed (GObject *object)

@@ -247,6 +247,37 @@ if test "x$with_tmpfilesdir" != "xno"; then
   AC_SUBST([tmpfilesdir], [$with_tmpfilesdir])
 fi
 
+# libeconf
+AC_ARG_WITH([econf],
+  AS_HELP_STRING([--without-econf], [do not use libeconf]),
+  [], [with_econf=check]
+)
+
+have_econf=no
+AS_IF([test "x$with_econf" != xno], [
+  PKG_CHECK_MODULES([ECONF], [libeconf], [have_econf=yes], [have_econf=no])
+    AS_CASE([$with_econf:$have_econf],
+    [yes:no],
+      [AC_MSG_ERROR([libeconf expected but libeconf not found])],
+    [*:yes],
+       AC_DEFINE([HAVE_LIBECONF], [1], [Define if libeconf is available])
+  )
+])
+AM_CONDITIONAL([HAVE_ECONF], [test "x$have_econf" = xyes])
+
+AC_ARG_WITH([vendordir],
+  AS_HELP_STRING([--with-vendordir=DIR], [Directory for distribution provided configuration files (libeconf is needed for it)]),
+  [], []
+)
+AC_SUBST([vendordir], [$with_vendordir])
+AM_CONDITIONAL([USE_VENDORDIR], [test "x$with_vendordir" != x])
+AS_IF([test "x$with_vendordir" != x], [
+  AC_DEFINE([USE_VENDORDIR], [1], [Define to 1 to use vendordir])
+  AS_IF([test "x$with_econf" == xno], [
+    AC_MSG_ERROR([libeconf is needed for using vendordir])
+  ])
+])
+
 # kernel modules
 AC_ARG_WITH([modloaddir],
   [AS_HELP_STRING([--with-modloaddir=DIR], [Directory for configuring kernel modules to load at boot])],
@@ -676,6 +707,7 @@ echo "
         sbindir:                    ${sbindir}
         datadir:                    ${datadir}
         sysconfdir:                 ${sysconfdir}
+	vendordir:                  ${with_vendordir}
         localstatedir:              ${localstatedir}
         docdir:                     ${docdir}
         introspection:              ${found_introspection}
@@ -687,6 +719,7 @@ echo "
         using libelogind:           ${have_libelogind}
         use /media for mounting:    ${fhs_media}
         acl support:                ${have_acl}
+	libeconf support:           ${have_econf}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

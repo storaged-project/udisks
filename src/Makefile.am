@@ -27,8 +27,13 @@ AM_CPPFLAGS =                                                                  \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \
 	$(BLOCKDEV_CFLAGS)                                                     \
-	$(WARN_CFLAGS)                                                         \
-	$(NULL)
+	$(WARN_CFLAGS)
+if USE_VENDORDIR
+AM_CPPFLAGS += \
+      -D_PATH_VENDORDIR=\"${vendordir}\"
+endif
+
+AM_CPPFLAGS += $(NULL)
 
 # ------------------------------------------------------------------------------
 
@@ -146,8 +151,13 @@ libudisks_daemon_la_LIBADD =                                                   \
 	$(LIBELOGIND_LIBS)                                                     \
 	$(PART_LDFLAGS)                                                        \
 	$(SWAP_LIBS)                                                           \
-	$(top_builddir)/udisks/libudisks2.la                                   \
-	$(NULL)
+	$(top_builddir)/udisks/libudisks2.la
+
+if HAVE_ECONF
+libudisks_daemon_la_LIBADD += -leconf
+endif
+
+libudisks_daemon_la_LIBADD += $(NULL)
 
 # ------------------------------------------------------------------------------
 
