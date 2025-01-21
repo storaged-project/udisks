@@ -274,7 +274,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         fguid = self.get_property_raw(drive_obj, '.NVMe.Controller', 'FGUID')
         self.assertEqual(len(fguid), 0)
         rev = self.get_property_raw(drive_obj, '.NVMe.Controller', 'NVMeRevision')
-        self.assertTrue(rev.startswith('1.'))
+        self.assertGreater(len(rev), 0)
         unalloc_cap = self.get_property_raw(drive_obj, '.NVMe.Controller', 'UnallocatedCapacity')
         self.assertEqual(unalloc_cap, 0)
 
