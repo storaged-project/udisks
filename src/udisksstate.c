@@ -783,6 +783,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
           if (!udisks_daemon_launch_spawned_job_sync (state->daemon,
                                                       NULL, /* UDisksObject */
                                                       "cleanup", 0, /* StartedByUID */
+                                                      FALSE,
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */
@@ -1247,6 +1248,7 @@ udisks_state_check_unlocked_crypto_dev_entry (UDisksState  *state,
                                                        NULL, /* UDisksObject */
                                                        "cleanup",
                                                        0, /* StartedByUID */
+                                                       FALSE,
                                                        luks_close_job_func,
                                                        &data,
                                                        NULL, /* user_data_free_func */

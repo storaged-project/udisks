@@ -371,6 +371,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                                                  UDISKS_OBJECT (object),
                                                  sync_action_to_job_id (sync_action),
                                                  0,
+                                                 FALSE,
                                                  NULL /* cancellable */);
 
           /* Mark the job as not cancellable. It simply has to finish... */
@@ -643,6 +644,7 @@ handle_start (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          "md-raid-start",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -805,6 +807,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          "md-raid-stop",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -1026,6 +1029,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          "md-raid-remove-device",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -1170,6 +1174,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          "md-raid-add-device",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -1286,6 +1291,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          "md-raid-set-bitmap",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -1403,6 +1409,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          sync_action_to_job_id (sync_action),
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)

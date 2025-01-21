@@ -249,6 +249,7 @@ handle_delete (UDisksLoop            *loop,
                                          UDISKS_OBJECT(object),
                                          "loop-setup",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)

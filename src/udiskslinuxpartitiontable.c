@@ -422,6 +422,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                          UDISKS_OBJECT (object),
                                          "partition-create",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)

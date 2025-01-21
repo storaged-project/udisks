@@ -2482,7 +2482,7 @@ erase_device (UDisksBlock   *block,
       goto out;
     }
 
-  job = udisks_daemon_launch_simple_job (daemon, object, "format-erase", caller_uid, NULL);
+  job = udisks_daemon_launch_simple_job (daemon, object, "format-erase", caller_uid, FALSE, NULL);
   udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (job), TRUE);
   udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
 
@@ -3185,6 +3185,7 @@ format_create_luks (UDisksDaemon  *daemon,
                                                object,
                                                "format-mkfs",
                                                caller_uid,
+                                               FALSE,
                                                luks_format_job_func,
                                                &crypto_job_data,
                                                NULL, /* user_data_free_func */
@@ -3229,6 +3230,7 @@ format_create_luks (UDisksDaemon  *daemon,
                                                object,
                                                "format-mkfs",
                                                caller_uid,
+                                               FALSE,
                                                luks_open_job_func,
                                                &crypto_job_data,
                                                NULL, /* user_data_free_func */
@@ -3571,6 +3573,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                    object,
                                                    "format-mkfs",
                                                    caller_uid,
+                                                   FALSE,
                                                    format_job_func,
                                                    &format_job_data,
                                                    NULL, /* user_data_free_func */
@@ -3679,6 +3682,7 @@ udisks_linux_block_handle_format (UDisksBlock             *block,
                                                    object,
                                                    "format-mkfs",
                                                    caller_uid,
+                                                   FALSE,
                                                    format_job_func,
                                                    &format_job_data,
                                                    NULL, /* user_data_free_func */
@@ -4268,6 +4272,7 @@ handle_restore_encrypted_header (UDisksBlock           *encrypted,
                                            UDISKS_OBJECT (object),
                                            "block-restore-encrypted-header",
                                            caller_uid,
+                                           FALSE,
                                            NULL);
     if (job == NULL)
       {
