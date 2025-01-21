@@ -371,8 +371,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                                                  UDISKS_OBJECT (object),
                                                  sync_action_to_job_id (sync_action),
                                                  0,
-                                                 FALSE,
-                                                 NULL /* cancellable */);
+                                                 TRUE, /* no_inhibit */
+                                                 NULL  /* cancellable */);
 
           /* Mark the job as not cancellable. It simply has to finish... */
           udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
