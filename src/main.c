@@ -89,7 +89,7 @@ on_name_acquired (GDBusConnection *connection,
                   const gchar     *name,
                   gpointer         user_data)
 {
-  udisks_notice ("Acquired the name %s on the system message bus", name);
+  udisks_info ("Acquired the name %s on the system message bus", name);
 }
 
 static gboolean
@@ -147,7 +147,7 @@ main (int    argc,
   if (g_getenv ("PATH") == NULL)
     g_setenv ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin", TRUE);
 
-  udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);
+  udisks_info ("udisks daemon version %s starting", PACKAGE_VERSION);
 
   if (! bd_utils_get_linux_version (&error))
     {
@@ -197,7 +197,7 @@ main (int    argc,
   if (opt_context != NULL)
     g_option_context_free (opt_context);
 
-  udisks_notice ("udisks daemon version %s exiting", PACKAGE_VERSION);
+  udisks_info ("udisks daemon version %s exiting", PACKAGE_VERSION);
 
   return ret;
 }
