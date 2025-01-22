@@ -19,6 +19,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         # ptype=5 - created device will be CD drive, one new target and host
         res, _ = self.run_command('modprobe scsi_debug ptype=5 num_tgts=1 add_host=1')
         self.assertEqual(res, 0)
+        self.run_command('udevadm trigger --settle')
         self.udev_settle()
         dirs = []
         # wait until directory appears
@@ -46,6 +47,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
                 time.sleep(0.1)
             self.udev_settle()
             self.run_command('modprobe -r scsi_debug')
+            self.run_command('udevadm trigger --settle')
 
     def test_10_eject(self):
         ''' Test of Drive.Eject method '''
@@ -86,8 +88,10 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         ''' Test of Drive properties values '''
 
         sys_dirs = glob.glob('/sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*:*/')
+        print(sys_dirs)
         self.assertEqual(len(sys_dirs), 1)
         sys_dir = sys_dirs[0]
+        print(sys_dir)
 
         def read_sys_file(value):
             return self.read_file(os.path.join(sys_dir, value)).strip()
