@@ -35,6 +35,12 @@
       Some storage systems require extra configuration in
       <emphasis>@sysconfdir@/udisks2/modules.conf.d/udisks2_lsm.conf</emphasis>.
     </para>
+
+    <para condition="with_vendordir">
+      If this file does not exist, the definitions are taken from the files
+      <emphasis>@vendordir@/udisks2/modules.conf.d/udisks2_lsm.conf</emphasis>.
+    </para>
+
   </refsect1>
 
   <refsect1>

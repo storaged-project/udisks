@@ -22,6 +22,12 @@ man_MANS += udisks2_lsm.conf.5
 endif # HAVE_LSM
 endif # ENABLE_MAN
 
+if USE_VENDORDIR
+VENDORDIR_COND = with_vendordir
+else
+VENDORDIR_COND = without_vendordir
+endif
+
 udisksctl.1 : udisksctl.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
@@ -40,7 +46,8 @@ udisks2.conf.5.xml: udisks2.conf.5.xml.in
 	$(SED) "s|\$${prefix}|${prefix}|" $< > $@
 
 udisks2.conf.5 : udisks2.conf.5.xml
-	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+	$(XSLTPROC) --stringparam profile.condition "$(VENDORDIR_COND)" -path "$(builddir)/.." \
+	-nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
 if HAVE_LSM
 # Hack: Autotools expand @sysconfdir@ as %{prefix}/etc; that's why we sed this
@@ -49,7 +56,8 @@ udisks2_lsm.conf.5.xml: udisks2_lsm.conf.5.xml.in
 	$(SED) "s|\$${prefix}|${prefix}|" $< > $@
 
 udisks2_lsm.conf.5 : udisks2_lsm.conf.5.xml
-	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+	$(XSLTPROC) --stringparam profile.condition "$(VENDORDIR_COND)" -path "$(builddir)/.." \
+	-nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 endif # HAVE_LSM
 
 EXTRA_DIST =                                                                   \

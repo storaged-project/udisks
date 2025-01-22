@@ -37,6 +37,16 @@
       the configuration file placed at
       <emphasis>@sysconfdir@/udisks2/udisks2.conf</emphasis>.
     </para>
+
+    <para condition="with_vendordir">
+      If this file does not exist, the definitions are taken from the files
+      <emphasis>@vendordir@/udisks2/udisks2.conf</emphasis>,
+      <emphasis>@vendordir@/udisks2/udisks2.d/*</emphasis> and
+      <emphasis>@sysconfdir@/udisks2/udisks2.d/*</emphasis> in that order.
+      If <emphasis>@sysconfdir@/udisks2/udisks2.d/@filename@</emphasis> exists, then
+      <emphasis>@vendordir@/udisks2/udisks2.d/@filename@</emphasis> will not be used.
+    </para>
+
   </refsect1>
 
   <refsect1>
