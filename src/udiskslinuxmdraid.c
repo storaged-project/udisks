@@ -1339,6 +1339,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   GError *error = NULL;
   const gchar *device_file = NULL;
   UDisksBaseJob *job = NULL;
+  gboolean opt_no_inhibit = FALSE;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
@@ -1368,6 +1369,8 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                                              "Only values 'check', 'repair' and 'idle' are currently supported.");
       goto out;
     }
+
+  g_variant_lookup (options, "no-inhibit-lock", "b", &opt_no_inhibit);
 
   raid_device = udisks_linux_mdraid_object_get_device (object);
   if (raid_device == NULL)
@@ -1409,7 +1412,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                                          UDISKS_OBJECT (object),
                                          sync_action_to_job_id (sync_action),
                                          caller_uid,
-                                         FALSE,
+                                         opt_no_inhibit,
                                          NULL);
 
   if (job == NULL)

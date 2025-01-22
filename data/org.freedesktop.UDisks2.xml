@@ -3357,7 +3357,7 @@
     <!--
         RequestSyncAction:
         @sync_action: The action to request.
-        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>no-inhibit-lock</parameter> (of type 'b').
 
         This method call can be used to trigger and cancel data
         redundancy checks and repairs. Currently only the values
@@ -3370,6 +3370,10 @@
         <literal>sync_action</literal> sysfs file, see the
         <filename><ulink url="https://www.kernel.org/doc/Documentation/admin-guide/md.rst">Documentation/admin-guide/md.rst</ulink></filename>
         file shipped with the kernel sources.
+
+        If the @option parameter contains the key @no-inhibit-lock with the value
+        %TRUE, no system inhibit lock is attempted to be acquired that would otherwise
+        prevent the system to shutdown, reboot, sleep or hibernate.
     -->
     <method name="RequestSyncAction">
       <arg name="sync_action" direction="in" type="s"/>
