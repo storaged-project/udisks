@@ -225,7 +225,9 @@ _load_module_conf (UDisksDaemon *daemon, GError **error)
   char *conf_path;
   int i;
   gboolean ret = TRUE;
+#ifdef USE_VENDORDIR
   struct stat st;
+#endif
 
   udisks_debug ("LSM: loading config file");
 
