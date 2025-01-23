@@ -15,9 +15,12 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         return drive_object
 
     def setUp(self):
+        # make sure scsi_debug is not loaded
+        res, _ = self.run_command('rmmod scsi_debug')
+        self.assertEqual(res, 1)
         # create new fake CD-ROM
         # ptype=5 - created device will be CD drive, one new target and host
-        res, _ = self.run_command('modprobe scsi_debug ptype=5 num_tgts=1 add_host=1')
+        res, _ = self.run_command('modprobe scsi_debug ptype=5 num_tgts=1 add_host=1 removable=1')
         self.assertEqual(res, 0)
         self.run_command('udevadm trigger --settle')
         self.udev_settle()
@@ -46,7 +49,8 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
             while os.path.exists(device):
                 time.sleep(0.1)
             self.udev_settle()
-            self.run_command('modprobe -r scsi_debug')
+            res, _ = self.run_command('modprobe -r scsi_debug')
+            self.assertEqual(res, 0)
             self.run_command('udevadm trigger --settle')
 
     def test_10_eject(self):
@@ -96,10 +100,12 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         def read_sys_file(value):
             return self.read_file(os.path.join(sys_dir, value)).strip()
 
+        print(self.cd_dev)
         ret_code, wwn = self.run_command('lsblk -d -no WWN %s' % self.cd_dev)
         self.assertEqual(ret_code, 0)
 
         rotational = read_sys_file("block/%s/queue/rotational" % os.path.basename(self.cd_dev))
+        print(rotational)
 
         res, _ = self.run_command('udisksctl dump')
         print (_)
