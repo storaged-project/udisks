@@ -101,6 +101,10 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
 
         rotational = read_sys_file("block/%s/queue/rotational" % os.path.basename(self.cd_dev))
 
+        res, _ = self.run_command('udisksctl dump')
+        print (_)
+
+
         # values expected are preset by scsi_debug and do not change
         expected_prop_vals = {
             'MediaCompatibility': ['optical_cd'],
