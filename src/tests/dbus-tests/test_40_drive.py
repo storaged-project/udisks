@@ -15,6 +15,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         return drive_object
 
     def setUp(self):
+        self.run_command('echo setUp > /dev/kmsg')
         # make sure scsi_debug is not loaded
         res, _ = self.run_command('rmmod scsi_debug')
         self.assertEqual(res, 1)
@@ -52,6 +53,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
             res, _ = self.run_command('modprobe -r scsi_debug')
             self.assertEqual(res, 0)
             self.run_command('udevadm trigger --settle')
+            self.run_command('echo tearDown > /dev/kmsg')
 
     def test_10_eject(self):
         ''' Test of Drive.Eject method '''
@@ -108,6 +110,10 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
         print(rotational)
 
         res, _ = self.run_command('udisksctl dump')
+        print (_)
+        res, _ = self.run_command('udevadm info %s' % self.cd_dev)
+        print (_)
+        res, _ = self.run_command('dmesg')
         print (_)
 
 
