@@ -120,7 +120,7 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
 
         for prop_name, expected_val in expected_prop_vals.items():
             actual_val = self.get_property(self.cd_drive, '.Drive', prop_name)
-            actual_val.assertEqual(expected_val)
+            actual_val.assertEqual(expected_val, msg=prop_name)
 
         # timeDetected and TimeMediaDetected has the same value and SortKey value
         # is derived from it
