@@ -13,6 +13,9 @@ prepare:
       # TF prioritizes Fedora tag repo over all others, in particular our daily COPR
       - for f in $(grep -l -r 'testing-farm-tag-repository' /etc/yum.repos.d); do sed -i '/priority/d' "$f" ;done
       - sudo dnf -y update
+      # amazon-ec2-utils creates sda -> nvme symlinks breaking our tests
+      # amazon-ec2-utils also ships /etc/udev/rules.d/60-cdrom_id.rules that breaks scsi_debug cdrom capabilities
+      - if rpm -q amazon-ec2-utils; then rpm -e --verbose amazon-ec2-utils && udevadm trigger;fi
 
   - name: ansible
     how: ansible
