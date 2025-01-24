@@ -127,7 +127,7 @@ class DBusProperty(object):
 
         return False
 
-    def assertEqual(self, value, timeout=TIMEOUT, getter=None, poll_vg=None):
+    def assertEqual(self, value, timeout=TIMEOUT, getter=None, poll_vg=None, msg=None):
         if getter is not None:
             check_fn = lambda x: getter(x) == value
         else:
@@ -136,11 +136,11 @@ class DBusProperty(object):
 
         if not ret:
             if getter is not None:
-                raise AssertionError('%s != %s' % (getter(self._value), value))
+                raise AssertionError('%s != %s%s' % (getter(self._value), value, ' (%s)' % msg if msg else ''))
             else:
-                raise AssertionError('%s != %s' % (self._value, value))
+                raise AssertionError('%s != %s%s' % (self._value, value, ' (%s)' % msg if msg else ''))
 
-    def assertNotEqual(self, value, timeout=TIMEOUT, getter=None):
+    def assertNotEqual(self, value, timeout=TIMEOUT, getter=None, msg=None):
         if getter is not None:
             check_fn = lambda x: getter(x) != value
         else:
@@ -149,9 +149,9 @@ class DBusProperty(object):
 
         if not ret:
             if getter is not None:
-                raise AssertionError('%s == %s' % (getter(self._value), value))
+                raise AssertionError('%s != %s%s' % (getter(self._value), value, ' (%s)' % msg if msg else ''))
             else:
-                raise AssertionError('%s == %s' % (self._value, value))
+                raise AssertionError('%s != %s%s' % (self._value, value, ' (%s)' % msg if msg else ''))
 
     def assertAlmostEqual(self, value, delta, timeout=TIMEOUT, getter=None):
         if getter is not None:
@@ -168,47 +168,47 @@ class DBusProperty(object):
                 raise AssertionError('%s is not almost equal to %s (delta = %s)' % (self._value,
                                                                                     value, delta))
 
-    def assertGreater(self, value, timeout=TIMEOUT):
+    def assertGreater(self, value, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: x > value
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s is not greater than %s' % (self._value, value))
+            raise AssertionError('%s is not greater than %s%s' % (self._value, value, ' (%s)' % msg if msg else ''))
 
-    def assertLess(self, value, timeout=TIMEOUT):
+    def assertLess(self, value, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: x < value
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s is not less than %s' % (self._value, value))
+            raise AssertionError('%s is not less than %s%s' % (self._value, value, ' (%s)' % msg if msg else ''))
 
-    def assertIn(self, lst, timeout=TIMEOUT):
+    def assertIn(self, lst, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: x in lst
         ret = self._check(timeout, check_fn)
 
         if not ret:
             raise AssertionError('%s not found in %s' % (self._value, lst))
 
-    def assertNotIn(self, lst, timeout=TIMEOUT):
+    def assertNotIn(self, lst, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: x not in lst
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s unexpectedly found in %s' % (self._value, lst))
+            raise AssertionError('%s unexpectedly found in %s%s' % (self._value, lst, ' (%s)' % msg if msg else ''))
 
-    def assertTrue(self, timeout=TIMEOUT):
+    def assertTrue(self, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: bool(x)
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s is not true' % self._value)
+            raise AssertionError('%s is not true%s' % (self._value, ' (%s)' % msg if msg else ''))
 
-    def assertFalse(self, timeout=TIMEOUT):
+    def assertFalse(self, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: not bool(x)
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s is not false' % self._value)
+            raise AssertionError('%s is not false%s' % (self._value, ' (%s)' % msg if msg else ''))
 
     def assertIsNone(self, timeout=TIMEOUT):
         check_fn = lambda x: x is None
@@ -217,14 +217,14 @@ class DBusProperty(object):
         if not ret:
             raise AssertionError('%s is not None' % self._value)
 
-    def assertIsNotNone(self, timeout=TIMEOUT):
+    def assertIsNotNone(self, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: x is not None
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('unexpectedly None')
+            raise AssertionError('unexpectedly None%s' % ' (%s)' % msg if msg else '')
 
-    def assertLen(self, length, timeout=TIMEOUT):
+    def assertLen(self, length, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: len(x) == length
         ret = self._check(timeout, check_fn)
 
@@ -232,15 +232,16 @@ class DBusProperty(object):
             if not hasattr(self._value, '__len__'):
                 raise AssertionError('%s has no length' % type(self._value))
             else:
-                raise AssertionError('Expected length %d, but %s has length %d' % (length,
-                                                                                   self._value,
-                                                                                   len(self._value)))
-    def assertContains(self, member, timeout=TIMEOUT):
+                raise AssertionError('Expected length %d, but %s has length %d%s' % (length,
+                                                                                     self._value,
+                                                                                     len(self._value,
+                                                                                     ' (%s)' % msg if msg else '')))
+    def assertContains(self, member, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: member in x
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('%s does not contain %s' % (self._value, member))
+            raise AssertionError('%s does not contain %s%s' % (self._value, member, ' (%s)' % msg if msg else ''))
 
 
 class UdisksTestCase(unittest.TestCase):
