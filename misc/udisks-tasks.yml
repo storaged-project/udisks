@@ -62,8 +62,12 @@
   when: ansible_distribution == 'CentOS'
 
 - name: Enable our copr repository with latest builds of libblockdev
-  command: "dnf -y copr enable @storage/udisks-daily"
-  when: ansible_distribution == 'CentOS'
+  command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-x86_64"
+  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '10'
+
+- name: Enable our copr repository with latest builds of libblockdev
+  command: "dnf -y copr enable @storage/udisks-daily centos-stream-9-x86_64"
+  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '9'
 
 - name: Install dnf-plugins-core for dnf builddep (CentOS)
   package: name=dnf-plugins-core state=present
