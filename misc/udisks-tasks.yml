@@ -3,13 +3,14 @@
 
 ---
 - name: Install basic build tools (Fedora)
-  package: name={{item}} state=present
-  with_items:
-    - gcc
-    - make
-    - libtool
-    - autoconf
-    - automake
+  package:
+    state: present
+    name:
+      - gcc
+      - make
+      - libtool
+      - autoconf
+      - automake
   when: ansible_distribution == 'Fedora'
 
 - name: Enable our copr repository with latest builds of libblockdev
@@ -25,40 +26,42 @@
   when: ansible_distribution == 'Fedora'
 
 - name: Install test dependencies (Fedora)
-  package: name={{item}} state=present
-  with_items:
-    - python3-bytesize
-    - python3-blockdev
-    - dbus-daemon
-    - sqlite
-    - targetcli
-    - nvme-cli
-    - nvmetcli
-    - smartmontools
-    - genisoimage
-    - xfsprogs
-    - ntfsprogs
-    - dosfstools
-    - e2fsprogs
-    - f2fs-tools
-    - kernel-modules-extra
-    - nilfs-utils
-    - udftools
-    - python3-systemd
-    - python3-monotonic
-    - cryptsetup
-    - vdo
+  package:
+    state: present
+    name:
+      - python3-bytesize
+      - python3-blockdev
+      - dbus-daemon
+      - sqlite
+      - targetcli
+      - nvme-cli
+      - nvmetcli
+      - smartmontools
+      - genisoimage
+      - xfsprogs
+      - ntfsprogs
+      - dosfstools
+      - e2fsprogs
+      - f2fs-tools
+      - kernel-modules-extra
+      - nilfs-utils
+      - udftools
+      - python3-systemd
+      - python3-monotonic
+      - cryptsetup
+      - vdo
   when: ansible_distribution == 'Fedora'
 
 ####### CentOS
 - name: Install basic build tools (CentOS)
-  package: name={{item}} state=present
-  with_items:
-    - gcc
-    - make
-    - libtool
-    - autoconf
-    - automake
+  package:
+    state: present
+    name:
+      - gcc
+      - make
+      - libtool
+      - autoconf
+      - automake
   when: ansible_distribution == 'CentOS'
 
 - name: Enable our copr repository with latest builds of libblockdev
@@ -86,20 +89,21 @@
   when: ansible_distribution == 'CentOS'
 
 - name: Install test dependencies (CentOS)
-  package: name={{item}} state=present
-  with_items:
-    - python3-bytesize
-    - python3-blockdev
-    - dbus-daemon
-    - sqlite
-    - targetcli
-    - nvme-cli
-    - nvmetcli
-    - smartmontools
-    - xfsprogs
-    - dosfstools
-    - e2fsprogs
-    - python3-systemd
-    - cryptsetup
-    - vdo
+  package:
+    state: present
+    name:
+      - python3-bytesize
+      - python3-blockdev
+      - dbus-daemon
+      - sqlite
+      - targetcli
+      - nvme-cli
+      - nvmetcli
+      - smartmontools
+      - xfsprogs
+      - dosfstools
+      - e2fsprogs
+      - python3-systemd
+      - cryptsetup
+      - vdo
   when: ansible_distribution == 'CentOS'
