@@ -822,6 +822,7 @@ common_job (UDisksDaemon    *daemon,
             UDisksObject    *object,
             const gchar     *job_operation,
             uid_t            job_started_by_uid,
+            gboolean         no_inhibit,
             gpointer         job)
 {
   gchar *job_object_path;
@@ -832,9 +833,12 @@ common_job (UDisksDaemon    *daemon,
   job_data = g_new0 (JobData, 1);
   job_data->daemon = g_object_ref (daemon);
   /* register inhibitor to systemd logind while job is running */
-  operation_description = udisks_client_get_job_description_from_operation (job_operation);
-  job_data->inhibit_cookie = udisks_daemon_util_inhibit_system_sync (operation_description);
-  g_free (operation_description);
+  if (!no_inhibit)
+    {
+      operation_description = udisks_client_get_job_description_from_operation (job_operation);
+      job_data->inhibit_cookie = udisks_daemon_util_inhibit_system_sync (operation_description);
+      g_free (operation_description);
+    }
 
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
@@ -863,6 +867,7 @@ common_job (UDisksDaemon    *daemon,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Launches a new simple job.
@@ -879,6 +884,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
                                  UDisksObject    *object,
                                  const gchar     *job_operation,
                                  uid_t            job_started_by_uid,
+                                 gboolean         no_inhibit,
                                  GCancellable    *cancellable)
 {
   UDisksSimpleJob *job;
@@ -886,7 +892,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
 
   job = udisks_simple_job_new (daemon, cancellable);
-  return common_job (daemon, object, job_operation, job_started_by_uid, job);
+  return common_job (daemon, object, job_operation, job_started_by_uid, no_inhibit, job);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -897,6 +903,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
  * @user_data_free_func: Function to free @user_data with or %NULL.
@@ -926,6 +933,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
                                     UDisksObject          *object,
                                     const gchar           *job_operation,
                                     uid_t                  job_started_by_uid,
+                                    gboolean               no_inhibit,
                                     UDisksThreadedJobFunc  job_func,
                                     gpointer               user_data,
                                     GDestroyNotify         user_data_free_func,
@@ -941,7 +949,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
                                  user_data_free_func,
                                  daemon,
                                  cancellable);
-  return common_job (daemon, object, job_operation, job_started_by_uid, job);
+  return common_job (daemon, object, job_operation, job_started_by_uid, no_inhibit, job);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -952,6 +960,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon          *daemon,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -980,6 +989,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                   UDisksObject    *object,
                                   const gchar     *job_operation,
                                   uid_t            job_started_by_uid,
+                                  gboolean         no_inhibit,
                                   GCancellable    *cancellable,
                                   uid_t            run_as_uid,
                                   uid_t            run_as_euid,
@@ -1003,6 +1013,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                           object,
                                           job_operation,
                                           job_started_by_uid,
+                                          no_inhibit,
                                           cancellable,
                                           run_as_uid,
                                           run_as_euid,
@@ -1021,6 +1032,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -1054,6 +1066,7 @@ udisks_daemon_launch_spawned_job_gstring (
                                   UDisksObject    *object,
                                   const gchar     *job_operation,
                                   uid_t            job_started_by_uid,
+                                  gboolean         no_inhibit,
                                   GCancellable    *cancellable,
                                   uid_t            run_as_uid,
                                   uid_t            run_as_euid,
@@ -1075,7 +1088,7 @@ udisks_daemon_launch_spawned_job_gstring (
   job = udisks_spawned_job_new (command_line, input_string, run_as_uid, run_as_euid, daemon, cancellable);
   g_free (command_line);
 
-  return common_job (daemon, object, job_operation, job_started_by_uid, job);
+  return common_job (daemon, object, job_operation, job_started_by_uid, no_inhibit, job);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1120,6 +1133,7 @@ spawned_job_sync_on_completed (UDisksJob    *job,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -1139,6 +1153,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                        UDisksObject    *object,
                                        const gchar     *job_operation,
                                        uid_t            job_started_by_uid,
+                                       gboolean         no_inhibit,
                                        GCancellable    *cancellable,
                                        uid_t            run_as_uid,
                                        uid_t            run_as_euid,
@@ -1164,6 +1179,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                           object,
                                           job_operation,
                                           job_started_by_uid,
+                                          no_inhibit,
                                           cancellable,
                                           run_as_uid,
                                           run_as_euid,
@@ -1184,6 +1200,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -1207,6 +1224,7 @@ udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
                                        UDisksObject    *object,
                                        const gchar     *job_operation,
                                        uid_t            job_started_by_uid,
+                                       gboolean         no_inhibit,
                                        GCancellable    *cancellable,
                                        uid_t            run_as_uid,
                                        uid_t            run_as_euid,
@@ -1239,6 +1257,7 @@ udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
                                           object,
                                           job_operation,
                                           job_started_by_uid,
+                                          no_inhibit,
                                           cancellable,
                                           run_as_uid,
                                           run_as_euid,
@@ -1318,6 +1337,7 @@ udisks_bd_thread_disable_progress (void)
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_operation: The operation for the job.
  * @job_started_by_uid: The user who started the job.
+ * @no_inhibit: Avoid placing system inhibitor lock.
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
  * @user_data_free_func: Function to free @user_data with or %NULL.
@@ -1334,6 +1354,7 @@ udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
                                         UDisksObject          *object,
                                         const gchar           *job_operation,
                                         uid_t                  job_started_by_uid,
+                                        gboolean               no_inhibit,
                                         UDisksThreadedJobFunc  job_func,
                                         gpointer               user_data,
                                         GDestroyNotify         user_data_free_func,
@@ -1350,6 +1371,7 @@ udisks_daemon_launch_threaded_job_sync (UDisksDaemon          *daemon,
                                            object,
                                            job_operation,
                                            job_started_by_uid,
+                                           no_inhibit,
                                            job_func,
                                            user_data,
                                            user_data_free_func,

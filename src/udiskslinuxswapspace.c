@@ -201,6 +201,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                                object,
                                                "swapspace-start",
                                                caller_uid,
+                                               FALSE,
                                                start_job_func,
                                                object,
                                                NULL, /* user_data_free_func */
@@ -299,6 +300,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                object,
                                                "swapspace-stop",
                                                caller_uid,
+                                               FALSE,
                                                stop_job_func,
                                                object,
                                                NULL, /* user_data_free_func */
@@ -376,6 +378,7 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                          UDISKS_OBJECT (object),
                                          "swapspace-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
   if (job == NULL)
     {
@@ -462,6 +465,7 @@ handle_set_uuid (UDisksSwapspace       *swapspace,
                                          UDISKS_OBJECT (object),
                                          "swapspace-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
   if (job == NULL)
     {

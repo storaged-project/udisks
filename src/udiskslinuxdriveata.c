@@ -1194,6 +1194,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
       drive->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
                                                                                     UDISKS_OBJECT (object),
                                                                                     "ata-smart-selftest", caller_uid,
+                                                                                    FALSE,
                                                                                     selftest_job_func,
                                                                                     g_object_ref (drive),
                                                                                     g_object_unref,
@@ -2226,7 +2227,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta  *drive,
   job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (object),
                                          enhanced ? "ata-enhanced-secure-erase" : "ata-secure-erase",
-                                         caller_uid, NULL);
+                                         caller_uid, FALSE, NULL);
   udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
 
   /* A value of 510 (255 in the IDENTIFY DATA register) means "erase

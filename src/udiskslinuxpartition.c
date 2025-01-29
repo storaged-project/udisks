@@ -389,6 +389,7 @@ handle_set_flags (UDisksPartition       *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -527,6 +528,7 @@ handle_set_name (UDisksPartition       *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -669,6 +671,7 @@ handle_set_uuid (UDisksPartition       *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -774,6 +777,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -984,6 +988,7 @@ handle_resize (UDisksPartition       *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-modify",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)
@@ -1115,6 +1120,7 @@ handle_delete (UDisksPartition       *partition,
                                          UDISKS_OBJECT (object),
                                          "partition-delete",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
 
   if (job == NULL)

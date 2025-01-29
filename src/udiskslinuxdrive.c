@@ -1142,6 +1142,7 @@ handle_eject (UDisksDrive           *_drive,
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
                                               "drive-eject", caller_uid,
+                                              FALSE,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

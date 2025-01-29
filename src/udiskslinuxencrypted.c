@@ -588,6 +588,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                                object,
                                                "encrypted-unlock",
                                                caller_uid,
+                                               FALSE,
                                                open_func,
                                                &data,
                                                NULL, /* user_data_free_func */
@@ -807,6 +808,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                                                object,
                                                "encrypted-lock",
                                                caller_uid,
+                                               FALSE,
                                                close_func,
                                                &data,
                                                NULL, /* user_data_free_func */
@@ -991,6 +993,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                                object,
                                                "encrypted-modify",
                                                caller_uid,
+                                               FALSE,
                                                luks_change_key_job_func,
                                                &data,
                                                NULL, /* user_data_free_func */
@@ -1155,6 +1158,7 @@ handle_resize (UDisksEncrypted       *encrypted,
                                          UDISKS_OBJECT (object),
                                          "encrypted-resize",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
   if (job == NULL)
     {
@@ -1296,6 +1300,7 @@ handle_convert (UDisksEncrypted       *encrypted,
                                          UDISKS_OBJECT (object),
                                          "encrypted-convert",
                                          caller_uid,
+                                         FALSE,
                                          NULL);
   if (job == NULL)
     {
@@ -1389,6 +1394,7 @@ handle_header_backup (UDisksEncrypted       *encrypted,
                                            UDISKS_OBJECT (object),
                                            "encrypted-header-backup",
                                            caller_uid,
+                                           FALSE,
                                            NULL);
     if (job == NULL)
       {
