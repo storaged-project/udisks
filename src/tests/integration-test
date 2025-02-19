@@ -1181,8 +1181,9 @@ class Fstab(UDisksTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.orig_fstab = '/etc/fstab.udiskstest'
-        shutil.copy2('/etc/fstab', cls.orig_fstab)
+        if os.path.isfile('/etc/fstab'):
+            cls.orig_fstab = '/etc/fstab.udiskstest'
+            shutil.copy2('/etc/fstab', cls.orig_fstab)
 
         # create one partition
         subprocess.check_call(
@@ -1212,10 +1213,14 @@ class Fstab(UDisksTestCase):
     @classmethod
     def tearDownClass(cls):
         os.rmdir(cls.mount_point)
-        os.unlink(cls.orig_fstab)
+        if cls.orig_fstab:
+            os.unlink(cls.orig_fstab)
 
     def tearDown(self):
-        shutil.copy2(self.orig_fstab, '/etc/fstab')
+        if self.orig_fstab:
+            shutil.copy2(self.orig_fstab, '/etc/fstab')
+        else:
+            os.unlink('/etc/fstab')
         self.retry_busy(self.fs.call_unmount_sync, no_options, None)
 
     def test_devname(self):
