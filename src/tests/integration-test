@@ -1112,7 +1112,7 @@ class FS(UDisksTestCase):
             except GLib.GError as e:
                 msg = r"(is write-protected but `rw' option given|" \
                         "is write-protected but explicit read-write mode requested|" \
-                        "fsconfig system call failed: /dev/sr.*: Can't open blockdev)"
+                        "fsconfig.*failed: /dev/sr.*: Can't open blockdev)"
                 if not re.search(msg, str(e)):
                     self.fail('Mounting read-only device with \'rw\' option failed '
                               'with an unexpected error.\nGot: %s\nExpected: \'%s\''
