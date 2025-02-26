@@ -50,7 +50,7 @@
       - python3-monotonic
       - cryptsetup
       - vdo
-      - parted
+      - util-linux
   when: ansible_distribution == 'Fedora'
 
 ####### CentOS
@@ -107,5 +107,5 @@
       - python3-systemd
       - cryptsetup
       - vdo
-      - parted
+      - util-linux
   when: ansible_distribution == 'CentOS'

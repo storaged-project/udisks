@@ -197,9 +197,9 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_50_create_no_part_scan(self):
         # create a partition on the file (future loop device)
-        ret, out = self.run_command("parted %s mklabel msdos" % self.LOOP_DEVICE_FILENAME)
+        ret, out = self.run_command("echo -e 'label:dos' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret, 0)
-        ret, out = self.run_command("parted %s mkpart primary ext2 1 10" % self.LOOP_DEVICE_FILENAME)
+        ret, out = self.run_command("echo -e 'size=9M, type=L\n' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret, 0)
 
         opts = dbus.Dictionary({"no-part-scan": dbus.Boolean(True)}, signature=dbus.Signature('sv'))
