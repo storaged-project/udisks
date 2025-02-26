@@ -1185,16 +1185,13 @@ class Fstab(UDisksTestCase):
             cls.orig_fstab = '/etc/fstab.udiskstest'
             shutil.copy2('/etc/fstab', cls.orig_fstab)
 
-        # create one partition
-        subprocess.check_call(
-            ['parted', '-s', cls.device, 'mklabel', 'gpt'], stdout=subprocess.PIPE)
-        subprocess.check_call(
-            ['parted', '-s', cls.device, 'mkpart', 'primary', '0', '64'],
-            stdout=subprocess.PIPE)
         cls.p1label = 'udtestp1'
-        subprocess.check_call(
-            ['parted', '-s', cls.device, 'name', '1', cls.p1label],
-            stdout=subprocess.PIPE)
+
+        # create one partition
+        subprocess.check_call("echo -e 'label:gpt' | sfdisk %s" % cls.device,
+                              stdout=subprocess.PIPE, shell=True)
+        subprocess.check_call("echo -e 'size=60M, type=L, name=%s\n' | sfdisk %s" % (cls.p1label, cls.device),
+                              stdout=subprocess.PIPE, shell=True)
         cls.sync()
         blkid = subprocess.check_output(
             ['blkid', '-oudev', '-p', cls.devname(1)], universal_newlines=True).splitlines()
