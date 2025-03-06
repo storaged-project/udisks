@@ -48,6 +48,7 @@
       - udftools
       - python3-systemd
       - python3-monotonic
+      - python3-packaging
       - cryptsetup
       - vdo
       - util-linux
@@ -105,6 +106,7 @@
       - dosfstools
       - e2fsprogs
       - python3-systemd
+      - python3-packaging
       - cryptsetup
       - vdo
       - util-linux
