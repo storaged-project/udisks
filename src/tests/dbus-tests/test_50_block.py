@@ -2,6 +2,7 @@ import copy
 import dbus
 import glob
 import fcntl
+import shutil
 import os
 import time
 
@@ -172,8 +173,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
     def test_configuration_fstab(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
 
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -237,8 +237,7 @@ class UdisksBlockTest(udiskstestcase.UdisksTestCase):
     def test_configuration_crypttab(self):
 
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
-        crypttab = self.read_file('/etc/crypttab')
-        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
+        self._conf_backup('/etc/crypttab')
 
         # format the disk
         disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
@@ -394,8 +393,7 @@ class UdisksBlockRemovableTest(udiskstestcase.UdisksTestCase):
     def test_configuration_fstab_removable(self):
 
         # this test will change /etc/fstab, we might want to revert the changes when it finishes
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
 
         # this might fail in case of stray udev rules or records in /etc/fstab
         hint_auto = self.get_property_raw(self.cd_device, '.Block', 'HintAuto')

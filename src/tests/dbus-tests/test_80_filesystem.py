@@ -709,7 +709,6 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=uid=,gid=,shortname=mixed,utf8=1,showexec\n", udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
             test_custom_option(self, False, None, True,  "[defaults]\nvfat_defaults=xxxxx\n\n[%s]\nvfat_defaults=yyyyyy\n" % block_fs_dev, udev_rules_content = { "UDISKS_MOUNT_OPTIONS_VFAT_DEFAULTS": "uid=,gid=,shortname=mixed,utf8=1,showexec,flush" }, match_mount_option="flush")
 
-
     def _test_fstab_label(self, disk_obj_path, label, fstab_label_str, mount_should_fail):
         self._check_can_create()
 
@@ -722,8 +721,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
 
         # this test will change /etc/fstab, we might want to revert the changes after it finishes
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
 
         disk = self.get_object(disk_obj_path)
         self.assertIsNotNone(disk)
@@ -1499,8 +1497,7 @@ class NonPOSIXTestCase(UdisksFSTestCase):
             self.skipTest('Cannot mount %s filesystem' % self._fs_signature)
 
         # this test will change /etc/fstab, we might want to revert the changes after it finishes
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
 
         # create filesystem
         disk.Format(self._fs_signature, self.no_options, dbus_interface=self.iface_prefix + '.Block')
