@@ -4,6 +4,7 @@ import subprocess
 import os
 import time
 import re
+import shutil
 import sys
 from datetime import datetime
 from enum import Enum
@@ -365,6 +366,18 @@ class UdisksTestCase(unittest.TestCase):
                 break
             time.sleep(0.5)
         self.fail('Failed to unmount %s: %s' % (path, out))
+
+    def _conf_backup(self, conf_file):
+        """ Backup and restore @conf_file during cleanup. If @conf_file doesn't exist, it
+            will be removed during cleanup
+        """
+        if os.path.exists(conf_file):
+            # conf file exists -> backup and restore
+            contents = self.read_file(conf_file)
+            self.addCleanup(self.write_file, conf_file, contents)
+        else:
+            # conf file doesn't exist -> remove during cleanup
+            self.addCleanup(shutil.rmtree, conf_file, True)
 
     @classmethod
     def read_file(self, filename):

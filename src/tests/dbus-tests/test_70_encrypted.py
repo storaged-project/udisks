@@ -370,10 +370,8 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     def test_configuration_track_parents(self):
         # this test will change /etc/crypttab and /etc/fstab, we might want to revert the changes
         # in case something goes wrong
-        crypttab = self.read_file('/etc/crypttab')
-        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
+        self._conf_backup('/etc/crypttab')
 
         disk_name = os.path.basename(self.vdevs[0])
         disk = self.get_object('/block_devices/' + disk_name)
@@ -742,10 +740,8 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_teardown_locked(self):
         # based on https://github.com/storaged-project/udisks/issues/1204
-        crypttab = self.read_file('/etc/crypttab')
-        self.addCleanup(self.write_file, '/etc/crypttab', crypttab)
-        fstab = self.read_file('/etc/fstab')
-        self.addCleanup(self.write_file, '/etc/fstab', fstab)
+        self._conf_backup('/etc/fstab')
+        self._conf_backup('/etc/crypttab')
 
         disk_name = os.path.basename(self.vdevs[0])
         disk = self.get_object('/block_devices/' + disk_name)
