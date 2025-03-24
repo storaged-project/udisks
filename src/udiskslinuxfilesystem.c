@@ -1394,11 +1394,11 @@ handle_mount (UDisksFilesystem      *filesystem,
                                system_managed,
                                system_managed ? FALSE : mpoint_persistent);
 
-  udisks_notice ("Mounted %s%s at %s on behalf of uid %u",
-                 device,
-                 system_managed ? " (system)" : "",
-                 mount_point_to_use,
-                 caller_uid);
+  udisks_info ("Mounted %s%s at %s on behalf of uid %u",
+               device,
+               system_managed ? " (system)" : "",
+               mount_point_to_use,
+               caller_uid);
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
@@ -1626,10 +1626,10 @@ handle_unmount (UDisksFilesystem      *filesystem,
 
           goto out;
         }
-      udisks_notice ("Unmounted %s (system) from %s on behalf of uid %u",
-                     udisks_block_get_device (block),
-                     mount_point,
-                     caller_uid);
+      udisks_info ("Unmounted %s (system) from %s on behalf of uid %u",
+                   udisks_block_get_device (block),
+                   mount_point,
+                   caller_uid);
       goto waiting;
     }
 
@@ -1694,9 +1694,9 @@ handle_unmount (UDisksFilesystem      *filesystem,
   /* filesystem unmounted, run the state/cleanup routines now to remove the mountpoint (if applicable) */
   udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
-  udisks_notice ("Unmounted %s on behalf of uid %u",
-                 udisks_block_get_device (block),
-                 caller_uid);
+  udisks_info ("Unmounted %s on behalf of uid %u",
+               udisks_block_get_device (block),
+               caller_uid);
 
   waiting:
   /* wait for mount-points update before returning from method */
