@@ -116,7 +116,7 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
     return FALSE;
   ncontext = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->new_passphrase->str,
                                                        data->new_passphrase->len, error);
-  if (!context)
+  if (!ncontext)
     {
       bd_crypto_keyslot_context_free (context);
       return FALSE;
