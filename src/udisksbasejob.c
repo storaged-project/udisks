@@ -50,11 +50,11 @@ struct _UDisksBaseJobPrivate
   GCancellable *cancellable;
   UDisksDaemon *daemon;
 
-  gboolean auto_estimate;
-  gulong notify_progress_signal_handler_id;
-
   Sample *samples;
   guint num_samples;
+
+  gboolean auto_estimate;
+  gulong notify_progress_signal_handler_id;
 };
 
 static void job_iface_init (UDisksJobIface *iface);
