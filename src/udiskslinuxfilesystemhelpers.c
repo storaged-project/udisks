@@ -123,6 +123,7 @@ take_filesystem_ownership (const gchar  *device,
 
 {
   gchar *mountpoint = NULL;
+  const gchar *mount_opts;
   GError *local_error = NULL;
   gboolean unmount = FALSE;
   gboolean success = TRUE;
@@ -151,8 +152,15 @@ take_filesystem_ownership (const gchar  *device,
               goto out;
             }
 
+          mount_opts = "nodev,nosuid";
+          if (g_strcmp0 (fstype, "ext2") == 0 ||
+              g_strcmp0 (fstype, "ext3") == 0 ||
+              g_strcmp0 (fstype, "ext4") == 0 ||
+              g_strcmp0 (fstype, "jfs") == 0)
+            mount_opts = "nodev,nosuid,errors=remount-ro";
+
           /* TODO: mount to a private mount namespace */
-          if (!bd_fs_mount (device, mountpoint, fstype, NULL, NULL, &local_error))
+          if (!bd_fs_mount (device, mountpoint, fstype, mount_opts, NULL, &local_error))
             {
               g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                            "Cannot mount %s at %s: %s",
