@@ -1716,8 +1716,8 @@ typedef struct
 {
   UDisksDaemon *daemon;
   GMainLoop *main_loop;
-  guint serial;
   gchar *uevent_path;
+  guint serial;
   gboolean success;
 } SynthUeventData;
 
