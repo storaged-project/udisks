@@ -2386,7 +2386,7 @@ udisks_state_set (UDisksState          *state,
   g_variant_ref_sink (value);
   normalized = g_variant_get_normal_form (value);
   size = g_variant_get_size (normalized);
-  data = g_malloc (size);
+  data = g_malloc (size ? size : 1); /* ensure the buffer is allocated even if size=0 */
   g_variant_store (normalized, data);
 
   path = get_state_file_path (key);
