@@ -37,7 +37,9 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#include <blockdev/smart.h>
+#ifdef HAVE_SMART
+#  include <blockdev/smart.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
@@ -76,7 +78,9 @@ struct _UDisksLinuxDriveAta
 
   gboolean     smart_is_from_blob;
   guint64      smart_updated;
+#ifdef HAVE_SMART
   BDSmartATA  *smart_data;
+#endif
 
   UDisksThreadedJob *selftest_job;
 
@@ -100,9 +104,11 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxDriveAta, udisks_linux_drive_ata, UDISKS_TYP
 static void
 udisks_linux_drive_ata_finalize (GObject *object)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (object);
 
   bd_smart_ata_free (drive->smart_data);
+#endif
 
   if (G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize (object);
@@ -141,6 +147,8 @@ udisks_linux_drive_ata_new (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 G_LOCK_DEFINE_STATIC (object_lock);
+
+#ifdef HAVE_SMART
 
 static const gchar *
 selftest_status_to_string (BDSmartATASelfTestStatus status)
@@ -186,6 +194,7 @@ count_failing_attrs (BDSmartATAAttribute **a,
         *num_bad_sectors += (*a)->value_raw;
     }
 }
+#endif
 
 /* may be called from *any* thread when the SMART data has been updated */
 static void
@@ -203,21 +212,22 @@ update_smart (UDisksLinuxDriveAta *drive,
   gint num_attributes_failing = -1;
   gint num_attributes_failed_in_the_past = -1;
   gint64 num_bad_sectors = -1;
-  guint16 word_82 = 0;
-  guint16 word_85 = 0;
 
 #ifdef HAVE_SMART
   supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART");
   enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
-  if (!supported && device->ata_identify_device_data)
+  if (!supported /* property not present */ &&
+      device->ata_identify_device_data)
     {
+      guint16 word_82;
+      guint16 word_85;
+
       /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
       word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
       word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
       supported = word_82 & (1<<0);
       enabled = word_85 & (1<<0);
     }
-#endif
 
   G_LOCK (object_lock);
   if ((drive->smart_is_from_blob || enabled) && drive->smart_updated > 0)
@@ -238,6 +248,7 @@ update_smart (UDisksLinuxDriveAta *drive,
                            &num_bad_sectors);
     }
   G_UNLOCK (object_lock);
+#endif
 
   if (selftest_status == NULL)
     selftest_status = "";
@@ -431,6 +442,8 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_SMART
+
 static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *device)
 {
   const gchar *drivepath = g_udev_device_get_sysfs_path (device->udev_device);
@@ -480,6 +493,7 @@ build_smart_extra_args (UDisksLinuxDevice *device)
   extra[0] = bd_extra_arg_new ("--device=sat,auto", NULL);
   return extra;
 }
+#endif
 
 /**
  * udisks_linux_drive_ata_refresh_smart_sync:
@@ -510,6 +524,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                                            GCancellable         *cancellable,
                                            GError              **error)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device = NULL;
   GError *l_error = NULL;
@@ -622,6 +637,11 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
+#else
+  g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                       "Support for ATA SMART is unavailable.");
+  return FALSE;
+#endif
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -648,6 +668,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
                                             GCancellable         *cancellable,
                                             GError              **error)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveObject *object;
   UDisksLinuxDevice *device = NULL;
   GError *l_error = NULL;
@@ -706,6 +727,11 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta  *drive,
   g_clear_object (&device);
   g_clear_object (&object);
   return ret;
+#else
+  g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                       "Support for ATA SMART is unavailable.");
+  return FALSE;
+#endif
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -828,9 +854,8 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
                              GDBusMethodInvocation *invocation,
                              GVariant              *options)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
-  GVariantBuilder builder;
-  BDSmartATAAttribute **a;
 
   G_LOCK (object_lock);
   if (drive->smart_data == NULL)
@@ -842,6 +867,9 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
     }
   else
     {
+      GVariantBuilder builder;
+      BDSmartATAAttribute **a;
+
       g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(ysqiiixia{sv})"));
       for (a = drive->smart_data->attributes; *a; a++)
         {
@@ -867,6 +895,12 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
                                                       g_variant_builder_end (&builder));
     }
   G_UNLOCK (object_lock);
+#else
+  g_dbus_method_invocation_return_error (invocation,
+                                         UDISKS_ERROR,
+                                         UDISKS_ERROR_NOT_SUPPORTED,
+                                         "Support for ATA SMART is unavailable.");
+#endif
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -972,6 +1006,8 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+#ifdef HAVE_SMART
 
 static gboolean
 selftest_job_func (UDisksThreadedJob  *job,
@@ -1093,7 +1129,7 @@ selftest_job_func (UDisksThreadedJob  *job,
   g_clear_object (&object);
   return ret;
 }
-
+#endif
 
 static gboolean
 handle_smart_selftest_start (UDisksDriveAta        *_drive,
@@ -1101,6 +1137,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                              const gchar           *type,
                              GVariant              *options)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveObject  *object;
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
@@ -1208,6 +1245,12 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
  out:
   g_clear_object (&object);
   g_clear_object (&block_object);
+#else
+  g_dbus_method_invocation_return_error (invocation,
+                                         UDISKS_ERROR,
+                                         UDISKS_ERROR_NOT_SUPPORTED,
+                                         "Support for ATA SMART is unavailable.");
+#endif
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -1217,6 +1260,7 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
                           gboolean               value,
                           GVariant              *options)
 {
+#ifdef HAVE_SMART
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject *object = NULL;
   UDisksLinuxBlockObject *block_object = NULL;
@@ -1396,6 +1440,12 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
   g_clear_object (&device);
   g_clear_object (&block_object);
   g_clear_object (&object);
+#else
+  g_dbus_method_invocation_return_error (invocation,
+                                         UDISKS_ERROR,
+                                         UDISKS_ERROR_NOT_SUPPORTED,
+                                         "Support for ATA SMART is unavailable.");
+#endif
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
