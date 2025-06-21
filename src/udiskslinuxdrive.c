@@ -1114,10 +1114,10 @@ handle_eject (UDisksDrive           *_drive,
   /* Translators: Shown in authentication dialog when the user
    * requests ejecting media from a drive.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to eject $(drive)");
+  message = N_("Authentication is required to eject $(device.name)");
   action_id = "org.freedesktop.udisks2.eject-media";
   if (udisks_block_get_hint_system (block))
     {
@@ -1203,10 +1203,10 @@ handle_set_configuration (UDisksDrive           *_drive,
   /* Translators: Shown in authentication dialog when the user
    * changes settings for a drive.
    *
-   * Do not translate $(drive), it's a placeholder and will be
+   * Do not translate $(device.name), it's a placeholder and will be
    * replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to configure settings for $(drive)");
+  message = N_("Authentication is required to configure settings for $(device.name)");
   action_id = "org.freedesktop.udisks2.modify-drive-settings";
 
   /* Check that the user is actually authorized */
@@ -1518,10 +1518,10 @@ handle_power_off (UDisksDrive           *_drive,
   /* Translators: Shown in authentication dialog when the user
    * requests ejecting media from a drive.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to power off $(drive)");
+  message = N_("Authentication is required to power off $(device.name)");
   action_id = "org.freedesktop.udisks2.power-off-drive";
   if (udisks_block_get_hint_system (block))
     {
