@@ -21,7 +21,9 @@
  */
 
 #include <glib.h>
-#include <blockdev/crypto.h>
+#ifdef HAVE_CRYPTO
+#  include <blockdev/crypto.h>
+#endif
 
 #include "udisksthreadedjob.h"
 #include "udiskslinuxencryptedhelpers.h"
@@ -31,6 +33,7 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
                       gpointer            user_data,
                       GError            **error)
 {
+#ifdef HAVE_CRYPTO
   BDCryptoLUKSVersion luks_version;
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
@@ -69,6 +72,9 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
   bd_crypto_keyslot_context_free (context);
   bd_crypto_luks_extra_free (extra);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean luks_open_job_func (UDisksThreadedJob  *job,
@@ -76,6 +82,7 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
                     gpointer            user_data,
                     GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
@@ -89,6 +96,9 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
   ret = bd_crypto_luks_open (data->device, data->map_name, context, data->read_only, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean luks_close_job_func (UDisksThreadedJob  *job,
@@ -96,8 +106,12 @@ gboolean luks_close_job_func (UDisksThreadedJob  *job,
                     gpointer            user_data,
                     GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_luks_close (data->map_name, error);
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
@@ -105,6 +119,7 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
                           gpointer            user_data,
                           GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   BDCryptoKeyslotContext *ncontext = NULL;
@@ -126,6 +141,9 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
   bd_crypto_keyslot_context_free (context);
   bd_crypto_keyslot_context_free (ncontext);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
@@ -133,6 +151,7 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
                                gpointer            user_data,
                                GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
@@ -154,6 +173,9 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
                            data->read_only, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
@@ -161,8 +183,12 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
                                 gpointer            user_data,
                                 GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_tc_close (data->map_name, error);
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
@@ -170,6 +196,7 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
                               gpointer            user_data,
                               GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
@@ -182,6 +209,9 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
   ret = bd_crypto_bitlk_open (data->device, data->map_name, context, data->read_only, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
@@ -189,6 +219,10 @@ gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
                                gpointer            user_data,
                                GError            **error)
 {
+#ifdef HAVE_CRYPTO
   CryptoJobData *data = (CryptoJobData*) user_data;
   return bd_crypto_bitlk_close (data->map_name, error);
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }

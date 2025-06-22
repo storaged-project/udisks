@@ -355,7 +355,9 @@ udisks_daemon_constructed (GObject *object)
   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
 #endif
   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
+#ifdef HAVE_CRYPTO
   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
+#endif
   BDPluginSpec nvme_plugin = {BD_PLUGIN_NVME, NULL};
 #ifdef HAVE_SMART
   BDPluginSpec smart_plugin = {BD_PLUGIN_SMART, NULL};
@@ -364,7 +366,10 @@ udisks_daemon_constructed (GObject *object)
      Additional plugins are required by various modules, but they make sure
      plugins are loaded themselves. */
   BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin,
-                             &fs_plugin, &crypto_plugin, &nvme_plugin,
+                             &fs_plugin, &nvme_plugin,
+#ifdef HAVE_CRYPTO
+                             &crypto_plugin,
+#endif
 #ifdef HAVE_MDRAID
                              &mdraid_plugin,
 #endif
