@@ -35,7 +35,9 @@
 
 #include <blockdev/loop.h>
 #include <blockdev/fs.h>
-#include <blockdev/mdraid.h>
+#ifdef HAVE_MDRAID
+#  include <blockdev/mdraid.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxmanager.h"
@@ -542,6 +544,7 @@ handle_mdraid_create (UDisksManager         *_object,
                       guint64                arg_chunk,
                       GVariant              *arg_options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (_object);
   UDisksObject *array_object = NULL;
   uid_t caller_uid;
@@ -901,6 +904,9 @@ handle_mdraid_create (UDisksManager         *_object,
   g_clear_object (&array_object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
