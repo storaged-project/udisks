@@ -152,12 +152,12 @@ take_filesystem_ownership (const gchar  *device,
               goto out;
             }
 
-          mount_opts = "nodev,nosuid";
+          mount_opts = "nodev,nosuid,noexec";
           if (g_strcmp0 (fstype, "ext2") == 0 ||
               g_strcmp0 (fstype, "ext3") == 0 ||
               g_strcmp0 (fstype, "ext4") == 0 ||
               g_strcmp0 (fstype, "jfs") == 0)
-            mount_opts = "nodev,nosuid,errors=remount-ro";
+            mount_opts = "nodev,nosuid,noexec,errors=remount-ro";
 
           /* TODO: mount to a private mount namespace */
           if (!bd_fs_mount (device, mountpoint, fstype, mount_opts, NULL, &local_error))
