@@ -403,10 +403,10 @@ handle_format_namespace (UDisksNVMeNamespace   *_ns,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * initiates a device self-test.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to format a namespace on $(drive)"),
+                                                    N_("Authentication is required to format a namespace on $(device.name)"),
                                                     invocation))
     goto out;
 

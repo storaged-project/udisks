@@ -195,10 +195,10 @@ handle_disconnect (UDisksNVMeFabrics     *_object,
   /* Translators: Shown in authentication dialog when the user
    * requests disconnect of a NVMeoF connected controller.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to disconnect a NVMe over Fabrics controller $(drive)");
+  message = N_("Authentication is required to disconnect a NVMe over Fabrics controller $(device.name)");
   action_id = "org.freedesktop.udisks2.nvme-disconnect";
 
   /* Check that the user is authorized */
