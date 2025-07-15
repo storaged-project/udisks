@@ -381,7 +381,7 @@ handle_loop_setup (UDisksManager          *object,
     goto out;
 
   fd_num = g_variant_get_handle (fd_index);
-  if (fd_list == NULL || fd_num >= g_unix_fd_list_get_length (fd_list))
+  if (fd_list == NULL || fd_num < 0 || fd_num >= g_unix_fd_list_get_length (fd_list))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
