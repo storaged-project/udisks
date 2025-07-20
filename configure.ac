@@ -477,22 +477,32 @@ if test "x$enable_daemon" = "xyes"; then
   fi
 
   # libblockdev mdraid
-  SAVE_CFLAGS=$CFLAGS
-  SAVE_LDFLAGS=$LDFLAGS
+  have_mdraid=no
+  AC_ARG_ENABLE(mdraid,
+                AS_HELP_STRING([--enable-mdraid], [enable BLOCKDEV MDRAID support]),
+ 	        [],
+ 	        [enable_mdraid=yes])
+  if test "x$enable_mdraid" = "xyes"; then
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
-  LDFLAGS="$GLIB_LIBS"
-  AC_MSG_CHECKING([libblockdev-mdraid presence])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/mdraid.h>]], [[]])],[AC_MSG_RESULT([yes])
+    CFLAGS="$GLIB_CFLAGS"
+    LDFLAGS="$GLIB_LIBS"
+    AC_MSG_CHECKING([libblockdev-mdraid presence])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/mdraid.h>]], [[]])],[AC_MSG_RESULT([yes])
                  have_mdraid=yes],[AC_MSG_RESULT([no])
                  have_mdraid=no])
 
-  CFLAGS=$SAVE_CFLAGS
-  LDFLAGS=$SAVE_LDFLAGS
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
 
-  if test "x$have_mdraid" = "xno"; then
-    AC_MSG_ERROR([BLOCKDEV MDRAID support requested but header or library not found])
+    if test "x$have_mdraid" = "xno"; then
+      AC_MSG_ERROR([BLOCKDEV MDRAID support requested but header or library not found])
+    fi
+    AC_DEFINE([HAVE_MDRAID], 1, [Define to 1 to enable BLOCKDEV MDRAID])
   fi
+
+  AM_CONDITIONAL(HAVE_MDRAID, test "x$have_mdraid" = "xyes")
 
   # libblockdev fs
   SAVE_CFLAGS=$CFLAGS
@@ -513,22 +523,32 @@ if test "x$enable_daemon" = "xyes"; then
   fi
 
   # libblockdev crypto
-  SAVE_CFLAGS=$CFLAGS
-  SAVE_LDFLAGS=$LDFLAGS
+  have_crypto=no
+  AC_ARG_ENABLE(crypto,
+                AS_HELP_STRING([--enable-crypto], [enable BLOCKDEV CRYPTO support]),
+ 	        [],
+ 	        [enable_crypto=yes])
+  if test "x$enable_crypto" = "xyes"; then
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
 
-  CFLAGS="$GLIB_CFLAGS"
-  LDFLAGS="$GLIB_LIBS"
-  AC_MSG_CHECKING([libblockdev-crypto presence])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/crypto.h>]], [[]])],[AC_MSG_RESULT([yes])
+    CFLAGS="$GLIB_CFLAGS"
+    LDFLAGS="$GLIB_LIBS"
+    AC_MSG_CHECKING([libblockdev-crypto presence])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <blockdev/crypto.h>]], [[]])],[AC_MSG_RESULT([yes])
                  have_crypto=yes],[AC_MSG_RESULT([no])
                  have_crypto=no])
 
-  CFLAGS=$SAVE_CFLAGS
-  LDFLAGS=$SAVE_LDFLAGS
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
 
-  if test "x$have_crypto" = "xno"; then
-    AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
+    if test "x$have_crypto" = "xno"; then
+      AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
+    fi
+    AC_DEFINE([HAVE_CRYPTO], 1, [Define to 1 to enable BLOCKDEV CRYPTO])
   fi
+
+  AM_CONDITIONAL(HAVE_CRYPTO, test "x$have_crypto" = "xyes")
 
   # libblockdev nvme
   SAVE_CFLAGS=$CFLAGS
