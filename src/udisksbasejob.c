@@ -302,6 +302,10 @@ udisks_base_job_add_object (UDisksBaseJob  *job,
     }
 
   p = g_new0 (const gchar *, n + 2);
+  for (n = 0; paths != NULL && paths[n] != NULL; n++)
+    {
+      p[n] = paths[n];
+    }
   p[n] = object_path;
   udisks_job_set_objects (UDISKS_JOB (job), p);
   g_free (p);
