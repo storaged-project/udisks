@@ -2258,7 +2258,7 @@ static const struct
  * udisks_client_get_partition_table_subtype_for_display:
  * @client: A #UDisksClient.
  * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
- * @partition_table_subtype: A partition table type e.g. 'dos' or 'gpt'.
+ * @partition_table_subtype: A partition table subtype e.g. 'generic' or 'linux'.
  *
  * Gets a human readable localized string for @partition_table_type and @partition_table_subtype.
  *
