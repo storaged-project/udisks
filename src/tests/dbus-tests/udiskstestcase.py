@@ -6,6 +6,7 @@ import time
 import re
 import shutil
 import sys
+import multiprocessing
 from datetime import datetime
 from enum import Enum
 from systemd import journal
@@ -17,6 +18,8 @@ from gi.repository import GUdev
 
 test_devs = None
 FLIGHT_RECORD_FILE = "flight_record.log"
+
+multiprocessing.set_start_method("fork")
 
 
 def run_command(command):
