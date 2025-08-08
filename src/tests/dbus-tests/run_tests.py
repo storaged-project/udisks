@@ -320,8 +320,6 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    setup_vdevs()
-
     if args.logfile:
         daemon_log = open(args.logfile, mode='w')
 
@@ -423,6 +421,8 @@ if __name__ == '__main__':
         runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast, resultclass=DebugTestResult)
     else:
         runner = unittest.TextTestRunner(verbosity=2, failfast=args.failfast)
+
+    setup_vdevs()
 
     result = runner.run(suite)
 
