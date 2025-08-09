@@ -526,7 +526,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
     name = g_strdup (crypttab_name);
   else {
     label = udisks_block_get_id_label (block);
-    if (label)
+    if (label && !is_bitlk)
       name = g_strdup (label);
     else
       {
