@@ -3,6 +3,13 @@ import dbus
 import os
 import shutil
 import tempfile
+
+import gi
+gi.require_version('GLib', '2.0')
+gi.require_version('Gio', '2.0')
+from gi.repository import GLib, Gio
+
+import safe_dbus
 import udiskstestcase
 
 
@@ -269,3 +276,13 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
 
         ssize = self.read_file('/sys/class/block/%s/queue/logical_block_size' % loop_dev)
         self.assertEqual(ssize.strip(), "4096")
+
+    def test_60_fd_handles(self):
+        msg = "GDBus.Error:org.freedesktop.UDisks2.Error.Failed: Expected to use fd at index -1073741824, but message has only 1 fds"
+        with self.assertRaisesRegex(safe_dbus.DBusCallError, msg):
+            safe_dbus.call_sync(self.iface_prefix,
+                                self.path_prefix + '/Manager',
+                                'org.freedesktop.UDisks2.Manager',
+                                'LoopSetup',
+                                GLib.Variant("(ha{sv})", (-2**30, {})),
+                                fds=Gio.UnixFDList.new_from_array([os.dup(1)]))
