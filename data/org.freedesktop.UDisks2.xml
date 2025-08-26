@@ -3106,7 +3106,7 @@
       @since: 2.0.0
 
       Objects implementing this interface represent
-      <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>
+      <ulink url="https://docs.kernel.org/admin-guide/md.html">Linux Software RAID arrays</ulink>
       detected on the system. Both running and not-running arrays are represented.
 
       Block devices point to objects implementing this interface, see
