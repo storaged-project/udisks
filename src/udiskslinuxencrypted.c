@@ -324,6 +324,14 @@ has_option (const gchar *options,
   return ret;
 }
 
+static gchar *
+label_to_safe_dm_name (const gchar *label)
+{
+  if (strlen (label) >= 128)
+    return g_strndup (label, 127);
+  return g_strdelimit (g_strdup (label), "/ ", '_');
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* runs in thread dedicated to handling @invocation */
@@ -526,8 +534,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
     name = g_strdup (crypttab_name);
   else {
     label = udisks_block_get_id_label (block);
-    if (label && !is_bitlk)
-      name = g_strdup (label);
+    if (label)
+      name = label_to_safe_dm_name (label);
     else
       {
         if (is_luks)
