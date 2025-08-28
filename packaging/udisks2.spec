@@ -22,7 +22,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.11.0
+Version: 2.10.91
 %if %{is_git} == 0
 Release: 1%{?dist}
 %else
@@ -329,6 +329,9 @@ fi
 %endif
 
 %changelog
+* Thu Aug 28 2025 Tomas Bzatek <tbzatek@redhat.com> - 2.10.91-1
+- Version 2.10.91 (pre-release)
+
 * Tue Oct 01 2024 Tomas Bzatek <tbzatek@redhat.com> - 2.10.90-1
 - Version 2.10.90 (pre-release)
 

@@ -1,17 +1,100 @@
----------------------------
-udisks 2.11.0 (unreleased)
----------------------------
+----------------------------
+udisks 2.10.91 (pre-release)
+----------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.10.90:
-(TODO: make shortlog)
+
+Anders Jonsson (1):
+      Update Swedish translation
+
+Andika Triwidada (1):
+      Update Indonesian translation
+
+Andrew Sayers (2):
+      Change several log levels from NOTICE to INFO
+      Use udisks_info() for (un)mount messages
+
+Artur S0 (1):
+      Update Russian translation
+
+Ekaterine Papava (1):
+      Update Georgian translation
+
+FineFindus (3):
+      doc: add missing closing bracket
+      doc: remove duplicate dot
+      docs(mdraid): update link to kernel docs
+
+Herman Semenov (1):
+      helpers: fixed memleak and misprint check for creating second BDCrypto context
+
+Marc Deslauriers (1):
+      udiskslinuxmanager: Add lower bounds check to fd_index
+
+Rafael Fontenelle (1):
+      Update Brazilian Portuguese translation
+
+Tomas Bzatek (15):
+      lvm2: Try opening for unused device detection harder
+      tests: Rework nvme revision check
+      udisksdaemon: Add 'no_inhibit' argument for job creation functions
+      daemon: Align to the no_inhibit job argument change
+      lvm2: Align to the no_inhibit job argument change
+      udiskslinuxmdraid: Avoid putting inhibit lock for externally started operations
+      udiskslinuxmdraid: Add 'no-inhibit-lock' RequestSyncAction() option
+      ci: Remove amazon-ec2-utils if installed
+      misc: Add python3-packaging to test dependencies
+      udiskslinuxfilesystemhelpers: Mount private mounts with 'nodev,nosuid'
+      udisksstate: Always allocate store buffer for empty variants
+      udiskslinuxfilesystemhelpers: Add 'noexec' to the default take-ownership mount options
+      tests: Backport safe_dbus.py from blivet
+      tests: Add Manager.LoopSetup() invalid fd test case
+
+Violet Purcell (1):
+      build: use -export-dynamic instead of -export_dynamic
+
+Vojtech Trefny (23):
+      Fix docstring for udisks_spawned_job_start
+      daemon: Add a logging function for libblockdev
+      Add support for specifying label when creating LUKS devices
+      Use label for DM device name when unlocking encrypted devices
+      ci: Install 'python3-libdnf5' for TMT test plans
+      tests: Stop trying to fully fill the VG in LVM tests
+      tests: Enable LVM VDO tests on CentOS/RHEL 10
+      tests: Enable Exfat UUID tests on Fedora
+      tests: Allow adding optional message to failed assert calls
+      tests: Add property name to failed asserts in test_40_drive
+      misc: Add CentOS to the install-test-dependencies playbook
+      misc: Separate Ansible tasks into a different file
+      misc: Force DNF to enable C10S Copr instead of EPEL
+      misc: Do not use "with_items" when installing packages
+      tests: Fix running tests on systems without /etc/fstab
+      misc: Add parted to test dependencies
+      tests: Fix expected error message with util-linux 2.41
+      tests: Use sfdisk instead of parted to create partitions in tests
+      tests: Fix running tests on systems without fstab and crypttab
+      tests: Force Python to use 'fork' method to start child processes
+      tests: Move creation of the test devices after arguments parsing
+      Do not use label for DM name when unlocking BitLocker devices
+      Fix using label as DM name when unlocking encrypted devices
+
+Zurab Kargareteli (1):
+      Update Georgian translation
+
+rong wang (1):
+      doc: fix docstring for udisks_threaded_job_start
+
+wangrong (2):
+      doc: fix docstring for udisks_client_get_partition_table_subtype_for_display
+      udisksbasejob: Keep the original data when adding object path
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2025-08-28
 
 ----------------------------
 udisks 2.10.90 (pre-release)
