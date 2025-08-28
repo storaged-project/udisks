@@ -1,4 +1,53 @@
 ---------------------------
+udisks 2.10.2
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+This is a bugfix release containing important security fixes.
+
+Changes since 2.10.1:
+
+Alessandro Astone (1):
+      integration-test: Fix change label test with exfatprogs 1.2.5
+
+Marc Deslauriers (1):
+      udiskslinuxmanager: Add lower bounds check to fd_index
+
+Marius Vollmer (1):
+      udiskslinuxblock: Survive a missing /etc/fstab
+
+Michael Biebl (1):
+      Do not overwrite CPPFLAGS
+
+Tomas Bzatek (10):
+      tests: Fix targetcli_config.json
+      mount options: Add some more f2fs options to the allow list
+      mount options: Add 'map' and 'check' ISO9660 options
+      mount options: Allow 'commit' option for ext3/ext4
+      integration-test: Adapt to the new libmount context error messages
+      udiskslinuxloop: Fix GError use-after-free
+      udiskslinuxmdraid: Refactor error reporting
+      udiskslinuxfilesystemhelpers: Mount private mounts with 'nodev,nosuid'
+      udisksstate: Always allocate store buffer for empty variants
+      udiskslinuxfilesystemhelpers: Add 'noexec' to the default take-ownership mount options
+
+Vojtech Trefny (1):
+      tests: Fix expected rotation rate for SCSI debug drives in tests
+
+xinpeng wang (1):
+      udiskslinuxmanager:use dbus interface after free
+
+zhoujing (1):
+      tests: Adapt to clang differences when causing a segfault
+
+Thanks to all our contributors.
+
+Tomas Bzatek
+2025-08-28
+
+---------------------------
 udisks 2.10.1
 ---------------------------
 
