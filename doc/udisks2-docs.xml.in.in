@@ -233,6 +233,10 @@
                 <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file, for example <quote>/dev/vg_lucifer/lv_root</quote> or <quote>/dev/sda1</quote>. If the object is not a block device, this is not set.</entry>
               </row>
               <row>
+                <entry><parameter>device.name</parameter></entry>
+                <entry>The value of this property is set to the best display name for this device, which may be the device's <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdLabel">Block:IdLabel</link>, or the capacity name calculated from the partition size, or the name associated with the encrypted volume. If none of the above information is present, the data assigned to the <parameter>drive</parameter> will be used as the fallback solution.</entry>
+              </row>
+              <row>
                 <entry><parameter>drive</parameter></entry>
                 <entry>Like the <parameter>device</parameter> variable, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
               </row>
