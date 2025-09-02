@@ -1188,9 +1188,9 @@ class Fstab(UDisksTestCase):
         cls.p1label = 'udtestp1'
 
         # create one partition
-        subprocess.check_call("echo -e 'label:gpt' | sfdisk %s" % cls.device,
+        subprocess.check_call("echo 'label:gpt' | sfdisk %s" % cls.device,
                               stdout=subprocess.PIPE, shell=True)
-        subprocess.check_call("echo -e 'size=60M, type=L, name=%s\n' | sfdisk %s" % (cls.p1label, cls.device),
+        subprocess.check_call("echo 'size=60M, type=L, name=%s' | sfdisk %s" % (cls.p1label, cls.device),
                               stdout=subprocess.PIPE, shell=True)
         cls.sync()
         blkid = subprocess.check_output(
