@@ -28,10 +28,8 @@ gi.require_version("Gio", "2.0")
 
 from gi.repository import GLib, Gio
 
-import os
 
 DEFAULT_DBUS_TIMEOUT = 100 * 1000
-DBUS_PROPS_IFACE = "org.freedesktop.DBus.Properties"
 DBUS_INTRO_IFACE = "org.freedesktop.DBus.Introspectable"
 
 
@@ -43,10 +41,6 @@ class DBusCallError(SafeDBusError):
     """Class for the errors related to calling methods over DBus."""
 
 
-class DBusPropertyError(DBusCallError):
-    """Class for the errors related to getting property values over DBus."""
-
-
 def get_new_system_connection():
     """Return a new connection to the system bus."""
 
@@ -55,48 +49,6 @@ def get_new_system_connection():
         Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
         Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
         None, None)
-
-
-def get_new_session_connection():
-    """
-    Get a connection handle for the per-user-login-session message bus.
-
-    !!! RUN THIS EARLY !!! like, before any other threads start. Connections to
-    the session bus must be made with the effective UID of the login user,
-    which in live installs is not the UID of anaconda. This means we need to
-    call seteuid in this method, and doing that after threads have started will
-    probably do something weird.
-
-    Live installs use consolehelper to run as root, which sets the original
-    UID in $USERHELPER_UID.
-
-    :return: the session connection handle
-    :rtype: Gio.DBusConnection
-    :raise DBusCallError: if some DBus related error appears
-    :raise OSError: if unable to set the effective UID
-    """
-
-    old_euid = None
-    if "USERHELPER_UID" in os.environ:
-        old_euid = os.geteuid()
-        os.seteuid(int(os.environ["USERHELPER_UID"]))
-
-    try:
-        connection = Gio.DBusConnection.new_for_address_sync(
-            Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None),
-            Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
-            Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
-            None, None)
-    except GLib.GError as gerr:
-        raise DBusCallError("Unable to connect to session bus: %s" % gerr)
-    finally:
-        if old_euid is not None:
-            os.seteuid(old_euid)
-
-    if connection.is_closed():
-        raise DBusCallError("Connection is closed")
-
-    return connection
 
 
 def call_sync(service, obj_path, iface, method, args,
@@ -153,68 +105,6 @@ def call_sync(service, obj_path, iface, method, args,
         raise DBusCallError(msg)
 
     return ret[0].unpack()
-
-
-def get_property_sync(service, obj_path, iface, prop_name,
-                      connection=None):
-    """
-    Get value of a given property of a given object provided by a given service.
-
-    :param service: DBus service to use
-    :type service: str
-    :param obj_path: object path
-    :type obj_path: str
-    :param iface: interface to use
-    :type iface: str
-    :param prop_name: name of the property
-    :type prop_name: str
-    :param connection: connection to use (if None, a new connection is
-                       established)
-    :type connection: Gio.DBusConnection
-    :return: unpacked value of the property
-    :rtype: tuple with elements that depend on the type of the property
-    :raise DBusCallError: when the internal dbus_call_safe_sync invocation
-                          raises an exception
-    :raise DBusPropertyError: when the given object doesn't have the given
-                              property
-
-    """
-
-    args = GLib.Variant('(ss)', (iface, prop_name))
-    ret = call_sync(service, obj_path, DBUS_PROPS_IFACE, "Get", args,
-                    connection)
-    if ret is None:
-        msg = "No value for the %s object's property %s" % (obj_path, prop_name)
-        raise DBusPropertyError(msg)
-
-    return ret
-
-
-def get_properties_sync(service, obj_path, iface, connection=None):
-    """
-    Get all properties of a given object provided by a given service.
-
-    :param service: DBus service to use
-    :type service: str
-    :param obj_path: object path
-    :type obj_path: str
-    :param iface: interface to use
-    :type iface: str
-    :param connection: connection to use (if None, a new connection is
-                       established)
-    :type connection: Gio.DBusConnection
-    :return: unpacked value of the property
-    :rtype: tuple with elements that depend on the type of the property
-    :raise DBusCallError: when the internal dbus_call_safe_sync invocation
-                          raises an exception
-
-    """
-
-    args = GLib.Variant('(s)', (iface,))
-    ret = call_sync(service, obj_path, DBUS_PROPS_IFACE, "GetAll", args,
-                    connection)
-
-    return ret
 
 
 def check_object_available(service, obj_path, iface=None):
