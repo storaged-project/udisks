@@ -170,6 +170,19 @@ def setup_nvme_target(dev_paths, subnqn):
         raise RuntimeError("Error setting up the NVMe target: %s" % out)
 
 
+def disable_target_ns(subnqn, nsid, enable=False):
+    """
+    Disables or enables particular namespace on the target.
+
+    :param str subnqn: Subsystem NQN
+    :param int nsid: Namespace ID
+    :param bool enable: Enable or disable the namespace
+    """
+
+    with open("/sys/kernel/config/nvmet/subsystems/%s/namespaces/%d/enable" % (subnqn, nsid), "w") as f:
+        f.write("1" if enable else "0")
+
+
 class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     SUBNQN = 'udisks_test_subnqn'
     DISCOVERY_NQN = 'nqn.2014-08.org.nvmexpress.discovery'
@@ -470,6 +483,53 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
                 d['lba_data_size'] = lbaf_curr[0]
                 d['metadata_size'] = dbus.UInt16(5)
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
+
+    def test_ns_detach(self):
+        self._nvme_connect()
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+        time.sleep(1)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 1)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        # find drive object through the second namespace block object
+        ns = self.get_device(ns_devs[1])
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+        drive_obj = self.get_object(drive_obj_path)
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+
+        # this will wait up to 10 seconds for the state to switch
+        state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+        state.assertEqual('live', timeout=10)
+
+        ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        # detach the second namespace
+        nsid = self.get_property_raw(ns, '.NVMe.Namespace', 'NSID')
+        disable_target_ns(self.SUBNQN, nsid)
+
+        # wait for the namespace block object to disappear
+        objects = []
+        for _ in range(20):
+            obj_mgr = self.get_object('')
+            objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+            if str(ns.object_path) not in objects.keys():
+                break
+            time.sleep(0.5)
+        self.assertNotIn(str(ns.object_path), objects.keys())
+
+        ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        # attach that namespace back
+        disable_target_ns(self.SUBNQN, nsid, enable=True)
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        nsid_new = self.get_property(ns, '.NVMe.Namespace', 'NSID')
+        nsid_new.assertEqual(nsid)
 
     def test_fabrics_connect(self):
         manager = self.get_interface("/Manager", ".Manager.NVMe")
