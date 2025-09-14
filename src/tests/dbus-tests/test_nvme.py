@@ -198,9 +198,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         setup_nvme_target(cls.dev_files, cls.SUBNQN)
 
-        for d in cls.dev_files:
-            os.unlink(d)
-
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
         ret, out = self.run_command("nvme disconnect --nqn=%s" % subnqn)
         if not ignore_errors and (ret != 0 or 'disconnected 0 ' in out):
