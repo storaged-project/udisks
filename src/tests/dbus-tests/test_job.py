@@ -36,7 +36,7 @@ class UdisksJobTest(udiskstestcase.UdisksTestCase):
             self.exception = e
 
     def _wait_for_job_thread(self, operation, device_path):
-        t = threading.currentThread()
+        t = threading.current_thread()
 
         while getattr(t, "run", True):
             objects = self._get_objects()
