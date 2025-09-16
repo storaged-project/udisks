@@ -1827,7 +1827,7 @@ class MDRaid(UDisksTestCase):
 
         self.md_legs = self.devices[:2]
         create = ['mdadm', '--create', self.md_device, '--level=1',
-                  '--metadata=0.90', '--raid-devices=2']
+                  '--metadata=0.90', '--raid-devices=2', '--bitmap=none']
         create.extend(self.md_legs)
         self.assertEqual(subprocess.call(create), 0)
         self.sync()
