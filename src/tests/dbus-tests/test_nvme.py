@@ -212,6 +212,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         setup_nvme_target(cls.dev_files, cls.SUBNQN)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
+        # force re-enable all exported namespaces
+        for i in range(1, self.NUM_NS + 1):
+            disable_target_ns(self.SUBNQN, i, enable=True)
         ret, out = self.run_command("nvme disconnect --nqn=%s" % subnqn)
         if not ignore_errors and (ret != 0 or 'disconnected 0 ' in out):
             raise RuntimeError("Error disconnecting the '%s' subsystem NQN: '%s'" % (subnqn, out))
@@ -227,6 +230,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         # kernels < 5.18 needean explicit uevent to deliver device info in a 'live' state
         self.udev_settle()
         self.run_command('udevadm trigger --subsystem-match=nvme --subsystem-match=block')
+
+    def _find_block_objects_for_ctrl(self, ctrl_obj_path):
+        namespaces = []
+        obj_mgr = self.get_object('')
+        objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        for p in [p for p in list(objects.keys()) if "/block_devices/nvme" in p]:
+            ns = self.get_device(p)
+            drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+            if drive_obj_path == str(ctrl_obj_path):
+                namespaces += [p]
+        return namespaces
 
     @classmethod
     def tearDownClass(cls):
@@ -513,14 +527,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         disable_target_ns(self.SUBNQN, nsid)
 
         # wait for the namespace block object to disappear
-        objects = []
-        for _ in range(20):
-            obj_mgr = self.get_object('')
-            objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
-            if str(ns.object_path) not in objects.keys():
-                break
-            time.sleep(0.5)
-        self.assertNotIn(str(ns.object_path), objects.keys())
+        self.assertObjNotOnBus(str(ns.object_path))
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
         ctrl_size.assertEqual(0)
@@ -564,6 +571,42 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl = self.get_object(ctrl_obj_path)
         with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
+    def test_fabrics_ns_detach_all(self):
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "", self.no_options)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+        transport = self.get_property(ctrl, '.NVMe.Fabrics', 'Transport')
+        transport.assertEqual('loop')
+        subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
+        subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
+        ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        # count number of namespaces pointing to our controller
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), self.NUM_NS)
+
+        # detach all namespaces
+        for i in range(1, self.NUM_NS + 1):
+            disable_target_ns(self.SUBNQN, i)
+
+        # verify the namespaces are gone
+        for ns in namespaces:
+            self.assertObjNotOnBus(ns)
+
+        # count number of namespaces pointing to our controller
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), 0)
+        ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
     def test_persistent_dc(self):
         manager = self.get_interface("/Manager", ".Manager.NVMe")
