@@ -249,6 +249,8 @@ class DBusProperty(object):
 
 
 class UdisksTestCase(unittest.TestCase):
+    TIMEOUT = 5
+
     iface_prefix = None
     path_prefix = None
     bus = None
@@ -491,8 +493,8 @@ class UdisksTestCase(unittest.TestCase):
         time.sleep(1)
 
     @classmethod
-    def assertHasIface(self, obj, iface):
-        for _ in range(20):
+    def assertHasIface(self, obj, iface, timeout=TIMEOUT):
+        for _ in range(timeout * 2):
             obj_intro = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
             intro_data = obj_intro.Introspect()
             if 'interface name="%s"' % iface in intro_data:
@@ -500,6 +502,17 @@ class UdisksTestCase(unittest.TestCase):
             time.sleep(0.5)
 
         raise AssertionError("Object '%s' has no interface '%s'" % (obj.object_path, iface))
+
+    def assertObjNotOnBus(self, obj_path, timeout=TIMEOUT):
+        objects = []
+        for _ in range(timeout * 2):
+            obj_mgr = self.get_object('')
+            objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+            if obj_path not in objects.keys():
+                return
+            time.sleep(0.5)
+
+        raise AssertionError("Object '%s' present on the object manager" % (obj_path))
 
     def assertStartswith(self, val, prefix):
         if not val.startswith(prefix):

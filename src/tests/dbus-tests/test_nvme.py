@@ -3,6 +3,7 @@ import stat
 import tempfile
 import time
 import shutil
+import glob
 import json
 import uuid
 import dbus
@@ -12,11 +13,43 @@ import udiskstestcase
 from config_h import PACKAGE_SYSCONF_DIR
 
 
-def find_nvme_ctrl_devs_for_subnqn(subnqn):
+def _wait_for_nvme_controllers_ready(subnqn, timeout=3):
+    """
+    Wait for NVMe controllers with matching subsystem NQN to be in live state
+
+    :param str subnqn: subsystem nqn to match controllers against
+    :param int timeout: timeout in seconds (default: 3)
+    """
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        try:
+            for ctrl_path in glob.glob("/sys/class/nvme-fabrics/ctl/nvme*/"):
+                state_file = os.path.join(ctrl_path, "state")
+                subsysnqn_file = os.path.join(ctrl_path, "subsysnqn")
+                try:
+                    state = udiskstestcase.UdisksTestCase.read_file(state_file).strip()
+                    controller_subnqn = udiskstestcase.UdisksTestCase.read_file(subsysnqn_file).strip()
+                    if state == "live" and controller_subnqn == subnqn:
+                        # Found a matching live controller
+                        os.system("udevadm settle")
+                        return
+                except:
+                    continue
+
+        except:
+            pass
+
+        time.sleep(1)
+
+    os.system("udevadm settle")
+
+def find_nvme_ctrl_devs_for_subnqn(subnqn, wait_for_ready=True):
     """
     Find NVMe controller devices for the specified subsystem nqn
 
     :param str subnqn: subsystem nqn
+    :param bool wait_for_ready: whether to wait for controllers to be ready (default: True)
     """
 
     def _check_subsys(subsys, dev_paths):
@@ -31,6 +64,9 @@ def find_nvme_ctrl_devs_for_subnqn(subnqn):
                 except:
                     pass
 
+    # Wait for controllers to be ready if requested
+    if wait_for_ready:
+        _wait_for_nvme_controllers_ready(subnqn)
     ret, out = udiskstestcase.run_command("nvme list --output-format=json --verbose")
     if ret != 0:
         raise RuntimeError("Error getting NVMe list: %s" % out)
@@ -53,11 +89,12 @@ def find_nvme_ctrl_devs_for_subnqn(subnqn):
     return dev_paths
 
 
-def find_nvme_ns_devs_for_subnqn(subnqn):
+def find_nvme_ns_devs_for_subnqn(subnqn, wait_for_ready=True):
     """
     Find NVMe namespace block devices for the specified subsystem nqn
 
     :param str subnqn: subsystem nqn
+    :param bool wait_for_ready: whether to wait for controllers to be ready (default: True)
     """
 
     def _check_namespaces(node, ns_dev_paths):
@@ -80,6 +117,8 @@ def find_nvme_ns_devs_for_subnqn(subnqn):
                     if 'Namespaces' in ctrl:
                         _check_namespaces(ctrl, ns_dev_paths)
 
+    if wait_for_ready:
+        _wait_for_nvme_controllers_ready(subnqn)
     ret, out = udiskstestcase.run_command("nvme list --output-format=json --verbose")
     if ret != 0:
         raise RuntimeError("Error getting NVMe list: %s" % out)
@@ -212,6 +251,9 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         setup_nvme_target(cls.dev_files, cls.SUBNQN)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
+        # force re-enable all exported namespaces
+        for i in range(1, self.NUM_NS + 1):
+            disable_target_ns(self.SUBNQN, i, enable=True)
         ret, out = self.run_command("nvme disconnect --nqn=%s" % subnqn)
         if not ignore_errors and (ret != 0 or 'disconnected 0 ' in out):
             raise RuntimeError("Error disconnecting the '%s' subsystem NQN: '%s'" % (subnqn, out))
@@ -228,6 +270,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.udev_settle()
         self.run_command('udevadm trigger --subsystem-match=nvme --subsystem-match=block')
 
+    def _find_block_objects_for_ctrl(self, ctrl_obj_path):
+        namespaces = []
+        obj_mgr = self.get_object('')
+        objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        for p in [p for p in list(objects.keys()) if "/block_devices/nvme" in p]:
+            ns = self.get_device(p)
+            drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
+            if drive_obj_path == str(ctrl_obj_path):
+                namespaces += [p]
+        return namespaces
+
     @classmethod
     def tearDownClass(cls):
         ret, out = udiskstestcase.run_command("nvmetcli clear")
@@ -243,7 +296,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_controller_info(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ctrl_devs), 1)
@@ -291,7 +343,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_namespace_info(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ns_devs), self.NUM_NS)
@@ -336,7 +387,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_health_info(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ctrl_devs), 1)
@@ -396,7 +446,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_sanitize(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ctrl_devs), 1)
@@ -432,7 +481,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_format_ns(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ns_devs), self.NUM_NS)
@@ -487,7 +535,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     def test_ns_detach(self):
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
-        time.sleep(1)
 
         ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
         self.assertEqual(len(ctrl_devs), 1)
@@ -513,14 +560,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         disable_target_ns(self.SUBNQN, nsid)
 
         # wait for the namespace block object to disappear
-        objects = []
-        for _ in range(20):
-            obj_mgr = self.get_object('')
-            objects = obj_mgr.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
-            if str(ns.object_path) not in objects.keys():
-                break
-            time.sleep(0.5)
-        self.assertNotIn(str(ns.object_path), objects.keys())
+        self.assertObjNotOnBus(str(ns.object_path))
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
         ctrl_size.assertEqual(0)
@@ -564,6 +604,47 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl = self.get_object(ctrl_obj_path)
         with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
+    def test_fabrics_ns_detach_all(self):
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "", self.no_options)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 1)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+        transport = self.get_property(ctrl, '.NVMe.Fabrics', 'Transport')
+        transport.assertEqual('loop')
+        subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
+        subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
+        ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        # count number of namespaces pointing to our controller
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), self.NUM_NS)
+
+        # detach all namespaces
+        for i in range(1, self.NUM_NS + 1):
+            disable_target_ns(self.SUBNQN, i)
+
+        # verify the namespaces are gone
+        for ns in namespaces:
+            self.assertObjNotOnBus(ns)
+
+        # count number of namespaces pointing to our controller
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), 0)
+        ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
     def test_persistent_dc(self):
         manager = self.get_interface("/Manager", ".Manager.NVMe")
