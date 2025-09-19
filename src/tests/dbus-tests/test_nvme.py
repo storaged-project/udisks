@@ -834,6 +834,114 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
 
+    def test_fabrics_multipath(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN, tr_tcp_ipv4=True, tr_tcp_ipv4_svcid=44420, tr_tcp_ipv6=self._ipv6_available, tr_tcp_ipv6_svcid=44220)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        # connect loop
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "", self.no_options)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 1)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        # connect tcp over ipv4
+        msg = r'Error connecting the controller: connection refused'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "127.0.0.1", self.no_options)
+        d = dbus.Dictionary(signature='sv')
+        d['transport_svcid'] = "44420"
+        ctrl2_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "127.0.0.1", d)
+
+        ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ctrl_devs), 2)
+        ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+        self.assertEqual(len(ns_devs), self.NUM_NS)
+
+        ctrl2 = self.get_object(ctrl2_obj_path)
+        self.assertHasIface(ctrl2, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl2, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        # connect tcp over ipv6
+        if self._ipv6_available:
+            msg = r'Error connecting the controller: connection refused'
+            with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+                manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "::1", self.no_options)
+
+            d = dbus.Dictionary(signature='sv')
+            d['transport_svcid'] = "44220"
+            ctrl3_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "::1", d)
+
+            ctrl_devs = find_nvme_ctrl_devs_for_subnqn(self.SUBNQN)
+            self.assertEqual(len(ctrl_devs), 3)
+            ns_devs = find_nvme_ns_devs_for_subnqn(self.SUBNQN)
+            self.assertEqual(len(ns_devs), self.NUM_NS)
+
+            ctrl3 = self.get_object(ctrl3_obj_path)
+            self.assertHasIface(ctrl3, 'org.freedesktop.UDisks2.NVMe.Controller')
+            self.assertHasIface(ctrl3, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        # verify objects
+        transport = self.get_property(ctrl, '.NVMe.Fabrics', 'Transport')
+        transport.assertEqual('loop')
+        tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(len(tr_addr), 1)   # the zero trailing byte
+        subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
+        subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
+        ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        transport = self.get_property(ctrl2, '.NVMe.Fabrics', 'Transport')
+        transport.assertEqual('tcp')
+        tr_addr = self.get_property_raw(ctrl2, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(self.ay_to_str(tr_addr), 'traddr=127.0.0.1,trsvcid=44420,src_addr=127.0.0.1')
+        subnqn = self.get_property(ctrl2, '.NVMe.Controller', 'SubsystemNQN')
+        subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
+        ctrl_size = self.get_property(ctrl2, '.Drive', 'Size')
+        ctrl_size.assertEqual(0)
+
+        if self._ipv6_available:
+            transport = self.get_property(ctrl3, '.NVMe.Fabrics', 'Transport')
+            transport.assertEqual('tcp')
+            tr_addr = self.get_property_raw(ctrl3, '.NVMe.Fabrics', 'TransportAddress')
+            self.assertEqual(self.ay_to_str(tr_addr), 'traddr=::1,trsvcid=44220,src_addr=::1')
+            subnqn = self.get_property(ctrl3, '.NVMe.Controller', 'SubsystemNQN')
+            subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
+            ctrl_size = self.get_property(ctrl3, '.Drive', 'Size')
+            ctrl_size.assertEqual(0)
+
+        # count number of namespaces pointing to our controller
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), self.NUM_NS)
+        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+        self.assertEqual(len(namespaces), 0)
+        if self._ipv6_available:
+            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+            self.assertEqual(len(namespaces), 0)
+
+        # disconnect the first controller and watch the drive object references change
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(namespaces), self.NUM_NS)
+        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+        self.assertEqual(len(namespaces), 0)
+
+        ctrl2.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        if self._ipv6_available:
+            namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
+            self.assertEqual(len(namespaces), self.NUM_NS)
+            namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+            self.assertEqual(len(namespaces), 0)
+            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+            self.assertEqual(len(namespaces), 0)
+            ctrl3.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+
     def test_hostnqn(self):
         HOSTNQN_PATH = '/etc/nvme/hostnqn'
         HOSTID_PATH = '/etc/nvme/hostid'
