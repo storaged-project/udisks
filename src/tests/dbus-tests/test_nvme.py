@@ -13,7 +13,7 @@ import udiskstestcase
 from config_h import PACKAGE_SYSCONF_DIR
 
 
-def _wait_for_nvme_controllers_ready(subnqn, timeout=3):
+def _wait_for_nvme_controllers_ready(subnqn, timeout=10):
     """
     Wait for NVMe controllers with matching subsystem NQN to be in live state
 
@@ -141,20 +141,33 @@ def find_nvme_ns_devs_for_subnqn(subnqn, wait_for_ready=True):
     return ns_dev_paths
 
 
-def setup_nvme_target(dev_paths, subnqn):
+def setup_nvme_target(dev_paths, subnqn, tr_loop=True, tr_tcp_ipv4=False, tr_tcp_ipv4_svcid=4420, tr_tcp_ipv6=False, tr_tcp_ipv6_svcid=4420):
     """
-    Sets up a new NVMe target loop device (using nvmetcli) on top of the
-    :param:`dev_paths` backing block devices.
+    Sets up a new NVMe target (using nvmetcli) with :param:`dev_paths`
+    as backing block devices. Supports loop and tcp transports over
+    ipv4 and ipv6.
 
     :param set dev_paths: set of backing block device paths
     :param str subnqn: Subsystem NQN
+    :param bool tr_loop: use the loop transport (default)
+    :param bool tr_tcp_ipv4: use the tcp transport on 127.0.0.1
+    :param int tr_tcp_ipv4_svcid: tcp port for IPv4 transport (default: 4420)
+    :param bool tr_tcp_ipv6: use the tcp transport on ::1
+    :param int tr_tcp_ipv6_svcid: tcp port for IPv6 transport (default: 4420)
     """
 
     # modprobe required nvme target modules
-    for module in ['nvmet', 'nvme-loop']:
+    kmods = ['nvmet']
+    if tr_loop:
+        kmods += ['nvme_loop']
+    if tr_tcp_ipv4 or tr_tcp_ipv6:
+        kmods += ['nvme_tcp']
+    if tr_tcp_ipv6:
+        kmods += ['ipv6']
+    for module in kmods:
         ret, out = udiskstestcase.run_command("modprobe %s" % module)
         if ret != 0:
-            raise RuntimeError("Cannot load required NVMe target modules: %s" % out)
+            raise RuntimeError("Cannot load required kernel module: %s" % out)
 
     # create a JSON file for nvmetcli
     with tempfile.NamedTemporaryFile(mode='wt', delete=False) as tmp:
@@ -170,23 +183,55 @@ def setup_nvme_target(dev_paths, subnqn):
         }}
         """.format(nguid=uuid.uuid4(), path=dev_path, nsid=i) for i, dev_path in enumerate(dev_paths, start=1)])
 
-        json = """
-{
-  "ports": [
+        ports_list = []
+        if tr_loop:
+            ports_list.append("""
     {
       "addr": {
-        "adrfam": "",
-        "traddr": "",
-        "treq": "not specified",
-        "trsvcid": "",
         "trtype": "loop"
       },
       "portid": 1,
-      "referrals": [],
       "subsystems": [
         "%s"
       ]
-    }
+    }""" % (subnqn))
+
+        if tr_tcp_ipv4:
+            ports_list.append("""
+    {
+      "addr": {
+        "adrfam": "ipv4",
+        "traddr": "127.0.0.1",
+        "trsvcid": "%d",
+        "trtype": "tcp"
+      },
+      "portid": 2,
+      "subsystems": [
+        "%s"
+      ]
+    }""" % (tr_tcp_ipv4_svcid, subnqn))
+
+        if tr_tcp_ipv6:
+            ports_list.append("""
+    {
+      "addr": {
+        "adrfam": "ipv6",
+        "traddr": "::1",
+        "trsvcid": "%d",
+        "trtype": "tcp"
+      },
+      "portid": 3,
+      "subsystems": [
+        "%s"
+      ]
+    }""" % (tr_tcp_ipv6_svcid, subnqn))
+
+        ports = ",".join(ports_list)
+
+        json = """
+{
+  "ports": [
+%s
   ],
   "subsystems": [
     {
@@ -201,12 +246,13 @@ def setup_nvme_target(dev_paths, subnqn):
   ]
 }
 """
-        tmp.write(json % (subnqn, namespaces, subnqn))
+        tmp.write(json % (ports, namespaces, subnqn))
 
     ret, out = udiskstestcase.run_command("nvmetcli restore %s" % tcli_json_file)
     os.unlink(tcli_json_file)
     if ret != 0:
         raise RuntimeError("Error setting up the NVMe target: %s" % out)
+    time.sleep(2)
 
 
 def disable_target_ns(subnqn, nsid, enable=False):
@@ -247,8 +293,6 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             with tempfile.NamedTemporaryFile(prefix="udisks_test", delete=False, mode='w+b', dir='/var/tmp') as temp:
                 temp.truncate(cls.NS_SIZE)
                 cls.dev_files += [temp.name]
-
-        setup_nvme_target(cls.dev_files, cls.SUBNQN)
 
     def _nvme_disconnect(self, subnqn, ignore_errors=False):
         # force re-enable all exported namespaces
@@ -294,6 +338,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         udiskstestcase.UdisksTestCase.tearDownClass()
 
     def test_controller_info(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -341,6 +386,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(unalloc_cap, 0)
 
     def test_namespace_info(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -385,6 +431,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.assertEqual(format_progress, -1)
 
     def test_health_info(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -444,6 +491,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             drive_obj.SmartSelftestAbort(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
     def test_sanitize(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -479,6 +527,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             drive_obj.SanitizeStart('overwrite', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
 
     def test_format_ns(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -533,6 +582,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
                 ns.FormatNamespace(d, dbus_interface=self.iface_prefix + '.NVMe.Namespace')
 
     def test_ns_detach(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         self._nvme_connect()
         self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
 
@@ -572,6 +622,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         nsid_new.assertEqual(nsid)
 
     def test_fabrics_connect(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         manager = self.get_interface("/Manager", ".Manager.NVMe")
         with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
             manager.Connect(self.str_to_ay(self.SUBNQN), "notransport", "", self.no_options)
@@ -606,6 +657,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
 
     def test_fabrics_ns_detach_all(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         manager = self.get_interface("/Manager", ".Manager.NVMe")
 
         ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "loop", "", self.no_options)
@@ -647,6 +699,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
     def test_persistent_dc(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN)
         manager = self.get_interface("/Manager", ".Manager.NVMe")
         with self.assertRaisesRegex(dbus.exceptions.DBusException, 'Invalid value specified for the transport address argument'):
             manager.Connect(self.str_to_ay(self.DISCOVERY_NQN), "notransport", "", self.no_options)
