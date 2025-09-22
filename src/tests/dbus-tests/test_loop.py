@@ -78,6 +78,21 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
         uid = self.get_property(self.device, '.Loop', 'SetupByUID')
         uid.assertEqual(0)  # uid should be 0 since device is not created by Udisks
 
+    def test_50_set_capacity(self):
+        # should use the whole file
+        size = self.get_property(self.device, ".Block", "Size")
+        size.assertEqual(10 * 1024**2)
+
+        with open(self.LOOP_DEVICE_FILENAME, "r+b") as loop_file:
+            fd = loop_file.fileno()
+            os.ftruncate(fd, 20 * 1024**2)
+
+        self.iface.SetCapacity(self.no_options)
+
+        # size should be updated
+        size = self.get_property(self.device, ".Block", "Size")
+        size.assertEqual(20 * 1024**2)
+
 
 class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
     """Unit tests for the loop-related methods of the Manager object"""

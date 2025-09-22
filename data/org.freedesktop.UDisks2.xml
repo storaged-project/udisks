@@ -3096,6 +3096,18 @@
       <arg name="value" direction="in" type="b"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        SetCapacity:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.11.0
+
+        Forces the loop driver to reread the size of the file associated
+        with this device.
+    -->
+    <method name="SetCapacity">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
