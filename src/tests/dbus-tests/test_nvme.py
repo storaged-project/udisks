@@ -656,6 +656,42 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
             self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
 
+    def test_fabrics_connect_tcp(self):
+        setup_nvme_target(self.dev_files, self.SUBNQN, tr_loop=False, tr_tcp_ipv4=True)
+        manager = self.get_interface("/Manager", ".Manager.NVMe")
+        msg = r'Error connecting the controller: failed to write to nvme-fabrics device'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "192.168.255.255", self.no_options)
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.Connect(self.str_to_ay("unknownsubnqn"), "tcp", "127.0.0.1", self.no_options)
+        msg = r'Error connecting the controller: failed to get transport address'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "192.368.1.1", self.no_options)
+
+        d = dbus.Dictionary(signature='sv')
+        d['host_nqn'] = self.str_to_ay('nqn.2014-08.org.nvmexpress:uuid:fedcba98-7654-3210-fedc-ba9876543210')
+        d['host_id'] = self.str_to_ay('fedcba98-7654-3210-fedc-ba9876543210')
+        ctrl_obj_path = manager.Connect(self.str_to_ay(self.SUBNQN), "tcp", "127.0.0.1", d)
+        self.addCleanup(self._nvme_disconnect, self.SUBNQN, ignore_errors=True)
+
+        ctrl = self.get_object(ctrl_obj_path)
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(ctrl, 'org.freedesktop.UDisks2.NVMe.Fabrics')
+
+        hostnqn = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+        self.assertEqual(hostnqn, d['host_nqn'])
+        hostid = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostID')
+        self.assertEqual(hostid, d['host_id'])
+        transport = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'Transport')
+        self.assertEqual(transport, 'tcp')
+        tr_addr = self.get_property_raw(ctrl, '.NVMe.Fabrics', 'TransportAddress')
+        self.assertEqual(self.ay_to_str(tr_addr), 'traddr=127.0.0.1,trsvcid=4420,src_addr=127.0.0.1')
+
+        ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
+        ctrl = self.get_object(ctrl_obj_path)
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, r'Object does not exist at path .*|No such interface'):
+            self.get_property_raw(ctrl, '.NVMe.Fabrics', 'HostNQN')
+
     def test_fabrics_ns_detach_all(self):
         setup_nvme_target(self.dev_files, self.SUBNQN)
         manager = self.get_interface("/Manager", ".Manager.NVMe")
