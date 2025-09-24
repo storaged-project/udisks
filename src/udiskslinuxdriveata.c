@@ -74,15 +74,15 @@ struct _UDisksLinuxDriveAta
 {
   UDisksDriveAtaSkeleton parent_instance;
 
-  gboolean     smart_is_from_blob;
-  guint64      smart_updated;
-  BDSmartATA  *smart_data;
-
   UDisksThreadedJob *selftest_job;
 
   gboolean     secure_erase_in_progress;
   unsigned long drive_read, drive_write;
   gboolean     standby_enabled;
+
+  gboolean     smart_is_from_blob;
+  guint64      smart_updated;
+  BDSmartATA  *smart_data;
 };
 
 struct _UDisksLinuxDriveAtaClass
