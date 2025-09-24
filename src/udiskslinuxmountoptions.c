@@ -171,6 +171,7 @@ udisks_mount_options_entry_free (UDisksMountOptionsEntry *entry)
 #define MOUNT_OPTIONS_ARG_GID_SELF           "$GID"
 #define UDEV_MOUNT_OPTIONS_PREFIX            "UDISKS_MOUNT_OPTIONS_"
 #define FS_SIGNATURE_DRIVER_SEP              ":"
+#define FS_SIGNATURE_DRIVER_SEP_CHR          ':'
 
 
 /* transfer none */
@@ -580,7 +581,7 @@ parse_key_value_pair (GHashTable *mount_options, const gchar *key, const gchar *
   g_warn_if_fail (group != NULL);
 
   /* Trim equal 'fs_signature:fs_type' strings */
-  if (strstr (fs_type, FS_SIGNATURE_DRIVER_SEP))
+  if (strchr (fs_type, FS_SIGNATURE_DRIVER_SEP_CHR))
     {
       gchar **split = g_strsplit (fs_type, FS_SIGNATURE_DRIVER_SEP, 2);
       if (g_strv_length (split) == 2 && g_strcmp0 (split[0], split[1]) == 0)
@@ -1149,7 +1150,7 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
       if (g_str_equal (value, VARIANT_NULL_STRING))
         value = NULL;
       /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
-      if (strstr (key, ",") != NULL || (value && strstr (value, ",") != NULL))
+      if (strchr (key, ',') != NULL || (value && strchr (value, ',') != NULL))
         {
           g_set_error (error,
                        UDISKS_ERROR,
