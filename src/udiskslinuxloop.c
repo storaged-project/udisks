@@ -365,6 +365,72 @@ handle_set_autoclear (UDisksLoop             *loop,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+/* runs in thread dedicated to handling @invocation */
+static gboolean
+handle_set_capacity (UDisksLoop             *loop,
+                     GDBusMethodInvocation  *invocation,
+                     GVariant               *options)
+{
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  UDisksLinuxDevice *device = NULL;
+  const gchar *device_file = NULL;
+  GError *error = NULL;
+  uid_t caller_uid = -1;
+
+  object = udisks_daemon_util_dup_object (loop, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        object,
+                                                        "org.freedesktop.udisks2.loop-modify-others",
+                                                        options,
+                                                        /* Translators: Shown in authentication dialog when the user
+                                                         * requests changing autoclear on a loop device set up by
+                                                         * another user.
+                                                         *
+                                                         * Do not translate $(drive), it's a placeholder and
+                                                         * will be replaced by the name of the drive/device in question
+                                                         */
+                                                        N_("Authentication is required to modify the loop device $(drive)"),
+                                                        invocation))
+        goto out;
+    }
+
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
+  device_file = g_udev_device_get_device_file (device->udev_device);
+  if (!bd_loop_set_capacity (device_file, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  udisks_loop_complete_set_capacity (loop, invocation);
+
+ out:
+  g_clear_object (&device);
+  g_clear_object (&object);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -372,4 +438,5 @@ loop_iface_init (UDisksLoopIface *iface)
 {
   iface->handle_delete        = handle_delete;
   iface->handle_set_autoclear = handle_set_autoclear;
+  iface->handle_set_capacity  = handle_set_capacity;
 }

@@ -399,8 +399,7 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
             # resize the loop device
             temp.truncate(TMP_SIZE_2)
-            self.run_command('losetup -c /dev/%s' % loop_dev)
-            time.sleep(2)
+            loop_dev_obj.SetCapacity(self.no_options, dbus_interface=self.iface_prefix + '.Loop')
             bsize = self.get_property(loop_dev_obj, '.Block', 'Size')
             bsize.assertEqual(TMP_SIZE_2)
             fssize = self.get_property(loop_dev_obj, '.Filesystem', 'Size')
