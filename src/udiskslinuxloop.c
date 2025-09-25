@@ -212,11 +212,9 @@ handle_delete (UDisksLoop            *loop,
   udisks_linux_block_object_lock_for_cleanup (UDISKS_LINUX_BLOCK_OBJECT (object));
   udisks_state_check_block (state, udisks_linux_block_object_get_device_number (UDISKS_LINUX_BLOCK_OBJECT (object)));
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -313,11 +311,9 @@ handle_set_autoclear (UDisksLoop             *loop,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
-  error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_clear_error (&error);
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -341,7 +337,6 @@ handle_set_autoclear (UDisksLoop             *loop,
 
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
   device_file = g_udev_device_get_device_file (device->udev_device);
-  error = NULL;
   if (!bd_loop_set_autoclear (device_file, arg_value, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
