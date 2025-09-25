@@ -1831,6 +1831,7 @@ class MDRaid(UDisksTestCase):
         create.extend(self.md_legs)
         self.assertEqual(subprocess.call(create), 0)
         self.sync()
+        time.sleep(2)  # FIXME: find a better way
 
     def tearDown(self):
         self.assertEqual(
