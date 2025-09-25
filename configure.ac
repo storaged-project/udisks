@@ -172,7 +172,7 @@ if test "x$enable_daemon" = "xyes"; then
   AC_SUBST(GMODULE_CFLAGS)
   AC_SUBST(GMODULE_LIBS)
 
-  PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 3.0])
+  PKG_CHECK_MODULES(BLOCKDEV, [blockdev >= 3.4])
   AC_SUBST(BLOCKDEV_CFLAGS)
   AC_SUBST(BLOCKDEV_LIBS)
 
