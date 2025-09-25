@@ -747,6 +747,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
   UDisksLinuxDevice *raid_device = NULL;
   UDisksBaseJob *job = NULL;
   const gchar *device_file = NULL;
+  const gchar *sysfs_path;
   GError *local_error = NULL;
   gboolean ret = FALSE;
 
@@ -802,6 +803,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
 
   job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (object),
@@ -824,6 +826,8 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
       g_propagate_error (error, local_error);
       goto out;
     }
+
+  udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   ret = TRUE;
@@ -930,6 +934,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   const gchar *member_device_file = NULL;
+  const gchar *sysfs_path;
   GError *error = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
@@ -1018,6 +1023,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
 
   member_device_file = udisks_block_get_device (member_device);
 
@@ -1062,6 +1068,11 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
         }
     }
 
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (member_device_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
+
   udisks_mdraid_complete_remove_device (_mdraid, invocation);
 
  out:
@@ -1092,6 +1103,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   const gchar *new_member_device_file = NULL;
+  const gchar *sysfs_path;
   GError *error = NULL;
   UDisksObject *new_member_device_object = NULL;
   UDisksBlock *new_member_device = NULL;
@@ -1168,6 +1180,8 @@ handle_add_device (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
+
   new_member_device_file = udisks_block_get_device (new_member_device);
 
   job = udisks_daemon_launch_simple_job (daemon,
@@ -1191,6 +1205,11 @@ handle_add_device (UDisksMDRaid           *_mdraid,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (new_member_device_object),
+                                                 UDISKS_DEFAULT_WAIT_TIMEOUT);
+
+  udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_mdraid_complete_add_device (_mdraid, invocation);
@@ -1221,6 +1240,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   uid_t caller_uid;
   UDisksLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
+  const gchar *sysfs_path;
   GError *error = NULL;
   UDisksBaseJob *job = NULL;
 
@@ -1286,6 +1306,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
 
   job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (object),
@@ -1308,6 +1329,8 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_mdraid_complete_add_device (_mdraid, invocation);
@@ -1338,6 +1361,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   UDisksLinuxDevice *raid_device = NULL;
   GError *error = NULL;
   const gchar *device_file = NULL;
+  const gchar *sysfs_path;
   UDisksBaseJob *job = NULL;
   gboolean opt_no_inhibit = FALSE;
 
@@ -1407,6 +1431,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
 
   job = udisks_daemon_launch_simple_job (daemon,
                                          UDISKS_OBJECT (object),
@@ -1429,6 +1454,8 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
   udisks_mdraid_complete_request_sync_action (_mdraid, invocation);
@@ -1455,6 +1482,7 @@ handle_delete (UDisksMDRaid           *mdraid,
   GList *member_devices = NULL;
   GList *l;
   UDisksLinuxDevice *raid_device = NULL;
+  const gchar *sysfs_path;
   GError *error = NULL;
 
   g_variant_lookup (options, "tear-down", "b", &teardown_flag);
@@ -1565,12 +1593,20 @@ handle_delete (UDisksMDRaid           *mdraid,
       UDisksLinuxDevice *member_device = UDISKS_LINUX_DEVICE (l->data);
       const gchar *device = g_udev_device_get_device_file (member_device->udev_device);
 
+      sysfs_path = g_udev_device_get_sysfs_path (member_device->udev_device);
       if (!bd_md_destroy (device, &error))
         {
           g_prefix_error (&error, "Error wiping device '%s': ", device);
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
+      udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
+    }
+
+  if (raid_device)
+    {
+      sysfs_path = g_udev_device_get_sysfs_path (raid_device->udev_device);
+      udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
     }
 
   udisks_mdraid_complete_delete (mdraid, invocation);
