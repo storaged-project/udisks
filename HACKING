@@ -75,6 +75,10 @@ TRANSLATIONS
 
 - Don't use VPATH build (To be fixed)
 
+- Some weeks before the planned release announce the upcoming release
+  on the GNOME Discourse in the Applications category with the i18n tag
+  https://discourse.gnome.org/
+
 - Check that Github -> Damned Lies synchronization works and that new strings
   show up on the l10n module page: https://l10n.gnome.org/module/udisks/
 
