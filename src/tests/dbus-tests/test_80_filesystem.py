@@ -1707,8 +1707,19 @@ class NTFSCommonTestCase(UdisksFSTestCase):
     @classmethod
     def setUpClass(cls):
         super(NTFSCommonTestCase, cls).setUpClass()
-        if not BlockDev.utils_have_kernel_module('ntfs3') and not BlockDev.utils_have_kernel_module('ntfs3') and not cls._have_ntfs3g:
+
+        if not BlockDev.utils_have_kernel_module('ntfs') and not BlockDev.utils_have_kernel_module('ntfs3') and not cls._have_ntfs3g:
             raise unittest.SkipTest('No ntfs/ntfs3/ntfs3g implementation available, skipping.')
+
+        if not cls._have_ntfs3g:
+            # Check if 'ntfs' is available in /proc/filesystems
+            try:
+                with open('/proc/filesystems', 'r') as f:
+                    filesystems = f.read()
+                if "ntfs\n" not in filesystems:
+                    raise unittest.SkipTest('ntfs filesystem not found in /proc/filesystems, skipping.')
+            except (IOError, OSError):
+                raise unittest.SkipTest('Unable to read /proc/filesystems, skipping.')
 
     def test_mount_auto_configurable_mount_options(self):
         raise unittest.SkipTest('Not applicable for the common NTFS test case, skipping.')
