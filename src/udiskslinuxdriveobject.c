@@ -1108,13 +1108,16 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
                                         GCancellable            *cancellable,
                                         GError                 **error)
 {
+  UDisksDriveAta *iface_drive_ata = NULL;
+  UDisksNVMeController *iface_nvme_ctrl = NULL;
   UDisksLinuxDevice *device = NULL;
   gboolean ret = FALSE;
 
   /* ATA */
-  if (object->iface_drive_ata != NULL &&
-      udisks_drive_ata_get_smart_supported (object->iface_drive_ata) &&
-      udisks_drive_ata_get_smart_enabled (object->iface_drive_ata))
+  iface_drive_ata = udisks_object_get_drive_ata (UDISKS_OBJECT (object));
+  if (iface_drive_ata != NULL &&
+      udisks_drive_ata_get_smart_supported (iface_drive_ata) &&
+      udisks_drive_ata_get_smart_enabled (iface_drive_ata))
     {
       GError *local_error;
       gboolean nowakeup;
@@ -1129,7 +1132,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
                    nowakeup);
 
       local_error = NULL;
-      if (!udisks_linux_drive_ata_refresh_smart_sync (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata),
+      if (!udisks_linux_drive_ata_refresh_smart_sync (UDISKS_LINUX_DRIVE_ATA (iface_drive_ata),
                                                       nowakeup,
                                                       NULL, /* simulate_path */
                                                       cancellable,
@@ -1163,9 +1166,11 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
             }
         }
     }
+
   /* NVMe */
-  if (object->iface_nvme_ctrl != NULL &&
-      g_strcmp0 (udisks_nvme_controller_get_state (UDISKS_NVME_CONTROLLER (object->iface_nvme_ctrl)), "live") == 0)
+  iface_nvme_ctrl = udisks_object_get_nvme_controller (UDISKS_OBJECT (object));
+  if (iface_nvme_ctrl != NULL &&
+      g_strcmp0 (udisks_nvme_controller_get_state (iface_nvme_ctrl), "live") == 0)
     {
       GError *local_error = NULL;
 
@@ -1178,7 +1183,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
           udisks_info ("Refreshing Health Information on %s",
                        g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
 
-          if (!udisks_linux_nvme_controller_refresh_smart_sync (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl),
+          if (!udisks_linux_nvme_controller_refresh_smart_sync (UDISKS_LINUX_NVME_CONTROLLER (iface_nvme_ctrl),
                                                                 cancellable, &local_error))
             {
               g_propagate_prefixed_error (error, local_error, "Error updating Health Information: ");
@@ -1191,6 +1196,8 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
 
  out:
   g_clear_object (&device);
+  g_clear_object (&iface_drive_ata);
+  g_clear_object (&iface_nvme_ctrl);
   return ret;
 }
 
