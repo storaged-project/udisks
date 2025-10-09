@@ -241,7 +241,7 @@ udisks_linux_block_object_constructed (GObject *_object)
                     object);
 
   /* initial coldplug */
-  udisks_linux_block_object_uevent (object, "add", NULL);
+  udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_ADD, NULL);
 
   /* compute the object path */
   str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
@@ -251,14 +251,14 @@ udisks_linux_block_object_constructed (GObject *_object)
 
   block = udisks_object_peek_block (UDISKS_OBJECT (object));
   if (block && g_strcmp0 (udisks_block_get_crypto_backing_device (block), "/") != 0)
-    udisks_linux_block_object_uevent (object, "change", NULL);
+    udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, NULL);
 
   /* run update for partitions again -- it sets the "Partitions" property
    * on the PartitionTable interface and we need the object path for that
    */
   partition = udisks_object_peek_partition (UDISKS_OBJECT (object));
   if (partition)
-    udisks_linux_block_object_uevent (object, "change", NULL);
+    udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, NULL);
 
   if (G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_block_object_parent_class)->constructed (_object);
@@ -424,7 +424,7 @@ udisks_linux_block_object_get_device_number (UDisksLinuxBlockObject *object)
 
 static void
 update_iface (UDisksObject                     *object,
-              const gchar                      *uevent_action,
+              UDisksUeventAction                uevent_action,
               UDisksObjectHasInterfaceFunc      has_func,
               UDisksObjectConnectInterfaceFunc  connect_func,
               UDisksObjectUpdateInterfaceFunc   update_func,
@@ -493,7 +493,7 @@ block_device_connect (UDisksObject *object)
 
 static gboolean
 block_device_update (UDisksObject   *object,
-                     const gchar    *uevent_action,
+                     UDisksUeventAction uevent_action,
                      GDBusInterface *_iface)
 {
   udisks_linux_block_update (UDISKS_LINUX_BLOCK (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -596,7 +596,7 @@ partition_table_connect (UDisksObject *object)
 
 static gboolean
 partition_table_update (UDisksObject   *object,
-                        const gchar    *uevent_action,
+                        UDisksUeventAction uevent_action,
                         GDBusInterface *_iface)
 {
   udisks_linux_partition_table_update (UDISKS_LINUX_PARTITION_TABLE (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -637,7 +637,7 @@ partition_connect (UDisksObject *object)
 
 static gboolean
 partition_update (UDisksObject   *object,
-                  const gchar    *uevent_action,
+                  UDisksUeventAction uevent_action,
                   GDBusInterface *_iface)
 {
   udisks_linux_partition_update (UDISKS_LINUX_PARTITION (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -748,7 +748,7 @@ filesystem_connect (UDisksObject *object)
 
 static gboolean
 filesystem_update (UDisksObject   *object,
-                   const gchar    *uevent_action,
+                   UDisksUeventAction uevent_action,
                    GDBusInterface *_iface)
 {
   udisks_linux_filesystem_update (UDISKS_LINUX_FILESYSTEM (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -784,7 +784,7 @@ swapspace_connect (UDisksObject *object)
 
 static gboolean
 swapspace_update (UDisksObject   *object,
-                  const gchar    *uevent_action,
+                  UDisksUeventAction uevent_action,
                   GDBusInterface *_iface)
 {
   udisks_linux_swapspace_update (UDISKS_LINUX_SWAPSPACE (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -811,7 +811,7 @@ encrypted_connect (UDisksObject *object)
 
 static gboolean
 encrypted_update (UDisksObject   *object,
-                  const gchar    *uevent_action,
+                  UDisksUeventAction uevent_action,
                   GDBusInterface *_iface)
 {
   udisks_linux_encrypted_update (UDISKS_LINUX_ENCRYPTED (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -841,7 +841,7 @@ loop_connect (UDisksObject *object)
 
 static gboolean
 loop_update (UDisksObject   *object,
-             const gchar    *uevent_action,
+             UDisksUeventAction uevent_action,
              GDBusInterface *_iface)
 {
   udisks_linux_loop_update (UDISKS_LINUX_LOOP (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -869,7 +869,7 @@ nvme_namespace_connect (UDisksObject *object)
 
 static gboolean
 nvme_namespace_update (UDisksObject   *object,
-                       const gchar    *uevent_action,
+                       UDisksUeventAction uevent_action,
                        GDBusInterface *_iface)
 {
   udisks_linux_nvme_namespace_update (UDISKS_LINUX_NVME_NAMESPACE (_iface), UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -881,14 +881,14 @@ nvme_namespace_update (UDisksObject   *object,
 /**
  * udisks_linux_block_object_uevent:
  * @object: A #UDisksLinuxBlockObject.
- * @action: Uevent action or %NULL
+ * @action: uevent action
  * @device: A new #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  *
  * Updates all information on interfaces on @object as a result of incoming uevent processing.
  */
 void
 udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
-                                  const gchar            *action,
+                                  UDisksUeventAction      action,
                                   UDisksLinuxDevice      *device)
 {
   UDisksModuleManager *module_manager;
@@ -982,7 +982,7 @@ on_mount_monitor_mount_added (UDisksMountMonitor  *monitor,
   object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
 
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
-    udisks_linux_block_object_uevent (object, NULL, NULL);
+    udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_OTHER, NULL);
 
   g_object_unref (object);
 }
@@ -997,7 +997,7 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
   object = UDISKS_LINUX_BLOCK_OBJECT (g_object_ref (user_data));
 
   if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
-    udisks_linux_block_object_uevent (object, NULL, NULL);
+    udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_OTHER, NULL);
 
   g_object_unref (object);
 }

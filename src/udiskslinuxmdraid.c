@@ -146,7 +146,7 @@ on_polling_timout (gpointer user_data)
   raid_device = udisks_linux_mdraid_object_get_device (object);
   if (raid_device != NULL)
     {
-      udisks_linux_mdraid_object_uevent (object, "change", raid_device, FALSE);
+      udisks_linux_mdraid_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, raid_device, FALSE);
       g_object_unref (raid_device);
     }
 

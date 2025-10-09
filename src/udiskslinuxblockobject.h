@@ -34,7 +34,7 @@ GType                     udisks_linux_block_object_get_type   (void) G_GNUC_CON
 UDisksLinuxBlockObject   *udisks_linux_block_object_new        (UDisksDaemon            *daemon,
                                                                 UDisksLinuxDevice       *device);
 void                      udisks_linux_block_object_uevent     (UDisksLinuxBlockObject  *object,
-                                                                const gchar             *action,
+                                                                UDisksUeventAction       action,
                                                                 UDisksLinuxDevice       *device);
 UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject  *object);
 UDisksLinuxDevice        *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);

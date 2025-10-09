@@ -451,7 +451,7 @@ udisks_linux_provider_constructed (GObject *object)
 static void
 synthesize_uevent_for_id (UDisksLinuxProvider *provider,
                           const gchar         *id,
-                          const gchar         *action)
+                          UDisksUeventAction   action)
 {
   GHashTableIter iter;
   UDisksLinuxDriveObject *drive_object;
@@ -465,7 +465,7 @@ synthesize_uevent_for_id (UDisksLinuxProvider *provider,
         {
           if (g_strcmp0 (udisks_drive_get_id (drive), id) == 0)
             {
-              udisks_debug ("synthesizing %s event on drive with id %s", action, id);
+              udisks_debug ("synthesizing %s event on drive with id %s", G_STRINGIFY (action), id);
               udisks_linux_drive_object_uevent (drive_object, action, NULL);
             }
           g_object_unref (drive);
@@ -504,7 +504,7 @@ on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
       gchar *filename = g_file_get_basename (file);
       gchar *id = dup_id_from_config_name (filename);
       if (id)
-          synthesize_uevent_for_id (provider, id, "change");
+          synthesize_uevent_for_id (provider, id, UDISKS_UEVENT_ACTION_CHANGE);
       g_free (id);
       g_free (filename);
     }
@@ -712,7 +712,7 @@ on_system_sleep_signal (GDBusConnection *connection,
     if (g_str_has_suffix (filename, ".conf"))
       {
         gchar *id = dup_id_from_config_name (filename);
-        synthesize_uevent_for_id (provider, id, "reconfigure");
+        synthesize_uevent_for_id (provider, id, UDISKS_UEVENT_ACTION_RECONFIGURE);
         g_free (id);
       }
 
@@ -975,7 +975,7 @@ maybe_remove_mdraid_object (UDisksLinuxProvider     *provider,
 
 static void
 handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
-                                          const gchar         *action,
+                                          UDisksUeventAction   action,
                                           UDisksLinuxDevice   *device,
                                           const gchar         *uuid,
                                           gboolean             is_member)
@@ -989,7 +989,7 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
 
   /* if uuid is NULL or bogus, consider it a remove event */
   if (uuid == NULL || g_strcmp0 (uuid, "00000000:00000000:00000000:00000000") == 0)
-    action = "remove";
+    action = UDISKS_UEVENT_ACTION_REMOVE;
   else
     {
       /* sometimes the bogus UUID looks legit, but it is still bogus. */
@@ -1001,12 +1001,12 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
             {
               udisks_debug ("UUID of %s became bogus (changed from %s to %s)",
                             sysfs_path, udisks_linux_mdraid_object_get_uuid (candidate), uuid);
-              action = "remove";
+              action = UDISKS_UEVENT_ACTION_REMOVE;
             }
         }
     }
 
-  if (g_strcmp0 (action, "remove") == 0)
+  if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       /* first check if this device was a member */
       object = g_hash_table_lookup (provider->sysfs_path_to_mdraid_members, sysfs_path);
@@ -1066,7 +1066,7 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
 
 static void
 handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
-                                const gchar         *action,
+                                UDisksUeventAction   action,
                                 UDisksLinuxDevice   *device)
 {
   const gchar *uuid;
@@ -1097,7 +1097,7 @@ handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
 /* called with lock held */
 static void
 handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
-                               const gchar         *action,
+                               UDisksUeventAction   action,
                                UDisksLinuxDevice   *device)
 {
   UDisksLinuxDriveObject *object;
@@ -1110,7 +1110,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
 
-  if (g_strcmp0 (action, "remove") == 0)
+  if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       object = g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path);
       if (object != NULL)
@@ -1153,7 +1153,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
         }
       else
         {
-          if (g_strcmp0 (action, "add") == 0) /* don't create new drive object on "change" event */
+          if (action == UDISKS_UEVENT_ACTION_ADD) /* don't create new drive object on "change" event */
             {
               object = udisks_linux_drive_object_new (daemon, device);
               if (object != NULL)
@@ -1176,7 +1176,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
           else
             {
               udisks_critical ("Couldn't find existing drive object for device %s (uevent action '%s', VPD '%s')",
-                               sysfs_path, action, vpd);
+                               sysfs_path, G_STRINGIFY (action), vpd);
             }
         }
     }
@@ -1229,7 +1229,7 @@ out:
 /* called with lock held */
 static void
 handle_block_uevent_for_block (UDisksLinuxProvider *provider,
-                               const gchar         *action,
+                               UDisksUeventAction   action,
                                UDisksLinuxDevice   *device)
 {
   const gchar *sysfs_path;
@@ -1242,7 +1242,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
 
-  if (g_strcmp0 (action, "remove") == 0)
+  if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (object != NULL)
@@ -1282,7 +1282,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
 /* called with lock held */
 static void
 handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
-                                 const gchar         *action,
+                                 UDisksUeventAction   action,
                                  UDisksLinuxDevice   *device)
 {
   GDBusObjectSkeleton *object;
@@ -1365,7 +1365,7 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
         }
 
       /* No module object claimed or was interested in this device, try creating new instance for the current module. */
-      if (! handled && g_strcmp0 (action, "remove") != 0)
+      if (! handled && action != UDISKS_UEVENT_ACTION_REMOVE)
         {
           GDBusObjectSkeleton **objects, **ll;
 
@@ -1410,7 +1410,7 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
 /* called with lock held */
 static void
 handle_block_uevent (UDisksLinuxProvider *provider,
-                     const gchar         *action,
+                     UDisksUeventAction   action,
                      UDisksLinuxDevice   *device)
 {
   /* We use the sysfs block device for all of
@@ -1422,7 +1422,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
    * objects. Ensure that drive and mdraid objects are added before
    * and removed after block objects.
    */
-  if (g_strcmp0 (action, "remove") == 0)
+  if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
@@ -1451,11 +1451,25 @@ handle_block_uevent (UDisksLinuxProvider *provider,
         }
     }
 
-  if (g_strcmp0 (action, "add") != 0)
+  if (action != UDISKS_UEVENT_ACTION_ADD)
     {
       /* Possibly need to clean up */
       udisks_state_check (udisks_daemon_get_state (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
     }
+}
+
+static UDisksUeventAction
+parse_uevent_action (const gchar *action)
+{
+  if (g_strcmp0 (action, "change") == 0)
+    return UDISKS_UEVENT_ACTION_CHANGE;
+  if (g_strcmp0 (action, "add") == 0)
+    return UDISKS_UEVENT_ACTION_ADD;
+  if (g_strcmp0 (action, "remove") == 0)
+    return UDISKS_UEVENT_ACTION_REMOVE;
+  if (g_strcmp0 (action, "reconfigure") == 0)
+    return UDISKS_UEVENT_ACTION_RECONFIGURE;
+  return UDISKS_UEVENT_ACTION_OTHER;
 }
 
 /* called without lock held */
@@ -1476,7 +1490,7 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
   if (g_strcmp0 (subsystem, "block") == 0 ||
       g_strcmp0 (subsystem, "nvme") == 0)
     {
-      handle_block_uevent (provider, action, device);
+      handle_block_uevent (provider, parse_uevent_action (action), device);
     }
 
   G_UNLOCK (provider_lock);
@@ -1631,7 +1645,7 @@ update_block_objects (UDisksLinuxProvider *provider, const gchar *device_path)
       UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (l->data);
 
       if (device_path == NULL)
-        udisks_linux_block_object_uevent (object, "change", NULL);
+        udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, NULL);
       else
         {
           gchar *block_dev;
@@ -1642,7 +1656,7 @@ update_block_objects (UDisksLinuxProvider *provider, const gchar *device_path)
           g_free (block_dev);
           if (match)
             {
-              udisks_linux_block_object_uevent (object, "change", NULL);
+              udisks_linux_block_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, NULL);
               break;
             }
         }

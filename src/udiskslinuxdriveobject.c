@@ -248,7 +248,7 @@ udisks_linux_drive_object_constructed (GObject *_object)
   object->module_ifaces = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
 
   /* initial coldplug */
-  udisks_linux_drive_object_uevent (object, "add", object->devices->data);
+  udisks_linux_drive_object_uevent (object, UDISKS_UEVENT_ACTION_ADD, object->devices->data);
 
   /* compute the object path */
   vendor = g_strdup (udisks_drive_get_vendor (object->iface_drive));
@@ -501,7 +501,7 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject *object,
 
 static gboolean
 update_iface (UDisksObject                     *object,
-              const gchar                      *uevent_action,
+              UDisksUeventAction                uevent_action,
               UDisksObjectHasInterfaceFunc      has_func,
               UDisksObjectConnectInterfaceFunc  connect_func,
               UDisksObjectUpdateInterfaceFunc   update_func,
@@ -583,7 +583,7 @@ drive_connect (UDisksObject *object)
 
 static gboolean
 drive_update (UDisksObject   *object,
-              const gchar    *uevent_action,
+              UDisksUeventAction uevent_action,
               GDBusInterface *_iface)
 {
   UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
@@ -621,7 +621,7 @@ drive_ata_connect (UDisksObject *object)
 
 static gboolean
 drive_ata_update (UDisksObject   *object,
-                  const gchar    *uevent_action,
+                  UDisksUeventAction uevent_action,
                   GDBusInterface *_iface)
 {
   UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
@@ -659,7 +659,7 @@ nvme_ctrl_connect (UDisksObject *object)
 
 static gboolean
 nvme_ctrl_update (UDisksObject   *object,
-                  const gchar    *uevent_action,
+                  UDisksUeventAction uevent_action,
                   GDBusInterface *_iface)
 {
   UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
@@ -687,7 +687,7 @@ nvme_fabrics_connect (UDisksObject *object)
 
 static gboolean
 nvme_fabrics_update (UDisksObject   *object,
-                     const gchar    *uevent_action,
+                     UDisksUeventAction uevent_action,
                      GDBusInterface *_iface)
 {
   UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
@@ -722,14 +722,14 @@ find_link_for_sysfs_path (UDisksLinuxDriveObject *object,
 /**
  * udisks_linux_drive_object_uevent:
  * @object: A #UDisksLinuxDriveObject.
- * @action: Uevent action or %NULL
+ * @action: uevent action
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  *
  * Updates all information on interfaces on @drive.
  */
 void
 udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
-                                  const gchar            *action,
+                                  UDisksUeventAction      action,
                                   UDisksLinuxDevice      *device)
 {
   GList *link;
@@ -746,7 +746,7 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
   link = NULL;
   if (device != NULL)
     link = find_link_for_sysfs_path (object, g_udev_device_get_sysfs_path (device->udev_device));
-  if (g_strcmp0 (action, "remove") == 0)
+  if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       if (link != NULL)
         {
@@ -830,7 +830,7 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
     }
   g_list_free_full (modules, g_object_unref);
 
-  if (g_strcmp0 (action, "reconfigure") == 0)
+  if (action == UDISKS_UEVENT_ACTION_RECONFIGURE)
     conf_changed = TRUE;
 
   if (conf_changed)

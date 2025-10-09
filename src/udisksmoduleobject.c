@@ -33,7 +33,7 @@ udisks_module_object_default_init (UDisksModuleObjectIface *iface)
 /**
  * udisks_module_object_process_uevent:
  * @object: A #UDisksModuleObject.
- * @action: uevent action, common values are <literal>add</literal>, <literal>change</literal> and <literal>remove</literal> or %NULL
+ * @action: uevent action, common values are <literal>add</literal>, <literal>change</literal> and <literal>remove</literal> or <literal>other</literal>
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  * @keep: A return value whether to keep the object around or not.
  *
@@ -69,7 +69,7 @@ udisks_module_object_default_init (UDisksModuleObjectIface *iface)
  */
 gboolean
 udisks_module_object_process_uevent (UDisksModuleObject  *object,
-                                     const gchar         *action,
+                                     UDisksUeventAction   action,
                                      UDisksLinuxDevice   *device,
                                      gboolean            *keep)
 {
