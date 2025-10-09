@@ -353,12 +353,12 @@ udisks_linux_mdraid_object_get_device (UDisksLinuxMDRaidObject   *object)
 typedef gboolean (*HasInterfaceFunc)     (UDisksLinuxMDRaidObject *object);
 typedef void     (*ConnectInterfaceFunc) (UDisksLinuxMDRaidObject *object);
 typedef gboolean (*UpdateInterfaceFunc)  (UDisksLinuxMDRaidObject *object,
-                                          const gchar             *uevent_action,
+                                          UDisksUeventAction       uevent_action,
                                           GDBusInterface          *interface);
 
 static gboolean
 update_iface (UDisksLinuxMDRaidObject  *object,
-              const gchar              *uevent_action,
+              UDisksUeventAction        uevent_action,
               HasInterfaceFunc          has_func,
               ConnectInterfaceFunc      connect_func,
               UpdateInterfaceFunc       update_func,
@@ -429,7 +429,7 @@ mdraid_connect (UDisksLinuxMDRaidObject *object)
 
 static gboolean
 mdraid_update (UDisksLinuxMDRaidObject  *object,
-               const gchar              *uevent_action,
+               UDisksUeventAction        uevent_action,
                GDBusInterface           *_iface)
 {
   return udisks_linux_mdraid_update (UDISKS_LINUX_MDRAID (object->iface_mdraid), object);
@@ -534,7 +534,7 @@ attr_changed (GIOChannel   *channel,
 
   /* synthesize uevent */
   if (object->raid_device != NULL)
-    udisks_linux_mdraid_object_uevent (object, "change", object->raid_device, FALSE);
+    udisks_linux_mdraid_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, object->raid_device, FALSE);
 
  out:
   if (bail)
@@ -615,7 +615,7 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
 /**
  * udisks_linux_mdraid_object_uevent:
  * @object: A #UDisksLinuxMDRaidObject.
- * @action: Uevent action or %NULL
+ * @action: uevent action
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  * @is_member: %TRUE if @device is a member, %FALSE if it's the raid device.
  *
@@ -623,7 +623,7 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
  */
 void
 udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
-                                   const gchar             *action,
+                                   UDisksUeventAction       action,
                                    UDisksLinuxDevice       *device,
                                    gboolean                 is_member)
 {
@@ -643,7 +643,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
           device_sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
         }
 
-      if (g_strcmp0 (action, "remove") == 0)
+      if (action == UDISKS_UEVENT_ACTION_REMOVE)
         {
           if (link != NULL)
             {
@@ -682,7 +682,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
       if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
         goto out;
 
-      if (g_strcmp0 (action, "remove") == 0)
+      if (action == UDISKS_UEVENT_ACTION_REMOVE)
         {
           if (object->raid_device != NULL)
             if (g_strcmp0 (g_udev_device_get_sysfs_path (object->raid_device->udev_device),

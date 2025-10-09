@@ -34,7 +34,7 @@ GType                   udisks_linux_drive_object_get_type      (void) G_GNUC_CO
 UDisksLinuxDriveObject *udisks_linux_drive_object_new           (UDisksDaemon             *daemon,
                                                                  UDisksLinuxDevice        *device);
 void                    udisks_linux_drive_object_uevent        (UDisksLinuxDriveObject   *object,
-                                                                 const gchar              *action,
+                                                                 UDisksUeventAction        action,
                                                                  UDisksLinuxDevice        *device);
 UDisksDaemon           *udisks_linux_drive_object_get_daemon    (UDisksLinuxDriveObject   *object);
 GList                  *udisks_linux_drive_object_get_devices   (UDisksLinuxDriveObject   *object);
