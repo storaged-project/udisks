@@ -204,6 +204,21 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
         for path in block_paths:
             self.assertIn(path, dbus_blocks)
 
+    def test_51_get_drives(self):
+        # get all objects and filter drives
+        udisks = self.get_object('')
+        objects = udisks.GetManagedObjects(dbus_interface='org.freedesktop.DBus.ObjectManager')
+        drive_paths = [p for p in list(objects.keys()) if "/drives/" in p]
+
+        # get drives using the 'GetDrives' function
+        manager = self.get_interface(self.manager_obj, '.Manager')
+        dbus_drives = manager.GetDrives(self.no_options)
+
+        # and make sure both lists are equal
+        self.assertEqual(len(drive_paths), len(dbus_drives))
+        for path in drive_paths:
+            self.assertIn(path, dbus_drives)
+
     def _wipe(self, device, retry=True):
         ret, out = self.run_command('wipefs -a %s' % device)
         if ret != 0:

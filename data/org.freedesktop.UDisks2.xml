@@ -242,6 +242,19 @@
     </method>
 
     <!--
+        GetDrives:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.11
+
+        Get list of all drives (object paths of objects implementing the #org.freedesktop.UDisks2.Drive interface) known to UDisks.
+
+    -->
+    <method name="GetDrives">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="drive_objects" direction="out" type="ao"/>
+    </method>
+
+    <!--
         ResolveDevice:
         @devspec: Dictionary with specification of a device.
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
