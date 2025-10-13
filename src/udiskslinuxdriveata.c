@@ -37,8 +37,6 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#include <blockdev/smart.h>
-
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxdriveobject.h"
@@ -52,6 +50,106 @@
 #include "udisksata.h"
 #include "udiskslinuxdevice.h"
 #include "udisksconfigmanager.h"
+
+#ifdef HAVE_SMART
+#include <blockdev/smart.h>
+#else
+/* Stub definitions when SMART support is disabled */
+typedef struct _BDSmartATA BDSmartATA;
+typedef struct _BDSmartATAAttribute BDSmartATAAttribute;
+
+typedef enum {
+  BD_SMART_ATA_SELF_TEST_STATUS_COMPLETED_NO_ERROR = 0,
+  BD_SMART_ATA_SELF_TEST_STATUS_ABORTED_HOST,
+  BD_SMART_ATA_SELF_TEST_STATUS_INTR_HOST_RESET,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_FATAL,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_UNKNOWN,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_ELECTRICAL,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_SERVO,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_READ,
+  BD_SMART_ATA_SELF_TEST_STATUS_ERROR_HANDLING,
+  BD_SMART_ATA_SELF_TEST_STATUS_IN_PROGRESS = 15
+} BDSmartATASelfTestStatus;
+
+typedef enum {
+  BD_SMART_SELF_TEST_OP_SHORT,
+  BD_SMART_SELF_TEST_OP_LONG,
+  BD_SMART_SELF_TEST_OP_OFFLINE,
+  BD_SMART_SELF_TEST_OP_CONVEYANCE,
+  BD_SMART_SELF_TEST_OP_ABORT
+} BDSmartSelfTestOp;
+
+typedef enum {
+  BD_SMART_ERROR,
+} BDSmartError;
+
+enum {
+  BD_SMART_ERROR_TECH_UNAVAIL
+};
+
+struct _BDSmartATA {
+  gboolean smart_supported;
+  gboolean smart_enabled;
+  gboolean overall_status_passed;
+  gdouble temperature;
+  guint64 power_on_time;
+  BDSmartATASelfTestStatus self_test_status;
+  gint self_test_percent_remaining;
+  BDSmartATAAttribute **attributes;
+};
+
+struct _BDSmartATAAttribute {
+  guint8 id;
+  gchar *well_known_name;
+  guint16 flags;
+  gint value;
+  gint worst;
+  gint threshold;
+  guint64 pretty_value;
+  gint pretty_value_unit;
+  gboolean failing_now;
+  gboolean failed_past;
+  guint64 value_raw;
+};
+
+static inline void
+bd_smart_ata_free (BDSmartATA *data)
+{
+}
+
+static inline BDSmartATA*
+bd_smart_ata_get_info_from_data (guint8 *data, gsize data_len, GError **error)
+{
+  g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+               "ATA SMART support has been disabled during compilation");
+  return NULL;
+}
+
+static inline BDSmartATA*
+bd_smart_ata_get_info (const gchar *device, const BDExtraArg **extra, GError **error)
+{
+  g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+               "ATA SMART support has been disabled during compilation");
+  return NULL;
+}
+
+static inline gboolean
+bd_smart_device_self_test (const gchar *device, BDSmartSelfTestOp operation, const BDExtraArg **extra, GError **error)
+{
+  g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+               "ATA SMART support has been disabled during compilation");
+  return FALSE;
+}
+
+static inline gboolean
+bd_smart_set_enabled (const gchar *device, gboolean enabled, const BDExtraArg **extra, GError **error)
+{
+  g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+               "ATA SMART support has been disabled during compilation");
+  return FALSE;
+}
+#endif
+
 
 /**
  * SECTION:udiskslinuxdriveata
