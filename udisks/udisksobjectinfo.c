@@ -386,7 +386,7 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
     size_str = udisks_client_get_size_for_display (client, size, FALSE, FALSE);
 
   name = udisks_mdraid_get_name (mdraid);
-  s = strstr (name, ":");
+  s = strchr (name, ':');
   if (s != NULL && strlen (s) > 1)
     info->name = g_strdup (s + 1);
   else
