@@ -594,10 +594,10 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # find drive object through the second namespace block object
         ns = self.get_device(ns_devs[1])
-        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
         drive_obj = self.get_object(drive_obj_path)
-        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller', timeout=60)
 
         # this will wait up to 10 seconds for the state to switch
         state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
@@ -612,13 +612,16 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # wait for the namespace block object to disappear
         self.assertObjNotOnBus(str(ns.object_path))
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller', timeout=60)
+        state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+        state.assertEqual('live', timeout=10)
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
         ctrl_size.assertEqual(0)
 
         # attach that namespace back
         disable_target_ns(self.SUBNQN, nsid, enable=True)
-        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         nsid_new = self.get_property(ns, '.NVMe.Namespace', 'NSID')
         nsid_new.assertEqual(nsid)
 
@@ -917,29 +920,33 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             ctrl_size.assertEqual(0)
 
         # count number of namespaces pointing to our controller
-        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-        self.assertEqual(len(namespaces), self.NUM_NS)
-        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-        self.assertEqual(len(namespaces), 0)
+        ns_ctrl3 = ()
+        ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
         if self._ipv6_available:
-            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
-            self.assertEqual(len(namespaces), 0)
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+        # NOTE: due to org.freedesktop.UDisks2.Block.Drive property single-path
+        #       limitation, it may randomly point to any of the active controllers.
+        #       That's still perfectly valid in a multipath scenario.
+        self.assertEqual(len(ns_ctrl1) + len(ns_ctrl2) + len(ns_ctrl3), self.NUM_NS)
 
         # disconnect the first controller and watch the drive object references change
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
-        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-        self.assertEqual(len(namespaces), self.NUM_NS)
-        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-        self.assertEqual(len(namespaces), 0)
+        ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(ns_ctrl1), 0)
+        ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+        if self._ipv6_available:
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+        self.assertEqual(len(ns_ctrl2) + len(ns_ctrl3), self.NUM_NS)
 
         ctrl2.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
         if self._ipv6_available:
-            namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-            self.assertEqual(len(namespaces), self.NUM_NS)
-            namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-            self.assertEqual(len(namespaces), 0)
-            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
-            self.assertEqual(len(namespaces), 0)
+            ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+            self.assertEqual(len(ns_ctrl1), 0)
+            ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+            self.assertEqual(len(ns_ctrl2), 0)
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+            self.assertEqual(len(ns_ctrl3), self.NUM_NS)
             ctrl3.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
     def test_hostnqn(self):
