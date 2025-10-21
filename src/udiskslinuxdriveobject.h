@@ -58,6 +58,11 @@ gboolean                udisks_linux_drive_object_should_include_device (GUdevCl
                                                                          UDisksLinuxDevice  *device,
                                                                          gchar             **out_vpd);
 
+void                    udisks_linux_drive_object_nvme_subsys_uevent (UDisksLinuxDriveObject   *object,
+                                                                      UDisksUeventAction        action,
+                                                                      UDisksLinuxDevice        *device,
+                                                                      UDisksLinuxBlockObject  **subsystem_blocks);
+
 
 G_END_DECLS
 

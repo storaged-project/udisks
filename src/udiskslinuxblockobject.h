@@ -52,6 +52,11 @@ void                      udisks_linux_block_object_lock_for_cleanup     (UDisks
 gboolean                  udisks_linux_block_object_try_lock_for_cleanup (UDisksLinuxBlockObject *object);
 void                      udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object);
 
+void                      udisks_linux_block_object_nvme_subsys_uevent   (UDisksLinuxBlockObject *object,
+                                                                          UDisksUeventAction      action,
+                                                                          UDisksLinuxDevice      *device);
+
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_OBJECT_H__ */
