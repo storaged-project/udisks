@@ -1178,3 +1178,20 @@ udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object)
 
   g_mutex_unlock (&object->cleanup_mutex);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_block_object_nvme_subsys_uevent:
+ * @object: A #UDisksLinuxBlockObject.
+ * @action: uevent action
+ * @device: A new #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
+ *
+ * Process uevent related to a NVMe subsystem the block/namespace is a part of.
+ */
+void
+udisks_linux_block_object_nvme_subsys_uevent (UDisksLinuxBlockObject *object,
+                                              UDisksUeventAction      action,
+                                              UDisksLinuxDevice      *device)
+{
+}

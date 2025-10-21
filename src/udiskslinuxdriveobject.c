@@ -1356,3 +1356,22 @@ udisks_linux_drive_object_get_siblings (UDisksLinuxDriveObject *object)
   g_free (sibling_id);
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_drive_object_nvme_subsys_uevent:
+ * @object: A #UDisksLinuxDriveObject.
+ * @action: uevent action
+ * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
+ * @subsystem_blocks: (element-type UDisksLinuxBlockObject) (array zero-terminated=1): A %NULL-terminated list of #UDisksLinuxBlockObject in the subsystem.
+ *
+ * Process uevent related to a NVMe subsystem the drive/controller is a part of.
+ */
+void
+udisks_linux_drive_object_nvme_subsys_uevent (UDisksLinuxDriveObject  *object,
+                                              UDisksUeventAction       action,
+                                              UDisksLinuxDevice       *device,
+                                              UDisksLinuxBlockObject **subsystem_blocks)
+{
+}
