@@ -1374,4 +1374,10 @@ udisks_linux_drive_object_nvme_subsys_uevent (UDisksLinuxDriveObject  *object,
                                               UDisksLinuxDevice       *device,
                                               UDisksLinuxBlockObject **subsystem_blocks)
 {
+  if (object->iface_drive != NULL)
+    udisks_linux_drive_update (UDISKS_LINUX_DRIVE (object->iface_drive), object);
+  if (object->iface_nvme_ctrl != NULL)
+    udisks_linux_nvme_controller_update (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl), object);
+  if (object->iface_nvme_fabrics != NULL)
+    udisks_linux_nvme_fabrics_update (UDISKS_LINUX_NVME_FABRICS (object->iface_nvme_fabrics), object);
 }

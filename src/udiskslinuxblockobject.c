@@ -1194,4 +1194,8 @@ udisks_linux_block_object_nvme_subsys_uevent (UDisksLinuxBlockObject *object,
                                               UDisksUeventAction      action,
                                               UDisksLinuxDevice      *device)
 {
+  if (object->iface_block_device != NULL)
+    udisks_linux_block_update (UDISKS_LINUX_BLOCK (object->iface_block_device), object);
+  if (object->iface_nvme_namespace != NULL)
+    udisks_linux_nvme_namespace_update (UDISKS_LINUX_NVME_NAMESPACE (object->iface_nvme_namespace), object);
 }
