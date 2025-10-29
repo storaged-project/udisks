@@ -1288,6 +1288,11 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
     subsys_nqn = g_hash_table_lookup (provider->sysfs_path_to_nvme_subsys, sysfs_path);
   if (subsys_nqn == NULL)
     return;
+  /* filter invalid values out */
+  if (g_strcmp0 (subsys_nqn, "(efault)") == 0 ||
+      g_strcmp0 (subsys_nqn, "(einval)") == 0 ||
+      g_strcmp0 (subsys_nqn, "(null)") == 0)
+    return;
 
   /* Store/remove the sysfs path */
   subsys_table = g_hash_table_lookup (provider->nvme_subsystems, subsys_nqn);
