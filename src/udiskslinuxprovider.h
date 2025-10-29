@@ -35,6 +35,11 @@ UDisksLinuxProvider   *udisks_linux_provider_new             (UDisksDaemon      
 GUdevClient           *udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider);
 gboolean               udisks_linux_provider_get_coldplug    (UDisksLinuxProvider *provider);
 
+void                   udisks_linux_provider_trigger_nvme_subsystem_uevent (UDisksLinuxProvider *provider,
+                                                                            const gchar         *subsys_nqn,
+                                                                            UDisksUeventAction   action,
+                                                                            UDisksLinuxDevice   *device);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_PROVIDER_H__ */
