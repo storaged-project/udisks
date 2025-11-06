@@ -329,6 +329,9 @@ fi
 %endif
 
 %changelog
+* Thu Nov 06 2025 Tomas Bzatek <tbzatek@redhat.com> - 2.11.0-1
+- Version 2.11.0
+
 * Thu Aug 28 2025 Tomas Bzatek <tbzatek@redhat.com> - 2.10.91-1
 - Version 2.10.91 (pre-release)
 

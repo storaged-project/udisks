@@ -1,17 +1,92 @@
 ---------------------------
-udisks 2.11.0 (unreleased)
+udisks 2.11.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
+This release brings several intrusive changes (as released in 2.10.90):
+- ATA SMART handling has been ported over to libblockdev which now offers
+  two plugins, based on libatasmart (default, recommended) and
+  smartmontools (experimental). There is an additional attribute
+  validation layer in place in libblockdev, some attributes may now
+  be reported as 'unknown' or 'untrusted'. Drive temperature reporting
+  has been reworked as well.
+- ATA SMART functionality has been made optional through the --disable-smart
+  configure switch (default: Enabled). ATA SMART can be also selectively
+  turned off for some drives by setting ID_ATA_SMART_ACCESS udev property
+  to 'none'. In such a case, the Drive.Ata.SmartUpdated property will remain
+  set to zero to indicate it was never updated for a particular drive.
+- ATA feature flags are now mostly retrieved from udev, skipping additional
+  probing done by UDisks in case of udev >= 257.
+
+Notable API changes and additions since 2.10.0:
+
+- Manager.MDRaidCreate(): added option 'version' to specify MD metadata version
+- new Manager.GetDrives() method
+- new MDRaid.ConsistencyPolicy property
+- MDRaid.RequestSyncAction(): added option 'no-inhibit-lock'
+- Block.Format(): new 'encrypt.label', 'encrypt.pbkdf', 'encrypt.memory',
+  'encrypt.iterations', 'encrypt.time' and 'encrypt.threads' options
+- new Block.RestoreEncryptedHeader() method
+- new Encrypted.Convert() method
+- new Encrypted.HeaderBackup() method
+- Drive.Ata.SmartUpdate(): deprecated the 'atasmart_blob' option
+- Drive.Ata.SmartSelftestStart(): added the 'offline' value for
+  the 'type' parameter
+- VDOVolume.GetStatistics(): aligned key names to follow the dm-vdo module
+  first upstream release (kernel 6.9)
+- new Filesystem.BTRFS.GetDefaultSubvolumeID() method
+- new Filesystem.BTRFS.SetDefaultSubvolumeID() method
+- new Loop.SetCapacity() method
+- Job.Operation: added new operation type 'encrypted-convert'
+
 Changes since 2.10.91:
-(TODO: make shortlog)
+
+Jordi Mas i Hernandez (1):
+      Update Catalan translation
+
+Tomas Bzatek (16):
+      Post-release version bump to 2.11.0
+      tests: Do not unlink nvme target backing files after setup
+      tests: Add nvme namespace detach/attach tests
+      integration-test: Force --bitmap=none on mdraid creation
+      tests: Add nvme detach-all & disconnect test
+      tests: Wait for requested nvme controllers to become live
+      udiskslinuxloop: Refactor error handling
+      udiskslinuxdriveata: Fix build without libblockdev-smart
+      tests: Add /proc/filesystems check for NTFS support in NTFSCommonTestCase
+      Update TRANSLATING
+      udiskslinuxmanagernvme: Parse the sysfs address composite string
+      udiskslinuxdriveobject: Hold interface references during housekeeping
+      tests: Extend the local nvme target setup with tcp
+      tests: Add TCP transport test for NVMe fabrics connection
+      tests: Add IPv6 TCP transport test and module availability check
+      tests: Add nvme multipath tests over loop and tcp
+
+Vojtech Trefny (7):
+      tests: Do not use "echo -e" in tests
+      tests: Remove unused functions from safe_dbus
+      tests: Replace deprecated threading.currentThread call
+      Add a function to re-read loop device capacity
+      spec: Bump required version of libblockdev to 3.4
+      udiskslinuxmanager: Add GetDrives method to Manager interface
+      ci: Add a simple test case for compilation without SMART
+
+dependabot[bot] (1):
+      infra: bump actions/upload-artifact from 4 to 5
+
+luming zh (2):
+      Update Chinese (China) translation
+      Update Chinese (China) translation
+
+twlvnn kraftwerk (1):
+      Update Bulgarian translation
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2025-11-06
 
 ----------------------------
 udisks 2.10.91 (pre-release)
