@@ -181,6 +181,8 @@ struct _UDisksLinuxDriveAta
   gboolean     secure_erase_in_progress;
   unsigned long drive_read, drive_write;
   gboolean     standby_enabled;
+
+  GMutex       object_lock;
 };
 
 struct _UDisksLinuxDriveAtaClass
@@ -202,6 +204,8 @@ udisks_linux_drive_ata_finalize (GObject *object)
 
   bd_smart_ata_free (drive->smart_data);
 
+  g_mutex_clear (&drive->object_lock);
+
   if (G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_ata_parent_class)->finalize (object);
 }
@@ -209,6 +213,8 @@ udisks_linux_drive_ata_finalize (GObject *object)
 static void
 udisks_linux_drive_ata_init (UDisksLinuxDriveAta *drive)
 {
+  g_mutex_init (&drive->object_lock);
+
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (drive),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
@@ -237,8 +243,6 @@ udisks_linux_drive_ata_new (void)
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-G_LOCK_DEFINE_STATIC (object_lock);
 
 static const gchar *
 selftest_status_to_string (BDSmartATASelfTestStatus status)
@@ -317,7 +321,7 @@ update_smart (UDisksLinuxDriveAta *drive,
     }
 #endif
 
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   if ((drive->smart_is_from_blob || enabled) && drive->smart_updated > 0)
     {
       if (drive->smart_is_from_blob)
@@ -335,7 +339,7 @@ update_smart (UDisksLinuxDriveAta *drive,
                            &num_attributes_failed_in_the_past,
                            &num_bad_sectors);
     }
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
 
   if (selftest_status == NULL)
     selftest_status = "";
@@ -697,12 +701,12 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       goto out;
     }
 
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   bd_smart_ata_free (drive->smart_data);
   drive->smart_data = data;
   drive->smart_is_from_blob = (simulate_path != NULL);
   drive->smart_updated = time (NULL);
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
 
   update_smart (drive, device);
 
@@ -930,7 +934,7 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
   GVariantBuilder builder;
   BDSmartATAAttribute **a;
 
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   if (drive->smart_data == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -964,7 +968,7 @@ handle_smart_get_attributes (UDisksDriveAta        *_drive,
       udisks_drive_ata_complete_smart_get_attributes (UDISKS_DRIVE_ATA (drive), invocation,
                                                       g_variant_builder_end (&builder));
     }
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1039,12 +1043,12 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
     }
 
   /* This wakes up the selftest thread */
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   if (drive->selftest_job != NULL)
     {
       g_cancellable_cancel (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (drive->selftest_job)));
     }
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
   /* TODO: wait for the selftest thread to terminate */
 
   error = NULL;
@@ -1108,10 +1112,10 @@ selftest_job_func (UDisksThreadedJob  *job,
 
       /* TODO: set estimation properties etc. on the Job object */
 
-      G_LOCK (object_lock);
+      g_mutex_lock (&drive->object_lock);
       still_in_progress = drive->smart_data && drive->smart_data->self_test_status == BD_SMART_ATA_SELF_TEST_STATUS_IN_PROGRESS;
       progress = (100.0 - (drive->smart_data ? drive->smart_data->self_test_percent_remaining : 0)) / 100.0;
-      G_UNLOCK (object_lock);
+      g_mutex_unlock (&drive->object_lock);
       if (!still_in_progress)
         {
           ret = TRUE;
@@ -1185,9 +1189,9 @@ selftest_job_func (UDisksThreadedJob  *job,
 
  out:
   /* terminate the job */
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   drive->selftest_job = NULL;
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
   g_clear_object (&object);
   return ret;
 }
@@ -1247,17 +1251,17 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   if (drive->selftest_job != NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "There is already SMART self-test running");
-      G_UNLOCK (object_lock);
+      g_mutex_unlock (&drive->object_lock);
       goto out;
     }
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     UDISKS_OBJECT (block_object),
@@ -1286,7 +1290,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  G_LOCK (object_lock);
+  g_mutex_lock (&drive->object_lock);
   if (drive->selftest_job == NULL)
     {
       drive->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
@@ -1299,7 +1303,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                                                     NULL)); /* GCancellable */
       udisks_threaded_job_start (drive->selftest_job);
     }
-  G_UNLOCK (object_lock);
+  g_mutex_unlock (&drive->object_lock);
 
   udisks_drive_ata_complete_smart_selftest_start (UDISKS_DRIVE_ATA (drive), invocation);
 
