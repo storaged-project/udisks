@@ -1028,7 +1028,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
       gchar *dm_uuid;
       dm_uuid = get_sysfs_attr (device->udev_device, "dm/uuid");
       if (dm_uuid != NULL &&
-           (g_str_has_prefix (dm_uuid, "CRYPT-LUKS") || g_str_has_prefix (dm_uuid, "CRYPT-BITLK") || g_str_has_prefix (dm_uuid, "CRYPT-TCRYPT")))
+           (g_str_has_prefix (dm_uuid, "CRYPT-LUKS") || g_str_has_prefix (dm_uuid, "CRYPT-BITLK") || g_str_has_prefix (dm_uuid, "CRYPT-TCRYPT") || g_str_has_prefix(dm_uuid, "CRYPT-PLAIN") ))
         {
           gchar *slave_sysfs_path;
           slave_sysfs_path = get_slave_sysfs_path (g_udev_device_get_sysfs_path (device->udev_device));
