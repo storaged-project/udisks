@@ -9,7 +9,7 @@
     <releaseinfo>
       For version &version; — the latest version of this
       documentation can be found at <ulink role="online-location"
-      url="http://storaged.org/doc/udisks2-api/latest/">http://storaged.org/doc/udisks2-api/latest/</ulink>.
+      url="https://storaged.org/udisks/docs/">https://storaged.org/udisks/docs/</ulink>.
     </releaseinfo>
   </bookinfo>
 

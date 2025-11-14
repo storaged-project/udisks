@@ -6,7 +6,7 @@
 # and 'fs_driver' is (optionally) the filesystem type (a kernel driver) passed
 # to the mount call. The 'key' is either "defaults", "allow" or "drivers".
 #
-# Refer to http://storaged.org/doc/udisks2-api/latest/mount_options.html
+# Refer to https://storaged.org/udisks/docs/mount_options.html
 #
 
 ### Simple global overrides
