@@ -190,10 +190,10 @@ handle_start (UDisksSwapspace        *swapspace,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * requests activating a swap device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to activate swapspace on $(drive)"),
+                                                    N_("Authentication is required to activate swapspace on $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -289,10 +289,10 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * requests deactivating a swap device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to deactivate swapspace on $(drive)"),
+                                                    N_("Authentication is required to deactivate swapspace on $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -367,10 +367,10 @@ handle_set_label (UDisksSwapspace        *swapspace,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * requests setting label of a swap device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to set swapspace label on $(drive)"),
+                                                    N_("Authentication is required to set swapspace label on $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -454,10 +454,10 @@ handle_set_uuid (UDisksSwapspace       *swapspace,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * requests setting UUID of a swap device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to set swapspace UUID on $(drive)"),
+                                                    N_("Authentication is required to set swapspace UUID on $(device.name)"),
                                                     invocation))
     goto out;
 
