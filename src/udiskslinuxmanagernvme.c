@@ -33,7 +33,9 @@
 #include "udisksdaemonutil.h"
 #include "udisksstate.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdevice.h"
+#include "udiskslinuxprovider.h"
 #include "udiskssimplejob.h"
 
 /**
@@ -471,6 +473,8 @@ handle_connect (UDisksManagerNVMe     *object,
   uid_t caller_uid;
   UDisksObject *ctrl_object = NULL;
   WaitForConnectData wait_data;
+  UDisksLinuxDevice *device = NULL;
+  UDisksLinuxProvider *provider;
   GError *error = NULL;
 
   if (arg_transport_addr && strlen (arg_transport_addr) == 0)
@@ -538,6 +542,13 @@ handle_connect (UDisksManagerNVMe     *object,
       goto out;
     }
 
+  device = udisks_linux_drive_object_get_device (UDISKS_LINUX_DRIVE_OBJECT (ctrl_object), TRUE /* get_hw */);
+  if (device)
+    {
+      provider = udisks_daemon_get_linux_provider (manager->daemon);
+      udisks_linux_provider_trigger_nvme_subsystem_uevent (provider, arg_subsysnqn, UDISKS_UEVENT_ACTION_ADD, device);
+    }
+
   udisks_manager_nvme_complete_connect (object,
                                         invocation,
                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (ctrl_object)));
@@ -545,6 +556,7 @@ handle_connect (UDisksManagerNVMe     *object,
  out:
   if (ctrl_object != NULL)
     g_object_unref (ctrl_object);
+  g_clear_object (&device);
   bd_extra_arg_list_free (extra_args);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
