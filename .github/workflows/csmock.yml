@@ -17,7 +17,7 @@ jobs:
       CI_CONTAINER: udisks-ci-csmock
     steps:
       - name: Checkout udisks repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install podman
         run: |
