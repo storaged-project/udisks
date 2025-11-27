@@ -11,17 +11,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2024-09-10 03:28+0000\n"
-"PO-Revision-Date: 2024-09-12 16:29+0200\n"
+"POT-Creation-Date: 2025-11-27 15:39+0000\n"
+"PO-Revision-Date: 2025-11-27 22:53+0100\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
-"%100==4 ? 2 : 3);\n"
-"X-Generator: Poedit 2.2.1\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
+"n%100==4 ? 2 : 3);\n"
+"X-Generator: Poedit 3.8\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -389,7 +389,7 @@ msgstr "Povezava NVMeoF"
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:492
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr ""
@@ -420,7 +420,7 @@ msgstr "Prekliči opravilo"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Za preklic opravila je potrebna overitev."
 
@@ -548,8 +548,8 @@ msgstr ""
 "Preverjanje pristnosti je potrebno za upravljanje LED diskovnega pogona"
 
 #: modules/lsm/lsm_linux_drive_local.c:278
-msgid "Authentication is required to change $(drive) LED"
-msgstr "Preverjanje pristnosti je potrebno za spremembo LED za $(drive)"
+msgid "Authentication is required to change $(device.name) LED"
+msgstr "Preverjanje pristnosti je potrebno za spremembo LED za $(device.name)"
 
 #: modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in:16
 msgid "Manage LVM"
@@ -563,46 +563,46 @@ msgstr "Za upravljanje LVM je potrebno preverjanje pristnosti"
 msgid "Authentication is required to delete a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za brisanje logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:653
+#: modules/lvm2/udiskslinuxlogicalvolume.c:654
 msgid "Authentication is required to repair a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za popravilo logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:756
+#: modules/lvm2/udiskslinuxlogicalvolume.c:758
 msgid "Authentication is required to rename a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za preimenovanje logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:820
+#: modules/lvm2/udiskslinuxlogicalvolume.c:823
 msgid "Authentication is required to resize a logical volume"
 msgstr ""
 "Preverjanje pristnosti je potrebno za spreminjanje velikosti logičnega "
 "nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:928
+#: modules/lvm2/udiskslinuxlogicalvolume.c:932
 msgid "Authentication is required to activate a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za aktiviranje logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:996
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1001
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za deaktiviranje logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1063
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1069
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 "Preverjanje pristnosti je potrebno za ustvarjanje posnetka logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1124
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1131
 msgid "Authentication is required to convert logical volume to cache"
 msgstr ""
 "Preverjanje pristnosti je potrebno za pretvorbo logičnega nosilca v "
 "predpomnilnik"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1146
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1197
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1154
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1206
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "Napaka pri pretvorbi pogona: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1175
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1183
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr ""
 "Preverjanje pristnosti je potrebno za razdelitev nabora predpomnilnika LV iz "
@@ -619,7 +619,7 @@ msgstr ""
 "Preverjanje pristnosti je potrebno za nastavitev deduplikacije / stiskanja "
 "na nosilcu VDO"
 
-#: modules/lvm2/udiskslinuxvdovolume.c:325
+#: modules/lvm2/udiskslinuxvdovolume.c:326
 msgid "Authentication is required to resize a VDO volume"
 msgstr ""
 "Preverjanje pristnosti je potrebno za spreminjanje velikosti nosilca VDO"
@@ -628,26 +628,26 @@ msgstr ""
 msgid "Authentication is required to delete a volume group"
 msgstr "Preverjanje pristnosti je potrebno za brisanje skupine nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:450
+#: modules/lvm2/udiskslinuxvolumegroup.c:451
 msgid "Authentication is required to rename a volume group"
 msgstr "Preverjanje pristnosti je potrebno za preimenovanje skupine nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:564
+#: modules/lvm2/udiskslinuxvolumegroup.c:566
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
 "Preverjanje pristnosti je potrebno za dodajanje naprave v skupino nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:663
+#: modules/lvm2/udiskslinuxvolumegroup.c:667
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
 "Preverjanje pristnosti je potrebno za odstranitev naprave iz skupine nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:672
+#: modules/lvm2/udiskslinuxvolumegroup.c:676
 msgid "Authentication is required to empty a device in a volume group"
 msgstr ""
 "Preverjanje pristnosti je potrebno za praznjenje naprave v skupini nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:847
+#: modules/lvm2/udiskslinuxvolumegroup.c:853
 msgid ""
 "Authentication is required to remove missing physical volumes from a volume "
 "group"
@@ -655,20 +655,20 @@ msgstr ""
 "Preverjanje pristnosti je potrebno za odstranitev manjkajočih fizičnih "
 "nosilcev iz skupine nosilcev"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:969
+#: modules/lvm2/udiskslinuxvolumegroup.c:976
 msgid "Authentication is required to create a logical volume"
 msgstr "Preverjanje pristnosti je potrebno za ustvarjanje logičnega nosilca"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:975
+#: modules/lvm2/udiskslinuxvolumegroup.c:982
 msgid "Authentication is required to create a thin volume"
 msgstr "Preverjanje pristnosti je potrebno za ustvarjanje nosilca lahkih"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:981
+#: modules/lvm2/udiskslinuxvolumegroup.c:988
 msgid "Authentication is required to create a thin pool volume"
 msgstr ""
 "Preverjanje pristnosti je potrebno za ustvarjanje nosilca nabora lahkih"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:987
+#: modules/lvm2/udiskslinuxvolumegroup.c:994
 msgid "Authentication is required to create a VDO volume"
 msgstr "Preverjanje pristnosti je potrebno za ustvarjanje nosilca VDO"
 
@@ -681,34 +681,34 @@ msgid "Authentication is required to read system-level secrets"
 msgstr "Za branje skrivnosti na ravni sistema je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2028
+#: src/udiskslinuxblock.c:2032
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Za dodajanje vnosa v datoteko /etc/fstab je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2047
+#: src/udiskslinuxblock.c:2051
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "Za dodajanje vnosa v datoteko /etc/crypttab je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2107
+#: src/udiskslinuxblock.c:2111
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Za odstranjevanje vnosa iz datoteke /etc/fstab je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2126
+#: src/udiskslinuxblock.c:2130
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
 "Za odstranjevanje vnosa iz datoteke /etc/crypttab je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2199
+#: src/udiskslinuxblock.c:2203
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Za spreminjanje datoteke /etc/fstab je potrebna overitev."
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2218
+#: src/udiskslinuxblock.c:2222
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Za spreminjanje datoteke /etc/crypttab je potrebna overitev."
 
@@ -716,393 +716,420 @@ msgstr "Za spreminjanje datoteke /etc/crypttab je potrebna overitev."
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
 #. * command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2909 src/udiskslinuxdriveata.c:2408
-msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "Za izvedbo varnega brisanja pogona $(drive) je potrebna overitev."
+#: src/udiskslinuxblock.c:2913 src/udiskslinuxdriveata.c:2562
+msgid "Authentication is required to perform a secure erase of $(device.name)"
+msgstr ""
+"Za izvedbo varnega brisanja pogona $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
 #. * table.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2921
-msgid "Authentication is required to format $(drive)"
-msgstr "Za formatiranje pogona $(drive) je potrebna overitev."
+#: src/udiskslinuxblock.c:2925
+msgid "Authentication is required to format $(device.name)"
+msgstr "Za formatiranje pogona $(device.name) je potrebna overitev."
 
-#: src/udiskslinuxblock.c:2950 src/udiskslinuxmdraid.c:1493
+#: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1503
 msgid "Authentication is required to modify the system configuration"
 msgstr "Preverjanje pristnosti je potrebno za spremembo prilagoditve sistema"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3906
-msgid "Authentication is required to open $(drive) for reading"
-msgstr "Za odpiranje pogona $(drive) za branje je potrebna overitev."
+#: src/udiskslinuxblock.c:3919
+msgid "Authentication is required to open $(device.name) for reading"
+msgstr "Za odpiranje pogona $(device.name) za branje je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3977
-msgid "Authentication is required to open $(drive) for writing"
-msgstr "Za odpiranje pogona $(drive) za pisanje je potrebna overitev."
+#: src/udiskslinuxblock.c:3990
+msgid "Authentication is required to open $(device.name) for writing"
+msgstr "Za odpiranje pogona $(device.name) za pisanje je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4051
-msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr "Za odpiranje $(drive) za primerjalni preskus je potrebna overitev."
+#: src/udiskslinuxblock.c:4064
+msgid "Authentication is required to open $(device.name) for benchmarking"
+msgstr ""
+"Za odpiranje $(device.name) za primerjalni preskus je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4134
-msgid "Authentication is required to open $(drive)."
-msgstr "Preverjanje pristnosti je potrebno za odpiranje $(drive)."
+#: src/udiskslinuxblock.c:4147
+msgid "Authentication is required to open $(device.name)."
+msgstr "Preverjanje pristnosti je potrebno za odpiranje $(device.name)."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4191
-msgid "Authentication is required to rescan $(drive)"
-msgstr "Overjanje je potrebno za ponovno preiskovanje "
+#: src/udiskslinuxblock.c:4204
+msgid "Authentication is required to rescan $(device.name)"
+msgstr "Zahtevano je overjanje za ponovno preiskovanje naprave $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1118
-msgid "Authentication is required to eject $(drive)"
-msgstr "Za izmet $(drive) je potrebna overitev."
+#: src/udiskslinuxdrive.c:1120
+msgid "Authentication is required to eject $(device.name)"
+msgstr "Za izmet $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will be
+#. * Do not translate $(device.name), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1206
-msgid "Authentication is required to configure settings for $(drive)"
-msgstr "Za prilagoditev nastavitev pogona $(drive) je potrebna overitev."
+#: src/udiskslinuxdrive.c:1209
+msgid "Authentication is required to configure settings for $(device.name)"
+msgstr "Za prilagoditev nastavitev pogona $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1521
-msgid "Authentication is required to power off $(drive)"
-msgstr "Za izklop pogona $(drive) je potrebna overitev"
+#: src/udiskslinuxdrive.c:1524
+msgid "Authentication is required to power off $(device.name)"
+msgstr "Za izklop pogona $(device.name) je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:710 src/udiskslinuxnvmecontroller.c:475
-msgid "Authentication is required to update SMART data from $(drive)"
-msgstr "Za posodobitev podatkov SMART s pogona $(drive) je potrebna overitev."
+#: src/udiskslinuxdriveata.c:860 src/udiskslinuxnvmecontroller.c:475
+msgid "Authentication is required to update SMART data from $(device.name)"
+msgstr ""
+"Za posodobitev podatkov SMART s pogona $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:721
-msgid "Authentication is required to set SMART data from a blob on $(drive)"
+#: src/udiskslinuxdriveata.c:871
+msgid ""
+"Authentication is required to set SMART data from a blob on $(device.name)"
 msgstr ""
-"Za določitev podatkov SMART iz zbirke dvojiških podatkov pogonu $(drive) je "
-"potrebna ovetitev."
+"Za določitev podatkov SMART iz zbirke dvojiških podatkov pogonu $"
+"(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:878
-msgid "Authentication is required to abort a SMART self-test on $(drive)"
+#: src/udiskslinuxdriveata.c:1028
+msgid "Authentication is required to abort a SMART self-test on $(device.name)"
 msgstr ""
-"Za prekinitev samopoizkusa SMART na napravi $(drive) je potrebna overitev."
+"Za prekinitev samopoizkusa SMART na napravi $(device.name) je potrebna "
+"overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1126
-msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "Za samopreizkus SMART na $(drive) je potrebna overitev."
+#: src/udiskslinuxdriveata.c:1276
+msgid "Authentication is required to start a SMART self-test on $(device.name)"
+msgstr "Za samopreizkus SMART na $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1221
-msgid "Authentication is required to enable SMART on $(drive)"
-msgstr "Za vklop SMART na pogonu $(drive) je potrebna overitev"
+#: src/udiskslinuxdriveata.c:1372
+#| msgid "Authentication is required to enable SMART on $(drive)"
+msgid "Authentication is required to enable SMART on $(device.name)"
+msgstr "Za vklop SMART na pogonu $(device.name) je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1231
-msgid "Authentication is required to disable SMART on $(drive)"
-msgstr "Za izklop SMART na pogonu $(drive) je potrebna overitev"
+#: src/udiskslinuxdriveata.c:1382
+msgid "Authentication is required to disable SMART on $(device.name)"
+msgstr "Za izklop SMART na pogonu $(device.name) je potrebna overitev"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1451
-msgid "Authentication is required to check power state for $(drive)"
-msgstr "Za preverjanje stanja napajanja za $(drive) je potrebna overitev."
+#: src/udiskslinuxdriveata.c:1605
+msgid "Authentication is required to check power state for $(device.name)"
+msgstr ""
+"Za preverjanje stanja napajanja za $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode or tries to put a drive into
 #. * standby mode.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1547
-msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "Za izhod $(drive) iz načina pripravljenosti je potrebna overitev."
+#: src/udiskslinuxdriveata.c:1701
+msgid "Authentication is required to wake up $(device.name) from standby mode"
+msgstr ""
+"Za izhod $(device.name) iz načina pripravljenosti je potrebna overitev."
 
-#: src/udiskslinuxdriveata.c:1548
-msgid "Authentication is required to put $(drive) in standby mode"
-msgstr "Za prehod $(drive) v način pripravljenosti je potrebna overitev."
+#: src/udiskslinuxdriveata.c:1702
+msgid "Authentication is required to put $(device.name) in standby mode"
+msgstr "Za prehod $(device.name) v način pripravljenosti je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
-msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "Za odklepanje širirane naprave $(drive) je potrebna overitev."
+#: src/udiskslinuxencrypted.c:507 src/udiskslinuxencrypted.c:984
+msgid ""
+"Authentication is required to unlock the encrypted device $(device.name)"
+msgstr "Za odklepanje šifrirane naprave $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
 #. * unlocked by another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:778
+#: src/udiskslinuxencrypted.c:795
 msgid ""
-"Authentication is required to lock the encrypted device $(drive) unlocked by "
-"another user"
+"Authentication is required to lock the encrypted device $(device.name) "
+"unlocked by another user"
 msgstr ""
-"Za zaklepanje širirane naprave $(drive), ki jo je odklenil drug uporabnik, "
-"je potrebna overitev."
+"Za zaklepanje šifrirane naprave $(device.name), ki jo je odklenil drug "
+"uporabnik, je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing a encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1100
-msgid "Authentication is required to resize the encrypted device $(drive)"
+#: src/udiskslinuxencrypted.c:1119
+msgid ""
+"Authentication is required to resize the encrypted device $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za spremembo velikosti šifrirane naprave "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za spremembo velikosti šifrirane naprave $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests conversion of an encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1254
+#: src/udiskslinuxencrypted.c:1274
 msgid ""
-"Authentication is required to convert device $(drive) to a different LUKS "
-"version."
+"Authentication is required to convert device $(device.name) to a different "
+"LUKS version."
 msgstr ""
-"Preverjanje pristnosti je potrebno za pretvorbo naprave $(drive) v drugo "
-"različico LUKS."
+"Preverjanje pristnosti je potrebno za pretvorbo naprave $(device.name) v "
+"drugo različico LUKS."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1130
-msgid "Authentication is required to mount $(drive)"
-msgstr "Za priklop $(drive) je potrebna overitev."
+#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1131
+msgid "Authentication is required to mount $(device.name)"
+msgstr "Za priklop $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1028
+#: src/udiskslinuxfilesystem.c:1029
 msgid ""
-"Authentication is required to mount $(drive) referenced in the /etc/fstab "
-"file"
+"Authentication is required to mount $(device.name) referenced in the /etc/"
+"fstab file"
 msgstr ""
-"Za priklop $(drive) s sklicem v datoteki /etc/fstab je potrebna overitev."
+"Za priklop $(device.name) s sklicem v datoteki /etc/fstab je potrebna "
+"overitev."
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1609
+#: src/udiskslinuxfilesystem.c:1612
 msgid ""
-"Authentication is required to unmount $(drive) referenced in the /etc/fstab "
-"file"
+"Authentication is required to unmount $(device.name) referenced in the /etc/"
+"fstab file"
 msgstr ""
-"Za odklop $(drive) s sklicem v datoteki /etc/fstab je potrebna overitev."
+"Za odklop $(device.name) s sklicem v datoteki /etc/fstab je potrebna "
+"overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1657
-msgid "Authentication is required to unmount $(drive) mounted by another user"
+#: src/udiskslinuxfilesystem.c:1660
+msgid ""
+"Authentication is required to unmount $(device.name) mounted by another user"
 msgstr ""
-"Za odklop naprave $(drive), ki jo je priklopil drug uporabnik, je potrebna "
-"overitev."
+"Za odklop naprave $(device.name), ki jo je priklopil drug uporabnik, je "
+"potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1825
-msgid "Authentication is required to change the filesystem label on $(drive)"
+#: src/udiskslinuxfilesystem.c:1829
+msgid ""
+"Authentication is required to change the filesystem label on $(device.name)"
 msgstr ""
-"Za spremembo oznake datotečnega sistema na pogonu $(drive) je potrebna "
+"Za spremembo oznake datotečnega sistema na pogonu $(device.name) je potrebna "
 "overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2007
-msgid "Authentication is required to resize the filesystem on $(drive)"
+#: src/udiskslinuxfilesystem.c:2012
+msgid "Authentication is required to resize the filesystem on $(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za spremembo velikosti datotečnega "
-"sistema na $(drive)"
+"sistema na $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2178
-msgid "Authentication is required to repair the filesystem on $(drive)"
+#: src/udiskslinuxfilesystem.c:2184
+msgid "Authentication is required to repair the filesystem on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za popravilo datotečnega sistema na "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za popravilo datotečnega sistema na $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2346
-msgid "Authentication is required to check the filesystem on $(drive)"
+#: src/udiskslinuxfilesystem.c:2353
+msgid "Authentication is required to check the filesystem on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za preverjanje datotečnega sistema na "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za preverjanje datotečnega sistema na $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2506
+#: src/udiskslinuxfilesystem.c:2514
 msgid ""
-"Authentication is required to change ownership of the filesystem on $(drive)"
+"Authentication is required to change ownership of the filesystem on $"
+"(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za spremembo lastništva datotečnega "
-"sistema na $(drive)"
+"sistema na $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem UUID.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2673
-msgid "Authentication is required to change the filesystem UUID on $(drive)"
+#: src/udiskslinuxfilesystem.c:2682
+msgid ""
+"Authentication is required to change the filesystem UUID on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za spremembo UUID datotečnega sistema na "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za spremembo UUID datotečnega sistema na $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:243
-msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "Za brisanje zančne naprave $(drive) je zahtevana overitev."
+#: src/udiskslinuxloop.c:241
+msgid "Authentication is required to delete the loop device $(device.name)"
+msgstr "Za brisanje zančne naprave $(device.name) je zahtevana overitev."
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing autoclear on a loop device set up by
+#. * another user.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxloop.c:333
+msgid "Authentication is required to modify the loop device $(device.name)"
+msgstr "Za spreminjanje zančne naprave $(device.name) je zahtevana overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -1111,7 +1138,7 @@ msgstr "Za brisanje zančne naprave $(drive) je zahtevana overitev."
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:336
+#: src/udiskslinuxloop.c:404
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Za spreminjanje zančne naprave $(drive) je zahtevana overitev."
 
@@ -1126,14 +1153,14 @@ msgstr "Za ustvarjanje polja RAID je potrebna overitev"
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host NQN value.
 #.
-#: src/udiskslinuxmanagernvme.c:549
+#: src/udiskslinuxmanagernvme.c:609
 msgid "Authentication is required to set NVMe Host NQN"
 msgstr "Preverjanje pristnosti je potrebno za nastavitev NQN gostitelja NVMe"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host ID value.
 #.
-#: src/udiskslinuxmanagernvme.c:618
+#: src/udiskslinuxmanagernvme.c:678
 msgid "Authentication is required to set NVMe Host ID"
 msgstr "Preverjanje pristnosti je potrebno za nastavitev ID-ja gostitelja NVMe"
 
@@ -1141,7 +1168,7 @@ msgstr "Preverjanje pristnosti je potrebno za nastavitev ID-ja gostitelja NVMe"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:632
+#: src/udiskslinuxmdraid.c:633
 msgid "Authentication is required to start a RAID array"
 msgstr "Za zagon polja RAID je potrebna overitev"
 
@@ -1149,7 +1176,7 @@ msgstr "Za zagon polja RAID je potrebna overitev"
 #. * attempts to stop a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:790
+#: src/udiskslinuxmdraid.c:792
 msgid "Authentication is required to stop a RAID array"
 msgstr "Za ustavitev polja RAID je potrebna overitev"
 
@@ -1157,7 +1184,7 @@ msgstr "Za ustavitev polja RAID je potrebna overitev"
 #. * attempts to remove a device from a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1006
+#: src/udiskslinuxmdraid.c:1009
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "Za odstranitev naprave iz polja RAID je potrebna overitev"
 
@@ -1165,7 +1192,7 @@ msgstr "Za odstranitev naprave iz polja RAID je potrebna overitev"
 #. * attempts to add a device to a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1155
+#: src/udiskslinuxmdraid.c:1159
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "Za dodajanje naprave polju RAID je potrebna overitev"
 
@@ -1173,7 +1200,7 @@ msgstr "Za dodajanje naprave polju RAID je potrebna overitev"
 #. * attempts to change whether it has a write-intent bitmap
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1272
+#: src/udiskslinuxmdraid.c:1277
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1184,140 +1211,148 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1389
+#: src/udiskslinuxmdraid.c:1398
 msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Za zagon/ustavitev prečesovanja podatkov polja RAID je potrebna overitev"
 
-#: src/udiskslinuxmdraid.c:1474
+#: src/udiskslinuxmdraid.c:1484
 msgid "Authentication is required to delete a RAID array"
 msgstr "Preverjanje pristnosti je potrebno za brisanje polja RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:837
-msgid "Authentication is required to start a device self-test on $(drive)"
+msgid ""
+"Authentication is required to start a device self-test on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za začetek samodejnega preizkusa naprave "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za začetek samodejnega preizkusa naprave $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:930
-msgid "Authentication is required to abort a device self-test on $(drive)"
+#: src/udiskslinuxnvmecontroller.c:931
+msgid ""
+"Authentication is required to abort a device self-test on $(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za prekinitev samodejnega preizkusa "
-"naprave $(drive)"
+"naprave $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a sanitize operation.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1232
-msgid "Authentication is required to perform a sanitize operation of $(drive)"
+#: src/udiskslinuxnvmecontroller.c:1233
+msgid ""
+"Authentication is required to perform a sanitize operation of $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za izvedbo operacije čiščenja $(drive)"
+"Preverjanje pristnosti je potrebno za izvedbo operacije čiščenja $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests disconnect of a NVMeoF connected controller.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmefabrics.c:201
 msgid ""
-"Authentication is required to disconnect a NVMe over Fabrics controller "
-"$(drive)"
+"Authentication is required to disconnect a NVMe over Fabrics controller $"
+"(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za prekinitev povezave s krmilnikom NVMe "
-"prek krmilnika Fabrics $(drive)"
+"prek krmilnika Fabrics $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmenamespace.c:409
-msgid "Authentication is required to format a namespace on $(drive)"
+msgid "Authentication is required to format a namespace on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za formatiranje imenskega prostora na "
-"$(drive)"
+"Preverjanje pristnosti je potrebno za formatiranje imenskega prostora na $"
+"(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartition.c:149
-msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "Za spreminjanje razdelka na pogonu $(drive) je potrebna overitev."
+msgid ""
+"Authentication is required to modify the partition on device $(device.name)"
+msgstr ""
+"Za spreminjanje razdelka na pogonu $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartitiontable.c:339
-msgid "Authentication is required to create a partition on $(drive)"
-msgstr "Za ustvarjanje razdelka na pogonu $(drive) je potrebna overitev."
+msgid "Authentication is required to create a partition on $(device.name)"
+msgstr "Za ustvarjanje razdelka na pogonu $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:196
-msgid "Authentication is required to activate swapspace on $(drive)"
+msgid "Authentication is required to activate swapspace on $(device.name)"
 msgstr ""
-"Za aktiviranje nadomestnega prostora na pogonu $(drive) je potrebna overitev."
+"Za aktiviranje nadomestnega prostora na pogonu $(device.name) je potrebna "
+"overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:294
-msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr "Za izklop izmenjevalnega prostora na $(drive) je potrebna overitev."
+#: src/udiskslinuxswapspace.c:295
+msgid "Authentication is required to deactivate swapspace on $(device.name)"
+msgstr ""
+"Za izklop izmenjevalnega prostora na $(device.name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting label of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:371
-msgid "Authentication is required to set swapspace label on $(drive)"
+#: src/udiskslinuxswapspace.c:373
+msgid "Authentication is required to set swapspace label on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za nastavitev oznake zamenjalnega "
-"prostora na $(drive)"
+"Preverjanje pristnosti je potrebno za nastavitev oznake izmenjalnega "
+"prostora na $(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting UUID of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:457
-msgid "Authentication is required to set swapspace UUID on $(drive)"
+#: src/udiskslinuxswapspace.c:460
+msgid "Authentication is required to set swapspace UUID on $(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za nastavitev UUID izmenjalnega prostora "
-"na $(drive)"
+"na $(device.name)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: udisks/udisksclient.c:1194
