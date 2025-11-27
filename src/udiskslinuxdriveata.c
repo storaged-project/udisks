@@ -850,10 +850,10 @@ handle_smart_update (UDisksDriveAta        *_drive,
   /* Translators: Shown in authentication dialog when the user
    * refreshes SMART data from a disk.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to update SMART data from $(drive)");
+  message = N_("Authentication is required to update SMART data from $(device.name)");
   action_id = "org.freedesktop.udisks2.ata-smart-update";
 
   if (atasmart_blob != NULL)
@@ -861,10 +861,10 @@ handle_smart_update (UDisksDriveAta        *_drive,
       /* Translators: Shown in authentication dialog when the user
        * tries to simulate SMART data from a libatasmart blob.
        *
-       * Do not translate $(drive), it's a placeholder and
+       * Do not translate $(device.name), it's a placeholder and
        * will be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to set SMART data from a blob on $(drive)");
+      message = N_("Authentication is required to set SMART data from a blob on $(device.name)");
       action_id = "org.freedesktop.udisks2.ata-smart-simulate";
     }
   else
@@ -1018,10 +1018,10 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * aborts a running SMART self-test.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to abort a SMART self-test on $(drive)"),
+                                                    N_("Authentication is required to abort a SMART self-test on $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -1266,10 +1266,10 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * initiates a SMART self-test.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and
+                                                     * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to start a SMART self-test on $(drive)"),
+                                                    N_("Authentication is required to start a SMART self-test on $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -1362,20 +1362,20 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
       /* Translators: Shown in authentication dialog when the user
        * requests enabling SMART on a disk.
        *
-       * Do not translate $(drive), it's a placeholder and
+       * Do not translate $(device.name), it's a placeholder and
        * will be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to enable SMART on $(drive)");
+      message = N_("Authentication is required to enable SMART on $(device.name)");
     }
   else
     {
       /* Translators: Shown in authentication dialog when the user
        * requests enabling SMART on a disk.
        *
-       * Do not translate $(drive), it's a placeholder and
+       * Do not translate $(device.name), it's a placeholder and
        * will be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to disable SMART on $(drive)");
+      message = N_("Authentication is required to disable SMART on $(device.name)");
     }
   action_id = "org.freedesktop.udisks2.ata-smart-enable-disable";
 
@@ -1595,10 +1595,10 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   /* Translators: Shown in authentication dialog when the user
    * requests the power state of a drive.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to check power state for $(drive)");
+  message = N_("Authentication is required to check power state for $(device.name)");
   action_id = "org.freedesktop.udisks2.ata-check-power";
 
   /* TODO: maybe not check with polkit if this is OK (consider gnome-disks(1) polling all drives every few seconds) */
@@ -1691,11 +1691,11 @@ handle_pm_standby_wakeup (UDisksDriveAta        *_drive,
    * tries to wake up a drive from standby mode or tries to put a drive into
    * standby mode.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = (do_wakeup) ? N_("Authentication is required to wake up $(drive) from standby mode") :
-                          N_("Authentication is required to put $(drive) in standby mode");
+  message = (do_wakeup) ? N_("Authentication is required to wake up $(device.name) from standby mode") :
+                          N_("Authentication is required to put $(device.name) in standby mode");
   action_id = "org.freedesktop.udisks2.ata-standby";
   if (udisks_block_get_hint_system (block))
     {
@@ -2552,10 +2552,10 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   /* Translators: Shown in authentication dialog when the user
    * requests erasing a hard disk using the SECURE ERASE UNIT command.
    *
-   * Do not translate $(drive), it's a placeholder and
+   * Do not translate $(device.name), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to perform a secure erase of $(drive)");
+  message = N_("Authentication is required to perform a secure erase of $(device.name)");
   action_id = "org.freedesktop.udisks2.ata-secure-erase";
 
   /* Check that the user is authorized */

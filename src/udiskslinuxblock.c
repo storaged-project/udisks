@@ -2907,10 +2907,10 @@ format_check_auth (UDisksDaemon          *daemon,
        * requests erasing a hard disk using the SECURE ERASE UNIT
        * command.
        *
-       * Do not translate $(drive), it's a placeholder and
+       * Do not translate $(device.name), it's a placeholder and
        * will be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to perform a secure erase of $(drive)");
+      message = N_("Authentication is required to perform a secure erase of $(device.name)");
       action_id = "org.freedesktop.udisks2.ata-secure-erase";
     }
   else
@@ -2919,10 +2919,10 @@ format_check_auth (UDisksDaemon          *daemon,
        * device. This includes both creating a filesystem or partition
        * table.
        *
-       * Do not translate $(drive), it's a placeholder and will
+       * Do not translate $(device.name), it's a placeholder and will
        * be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to format $(drive)");
+      message = N_("Authentication is required to format $(device.name)");
       action_id = format_extra_args ? "org.freedesktop.udisks2.modify-device-system" :
                                       "org.freedesktop.udisks2.modify-device";
       if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
@@ -3913,10 +3913,10 @@ handle_open_for_backup (UDisksBlock           *block,
                                                     /* Translators: Shown in authentication dialog when creating a
                                                      * disk image file.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * Do not translate $(device.name), it's a placeholder and will
                                                      * be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to open $(drive) for reading"),
+                                                    N_("Authentication is required to open $(device.name) for reading"),
                                                     invocation))
     goto out;
 
@@ -3984,10 +3984,10 @@ handle_open_for_restore (UDisksBlock           *block,
                                                     /* Translators: Shown in authentication dialog when restoring
                                                      * from a disk image file.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * Do not translate $(device.name), it's a placeholder and will
                                                      * be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to open $(drive) for writing"),
+                                                    N_("Authentication is required to open $(device.name) for writing"),
                                                     invocation))
     goto out;
 
@@ -4058,10 +4058,10 @@ handle_open_for_benchmark (UDisksBlock           *block,
                                                     /* Translators: Shown in authentication dialog when an application
                                                      * wants to benchmark a device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * Do not translate $(device.name), it's a placeholder and will
                                                      * be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to open $(drive) for benchmarking"),
+                                                    N_("Authentication is required to open $(device.name) for benchmarking"),
                                                     invocation))
     goto out;
 
@@ -4141,10 +4141,10 @@ handle_open_device (UDisksBlock           *block,
                                                     /* Translators: Shown in authentication dialog when an application
                                                      * wants to benchmark a device.
                                                      *
-                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * Do not translate $(device.name), it's a placeholder and will
                                                      * be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to open $(drive)."),
+                                                    N_("Authentication is required to open $(device.name)."),
                                                     invocation))
     goto out;
 
@@ -4198,10 +4198,10 @@ handle_rescan (UDisksBlock           *block,
   /* Translators: Shown in authentication dialog when an application
    * wants to rescan a device.
    *
-   * Do not translate $(drive), it's a placeholder and will
+   * Do not translate $(device.name), it's a placeholder and will
    * be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to rescan $(drive)");
+  message = N_("Authentication is required to rescan $(device.name)");
   action_id = "org.freedesktop.udisks2.rescan";
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,

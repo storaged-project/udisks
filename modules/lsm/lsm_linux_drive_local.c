@@ -275,7 +275,7 @@ is_authed (GDBusMethodInvocation    *invocation,
                                                      UDISKS_OBJECT (block_object),
                                                      LSM_POLICY_ACTION_ID,
                                                      options,
-                                                     N_("Authentication is required to change $(drive) LED"),
+                                                     N_("Authentication is required to change $(device.name) LED"),
                                                      invocation))
     goto out;
 
