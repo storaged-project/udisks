@@ -16,8 +16,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2025-09-30 15:38+0000\n"
-"PO-Revision-Date: 2025-10-01 09:29+0800\n"
+"POT-Creation-Date: 2025-11-27 15:39+0000\n"
+"PO-Revision-Date: 2025-11-28 10:12+0800\n"
 "Last-Translator: lumingzh <lumingzh@qq.com>\n"
 "Language-Team: Chinese (China) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -373,7 +373,7 @@ msgstr "NVMeoF 连接"
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:492
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr "连接至 NVMe over Fabrics 控制器需要身份验证"
@@ -520,8 +520,8 @@ msgid "Authentication is required to manage disk drive LED"
 msgstr "控制硬盘驱动器指示灯需要身份验证"
 
 #: modules/lsm/lsm_linux_drive_local.c:278
-msgid "Authentication is required to change $(drive) LED"
-msgstr "更改 $(drive) LED 需要身份验证"
+msgid "Authentication is required to change $(device.name) LED"
+msgstr "更改 $(device.name) LED 需要身份验证"
 
 #: modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in:16
 msgid "Manage LVM"
@@ -671,29 +671,29 @@ msgstr "修改 /etc/crypttab 文件需要身份验证"
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
 #. * command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2913 src/udiskslinuxdriveata.c:2460
-msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "执行安全擦除 $(drive) 需要身份验证"
+#: src/udiskslinuxblock.c:2913 src/udiskslinuxdriveata.c:2562
+msgid "Authentication is required to perform a secure erase of $(device.name)"
+msgstr "执行安全擦除 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
 #. * table.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:2925
-msgid "Authentication is required to format $(drive)"
-msgstr "格式化 $(drive) 需要身份验证"
+msgid "Authentication is required to format $(device.name)"
+msgstr "格式化 $(device.name) 需要身份验证"
 
 #: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1503
 msgid "Authentication is required to modify the system configuration"
@@ -702,228 +702,231 @@ msgstr "修改系统配置需要身份验证"
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:3919
-msgid "Authentication is required to open $(drive) for reading"
-msgstr "打开$(drive) 进行读取需要身份验证"
+msgid "Authentication is required to open $(device.name) for reading"
+msgstr "打开$(device.name) 进行读取需要身份验证"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:3990
-msgid "Authentication is required to open $(drive) for writing"
-msgstr "打开 $(drive) 进行写入需要身份验证"
+msgid "Authentication is required to open $(device.name) for writing"
+msgstr "打开 $(device.name) 进行写入需要身份验证"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:4064
-msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr "打开 $(drive) 进行性能测试需要身份验证"
+msgid "Authentication is required to open $(device.name) for benchmarking"
+msgstr "打开 $(device.name) 进行基准测试需要身份验证"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:4147
-msgid "Authentication is required to open $(drive)."
-msgstr "打开 $(drive) 需要身份验证。"
+msgid "Authentication is required to open $(device.name)."
+msgstr "打开 $(device.name) 需要身份验证。"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxblock.c:4204
-msgid "Authentication is required to rescan $(drive)"
-msgstr "重新扫描 $(drive) 需要认证"
+msgid "Authentication is required to rescan $(device.name)"
+msgstr "重新扫描 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxdrive.c:1120
-msgid "Authentication is required to eject $(drive)"
-msgstr "弹出 $(drive) 需要身份验证"
+msgid "Authentication is required to eject $(device.name)"
+msgstr "弹出 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will be
+#. * Do not translate $(device.name), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxdrive.c:1209
-msgid "Authentication is required to configure settings for $(drive)"
-msgstr "配置 $(drive) 设置需要身份验证"
+msgid "Authentication is required to configure settings for $(device.name)"
+msgstr "配置 $(device.name) 设置需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxdrive.c:1524
-msgid "Authentication is required to power off $(drive)"
-msgstr "给 $(drive) 断电需要认证"
+msgid "Authentication is required to power off $(device.name)"
+msgstr "给 $(device.name) 关机需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:758 src/udiskslinuxnvmecontroller.c:475
-msgid "Authentication is required to update SMART data from $(drive)"
-msgstr "使用 $(drive) 的 SMART 数据需要身份验证"
+#: src/udiskslinuxdriveata.c:860 src/udiskslinuxnvmecontroller.c:475
+msgid "Authentication is required to update SMART data from $(device.name)"
+msgstr "更新来自 $(device.name) 的 SMART 数据需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:769
-msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr "从 $(drive) 上的 blob 设置 SMART 数据需要身份验证"
+#: src/udiskslinuxdriveata.c:871
+msgid ""
+"Authentication is required to set SMART data from a blob on $(device.name)"
+msgstr "从 $(device.name) 上的 blob 设置 SMART 数据需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:926
-msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr "中止 $(drive) SMART 自检需要身份验证"
+#: src/udiskslinuxdriveata.c:1028
+msgid "Authentication is required to abort a SMART self-test on $(device.name)"
+msgstr "中止 $(device.name) SMART 自检需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1174
-msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "启动 $(drive) SMART 自检需要身份验证"
+#: src/udiskslinuxdriveata.c:1276
+msgid "Authentication is required to start a SMART self-test on $(device.name)"
+msgstr "启动 $(device.name) SMART 自检需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1270
-msgid "Authentication is required to enable SMART on $(drive)"
-msgstr "在 $(drive) 上启用 SMART 需要认证"
+#: src/udiskslinuxdriveata.c:1372
+msgid "Authentication is required to enable SMART on $(device.name)"
+msgstr "在 $(device.name) 上启用 SMART 需要认证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1280
-msgid "Authentication is required to disable SMART on $(drive)"
-msgstr "在 $(drive) 上禁用 SMART 需要身份验证"
+#: src/udiskslinuxdriveata.c:1382
+msgid "Authentication is required to disable SMART on $(device.name)"
+msgstr "在 $(device.name) 上禁用 SMART 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1503
-msgid "Authentication is required to check power state for $(drive)"
-msgstr "检查 $(drive) 电源状态需要身份验证"
+#: src/udiskslinuxdriveata.c:1605
+msgid "Authentication is required to check power state for $(device.name)"
+msgstr "检查 $(device.name) 电源状态需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode or tries to put a drive into
 #. * standby mode.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1599
-msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "从待机模式唤醒 $(drive) 需要身份验证"
+#: src/udiskslinuxdriveata.c:1701
+msgid "Authentication is required to wake up $(device.name) from standby mode"
+msgstr "从待机模式唤醒 $(device.name) 需要身份验证"
 
-#: src/udiskslinuxdriveata.c:1600
-msgid "Authentication is required to put $(drive) in standby mode"
-msgstr "将  $(drive) 转入待机模式需要身份验证"
+#: src/udiskslinuxdriveata.c:1702
+msgid "Authentication is required to put $(device.name) in standby mode"
+msgstr "将 $(device.name) 转入待机模式需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxencrypted.c:507 src/udiskslinuxencrypted.c:984
-msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "解锁加密的设备 $(drive) 需要身份验证"
+msgid ""
+"Authentication is required to unlock the encrypted device $(device.name)"
+msgstr "解锁加密设备 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
 #. * unlocked by another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxencrypted.c:795
 msgid ""
-"Authentication is required to lock the encrypted device $(drive) unlocked by "
-"another user"
-msgstr "锁定由其他用户解锁的设备 $(drive) 需要身份验证"
+"Authentication is required to lock the encrypted device $(device.name) "
+"unlocked by another user"
+msgstr "锁定由其他用户解锁的加密设备 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing a encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxencrypted.c:1119
-msgid "Authentication is required to resize the encrypted device $(drive)"
-msgstr "更改加密设备 $(drive) 的大小需要身份验证"
+msgid ""
+"Authentication is required to resize the encrypted device $(device.name)"
+msgstr "更改加密设备 $(device.name) 的大小需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests conversion of an encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxencrypted.c:1274
 msgid ""
-"Authentication is required to convert device $(drive) to a different LUKS "
-"version."
-msgstr "将设备 $(drive) 转换为不同的 LUKS 版本需要身份验证。"
+"Authentication is required to convert device $(device.name) to a different "
+"LUKS version."
+msgstr "将设备 $(device.name) 转换为不同的 LUKS 版本需要身份验证。"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1131
-msgid "Authentication is required to mount $(drive)"
-msgstr "挂载 $(drive) 需要身份验证"
+msgid "Authentication is required to mount $(device.name)"
+msgstr "挂载 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
@@ -931,15 +934,15 @@ msgstr "挂载 $(drive) 需要身份验证"
 #.
 #: src/udiskslinuxfilesystem.c:1029
 msgid ""
-"Authentication is required to mount $(drive) referenced in the /etc/fstab "
-"file"
-msgstr "挂载 /etc/fstab 中引用的 $(drive) 需要身份验证"
+"Authentication is required to mount $(device.name) referenced in the /etc/"
+"fstab file"
+msgstr "挂载 /etc/fstab 文件中引用的 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
@@ -947,92 +950,107 @@ msgstr "挂载 /etc/fstab 中引用的 $(drive) 需要身份验证"
 #.
 #: src/udiskslinuxfilesystem.c:1612
 msgid ""
-"Authentication is required to unmount $(drive) referenced in the /etc/fstab "
-"file"
-msgstr "卸载 /etc/fstab 文件中引用的 $(drive) 需要身份验证"
+"Authentication is required to unmount $(device.name) referenced in the /etc/"
+"fstab file"
+msgstr "卸载 /etc/fstab 文件中引用的 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:1660
-msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr "需要授权来卸载由其他用户挂载的 $(drive) "
+msgid ""
+"Authentication is required to unmount $(device.name) mounted by another user"
+msgstr "卸载由其他用户挂载的 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:1829
-msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr "更改  $(drive) 的文件系统标签需要身份验证"
+msgid ""
+"Authentication is required to change the filesystem label on $(device.name)"
+msgstr "更改 $(device.name) 的文件系统标签需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:2012
-msgid "Authentication is required to resize the filesystem on $(drive)"
-msgstr "改变 $(drive) 上文件系统大小需要身份验证"
+msgid "Authentication is required to resize the filesystem on $(device.name)"
+msgstr "更改 $(device.name) 上文件系统的大小需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:2184
-msgid "Authentication is required to repair the filesystem on $(drive)"
-msgstr "修复 $(drive) 的文件系统需要身份验证"
+msgid "Authentication is required to repair the filesystem on $(device.name)"
+msgstr "修复 $(device.name) 上的文件系统需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:2353
-msgid "Authentication is required to check the filesystem on $(drive)"
-msgstr "检查 $(drive) 上文件系统需要身份验证"
+msgid "Authentication is required to check the filesystem on $(device.name)"
+msgstr "检查 $(device.name) 上的文件系统需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:2514
 msgid ""
-"Authentication is required to change ownership of the filesystem on $(drive)"
-msgstr "改变 $(drive) 上文件系统所有者需要身份验证"
+"Authentication is required to change ownership of the filesystem on $"
+"(device.name)"
+msgstr "更改 $(device.name) 上文件系统的所有者需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem UUID.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxfilesystem.c:2682
-msgid "Authentication is required to change the filesystem UUID on $(drive)"
-msgstr "更改 $(drive) 上的文件系统 UUID 需要身份验证"
+msgid ""
+"Authentication is required to change the filesystem UUID on $(device.name)"
+msgstr "更改 $(device.name) 上的文件系统 UUID 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxloop.c:241
-msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "删除回环设备 $(drive) 需要身份验证"
+msgid "Authentication is required to delete the loop device $(device.name)"
+msgstr "删除回环设备 $(device.name) 需要身份验证"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing autoclear on a loop device set up by
+#. * another user.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxloop.c:333
+msgid "Authentication is required to modify the loop device $(device.name)"
+msgstr "修改回环设备 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -1041,7 +1059,7 @@ msgstr "删除回环设备 $(drive) 需要身份验证"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:333 src/udiskslinuxloop.c:404
+#: src/udiskslinuxloop.c:404
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "修改回环设备 $(drive) 需要身份验证"
 
@@ -1056,14 +1074,14 @@ msgstr "创建 RAID 阵列需要身份验证"
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host NQN value.
 #.
-#: src/udiskslinuxmanagernvme.c:549
+#: src/udiskslinuxmanagernvme.c:609
 msgid "Authentication is required to set NVMe Host NQN"
 msgstr "设置 NVMe 主机 NQN 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host ID value.
 #.
-#: src/udiskslinuxmanagernvme.c:618
+#: src/udiskslinuxmanagernvme.c:678
 msgid "Authentication is required to set NVMe Host ID"
 msgstr "设置 NVMe 主机 ID 需要身份验证"
 
@@ -1124,114 +1142,118 @@ msgstr "删除 RAID 阵列需要身份验证"
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:837
-msgid "Authentication is required to start a device self-test on $(drive)"
-msgstr "启动 $(drive) 上的设备自检需要身份验证"
+msgid ""
+"Authentication is required to start a device self-test on $(device.name)"
+msgstr "启动 $(device.name) 上的设备自检需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:931
-msgid "Authentication is required to abort a device self-test on $(drive)"
-msgstr "中止 $(drive) 上的设备自检需要身份验证"
+msgid ""
+"Authentication is required to abort a device self-test on $(device.name)"
+msgstr "中止 $(device.name) 上的设备自检需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a sanitize operation.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:1233
-msgid "Authentication is required to perform a sanitize operation of $(drive)"
-msgstr "执行 $(drive) 的擦除操作需要身份验证"
+msgid ""
+"Authentication is required to perform a sanitize operation of $(device.name)"
+msgstr "执行 $(device.name) 的擦除操作需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests disconnect of a NVMeoF connected controller.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmefabrics.c:201
 msgid ""
 "Authentication is required to disconnect a NVMe over Fabrics controller $"
-"(drive)"
-msgstr "断开与 NVMe over Fabrics 控制器 $(drive) 的连接需要身份验证"
+"(device.name)"
+msgstr "断开与 NVMe over Fabrics 控制器 $(device.name) 的连接需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmenamespace.c:409
-msgid "Authentication is required to format a namespace on $(drive)"
-msgstr "格式化 $(drive) 上的命名空间需要身份验证"
+msgid "Authentication is required to format a namespace on $(device.name)"
+msgstr "格式化 $(device.name) 上的命名空间需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartition.c:149
-msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "修改设备 $(drive) 上的分区需要身份验证"
+msgid ""
+"Authentication is required to modify the partition on device $(device.name)"
+msgstr "修改设备 $(device.name) 上的分区需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartitiontable.c:339
-msgid "Authentication is required to create a partition on $(drive)"
-msgstr "在 $(drive) 上创建分区需要身份验证"
+msgid "Authentication is required to create a partition on $(device.name)"
+msgstr "在 $(device.name) 上创建分区需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:196
-msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr "激活 $(drive) 上的交换空间需要身份验证"
+msgid "Authentication is required to activate swapspace on $(device.name)"
+msgstr "激活 $(device.name) 上的交换空间需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:295
-msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr "取消激活 $(drive)上的交换空间需要身份验证"
+msgid "Authentication is required to deactivate swapspace on $(device.name)"
+msgstr "停用 $(device.name) 上的交换空间需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting label of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:373
-msgid "Authentication is required to set swapspace label on $(drive)"
-msgstr "设置 $(drive)上的交换空间标签需要身份验证"
+msgid "Authentication is required to set swapspace label on $(device.name)"
+msgstr "设置 $(device.name) 上的交换空间标签需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting UUID of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:460
-msgid "Authentication is required to set swapspace UUID on $(drive)"
-msgstr "设置 $(drive)上的交换空间 UUID 需要身份验证"
+msgid "Authentication is required to set swapspace UUID on $(device.name)"
+msgstr "设置 $(device.name) 上的交换空间 UUID 需要身份验证"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: udisks/udisksclient.c:1194
@@ -3638,6 +3660,9 @@ msgstr "%s — %s [%s] (%s)"
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
 msgstr "%s — %s (%s)"
+
+#~ msgid "Authentication is required to rescan $(drive)"
+#~ msgstr "重新扫描 $(drive) 需要认证"
 
 #~ msgid "Manage Bcache"
 #~ msgstr "管理 Bcache"
