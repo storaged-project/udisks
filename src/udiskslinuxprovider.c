@@ -93,12 +93,11 @@ struct _UDisksLinuxProvider
   /* Module interfaces hashtable */
   GHashTable *module_ifaces;
 
-  /* set to TRUE only in the coldplug phase */
-  gboolean coldplug;
-
-  guint housekeeping_timeout;
   guint64 housekeeping_last;
-  gboolean housekeeping_running;
+  guint housekeeping_timeout;
+
+  gboolean coldplug : 1;
+  gboolean housekeeping_running : 1;
 };
 
 G_LOCK_DEFINE_STATIC (provider_lock);

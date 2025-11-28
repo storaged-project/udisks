@@ -50,8 +50,8 @@ struct _UDisksFstabEntry
   gchar *dir;
   gchar *type;
   gchar *opts;
-  gint freq;
-  gint passno;
+  gint16 freq;
+  gint16 passno;
 };
 
 typedef struct _UDisksFstabEntryClass UDisksFstabEntryClass;

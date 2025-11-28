@@ -31,12 +31,11 @@
 struct _UDisksConfigManager {
   GObject parent_instance;
 
-  gboolean uninstalled;
-
-  UDisksModuleLoadPreference load_preference;
-
   const gchar *encryption;
   gchar *config_dir;
+
+  UDisksModuleLoadPreference load_preference;
+  gboolean uninstalled : 1;
 };
 
 struct _UDisksConfigManagerClass {
