@@ -73,12 +73,12 @@ struct _LsmConnData
 struct _LsmPlData
 {
   gint64 last_refresh_time;
-  gboolean is_ok;
-  gboolean is_raid_degraded;
-  gboolean is_raid_error;
-  gboolean is_raid_verifying;
-  gboolean is_raid_reconstructing;
   char *status_info;
+  gboolean is_ok : 1;
+  gboolean is_raid_degraded : 1;
+  gboolean is_raid_error : 1;
+  gboolean is_raid_verifying : 1;
+  gboolean is_raid_reconstructing : 1;
 };
 
 /*
