@@ -737,7 +737,7 @@ calculate_mount_point (UDisksDaemon  *daemon,
   /* If we know the user-name and it doesn't have any '/' character in
    * it, mount in MOUNT_BASE/$USER
    */
-  if (!fs_shared && (user_name != NULL && strstr (user_name, "/") == NULL))
+  if (!fs_shared && (user_name != NULL && strchr (user_name, '/') == NULL))
     {
       mount_dir = g_strdup_printf (MOUNT_BASE "/%s", user_name);
       *persistent = MOUNT_BASE_PERSISTENT;
