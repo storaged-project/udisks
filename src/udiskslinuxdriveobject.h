@@ -34,7 +34,7 @@ GType                   udisks_linux_drive_object_get_type      (void) G_GNUC_CO
 UDisksLinuxDriveObject *udisks_linux_drive_object_new           (UDisksDaemon             *daemon,
                                                                  UDisksLinuxDevice        *device);
 void                    udisks_linux_drive_object_uevent        (UDisksLinuxDriveObject   *object,
-                                                                 const gchar              *action,
+                                                                 UDisksUeventAction        action,
                                                                  UDisksLinuxDevice        *device);
 UDisksDaemon           *udisks_linux_drive_object_get_daemon    (UDisksLinuxDriveObject   *object);
 GList                  *udisks_linux_drive_object_get_devices   (UDisksLinuxDriveObject   *object);
@@ -57,6 +57,11 @@ gboolean                udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriv
 gboolean                udisks_linux_drive_object_should_include_device (GUdevClient        *client,
                                                                          UDisksLinuxDevice  *device,
                                                                          gchar             **out_vpd);
+
+void                    udisks_linux_drive_object_nvme_subsys_uevent (UDisksLinuxDriveObject   *object,
+                                                                      UDisksUeventAction        action,
+                                                                      UDisksLinuxDevice        *device,
+                                                                      UDisksLinuxBlockObject  **subsystem_blocks);
 
 
 G_END_DECLS
