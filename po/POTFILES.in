@@ -17,6 +17,7 @@ modules/lvm2/udiskslinuxphysicalvolume.c
 modules/lvm2/udiskslinuxvdovolume.c
 modules/lvm2/udiskslinuxvolumegroup.c
 src/udisksbasejob.c
+src/udisksdaemonutil.c
 src/udiskslinuxblock.c
 src/udiskslinuxdrive.c
 src/udiskslinuxdriveata.c
