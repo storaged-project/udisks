@@ -11,17 +11,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2025-11-27 15:39+0000\n"
-"PO-Revision-Date: 2025-11-27 22:53+0100\n"
+"POT-Creation-Date: 2025-12-05 03:43+0000\n"
+"PO-Revision-Date: 2025-12-05 12:05+0100\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
-"n%100==4 ? 2 : 3);\n"
-"X-Generator: Poedit 3.8\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
+"X-Generator: Poedit 2.2.1\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -672,6 +672,30 @@ msgstr ""
 msgid "Authentication is required to create a VDO volume"
 msgstr "Preverjanje pristnosti je potrebno za ustvarjanje nosilca VDO"
 
+#. Translators: This is used for possibly encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:721
+#, c-format
+msgid "%s Possibly Encrypted"
+msgstr "%s - morda šifrirano"
+
+#. Translators: This is used for encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:728
+#, c-format
+msgid "%s Encrypted"
+msgstr "%s - šifrirano"
+
+#. Translators: This is used for volume with no filesystem label.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:741
+#, c-format
+msgid "%s Volume"
+msgstr "Pogon %s"
+
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
@@ -847,8 +871,8 @@ msgstr ""
 msgid ""
 "Authentication is required to set SMART data from a blob on $(device.name)"
 msgstr ""
-"Za določitev podatkov SMART iz zbirke dvojiških podatkov pogonu $"
-"(device.name) je potrebna overitev."
+"Za določitev podatkov SMART iz zbirke dvojiških podatkov pogonu $(device."
+"name) je potrebna overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -879,7 +903,6 @@ msgstr "Za samopreizkus SMART na $(device.name) je potrebna overitev."
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxdriveata.c:1372
-#| msgid "Authentication is required to enable SMART on $(drive)"
 msgid "Authentication is required to enable SMART on $(device.name)"
 msgstr "Za vklop SMART na pogonu $(device.name) je potrebna overitev"
 
@@ -956,8 +979,8 @@ msgstr ""
 msgid ""
 "Authentication is required to resize the encrypted device $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za spremembo velikosti šifrirane naprave $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za spremembo velikosti šifrirane naprave "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests conversion of an encrypted block device.
@@ -1067,8 +1090,8 @@ msgstr ""
 #: src/udiskslinuxfilesystem.c:2184
 msgid "Authentication is required to repair the filesystem on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za popravilo datotečnega sistema na $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za popravilo datotečnega sistema na "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
@@ -1079,8 +1102,8 @@ msgstr ""
 #: src/udiskslinuxfilesystem.c:2353
 msgid "Authentication is required to check the filesystem on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za preverjanje datotečnega sistema na $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za preverjanje datotečnega sistema na "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
@@ -1090,8 +1113,8 @@ msgstr ""
 #.
 #: src/udiskslinuxfilesystem.c:2514
 msgid ""
-"Authentication is required to change ownership of the filesystem on $"
-"(device.name)"
+"Authentication is required to change ownership of the filesystem on $(device."
+"name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za spremembo lastništva datotečnega "
 "sistema na $(device.name)"
@@ -1106,8 +1129,8 @@ msgstr ""
 msgid ""
 "Authentication is required to change the filesystem UUID on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za spremembo UUID datotečnega sistema na $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za spremembo UUID datotečnega sistema na "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -1230,8 +1253,8 @@ msgstr "Preverjanje pristnosti je potrebno za brisanje polja RAID"
 msgid ""
 "Authentication is required to start a device self-test on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za začetek samodejnega preizkusa naprave $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za začetek samodejnega preizkusa naprave "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
@@ -1256,8 +1279,8 @@ msgstr ""
 msgid ""
 "Authentication is required to perform a sanitize operation of $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za izvedbo operacije čiščenja $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za izvedbo operacije čiščenja $(device."
+"name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests disconnect of a NVMeoF connected controller.
@@ -1267,8 +1290,8 @@ msgstr ""
 #.
 #: src/udiskslinuxnvmefabrics.c:201
 msgid ""
-"Authentication is required to disconnect a NVMe over Fabrics controller $"
-"(device.name)"
+"Authentication is required to disconnect a NVMe over Fabrics controller "
+"$(device.name)"
 msgstr ""
 "Preverjanje pristnosti je potrebno za prekinitev povezave s krmilnikom NVMe "
 "prek krmilnika Fabrics $(device.name)"
@@ -1282,8 +1305,8 @@ msgstr ""
 #: src/udiskslinuxnvmenamespace.c:409
 msgid "Authentication is required to format a namespace on $(device.name)"
 msgstr ""
-"Preverjanje pristnosti je potrebno za formatiranje imenskega prostora na $"
-"(device.name)"
+"Preverjanje pristnosti je potrebno za formatiranje imenskega prostora na "
+"$(device.name)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
