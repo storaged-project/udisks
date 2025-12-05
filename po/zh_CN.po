@@ -16,8 +16,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2025-11-27 15:39+0000\n"
-"PO-Revision-Date: 2025-11-28 10:12+0800\n"
+"POT-Creation-Date: 2025-12-04 15:39+0000\n"
+"PO-Revision-Date: 2025-12-05 08:08+0800\n"
 "Last-Translator: lumingzh <lumingzh@qq.com>\n"
 "Language-Team: Chinese (China) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -627,6 +627,30 @@ msgstr "创建瘦部署池卷需要身份验证"
 #: modules/lvm2/udiskslinuxvolumegroup.c:994
 msgid "Authentication is required to create a VDO volume"
 msgstr "创建 VDO 卷需要身份验证"
+
+#. Translators: This is used for possibly encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:721
+#, c-format
+msgid "%s Possibly Encrypted"
+msgstr "%s 可能已加密"
+
+#. Translators: This is used for encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:728
+#, c-format
+msgid "%s Encrypted"
+msgstr "%s 已加密"
+
+#. Translators: This is used for volume with no filesystem label.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:741
+#, c-format
+msgid "%s Volume"
+msgstr "%s 卷"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
