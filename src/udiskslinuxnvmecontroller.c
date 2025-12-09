@@ -233,7 +233,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
           case BD_NVME_SANITIZE_STATUS_NEVER_SANITIZED:
             status = "never_sanitized";
             break;
-          case BD_NVME_SANITIZE_STATUS_IN_PROGESS:
+          case BD_NVME_SANITIZE_STATUS_IN_PROGRESS:
             status = "inprogress";
             compl = 100 - sanitize_log->sanitize_progress;
             break;
@@ -1044,7 +1044,7 @@ sanitize_job_func (UDisksThreadedJob  *job,
         }
 
       g_mutex_lock (&ctrl->smart_lock);
-      still_in_progress = ctrl->sanitize_log && ctrl->sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGESS;
+      still_in_progress = ctrl->sanitize_log && ctrl->sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGRESS;
       progress = (ctrl->sanitize_log ? ctrl->sanitize_log->sanitize_progress : 0) / 100.0;
       g_mutex_unlock (&ctrl->smart_lock);
 
@@ -1246,7 +1246,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  if (sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGESS)
+  if (sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGRESS)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
