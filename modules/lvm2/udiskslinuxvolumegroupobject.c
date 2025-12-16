@@ -561,6 +561,7 @@ update_vg (GObject      *source_obj,
            GAsyncResult *result,
            gpointer      user_data)
 {
+  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
   UDisksDaemon *daemon;
   GDBusObjectManagerServer *manager;
   GHashTableIter volume_iter;
@@ -569,11 +570,9 @@ update_vg (GObject      *source_obj,
   GHashTable *new_pvs;
   GList *objects, *l;
   gboolean needs_polling = FALSE;
-  GError *error = NULL;
-
-  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
   GTask *task = G_TASK (result);
   VGUpdateData *data = user_data;
+  GError *error = NULL;
   BDLVMLVdata **lvs = g_task_propagate_pointer (task, &error);
   BDLVMVGdata *vg_info = data->vg_info;
   GSList *vg_pvs = data->vg_pvs;
@@ -581,6 +580,10 @@ update_vg (GObject      *source_obj,
   if (data->epoch != object->update_epoch)
     {
       lv_list_free (lvs);
+      g_slist_free_full (vg_pvs, (GDestroyNotify) bd_lvm_pvdata_free);
+      bd_lvm_vgdata_free (vg_info);
+      g_object_unref (object);
+      g_free (data);
       return;
     }
 
