@@ -235,6 +235,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   const gchar *level = NULL;
   const gchar *uuid = NULL;
   const gchar *name = NULL;
+  const gchar *devfile = NULL;
   gchar *sync_action = NULL;
   gchar *sync_completed = NULL;
   gchar *consistency_policy = NULL;
@@ -318,7 +319,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           sync_action = udisks_linux_device_read_sysfs_attr (raid_device, "md/sync_action", NULL);
           sync_completed = udisks_linux_device_read_sysfs_attr (raid_device, "md/sync_completed", NULL);
           consistency_policy = udisks_linux_device_read_sysfs_attr (raid_device, "md/consistency_policy", NULL);
-          bitmap_location = udisks_linux_device_read_sysfs_attr (raid_device, "md/bitmap/location", NULL);
+          devfile = g_udev_device_get_device_file (raid_device->udev_device);
+          if (devfile)
+            bitmap_location = bd_md_get_bitmap_location (devfile, NULL);
         }
 
       if (mdraid_has_stripes (level))
