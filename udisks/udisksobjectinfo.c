@@ -377,7 +377,8 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
   gchar *size_str = NULL;
   const gchar *name;
   const gchar *level;
-  gchar *s;
+  const gchar *s;
+  gchar *desc;
 
   block = udisks_client_get_block_for_mdraid (client, mdraid);
 
@@ -416,10 +417,10 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
        *              The %u is the partition number.
        *              The %s is the description for the drive (e.g. "2 TB RAID-5").
        */
-      s = g_strdup_printf (C_("part-raid", "Partition %u of %s"),
-                           udisks_partition_get_number (partition), info->description);
+      desc = g_strdup_printf (C_("part-raid", "Partition %u of %s"),
+                              udisks_partition_get_number (partition), info->description);
       g_free (info->description);
-      info->description = s;
+      info->description = desc;
     }
 
   if (strlen (info->name) > 0)
