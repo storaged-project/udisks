@@ -120,6 +120,14 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
 
         return data
 
+    def _get_bitmap_location(self, md_name):
+        try:
+            bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name)
+        except FileNotFoundError:
+            # since kernel 6.18 the md/bitmap/location file doesn't exist when bitmap is not set
+            bitmap = "none"
+        return bitmap.strip()
+
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_create(self):
         if self.level is None:
@@ -167,7 +175,7 @@ class RAIDLevel(udiskstestcase.UdisksTestCase):
 
         # check bitmap location
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
-        sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name)
+        sys_bitmap = self._get_bitmap_location(md_name)
 
         # raid0 does not support write-intent bitmaps -> BitmapLocation is set to an empty string
         if self.level == 'raid0':
@@ -369,7 +377,7 @@ class RAID1TestCase(RAIDLevel):
 
         # check that internal bitmap was forced
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
-        sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
+        sys_bitmap = self._get_bitmap_location(md_name)
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
         self.assertStartswith(sys_bitmap, '+')
 
@@ -379,7 +387,7 @@ class RAID1TestCase(RAIDLevel):
         array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
-        sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
+        sys_bitmap = self._get_bitmap_location(md_name)
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
         self.assertEqual(sys_bitmap, 'none')
 
@@ -389,7 +397,7 @@ class RAID1TestCase(RAIDLevel):
         array.SetBitmapLocation(loc, self.no_options, dbus_interface=self.iface_prefix + '.MDRaid')
 
         dbus_bitmap = self.get_property(array, '.MDRaid', 'BitmapLocation')
-        sys_bitmap = self.read_file('/sys/block/%s/md/bitmap/location' % md_name).strip()
+        sys_bitmap = self._get_bitmap_location(md_name)
         dbus_bitmap.assertEqual(self.str_to_ay(sys_bitmap))
         self.assertStartswith(sys_bitmap, '+')
 
