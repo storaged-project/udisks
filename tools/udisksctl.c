@@ -2359,6 +2359,303 @@ handle_command_power_off (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar   *opt_set_standby_object_path = NULL;
+static gchar   *opt_set_standby_device = NULL;
+static gint     opt_set_standby_timeout = -1;
+static gboolean opt_set_standby_no_user_interaction = FALSE;
+
+static const GOptionEntry command_set_standby_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_set_standby_object_path,
+    "Object path for drive",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_set_standby_device,
+    "Device file for drive",
+    NULL
+  },
+  {
+    "timeout",
+    't',
+    0,
+    G_OPTION_ARG_INT,
+    &opt_set_standby_timeout,
+    "Standby timeout value (0-255, see udisks(8) for details)",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_set_standby_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static gint
+handle_command_set_standby (gint        *argc,
+                            gchar      **argv[],
+                            gboolean     request_completion,
+                            const gchar *completion_cur,
+                            const gchar *completion_prev)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  gboolean complete_objects;
+  gboolean complete_devices;
+  GList *l;
+  GList *objects;
+  UDisksObject *object;
+  UDisksDrive *drv;
+  guint n;
+  GVariant *options;
+  GVariant *configuration;
+  GVariantBuilder builder;
+  GVariantBuilder conf_builder;
+  GError *error;
+  UDisksDrive *proxy;
+
+  ret = 1;
+  opt_set_standby_object_path = NULL;
+  opt_set_standby_device = NULL;
+  opt_set_standby_timeout = -1;
+  object = NULL;
+  options = NULL;
+  configuration = NULL;
+
+  modify_argv0_for_command (argc, argv, "drive-set-standby");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_summary (o, "Set the persistent standby timeout for a drive.");
+  g_option_context_add_main_entries (o,
+                                     command_set_standby_entries,
+                                     NULL /* GETTEXT_PACKAGE*/);
+
+  complete_objects = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0 ||
+                             g_strcmp0 (completion_cur, "--object-path") == 0 || g_strcmp0 (completion_cur, "-p") == 0))
+    {
+      complete_objects = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_devices = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0 ||
+                             g_strcmp0 (completion_cur, "--block-device") == 0 || g_strcmp0 (completion_cur, "-b") == 0))
+    {
+      complete_devices = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  if (request_completion)
+    {
+      if (!complete_objects && !complete_devices)
+        {
+          list_options (command_set_standby_entries);
+        }
+
+      if (complete_objects)
+        {
+          const gchar *object_path;
+          objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+          for (l = objects; l != NULL; l = l->next)
+            {
+              object = UDISKS_OBJECT (l->data);
+              drv = udisks_object_peek_drive (object);
+              if (drv != NULL)
+                {
+                  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+                  g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+                  g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+                }
+            }
+          g_list_free_full (objects, g_object_unref);
+        }
+
+      if (complete_devices)
+        {
+          objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+          for (l = objects; l != NULL; l = l->next)
+            {
+              object = UDISKS_OBJECT (l->data);
+              drv = udisks_object_peek_drive (object);
+              if (drv != NULL)
+                {
+                  UDisksBlock *block;
+
+                  block = udisks_client_get_block_for_drive (client, drv, TRUE);
+                  if (block != NULL)
+                    {
+                      const gchar * const *symlinks;
+
+                      g_print ("%s \n", udisks_block_get_device (block));
+                      symlinks = udisks_block_get_symlinks (block);
+                      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                        g_print ("%s \n", symlinks[n]);
+                      g_object_unref (block);
+                    }
+                }
+            }
+          g_list_free_full (objects, g_object_unref);
+        }
+      goto out;
+    }
+
+  /* Validate timeout value */
+  if (opt_set_standby_timeout < 0 || opt_set_standby_timeout > 255)
+    {
+      g_printerr ("Error: --timeout must be between 0 and 255\n");
+      s = g_option_context_get_help (o, FALSE, NULL);
+      g_printerr ("%s", s);
+      g_free (s);
+      goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  if (opt_set_standby_no_user_interaction)
+    {
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "auth.no_user_interaction", g_variant_new_boolean (TRUE));
+    }
+  options = g_variant_builder_end (&builder);
+  g_variant_ref_sink (options);
+
+  /* Build the configuration dictionary */
+  g_variant_builder_init (&conf_builder, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add (&conf_builder,
+                         "{sv}",
+                         "ata-pm-standby", g_variant_new_int32 (opt_set_standby_timeout));
+  configuration = g_variant_builder_end (&conf_builder);
+  g_variant_ref_sink (configuration);
+
+  if (opt_set_standby_object_path != NULL)
+    {
+      object = lookup_object_by_path (opt_set_standby_object_path);
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object with path %s\n", opt_set_standby_object_path);
+          goto out;
+        }
+    }
+  else if (opt_set_standby_device != NULL)
+    {
+      UDisksObject *block_object;
+      UDisksDrive *drive;
+
+      block_object = lookup_object_by_device (opt_set_standby_device);
+      if (block_object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_set_standby_device);
+          goto out;
+        }
+      drive = udisks_client_get_drive_for_block (client, udisks_object_peek_block (block_object));
+      if (drive == NULL)
+        {
+          g_printerr ("Error looking up drive for device %s\n", opt_set_standby_device);
+          g_object_unref (block_object);
+          goto out;
+        }
+      object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (drive));
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_set_standby_device);
+          g_object_unref (block_object);
+          goto out;
+        }
+      g_object_unref (block_object);
+    }
+  else
+    {
+      s = g_option_context_get_help (o, FALSE, NULL);
+      g_printerr ("%s", s);
+      g_free (s);
+      goto out;
+    }
+
+ try_again:
+  error = NULL;
+
+  proxy = udisks_object_peek_drive (object);
+  if (!proxy)
+    {
+      g_printerr ("Error setting standby timeout: dbus interface not supported\n");
+      g_object_unref (object);
+      goto out;
+    }
+
+  if (!udisks_drive_call_set_configuration_sync (proxy,
+                                                 configuration,
+                                                 options,
+                                                 NULL,                       /* GCancellable */
+                                                 &error))
+    {
+      if (error->domain == UDISKS_ERROR &&
+          error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+          setup_local_polkit_agent ())
+        {
+          g_clear_error (&error);
+          goto try_again;
+        }
+      g_dbus_error_strip_remote_error (error);
+      g_printerr ("Error setting standby timeout: %s (%s, %d)\n",
+                  error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      g_object_unref (object);
+      goto out;
+    }
+
+  g_print ("Set standby timeout to %d on %s\n",
+           opt_set_standby_timeout,
+           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  g_object_unref (object);
+
+
+  ret = 0;
+
+ out:
+  if (configuration != NULL)
+    g_variant_unref (configuration);
+  if (options != NULL)
+    g_variant_unref (options);
+  g_option_context_free (o);
+  g_free (opt_set_standby_object_path);
+  g_free (opt_set_standby_device);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
 static gchar *opt_info_drive = NULL;
@@ -3193,19 +3490,20 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
   g_option_context_parse (o, argc, argv, NULL);
   program_name = g_path_get_basename ((*argv)[0]);
   description = g_strdup_printf ("Commands:\n"
-                       "  help            Shows this information\n"
-                       "  info            Shows information about an object\n"
-                       "  dump            Shows information about all objects\n"
-                       "  status          Shows high-level status\n"
-                       "  monitor         Monitor changes to objects\n"
-                       "  mount           Mount a filesystem\n"
-                       "  unmount         Unmount a filesystem\n"
-                       "  unlock          Unlock an encrypted device\n"
-                       "  lock            Lock an encrypted device\n"
-                       "  loop-setup      Set-up a loop device\n"
-                       "  loop-delete     Delete a loop device\n"
-                       "  power-off       Safely power off a drive\n"
-                       "  smart-simulate  Set SMART data for a drive\n"
+                       "  help              Shows this information\n"
+                       "  info              Shows information about an object\n"
+                       "  dump              Shows information about all objects\n"
+                       "  status            Shows high-level status\n"
+                       "  monitor           Monitor changes to objects\n"
+                       "  mount             Mount a filesystem\n"
+                       "  unmount           Unmount a filesystem\n"
+                       "  unlock            Unlock an encrypted device\n"
+                       "  lock              Lock an encrypted device\n"
+                       "  loop-setup        Set-up a loop device\n"
+                       "  loop-delete       Delete a loop device\n"
+                       "  power-off         Safely power off a drive\n"
+                       "  smart-simulate    Set SMART data for a drive\n"
+                       "  drive-set-standby Set persistent standby timeout for a drive\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
@@ -3417,6 +3715,15 @@ main (int argc,
                                       completion_prev);
       goto out;
     }
+  else if (g_strcmp0 (command, "drive-set-standby") == 0)
+    {
+      ret = handle_command_set_standby (&argc,
+                                        &argv,
+                                        request_completion,
+                                        completion_cur,
+                                        completion_prev);
+      goto out;
+    }
   else if (g_strcmp0 (command, "dump") == 0)
     {
       ret = handle_command_dump (&argc,
@@ -3524,6 +3831,7 @@ main (int argc,
                    "loop-delete \n"
                    "power-off \n"
                    "smart-simulate \n"
+                   "drive-set-standby \n"
                    );
           ret = 0;
           goto out;
