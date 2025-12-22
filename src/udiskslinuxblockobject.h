@@ -34,7 +34,7 @@ GType                     udisks_linux_block_object_get_type   (void) G_GNUC_CON
 UDisksLinuxBlockObject   *udisks_linux_block_object_new        (UDisksDaemon            *daemon,
                                                                 UDisksLinuxDevice       *device);
 void                      udisks_linux_block_object_uevent     (UDisksLinuxBlockObject  *object,
-                                                                const gchar             *action,
+                                                                UDisksUeventAction       action,
                                                                 UDisksLinuxDevice       *device);
 UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject  *object);
 UDisksLinuxDevice        *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
@@ -51,6 +51,11 @@ gboolean                  udisks_linux_block_object_contains_filesystem (UDisksO
 void                      udisks_linux_block_object_lock_for_cleanup     (UDisksLinuxBlockObject *object);
 gboolean                  udisks_linux_block_object_try_lock_for_cleanup (UDisksLinuxBlockObject *object);
 void                      udisks_linux_block_object_release_cleanup_lock (UDisksLinuxBlockObject *object);
+
+void                      udisks_linux_block_object_nvme_subsys_uevent   (UDisksLinuxBlockObject *object,
+                                                                          UDisksUeventAction      action,
+                                                                          UDisksLinuxDevice      *device);
+
 
 G_END_DECLS
 
