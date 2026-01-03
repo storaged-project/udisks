@@ -2,14 +2,14 @@
 # Copyright (C) 2023 udisks' authors
 # This file is distributed under the same license as the udisks package.
 # Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2023.
-# Ekaterine Papava <papava.e@gtu.ge>, 2024.
+# Ekaterine Papava <papava.e@gtu.ge>, 2024-2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2024-10-13 15:29+0000\n"
-"PO-Revision-Date: 2024-10-23 09:42+0200\n"
+"POT-Creation-Date: 2025-12-17 12:46+0000\n"
+"PO-Revision-Date: 2026-01-03 16:11+0100\n"
 "Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.8\n"
 
 #: data/org.freedesktop.UDisks2.policy.in:16
 msgid "Mount a filesystem"
@@ -379,7 +379,7 @@ msgstr "NVMeoF მიერთება"
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:435
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:492
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr ""
@@ -408,7 +408,7 @@ msgstr "დავალების გაუქმება"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:400
+#: data/org.freedesktop.UDisks2.policy.in:619 src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "დავალების გაუქმებას ავთენტიკაცია სჭირდება"
 
@@ -529,8 +529,8 @@ msgid "Authentication is required to manage disk drive LED"
 msgstr "დისკის ნათურის მართვას ავთენტიკაცია სჭირდება"
 
 #: modules/lsm/lsm_linux_drive_local.c:278
-msgid "Authentication is required to change $(drive) LED"
-msgstr "$(drive)-ის ნათურის მართვას ავთენტიკაცია სჭირდება"
+msgid "Authentication is required to change $(device.name) LED"
+msgstr "$(device.name)-ის ნათურის მართვას ავთენტიკაცია სჭირდება"
 
 #: modules/lvm2/data/org.freedesktop.UDisks2.lvm2.policy.in:16
 msgid "Manage LVM"
@@ -544,41 +544,41 @@ msgstr "LVM-ის მართვას ავთენტიკაცია �
 msgid "Authentication is required to delete a logical volume"
 msgstr "ლოგიკური ტომის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:653
+#: modules/lvm2/udiskslinuxlogicalvolume.c:654
 msgid "Authentication is required to repair a logical volume"
 msgstr "ლოგიკური ტომის შეკეთებას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:756
+#: modules/lvm2/udiskslinuxlogicalvolume.c:758
 msgid "Authentication is required to rename a logical volume"
 msgstr "ლოგიკური ტომის სახელის გადარქმევას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:820
+#: modules/lvm2/udiskslinuxlogicalvolume.c:823
 msgid "Authentication is required to resize a logical volume"
 msgstr "ლოგიკური ტომის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:928
+#: modules/lvm2/udiskslinuxlogicalvolume.c:932
 msgid "Authentication is required to activate a logical volume"
 msgstr "ლოგიკური ტომის აქტივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:996
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1001
 msgid "Authentication is required to deactivate a logical volume"
 msgstr "ლოგიკური ტომის დექატივაციას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1063
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1069
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr "ლოგიკური ტომის სწრაფი ასლის შექმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1124
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1131
 msgid "Authentication is required to convert logical volume to cache"
 msgstr "ლოგიკური ტომის ქეშად გარდაქმნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1146
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1197
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1154
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1206
 #, c-format
 msgid "Error converting volume: %s"
 msgstr "ტომის გადაყვანის შეცდომა: %s"
 
-#: modules/lvm2/udiskslinuxlogicalvolume.c:1175
+#: modules/lvm2/udiskslinuxlogicalvolume.c:1183
 msgid "Authentication is required to split cache pool LV off of a cache LV"
 msgstr "ქეშის LV-is ქეშის პულის LV-დან გამოსაყოფად ავთენტიკაციაა საჭირო"
 
@@ -591,7 +591,7 @@ msgid ""
 "Authentication is required to set deduplication/compression on a VDO volume"
 msgstr "VDO ტომის დედუპლიკაციის/შეკუმშვის დაყენებას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvdovolume.c:325
+#: modules/lvm2/udiskslinuxvdovolume.c:326
 msgid "Authentication is required to resize a VDO volume"
 msgstr "VDO ტომის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -599,43 +599,67 @@ msgstr "VDO ტომის ზომის შეცვლას ავთე�
 msgid "Authentication is required to delete a volume group"
 msgstr "ტომის ჯგუფის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:450
+#: modules/lvm2/udiskslinuxvolumegroup.c:451
 msgid "Authentication is required to rename a volume group"
 msgstr "ტომის ჯგუფის სახელის გადარქმევას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:564
+#: modules/lvm2/udiskslinuxvolumegroup.c:566
 msgid "Authentication is required to add a device to a volume group"
 msgstr "ტომის ჯგუფში მოწყობილობის ჩამატებას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:663
+#: modules/lvm2/udiskslinuxvolumegroup.c:667
 msgid "Authentication is required to remove a device from a volume group"
 msgstr "ტომის ჯგუფიდან მოწყობილობის წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:672
+#: modules/lvm2/udiskslinuxvolumegroup.c:676
 msgid "Authentication is required to empty a device in a volume group"
 msgstr "ტომების ჯგუფში მოწყობილობის დასაცარიელებლად ავთენტიკაციაა საჭირო"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:847
+#: modules/lvm2/udiskslinuxvolumegroup.c:853
 msgid ""
 "Authentication is required to remove missing physical volumes from a volume "
 "group"
 msgstr "ტომის ჯგუფიდან ნაკლული ფიზიკური ტომების წაშლას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:969
+#: modules/lvm2/udiskslinuxvolumegroup.c:976
 msgid "Authentication is required to create a logical volume"
 msgstr "ლოგიკური ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:975
+#: modules/lvm2/udiskslinuxvolumegroup.c:982
 msgid "Authentication is required to create a thin volume"
 msgstr "თხელი ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:981
+#: modules/lvm2/udiskslinuxvolumegroup.c:988
 msgid "Authentication is required to create a thin pool volume"
 msgstr "თხელი პულის ტომის შექნას ავთენტიკაცია სჭირდება"
 
-#: modules/lvm2/udiskslinuxvolumegroup.c:987
+#: modules/lvm2/udiskslinuxvolumegroup.c:994
 msgid "Authentication is required to create a VDO volume"
 msgstr "VDO ტომის შექმნას ავთენტიკაცია სჭირდება"
+
+#. Translators: This is used for possibly encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:721
+#, c-format
+msgid "%s Possibly Encrypted"
+msgstr "%s შესაძლოა დაშიფრულია"
+
+#. Translators: This is used for encrypted volumes.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:728
+#, c-format
+msgid "%s Encrypted"
+msgstr "%s დაშიფრულია"
+
+#. Translators: This is used for volume with no filesystem label.
+#. *              The first %s is the formatted size (e.g. "42.0 MB").
+#.
+#: src/udisksdaemonutil.c:741
+#, c-format
+msgid "%s Volume"
+msgstr "%s ტომი"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -646,33 +670,33 @@ msgid "Authentication is required to read system-level secrets"
 msgstr "სისტემური დონის პაროლების წაკითხვას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2028
+#: src/udiskslinuxblock.c:2032
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "/etc/fstab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2047
+#: src/udiskslinuxblock.c:2051
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილში ჩანაწერის დამატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2107
+#: src/udiskslinuxblock.c:2111
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "/etc/fstab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2126
+#: src/udiskslinuxblock.c:2130
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილიდან ჩანაწერის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2199
+#: src/udiskslinuxblock.c:2203
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "/etc/fstab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2218
+#: src/udiskslinuxblock.c:2222
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "/etc/crypttab ფაილის შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -680,375 +704,401 @@ msgstr "/etc/crypttab ფაილის შეცვლას ავთენ�
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
 #. * command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2909 src/udiskslinuxdriveata.c:2459
-msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "$(drive)-ის უსაფრთხო წაშლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:2913 src/udiskslinuxdriveata.c:2562
+msgid "Authentication is required to perform a secure erase of $(device.name)"
+msgstr "$(device.name)-ის უსაფრთხო წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
 #. * table.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2921
-msgid "Authentication is required to format $(drive)"
-msgstr "$(drive)-ის დაფორმატებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:2925
+msgid "Authentication is required to format $(device.name)"
+msgstr "$(device.name)-ის დაფორმატებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxblock.c:2950 src/udiskslinuxmdraid.c:1493
+#: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to modify the system configuration"
 msgstr "სისტემის კონფიგურაციის ცვლილებისთვის ავთენტიკაცია აუცილებელია"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3906
-msgid "Authentication is required to open $(drive) for reading"
-msgstr "$(drive)-ის წასაკითხად გახსნას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:3919
+msgid "Authentication is required to open $(device.name) for reading"
+msgstr "$(device.name)-ის წასაკითხად გახსნას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3977
-msgid "Authentication is required to open $(drive) for writing"
-msgstr "$(drive)-ის ჩასაწერად გახსნას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:3990
+msgid "Authentication is required to open $(device.name) for writing"
+msgstr "$(device.name)-ის ჩასაწერად გახსნას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4051
-msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr "$(drive)-ის დასატესტად გახსნას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:4064
+msgid "Authentication is required to open $(device.name) for benchmarking"
+msgstr ""
+"$(device.name)-ის წარმადობის შესამოწმებლად გახსნას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4134
-msgid "Authentication is required to open $(drive)."
-msgstr "$(drive)-ის გახსნას ავთენტიკაცია სჭირდება."
+#: src/udiskslinuxblock.c:4147
+msgid "Authentication is required to open $(device.name)."
+msgstr "$(device.name)-ის გახსნას ავთენტიკაცია სჭირდება."
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will
+#. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4191
-msgid "Authentication is required to rescan $(drive)"
-msgstr "$(drive)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxblock.c:4204
+msgid "Authentication is required to rescan $(device.name)"
+msgstr "$(device.name)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxdrive.c:1120
-msgid "Authentication is required to eject $(drive)"
-msgstr "$(drive)-ის გამოღებას ავთენტიკაცია სჭირდება"
+msgid "Authentication is required to eject $(device.name)"
+msgstr "$(device.name)-ის გამოღებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and will be
+#. * Do not translate $(device.name), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1208
-msgid "Authentication is required to configure settings for $(drive)"
-msgstr "$(drive)-ის პარამეტრების მორგებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdrive.c:1209
+msgid "Authentication is required to configure settings for $(device.name)"
+msgstr "$(device.name)-ის პარამეტრების მორგებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1523
-msgid "Authentication is required to power off $(drive)"
-msgstr "$(drive)-ის გამორთვას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdrive.c:1524
+msgid "Authentication is required to power off $(device.name)"
+msgstr "$(device.name)-ის გამორთვას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:758 src/udiskslinuxnvmecontroller.c:475
-msgid "Authentication is required to update SMART data from $(drive)"
-msgstr "SMART მონაცემების $(drive)-დან განახლებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:860 src/udiskslinuxnvmecontroller.c:475
+msgid "Authentication is required to update SMART data from $(device.name)"
+msgstr "SMART მონაცემების $(device.name)-დან განახლებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:769
-msgid "Authentication is required to set SMART data from a blob on $(drive)"
+#: src/udiskslinuxdriveata.c:871
+msgid ""
+"Authentication is required to set SMART data from a blob on $(device.name)"
 msgstr ""
-"SMART მონაცემების $(drive)-სთვის ბლობიდან განახლებას ავთენტიკაცია სჭირდება"
+"$(device.name)-ზე SMART მონაცემების ბლობიდან დაყენებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:926
-msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr "$(drive)-ზე SMART თვით-ტესტის შეჩერებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1028
+msgid "Authentication is required to abort a SMART self-test on $(device.name)"
+msgstr "$(device.name)-ზე SMART თვითშემოწმების შეწყვეტას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1174
-msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "$(drive)-ზე SMART თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1276
+msgid "Authentication is required to start a SMART self-test on $(device.name)"
+msgstr "$(device.name)-ზე SMART თვითშემოწმების გაშვებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1269
-msgid "Authentication is required to enable SMART on $(drive)"
-msgstr "$(drive)-ზე SMART-ის ჩართვას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1372
+msgid "Authentication is required to enable SMART on $(device.name)"
+msgstr "$(device.name)-ზე SMART-ის ჩართვას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1279
-msgid "Authentication is required to disable SMART on $(drive)"
-msgstr "$(drive)-ზე SMART-ის გამორთვას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1382
+msgid "Authentication is required to disable SMART on $(device.name)"
+msgstr "$(device.name)-ზე SMART-ის გამორთვას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1502
-msgid "Authentication is required to check power state for $(drive)"
-msgstr "$(drive)-ის კვების მდგომარეობის შემოწმებას ავთენტკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1605
+msgid "Authentication is required to check power state for $(device.name)"
+msgstr "$(device.name)-ის კვების მდგომარეობის შემოწმებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode or tries to put a drive into
 #. * standby mode.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdriveata.c:1598
-msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "უქმე რეჟიმიდან $(drive)-ის გაღვიძებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1701
+msgid "Authentication is required to wake up $(device.name) from standby mode"
+msgstr "უქმე რეჟიმიდან $(device.name)-ის გაღვიძებას ავთენტიკაცია სჭირდება"
 
-#: src/udiskslinuxdriveata.c:1599
-msgid "Authentication is required to put $(drive) in standby mode"
-msgstr "$(drive)-ის უქმე რეჟიმში გადართვას ავთენტკაცია სჭირდება"
+#: src/udiskslinuxdriveata.c:1702
+msgid "Authentication is required to put $(device.name) in standby mode"
+msgstr "$(device.name)-ის უქმე რეჟიმში გადართვას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:498 src/udiskslinuxencrypted.c:966
-msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "დაშიფრული მოწყობილობის, $(drive)-ის განბლოკვას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxencrypted.c:507 src/udiskslinuxencrypted.c:984
+msgid ""
+"Authentication is required to unlock the encrypted device $(device.name)"
+msgstr ""
+"დაშიფრული მოწყობილობის, $(device.name)-ის განბლოკვას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
 #. * unlocked by another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:778
+#: src/udiskslinuxencrypted.c:795
 msgid ""
-"Authentication is required to lock the encrypted device $(drive) unlocked by "
-"another user"
+"Authentication is required to lock the encrypted device $(device.name) "
+"unlocked by another user"
 msgstr ""
-"სხვა მომხმარებლის მიერ განბლოკილი მოწყობილობის ($(drive)) დასაბლოკად "
+"სხვა მომხმარებლის მიერ განბლოკილი მოწყობილობის $(device.name) დასაბლოკად "
 "ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing a encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1100
-msgid "Authentication is required to resize the encrypted device $(drive)"
-msgstr "დაშიფრული მოწყობილობის $(drive) ზომის შეცვლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxencrypted.c:1119
+msgid ""
+"Authentication is required to resize the encrypted device $(device.name)"
+msgstr ""
+"დაშიფრული მოწყობილობის $(device.name) ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests conversion of an encrypted block device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1254
+#: src/udiskslinuxencrypted.c:1274
 msgid ""
-"Authentication is required to convert device $(drive) to a different LUKS "
-"version."
-msgstr "$(drive)-ის სხვა LUKS-ის ვერსიაზე გადაყვანას ავთენტიკაცია სჭირდება."
+"Authentication is required to convert device $(device.name) to a different "
+"LUKS version."
+msgstr ""
+"$(device.name)-ის სხვა LUKS-ის ვერსიაზე გადაყვანას ავთენტიკაცია სჭირდება."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1130
-msgid "Authentication is required to mount $(drive)"
-msgstr "$(drive)-ის მიმაგრებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1131
+msgid "Authentication is required to mount $(device.name)"
+msgstr "$(device.name)-ის მიმაგრებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1028
+#: src/udiskslinuxfilesystem.c:1029
 msgid ""
-"Authentication is required to mount $(drive) referenced in the /etc/fstab "
-"file"
+"Authentication is required to mount $(device.name) referenced in the /etc/"
+"fstab file"
 msgstr ""
-"/etc/fstab ფაილში აღწერილი მოწყობილობის $(drive)-ის მიბმას ავთენტიკაცია "
-"სჭირდება"
+"/etc/fstab ფაილში აღწერილი მოწყობილობის $(device.name)-ის მიმაგრებას "
+"ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
 #. * /etc/fstab file with the x-udisks-auth option.
 #. *
-#. * Do not translate $(drive), it's a
+#. * Do not translate $(device.name), it's a
 #. * placeholder and will be replaced by the name of
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1609
+#: src/udiskslinuxfilesystem.c:1612
 msgid ""
-"Authentication is required to unmount $(drive) referenced in the /etc/fstab "
-"file"
+"Authentication is required to unmount $(device.name) referenced in the /etc/"
+"fstab file"
 msgstr ""
-"/etc/fstab ფაილში აღწერილი მოწყობილობის $(drive)-ის მიბმის მოხსნას "
+"/etc/fstab ფაილში აღწერილი მოწყობილობის $(device.name)-ის მიმაგრების მოხსნას "
 "ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1657
-msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr "სხვა მომხმარებლის მიერ მიმაგრებული $(drive)-ის მოხსნა შეუძლებელია"
+#: src/udiskslinuxfilesystem.c:1660
+msgid ""
+"Authentication is required to unmount $(device.name) mounted by another user"
+msgstr ""
+"სხვა მომხმარებლის მიერ მიმაგრებული მოწყობილობის $(device.name) მოხსნას "
+"ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1825
-msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის ჭდის შეცვლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:1829
+msgid ""
+"Authentication is required to change the filesystem label on $(device.name)"
+msgstr "$(device.name)-ზე ფაილური სისტემის ჭდის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2007
-msgid "Authentication is required to resize the filesystem on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის ზომის შეცვლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:2012
+msgid "Authentication is required to resize the filesystem on $(device.name)"
+msgstr "$(device.name)-ზე ფაილური სისტემის ზომის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2178
-msgid "Authentication is required to repair the filesystem on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის შეკეთებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:2184
+msgid "Authentication is required to repair the filesystem on $(device.name)"
+msgstr "$(device.name)-ზე ფაილური სისტემის შეკეთებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2346
-msgid "Authentication is required to check the filesystem on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის შემოწმებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:2353
+msgid "Authentication is required to check the filesystem on $(device.name)"
+msgstr "$(device.name)-ზე ფაილური სისტემის შემოწმებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests taking ownership of the filesystem.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2506
+#: src/udiskslinuxfilesystem.c:2514
 msgid ""
-"Authentication is required to change ownership of the filesystem on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის მფლობელის შეცვლას ავთენტიკაცია სჭირდება"
+"Authentication is required to change ownership of the filesystem on $"
+"(device.name)"
+msgstr ""
+"$(device.name)-ზე ფაილური სისტემის მფლობელის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem UUID.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2673
-msgid "Authentication is required to change the filesystem UUID on $(drive)"
-msgstr "$(drive)-ზე ფაილური სისტემის UUID-ის შეცვლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxfilesystem.c:2682
+msgid ""
+"Authentication is required to change the filesystem UUID on $(device.name)"
+msgstr ""
+"$(device.name)-ზე ფაილური სისტემის UUID-ის შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
 #. * another user.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:243
-msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "მარყუჟმოწყობილობის $(drive) წაშლას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxloop.c:241
+msgid "Authentication is required to delete the loop device $(device.name)"
+msgstr "მარყუჟმოწყობილობის $(device.name) წაშლას ავთენტიკაცია სჭირდება"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing autoclear on a loop device set up by
+#. * another user.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxloop.c:333
+msgid "Authentication is required to modify the loop device $(device.name)"
+msgstr "მარყუჟმოწყობილობის $(device.name) შეცვლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -1057,7 +1107,7 @@ msgstr "მარყუჟმოწყობილობის $(drive) წა�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxloop.c:336
+#: src/udiskslinuxloop.c:404
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "მარყუჟმოწყობილობის $(drive) შეცვლას ავთენტიკაცია სჭირდება"
 
@@ -1072,14 +1122,14 @@ msgstr "RAID მასივის შექმნას ავთენტი�
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host NQN value.
 #.
-#: src/udiskslinuxmanagernvme.c:549
+#: src/udiskslinuxmanagernvme.c:609
 msgid "Authentication is required to set NVMe Host NQN"
 msgstr "NVMe ჰოსტის NQN-ის დაყენებისთვის ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host ID value.
 #.
-#: src/udiskslinuxmanagernvme.c:618
+#: src/udiskslinuxmanagernvme.c:678
 msgid "Authentication is required to set NVMe Host ID"
 msgstr "NVMe ჰოსტის ID-ის დაყენებისთვის ავთენტიკაციაა საჭირო"
 
@@ -1087,7 +1137,7 @@ msgstr "NVMe ჰოსტის ID-ის დაყენებისთვი�
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:632
+#: src/udiskslinuxmdraid.c:636
 msgid "Authentication is required to start a RAID array"
 msgstr "RAID მასივის გაშვებას ავთენტიკაცია სჭირდება"
 
@@ -1095,7 +1145,7 @@ msgstr "RAID მასივის გაშვებას ავთენტ�
 #. * attempts to stop a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:790
+#: src/udiskslinuxmdraid.c:796
 msgid "Authentication is required to stop a RAID array"
 msgstr "RAID მასივის შეჩერებას ავთენტიკაცია სჭირდება"
 
@@ -1103,7 +1153,7 @@ msgstr "RAID მასივის შეჩერებას ავთენ�
 #. * attempts to remove a device from a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1006
+#: src/udiskslinuxmdraid.c:1017
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "RAID მასივიდან დისკის წაშლას ავთენტიკაცია სჭირდება"
 
@@ -1111,7 +1161,7 @@ msgstr "RAID მასივიდან დისკის წაშლას �
 #. * attempts to add a device to a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1155
+#: src/udiskslinuxmdraid.c:1174
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "RAID მასივში დისკის ჩამატებას ავთენტიკაცია სჭირდება"
 
@@ -1119,7 +1169,7 @@ msgstr "RAID მასივში დისკის ჩამატება�
 #. * attempts to change whether it has a write-intent bitmap
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1272
+#: src/udiskslinuxmdraid.c:1300
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1130,131 +1180,134 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1389
+#: src/udiskslinuxmdraid.c:1425
 msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "RAID მასივის მონაცემების სკრაბინგის გასაშვებად/გასაჩერებლად ავთენტიკაციაა "
 "საჭირო"
 
-#: src/udiskslinuxmdraid.c:1474
+#: src/udiskslinuxmdraid.c:1515
 msgid "Authentication is required to delete a RAID array"
 msgstr "RAID მასივის წაშლას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmecontroller.c:837
-msgid "Authentication is required to start a device self-test on $(drive)"
-msgstr "$(drive)-ზე თვით-ტესტის გაშვებას ავთენტიკაცია სჭირდება"
+msgid ""
+"Authentication is required to start a device self-test on $(device.name)"
+msgstr "$(device.name)-ზე თვითშემოწმების გაშვებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:930
-msgid "Authentication is required to abort a device self-test on $(drive)"
-msgstr "$(drive)-ზე თვით-ტესტის შეჩერებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxnvmecontroller.c:931
+msgid ""
+"Authentication is required to abort a device self-test on $(device.name)"
+msgstr "$(device.name)-ზე თვითშემოწმების შეჩერებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a sanitize operation.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1232
-msgid "Authentication is required to perform a sanitize operation of $(drive)"
+#: src/udiskslinuxnvmecontroller.c:1233
+msgid ""
+"Authentication is required to perform a sanitize operation of $(device.name)"
 msgstr ""
-"$(drive)-ის სანიტარული დამუშავების ოპერაციის ჩასატარებლად ავთენტიკაციაა "
-"საჭირო"
+"$(device.name)-ის სანიტარული დამუშავების ოპერაციის ჩასატარებლად "
+"ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests disconnect of a NVMeoF connected controller.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmefabrics.c:201
 msgid ""
-"Authentication is required to disconnect a NVMe over Fabrics controller "
-"$(drive)"
+"Authentication is required to disconnect a NVMe over Fabrics controller $"
+"(device.name)"
 msgstr ""
-"სტრუქტურის კონტროლერ $(drive)-ზე მდებარე NVMe-ის გასათიშად ავთენტიკაციაა "
-"საჭირო"
+"NVMe სტრუქტურის კონტროლერზე $(device.name) გასათიშად ავთენტიკაცია საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a device self-test.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxnvmenamespace.c:409
-msgid "Authentication is required to format a namespace on $(drive)"
-msgstr "$(drive)-ზე სახელების სივრცის დაფორმატებას ავთენტიკაცია სჭირდება"
+msgid "Authentication is required to format a namespace on $(device.name)"
+msgstr "$(device.name)-ზე სახელების სივრცის დაფორმატებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartition.c:149
-msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "დისკზე $(drive) დანაყოფების შესაცვლელად ავთენტიკაციაა საჭირო"
+msgid ""
+"Authentication is required to modify the partition on device $(device.name)"
+msgstr "დისკზე $(device.name) დანაყოფების შესაცვლელად ავთენტიკაციაა საჭირო"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxpartitiontable.c:339
-msgid "Authentication is required to create a partition on $(drive)"
-msgstr "$(drive)-ზე დანაყოფის შექმნას ავთენტიკაცია სჭირდება"
+msgid "Authentication is required to create a partition on $(device.name)"
+msgstr "$(device.name)-ზე დანაყოფის შექმნას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
 #: src/udiskslinuxswapspace.c:196
-msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr "$(drive)-ზე სვოპის აქტივაციას ავთენტიკაცია სჭირდება"
+msgid "Authentication is required to activate swapspace on $(device.name)"
+msgstr "$(device.name)-ზე სვოპის აქტივაციას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:294
-msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr "$(drive)-ზე სვოპის დეაქტივაციას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxswapspace.c:295
+msgid "Authentication is required to deactivate swapspace on $(device.name)"
+msgstr "$(device.name)-ზე სვოპის დეაქტივაციას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting label of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:371
-msgid "Authentication is required to set swapspace label on $(drive)"
-msgstr "$(drive)-ზე სვოპის ჭდის დაყენებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxswapspace.c:373
+msgid "Authentication is required to set swapspace label on $(device.name)"
+msgstr "$(device.name)-ზე სვოპის ჭდის დაყენებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting UUID of a swap device.
 #. *
-#. * Do not translate $(drive), it's a placeholder and
+#. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxswapspace.c:457
-msgid "Authentication is required to set swapspace UUID on $(drive)"
-msgstr "$(drive)-ზე სვოპის UUID-ის დაყენებას ავთენტიკაცია სჭირდება"
+#: src/udiskslinuxswapspace.c:460
+msgid "Authentication is required to set swapspace UUID on $(device.name)"
+msgstr "$(device.name)-ზე სვოპის UUID-ის დაყენებას ავთენტიკაცია სჭირდება"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: udisks/udisksclient.c:1194
@@ -3478,7 +3531,7 @@ msgstr "RAID მასივი"
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
 #.
-#: udisks/udisksobjectinfo.c:404
+#: udisks/udisksobjectinfo.c:405
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
@@ -3488,7 +3541,7 @@ msgstr "%s %s"
 #. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:419
+#: udisks/udisksobjectinfo.c:420
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
@@ -3499,7 +3552,7 @@ msgstr "დანაყოფი %u %s-დან"
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:434
+#: udisks/udisksobjectinfo.c:435
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
@@ -3509,7 +3562,7 @@ msgstr "%s — %s (%s)"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:445
+#: udisks/udisksobjectinfo.c:446
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
@@ -3519,7 +3572,7 @@ msgstr "%s — %s"
 #. *              The first %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The second %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:458
+#: udisks/udisksobjectinfo.c:459
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
@@ -3528,56 +3581,56 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The %s is the size and level (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:467
+#: udisks/udisksobjectinfo.c:468
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
 msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the type, e.g. 'Thumb'
-#: udisks/udisksobjectinfo.c:595
+#: udisks/udisksobjectinfo.c:596
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
 msgstr "%s დისკი"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy'
-#: udisks/udisksobjectinfo.c:599
+#: udisks/udisksobjectinfo.c:600
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
 msgstr "%s დისკი"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash'
-#: udisks/udisksobjectinfo.c:603
+#: udisks/udisksobjectinfo.c:604
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
 msgstr "%s ბარათი"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM'
-#: udisks/udisksobjectinfo.c:607
+#: udisks/udisksobjectinfo.c:608
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
 msgstr "%s დისკი"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
-#: udisks/udisksobjectinfo.c:627
+#: udisks/udisksobjectinfo.c:628
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
 msgstr "%s დისკი"
 
 #. Translators: Used to describe a drive we know very little about (removable media or size not known)
-#: udisks/udisksobjectinfo.c:632
+#: udisks/udisksobjectinfo.c:633
 msgctxt "generic-drive"
 msgid "Drive"
 msgstr "დისკი"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
-#: udisks/udisksobjectinfo.c:643
+#: udisks/udisksobjectinfo.c:644
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
@@ -3586,26 +3639,26 @@ msgstr "%s დისკი"
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The drive is either using removable media or its
 #. * size not known.
-#: udisks/udisksobjectinfo.c:650
+#: udisks/udisksobjectinfo.c:651
 msgctxt "disk-non-rotational"
 msgid "Disk"
 msgstr "დისკი"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.
-#: udisks/udisksobjectinfo.c:658
+#: udisks/udisksobjectinfo.c:659
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
 msgstr "%s მყარი დისკი"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or size not known)
-#: udisks/udisksobjectinfo.c:663
+#: udisks/udisksobjectinfo.c:664
 msgctxt "disk-hdd"
 msgid "Hard Disk"
 msgstr "მყარი დისკი"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g. 'CompactFlash'.
-#: udisks/udisksobjectinfo.c:671
+#: udisks/udisksobjectinfo.c:672
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
@@ -3614,7 +3667,7 @@ msgstr "%s ბარათის წამკითხავი"
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
 #.
-#: udisks/udisksobjectinfo.c:682
+#: udisks/udisksobjectinfo.c:683
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
@@ -3622,28 +3675,28 @@ msgstr "%s %s დისკი"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
 #.
-#: udisks/udisksobjectinfo.c:688
+#: udisks/udisksobjectinfo.c:689
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
 msgstr "%s დისკი"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc"
-#: udisks/udisksobjectinfo.c:767
+#: udisks/udisksobjectinfo.c:768
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
 msgstr "ცარიელი %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc"
-#: udisks/udisksobjectinfo.c:775
+#: udisks/udisksobjectinfo.c:776
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
 msgstr "შერეული %s"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc"
-#: udisks/udisksobjectinfo.c:783
+#: udisks/udisksobjectinfo.c:784
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
@@ -3653,7 +3706,7 @@ msgstr "აუდიო %s"
 #. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
 #.
-#: udisks/udisksobjectinfo.c:836
+#: udisks/udisksobjectinfo.c:837
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
@@ -3665,7 +3718,7 @@ msgstr "დანაყოფი %u %s-დან"
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:854
+#: udisks/udisksobjectinfo.c:855
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
@@ -3676,11 +3729,14 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:867
+#: udisks/udisksobjectinfo.c:868
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
 msgstr "%s — %s (%s)"
+
+#~ msgid "Authentication is required to rescan $(drive)"
+#~ msgstr "$(drive)-ის თავიდან სკანირებას ავთენტიკაცია სჭირდება"
 
 #~ msgid "LVMCache not enabled at compile time."
 #~ msgstr "LVMCache აგების დროს ჩართული არ იყო."
