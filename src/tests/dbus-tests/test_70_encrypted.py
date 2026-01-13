@@ -255,6 +255,22 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks_path = self.get_property(luks_obj, '.Block', 'PreferredDevice')
         luks_path.assertEqual(self.str_to_ay(dm_path))
 
+        # lock the device
+        disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # override crypttab options with extra options
+        options = dbus.Dictionary({'discard' : False, 'read-only': False}, signature=dbus.Signature('sv'))
+        luks = disk.Unlock(self.PASSPHRASE, options,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks)
+
+        # check that discard is not enabled for the mapped device
+        _ret, out, = self.run_command("dmsetup table %s" % self.LUKS_NAME)
+        self.assertNotIn("allow_discards", out)
+
+        # check that the device is not read-only
+        self.assertFalse(self._is_ro(self.LUKS_NAME))
+
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab_keyfile(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes

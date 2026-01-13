@@ -578,8 +578,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (udisks_block_get_read_only (block))
     read_only = TRUE;
 
+  /* unlock with discard if specified in @options or crypttab */
   if (is_in_crypttab && has_option (crypttab_options, "discard"))
     discard = TRUE;
+  g_variant_lookup (options, "discard", "b", &discard);
 
   data.device = device;
   data.map_name = name;
