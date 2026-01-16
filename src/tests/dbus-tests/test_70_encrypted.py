@@ -197,6 +197,15 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks_ro = self.get_property(luks_obj, '.Block', 'ReadOnly')
         luks_ro.assertTrue()
 
+    def _is_ro(self, dm_name):
+        dm_path = os.path.realpath("/dev/mapper/%s" % dm_name)
+        dm_basename = os.path.basename(dm_path)
+        sysfs_path = "/sys/block/%s/ro" % dm_basename
+
+        with open(sysfs_path, "r") as f:
+            ro = f.read()
+        return ro.strip() == "1"
+
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
@@ -216,12 +225,13 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
         # add new entry to the crypttab
-        new_crypttab = crypttab + '%s UUID=%s none\n' % (self.LUKS_NAME, disk_uuid)
+        new_crypttab = crypttab + '%s UUID=%s none discard,read-only\n' % (self.LUKS_NAME, disk_uuid)
         self.write_file('/etc/crypttab', new_crypttab)
 
         dbus_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.assertIsNotNone(dbus_conf)
         self.assertEqual(self.ay_to_str(dbus_conf[0][1]['name']), self.LUKS_NAME)
+        self.assertEqual(self.ay_to_str(dbus_conf[0][1]['options']), "discard,read-only")
 
         # unlock the device
         luks = disk.Unlock(self.PASSPHRASE, self.no_options,
@@ -232,11 +242,34 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         dm_path = '/dev/mapper/%s' % self.LUKS_NAME
         self.assertTrue(os.path.exists(dm_path))
 
+        # check that discard is enabled for the mapped device
+        _ret, out, = self.run_command("dmsetup table %s" % self.LUKS_NAME)
+        self.assertIn("allow_discards", out)
+
+        # check that the device is read-only
+        self.assertTrue(self._is_ro(self.LUKS_NAME))
+
         # preferred 'device' should be /dev/mapper/name too
         luks_obj = self.get_object(luks)
         self.assertIsNotNone(luks_obj)
         luks_path = self.get_property(luks_obj, '.Block', 'PreferredDevice')
         luks_path.assertEqual(self.str_to_ay(dm_path))
+
+        # lock the device
+        disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # override crypttab options with extra options
+        options = dbus.Dictionary({'discard' : False, 'read-only': False}, signature=dbus.Signature('sv'))
+        luks = disk.Unlock(self.PASSPHRASE, options,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks)
+
+        # check that discard is not enabled for the mapped device
+        _ret, out, = self.run_command("dmsetup table %s" % self.LUKS_NAME)
+        self.assertNotIn("allow_discards", out)
+
+        # check that the device is not read-only
+        self.assertFalse(self._is_ro(self.LUKS_NAME))
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab_keyfile(self):

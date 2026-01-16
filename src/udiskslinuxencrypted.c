@@ -363,6 +363,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gboolean read_only = FALSE;
   gboolean is_hidden = FALSE;
   gboolean is_system = FALSE;
+  gboolean discard = FALSE;
   guint32 pim = 0;
   GString *effective_passphrase = NULL;
   GVariant *keyfiles_variant = NULL;
@@ -570,10 +571,17 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   device = udisks_block_dup_device (block);
 
-  /* unlock as read-only if specified in @options or if the device itself is read-only */
+  /* unlock as read-only if specified in @options or crypttab or if the device itself is read-only */
+  if (is_in_crypttab && (has_option (crypttab_options, "read-only") || has_option (crypttab_options, "readonly")))
+    read_only = TRUE;
   g_variant_lookup (options, "read-only", "b", &read_only);
   if (udisks_block_get_read_only (block))
     read_only = TRUE;
+
+  /* unlock with discard if specified in @options or crypttab */
+  if (is_in_crypttab && has_option (crypttab_options, "discard"))
+    discard = TRUE;
+  g_variant_lookup (options, "discard", "b", &discard);
 
   data.device = device;
   data.map_name = name;
@@ -583,6 +591,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   data.hidden = is_hidden;
   data.system = is_system;
   data.read_only = read_only;
+  data.discard = discard;
 
   if (is_luks)
     open_func = luks_open_job_func;
@@ -924,7 +933,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   const gchar *action_id;
   GError *error = NULL;
   gchar *device = NULL;
-  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, NULL };
+  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, FALSE, NULL };
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)

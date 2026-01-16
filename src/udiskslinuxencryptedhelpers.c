@@ -79,14 +79,20 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
+  BDCryptoOpenFlags flags = 0;
 
   context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
                                                       data->passphrase->len, error);
   if (!context)
     return FALSE;
 
-  /* device, name, context, read_only, error */
-  ret = bd_crypto_luks_open (data->device, data->map_name, context, data->read_only, error);
+  if (data->read_only)
+    flags |= BD_CRYPTO_OPEN_READONLY;
+  if (data->discard)
+    flags |= BD_CRYPTO_OPEN_ALLOW_DISCARDS;
+
+  /* device, name, context, flags, error */
+  ret = bd_crypto_luks_open_flags (data->device, data->map_name, context, flags, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
 }
@@ -136,6 +142,7 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
+  BDCryptoOpenFlags flags = 0;
 
   /* We always use the veracrypt option, because it can unlock both VeraCrypt and legacy TrueCrypt volumes */
   gboolean  veracrypt = TRUE;
@@ -149,9 +156,14 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
         return FALSE;
     }
 
-  ret = bd_crypto_tc_open (data->device, data->map_name, context,
-                           data->keyfiles, data->hidden, data->system, veracrypt, data->pim,
-                           data->read_only, error);
+  if (data->read_only)
+    flags |= BD_CRYPTO_OPEN_READONLY;
+  if (data->discard)
+    flags |= BD_CRYPTO_OPEN_ALLOW_DISCARDS;
+
+  ret = bd_crypto_tc_open_flags (data->device, data->map_name, context,
+                                 data->keyfiles, data->hidden, data->system, veracrypt, data->pim,
+                                 flags, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
 }
@@ -173,13 +185,19 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
   CryptoJobData *data = (CryptoJobData*) user_data;
   BDCryptoKeyslotContext *context = NULL;
   gboolean ret = FALSE;
+  BDCryptoOpenFlags flags = 0;
 
   context = bd_crypto_keyslot_context_new_passphrase ((const guint8 *) data->passphrase->str,
                                                       data->passphrase->len, error);
   if (!context)
     return FALSE;
 
-  ret = bd_crypto_bitlk_open (data->device, data->map_name, context, data->read_only, error);
+  if (data->read_only)
+    flags |= BD_CRYPTO_OPEN_READONLY;
+  if (data->discard)
+    flags |= BD_CRYPTO_OPEN_ALLOW_DISCARDS;
+
+  ret = bd_crypto_bitlk_open_flags (data->device, data->map_name, context, flags, error);
   bd_crypto_keyslot_context_free (context);
   return ret;
 }
