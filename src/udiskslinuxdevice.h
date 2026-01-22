@@ -74,6 +74,8 @@ guint64            udisks_linux_device_read_sysfs_attr_as_uint64 (UDisksLinuxDev
                                                                   const gchar        *attr,
                                                                   GError            **error);
 
+gboolean           udisks_linux_device_is_ata                    (UDisksLinuxDevice  *device);
+
 gboolean           udisks_linux_device_subsystem_is_nvme         (UDisksLinuxDevice  *device);
 gboolean           udisks_linux_device_nvme_is_fabrics           (UDisksLinuxDevice  *device);
 
