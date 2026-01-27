@@ -1,25 +1,3 @@
-CODING STYLE
-============
-
- - Please follow the coding style already used (which is close to the
-   GNU style) - if adding new files please include the following mode
-   line for emacs and other editors:
-
-   -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
-
- - Spaces, not tabs, are used.
-
- - All external interfaces (network protocols, file formats, etc.)
-   should be documented in man pages or other documentation.
-
-
-SOURCE CONTROL
-==============
-
-Anonymous checkouts:
-
-  $ git clone git@github.com:storaged-project/udisks.git
-
 MAKING RELEASES
 ===============
 
@@ -70,6 +48,7 @@ For maintenance releases, the rules are simple
  - Do not add, remove or change any translatable strings
  - Do not add new dependencies
 
+
 TRANSLATIONS
 ============
 
@@ -85,31 +64,3 @@ TRANSLATIONS
 - Check that recent commits to the po/ directory done by the GNOME
   Infrastructure Automation Bot (@gnomesysadmins) reflect the translation
   status on the l10n page
-
-COMMITTING CODE
-===============
-
- - Commit messages should be of the form (the five lines between the
-   lines starting with ===)
-
-=== begin example commit ===
-Short explanation of the commit
-
-Longer explanation explaining exactly what's changed, whether any
-external or private interfaces changed, what bugs were fixed (with bug
-tracker reference if applicable) and so forth. Be concise but not too brief.
-=== end example commit ===
-
- - Always add a brief description of the commit to the _first_ line of
-   the commit and terminate by two newlines (it will work without the
-   second newline, but that is not nice for the interfaces).
-
- - First line (the brief description) must only be one sentence and
-   must start with a capital letter. Don't use a trailing period.
-
- - The main description (the body) is normal prose and should use normal
-   punctuation and capital letters where appropriate. Normally, for patches
-   sent to a mailing list it's copied from there.
-
- - When committing code on behalf of others use the --author option, e.g.
-   git commit -a --author "Joe Coder <joe@coder.org>"
