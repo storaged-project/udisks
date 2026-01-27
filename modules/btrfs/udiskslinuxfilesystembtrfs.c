@@ -960,7 +960,7 @@ udisks_linux_filesystem_btrfs_iface_init (UDisksFilesystemBTRFSIface *iface)
 
 static gboolean
 udisks_linux_filesystem_btrfs_module_object_process_uevent (UDisksModuleObject *module_object,
-                                                            const gchar        *action,
+                                                            UDisksUeventAction  action,
                                                             UDisksLinuxDevice  *device,
                                                             gboolean           *keep)
 {

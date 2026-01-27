@@ -42,7 +42,7 @@ const gchar                    *udisks_linux_iscsi_session_object_get_session_id
 gchar                          *udisks_linux_iscsi_session_object_get_object_path (UDisksLinuxISCSISessionObject *session_object);
 
 gboolean                        udisks_linux_iscsi_session_object_process_uevent (UDisksModuleObject *module_object,
-                                                                                  const gchar        *action,
+                                                                                  UDisksUeventAction  action,
                                                                                   UDisksLinuxDevice  *device,
                                                                                   gboolean           *keep);
 
