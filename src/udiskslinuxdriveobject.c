@@ -605,7 +605,7 @@ drive_ata_check (UDisksObject *object)
     goto out;
 
   device = drive_object->devices->data;
-  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA") ||
+  if (udisks_linux_device_is_ata (device) ||
       device->ata_identify_device_data != NULL || device->ata_identify_packet_device_data != NULL)
     ret = TRUE;
 

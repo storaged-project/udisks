@@ -141,6 +141,42 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device, GUdevClient *udev_client
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+device_is_ata (GUdevDevice *d)
+{
+  GUdevDevice *parent;
+
+  if (!g_udev_device_get_property_as_boolean (d, "ID_ATA") ||
+      g_udev_device_has_property (d, "ID_USB_TYPE") ||
+      g_udev_device_has_property (d, "ID_USB_DRIVER") ||
+      g_udev_device_has_property (d, "ID_USB_MODEL"))
+    return FALSE;
+
+  parent = g_udev_device_get_parent_with_subsystem (d, "usb", "usb_interface");
+  if (parent != NULL)
+    {
+      g_object_unref (parent);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+/**
+ * udisks_linux_device_is_ata:
+ * @device: A #UDisksLinuxDevice.
+ *
+ * Checks that the @device is a locally-attached ATA drive. Typically
+ * excludes USB connected devices that still do identify as ATA.
+ *
+ * Returns: %TRUE if @device is ATA, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_is_ata (UDisksLinuxDevice *device)
+{
+  return device_is_ata (device->udev_device);
+}
+
 /**
  * udisks_linux_device_reprobe_sync:
  * @device: A #UDisksLinuxDevice.
@@ -171,10 +207,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
   /* Get IDENTIFY DEVICE / IDENTIFY PACKET DEVICE data for ATA devices */
   if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
       g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
-      g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA") &&
-      !g_udev_device_has_property (device->udev_device, "ID_USB_TYPE") &&
-      !g_udev_device_has_property (device->udev_device, "ID_USB_DRIVER") &&
-      !g_udev_device_has_property (device->udev_device, "ID_USB_MODEL") &&
+      device_is_ata (device->udev_device) &&
       !udisks_linux_device_is_mpath_device_path (device))
     {
       if (!probe_ata (device, FALSE, cancellable, error))
@@ -244,7 +277,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
           slave = g_udev_client_query_by_sysfs_path (udev_client, slaves[n]);
           if (slave != NULL)
             {
-              is_ata |= g_udev_device_get_property_as_boolean (slave, "ID_ATA");
+              is_ata |= device_is_ata (slave);
               g_object_unref (slave);
             }
           if (is_ata)
