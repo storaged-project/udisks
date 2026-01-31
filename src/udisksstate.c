@@ -33,6 +33,8 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include "udisksdaemon.h"
 #include "udisksstate.h"
@@ -2302,24 +2304,17 @@ udisks_state_get (UDisksState           *state,
                   const GVariantType    *type)
 {
   gchar *path;
-  GVariant *ret;
-  gchar *contents = NULL;
-  GError *local_error = NULL;
-  gsize length = 0;
+  GVariant *ret = NULL;
+  int fd = -1;
+  struct stat sb;
+  void *addr = NULL;
 
   g_return_val_if_fail (UDISKS_IS_STATE (state), NULL);
   g_return_val_if_fail (key != NULL, NULL);
   g_return_val_if_fail (g_variant_type_is_definite (type), NULL);
 
-  /* TODO:
-   *
-   * - could use a cache here to avoid loading files all the time
-   * - could also mmap the file
-   */
-
   path = get_state_file_path (key);
 
-  /* see if it's already in the cache */
   ret = g_hash_table_lookup (state->cache, path);
   if (ret != NULL)
     {
@@ -2327,40 +2322,41 @@ udisks_state_get (UDisksState           *state,
       goto out;
     }
 
-  if (!g_file_get_contents (path,
-                            &contents,
-                            &length,
-                            &local_error))
+  fd = open (path, O_RDONLY);
+  if (fd == -1)
     {
-      if (local_error->domain == G_FILE_ERROR && local_error->code == G_FILE_ERROR_NOENT)
-        {
-          /* this is not an error */
-          g_clear_error (&local_error);
-          goto out;
-        }
-
-      udisks_warning ("Error getting state data %s: %s (%s, %d)",
-                      key,
-                      local_error->message,
-                      g_quark_to_string (local_error->domain),
-                      local_error->code);
-      g_clear_error (&local_error);
+      if (errno != ENOENT)
+        udisks_warning ("Error opening state file %s: %m", path);
       goto out;
     }
 
-  ret = g_variant_new_from_data (type,
-                                 (gconstpointer) contents,
-                                 length,
-                                 FALSE,
-                                 g_free,
-                                 contents);
-  g_warn_if_fail (ret != NULL);
-  g_variant_ref_sink (ret);
+  if (fstat (fd, &sb) == -1)
+    {
+      udisks_warning ("Error stating state file %s: %m", path);
+      goto out;
+    }
 
-  contents = NULL; /* ownership transferred to the returned GVariant */
+  if (sb.st_size > 0)
+    {
+      addr = mmap (NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+      if (addr == MAP_FAILED)
+        {
+          udisks_warning ("Error mmaping state file %s: %m", path);
+          addr = NULL;
+          goto out;
+        }
+    }
+
+  if (addr != NULL)
+    {
+      GBytes *bytes = g_bytes_new_with_free_func (addr, sb.st_size, (GDestroyNotify) munmap, addr);
+      ret = g_variant_new_from_bytes (type, bytes, FALSE);
+      g_bytes_unref (bytes);
+    }
 
  out:
-  g_free (contents);
+  if (fd != -1)
+    close (fd);
   g_free (path);
   return ret;
 }
