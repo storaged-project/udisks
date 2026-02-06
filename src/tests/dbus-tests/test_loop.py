@@ -29,7 +29,6 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
 
     def tearDown(self):
         # tear down loop device
-        self.run_command('umount %s' % self.dev_name)
         self.run_command('losetup --detach %s' % self.dev_name)
         os.remove(self.LOOP_DEVICE_FILENAME)
 
@@ -52,14 +51,13 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
         # the same udisks/udisks2 functionality (japokorn, Nov 2016)
 
     def test_20_setautoclear(self):
-        # autoclear detaches loop device as soon as it is umounted
-        # to be able to check that property value is set we need to mount the
-        # device first
+        # open the loop device so that it doesn't disappear once we set
+        # autoclear to True (it's otherwise not being used so it may get cleared
+        # automatically)
         flag_file_name = '/sys/class/block/%s/loop/autoclear' % os.path.basename(self.dev_name)
-        tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp)
-        self.run_command('mkfs -t ext4 %s' % self.dev_name)
-        self.run_command('mount %s %s' % (self.dev_name, tmp))
+        fd = os.open(self.dev_name, os.O_RDONLY)
+        self.addCleanup(os.close, fd)
+
         self.iface.SetAutoclear(True, self.no_options)
         self.udev_settle()
         autoclear_flag = self.get_property(self.device, '.Loop', 'Autoclear')
