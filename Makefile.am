@@ -22,6 +22,7 @@ export GCC_COLORS
 
 EXTRA_DIST =                                                                   \
 	HACKING                                                                \
+	CONTRIBUTING                                                           \
 	README.md                                                              \
 	$(NULL)
 

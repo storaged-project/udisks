@@ -73,7 +73,10 @@ Please report bugs via the GitHub's issues tracker at
 
  https://github.com/storaged-project/udisks/issues
 
- ### Running out of development source tree
+Please make sure to read CONTRIBUTING before opening a pull request.
+
+
+### Running out of development source tree
  If you would like to run out of the source tree for development without installing,
  please do the following below.
 
