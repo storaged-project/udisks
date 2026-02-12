@@ -572,6 +572,7 @@ handle_set_name (UDisksPartition       *partition,
                                              UDISKS_ERROR_NOT_SUPPORTED,
                                              "No support for setting partition name on a partition table of type `%s'",
                                              udisks_partition_table_get_type_ (partition_table));
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
       goto out;
     }
 
