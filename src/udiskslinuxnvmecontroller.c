@@ -1123,7 +1123,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
   UDisksLinuxDevice *device = NULL;
   BDNVMESanitizeAction action;
   BDNVMEControllerFeature ctrl_feature;
-  gint overwrite_pass_count = 0;
+  guchar overwrite_pass_count = 0;
   guint32 overwrite_pattern = 0;
   gboolean overwrite_invert_pattern = FALSE;
   BDNVMESanitizeLog *sanitize_log;
