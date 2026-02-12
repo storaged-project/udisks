@@ -1307,7 +1307,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
       udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
       udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
                                         g_get_real_time () + time_est);
-      udisks_threaded_job_start (ctrl->selftest_job);
+      udisks_threaded_job_start (ctrl->sanitize_job);
     }
   g_mutex_unlock (&ctrl->smart_lock);
 
