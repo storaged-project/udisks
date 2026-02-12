@@ -463,6 +463,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                  "Requested start for the new partition %"G_GUINT64_FORMAT" "
                                                  "overlaps with existing partition %s.",
                                                   offset, overlapping_part->path);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
           goto out;
         }
     }
