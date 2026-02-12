@@ -335,6 +335,45 @@ typedef struct
   const gchar *host_id;
 } WaitForConnectData;
 
+static gboolean
+fabrics_object_matches (UDisksNVMeController *ctrl,
+                        UDisksNVMeFabrics    *fab,
+                        WaitForConnectData   *data)
+{
+  gchar *traddr = NULL;
+  gchar *trsvcid = NULL;
+  gchar *host_traddr = NULL;
+  gchar *host_iface = NULL;
+  gboolean match;
+
+  if (g_strcmp0 (udisks_nvme_controller_get_subsystem_nqn (ctrl), data->subsysnqn) != 0 ||
+      g_strcmp0 (udisks_nvme_fabrics_get_transport (fab), data->transport) != 0 ||
+      (data->host_nqn && g_strcmp0 (udisks_nvme_fabrics_get_host_nqn (fab), data->host_nqn) != 0) ||
+      (data->host_id && g_strcmp0 (udisks_nvme_fabrics_get_host_id (fab), data->host_id) != 0))
+    return FALSE;
+
+  if (data->transport_addr || data->transport_svcid || data->host_traddr || data->host_iface)
+    {
+      parse_sysfs_addr (udisks_nvme_fabrics_get_transport_address (fab),
+                        udisks_nvme_fabrics_get_transport (fab),
+                        &traddr, &trsvcid, &host_traddr, &host_iface);
+
+      match = (!data->transport_addr || g_strcmp0 (traddr, data->transport_addr) == 0) &&
+              (!data->transport_svcid || g_strcmp0 (trsvcid, data->transport_svcid) == 0) &&
+              (!data->host_traddr || g_strcmp0 (host_traddr, data->host_traddr) == 0) &&
+              (!data->host_iface || g_strcmp0 (host_iface, data->host_iface) == 0);
+
+      g_free (traddr);
+      g_free (trsvcid);
+      g_free (host_traddr);
+      g_free (host_iface);
+
+      return match;
+    }
+
+  return TRUE;
+}
+
 static UDisksObject *
 wait_for_fabrics_object (UDisksDaemon *daemon,
                          gpointer      user_data)
@@ -352,48 +391,14 @@ wait_for_fabrics_object (UDisksDaemon *daemon,
 
       ctrl = udisks_object_get_nvme_controller (object);
       fab = udisks_object_get_nvme_fabrics (object);
-      if (ctrl && fab)
-        {
-          if (g_strcmp0 (udisks_nvme_controller_get_subsystem_nqn (ctrl), data->subsysnqn) != 0 ||
-              g_strcmp0 (udisks_nvme_fabrics_get_transport (fab), data->transport) != 0 ||
-              (data->host_nqn && g_strcmp0 (udisks_nvme_fabrics_get_host_nqn (fab), data->host_nqn) != 0) ||
-              (data->host_id && g_strcmp0 (udisks_nvme_fabrics_get_host_id (fab), data->host_id) != 0))
-            continue;
-          if (data->transport_addr || data->transport_svcid || data->host_traddr || data->host_iface)
-            {
-              gchar *traddr = NULL;
-              gchar *trsvcid = NULL;
-              gchar *host_traddr = NULL;
-              gchar *host_iface = NULL;
-              gboolean b;
-
-              parse_sysfs_addr(udisks_nvme_fabrics_get_transport_address (fab),
-                               udisks_nvme_fabrics_get_transport (fab),
-                               &traddr, &trsvcid, &host_traddr, &host_iface);
-
-              b = (!data->transport_addr || g_strcmp0 (traddr, data->transport_addr) == 0) &&
-                  (!data->transport_svcid || g_strcmp0 (trsvcid, data->transport_svcid) == 0) &&
-                  (!data->host_traddr || g_strcmp0 (host_traddr, data->host_traddr) == 0) &&
-                  (!data->host_iface || g_strcmp0 (host_iface, data->host_iface) == 0);
-
-              g_free (traddr);
-              g_free (trsvcid);
-              g_free (host_traddr);
-              g_free (host_iface);
-              if (!b)
-                  continue;
-            }
-          /* match */
-          g_object_unref (ctrl);
-          g_object_unref (fab);
-          ret = g_object_ref (object);
-          goto out;
-        }
+      if (ctrl && fab && fabrics_object_matches (ctrl, fab, data))
+        ret = g_object_ref (object);
       g_clear_object (&ctrl);
       g_clear_object (&fab);
+      if (ret != NULL)
+        break;
     }
 
- out:
   g_list_free_full (objects, g_object_unref);
   return ret;
 }
