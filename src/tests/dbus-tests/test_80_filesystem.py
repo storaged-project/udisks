@@ -941,8 +941,8 @@ class UdisksFSTestCase(udiskstestcase.UdisksTestCase):
 
         # check utab
         utab_opts = self.get_property(block_fs, '.Block', 'UserspaceMountOptions')
-        self.assertEqual({str(o) for o in utab_opts.value},
-                         {'uhelper=udisks2', 'x-test.op1'})
+        utab_opts.assertEqual({'uhelper=udisks2', 'x-test.op1'},
+                              getter=lambda x: {str(o) for o in x})
 
         # umount
         block_fs.Unmount(self.no_options, dbus_interface=self.iface_prefix + '.Filesystem')

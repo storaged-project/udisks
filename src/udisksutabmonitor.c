@@ -79,7 +79,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (UDisksUtabMonitor, udisks_utab_monitor, G_TYPE_OBJECT)
 
 static void udisks_utab_monitor_ensure (UDisksUtabMonitor *monitor);
-static void udisks_utab_monitor_invalidate (UDisksUtabMonitor *monitor);
+static void invalidate_locked (UDisksUtabMonitor *monitor);
 static void udisks_utab_monitor_constructed (GObject *object);
 
 static void
@@ -193,7 +193,7 @@ reload_utab_entries (UDisksUtabMonitor *monitor)
   g_rw_lock_writer_unlock (&monitor->lock);
 
   g_rw_lock_writer_lock (&monitor->lock);
-  udisks_utab_monitor_invalidate (monitor);
+  invalidate_locked (monitor);
   udisks_utab_monitor_ensure (monitor);
   g_rw_lock_writer_unlock (&monitor->lock);
 
@@ -379,11 +379,31 @@ udisks_utab_monitor_ensure (UDisksUtabMonitor *monitor)
 }
 
 static void
-udisks_utab_monitor_invalidate (UDisksUtabMonitor *monitor)
+invalidate_locked (UDisksUtabMonitor *monitor)
 {
   if (!monitor->current_tb)
     return;
 
   mnt_unref_table (monitor->current_tb);
   monitor->current_tb = NULL;
+}
+
+/**
+ * udisks_utab_monitor_invalidate:
+ * @monitor: A #UDisksUtabMonitor.
+ *
+ * Invalidates the cached utab table so the next call to
+ * udisks_utab_monitor_get_entries() will re-read the file from disk.
+ *
+ * This is useful to ensure fresh data is available after a mount or
+ * unmount operation, avoiding a race with the inotify-based monitor.
+ */
+void
+udisks_utab_monitor_invalidate (UDisksUtabMonitor *monitor)
+{
+  g_return_if_fail (UDISKS_IS_UTAB_MONITOR (monitor));
+
+  g_rw_lock_writer_lock (&monitor->lock);
+  invalidate_locked (monitor);
+  g_rw_lock_writer_unlock (&monitor->lock);
 }

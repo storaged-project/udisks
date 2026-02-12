@@ -479,6 +479,7 @@ udisks_utab_entry_get_opts
 UDisksUtabMonitor
 udisks_utab_monitor_new
 udisks_utab_monitor_get_entries
+udisks_utab_monitor_invalidate
 <SUBSECTION Standard>
 UDISKS_TYPE_UTAB_ENTRY
 UDISKS_UTAB_ENTRY

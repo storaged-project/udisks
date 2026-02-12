@@ -56,6 +56,7 @@
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxmountoptions.h"
 #include "udisksata.h"
+#include "udisksutabmonitor.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -1400,6 +1401,13 @@ handle_mount (UDisksFilesystem      *filesystem,
                mount_point_to_use,
                caller_uid);
 
+  /* Invalidate the utab monitor cache so the subsequent uevent processing
+   * picks up fresh UserspaceMountOptions (uhelper, x-* options) written
+   * to utab by libmount during the mount call.  Without this there is a
+   * race between the inotify-based utab monitor and the uevent that can
+   * leave UserspaceMountOptions empty when the D-Bus reply is sent. */
+  udisks_utab_monitor_invalidate (udisks_daemon_get_utab_monitor (daemon));
+
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
@@ -1697,6 +1705,10 @@ handle_unmount (UDisksFilesystem      *filesystem,
   udisks_info ("Unmounted %s on behalf of uid %u",
                udisks_block_get_device (block),
                caller_uid);
+
+  /* Invalidate the utab monitor cache so the subsequent uevent processing
+   * picks up the utab changes written by libmount during unmount. */
+  udisks_utab_monitor_invalidate (udisks_daemon_get_utab_monitor (daemon));
 
   waiting:
   /* wait for mount-points update before returning from method */

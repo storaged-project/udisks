@@ -29,9 +29,10 @@ G_BEGIN_DECLS
 #define UDISKS_UTAB_MONITOR(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_UTAB_MONITOR, UDisksUtabMonitor))
 #define UDISKS_IS_UTAB_MONITOR(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_UTAB_MONITOR))
 
-GType              udisks_utab_monitor_get_type    (void) G_GNUC_CONST;
-UDisksUtabMonitor *udisks_utab_monitor_new         (void);
-GSList            *udisks_utab_monitor_get_entries (UDisksUtabMonitor *monitor);
+GType              udisks_utab_monitor_get_type       (void) G_GNUC_CONST;
+UDisksUtabMonitor *udisks_utab_monitor_new            (void);
+GSList            *udisks_utab_monitor_get_entries    (UDisksUtabMonitor *monitor);
+void               udisks_utab_monitor_invalidate     (UDisksUtabMonitor *monitor);
 
 G_END_DECLS
 
