@@ -438,9 +438,9 @@ fabrics_options_to_extra (GVariant *arg_options)
       else if (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))
         v = g_strdup_printf ("%u", g_variant_get_uint32 (value));
       else if (g_variant_is_of_type (value, G_VARIANT_TYPE_INT64))
-        v = g_strdup_printf ("%ld", g_variant_get_int64 (value));
-      else if (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))
-        v = g_strdup_printf ("%lu", g_variant_get_uint64 (value));
+        v = g_strdup_printf ("%" G_GINT64_FORMAT, g_variant_get_int64 (value));
+      else if (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT64))
+        v = g_strdup_printf ("%" G_GUINT64_FORMAT, g_variant_get_uint64 (value));
       else
         {
           udisks_warning ("fabrics_options_to_extra: unhandled extra option '%s' of type %s, ignoring",
