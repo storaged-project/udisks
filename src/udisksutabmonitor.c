@@ -181,6 +181,7 @@ static void
 reload_utab_entries (UDisksUtabMonitor *monitor)
 {
   struct libmnt_table *old_tb;
+  struct libmnt_table *new_tb;
   struct libmnt_tabdiff *diff = NULL;
   struct libmnt_iter *itr;
   struct libmnt_fs *old, *new;
@@ -195,17 +196,17 @@ reload_utab_entries (UDisksUtabMonitor *monitor)
   g_rw_lock_writer_lock (&monitor->lock);
   invalidate_locked (monitor);
   udisks_utab_monitor_ensure (monitor);
+  new_tb = monitor->current_tb;
+  mnt_ref_table (new_tb);
   g_rw_lock_writer_unlock (&monitor->lock);
 
-  g_rw_lock_reader_lock (&monitor->lock);
   diff = mnt_new_tabdiff ();
   itr = mnt_new_iter (MNT_ITER_FORWARD);
-  g_rw_lock_reader_unlock (&monitor->lock);
 
-  if (!old_tb || !monitor->current_tb || !diff || !itr)
+  if (!old_tb || !new_tb || !diff || !itr)
     goto out;
 
-  rc = mnt_diff_tables (diff, old_tb, monitor->current_tb);
+  rc = mnt_diff_tables (diff, old_tb, new_tb);
 
   if (rc < 0)
     goto out;
@@ -249,6 +250,8 @@ reload_utab_entries (UDisksUtabMonitor *monitor)
 out:
   if (old_tb)
     mnt_unref_table (old_tb);
+  if (new_tb)
+    mnt_unref_table (new_tb);
   if (diff)
     mnt_free_tabdiff (diff);
   if (itr)
