@@ -4244,6 +4244,7 @@ handle_restore_encrypted_header (UDisksBlock           *encrypted,
     UDisksBlock *block;
     UDisksDaemon *daemon;
     UDisksState *state = NULL;
+    const gchar *action_id;
     uid_t caller_uid;
     GError *error = NULL;
     UDisksBaseJob *job = NULL;
@@ -4267,6 +4268,33 @@ handle_restore_encrypted_header (UDisksBlock           *encrypted,
         g_dbus_method_invocation_return_gerror (invocation, error);
         goto out;
       }
+
+    action_id = "org.freedesktop.udisks2.modify-device";
+    if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+      {
+        if (udisks_block_get_hint_system (block))
+          {
+            action_id = "org.freedesktop.udisks2.modify-device-system";
+          }
+        else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
+          {
+            action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+          }
+      }
+
+    if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                      object,
+                                                      action_id,
+                                                      options,
+                                                      /* Translators: Shown in authentication dialog when restoring
+                                                       * a LUKS header on a device.
+                                                       *
+                                                       * Do not translate $(device.name), it's a placeholder and will
+                                                       * be replaced by the name of the drive/device in question
+                                                       */
+                                                      N_("Authentication is required to restore the encrypted header on $(device.name)"),
+                                                      invocation))
+      goto out;
 
     job = udisks_daemon_launch_simple_job (daemon,
                                            UDISKS_OBJECT (object),
