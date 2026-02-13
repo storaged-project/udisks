@@ -1362,6 +1362,7 @@ handle_header_backup (UDisksEncrypted       *encrypted,
     UDisksBlock *block;
     UDisksDaemon *daemon;
     UDisksState *state = NULL;
+    const gchar *action_id;
     uid_t caller_uid;
     GError *error = NULL;
     UDisksBaseJob *job = NULL;
@@ -1397,6 +1398,24 @@ handle_header_backup (UDisksEncrypted       *encrypted,
         g_dbus_method_invocation_return_gerror (invocation, error);
         goto out;
       }
+
+    action_id = "org.freedesktop.udisks2.open-device";
+    if (udisks_block_get_hint_system (block))
+      action_id = "org.freedesktop.udisks2.open-device-system";
+
+    if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                      object,
+                                                      action_id,
+                                                      options,
+                                                      /* Translators: Shown in authentication dialog when backing up
+                                                       * a LUKS header of a device.
+                                                       *
+                                                       * Do not translate $(device.name), it's a placeholder and will
+                                                       * be replaced by the name of the drive/device in question
+                                                       */
+                                                      N_("Authentication is required to back up the encrypted header of $(device.name)"),
+                                                      invocation))
+      goto out;
 
     job = udisks_daemon_launch_simple_job (daemon,
                                            UDISKS_OBJECT (object),
