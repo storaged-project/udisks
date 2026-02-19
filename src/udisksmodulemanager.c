@@ -720,12 +720,6 @@ udisks_module_manager_get_modules (UDisksModuleManager *manager)
 
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
 
-  /* Return fast to avoid bottleneck over locking, expecting
-   * a simple pointer check would be atomic.
-   */
-  if (manager->modules == NULL)
-    return NULL;
-
   g_mutex_lock (&manager->modules_lock);
   l = g_list_copy_deep (manager->modules, (GCopyFunc) udisks_g_object_ref_copy, NULL);
   g_mutex_unlock (&manager->modules_lock);
