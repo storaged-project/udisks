@@ -31,6 +31,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <glib/gstdio.h>
 #include <gmodule.h>
 
 #include "udisksdaemon.h"
@@ -295,6 +296,17 @@ load_single_module_unlocked (UDisksModuleManager *manager,
   UDisksModuleNewFunc module_new_func;
   UDisksModule *module;
 
+  /* Unfortunately error reporting from dlopen() is done through dlerror() which
+   * only returns a string - no errno set (or at least not officially documented).
+   * Thus perform this extra check in a slightly racy way.
+   */
+  if (g_access (sopath, R_OK) != 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "Module not available: %s", sopath);
+      return FALSE;
+    }
+
   handle = g_module_open (sopath, 0);
   if (handle == NULL)
     {
@@ -450,8 +462,9 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
                                          &do_notify,
                                          &error))
         {
-          udisks_critical ("Error loading module: %s",
-                           error->message);
+          if (! g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED))
+            udisks_critical ("Error loading module: %s",
+                             error->message);
           g_clear_error (&error);
           continue;
         }
