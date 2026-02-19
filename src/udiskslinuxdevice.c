@@ -453,7 +453,7 @@ udisks_linux_device_read_sysfs_attr_as_int (UDisksLinuxDevice  *device,
   gchar *str;
 
   if ((str = udisks_linux_device_read_sysfs_attr (device, attr, error)))
-    ret = atoi (str);
+    ret = (gint) g_ascii_strtoll (str, NULL, 0);
   g_free (str);
 
   return ret;
