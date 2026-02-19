@@ -500,6 +500,13 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
   g_mutex_lock (&manager->modules_lock);
 
   l = g_steal_pointer (&manager->modules);
+
+  /* clear the state file */
+  state = udisks_daemon_get_state (manager->daemon);
+  udisks_state_clear_modules (state);
+
+  g_mutex_unlock (&manager->modules_lock);
+
   if (l)
     {
       /* notify listeners that the list of active modules has changed */
@@ -507,12 +514,6 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
     }
   /* only unref module objects after all listeners have performed cleanup */
   g_list_free_full (l, g_object_unref);
-
-  /* clear the state file */
-  state = udisks_daemon_get_state (manager->daemon);
-  udisks_state_clear_modules (state);
-
-  g_mutex_unlock (&manager->modules_lock);
 }
 
 static void
