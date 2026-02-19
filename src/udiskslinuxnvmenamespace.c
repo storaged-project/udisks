@@ -34,7 +34,6 @@
 #include "udisksprivate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
-#include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udisksthreadedjob.h"
