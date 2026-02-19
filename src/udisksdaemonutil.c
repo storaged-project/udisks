@@ -484,7 +484,7 @@ udisks_daemon_util_resolve_link (const gchar *path,
  * Resolves all symlinks in @path/@dir_name. This can be used to
  * easily walk e.g. holders or slaves of block devices.
  *
- * Returns: An array of canonicalized absolute pathnames. Free with g_strfreev().
+ * Returns: (array zero-terminated=1): An array of canonicalized absolute pathnames. Free with g_strfreev().
  */
 gchar **
 udisks_daemon_util_resolve_links (const gchar *path,
@@ -508,9 +508,9 @@ udisks_daemon_util_resolve_links (const gchar *path,
       if (resolved != NULL)
         g_ptr_array_add (p, resolved);
     }
-  g_ptr_array_add (p, NULL);
 
  out:
+  g_ptr_array_add (p, NULL);
   if (dir != NULL)
     g_dir_close (dir);
   g_free (s);
