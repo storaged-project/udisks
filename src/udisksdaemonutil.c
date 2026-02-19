@@ -1518,6 +1518,7 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
                    G_IO_ERROR,
                    g_io_error_from_errno (errno),
                    "Error calling fdopen: %m");
+      close (fd);
       g_unlink (tmpl);
       goto out;
     }
