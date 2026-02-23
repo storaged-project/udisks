@@ -74,7 +74,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
                 manager.EnableModule(module, dbus.Boolean(False))
             manager.EnableModule(module, dbus.Boolean(True))
         with self.assertRaisesRegex(dbus.exceptions.DBusException,
-                                    r'cannot open shared object file: No such file or directory'):
+                                    r'Module not available: '):
             manager.EnableModule("non-exist_ent", dbus.Boolean(True))
         with self.assertRaisesRegex(dbus.exceptions.DBusException,
                                     r'Module unloading is not currently supported.'):
