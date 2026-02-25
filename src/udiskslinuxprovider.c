@@ -1601,7 +1601,10 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
     {
       for (l = modules_to_remove; l; l = l->next)
         {
-          g_warn_if_fail (g_hash_table_size (l->data) == 0);
+          GHashTable *inst_table;
+
+          inst_table = g_hash_table_lookup (provider->module_objects, l->data);
+          g_warn_if_fail (inst_table == NULL || g_hash_table_size (inst_table) == 0);
           g_warn_if_fail (g_hash_table_remove (provider->module_objects, l->data));
         }
       g_list_free (modules_to_remove);
