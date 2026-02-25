@@ -2819,6 +2819,7 @@ monitor_on_interface_proxy_properties_changed (GDBusObjectManagerClient *manager
       if (max_property_name_len < property_name_len)
         max_property_name_len = property_name_len;
     }
+  g_variant_iter_free (iter);
 
   value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
   if (value_column < 24)
@@ -2848,6 +2849,7 @@ monitor_on_interface_proxy_properties_changed (GDBusObjectManagerClient *manager
       g_free (value_str);
       g_variant_unref (value);
     }
+  g_variant_iter_free (iter);
  out:
   ;
 }
