@@ -1302,7 +1302,8 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
   if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       g_warn_if_fail (subsys_table != NULL);
-      g_hash_table_remove (subsys_table, sysfs_path);
+      if (subsys_table != NULL)
+        g_hash_table_remove (subsys_table, sysfs_path);
       g_hash_table_remove (provider->sysfs_path_to_nvme_subsys, sysfs_path);
     }
   else
