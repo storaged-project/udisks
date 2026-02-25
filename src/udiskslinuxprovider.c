@@ -293,6 +293,22 @@ uevent_is_spurious (GUdevDevice *dev)
   return FALSE;
 }
 
+static void
+probe_device_thread_func (GTask *task, gpointer source_object, gpointer task_data, GCancellable *cancellable)
+{
+  ProbeRequest *request = task_data;
+  request->udisks_device = udisks_linux_device_new_sync (request->udev_device, udisks_linux_provider_get_udev_client(request->provider));
+  g_task_return_pointer (task, request, NULL);
+}
+
+static void
+on_probe_job_completed (GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+  GTask *task = G_TASK (res);
+  ProbeRequest *request = g_task_propagate_pointer (task, NULL);
+  g_idle_add (on_idle_with_probed_uevent, request);
+}
+
 static gpointer
 probe_request_thread_func (gpointer user_data)
 {
@@ -330,13 +346,16 @@ probe_request_thread_func (gpointer user_data)
 
       /* ignore spurious uevents */
       if (!request->known_block && uevent_is_spurious (request->udev_device))
-        continue;
-
-      /* probe the device - this may take a while */
-      request->udisks_device = udisks_linux_device_new_sync (request->udev_device, provider->gudev_client);
+        {
+          probe_request_free (request);
+          continue;
+        }
 
       /* now that we've probed the device, post the request back to the main thread */
-      g_idle_add (on_idle_with_probed_uevent, request);
+      GTask *task = g_task_new (provider, NULL, on_probe_job_completed, NULL);
+      g_task_set_task_data (task, request, (GDestroyNotify) probe_request_free);
+      g_task_run_in_thread (task, probe_device_thread_func);
+      g_object_unref (task);
     }
   while (TRUE);
 
