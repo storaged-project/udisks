@@ -1712,7 +1712,7 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
 #define KIBIBYTE_FACTOR 1024.0
 #define MEBIBYTE_FACTOR (1024.0 * 1024.0)
 #define GIBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0)
-#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 10242.0)
+#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 1024.0)
 
 static char *
 get_pow2_size (guint64 size)
