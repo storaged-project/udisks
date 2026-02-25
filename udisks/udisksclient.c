@@ -949,7 +949,10 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_drive (block));
   if (object != NULL)
-    ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
@@ -980,7 +983,10 @@ udisks_client_get_mdraid_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_mdraid (block));
   if (object != NULL)
-    ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
