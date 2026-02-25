@@ -856,9 +856,11 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
     }
   bd_nvme_self_test_log_free (self_test_log);
 
-  /* Trigger the self-test operation */
+  /* Trigger the self-test operation and launch the monitoring job atomically */
+  g_mutex_lock (&ctrl->smart_lock);
   if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device), action, &error))
     {
+      g_mutex_unlock (&ctrl->smart_lock);
       udisks_warning ("Error starting device selftest for %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -866,26 +868,22 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
       goto out;
     }
 
-  g_mutex_lock (&ctrl->smart_lock);
-  if (ctrl->selftest_job == NULL)
+  ctrl->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                               UDISKS_OBJECT (object),
+                                                                               "nvme-selftest",
+                                                                               caller_uid,
+                                                                               FALSE,
+                                                                               selftest_job_func,
+                                                                               g_object_ref (ctrl),
+                                                                               (GDestroyNotify) selftest_job_func_done,
+                                                                               NULL)); /* GCancellable */
+  if (time_est > 0)
     {
-      ctrl->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
-                                                                                   UDISKS_OBJECT (object),
-                                                                                   "nvme-selftest",
-                                                                                   caller_uid,
-                                                                                   FALSE,
-                                                                                   selftest_job_func,
-                                                                                   g_object_ref (ctrl),
-                                                                                   (GDestroyNotify) selftest_job_func_done,
-                                                                                   NULL)); /* GCancellable */
-      if (time_est > 0)
-        {
-          udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->selftest_job), FALSE);
-          udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->selftest_job),
-                                            g_get_real_time () + time_est);
-        }
-      udisks_threaded_job_start (ctrl->selftest_job);
+      udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->selftest_job), FALSE);
+      udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->selftest_job),
+                                        g_get_real_time () + time_est);
     }
+  udisks_threaded_job_start (ctrl->selftest_job);
   g_mutex_unlock (&ctrl->smart_lock);
 
   udisks_nvme_controller_complete_smart_selftest_start (_ctrl, invocation);
@@ -1276,7 +1274,8 @@ handle_sanitize_start (UDisksNVMeController  *_object,
    */
   bd_nvme_sanitize_log_free (sanitize_log);
 
-  /* Trigger the sanitize operation */
+  /* Trigger the sanitize operation and launch the monitoring job atomically */
+  g_mutex_lock (&ctrl->smart_lock);
   if (!bd_nvme_sanitize (g_udev_device_get_device_file (device->udev_device),
                          action,
                          TRUE, /* no_dealloc */
@@ -1285,6 +1284,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
                          overwrite_invert_pattern,
                          &error))
     {
+      g_mutex_unlock (&ctrl->smart_lock);
       udisks_warning ("Error starting the sanitize operation for %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -1292,23 +1292,19 @@ handle_sanitize_start (UDisksNVMeController  *_object,
       goto out;
     }
 
-  g_mutex_lock (&ctrl->smart_lock);
-  if (ctrl->sanitize_job == NULL)
-    {
-      ctrl->sanitize_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
-                                                                                   UDISKS_OBJECT (object),
-                                                                                   "nvme-sanitize",
-                                                                                   caller_uid,
-                                                                                   FALSE,
-                                                                                   sanitize_job_func,
-                                                                                   g_object_ref (ctrl),
-                                                                                   (GDestroyNotify) sanitize_job_func_done,
-                                                                                   NULL)); /* GCancellable */
-      udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
-      udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
-                                        g_get_real_time () + time_est);
-      udisks_threaded_job_start (ctrl->sanitize_job);
-    }
+  ctrl->sanitize_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                               UDISKS_OBJECT (object),
+                                                                               "nvme-sanitize",
+                                                                               caller_uid,
+                                                                               FALSE,
+                                                                               sanitize_job_func,
+                                                                               g_object_ref (ctrl),
+                                                                               (GDestroyNotify) sanitize_job_func_done,
+                                                                               NULL)); /* GCancellable */
+  udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
+  udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
+                                    g_get_real_time () + time_est);
+  udisks_threaded_job_start (ctrl->sanitize_job);
   g_mutex_unlock (&ctrl->smart_lock);
 
   udisks_nvme_controller_complete_sanitize_start (_object, invocation);
