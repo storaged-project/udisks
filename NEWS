@@ -1,4 +1,32 @@
 ---------------------------
+udisks 2.11.1
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+This is a bugfix release, fixing ATA USB device detection regression, leaking
+systemd inhibitors and missing polkit checks (CVE-2026-26103, CVE-2026-26104).
+
+Changes since 2.11.0:
+
+Tomas Bzatek (8):
+      lvm2: Prevent a segfault on discarded probe output
+      udiskslinuxdevice: Fix ATA USB detection
+      udiskslinuxnvmecontroller: Fix sanitize job start
+      udiskslinuxpartition: Fix missing job completion in handle_set_name
+      udiskslinuxpartitiontable: Fix missing job completion on overlapping partition error
+      udiskslinuxmanagernvme: Fix UINT64 variant handling in fabrics extra options
+      udiskslinuxblock: Add missing polkit check for RestoreEncryptedHeader()
+      udiskslinuxencrypted: Add missing polkit check for HeaderBackup()
+
+Vojtech Trefny (4):
+      docs: Update links to documentation on storaged.org
+      udiskslinuxmdraid: Fix getting bitmap location on latest kernels
+      udisksobjectinfo: Fix compiler warning with C23
+      tests: Do not mount the loop device for SetAutoclear test
+
+---------------------------
 udisks 2.11.0
 ---------------------------
 
