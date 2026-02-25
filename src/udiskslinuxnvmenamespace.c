@@ -315,6 +315,15 @@ format_ns_job_func (UDisksThreadedJob  *job,
         }
     }
 
+  if (g_cancellable_is_cancelled (cancellable))
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_CANCELLED,
+                   "Format namespace job was cancelled");
+      goto out;
+    }
+
   ret = TRUE;
 
  out:
