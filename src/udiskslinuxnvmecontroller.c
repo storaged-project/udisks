@@ -840,7 +840,7 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
 
   /* Time estimates */
   if (action == BD_NVME_SELF_TEST_ACTION_EXTENDED)
-    time_est = device->nvme_ctrl_info->selftest_ext_time * 60 * 1000000;
+    time_est = (gint64) device->nvme_ctrl_info->selftest_ext_time * 60 * 1000000;
 
   /* Check that the Device Self-test (Log Identifier 06h) log page can be retrieved,
    * otherwise we wouldn't be able to detect the test progress and its completion.
@@ -1259,13 +1259,13 @@ handle_sanitize_start (UDisksNVMeController  *_object,
   switch (action)
     {
       case BD_NVME_SANITIZE_ACTION_BLOCK_ERASE:
-          time_est = sanitize_log->time_for_block_erase_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_block_erase_nd * 1000000;
           break;
       case BD_NVME_SANITIZE_ACTION_OVERWRITE:
-          time_est = sanitize_log->time_for_overwrite_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_overwrite_nd * 1000000;
           break;
       case BD_NVME_SANITIZE_ACTION_CRYPTO_ERASE:
-          time_est = sanitize_log->time_for_crypto_erase_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_crypto_erase_nd * 1000000;
           break;
       default:
           udisks_warning ("Invalid sanitize action");
