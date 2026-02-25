@@ -822,12 +822,18 @@ compare_blocks_by_device (gconstpointer a,
 {
   UDisksBlock *block_a = udisks_object_get_block (UDISKS_OBJECT (a));
   UDisksBlock *block_b = udisks_object_get_block (UDISKS_OBJECT (b));
+  int ret;
 
   g_assert (block_a != NULL);
   g_assert (block_b != NULL);
 
-  return g_strcmp0 (udisks_block_get_device (block_a),
-                    udisks_block_get_device (block_b));
+  ret = g_strcmp0 (udisks_block_get_device (block_a),
+                   udisks_block_get_device (block_b));
+
+  g_clear_object (&block_a);
+  g_clear_object (&block_b);
+
+  return ret;
 }
 
 static GList *
