@@ -330,7 +330,10 @@ probe_request_thread_func (gpointer user_data)
 
       /* ignore spurious uevents */
       if (!request->known_block && uevent_is_spurious (request->udev_device))
-        continue;
+        {
+          probe_request_free (request);
+          continue;
+        }
 
       /* probe the device - this may take a while */
       request->udisks_device = udisks_linux_device_new_sync (request->udev_device, provider->gudev_client);
