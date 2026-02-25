@@ -191,7 +191,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
   else
     {
       /* fallback, smart_log has never been retrieved successfully */
-      const gchar * const *warning = { NULL };
+      const gchar * const warning[] = { NULL };
 
       udisks_nvme_controller_set_smart_critical_warning (UDISKS_NVME_CONTROLLER (ctrl), warning);
       udisks_nvme_controller_set_smart_power_on_hours (UDISKS_NVME_CONTROLLER (ctrl), 0);
