@@ -685,7 +685,7 @@ on_system_sleep_signal (GDBusConnection *connection,
   UDisksDaemon *daemon;
   UDisksConfigManager *config_manager;
   GDir *etc_dir;
-  GError *error;
+  GError *error = NULL;
   const gchar *filename;
   GVariant *tmp_bool;
   gboolean suspending;
