@@ -175,7 +175,7 @@ udisks_linux_block_object_get_property (GObject    *__object,
       break;
 
     case PROP_DEVICE:
-      g_value_set_object (value, udisks_linux_block_object_get_device (object));
+      g_value_take_object (value, udisks_linux_block_object_get_device (object));
       break;
 
     default:
