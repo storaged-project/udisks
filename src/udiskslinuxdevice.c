@@ -237,6 +237,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
        */
 
       /* TODO: shall we trigger uevent on all namespaces once NVME_EVENT=connected is received? */
+      bd_nvme_controller_info_free (device->nvme_ctrl_info);
       device->nvme_ctrl_info = bd_nvme_get_controller_info (device_file, error);
       if (!device->nvme_ctrl_info)
         {
@@ -255,6 +256,7 @@ udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
       udisks_linux_device_subsystem_is_nvme (device) &&
       device_file != NULL)
     {
+      bd_nvme_namespace_info_free (device->nvme_ns_info);
       device->nvme_ns_info = bd_nvme_get_namespace_info (device_file, error);
       if (!device->nvme_ns_info)
         goto out;
@@ -451,7 +453,7 @@ udisks_linux_device_read_sysfs_attr_as_int (UDisksLinuxDevice  *device,
   gchar *str;
 
   if ((str = udisks_linux_device_read_sysfs_attr (device, attr, error)))
-    ret = atoi (str);
+    ret = (gint) g_ascii_strtoll (str, NULL, 0);
   g_free (str);
 
   return ret;
