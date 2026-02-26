@@ -822,12 +822,18 @@ compare_blocks_by_device (gconstpointer a,
 {
   UDisksBlock *block_a = udisks_object_get_block (UDISKS_OBJECT (a));
   UDisksBlock *block_b = udisks_object_get_block (UDISKS_OBJECT (b));
+  int ret;
 
   g_assert (block_a != NULL);
   g_assert (block_b != NULL);
 
-  return g_strcmp0 (udisks_block_get_device (block_a),
-                    udisks_block_get_device (block_b));
+  ret = g_strcmp0 (udisks_block_get_device (block_a),
+                   udisks_block_get_device (block_b));
+
+  g_clear_object (&block_a);
+  g_clear_object (&block_b);
+
+  return ret;
 }
 
 static GList *
@@ -943,7 +949,10 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_drive (block));
   if (object != NULL)
-    ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
@@ -974,7 +983,10 @@ udisks_client_get_mdraid_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_mdraid (block));
   if (object != NULL)
-    ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
@@ -1712,7 +1724,7 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
 #define KIBIBYTE_FACTOR 1024.0
 #define MEBIBYTE_FACTOR (1024.0 * 1024.0)
 #define GIBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0)
-#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 10242.0)
+#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 1024.0)
 
 static char *
 get_pow2_size (guint64 size)

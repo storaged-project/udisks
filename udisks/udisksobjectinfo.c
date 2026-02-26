@@ -162,8 +162,8 @@ static const struct
   {"thumb",      NC_("media-type", "Thumb"),        NC_("media-type", "Thumb"),        "media-removable", "media-removable-symbolic", DRIVE_TYPE_DRIVE, "media-removable", "media-removable-symbolic"},
 
   {"floppy",     NC_("media-type", "Floppy"),       NC_("media-type", "Floppy"), "media-floppy", "media-floppy-symbolic",      DRIVE_TYPE_DISK, "drive-removable-media-floppy", "drive-removable-media-symbolic"},
-  {"floppy_zip", NC_("media-type", "Zip"),          NC_("media-type", "Zip"),    "media-floppy-jaz", "media-floppy-symbolic",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz", "drive-removable-media-symbolic"},
-  {"floppy_jaz", NC_("media-type", "Jaz"),          NC_("media-type", "Jaz"),    "media-floppy-zip", "media-floppy-symbolic",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip", "drive-removable-media-symbolic"},
+  {"floppy_zip", NC_("media-type", "Zip"),          NC_("media-type", "Zip"),    "media-floppy-zip", "media-floppy-symbolic",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip", "drive-removable-media-symbolic"},
+  {"floppy_jaz", NC_("media-type", "Jaz"),          NC_("media-type", "Jaz"),    "media-floppy-jaz", "media-floppy-symbolic",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz", "drive-removable-media-symbolic"},
 
   {"flash",      NC_("media-type", "Flash"),        NC_("media-type", "Flash"),        "media-flash", "media-flash-symbolic",       DRIVE_TYPE_CARD, "drive-removable-media-flash", "drive-removable-media-symbolic"},
   {"flash_ms",   NC_("media-type", "MemoryStick"),  NC_("media-type", "MemoryStick"),  "media-flash-ms", "media-flash-symbolic",    DRIVE_TYPE_CARD, "drive-removable-media-flash-ms", "drive-removable-media-symbolic"},

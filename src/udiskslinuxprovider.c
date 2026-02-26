@@ -330,7 +330,10 @@ probe_request_thread_func (gpointer user_data)
 
       /* ignore spurious uevents */
       if (!request->known_block && uevent_is_spurious (request->udev_device))
-        continue;
+        {
+          probe_request_free (request);
+          continue;
+        }
 
       /* probe the device - this may take a while */
       request->udisks_device = udisks_linux_device_new_sync (request->udev_device, provider->gudev_client);
@@ -682,7 +685,7 @@ on_system_sleep_signal (GDBusConnection *connection,
   UDisksDaemon *daemon;
   UDisksConfigManager *config_manager;
   GDir *etc_dir;
-  GError *error;
+  GError *error = NULL;
   const gchar *filename;
   GVariant *tmp_bool;
   gboolean suspending;
@@ -1299,7 +1302,8 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
   if (action == UDISKS_UEVENT_ACTION_REMOVE)
     {
       g_warn_if_fail (subsys_table != NULL);
-      g_hash_table_remove (subsys_table, sysfs_path);
+      if (subsys_table != NULL)
+        g_hash_table_remove (subsys_table, sysfs_path);
       g_hash_table_remove (provider->sysfs_path_to_nvme_subsys, sysfs_path);
     }
   else
@@ -1597,7 +1601,10 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
     {
       for (l = modules_to_remove; l; l = l->next)
         {
-          g_warn_if_fail (g_hash_table_size (l->data) == 0);
+          GHashTable *inst_table;
+
+          inst_table = g_hash_table_lookup (provider->module_objects, l->data);
+          g_warn_if_fail (inst_table == NULL || g_hash_table_size (inst_table) == 0);
           g_warn_if_fail (g_hash_table_remove (provider->module_objects, l->data));
         }
       g_list_free (modules_to_remove);
