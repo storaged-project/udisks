@@ -1047,8 +1047,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
  out:
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
-  if (device != NULL)
-    g_clear_object (&device);
+  g_clear_object (&device);
 
   return ret;
 }
