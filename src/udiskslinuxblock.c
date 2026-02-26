@@ -2072,7 +2072,8 @@ handle_add_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2151,7 +2152,8 @@ handle_remove_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2243,8 +2245,10 @@ handle_update_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (new_details);
-  g_variant_unref (old_details);
+  if (new_details != NULL)
+    g_variant_unref (new_details);
+  if (old_details != NULL)
+    g_variant_unref (old_details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
