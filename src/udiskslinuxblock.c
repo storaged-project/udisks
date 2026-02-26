@@ -177,6 +177,9 @@ get_sysfs_attr (GUdevDevice *device,
       g_clear_error (&error);
     }
 
+  if (value != NULL)
+    g_strchomp (value);
+
   g_free (filename);
   return value;
 }
