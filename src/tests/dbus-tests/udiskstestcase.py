@@ -428,7 +428,7 @@ class UdisksTestCase(unittest.TestCase):
             manager.EnableModule(module, dbus.Boolean(True))
             return True
         except dbus.exceptions.DBusException as e:
-            msg = r"Error initializing module '%s': .*\.so: cannot open shared object file: No such file or directory" % module
+            msg = r"Error initializing module '%s': Module not available: " % module
             if re.search(msg, e.get_dbus_message()):
                 return False
             else:

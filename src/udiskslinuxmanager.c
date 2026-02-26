@@ -934,8 +934,12 @@ load_modules_in_idle_cb (gpointer user_data)
       /* Load single requested module */
       if (! udisks_module_manager_load_single_module (module_manager, data->module_name, &error))
         {
+          if (g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED))
+            /* Module not available, change to UDISKS_ERROR_FAILED for backwards compatibility */
+            error->code = UDISKS_ERROR_FAILED;
+          else
+            g_warning ("Error initializing module '%s': %s", data->module_name, error->message);
           g_prefix_error (&error, "Error initializing module '%s': ", data->module_name);
-          g_warning ("%s", error->message);
           g_dbus_method_invocation_take_error (data->invocation, error);
         }
       else

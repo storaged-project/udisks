@@ -31,6 +31,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <glib/gstdio.h>
 #include <gmodule.h>
 
 #include "udisksdaemon.h"
@@ -295,6 +296,17 @@ load_single_module_unlocked (UDisksModuleManager *manager,
   UDisksModuleNewFunc module_new_func;
   UDisksModule *module;
 
+  /* Unfortunately error reporting from dlopen() is done through dlerror() which
+   * only returns a string - no errno set (or at least not officially documented).
+   * Thus perform this extra check in a slightly racy way.
+   */
+  if (g_access (sopath, R_OK) != 0)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED,
+                   "Module not available: %s", sopath);
+      return FALSE;
+    }
+
   handle = g_module_open (sopath, 0);
   if (handle == NULL)
     {
@@ -450,8 +462,9 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
                                          &do_notify,
                                          &error))
         {
-          udisks_critical ("Error loading module: %s",
-                           error->message);
+          if (! g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED))
+            udisks_critical ("Error loading module: %s",
+                             error->message);
           g_clear_error (&error);
           continue;
         }
@@ -487,6 +500,13 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
   g_mutex_lock (&manager->modules_lock);
 
   l = g_steal_pointer (&manager->modules);
+
+  /* clear the state file */
+  state = udisks_daemon_get_state (manager->daemon);
+  udisks_state_clear_modules (state);
+
+  g_mutex_unlock (&manager->modules_lock);
+
   if (l)
     {
       /* notify listeners that the list of active modules has changed */
@@ -494,12 +514,6 @@ udisks_module_manager_unload_modules (UDisksModuleManager *manager)
     }
   /* only unref module objects after all listeners have performed cleanup */
   g_list_free_full (l, g_object_unref);
-
-  /* clear the state file */
-  state = udisks_daemon_get_state (manager->daemon);
-  udisks_state_clear_modules (state);
-
-  g_mutex_unlock (&manager->modules_lock);
 }
 
 static void
@@ -706,12 +720,6 @@ udisks_module_manager_get_modules (UDisksModuleManager *manager)
   GList *l;
 
   g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
-
-  /* Return fast to avoid bottleneck over locking, expecting
-   * a simple pointer check would be atomic.
-   */
-  if (manager->modules == NULL)
-    return NULL;
 
   g_mutex_lock (&manager->modules_lock);
   l = g_list_copy_deep (manager->modules, (GCopyFunc) udisks_g_object_ref_copy, NULL);
