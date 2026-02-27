@@ -727,7 +727,7 @@ append_fixedup_sd (const gchar *prefix,
     ;
   str = g_string_new (prefix);
   g_string_append (str, "sd");
-  for (n = 0; n < 5 - num_alphas; n++)
+  for (n = num_alphas; n < 5; n++)
     g_string_append_c (str, '_');
 
   g_string_append (str, device_name + 2);
@@ -1047,8 +1047,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
  out:
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
-  if (device != NULL)
-    g_clear_object (&device);
+  g_clear_object (&device);
 
   return ret;
 }

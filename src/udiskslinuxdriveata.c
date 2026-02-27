@@ -2587,6 +2587,8 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (block_object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
 
+  udisks_drive_ata_complete_security_erase_unit (_drive, invocation);
+
  out:
   g_clear_object (&block_object);
   g_clear_object (&object);

@@ -902,7 +902,7 @@ check_for_vpd (GUdevDevice *device)
   const gchar *path;
   const gchar *model;
 
-  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
 
   /* order of preference: WWN_serial, WWN, Model_serial, serial, path */
   serial = g_udev_device_get_property (device, "ID_SERIAL");

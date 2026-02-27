@@ -175,7 +175,7 @@ udisks_linux_block_object_get_property (GObject    *__object,
       break;
 
     case PROP_DEVICE:
-      g_value_set_object (value, udisks_linux_block_object_get_device (object));
+      g_value_take_object (value, udisks_linux_block_object_get_device (object));
       break;
 
     default:
@@ -1107,14 +1107,14 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject  *objec
       while (flock (fd, LOCK_EX | LOCK_NB) != 0)
         {
           g_usleep (100 * 1000); /* microseconds */
-          if (num_tries-- < 0)
+          if (--num_tries < 0)
             break;
         }
 
       num_tries = 5;
       while (ioctl (fd, BLKRRPART) != 0)
         {
-          if (errno == EBUSY && num_tries-- >= 0)
+          if (errno == EBUSY && --num_tries >= 0)
             {
               g_usleep (200 * 1000); /* microseconds */
               continue;
