@@ -10,14 +10,14 @@
 # Charles Lee <lchopn@gmail.com>, 2017. #zanata
 # Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
 # cheng ye <18969068329@163.com>, 2017. #zanata
-# lumingzh <lumingzh@qq.com>, 2025.
+# lumingzh <lumingzh@qq.com>, 2025-2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
 "Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2025-12-04 15:39+0000\n"
-"PO-Revision-Date: 2025-12-05 08:08+0800\n"
+"POT-Creation-Date: 2026-02-26 12:01+0000\n"
+"PO-Revision-Date: 2026-02-27 08:46+0800\n"
 "Last-Translator: lumingzh <lumingzh@qq.com>\n"
 "Language-Team: Chinese (China) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -373,7 +373,7 @@ msgstr "NVMeoF 连接"
 #. Translators: Shown in authentication dialog when the user
 #. * requests connection to a NVMeoF controller.
 #.
-#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:492
+#: data/org.freedesktop.UDisks2.policy.in:584 src/udiskslinuxmanagernvme.c:501
 msgid ""
 "Authentication is required to connect to an NVMe over Fabrics controller"
 msgstr "连接至 NVMe over Fabrics 控制器需要身份验证"
@@ -719,7 +719,7 @@ msgstr "执行安全擦除 $(device.name) 需要身份验证"
 msgid "Authentication is required to format $(device.name)"
 msgstr "格式化 $(device.name) 需要身份验证"
 
-#: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1503
+#: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1534
 msgid "Authentication is required to modify the system configuration"
 msgstr "修改系统配置需要身份验证"
 
@@ -772,6 +772,17 @@ msgstr "打开 $(device.name) 需要身份验证。"
 #: src/udiskslinuxblock.c:4204
 msgid "Authentication is required to rescan $(device.name)"
 msgstr "重新扫描 $(device.name) 需要身份验证"
+
+#. Translators: Shown in authentication dialog when restoring
+#. * a LUKS header on a device.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxblock.c:4295
+msgid ""
+"Authentication is required to restore the encrypted header on $(device.name)"
+msgstr "恢复加密设备 $(device.name) 上的加密头信息需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -895,7 +906,7 @@ msgstr "将 $(device.name) 转入待机模式需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:507 src/udiskslinuxencrypted.c:984
+#: src/udiskslinuxencrypted.c:508 src/udiskslinuxencrypted.c:993
 msgid ""
 "Authentication is required to unlock the encrypted device $(device.name)"
 msgstr "解锁加密设备 $(device.name) 需要身份验证"
@@ -907,7 +918,7 @@ msgstr "解锁加密设备 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:795
+#: src/udiskslinuxencrypted.c:804
 msgid ""
 "Authentication is required to lock the encrypted device $(device.name) "
 "unlocked by another user"
@@ -919,7 +930,7 @@ msgstr "锁定由其他用户解锁的加密设备 $(device.name) 需要身份�
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1119
+#: src/udiskslinuxencrypted.c:1128
 msgid ""
 "Authentication is required to resize the encrypted device $(device.name)"
 msgstr "更改加密设备 $(device.name) 的大小需要身份验证"
@@ -930,11 +941,22 @@ msgstr "更改加密设备 $(device.name) 的大小需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:1274
+#: src/udiskslinuxencrypted.c:1283
 msgid ""
 "Authentication is required to convert device $(device.name) to a different "
 "LUKS version."
 msgstr "将设备 $(device.name) 转换为不同的 LUKS 版本需要身份验证。"
+
+#. Translators: Shown in authentication dialog when backing up
+#. * a LUKS header of a device.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxencrypted.c:1425
+msgid ""
+"Authentication is required to back up the encrypted header of $(device.name)"
+msgstr "备份加密设备 $(device.name) 上的加密头信息需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -1098,14 +1120,14 @@ msgstr "创建 RAID 阵列需要身份验证"
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host NQN value.
 #.
-#: src/udiskslinuxmanagernvme.c:609
+#: src/udiskslinuxmanagernvme.c:626
 msgid "Authentication is required to set NVMe Host NQN"
 msgstr "设置 NVMe 主机 NQN 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting new NVMe Host ID value.
 #.
-#: src/udiskslinuxmanagernvme.c:678
+#: src/udiskslinuxmanagernvme.c:695
 msgid "Authentication is required to set NVMe Host ID"
 msgstr "设置 NVMe 主机 ID 需要身份验证"
 
@@ -1113,7 +1135,7 @@ msgstr "设置 NVMe 主机 ID 需要身份验证"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:633
+#: src/udiskslinuxmdraid.c:636
 msgid "Authentication is required to start a RAID array"
 msgstr "启动 RAID 阵列需要身份验证"
 
@@ -1121,7 +1143,7 @@ msgstr "启动 RAID 阵列需要身份验证"
 #. * attempts to stop a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:792
+#: src/udiskslinuxmdraid.c:796
 msgid "Authentication is required to stop a RAID array"
 msgstr "停止 RAID 阵列需要身份验证"
 
@@ -1129,7 +1151,7 @@ msgstr "停止 RAID 阵列需要身份验证"
 #. * attempts to remove a device from a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1009
+#: src/udiskslinuxmdraid.c:1017
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "从 RAID 阵列中移除设备需要身份验证"
 
@@ -1137,7 +1159,7 @@ msgstr "从 RAID 阵列中移除设备需要身份验证"
 #. * attempts to add a device to a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1159
+#: src/udiskslinuxmdraid.c:1174
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "向 RAID 阵列添加设备需要身份验证"
 
@@ -1145,7 +1167,7 @@ msgstr "向 RAID 阵列添加设备需要身份验证"
 #. * attempts to change whether it has a write-intent bitmap
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1277
+#: src/udiskslinuxmdraid.c:1300
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1155,11 +1177,11 @@ msgstr "配置 RAID 阵列上的  write-intent 位图需要身份验证"
 #. * attempts to start/stop data scrubbing operations
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1398
+#: src/udiskslinuxmdraid.c:1425
 msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr "启动/停止 RAID 阵列的数据清理需要身份验证"
 
-#: src/udiskslinuxmdraid.c:1484
+#: src/udiskslinuxmdraid.c:1515
 msgid "Authentication is required to delete a RAID array"
 msgstr "删除 RAID 阵列需要身份验证"
 
@@ -1180,7 +1202,7 @@ msgstr "启动 $(device.name) 上的设备自检需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:931
+#: src/udiskslinuxnvmecontroller.c:929
 msgid ""
 "Authentication is required to abort a device self-test on $(device.name)"
 msgstr "中止 $(device.name) 上的设备自检需要身份验证"
@@ -1191,7 +1213,7 @@ msgstr "中止 $(device.name) 上的设备自检需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmecontroller.c:1233
+#: src/udiskslinuxnvmecontroller.c:1231
 msgid ""
 "Authentication is required to perform a sanitize operation of $(device.name)"
 msgstr "执行 $(device.name) 的擦除操作需要身份验证"
@@ -1202,7 +1224,7 @@ msgstr "执行 $(device.name) 的擦除操作需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmefabrics.c:201
+#: src/udiskslinuxnvmefabrics.c:203
 msgid ""
 "Authentication is required to disconnect a NVMe over Fabrics controller $"
 "(device.name)"
@@ -1214,7 +1236,7 @@ msgstr "断开与 NVMe over Fabrics 控制器 $(device.name) 的连接需要身�
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxnvmenamespace.c:409
+#: src/udiskslinuxnvmenamespace.c:417
 msgid "Authentication is required to format a namespace on $(device.name)"
 msgstr "格式化 $(device.name) 上的命名空间需要身份验证"
 
@@ -1280,7 +1302,7 @@ msgid "Authentication is required to set swapspace UUID on $(device.name)"
 msgstr "设置 $(device.name) 上的交换空间 UUID 需要身份验证"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
-#: udisks/udisksclient.c:1194
+#: udisks/udisksclient.c:1206
 msgctxt "dos-part-flag"
 msgid "Bootable"
 msgstr "可启动"
@@ -1288,7 +1310,7 @@ msgstr "可启动"
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #.
-#: udisks/udisksclient.c:1204
+#: udisks/udisksclient.c:1216
 msgctxt "gpt-part-flag"
 msgid "System"
 msgstr "系统"
@@ -1296,7 +1318,7 @@ msgstr "系统"
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #.
-#: udisks/udisksclient.c:1211
+#: udisks/udisksclient.c:1223
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
 msgstr "旧式 BIOS 可启动"
@@ -1304,7 +1326,7 @@ msgstr "旧式 BIOS 可启动"
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #.
-#: udisks/udisksclient.c:1218
+#: udisks/udisksclient.c:1230
 msgctxt "gpt-part-flag"
 msgid "Read-only"
 msgstr "只读"
@@ -1312,7 +1334,7 @@ msgstr "只读"
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #.
-#: udisks/udisksclient.c:1225
+#: udisks/udisksclient.c:1237
 msgctxt "gpt-part-flag"
 msgid "Hidden"
 msgstr "隐藏"
@@ -1320,68 +1342,68 @@ msgstr "隐藏"
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #.
-#: udisks/udisksclient.c:1232
+#: udisks/udisksclient.c:1244
 msgctxt "gpt-part-flag"
 msgid "No Automount"
 msgstr "不自动挂载"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of flags
-#: udisks/udisksclient.c:1245
+#: udisks/udisksclient.c:1257
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
 msgstr "%s (%s)"
 
 #. Translators: The Partition info when unknown
-#: udisks/udisksclient.c:1256
+#: udisks/udisksclient.c:1268
 msgctxt "partition-info"
 msgid "Unknown"
 msgstr "未知"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1729
+#: udisks/udisksclient.c:1741
 msgctxt "byte-size-pow2"
 msgid "KiB"
 msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1735
+#: udisks/udisksclient.c:1747
 msgctxt "byte-size-pow2"
 msgid "MiB"
 msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1741
+#: udisks/udisksclient.c:1753
 msgctxt "byte-size-pow2"
 msgid "GiB"
 msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1747
+#: udisks/udisksclient.c:1759
 msgctxt "byte-size-pow2"
 msgid "TiB"
 msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1772
+#: udisks/udisksclient.c:1784
 msgctxt "byte-size-pow10"
 msgid "KB"
 msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1778
+#: udisks/udisksclient.c:1790
 msgctxt "byte-size-pow10"
 msgid "MB"
 msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1784
+#: udisks/udisksclient.c:1796
 msgctxt "byte-size-pow10"
 msgid "GB"
 msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
-#: udisks/udisksclient.c:1790
+#: udisks/udisksclient.c:1802
 msgctxt "byte-size-pow10"
 msgid "TB"
 msgstr "TB"
@@ -1389,7 +1411,7 @@ msgstr "TB"
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
 #.
-#: udisks/udisksclient.c:1833
+#: udisks/udisksclient.c:1845
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
@@ -1398,62 +1420,62 @@ msgstr "%s (%s 字节)"
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
 #.
-#: udisks/udisksclient.c:1843
+#: udisks/udisksclient.c:1855
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
 msgstr "%s (%s 字节)"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1904
+#: udisks/udisksclient.c:1916
 msgctxt "media"
 msgid "CompactFlash"
 msgstr "CompactFlash"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1909
+#: udisks/udisksclient.c:1921
 msgctxt "media"
 msgid "MemoryStick"
 msgstr "记忆棒"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1914
+#: udisks/udisksclient.c:1926
 msgctxt "media"
 msgid "SmartMedia"
 msgstr "SmartMedia"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1919
+#: udisks/udisksclient.c:1931
 msgctxt "media"
 msgid "SecureDigital"
 msgstr "SD卡"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1924
+#: udisks/udisksclient.c:1936
 msgctxt "media"
 msgid "SD High Capacity"
 msgstr "SD 大容量"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1929
+#: udisks/udisksclient.c:1941
 msgctxt "media"
 msgid "Floppy"
 msgstr "软盘"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1934
+#: udisks/udisksclient.c:1946
 msgctxt "media"
 msgid "Zip"
 msgstr "Zip"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1939
+#: udisks/udisksclient.c:1951
 msgctxt "media"
 msgid "Jaz"
 msgstr "Jaz"
 
 #. Translators: This word is used to describe the media inserted into a device
-#: udisks/udisksclient.c:1944
+#: udisks/udisksclient.c:1956
 msgctxt "media"
 msgid "Flash"
 msgstr "闪存"
@@ -1461,7 +1483,7 @@ msgstr "闪存"
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #.
-#: udisks/udisksclient.c:1978
+#: udisks/udisksclient.c:1990
 msgctxt "disc-type"
 msgid "CD"
 msgstr "CD光盘"
@@ -1469,7 +1491,7 @@ msgstr "CD光盘"
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #.
-#: udisks/udisksclient.c:1987
+#: udisks/udisksclient.c:1999
 msgctxt "disc-type"
 msgid "DVD"
 msgstr "DVD 光盘"
@@ -1477,7 +1499,7 @@ msgstr "DVD 光盘"
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #.
-#: udisks/udisksclient.c:1996
+#: udisks/udisksclient.c:2008
 msgctxt "disc-type"
 msgid "Blu-Ray"
 msgstr "蓝光光盘"
@@ -1485,332 +1507,332 @@ msgstr "蓝光光盘"
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
 #.
-#: udisks/udisksclient.c:2005
+#: udisks/udisksclient.c:2017
 msgctxt "disc-type"
 msgid "HDDVD"
 msgstr "HDDVD 光盘"
 
-#: udisks/udisksclient.c:2026
+#: udisks/udisksclient.c:2038
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
 msgstr "FAT (12位版本)"
 
-#: udisks/udisksclient.c:2026 udisks/udisksclient.c:2027
-#: udisks/udisksclient.c:2028 udisks/udisksclient.c:2029
-#: udisks/udisksclient.c:2030
+#: udisks/udisksclient.c:2038 udisks/udisksclient.c:2039
+#: udisks/udisksclient.c:2040 udisks/udisksclient.c:2041
+#: udisks/udisksclient.c:2042
 msgctxt "fs-type"
 msgid "FAT"
 msgstr "FAT"
 
-#: udisks/udisksclient.c:2027
+#: udisks/udisksclient.c:2039
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
 msgstr "FAT (16位版本)"
 
-#: udisks/udisksclient.c:2028
+#: udisks/udisksclient.c:2040
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
 msgstr "FAT (32位版本)"
 
-#: udisks/udisksclient.c:2029
+#: udisks/udisksclient.c:2041
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
 msgstr "FAT (版本 %s)"
 
-#: udisks/udisksclient.c:2031
+#: udisks/udisksclient.c:2043
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
 msgstr "NTFS (版本 %s)"
 
-#: udisks/udisksclient.c:2031 udisks/udisksclient.c:2032
+#: udisks/udisksclient.c:2043 udisks/udisksclient.c:2044
 msgctxt "fs-type"
 msgid "NTFS"
 msgstr "NTFS"
 
-#: udisks/udisksclient.c:2033
+#: udisks/udisksclient.c:2045
 msgctxt "fs-type"
 msgid "HFS"
 msgstr "HFS"
 
-#: udisks/udisksclient.c:2034
+#: udisks/udisksclient.c:2046
 msgctxt "fs-type"
 msgid "HFS+"
 msgstr "HFS+"
 
-#: udisks/udisksclient.c:2035
+#: udisks/udisksclient.c:2047
 msgctxt "fs-type"
 msgid "APFS"
 msgstr "APFS"
 
-#: udisks/udisksclient.c:2036
+#: udisks/udisksclient.c:2048
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
 msgstr "Ext2 (版本 %s)"
 
-#: udisks/udisksclient.c:2036 udisks/udisksclient.c:2037
+#: udisks/udisksclient.c:2048 udisks/udisksclient.c:2049
 msgctxt "fs-type"
 msgid "Ext2"
 msgstr "Ext2"
 
-#: udisks/udisksclient.c:2038
+#: udisks/udisksclient.c:2050
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
 msgstr "Ext3 (版本 %s)"
 
-#: udisks/udisksclient.c:2038 udisks/udisksclient.c:2039
+#: udisks/udisksclient.c:2050 udisks/udisksclient.c:2051
 msgctxt "fs-type"
 msgid "Ext3"
 msgstr "Ext3"
 
-#: udisks/udisksclient.c:2040
+#: udisks/udisksclient.c:2052
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
 msgstr "Ext4 (版本 %s)"
 
-#: udisks/udisksclient.c:2040 udisks/udisksclient.c:2041
+#: udisks/udisksclient.c:2052 udisks/udisksclient.c:2053
 msgctxt "fs-type"
 msgid "Ext4"
 msgstr "Ext4"
 
-#: udisks/udisksclient.c:2042
+#: udisks/udisksclient.c:2054
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
 msgstr "Ext 日志(版本 %s)"
 
-#: udisks/udisksclient.c:2042 udisks/udisksclient.c:2043
+#: udisks/udisksclient.c:2054 udisks/udisksclient.c:2055
 msgctxt "fs-type"
 msgid "JDB"
 msgstr "JDB"
 
-#: udisks/udisksclient.c:2043
+#: udisks/udisksclient.c:2055
 msgctxt "fs-type"
 msgid "Journal for Ext"
 msgstr "Ext 日志"
 
-#: udisks/udisksclient.c:2044
+#: udisks/udisksclient.c:2056
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
 msgstr "XFS (版本 %s)"
 
-#: udisks/udisksclient.c:2044 udisks/udisksclient.c:2045
+#: udisks/udisksclient.c:2056 udisks/udisksclient.c:2057
 msgctxt "fs-type"
 msgid "XFS"
 msgstr "XFS"
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
-#: udisks/udisksclient.c:2047
+#: udisks/udisksclient.c:2059
 msgctxt "fs-type"
 msgid "Btrfs"
 msgstr "Btrfs"
 
-#: udisks/udisksclient.c:2048
+#: udisks/udisksclient.c:2060
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
 msgstr "ISO 9660 (版本 %s)"
 
-#: udisks/udisksclient.c:2048 udisks/udisksclient.c:2049
+#: udisks/udisksclient.c:2060 udisks/udisksclient.c:2061
 msgctxt "fs-type"
 msgid "ISO9660"
 msgstr "ISO9660"
 
-#: udisks/udisksclient.c:2049
+#: udisks/udisksclient.c:2061
 msgctxt "fs-type"
 msgid "ISO 9660"
 msgstr "ISO 9660"
 
-#: udisks/udisksclient.c:2050
+#: udisks/udisksclient.c:2062
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
 msgstr "UDF (版本 %s)"
 
-#: udisks/udisksclient.c:2050 udisks/udisksclient.c:2051
+#: udisks/udisksclient.c:2062 udisks/udisksclient.c:2063
 msgctxt "fs-type"
 msgid "UDF"
 msgstr "UDF"
 
-#: udisks/udisksclient.c:2052 udisks/udisksclient.c:2053
+#: udisks/udisksclient.c:2064 udisks/udisksclient.c:2065
 msgctxt "fs-type"
 msgid "exFAT"
 msgstr "exFAT"
 
-#: udisks/udisksclient.c:2053
+#: udisks/udisksclient.c:2065
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
 msgstr "exFAT (版本 %s)"
 
-#: udisks/udisksclient.c:2054
+#: udisks/udisksclient.c:2066
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
 msgstr "Swap (版本 %s)"
 
-#: udisks/udisksclient.c:2054 udisks/udisksclient.c:2055
+#: udisks/udisksclient.c:2066 udisks/udisksclient.c:2067
 msgctxt "fs-type"
 msgid "Swap"
 msgstr "Swap"
 
-#: udisks/udisksclient.c:2056
+#: udisks/udisksclient.c:2068
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
 msgstr "LVM2 物理卷(%s)"
 
-#: udisks/udisksclient.c:2056 udisks/udisksclient.c:2057
+#: udisks/udisksclient.c:2068 udisks/udisksclient.c:2069
 msgctxt "fs-type"
 msgid "LVM2 PV"
 msgstr "LVM2 PV"
 
-#: udisks/udisksclient.c:2057
+#: udisks/udisksclient.c:2069
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
 msgstr "LVM2 物理卷"
 
-#: udisks/udisksclient.c:2058
+#: udisks/udisksclient.c:2070
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
 msgstr "Linux RAID 成员(版本 %s)"
 
-#: udisks/udisksclient.c:2058 udisks/udisksclient.c:2059
+#: udisks/udisksclient.c:2070 udisks/udisksclient.c:2071
 msgctxt "fs-type"
 msgid "Linux RAID Member"
 msgstr "Linux RAID 成员"
 
-#: udisks/udisksclient.c:2060
+#: udisks/udisksclient.c:2072
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
 msgstr "ZFS 设备(ZPool 版本 %s)"
 
-#: udisks/udisksclient.c:2060
+#: udisks/udisksclient.c:2072
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
 msgstr "ZFS (v%s)"
 
-#: udisks/udisksclient.c:2061
+#: udisks/udisksclient.c:2073
 msgctxt "fs-type"
 msgid "ZFS Device"
 msgstr "ZFS 设备"
 
-#: udisks/udisksclient.c:2061
+#: udisks/udisksclient.c:2073
 msgctxt "fs-type"
 msgid "ZFS"
 msgstr "ZFS"
 
-#: udisks/udisksclient.c:2062
+#: udisks/udisksclient.c:2074
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr "Intel 快速存储技术 RAID 成员（版本 %s）"
 
-#: udisks/udisksclient.c:2062
+#: udisks/udisksclient.c:2074
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
 msgstr "Intel RSTe RAID 成员（%s）"
 
-#: udisks/udisksclient.c:2063
+#: udisks/udisksclient.c:2075
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
 msgstr "Intel快速存储技术 RAID 成员"
 
-#: udisks/udisksclient.c:2063
+#: udisks/udisksclient.c:2075
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
 msgstr "Intel RSTe RAID 成员"
 
-#: udisks/udisksclient.c:2064
+#: udisks/udisksclient.c:2076
 msgctxt "fs-type"
 msgid "Possibly Encrypted"
 msgstr "可能已加密"
 
-#: udisks/udisksclient.c:2064
+#: udisks/udisksclient.c:2076
 msgctxt "fs-type"
 msgid "Encrypted?"
 msgstr "是否已加密？"
 
-#: udisks/udisksclient.c:2065
+#: udisks/udisksclient.c:2077
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
 msgstr "LUKS 加密(版本 %s)"
 
-#: udisks/udisksclient.c:2065 udisks/udisksclient.c:2066
+#: udisks/udisksclient.c:2077 udisks/udisksclient.c:2078
 msgctxt "fs-type"
 msgid "LUKS"
 msgstr "LUKS"
 
-#: udisks/udisksclient.c:2066
+#: udisks/udisksclient.c:2078
 msgctxt "fs-type"
 msgid "LUKS Encryption"
 msgstr "LUKS 加密"
 
-#: udisks/udisksclient.c:2067
+#: udisks/udisksclient.c:2079
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt Encryption"
 msgstr "VeraCrypt/TrueCrypt 加密"
 
-#: udisks/udisksclient.c:2067
+#: udisks/udisksclient.c:2079
 msgctxt "fs-type"
 msgid "VeraCrypt/TrueCrypt"
 msgstr "VeraCrypt/TrueCrypt"
 
-#: udisks/udisksclient.c:2068
+#: udisks/udisksclient.c:2080
 msgctxt "fs-type"
 msgid "BitLocker Encryption"
 msgstr "BitLocker 加密"
 
-#: udisks/udisksclient.c:2068
+#: udisks/udisksclient.c:2080
 msgctxt "fs-type"
 msgid "BitLocker"
 msgstr "BitLocker"
 
-#: udisks/udisksclient.c:2069
+#: udisks/udisksclient.c:2081
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
 msgstr "VMFS (版本 %s)"
 
-#: udisks/udisksclient.c:2069
+#: udisks/udisksclient.c:2081
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
 msgstr "VMFS (v%s)"
 
-#: udisks/udisksclient.c:2070
+#: udisks/udisksclient.c:2082
 msgctxt "fs-type"
 msgid "VMFS"
 msgstr "VMFS"
 
-#: udisks/udisksclient.c:2071
+#: udisks/udisksclient.c:2083
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
 msgstr "VMFS 卷成员(版本 %s)"
 
-#: udisks/udisksclient.c:2071
+#: udisks/udisksclient.c:2083
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
 msgstr "VMFS 成员(v%s)"
 
-#: udisks/udisksclient.c:2072
+#: udisks/udisksclient.c:2084
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
 msgstr "VMFS 卷成员"
 
-#: udisks/udisksclient.c:2072
+#: udisks/udisksclient.c:2084
 msgctxt "fs-type"
 msgid "VMFS Member"
 msgstr "VMFS 成员"
@@ -1818,7 +1840,7 @@ msgstr "VMFS 成员"
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
 #.
-#: udisks/udisksclient.c:2148
+#: udisks/udisksclient.c:2160
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
@@ -1827,7 +1849,7 @@ msgstr "未知(%s %s)"
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
 #.
-#: udisks/udisksclient.c:2157
+#: udisks/udisksclient.c:2169
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
@@ -1835,955 +1857,955 @@ msgstr "未知(%s)"
 
 #. Translators: Shown for unknown filesystem types.
 #.
-#: udisks/udisksclient.c:2163 udisks/udisksclient.c:2177
+#: udisks/udisksclient.c:2175 udisks/udisksclient.c:2189
 msgctxt "fs-type"
 msgid "Unknown"
 msgstr "未知"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2194
+#: udisks/udisksclient.c:2206
 msgid "Master Boot Record"
 msgstr "主引导记录"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2196
+#: udisks/udisksclient.c:2208
 msgid "GUID Partition Table"
 msgstr "GUID 分区表"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2198
+#: udisks/udisksclient.c:2210
 msgid "Apple Partition Map"
 msgstr "Apple 分区映射"
 
 #. Translators: name of partition table format
-#: udisks/udisksclient.c:2241 udisks/udisksclient.c:2246
+#: udisks/udisksclient.c:2253 udisks/udisksclient.c:2258
 msgctxt "partition-subtype"
 msgid "Generic"
 msgstr "常规"
 
-#: udisks/udisksclient.c:2242 udisks/udisksclient.c:2247
+#: udisks/udisksclient.c:2254 udisks/udisksclient.c:2259
 msgctxt "partition-subtype"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2243 udisks/udisksclient.c:2248
-#: udisks/udisksclient.c:2253
+#: udisks/udisksclient.c:2255 udisks/udisksclient.c:2260
+#: udisks/udisksclient.c:2265
 msgctxt "partition-subtype"
 msgid "Windows"
 msgstr "Windows"
 
-#: udisks/udisksclient.c:2244 udisks/udisksclient.c:2250
+#: udisks/udisksclient.c:2256 udisks/udisksclient.c:2262
 msgctxt "partition-subtype"
 msgid "Other"
 msgstr "其它"
 
-#: udisks/udisksclient.c:2249 udisks/udisksclient.c:2252
+#: udisks/udisksclient.c:2261 udisks/udisksclient.c:2264
 msgctxt "partition-subtype"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
-#: udisks/udisksclient.c:2341
+#: udisks/udisksclient.c:2353
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
 msgstr "MBR 分区方案"
 
-#: udisks/udisksclient.c:2342
+#: udisks/udisksclient.c:2354
 msgctxt "part-type"
 msgid "EFI System"
 msgstr "EFI 系统"
 
-#: udisks/udisksclient.c:2343
+#: udisks/udisksclient.c:2355
 msgctxt "part-type"
 msgid "BIOS Boot"
 msgstr "BIOS 启动区"
 
 #. This is also defined in the Apple and Solaris section
-#: udisks/udisksclient.c:2345
+#: udisks/udisksclient.c:2357
 msgctxt "part-type"
 msgid "ZFS"
 msgstr "ZFS"
 
 #. Extended Boot Partition, see http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
-#: udisks/udisksclient.c:2347
+#: udisks/udisksclient.c:2359
 msgctxt "part-type"
 msgid "Extended Boot Partition"
 msgstr "扩展引导分区"
 
 #. Discoverable Linux Partitions, see http://systemd.io/DISCOVERABLE_PARTITIONS/
-#: udisks/udisksclient.c:2349
+#: udisks/udisksclient.c:2361
 msgctxt "part-type"
 msgid "Linux Root Partition (Alpha)"
 msgstr "Linux 根分区 (Alpha)"
 
-#: udisks/udisksclient.c:2350
+#: udisks/udisksclient.c:2362
 msgctxt "part-type"
 msgid "Linux Root Partition (ARC)"
 msgstr "Linux 根分区 (ARC)"
 
-#: udisks/udisksclient.c:2351
+#: udisks/udisksclient.c:2363
 msgctxt "part-type"
 msgid "Linux Root Partition (32-bit ARM)"
 msgstr "Linux 根分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2352
+#: udisks/udisksclient.c:2364
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit ARM/AArch64)"
 msgstr "Linux 根分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2353
+#: udisks/udisksclient.c:2365
 msgctxt "part-type"
 msgid "Linux Root Partition (Itanium/IA-64)"
 msgstr "Linux 根分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2354
+#: udisks/udisksclient.c:2366
 msgctxt "part-type"
 msgid "Linux Root Partition (LoongArch 64-bit)"
 msgstr "Linux 根分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2355
+#: udisks/udisksclient.c:2367
 msgctxt "part-type"
 msgid "Linux Root Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux 根分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2356
+#: udisks/udisksclient.c:2368
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux 根分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2357
+#: udisks/udisksclient.c:2369
 msgctxt "part-type"
 msgid "Linux Root Partition (HPPA/PARISC)"
 msgstr "Linux 根分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2358
+#: udisks/udisksclient.c:2370
 msgctxt "part-type"
 msgid "Linux Root Partition (32-bit PowerPC)"
 msgstr "Linux 根分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2359
+#: udisks/udisksclient.c:2371
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux 根分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2360
+#: udisks/udisksclient.c:2372
 msgctxt "part-type"
 msgid "Linux Root Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux 根分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2361
+#: udisks/udisksclient.c:2373
 msgctxt "part-type"
 msgid "Linux Root Partition (RISC-V 32-bit)"
 msgstr "Linux 根分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2362
+#: udisks/udisksclient.c:2374
 msgctxt "part-type"
 msgid "Linux Root Partition (RISC-V 64-bit)"
 msgstr "Linux 根分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2363
+#: udisks/udisksclient.c:2375
 msgctxt "part-type"
 msgid "Linux Root Partition (s390)"
 msgstr "Linux 根分区 (s390)"
 
-#: udisks/udisksclient.c:2364
+#: udisks/udisksclient.c:2376
 msgctxt "part-type"
 msgid "Linux Root Partition (s390x)"
 msgstr "Linux 根分区 (s390x)"
 
-#: udisks/udisksclient.c:2365
+#: udisks/udisksclient.c:2377
 msgctxt "part-type"
 msgid "Linux Root Partition (TILE-Gx)"
 msgstr "Linux 根分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2366
+#: udisks/udisksclient.c:2378
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
 msgstr "Linux 根分区 (x86)"
 
-#: udisks/udisksclient.c:2367
+#: udisks/udisksclient.c:2379
 msgctxt "part-type"
 msgid "Linux Root Partition (amd64/x86_64)"
 msgstr "Linux 根分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2368
+#: udisks/udisksclient.c:2380
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (Alpha)"
 msgstr "Linux /usr/ 分区 (Alpha)"
 
-#: udisks/udisksclient.c:2369
+#: udisks/udisksclient.c:2381
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (ARC)"
 msgstr "Linux /usr/ 分区 (ARC)"
 
-#: udisks/udisksclient.c:2370
+#: udisks/udisksclient.c:2382
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (32-bit ARM)"
 msgstr "Linux /usr/ 分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2371
+#: udisks/udisksclient.c:2383
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (64-bit ARM/AArch64)"
 msgstr "Linux /usr/ 分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2372
+#: udisks/udisksclient.c:2384
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (Itanium/IA-64)"
 msgstr "Linux /usr/ 分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2373
+#: udisks/udisksclient.c:2385
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (LoongArch 64-bit)"
 msgstr "Linux /usr/ 分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2374
+#: udisks/udisksclient.c:2386
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux /usr/ 分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2375
+#: udisks/udisksclient.c:2387
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux /usr/ 分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2376
+#: udisks/udisksclient.c:2388
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (HPPA/PARISC)"
 msgstr "Linux /usr/ 分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2377
+#: udisks/udisksclient.c:2389
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (32-bit PowerPC)"
 msgstr "Linux /usr/ 分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2378
+#: udisks/udisksclient.c:2390
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux /usr/ 分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2379
+#: udisks/udisksclient.c:2391
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux /usr/ 分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2380
+#: udisks/udisksclient.c:2392
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (RISC-V 32-bit)"
 msgstr "Linux /usr/ 分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2381
+#: udisks/udisksclient.c:2393
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (RISC-V 64-bit)"
 msgstr "Linux /usr/ 分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2382
+#: udisks/udisksclient.c:2394
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (s390)"
 msgstr "Linux /usr/ 分区 (s390)"
 
-#: udisks/udisksclient.c:2383
+#: udisks/udisksclient.c:2395
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (s390x)"
 msgstr "Linux /usr/ 分区 (s390x)"
 
-#: udisks/udisksclient.c:2384
+#: udisks/udisksclient.c:2396
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (TILE-Gx)"
 msgstr "Linux /usr/ 分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2385
+#: udisks/udisksclient.c:2397
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (x86)"
 msgstr "Linux /usr/ 分区 (x86)"
 
-#: udisks/udisksclient.c:2386
+#: udisks/udisksclient.c:2398
 msgctxt "part-type"
 msgid "Linux /usr/ Partition (amd64/x86_64)"
 msgstr "Linux /usr/ 分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2387
+#: udisks/udisksclient.c:2399
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Alpha)"
 msgstr "Linux 根校验分区 (Alpha)"
 
-#: udisks/udisksclient.c:2388
+#: udisks/udisksclient.c:2400
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (ARC)"
 msgstr "Linux 根校验分区 (ARC)"
 
-#: udisks/udisksclient.c:2389
+#: udisks/udisksclient.c:2401
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit ARM)"
 msgstr "Linux 根校验分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2390
+#: udisks/udisksclient.c:2402
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit ARM/AArch64)"
 msgstr "Linux 根校验分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2391
+#: udisks/udisksclient.c:2403
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (Itanium/IA-64)"
 msgstr "Linux 根校验分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2392
+#: udisks/udisksclient.c:2404
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (LoongArch 64-bit)"
 msgstr "Linux 根校验分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2393
+#: udisks/udisksclient.c:2405
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux 根校验分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2394
+#: udisks/udisksclient.c:2406
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux 根校验分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2395
+#: udisks/udisksclient.c:2407
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (HPPA/PARISC)"
 msgstr "Linux 根校验分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2396
+#: udisks/udisksclient.c:2408
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux 根校验分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2397
+#: udisks/udisksclient.c:2409
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux 根校验分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2398
+#: udisks/udisksclient.c:2410
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (32-bit PowerPC)"
 msgstr "Linux 根校验分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2399
+#: udisks/udisksclient.c:2411
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 32-bit)"
 msgstr "Linux 根校验分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2400
+#: udisks/udisksclient.c:2412
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (RISC-V 64-bit)"
 msgstr "Linux 根校验分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2401
+#: udisks/udisksclient.c:2413
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390)"
 msgstr "Linux 根校验分区 (s390)"
 
-#: udisks/udisksclient.c:2402
+#: udisks/udisksclient.c:2414
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (s390x)"
 msgstr "Linux 根校验分区 (s390x)"
 
-#: udisks/udisksclient.c:2403
+#: udisks/udisksclient.c:2415
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (TILE-Gx)"
 msgstr "Linux 根校验分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2404
+#: udisks/udisksclient.c:2416
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (amd64/x86_64)"
 msgstr "Linux 根校验分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2405
+#: udisks/udisksclient.c:2417
 msgctxt "part-type"
 msgid "Linux Root Verity Partition (x86)"
 msgstr "Linux 根校验分区 (x86)"
 
-#: udisks/udisksclient.c:2406
+#: udisks/udisksclient.c:2418
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Alpha)"
 msgstr "Linux /usr/ 校验分区 (Alpha)"
 
-#: udisks/udisksclient.c:2407
+#: udisks/udisksclient.c:2419
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (ARC)"
 msgstr "Linux /usr/ 校验分区 (ARC)"
 
-#: udisks/udisksclient.c:2408
+#: udisks/udisksclient.c:2420
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit ARM)"
 msgstr "Linux /usr/ 校验分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2409
+#: udisks/udisksclient.c:2421
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit ARM/AArch64)"
 msgstr "Linux /usr/ 校验分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2410
+#: udisks/udisksclient.c:2422
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (Itanium/IA-64)"
 msgstr "Linux /usr/ 校验分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2411
+#: udisks/udisksclient.c:2423
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (LoongArch 64-bit)"
 msgstr "Linux /usr/ 校验分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2412
+#: udisks/udisksclient.c:2424
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux /usr/ 校验分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2413
+#: udisks/udisksclient.c:2425
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux /usr/ 校验分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2414
+#: udisks/udisksclient.c:2426
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (HPPA/PARISC)"
 msgstr "Linux /usr/ 校验分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2415
+#: udisks/udisksclient.c:2427
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux /usr/ 校验分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2416
+#: udisks/udisksclient.c:2428
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux /usr/ 校验分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2417
+#: udisks/udisksclient.c:2429
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (32-bit PowerPC)"
 msgstr "Linux /usr/ 校验分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2418
+#: udisks/udisksclient.c:2430
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (RISC-V 32-bit)"
 msgstr "Linux /usr/ 校验分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2419
+#: udisks/udisksclient.c:2431
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (RISC-V 64-bit)"
 msgstr "Linux /usr/ 校验分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2420
+#: udisks/udisksclient.c:2432
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390)"
 msgstr "Linux /usr/ 校验分区 (s390)"
 
-#: udisks/udisksclient.c:2421
+#: udisks/udisksclient.c:2433
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (s390x)"
 msgstr "Linux /usr/ 校验分区 (s390x)"
 
-#: udisks/udisksclient.c:2422
+#: udisks/udisksclient.c:2434
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (TILE-Gx)"
 msgstr "Linux /usr/ 校验分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2423
+#: udisks/udisksclient.c:2435
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (amd64/x86_64)"
 msgstr "Linux /usr/ 校验分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2424
+#: udisks/udisksclient.c:2436
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Partition (x86)"
 msgstr "Linux /usr/ 校验分区 (x86)"
 
-#: udisks/udisksclient.c:2425
+#: udisks/udisksclient.c:2437
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (Alpha)"
 msgstr "Linux 根校验签名分区 (Alpha)"
 
-#: udisks/udisksclient.c:2426
+#: udisks/udisksclient.c:2438
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (ARC)"
 msgstr "Linux 根校验签名分区 (ARC)"
 
-#: udisks/udisksclient.c:2427
+#: udisks/udisksclient.c:2439
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit ARM)"
 msgstr "Linux 根校验签名分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2428
+#: udisks/udisksclient.c:2440
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (64-bit ARM/AArch64)"
 msgstr "Linux 根校验签名分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2429
+#: udisks/udisksclient.c:2441
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (Itanium/IA-64)"
 msgstr "Linux 根校验签名分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2430
+#: udisks/udisksclient.c:2442
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (LoongArch 64-bit)"
 msgstr "Linux 根校验签名分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2431
+#: udisks/udisksclient.c:2443
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux 根校验签名分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2432
+#: udisks/udisksclient.c:2444
 msgctxt "part-type"
 msgid ""
 "Linux Root Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux 根校验签名分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2433
+#: udisks/udisksclient.c:2445
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (HPPA/PARISC)"
 msgstr "Linux 根校验签名分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2434
+#: udisks/udisksclient.c:2446
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux 根校验签名分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2435
+#: udisks/udisksclient.c:2447
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux 根校验签名分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2436
+#: udisks/udisksclient.c:2448
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (32-bit PowerPC)"
 msgstr "Linux 根校验签名分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2437
+#: udisks/udisksclient.c:2449
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (RISC-V 32-bit)"
 msgstr "Linux 根校验签名分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2438
+#: udisks/udisksclient.c:2450
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (RISC-V 64-bit)"
 msgstr "Linux 根校验签名分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2439
+#: udisks/udisksclient.c:2451
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (s390)"
 msgstr "Linux 根校验签名分区 (s390)"
 
-#: udisks/udisksclient.c:2440
+#: udisks/udisksclient.c:2452
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (s390x)"
 msgstr "Linux 根校验签名分区 (s390x)"
 
-#: udisks/udisksclient.c:2441
+#: udisks/udisksclient.c:2453
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (TILE-Gx)"
 msgstr "Linux 根校验签名分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2442
+#: udisks/udisksclient.c:2454
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (amd64/x86_64)"
 msgstr "Linux 根校验签名分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2443
+#: udisks/udisksclient.c:2455
 msgctxt "part-type"
 msgid "Linux Root Verity Signature Partition (x86)"
 msgstr "Linux 根校验签名分区 (x86)"
 
-#: udisks/udisksclient.c:2444
+#: udisks/udisksclient.c:2456
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (Alpha)"
 msgstr "Linux /usr/ 校验签名分区 (Alpha)"
 
-#: udisks/udisksclient.c:2445
+#: udisks/udisksclient.c:2457
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (ARC)"
 msgstr "Linux /usr/ 校验签名分区 (ARC)"
 
-#: udisks/udisksclient.c:2446
+#: udisks/udisksclient.c:2458
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (32-bit ARM)"
 msgstr "Linux /usr/ 校验签名分区 (32 位 ARM)"
 
-#: udisks/udisksclient.c:2447
+#: udisks/udisksclient.c:2459
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (64-bit ARM/AArch64)"
 msgstr "Linux /usr/ 校验签名分区 (64 位 ARM/AArch64)"
 
-#: udisks/udisksclient.c:2448
+#: udisks/udisksclient.c:2460
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (Itanium/IA-64)"
 msgstr "Linux /usr/ 校验签名分区 (安腾/IA-64)"
 
-#: udisks/udisksclient.c:2449
+#: udisks/udisksclient.c:2461
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (LoongArch 64-bit)"
 msgstr "Linux /usr/ 校验签名分区 (LoongArch 64 位)"
 
-#: udisks/udisksclient.c:2450
+#: udisks/udisksclient.c:2462
 msgctxt "part-type"
 msgid ""
 "Linux /usr/ Verity Signature Partition (32-bit MIPS LittleEndian/mipsel)"
 msgstr "Linux /usr/ 校验签名分区 (32 位 MIPS 小端/mipsel)"
 
-#: udisks/udisksclient.c:2451
+#: udisks/udisksclient.c:2463
 msgctxt "part-type"
 msgid ""
 "Linux /usr/ Verity Signature Partition (64-bit MIPS LittleEndian/mips64el)"
 msgstr "Linux /usr/ 校验签名分区 (64 位 MIPS 小端/mips64el)"
 
-#: udisks/udisksclient.c:2452
+#: udisks/udisksclient.c:2464
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (HPPA/PARISC)"
 msgstr "Linux /usr/ 校验签名分区 (HPPA/PARISC)"
 
-#: udisks/udisksclient.c:2453
+#: udisks/udisksclient.c:2465
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC LittleEndian)"
 msgstr "Linux /usr/ 校验签名分区 (64 位 PowerPC 小端)"
 
-#: udisks/udisksclient.c:2454
+#: udisks/udisksclient.c:2466
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (64-bit PowerPC BigEndian)"
 msgstr "Linux /usr/ 校验签名分区 (64 位 PowerPC 大端)"
 
-#: udisks/udisksclient.c:2455
+#: udisks/udisksclient.c:2467
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (32-bit PowerPC)"
 msgstr "Linux /usr/ 校验签名分区 (32 位 PowerPC)"
 
-#: udisks/udisksclient.c:2456
+#: udisks/udisksclient.c:2468
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (RISC-V 32-bit)"
 msgstr "Linux /usr/ 校验签名分区 (RISC-V 32 位)"
 
-#: udisks/udisksclient.c:2457
+#: udisks/udisksclient.c:2469
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (RISC-V 64-bit)"
 msgstr "Linux /usr/ 校验签名分区 (RISC-V 64 位)"
 
-#: udisks/udisksclient.c:2458
+#: udisks/udisksclient.c:2470
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (s390)"
 msgstr "Linux /usr/ 校验签名分区 (s390)"
 
-#: udisks/udisksclient.c:2459
+#: udisks/udisksclient.c:2471
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (s390x)"
 msgstr "Linux /usr/ 校验签名分区 (s390x)"
 
-#: udisks/udisksclient.c:2460
+#: udisks/udisksclient.c:2472
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (TILE-Gx)"
 msgstr "Linux /usr/ 校验签名分区 (TILE-Gx)"
 
-#: udisks/udisksclient.c:2461
+#: udisks/udisksclient.c:2473
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (amd64/x86_64)"
 msgstr "Linux /usr/ 校验签名分区 (amd64/x86_64)"
 
-#: udisks/udisksclient.c:2462
+#: udisks/udisksclient.c:2474
 msgctxt "part-type"
 msgid "Linux /usr/ Verity Signature Partition (x86)"
 msgstr "Linux /usr/ 校验签名分区 (x86)"
 
-#: udisks/udisksclient.c:2463
+#: udisks/udisksclient.c:2475
 msgctxt "part-type"
 msgid "Linux Variable Data Partition"
 msgstr "Linux 可变数据分区"
 
-#: udisks/udisksclient.c:2464
+#: udisks/udisksclient.c:2476
 msgctxt "part-type"
 msgid "Linux Temporary Data Partition"
 msgstr "Linux 临时数据分区"
 
-#: udisks/udisksclient.c:2465
+#: udisks/udisksclient.c:2477
 msgctxt "part-type"
 msgid "Linux Per-user Home Partition"
 msgstr "Linux 各用户主目录分区"
 
-#: udisks/udisksclient.c:2466
+#: udisks/udisksclient.c:2478
 msgctxt "part-type"
 msgid "Linux Home Partition"
 msgstr "Linux 主目录分区"
 
-#: udisks/udisksclient.c:2467
+#: udisks/udisksclient.c:2479
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
 msgstr "Linux 服务器数据分区"
 
 #. Linux
-#: udisks/udisksclient.c:2469
+#: udisks/udisksclient.c:2481
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Linux 交换分区"
 
-#: udisks/udisksclient.c:2470
+#: udisks/udisksclient.c:2482
 msgctxt "part-type"
 msgid "Linux Filesystem"
 msgstr "Linux 文件系统"
 
-#: udisks/udisksclient.c:2471
+#: udisks/udisksclient.c:2483
 msgctxt "part-type"
 msgid "Linux RAID"
 msgstr "Linux RAID"
 
-#: udisks/udisksclient.c:2472 udisks/udisksclient.c:2558
+#: udisks/udisksclient.c:2484 udisks/udisksclient.c:2570
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux LVM"
 
-#: udisks/udisksclient.c:2473
+#: udisks/udisksclient.c:2485
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Linux 保留区"
 
 #. Microsoft
-#: udisks/udisksclient.c:2475
+#: udisks/udisksclient.c:2487
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "基础数据"
 
-#: udisks/udisksclient.c:2476
+#: udisks/udisksclient.c:2488
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Microsoft 保留区"
 
-#: udisks/udisksclient.c:2477
+#: udisks/udisksclient.c:2489
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft LDM 元数据"
 
-#: udisks/udisksclient.c:2478
+#: udisks/udisksclient.c:2490
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft LDM 数据"
 
-#: udisks/udisksclient.c:2479
+#: udisks/udisksclient.c:2491
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Microsoft Windows 还原环境"
 
 #. Apple OS X
-#: udisks/udisksclient.c:2481
+#: udisks/udisksclient.c:2493
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple HFS/HFS+"
 
-#: udisks/udisksclient.c:2482
+#: udisks/udisksclient.c:2494
 msgctxt "part-type"
 msgid "Apple APFS"
 msgstr "Apple APFS"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: udisks/udisksclient.c:2483 udisks/udisksclient.c:2537
+#: udisks/udisksclient.c:2495 udisks/udisksclient.c:2549
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple UFS"
 
-#: udisks/udisksclient.c:2484
+#: udisks/udisksclient.c:2496
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple ZFS"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2485
+#: udisks/udisksclient.c:2497
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple RAID"
 
-#: udisks/udisksclient.c:2486
+#: udisks/udisksclient.c:2498
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple RAID (离线)"
 
-#: udisks/udisksclient.c:2487
+#: udisks/udisksclient.c:2499
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Apple 启动区"
 
-#: udisks/udisksclient.c:2488
+#: udisks/udisksclient.c:2500
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple 标识区"
 
-#: udisks/udisksclient.c:2489
+#: udisks/udisksclient.c:2501
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV 恢复区"
 
-#: udisks/udisksclient.c:2490
+#: udisks/udisksclient.c:2502
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Apple 内核存储"
 
 #. HP-UX
-#: udisks/udisksclient.c:2492
+#: udisks/udisksclient.c:2504
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX 数据区"
 
-#: udisks/udisksclient.c:2493
+#: udisks/udisksclient.c:2505
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX 服务区"
 
 #. FreeBSD
-#: udisks/udisksclient.c:2495
+#: udisks/udisksclient.c:2507
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "FreeBSD 启动区"
 
-#: udisks/udisksclient.c:2496
+#: udisks/udisksclient.c:2508
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD 数据区"
 
-#: udisks/udisksclient.c:2497
+#: udisks/udisksclient.c:2509
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "FreeBSD Swap"
 
-#: udisks/udisksclient.c:2498
+#: udisks/udisksclient.c:2510
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD UFS"
 
-#: udisks/udisksclient.c:2499
+#: udisks/udisksclient.c:2511
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD Vinum"
 
-#: udisks/udisksclient.c:2500
+#: udisks/udisksclient.c:2512
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD ZFS"
 
 #. Solaris
-#: udisks/udisksclient.c:2502
+#: udisks/udisksclient.c:2514
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Solaris 启动区"
 
-#: udisks/udisksclient.c:2503
+#: udisks/udisksclient.c:2515
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris Root"
 
-#: udisks/udisksclient.c:2504
+#: udisks/udisksclient.c:2516
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Solaris Swap"
 
-#: udisks/udisksclient.c:2505
+#: udisks/udisksclient.c:2517
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris Backup"
 
-#: udisks/udisksclient.c:2506
+#: udisks/udisksclient.c:2518
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris /usr"
 
 #. same as ZFS
-#: udisks/udisksclient.c:2507
+#: udisks/udisksclient.c:2519
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris /var"
 
-#: udisks/udisksclient.c:2508
+#: udisks/udisksclient.c:2520
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris /home"
 
-#: udisks/udisksclient.c:2509
+#: udisks/udisksclient.c:2521
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris 替换扇区"
 
-#: udisks/udisksclient.c:2510
+#: udisks/udisksclient.c:2522
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Solaris 保留区"
 
-#: udisks/udisksclient.c:2511
+#: udisks/udisksclient.c:2523
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Solaris 保留区(2)"
 
-#: udisks/udisksclient.c:2512
+#: udisks/udisksclient.c:2524
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Solaris 保留区(3)"
 
-#: udisks/udisksclient.c:2513
+#: udisks/udisksclient.c:2525
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Solaris 保留区(4)"
 
-#: udisks/udisksclient.c:2514
+#: udisks/udisksclient.c:2526
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Solaris 保留区(5)"
 
 #. NetBSD
-#: udisks/udisksclient.c:2516
+#: udisks/udisksclient.c:2528
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "NetBSD Swap"
 
-#: udisks/udisksclient.c:2517
+#: udisks/udisksclient.c:2529
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD FFS"
 
-#: udisks/udisksclient.c:2518
+#: udisks/udisksclient.c:2530
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD LFS"
 
-#: udisks/udisksclient.c:2519
+#: udisks/udisksclient.c:2531
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD RAID"
 
-#: udisks/udisksclient.c:2520
+#: udisks/udisksclient.c:2532
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "NetBSD 联结区"
 
-#: udisks/udisksclient.c:2521
+#: udisks/udisksclient.c:2533
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "NetBSD 加密区"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html
-#: udisks/udisksclient.c:2523
+#: udisks/udisksclient.c:2535
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: udisks/udisksclient.c:2524
+#: udisks/udisksclient.c:2536
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format
-#: udisks/udisksclient.c:2526
+#: udisks/udisksclient.c:2538
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
 msgstr "ChromeOS 固件"
 
-#: udisks/udisksclient.c:2527
+#: udisks/udisksclient.c:2539
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
 msgstr "ChromeOS 内核"
 
-#: udisks/udisksclient.c:2528
+#: udisks/udisksclient.c:2540
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
 msgstr "ChromeOS 根文件系统"
 
-#: udisks/udisksclient.c:2529
+#: udisks/udisksclient.c:2541
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
 msgstr "ChromeOS 保留区"
@@ -2791,414 +2813,414 @@ msgstr "ChromeOS 保留区"
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
 #. http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf
-#: udisks/udisksclient.c:2533
+#: udisks/udisksclient.c:2545
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
 msgstr "Intel FFS 保留"
 
-#: udisks/udisksclient.c:2538
+#: udisks/udisksclient.c:2550
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple HFS/HFS"
 
-#: udisks/udisksclient.c:2539
+#: udisks/udisksclient.c:2551
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Apple 分区映射"
 
-#: udisks/udisksclient.c:2540
+#: udisks/udisksclient.c:2552
 msgctxt "part-type"
 msgid "Unused"
 msgstr "未使用"
 
-#: udisks/udisksclient.c:2541
+#: udisks/udisksclient.c:2553
 msgctxt "part-type"
 msgid "Empty"
 msgstr "空"
 
-#: udisks/udisksclient.c:2542
+#: udisks/udisksclient.c:2554
 msgctxt "part-type"
 msgid "Driver"
 msgstr "Driver"
 
-#: udisks/udisksclient.c:2543
+#: udisks/udisksclient.c:2555
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Driver 4.3"
 
-#: udisks/udisksclient.c:2544
+#: udisks/udisksclient.c:2556
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "ProDOS 文件系统"
 
-#: udisks/udisksclient.c:2545
+#: udisks/udisksclient.c:2557
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: udisks/udisksclient.c:2546
+#: udisks/udisksclient.c:2558
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: udisks/udisksclient.c:2547
+#: udisks/udisksclient.c:2559
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: udisks/udisksclient.c:2548
+#: udisks/udisksclient.c:2560
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: udisks/udisksclient.c:2549
+#: udisks/udisksclient.c:2561
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: udisks/udisksclient.c:2552
+#: udisks/udisksclient.c:2564
 msgctxt "part-type"
 msgid "Extended"
 msgstr "扩展"
 
-#: udisks/udisksclient.c:2553
+#: udisks/udisksclient.c:2565
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI GPT"
 
-#: udisks/udisksclient.c:2554
+#: udisks/udisksclient.c:2566
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: udisks/udisksclient.c:2555
+#: udisks/udisksclient.c:2567
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Linux 交换分区"
 
-#: udisks/udisksclient.c:2556
+#: udisks/udisksclient.c:2568
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: udisks/udisksclient.c:2557
+#: udisks/udisksclient.c:2569
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Linux 扩展"
 
-#: udisks/udisksclient.c:2559
+#: udisks/udisksclient.c:2571
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Linux RAID 自动"
 
-#: udisks/udisksclient.c:2560
+#: udisks/udisksclient.c:2572
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: udisks/udisksclient.c:2561
+#: udisks/udisksclient.c:2573
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32M"
 
-#: udisks/udisksclient.c:2562
+#: udisks/udisksclient.c:2574
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: udisks/udisksclient.c:2563
+#: udisks/udisksclient.c:2575
 msgctxt "part-type"
 msgid "NTFS/exFAT/HPFS"
 msgstr "NTFS/exFAT/HPFS"
 
-#: udisks/udisksclient.c:2564
+#: udisks/udisksclient.c:2576
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95 FAT32"
 
-#: udisks/udisksclient.c:2565
+#: udisks/udisksclient.c:2577
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2566
+#: udisks/udisksclient.c:2578
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2567
+#: udisks/udisksclient.c:2579
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95 Ext d (LBA)"
 
-#: udisks/udisksclient.c:2568
+#: udisks/udisksclient.c:2580
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "隐藏 FAT12"
 
-#: udisks/udisksclient.c:2569
+#: udisks/udisksclient.c:2581
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "隐藏 FAT16 <32M"
 
-#: udisks/udisksclient.c:2570
+#: udisks/udisksclient.c:2582
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "隐藏 FAT16"
 
-#: udisks/udisksclient.c:2571
+#: udisks/udisksclient.c:2583
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "隐藏 HPFS/NTFS"
 
-#: udisks/udisksclient.c:2572
+#: udisks/udisksclient.c:2584
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "隐藏 W95 FAT32"
 
-#: udisks/udisksclient.c:2573
+#: udisks/udisksclient.c:2585
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "隐藏 W95 FAT32 (LBA)"
 
-#: udisks/udisksclient.c:2574
+#: udisks/udisksclient.c:2586
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "隐藏 W95 FAT16 (LBA)"
 
-#: udisks/udisksclient.c:2575
+#: udisks/udisksclient.c:2587
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: udisks/udisksclient.c:2576
+#: udisks/udisksclient.c:2588
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Compaq 诊断"
 
-#: udisks/udisksclient.c:2577
+#: udisks/udisksclient.c:2589
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: udisks/udisksclient.c:2578
+#: udisks/udisksclient.c:2590
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: udisks/udisksclient.c:2579 udisks/udisksclient.c:2580
+#: udisks/udisksclient.c:2591 udisks/udisksclient.c:2592
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "休眠"
 
-#: udisks/udisksclient.c:2581
+#: udisks/udisksclient.c:2593
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: udisks/udisksclient.c:2582
+#: udisks/udisksclient.c:2594
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: udisks/udisksclient.c:2583 udisks/udisksclient.c:2584
+#: udisks/udisksclient.c:2595 udisks/udisksclient.c:2596
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: udisks/udisksclient.c:2585
+#: udisks/udisksclient.c:2597
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Solaris 启动区"
 
-#: udisks/udisksclient.c:2586
+#: udisks/udisksclient.c:2598
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: udisks/udisksclient.c:2587
+#: udisks/udisksclient.c:2599
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS BFS"
 
-#: udisks/udisksclient.c:2588
+#: udisks/udisksclient.c:2600
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS SkyFS"
 
-#: udisks/udisksclient.c:2731
+#: udisks/udisksclient.c:2743
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "SMART 自检"
 
-#: udisks/udisksclient.c:2732
+#: udisks/udisksclient.c:2744
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "弹出媒体"
 
-#: udisks/udisksclient.c:2733
+#: udisks/udisksclient.c:2745
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "解锁设备"
 
-#: udisks/udisksclient.c:2734
+#: udisks/udisksclient.c:2746
 msgctxt "job"
 msgid "Locking Device"
 msgstr "锁定设备"
 
-#: udisks/udisksclient.c:2735
+#: udisks/udisksclient.c:2747
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "修改加密设备"
 
-#: udisks/udisksclient.c:2736
+#: udisks/udisksclient.c:2748
 msgctxt "job"
 msgid "Resizing Encrypted Device"
 msgstr "更改加密设备大小"
 
-#: udisks/udisksclient.c:2737
+#: udisks/udisksclient.c:2749
 msgctxt "job"
 msgid "Converting Encrypted Device"
 msgstr "转换加密设备"
 
-#: udisks/udisksclient.c:2738
+#: udisks/udisksclient.c:2750
 msgctxt "job"
 msgid "Backing Up Header of an Encrypted Device"
 msgstr "备份加密设备的头部数据"
 
-#: udisks/udisksclient.c:2739
+#: udisks/udisksclient.c:2751
 msgctxt "job"
 msgid "Restoring Header of an Encrypted Device"
 msgstr "恢复加密设备的头部数据"
 
-#: udisks/udisksclient.c:2740
+#: udisks/udisksclient.c:2752
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "启动交换设备"
 
-#: udisks/udisksclient.c:2741
+#: udisks/udisksclient.c:2753
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "停止交换设备"
 
-#: udisks/udisksclient.c:2742
+#: udisks/udisksclient.c:2754
 msgctxt "job"
 msgid "Modifying Swap Device"
 msgstr "修改交换设备"
 
-#: udisks/udisksclient.c:2743
+#: udisks/udisksclient.c:2755
 msgctxt "job"
 msgid "Checking Filesystem"
 msgstr "检查文件系统"
 
-#: udisks/udisksclient.c:2744
+#: udisks/udisksclient.c:2756
 msgctxt "job"
 msgid "Mounting Filesystem"
 msgstr "挂载文件系统"
 
-#: udisks/udisksclient.c:2745
+#: udisks/udisksclient.c:2757
 msgctxt "job"
 msgid "Unmounting Filesystem"
 msgstr "卸载文件系统"
 
-#: udisks/udisksclient.c:2746
+#: udisks/udisksclient.c:2758
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "修改文件系统"
 
-#: udisks/udisksclient.c:2747
+#: udisks/udisksclient.c:2759
 msgctxt "job"
 msgid "Repairing Filesystem"
 msgstr "修复文件系统"
 
-#: udisks/udisksclient.c:2748
+#: udisks/udisksclient.c:2760
 msgctxt "job"
 msgid "Resizing Filesystem"
 msgstr "更改文件系统大小"
 
-#: udisks/udisksclient.c:2749
+#: udisks/udisksclient.c:2761
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "擦除设备"
 
-#: udisks/udisksclient.c:2750
+#: udisks/udisksclient.c:2762
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "创建文件系统"
 
-#: udisks/udisksclient.c:2751
+#: udisks/udisksclient.c:2763
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "部署回环设备"
 
-#: udisks/udisksclient.c:2752
+#: udisks/udisksclient.c:2764
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "修改分区"
 
-#: udisks/udisksclient.c:2753
+#: udisks/udisksclient.c:2765
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "删除分区"
 
-#: udisks/udisksclient.c:2754
+#: udisks/udisksclient.c:2766
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "创建分区"
 
-#: udisks/udisksclient.c:2755
+#: udisks/udisksclient.c:2767
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "清理"
 
-#: udisks/udisksclient.c:2756
+#: udisks/udisksclient.c:2768
 msgctxt "job"
 msgid "ATA Secure Erase"
 msgstr "ATA 安全擦除"
 
-#: udisks/udisksclient.c:2757
+#: udisks/udisksclient.c:2769
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
 msgstr "ATA 增强安全擦除"
 
-#: udisks/udisksclient.c:2758
+#: udisks/udisksclient.c:2770
 msgctxt "job"
 msgid "Stopping RAID Array"
 msgstr "停止 RAID 阵列"
 
-#: udisks/udisksclient.c:2759
+#: udisks/udisksclient.c:2771
 msgctxt "job"
 msgid "Starting RAID Array"
 msgstr "启动 RAID 阵列"
 
-#: udisks/udisksclient.c:2760
+#: udisks/udisksclient.c:2772
 msgctxt "job"
 msgid "Marking Device as Faulty"
 msgstr "将设备标志为有错误"
 
-#: udisks/udisksclient.c:2761
+#: udisks/udisksclient.c:2773
 msgctxt "job"
 msgid "Removing Device from Array"
 msgstr "从阵列中移除设备"
 
-#: udisks/udisksclient.c:2762
+#: udisks/udisksclient.c:2774
 msgctxt "job"
 msgid "Adding Device to Array"
 msgstr "将设备添加到阵列"
 
-#: udisks/udisksclient.c:2763
+#: udisks/udisksclient.c:2775
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
 msgstr "设置 Write-Intent 位图"
 
-#: udisks/udisksclient.c:2764
+#: udisks/udisksclient.c:2776
 msgctxt "job"
 msgid "Creating RAID Array"
 msgstr "创建 RAID 阵列"
 
-#: udisks/udisksclient.c:2771
+#: udisks/udisksclient.c:2783
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
@@ -3481,7 +3503,7 @@ msgstr "RAID 阵列"
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
 #.
-#: udisks/udisksobjectinfo.c:404
+#: udisks/udisksobjectinfo.c:405
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
@@ -3491,7 +3513,7 @@ msgstr "%s %s"
 #. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:419
+#: udisks/udisksobjectinfo.c:420
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
@@ -3502,7 +3524,7 @@ msgstr "分区 %u / %s"
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:434
+#: udisks/udisksobjectinfo.c:435
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
@@ -3512,7 +3534,7 @@ msgstr "%s — %s (%s)"
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:445
+#: udisks/udisksobjectinfo.c:446
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
@@ -3522,7 +3544,7 @@ msgstr "%s — %s"
 #. *              The first %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The second %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:458
+#: udisks/udisksobjectinfo.c:459
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
@@ -3531,56 +3553,56 @@ msgstr "%s — %s"
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The %s is the size and level (e.g. "2 TB RAID-5").
 #.
-#: udisks/udisksobjectinfo.c:467
+#: udisks/udisksobjectinfo.c:468
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
 msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the type, e.g. 'Thumb'
-#: udisks/udisksobjectinfo.c:595
+#: udisks/udisksobjectinfo.c:596
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
 msgstr "%s 驱动器"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy'
-#: udisks/udisksobjectinfo.c:599
+#: udisks/udisksobjectinfo.c:600
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
 msgstr "%s 磁盘"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash'
-#: udisks/udisksobjectinfo.c:603
+#: udisks/udisksobjectinfo.c:604
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
 msgstr "%s 卡"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM'
-#: udisks/udisksobjectinfo.c:607
+#: udisks/udisksobjectinfo.c:608
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
 msgstr "%s 光盘"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
-#: udisks/udisksobjectinfo.c:627
+#: udisks/udisksobjectinfo.c:628
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
 msgstr "%s 驱动器"
 
 #. Translators: Used to describe a drive we know very little about (removable media or size not known)
-#: udisks/udisksobjectinfo.c:632
+#: udisks/udisksobjectinfo.c:633
 msgctxt "generic-drive"
 msgid "Drive"
 msgstr "驱动器"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
-#: udisks/udisksobjectinfo.c:643
+#: udisks/udisksobjectinfo.c:644
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
@@ -3589,26 +3611,26 @@ msgstr "%s 磁盘"
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The drive is either using removable media or its
 #. * size not known.
-#: udisks/udisksobjectinfo.c:650
+#: udisks/udisksobjectinfo.c:651
 msgctxt "disk-non-rotational"
 msgid "Disk"
 msgstr "磁盘"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.
-#: udisks/udisksobjectinfo.c:658
+#: udisks/udisksobjectinfo.c:659
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
 msgstr "%s 硬盘"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or size not known)
-#: udisks/udisksobjectinfo.c:663
+#: udisks/udisksobjectinfo.c:664
 msgctxt "disk-hdd"
 msgid "Hard Disk"
 msgstr "硬盘"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g. 'CompactFlash'.
-#: udisks/udisksobjectinfo.c:671
+#: udisks/udisksobjectinfo.c:672
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
@@ -3617,7 +3639,7 @@ msgstr "%s 读卡器"
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
 #.
-#: udisks/udisksobjectinfo.c:682
+#: udisks/udisksobjectinfo.c:683
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
@@ -3625,28 +3647,28 @@ msgstr "%s %s 驱动器"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
 #.
-#: udisks/udisksobjectinfo.c:688
+#: udisks/udisksobjectinfo.c:689
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
 msgstr "%s 驱动器"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc"
-#: udisks/udisksobjectinfo.c:767
+#: udisks/udisksobjectinfo.c:768
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
 msgstr "空白 %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc"
-#: udisks/udisksobjectinfo.c:775
+#: udisks/udisksobjectinfo.c:776
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
 msgstr "混合 %s"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc"
-#: udisks/udisksobjectinfo.c:783
+#: udisks/udisksobjectinfo.c:784
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
@@ -3656,7 +3678,7 @@ msgstr "音频 %s"
 #. *              The %u is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
 #.
-#: udisks/udisksobjectinfo.c:836
+#: udisks/udisksobjectinfo.c:837
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
@@ -3668,7 +3690,7 @@ msgstr "分区 %u / %s"
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:854
+#: udisks/udisksobjectinfo.c:855
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
@@ -3679,7 +3701,7 @@ msgstr "%s — %s [%s] (%s)"
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
 #.
-#: udisks/udisksobjectinfo.c:867
+#: udisks/udisksobjectinfo.c:868
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
