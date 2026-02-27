@@ -32,7 +32,9 @@
 #include <glib/gstdio.h>
 
 #include <blockdev/fs.h>
-#include <blockdev/mdraid.h>
+#ifdef HAVE_MDRAID
+#  include <blockdev/mdraid.h>
+#endif
 
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
@@ -225,6 +227,7 @@ gboolean
 udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                             UDisksLinuxMDRaidObject *object)
 {
+#ifdef HAVE_MDRAID
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
   guint num_devices = 0;
@@ -530,6 +533,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   g_clear_object (&raid_device);
   g_clear_error (&error);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -538,6 +544,7 @@ static UDisksObject *
 wait_for_md_block_object (UDisksDaemon *daemon,
                           gpointer      user_data)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaidObject *mdraid_object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
   UDisksObject *ret = NULL;
   GList *objects, *l;
@@ -565,6 +572,9 @@ wait_for_md_block_object (UDisksDaemon *daemon,
  out:
   g_list_free_full (objects, g_object_unref);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 static gboolean
@@ -572,6 +582,7 @@ handle_start (UDisksMDRaid           *_mdraid,
               GDBusMethodInvocation  *invocation,
               GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -731,6 +742,9 @@ handle_start (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -741,6 +755,7 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
                           GVariant               *options,
                           GError                **error)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -839,6 +854,9 @@ udisks_linux_mdraid_stop (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return ret;
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 static gboolean
@@ -926,6 +944,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
                       const gchar            *member_device_objpath,
                       GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -1085,6 +1104,9 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1095,6 +1117,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
                    const gchar            *new_member_device_objpath,
                    GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -1223,6 +1246,9 @@ handle_add_device (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1233,6 +1259,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
                             const gchar            *value,
                             GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -1343,6 +1370,9 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1353,6 +1383,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
                             const gchar            *sync_action,
                             GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
   UDisksState *state;
@@ -1467,6 +1498,9 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1476,6 +1510,7 @@ handle_delete (UDisksMDRaid           *mdraid,
                GDBusMethodInvocation  *invocation,
                GVariant               *options)
 {
+#ifdef HAVE_MDRAID
   UDisksLinuxMDRaidObject *object;
   UDisksDaemon *daemon;
   uid_t caller_uid;
@@ -1619,6 +1654,9 @@ handle_delete (UDisksMDRaid           *mdraid,
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out mdraid support */
+#endif /* HAVE_MDRAID */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

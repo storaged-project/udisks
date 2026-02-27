@@ -42,7 +42,9 @@
 
 #include <blockdev/part.h>
 #include <blockdev/fs.h>
-#include <blockdev/crypto.h>
+#ifdef HAVE_CRYPTO
+#  include <blockdev/crypto.h>
+#endif
 #include <blockdev/swap.h>
 
 #include "udiskslogging.h"
@@ -1207,6 +1209,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
 
   if (udisks_daemon_get_enable_tcrypt (daemon))
     {
+#ifdef HAVE_CRYPTO
       seems_encrypted = bd_crypto_device_seems_encrypted (device_file, &error);
       if (error != NULL)
         {
@@ -1214,6 +1217,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
                           device_file, error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
         }
+#endif /* HAVE_CRYPTO */
     }
 
   if (seems_encrypted)
@@ -1238,6 +1242,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
                                  g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
   if ((!s || strlen (s) == 0) && udisks_linux_block_is_bitlk (iface))
     {
+#ifdef HAVE_CRYPTO
       BDCryptoBITLKInfo *bitlk_info;
 
       /* Attempt to retrieve bitlk uuid from the on-disk header */
@@ -1254,6 +1259,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
                      device_file, error->message);
           g_error_free (error);
         }
+#endif /* HAVE_CRYPTO */
     }
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
@@ -1669,6 +1675,7 @@ has_whitespace (const gchar *s)
 static gchar *
 make_block_luksname (UDisksBlock *block, GError **error)
 {
+#ifdef HAVE_CRYPTO
   BDCryptoLUKSInfo *info = NULL;
   gchar *ret = NULL;
 
@@ -1688,6 +1695,9 @@ make_block_luksname (UDisksBlock *block, GError **error)
     }
   else
     return NULL;
+#else
+  return NULL;
+#endif /* HAVE_CRYPTO */
 }
 
 static gboolean

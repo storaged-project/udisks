@@ -27,7 +27,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <blockdev/crypto.h>
+#ifdef HAVE_CRYPTO
+#  include <blockdev/crypto.h>
+#endif
 
 #include <glib/gstdio.h>
 
@@ -161,6 +163,7 @@ static void
 update_metadata_size (UDisksLinuxEncrypted   *encrypted,
                       UDisksLinuxBlockObject *object)
 {
+#ifdef HAVE_CRYPTO
   UDisksLinuxDevice *device;
   BDCryptoLUKSInfo *info = NULL;
   GError *error = NULL;
@@ -184,6 +187,7 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
 
   g_object_unref (device);
   bd_crypto_luks_info_free (info);
+#endif /* HAVE_CRYPTO */
 }
 
 static void
@@ -1054,6 +1058,7 @@ handle_resize (UDisksEncrypted       *encrypted,
                guint64                size,
                GVariant              *options)
 {
+#ifdef HAVE_CRYPTO
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksObject *cleartext_object = NULL;
@@ -1219,6 +1224,9 @@ handle_resize (UDisksEncrypted       *encrypted,
   udisks_string_wipe_and_free (effective_passphrase);
   bd_crypto_keyslot_context_free (context);
   return TRUE; /* returning TRUE means that we handled the method invocation */
+#else
+  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
+#endif /* HAVE_CRYPTO */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
