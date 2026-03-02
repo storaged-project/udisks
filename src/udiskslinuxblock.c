@@ -58,7 +58,6 @@
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
-#include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
@@ -177,6 +176,9 @@ get_sysfs_attr (GUdevDevice *device,
       udisks_debug ("Failed to read sysfs attribute %s: %s", attr, error->message);
       g_clear_error (&error);
     }
+
+  if (value != NULL)
+    g_strchomp (value);
 
   g_free (filename);
   return value;
@@ -2070,7 +2072,8 @@ handle_add_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2149,7 +2152,8 @@ handle_remove_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2241,8 +2245,10 @@ handle_update_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (new_details);
-  g_variant_unref (old_details);
+  if (new_details != NULL)
+    g_variant_unref (new_details);
+  if (old_details != NULL)
+    g_variant_unref (old_details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
