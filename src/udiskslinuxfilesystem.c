@@ -2346,6 +2346,7 @@ handle_check (UDisksFilesystem      *filesystem,
                                              "Cannot check %s filesystem on %s if mounted",
                                              probed_fs_usage,
                                              udisks_block_get_device (block));
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
