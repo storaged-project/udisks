@@ -1566,7 +1566,7 @@ handle_delete (UDisksMDRaid           *mdraid,
               goto out;
             }
 
-          g_object_unref (block_object);
+          g_clear_object (&block_object);
         }
       else
         {
