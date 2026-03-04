@@ -820,7 +820,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
           g_set_error (error,
                        UDISKS_ERROR,
                        UDISKS_ERROR_FAILED,
-                       "Given type `%s' is not a valid",
+                       "Given type `%s' is not valid",
                        type);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
