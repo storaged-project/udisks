@@ -1985,12 +1985,15 @@ handle_resize (UDisksFilesystem      *filesystem,
   if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
     {
       if (! (mode & BD_FS_ONLINE_SHRINK) && ! (mode & BD_FS_ONLINE_GROW))
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_NOT_SUPPORTED,
-                                               "Cannot resize %s filesystem on %s if mounted",
-                                               probed_fs_usage,
-                                               udisks_block_get_device (block));
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_NOT_SUPPORTED,
+                                                 "Cannot resize %s filesystem on %s if mounted",
+                                                 probed_fs_usage,
+                                                 udisks_block_get_device (block));
+          goto out;
+        }
     }
   else if (! (mode & BD_FS_OFFLINE_SHRINK) && ! (mode & BD_FS_OFFLINE_GROW))
     {
@@ -2000,6 +2003,7 @@ handle_resize (UDisksFilesystem      *filesystem,
                                              "Cannot resize %s filesystem on %s if unmounted",
                                              probed_fs_usage,
                                              udisks_block_get_device (block));
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
