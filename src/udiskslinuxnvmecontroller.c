@@ -165,7 +165,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
     {
       GPtrArray *a;
 
-      a = g_ptr_array_new ();
+      a = g_ptr_array_new_full (0, g_free);
       if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_SPARE) == BD_NVME_SMART_CRITICAL_WARNING_SPARE)
         g_ptr_array_add (a, g_strdup ("spare"));
       if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE) == BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE)
