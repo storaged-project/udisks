@@ -372,7 +372,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_add (p, NULL);
   udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
                                       (const gchar *const *) p->pdata);
-  mounted = p->len > 0;
+  mounted = p->len > 1;
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
