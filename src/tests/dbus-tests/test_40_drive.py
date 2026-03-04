@@ -17,12 +17,17 @@ class UdisksDriveTest(udiskstestcase.UdisksTestCase):
     def setUp(self):
         # create new fake CD-ROM
         # ptype=5 - created device will be CD drive, one new target and host
+        # ensure sr driver is available
+        self.run_command('modprobe sr_mod')
         res, _ = self.run_command('modprobe scsi_debug ptype=5 num_tgts=1 add_host=1')
         self.assertEqual(res, 0)
         self.udev_settle()
         dirs = []
-        # wait until directory appears
+        # wait until block directory appears (avoid infinite loop)
+        start = time.time()
         while len(dirs) < 1:
+            if time.time() - start > 10:
+                self.fail('scsi_debug block device did not appear')
             dirs = glob.glob('/sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*:*/block')
             time.sleep(0.1)
 
