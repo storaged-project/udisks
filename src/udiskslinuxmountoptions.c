@@ -1076,8 +1076,8 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                         "&s", &option_string))
     {
       gchar **split_option_string;
-      split_option_string = g_strsplit (option_string, ",", -1);
-      for (n = 0; split_option_string[n] != NULL; n++)
+      split_option_string = parse_mount_options_string (option_string, FALSE);
+      for (n = 0; split_option_string != NULL && split_option_string[n] != NULL; n++)
         {
           gchar *option = split_option_string[n];
           const gchar *eq = strchr (option, '=');
@@ -1093,10 +1093,8 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
             }
           else
             g_variant_builder_add (&builder, "{ss}", option, VARIANT_NULL_STRING);
-
-          g_free (option);
         }
-      g_free (split_option_string);
+      g_strfreev (split_option_string);
     }
 
   return g_variant_builder_end (&builder);
