@@ -1042,16 +1042,23 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                   /* set different 'mode' and 'dmode' options for file systems mounted at shared
                      location (otherwise they cannot be used by anybody else so mounting them at
                      a shared location doesn't make much sense */
-                  gchar *shared_mode = g_strdup (value);
+                  if (strlen (value) > 3)
+                    {
+                      gchar *shared_mode = g_strdup (value);
 
-                  /* give group and others the same permissions as to the owner
-                     without the 'write' permission, but at least 'read'
-                     (HINT: keep in mind that chars are ints in C and that
-                     digits are ordered naturally in the ASCII table) */
-                  shared_mode[2] = MAX(shared_mode[1] - 2, '4');
-                  shared_mode[3] = MAX(shared_mode[1] - 2, '4');
-                  g_variant_builder_add (&builder, "{ss}", option_name, shared_mode);
-                  g_free (shared_mode);
+                      /* give group and others the same permissions as to the owner
+                         without the 'write' permission, but at least 'read'
+                         (HINT: keep in mind that chars are ints in C and that
+                         digits are ordered naturally in the ASCII table) */
+                      shared_mode[2] = MAX (shared_mode[1] - 2, '4');
+                      shared_mode[3] = MAX (shared_mode[1] - 2, '4');
+                      g_variant_builder_add (&builder, "{ss}", option_name, shared_mode);
+                      g_free (shared_mode);
+                    }
+                  else
+                    {
+                      udisks_warning ("Ignoring malformed mount option '%s=%s'", option_name, value);
+                    }
                 }
               else if (shared_fs && g_str_equal (option_name, "dmode"))
                 {
