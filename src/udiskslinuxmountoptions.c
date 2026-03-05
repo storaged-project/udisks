@@ -843,11 +843,10 @@ is_uid_in_gid (uid_t uid,
   GError *error = NULL;
   gid_t primary_gid = -1;
   gchar *user_name = NULL;
-  static gid_t supplementary_groups[128];
-  int num_supplementary_groups = 128;
+  gid_t *supplementary_groups = NULL;
+  int num_supplementary_groups = 0;
   int n;
-
-  /* TODO: use some #define instead of hardcoding some random number like 128 */
+  gboolean ret = FALSE;
 
   if (! udisks_daemon_util_get_user_info (uid, &primary_gid, &user_name, &error))
     {
@@ -861,21 +860,31 @@ is_uid_in_gid (uid_t uid,
       return TRUE;
     }
 
-  if (getgrouplist (user_name, primary_gid, supplementary_groups, &num_supplementary_groups) < 0)
+  num_supplementary_groups = 0;
+  getgrouplist (user_name, primary_gid, NULL, &num_supplementary_groups);
+  if (num_supplementary_groups > 0)
     {
-      udisks_warning ("Error getting supplementary groups for uid %u: %m", uid);
-      g_free (user_name);
-      return FALSE;
+      supplementary_groups = g_new (gid_t, num_supplementary_groups);
+      if (getgrouplist (user_name, primary_gid, supplementary_groups, &num_supplementary_groups) < 0)
+        {
+          udisks_warning ("Error getting supplementary groups for uid %u: %m", uid);
+          goto out;
+        }
+
+      for (n = 0; n < num_supplementary_groups; n++)
+        {
+          if (supplementary_groups[n] == gid)
+            {
+              ret = TRUE;
+              goto out;
+            }
+        }
     }
+
+ out:
+  g_free (supplementary_groups);
   g_free (user_name);
-
-  for (n = 0; n < num_supplementary_groups; n++)
-    {
-      if (supplementary_groups[n] == gid)
-        return TRUE;
-    }
-
-  return FALSE;
+  return ret;
 }
 
 /* extracts option names from @allow that carry the @arg string as an argument */
