@@ -27,6 +27,7 @@
 #include <grp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <glib/gstdio.h>
 
@@ -912,8 +913,8 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                          uid_t                 caller_uid)
 {
   gchar *endp;
-  uid_t uid;
-  gid_t gid;
+  guint64 uid64;
+  guint64 gid64;
   gchar *s;
 
   /* match the exact option=value string within allowed options */
@@ -941,11 +942,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                           option);
           return FALSE;
         }
-      uid = strtol (value, &endp, 10);
-      if (*endp != '\0')
-        /* malformed value string */
+      errno = 0;
+      uid64 = g_ascii_strtoull (value, &endp, 10);
+      if (*endp != '\0' || errno == ERANGE || uid64 != (uid_t) uid64)
         return FALSE;
-      return (uid == caller_uid);
+      return ((uid_t) uid64 == caller_uid);
     }
 
   /* .. ditto for gid
@@ -958,11 +959,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                           option);
           return FALSE;
         }
-      gid = strtol (value, &endp, 10);
-      if (*endp != '\0')
-        /* malformed value string */
+      errno = 0;
+      gid64 = g_ascii_strtoull (value, &endp, 10);
+      if (*endp != '\0' || errno == ERANGE || gid64 != (gid_t) gid64)
         return FALSE;
-      return is_uid_in_gid (caller_uid, gid);
+      return is_uid_in_gid (caller_uid, (gid_t) gid64);
     }
 
   /* the above UID/GID checks also assure that none of the options
