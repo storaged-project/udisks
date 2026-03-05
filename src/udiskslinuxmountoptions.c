@@ -893,7 +893,7 @@ extract_opts_with_arg (gchar **allow,
       gchar *eq;
 
       eq = g_strrstr (*allow, arg);
-      if (eq && eq != *allow && *(eq - 1) == '=')
+      if (eq && eq != *allow && *(eq - 1) == '=' && *(eq + strlen (arg)) == '\0')
         g_ptr_array_add (opts, g_strndup (*allow, eq - *allow - 1));
     }
   g_ptr_array_add (opts, NULL);
