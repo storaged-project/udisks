@@ -1146,8 +1146,9 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
       /* GVariant doesn't handle NULL strings gracefully */
       if (g_str_equal (value, VARIANT_NULL_STRING))
         value = NULL;
-      /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
-      if (strstr (key, ",") != NULL || (value && strstr (value, ",") != NULL))
+      /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option
+       * or injecting newlines/tabs that could affect /proc/mounts parsing */
+      if (strpbrk (key, ",\n\t") != NULL || (value && strpbrk (value, ",\n\t") != NULL))
         {
           g_set_error (error,
                        UDISKS_ERROR,
