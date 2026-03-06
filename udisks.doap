@@ -12,7 +12,7 @@ The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
   </description>
 
-  <homepage rdf:resource="http://storaged.org/" />
+  <homepage rdf:resource="https://storaged.org/" />
   <download-page rdf:resource="https://github.com/storaged-project/udisks/releases/" />
   <bug-database rdf:resource="https://github.com/storaged-project/udisks/issues/" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#platform" />
