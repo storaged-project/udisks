@@ -1233,7 +1233,7 @@ is_block_unlocked (GList *objects, const gchar *crypto_object_path)
  * Checks if the drive represented by @object is in use and sets
  * @error if so.
  *
- * Returns: %TRUE if @object is not is use, %FALSE if @error is set.
+ * Returns: %TRUE if @object is not in use, %FALSE if @error is set.
  */
 gboolean
 udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriveObject  *object,
