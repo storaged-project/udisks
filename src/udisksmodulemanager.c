@@ -349,7 +349,7 @@ load_single_module_unlocked (UDisksModuleManager *manager,
   g_free (module_new_func_name);
 
   /* The following calls will initialize new GType's from the module,
-   * making it uneligible for unload.
+   * making it ineligible for unload.
    */
   g_module_make_resident (handle);
 
@@ -661,7 +661,7 @@ udisks_module_manager_new (UDisksDaemon *daemon)
  * Creates a new #UDisksModuleManager object with indication that
  * the daemon runs from a source tree.
  *
- * Returns: A #UDisksModuleManager. Free with g_object_notify().
+ * Returns: A #UDisksModuleManager. Free with g_object_unref().
  */
 UDisksModuleManager *
 udisks_module_manager_new_uninstalled (UDisksDaemon *daemon)
