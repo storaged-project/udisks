@@ -2052,7 +2052,7 @@ static const struct
   {"filesystem", "ext4",              "*",     NC_("fs-type", "Ext4 (version %s)"),                 NC_("fs-type", "Ext4")},
   {"filesystem", "ext4",              NULL,    NC_("fs-type", "Ext4"),                              NC_("fs-type", "Ext4")},
   {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext (version %s)"),      NC_("fs-type", "JDB")},
-  {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
+  {"filesystem", "jdb",               NULL,    NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
   {"filesystem", "xfs",               "*",     NC_("fs-type", "XFS (version %s)"),                  NC_("fs-type", "XFS")},
   {"filesystem", "xfs",               NULL,    NC_("fs-type", "XFS"),                               NC_("fs-type", "XFS")},
   /* TODO: No ID_FS_VERSION yet for btrfs... */
