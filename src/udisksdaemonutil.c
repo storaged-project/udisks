@@ -1520,7 +1520,7 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
       goto out;
     }
 
-  if (contents_len < 0 )
+  if (contents_len < 0)
     contents_len = strlen (contents);
   if (fwrite (contents, 1, contents_len, f) != (gsize) contents_len)
     {
