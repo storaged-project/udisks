@@ -359,7 +359,7 @@ load_single_module_unlocked (UDisksModuleManager *manager,
   if (module == NULL)
     {
       /* Workaround for broken modules to avoid segfault */
-      if (error == NULL)
+      if (error != NULL && *error == NULL)
         {
           g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                "unknown fatal error");
