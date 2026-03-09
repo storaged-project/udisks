@@ -497,7 +497,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
               goto out;
             }
         }
-      else if (partition_uuid)
+      if (partition_uuid)
         {
           if (!bd_part_set_part_uuid (device_name, part_spec->path, partition_uuid, &error))
             {
