@@ -494,11 +494,6 @@ handle_loop_setup (UDisksManager          *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef struct
-{
-  gint md_num;
-} WaitForArrayData;
-
 static UDisksObject *
 wait_for_array_object (UDisksDaemon *daemon,
                        gpointer      user_data)
