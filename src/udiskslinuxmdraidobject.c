@@ -689,7 +689,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                            g_udev_device_get_sysfs_path (device->udev_device)) == 0)
               {
                 g_clear_object (&object->raid_device);
-                raid_device_removed (object, object->raid_device);
+                raid_device_removed (object, NULL);
               }
             else
               {
