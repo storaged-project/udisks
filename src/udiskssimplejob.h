@@ -33,7 +33,7 @@ GType            udisks_simple_job_get_type         (void) G_GNUC_CONST;
 UDisksSimpleJob *udisks_simple_job_new              (UDisksDaemon        *daemon,
                                                      GCancellable        *cancellable);
 void             udisks_simple_job_complete         (UDisksSimpleJob     *job,
-                                                     gboolean             succeess,
+                                                     gboolean             success,
                                                      const gchar         *message);
 
 G_END_DECLS
