@@ -2137,7 +2137,10 @@ on_secure_erase_update_progress_timeout (gpointer user_data)
   start = udisks_job_get_start_time (job);
   end = udisks_job_get_expected_end_time (job);
 
-  progress = ((gdouble) (now - start)) / (end - start);
+  if (end <= start)
+    progress = 0;
+  else
+    progress = ((gdouble) (now - start)) / (end - start);
   if (progress < 0)
     progress = 0;
   if (progress > 1)
