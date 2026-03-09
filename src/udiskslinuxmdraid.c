@@ -1050,7 +1050,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_remove (device_file, member_device_file, set_faulty, NULL, &error))
     {
-      g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", device_file, member_device_file);
+      g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", member_device_file, device_file);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
