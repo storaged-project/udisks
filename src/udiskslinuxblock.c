@@ -1429,7 +1429,7 @@ track_parents (UDisksBlock *block, const gchar *options)
     {
       end = strchr (start, ',');
       if (end)
-        strcpy (start, end+1);
+        memmove (start, end + 1, strlen (end + 1) + 1);
       else
         *start = '\0';
     }
