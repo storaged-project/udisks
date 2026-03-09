@@ -296,7 +296,7 @@ udisks_decode_udev_string (const gchar *str, const gchar *fallback_str)
  * <literal>[A-Z][a-z][0-9]_</literal> will be escaped as _HEX where
  * HEX is a two-digit hexadecimal number.
  *
- * Note that his mapping is not bijective - e.g. you cannot go back
+ * Note that this mapping is not bijective - e.g. you cannot go back
  * to the original string.
  */
 void
