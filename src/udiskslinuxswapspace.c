@@ -394,7 +394,7 @@ handle_set_label (UDisksSwapspace        *swapspace,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error taking setting label on %s: %s",
+                                             "Error setting label on %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
@@ -481,7 +481,7 @@ handle_set_uuid (UDisksSwapspace       *swapspace,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error taking setting UUID on %s: %s",
+                                             "Error setting UUID on %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
