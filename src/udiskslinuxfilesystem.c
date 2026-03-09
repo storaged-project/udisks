@@ -802,20 +802,23 @@ calculate_mount_point (UDisksDaemon  *daemon,
 
   /* ... then uniqify the mount point */
   orig_mount_point = g_strdup (mount_point);
-  n = 1;
-  while (TRUE)
+  for (n = 1; g_file_test (mount_point, G_FILE_TEST_EXISTS) && n <= 1000; n++)
     {
-      if (!g_file_test (mount_point, G_FILE_TEST_EXISTS))
-        {
-          break;
-        }
-      else
-        {
-          g_free (mount_point);
-          mount_point = g_strdup_printf ("%s%u", orig_mount_point, n++);
-        }
+      g_free (mount_point);
+      mount_point = g_strdup_printf ("%s%u", orig_mount_point, n);
     }
   g_free (orig_mount_point);
+  if (n > 1000)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Too many mount points with prefix `%s'",
+                   mount_point);
+      g_free (mount_point);
+      mount_point = NULL;
+      goto out;
+    }
 
  out:
   g_free (mount_dir);
