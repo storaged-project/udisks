@@ -126,7 +126,9 @@ udisks_linux_volume_group_new (void)
 /**
  * udisks_linux_volume_group_update:
  * @volume_group: A #UDisksLinuxVolumeGroup.
- * @object: The enclosing #UDisksLinuxVolumeGroupObject instance.
+ * @vg_info: LVM volume group info
+ * @vg_pvs: List of LVM physical volumes in the volume group
+ * @needs_polling_ret: (out): Return location for whether polling is needed
  *
  * Updates the interface.
  */
@@ -743,7 +745,7 @@ handle_remove_common (UDisksVolumeGroup     *_group,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             (is_remove) ? "Error remove %s from volume group: %s" : "Error emptying %s: %s",
+                                             (is_remove) ? "Error removing %s from volume group: %s" : "Error emptying %s: %s",
                                              data.pv_path,
                                              error->message);
       g_clear_error (&error);
