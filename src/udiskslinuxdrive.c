@@ -1563,7 +1563,7 @@ handle_power_off (UDisksDrive           *_drive,
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
-                                                 "Error syncing  %s: %m",
+                                                 "Error syncing %s: %m",
                                                  device_file);
           close (device_fd);
           goto out;
