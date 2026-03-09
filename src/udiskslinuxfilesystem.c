@@ -919,6 +919,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
   const gchar *message = NULL;
   gboolean success = FALSE;
   gboolean mount_fstab_as_root = FALSE;
+  gboolean dir_created = FALSE;
   UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
@@ -976,6 +977,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                                                  device);
           return FALSE;
         }
+      dir_created = TRUE;
     }
 
   while (TRUE)
@@ -1034,11 +1036,17 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                                                                 options,
                                                                 message,
                                                                 invocation))
-                return FALSE;
+                {
+                  if (dir_created && g_rmdir (mount_point_to_use) != 0)
+                    udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
+                  return FALSE;
+                }
               mount_fstab_as_root = TRUE;
               continue;  /* retry */
             }
 
+          if (dir_created && g_rmdir (mount_point_to_use) != 0)
+            udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
