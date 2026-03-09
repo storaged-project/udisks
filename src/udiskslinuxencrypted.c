@@ -328,7 +328,7 @@ static gchar *
 label_to_safe_dm_name (const gchar *label)
 {
   if (strlen (label) >= 128)
-    return g_strndup (label, 127);
+    return g_strdelimit (g_strndup (label, 127), "/ ", '_');
   return g_strdelimit (g_strdup (label), "/ ", '_');
 }
 
