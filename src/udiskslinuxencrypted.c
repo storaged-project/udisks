@@ -972,7 +972,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  /* Now, check that the user is actually authorized to unlock the device.
+  /* Now, check that the user is actually authorized to change the passphrase.
    */
   action_id = "org.freedesktop.udisks2.encrypted-change-passphrase";
   if (udisks_block_get_hint_system (block) &&
@@ -985,12 +985,12 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                                     action_id,
                                                     options,
                                                     /* Translators: Shown in authentication dialog when the user
-                                                     * requests unlocking an encrypted device.
+                                                     * requests changing the passphrase for an encrypted device.
                                                      *
                                                      * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to unlock the encrypted device $(device.name)"),
+                                                    N_("Authentication is required to change the passphrase for the encrypted device $(device.name)"),
                                                     invocation))
     goto out;
 
