@@ -1799,8 +1799,9 @@ iterate_list (GVariant *list, node_cb visit, gpointer compare_data,
 }
 
 static gboolean
-_udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
-                                     gpointer user_data )
+_udisks_state_has_loop_list_visitor (GVariant *child,
+                                     gpointer  compare_data,
+                                     gpointer  user_data)
 {
   gboolean ret = FALSE;
   const gchar *iter_device_file = NULL;
@@ -1809,8 +1810,9 @@ _udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
 
   g_variant_get (child, "{&s@a{sv}}", &iter_device_file, &details);
 
-  if (g_strcmp0 (iter_device_file, ((gchar*)compare_data)) == 0)
+  if (g_strcmp0 (iter_device_file, ((gchar*) compare_data)) == 0)
     {
+      ret = TRUE;
       if (out_uid != NULL)
         {
           GVariant *lookup_value;
@@ -1820,13 +1822,12 @@ _udisks_state_has_loop_list_visitor (GVariant *child, gpointer compare_data,
             {
               *out_uid = g_variant_get_uint32 (lookup_value);
               g_variant_unref (lookup_value);
-              ret = TRUE;
             }
         }
     }
-    g_variant_unref (details);
+  g_variant_unref (details);
 
-    return ret;
+  return ret;
 }
 
 /**
