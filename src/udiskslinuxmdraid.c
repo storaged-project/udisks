@@ -346,7 +346,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
             sync_completed_val = ((gdouble) completed_sectors) / ((gdouble) num_sectors);
         }
 
-      /* this is KiB/s (see drivers/md/md.c:sync_speed_show() */
+      /* this is KiB/s (see drivers/md/md.c:sync_speed_show()) */
       sync_rate = udisks_linux_device_read_sysfs_attr_as_uint64 (raid_device, "md/sync_speed", NULL) * 1024;
       if (sync_rate > 0)
         {
