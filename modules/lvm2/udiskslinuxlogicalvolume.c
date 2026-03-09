@@ -1151,7 +1151,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error converting volume: %s"),
+                                             "Error converting volume: %s",
                                              error->message);
       g_clear_error (&error);
       goto out;
@@ -1203,7 +1203,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume    *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error converting volume: %s"),
+                                             "Error converting volume: %s",
                                              error->message);
       g_clear_error (&error);
       goto out;
