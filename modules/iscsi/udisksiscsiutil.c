@@ -215,7 +215,7 @@ iscsi_node_set_parameters (struct libiscsi_context  *ctx,
       g_free (key);
     }
 
-  return 0;
+  return err;
 }
 
 static void
