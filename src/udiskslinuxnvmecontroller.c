@@ -401,7 +401,7 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     }
 
   /* Controller capabilities check - there's no authoritative way to find out which
-   * log pages are actually supported, taking controller feature flags in account instead.
+   * log pages are actually supported, taking controller feature flags into account instead.
    * The "Supported Log Pages" log page support only came with NVMe 2.0 specification.
    */
   smart_log = bd_nvme_get_smart_log (dev_file, error);
