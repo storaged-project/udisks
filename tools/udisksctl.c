@@ -2318,7 +2318,7 @@ handle_command_power_off (gint        *argc,
   proxy = udisks_object_peek_drive (object);
   if (!proxy)
     {
-      g_printerr ("Error powering off drive: dbus interface not supported");
+      g_printerr ("Error powering off drive: dbus interface not supported\n");
       g_object_unref (object);
       goto out;
     }
