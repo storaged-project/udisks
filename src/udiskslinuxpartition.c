@@ -467,7 +467,6 @@ handle_set_flags (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -596,7 +595,6 @@ handle_set_name (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -717,7 +715,6 @@ handle_set_uuid (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -823,7 +820,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
           g_set_error (error,
                        UDISKS_ERROR,
                        UDISKS_ERROR_FAILED,
-                       "Given type `%s' is not a valid",
+                       "Given type `%s' is not valid",
                        type);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
@@ -877,7 +874,6 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
   g_clear_error (&loc_error);
 
   return ret;
@@ -1161,7 +1157,6 @@ handle_delete (UDisksPartition       *partition,
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

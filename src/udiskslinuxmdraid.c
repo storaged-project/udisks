@@ -1336,7 +1336,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
   udisks_daemon_util_trigger_uevent_sync (daemon, NULL, sysfs_path, UDISKS_DEFAULT_WAIT_TIMEOUT);
 
   udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, NULL);
-  udisks_mdraid_complete_add_device (_mdraid, invocation);
+  udisks_mdraid_complete_set_bitmap_location (_mdraid, invocation);
   udisks_linux_mdraid_update (mdraid, object);
 
  out:
@@ -1566,7 +1566,7 @@ handle_delete (UDisksMDRaid           *mdraid,
               goto out;
             }
 
-          g_object_unref (block_object);
+          g_clear_object (&block_object);
         }
       else
         {

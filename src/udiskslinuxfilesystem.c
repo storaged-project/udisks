@@ -372,7 +372,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   g_ptr_array_add (p, NULL);
   udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
                                       (const gchar *const *) p->pdata);
-  mounted = p->len > 0;
+  mounted = p->len > 1;
   g_ptr_array_free (p, TRUE);
   g_list_free_full (mounts, g_object_unref);
 
@@ -1985,12 +1985,15 @@ handle_resize (UDisksFilesystem      *filesystem,
   if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
     {
       if (! (mode & BD_FS_ONLINE_SHRINK) && ! (mode & BD_FS_ONLINE_GROW))
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_NOT_SUPPORTED,
-                                               "Cannot resize %s filesystem on %s if mounted",
-                                               probed_fs_usage,
-                                               udisks_block_get_device (block));
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_NOT_SUPPORTED,
+                                                 "Cannot resize %s filesystem on %s if mounted",
+                                                 probed_fs_usage,
+                                                 udisks_block_get_device (block));
+          goto out;
+        }
     }
   else if (! (mode & BD_FS_OFFLINE_SHRINK) && ! (mode & BD_FS_OFFLINE_GROW))
     {
@@ -2000,6 +2003,7 @@ handle_resize (UDisksFilesystem      *filesystem,
                                              "Cannot resize %s filesystem on %s if unmounted",
                                              probed_fs_usage,
                                              udisks_block_get_device (block));
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
@@ -2172,6 +2176,7 @@ handle_repair (UDisksFilesystem      *filesystem,
                                              "Cannot repair %s filesystem on %s if mounted",
                                              probed_fs_usage,
                                              udisks_block_get_device (block));
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
@@ -2341,6 +2346,7 @@ handle_check (UDisksFilesystem      *filesystem,
                                              "Cannot check %s filesystem on %s if mounted",
                                              probed_fs_usage,
                                              udisks_block_get_device (block));
+      goto out;
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";

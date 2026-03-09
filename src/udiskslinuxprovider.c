@@ -244,7 +244,7 @@ probe_request_free (ProbeRequest *request)
   g_clear_object (&request->provider);
   g_clear_object (&request->udev_device);
   g_clear_object (&request->udisks_device);
-  g_slice_free (ProbeRequest, request);
+  g_free (request);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -359,7 +359,7 @@ on_uevent (GUdevClient  *client,
   ProbeRequest *request;
   const gchar *sysfs_path;
 
-  request = g_slice_new0 (ProbeRequest);
+  request = g_new0 (ProbeRequest, 1);
   request->provider = g_object_ref (provider);
   request->udev_device = g_object_ref (device);
 
