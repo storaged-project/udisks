@@ -1889,7 +1889,7 @@ apply_configuration_thread_func (GTask        *task,
                  udisks_config_manager_get_config_dir (udisks_daemon_get_config_manager (daemon)),
                  udisks_drive_get_id (data->drive), device_file);
 
-  /* Use O_RDRW instead of O_RDONLY to force a 'change' uevent so properties are updated */
+  /* Use O_RDWR instead of O_RDONLY to force a 'change' uevent so properties are updated */
   fd = open (device_file, O_RDWR|O_NONBLOCK);
   if (fd == -1)
     {
