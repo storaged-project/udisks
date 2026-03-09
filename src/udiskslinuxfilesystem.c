@@ -705,7 +705,6 @@ calculate_mount_point (UDisksDaemon  *daemon,
   gboolean fs_shared = FALSE;
   const gchar *label = NULL;
   const gchar *uuid = NULL;
-  gchar *escaped_user_name = NULL;
   gchar *mount_dir = NULL;
   gchar *mount_point = NULL;
   gchar *orig_mount_point;
@@ -823,7 +822,6 @@ calculate_mount_point (UDisksDaemon  *daemon,
  out:
   g_free (mount_dir);
   g_clear_object (&object);
-  g_free (escaped_user_name);
   return mount_point;
 }
 
