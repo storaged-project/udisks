@@ -243,7 +243,8 @@ udisks_decode_udev_string (const gchar *str, const gchar *fallback_str)
         {
           gint val;
 
-          if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0')
+          if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0' ||
+              g_ascii_xdigit_value (str[n + 2]) < 0 || g_ascii_xdigit_value (str[n + 3]) < 0)
             {
               udisks_warning ("**** NOTE: malformed encoded string `%s'", str);
               break;
