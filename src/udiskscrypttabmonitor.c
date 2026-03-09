@@ -79,7 +79,7 @@ struct _UDisksCrypttabMonitorClass
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-#define CRYPPTAB_FILENAME "/etc/crypttab"
+#define CRYPTTAB_FILENAME "/etc/crypttab"
 
 enum
   {
@@ -226,7 +226,7 @@ on_file_monitor_changed (GFileMonitor      *file_monitor,
       event_type == G_FILE_MONITOR_EVENT_CREATED ||
       event_type == G_FILE_MONITOR_EVENT_DELETED)
     {
-      udisks_debug (CRYPPTAB_FILENAME " changed!");
+      udisks_debug (CRYPTTAB_FILENAME " changed!");
       udisks_crypttab_monitor_ensure (monitor);
     }
 }
@@ -238,7 +238,7 @@ udisks_crypttab_monitor_constructed (GObject *object)
   GError *error;
   GFile *file;
 
-  file = g_file_new_for_path (CRYPPTAB_FILENAME);
+  file = g_file_new_for_path (CRYPTTAB_FILENAME);
   error = NULL;
   monitor->file_monitor = g_file_monitor_file (file,
                                                G_FILE_MONITOR_NONE,
@@ -246,7 +246,7 @@ udisks_crypttab_monitor_constructed (GObject *object)
                                                &error);
   if (monitor->file_monitor == NULL)
     {
-      udisks_critical ("Error monitoring " CRYPPTAB_FILENAME ": %s (%s, %d)",
+      udisks_critical ("Error monitoring " CRYPTTAB_FILENAME ": %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
     }
@@ -372,14 +372,14 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
   g_mutex_lock (&monitor->crypttab_entries_mutex);
 
   /* Read the contents */
-  if (!g_file_get_contents (CRYPPTAB_FILENAME,
+  if (!g_file_get_contents (CRYPTTAB_FILENAME,
                             &contents,
                             &contents_len,
                             &error))
     {
       if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
         {
-          udisks_warning ("Error opening " CRYPPTAB_FILENAME ": %s (%s, %d)",
+          udisks_warning ("Error opening " CRYPTTAB_FILENAME ": %s (%s, %d)",
                           error->message, g_quark_to_string (error->domain), error->code);
         }
       g_clear_error (&error);
@@ -418,7 +418,7 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
         }
       else
         {
-          udisks_warning ("Line %u of " CRYPPTAB_FILENAME " only contains %u tokens", n, num_tokens);
+          udisks_warning ("Line %u of " CRYPTTAB_FILENAME " only contains %u tokens", n, num_tokens);
         }
       g_strfreev (tokens);
     }
