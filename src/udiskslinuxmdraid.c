@@ -130,7 +130,7 @@ udisks_linux_mdraid_new (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-on_polling_timout (gpointer user_data)
+on_polling_timeout (gpointer user_data)
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (user_data);
   UDisksLinuxMDRaidObject *object = NULL;
@@ -164,7 +164,7 @@ ensure_polling (UDisksLinuxMDRaid  *mdraid,
       if (mdraid->polling_timeout == 0)
         {
           mdraid->polling_timeout = g_timeout_add_seconds (1,
-                                                           on_polling_timout,
+                                                           on_polling_timeout,
                                                            mdraid);
         }
     }
