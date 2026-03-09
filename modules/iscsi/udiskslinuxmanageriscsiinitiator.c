@@ -122,7 +122,12 @@ udisks_linux_manager_iscsi_initiator_set_property (GObject *object, guint proper
 static void
 udisks_linux_manager_iscsi_initiator_finalize (GObject *object)
 {
-  if (G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class))
+  UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+
+  g_clear_object (&manager->module);
+  g_mutex_clear (&manager->initiator_config_mutex);
+
+  if (G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class)->finalize (object);
 }
 
