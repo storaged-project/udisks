@@ -679,7 +679,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       if (!udisks_ata_get_pm_state (g_udev_device_get_device_file (device->udev_device), error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
-      /* don't wake up disk unless specically asked to */
+      /* don't wake up disk unless specifically asked to */
       if (nowakeup && (!awake || noio))
         {
           g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_WOULD_WAKEUP,
