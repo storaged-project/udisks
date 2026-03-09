@@ -1128,7 +1128,7 @@ udisks_daemon_util_get_user_info (const uid_t uid,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
-                   "User with uid %d does not exist", (gint) uid);
+                   "User with uid %u does not exist", (guint) uid);
       goto out;
     }
   else if (pw == NULL)
@@ -1136,7 +1136,7 @@ udisks_daemon_util_get_user_info (const uid_t uid,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
-                   "Error looking up passwd struct for uid %d: %m", (gint) uid);
+                   "Error looking up passwd struct for uid %u: %m", (guint) uid);
       goto out;
     }
 
