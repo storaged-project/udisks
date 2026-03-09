@@ -212,7 +212,7 @@ udisks_linux_filesystem_btrfs_new (UDisksLinuxModuleBTRFS *module,
 
 /**
  * udisks_linux_filesystem_btrfs_get_module:
- * @fs: A #UDisksLinuxFilesystemBTRFS.
+ * @l_fs_btrfs: A #UDisksLinuxFilesystemBTRFS.
  *
  * Gets the module used by @l_fs_btrfs.
  *
@@ -228,7 +228,7 @@ udisks_linux_filesystem_btrfs_get_module (UDisksLinuxFilesystemBTRFS *l_fs_btrfs
 /**
  * udisks_linux_filesystem_btrfs_update:
  * @l_fs_btrfs: A #UDisksLinuxFilesystemBTRFS.
- * @object: The enclosing #UDisksLlinuxDriveObject instance.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
  *
  * Updates the interface.
  *
