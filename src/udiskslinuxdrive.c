@@ -1269,6 +1269,7 @@ handle_set_configuration (UDisksDrive           *_drive,
             {
               g_assert_not_reached ();
             }
+          g_variant_unref (value);
         }
     }
 
