@@ -611,7 +611,6 @@ handle_set_uuid (UDisksPartition       *partition,
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
   UDisksState *state = NULL;
-  gchar *device_name = NULL;
   gchar *partition_name = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
@@ -707,7 +706,6 @@ handle_set_uuid (UDisksPartition       *partition,
     udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (state != NULL)
     udisks_state_check (state);
-  g_free (device_name);
   g_free (partition_name);
   g_clear_error (&error);
   g_clear_object (&object);
