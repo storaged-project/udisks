@@ -583,7 +583,6 @@ handle_start (UDisksMDRaid           *_mdraid,
   GList *member_devices = NULL;
   gchar *raid_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   gboolean opt_start_degraded = FALSE;
   struct stat statbuf;
   dev_t raid_device_num;
@@ -726,7 +725,6 @@ handle_start (UDisksMDRaid           *_mdraid,
   g_clear_object (&block);
   g_clear_object (&block_object);
   g_list_free_full (member_devices, g_object_unref);
-  g_free (error_message);
   g_free (raid_device_file);
   g_clear_object (&raid_device);
   g_clear_object (&object);
