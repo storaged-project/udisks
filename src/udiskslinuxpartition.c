@@ -425,27 +425,27 @@ handle_set_flags (UDisksPartition       *partition,
                                       partition_name,
                                       bootable,
                                       &error))
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_FAILED,
-                                               "Error setting partition flags on %s: %s",
-                                               udisks_block_get_device (block),
-                                               error->message);
-        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-        goto out;
-      }
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error setting partition flags on %s: %s",
+                                                 udisks_block_get_device (block),
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
     }
-    else
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_NOT_SUPPORTED,
-                                               "No support for setting partition flags on a partition table of type `%s'",
-                                               udisks_partition_table_get_type_ (partition_table));
-        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
-        goto out;
-      }
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "No support for setting partition flags on a partition table of type `%s'",
+                                             udisks_partition_table_get_type_ (partition_table));
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
+      goto out;
+    }
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
