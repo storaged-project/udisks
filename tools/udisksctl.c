@@ -3240,7 +3240,6 @@ static void
 modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command)
 {
   gchar *s;
-  gchar *program_name;
 
   /* TODO:
    *  1. get a g_set_prgname() ?; or
@@ -3250,10 +3249,8 @@ modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command)
   g_assert (g_strcmp0 ((*argv)[1], command) == 0);
   remove_arg (1, argc, argv);
 
-  program_name = g_path_get_basename ((*argv)[0]);
   s = g_strdup_printf ("%s %s", (*argv)[0], command);
   (*argv)[0] = s;
-  g_free (program_name);
 }
 
 static gchar *
