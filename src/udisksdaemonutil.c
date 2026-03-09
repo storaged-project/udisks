@@ -1337,8 +1337,6 @@ udisks_daemon_util_on_user_seat (UDisksDaemon *daemon,
   return TRUE;
 #else
   gboolean ret = FALSE;
-  char *session = NULL;
-  char *seat = NULL;
   const gchar *drive_seat;
   UDisksObject *drive_object = NULL;
   UDisksDrive *drive = NULL;
@@ -1380,8 +1378,6 @@ udisks_daemon_util_on_user_seat (UDisksDaemon *daemon,
     }
 
  out:
-  free (seat);
-  free (session);
   g_clear_object (&drive_object);
   g_clear_object (&drive);
   return ret;
