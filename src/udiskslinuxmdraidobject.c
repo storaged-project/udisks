@@ -482,7 +482,7 @@ watch_attr (UDisksLinuxDevice *device,
       g_source_set_callback (ret, callback, user_data, NULL);
       source_id = g_source_attach (ret, g_main_context_get_thread_default ());
       g_source_unref (ret);
-      g_io_channel_unref (channel); /* the keeps a reference to this object */
+      g_io_channel_unref (channel); /* this keeps a reference to the object */
       if (source_id == 0)
         {
           /* something bad happened while attaching the source */
@@ -545,7 +545,7 @@ attr_changed (GIOChannel   *channel,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* The md(4) driver does not use the usual uevent 'change' mechanism
- * for notification - instead it excepts user-space to select(2)-ish
+ * for notification - instead it expects user-space to select(2)-ish
  * on a fd for the sysfs attribute. Annoying. See
  *
  *  https://www.kernel.org/doc/Documentation/admin-guide/md.rst
@@ -619,7 +619,7 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  * @is_member: %TRUE if @device is a member, %FALSE if it's the raid device.
  *
- * Updates all information on interfaces on @mdraid.
+ * Updates all information on interfaces on @object.
  */
 void
 udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
@@ -724,7 +724,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                 }
               else if (object->sync_action_source == NULL && object->degraded_source == NULL)
                 {
-                  /* we don't have file watchers, adding them may failed because
+                  /* we don't have file watchers, adding them may have failed because
                      we were unable to get raid level, let's try again */
                   raid_device_added (object, object->raid_device);
                 }
