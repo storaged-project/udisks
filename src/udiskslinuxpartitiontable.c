@@ -413,7 +413,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   else
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Don't know how to create partitions this partition table of type `%s'",
+                                             "Don't know how to create partitions on this partition table of type `%s'",
                                              table_type);
       goto out;
     }
@@ -433,10 +433,10 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     }
 
   /* Users might want to specify logical partitions start and size using size of
-   * of the extended partition. If this happens we need to shift start (offset)
+   * the extended partition. If this happens we need to shift start (offset)
    * of the logical partition.
    * XXX: We really shouldn't allow creation of overlapping partitions and
-   *      and just automatically fix this. But udisks currently doesn't have
+   *      just automatically fix this. But udisks currently doesn't have
    *      functions to get free regions on the disks so this is a somewhat valid
    *      use case. But we should definitely provide some functionality to get
    *      right "numbers" and stop doing this.
