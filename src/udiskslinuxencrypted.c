@@ -795,7 +795,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                                                                    "org.freedesktop.udisks2.encrypted-lock-others",
                                                                    options,
                                                                    /* Translators: Shown in authentication dialog when the user
-                                                                    * requests locking an encrypted device that was previously.
+                                                                    * requests locking an encrypted device that was previously
                                                                     * unlocked by another user.
                                                                     *
                                                                     * Do not translate $(device.name), it's a placeholder and
