@@ -2231,7 +2231,7 @@ handle_repair (UDisksFilesystem      *filesystem,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error reparing filesystem on %s: %s",
+                                             "Error repairing filesystem on %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
