@@ -2097,8 +2097,8 @@ _udisks_state_has_mdraid_list_visitor (GVariant *child, gpointer compare_data,
               g_variant_unref (lookup_value);
             }
         }
-      g_variant_unref (details);
     }
+  g_variant_unref (details);
   return ret;
 }
 
