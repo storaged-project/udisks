@@ -128,6 +128,17 @@
 
     <cmdsynopsis>
       <command>udisksctl</command>
+      <arg choice="plain">drive-set-standby </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="plain">--timeout <replaceable>VALUE</replaceable></arg>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
       <arg choice="plain">monitor</arg>
     </cmdsynopsis>
 
@@ -377,6 +388,40 @@
           <listitem>
             <para>
               File with the libatasmart blob.
+            </para>
+          </listitem>
+        </varlistentry>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>drive-set-standby</option></term>
+        <listitem>
+          <para>
+            Sets the persistent standby timeout for an ATA drive. This
+            configuration is stored in
+            <filename>/etc/udisks2/IDENTIFIER.conf</filename> and is
+            applied every time the drive is connected (e.g. at start-up,
+            hotplug, or resume from suspend).
+          </para>
+        </listitem>
+
+        <varlistentry>
+          <term><option>-t</option></term>
+          <term><option>--timeout=<replaceable>VALUE</replaceable></option></term>
+          <listitem>
+            <para>
+              The standby timeout value (0-255). A value of zero means
+              "timeouts are disabled": the device will not automatically
+              enter standby mode. Values from 1 to 240 specify multiples
+              of 5 seconds, yielding timeouts from 5 seconds to 20
+              minutes. Values from 241 to 251 specify from 1 to 11 units
+              of 30 minutes, yielding timeouts from 30 minutes to 5.5
+              hours. A value of 252 signifies a timeout of 21 minutes. A
+              value of 253 sets a vendor-defined timeout period between
+              8 and 12 hours, and the value 254 is reserved. 255 is
+              interpreted as 21 minutes plus 15 seconds. This is similar
+              to the <option>-S</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
             </para>
           </listitem>
         </varlistentry>
