@@ -1254,7 +1254,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
         {
           g_warning ("Crypto bitlk container detected on %s but failed to parse the header: %s",
                      device_file, error->message);
-          g_error_free (error);
+          g_clear_error (&error);
         }
     }
   udisks_block_set_id_uuid (iface, s);
@@ -1429,7 +1429,7 @@ track_parents (UDisksBlock *block, const gchar *options)
     {
       end = strchr (start, ',');
       if (end)
-        strcpy (start, end+1);
+        memmove (start, end + 1, strlen (end + 1) + 1);
       else
         *start = '\0';
     }

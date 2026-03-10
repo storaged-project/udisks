@@ -679,7 +679,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
       if (!udisks_ata_get_pm_state (g_udev_device_get_device_file (device->udev_device), error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
-      /* don't wake up disk unless specically asked to */
+      /* don't wake up disk unless specifically asked to */
       if (nowakeup && (!awake || noio))
         {
           g_set_error_literal (error, UDISKS_ERROR, UDISKS_ERROR_WOULD_WAKEUP,
@@ -1889,7 +1889,7 @@ apply_configuration_thread_func (GTask        *task,
                  udisks_config_manager_get_config_dir (udisks_daemon_get_config_manager (daemon)),
                  udisks_drive_get_id (data->drive), device_file);
 
-  /* Use O_RDRW instead of O_RDONLY to force a 'change' uevent so properties are updated */
+  /* Use O_RDWR instead of O_RDONLY to force a 'change' uevent so properties are updated */
   fd = open (device_file, O_RDWR|O_NONBLOCK);
   if (fd == -1)
     {
@@ -2137,7 +2137,10 @@ on_secure_erase_update_progress_timeout (gpointer user_data)
   start = udisks_job_get_start_time (job);
   end = udisks_job_get_expected_end_time (job);
 
-  progress = ((gdouble) (now - start)) / (end - start);
+  if (end <= start)
+    progress = 0;
+  else
+    progress = ((gdouble) (now - start)) / (end - start);
   if (progress < 0)
     progress = 0;
   if (progress > 1)

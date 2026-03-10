@@ -379,13 +379,13 @@ udisks_daemon_constructed (GObject *object)
                         error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
         }
-    else
-      {
-        for (plugin_p = plugins; *plugin_p; plugin_p++)
-          if (!bd_is_plugin_available ((*plugin_p)->name))
-            udisks_error ("Failed to load the '%s' libblockdev plugin",
-                          bd_get_plugin_name ((*plugin_p)->name));
-      }
+      else
+        {
+          for (plugin_p = plugins; *plugin_p; plugin_p++)
+            if (!bd_is_plugin_available ((*plugin_p)->name))
+              udisks_error ("Failed to load the '%s' libblockdev plugin",
+                            bd_get_plugin_name ((*plugin_p)->name));
+        }
     }
 
 #ifdef DEBUG
@@ -1857,7 +1857,7 @@ udisks_daemon_get_config_manager (UDisksDaemon *daemon)
  * Returns: %TRUE if --disable-modules commandline switch has been specified.
  */
 gboolean
-udisks_daemon_get_disable_modules (UDisksDaemon*daemon)
+udisks_daemon_get_disable_modules (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
   return daemon->disable_modules;

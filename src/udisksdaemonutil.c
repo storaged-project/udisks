@@ -243,7 +243,8 @@ udisks_decode_udev_string (const gchar *str, const gchar *fallback_str)
         {
           gint val;
 
-          if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0')
+          if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0' ||
+              g_ascii_xdigit_value (str[n + 2]) < 0 || g_ascii_xdigit_value (str[n + 3]) < 0)
             {
               udisks_warning ("**** NOTE: malformed encoded string `%s'", str);
               break;
@@ -295,7 +296,7 @@ udisks_decode_udev_string (const gchar *str, const gchar *fallback_str)
  * <literal>[A-Z][a-z][0-9]_</literal> will be escaped as _HEX where
  * HEX is a two-digit hexadecimal number.
  *
- * Note that his mapping is not bijective - e.g. you cannot go back
+ * Note that this mapping is not bijective - e.g. you cannot go back
  * to the original string.
  */
 void
@@ -1127,7 +1128,7 @@ udisks_daemon_util_get_user_info (const uid_t uid,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
-                   "User with uid %d does not exist", (gint) uid);
+                   "User with uid %u does not exist", (guint) uid);
       goto out;
     }
   else if (pw == NULL)
@@ -1135,7 +1136,7 @@ udisks_daemon_util_get_user_info (const uid_t uid,
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
-                   "Error looking up passwd struct for uid %d: %m", (gint) uid);
+                   "Error looking up passwd struct for uid %u: %m", (guint) uid);
       goto out;
     }
 
@@ -1336,8 +1337,6 @@ udisks_daemon_util_on_user_seat (UDisksDaemon *daemon,
   return TRUE;
 #else
   gboolean ret = FALSE;
-  char *session = NULL;
-  char *seat = NULL;
   const gchar *drive_seat;
   UDisksObject *drive_object = NULL;
   UDisksDrive *drive = NULL;
@@ -1379,8 +1378,6 @@ udisks_daemon_util_on_user_seat (UDisksDaemon *daemon,
     }
 
  out:
-  free (seat);
-  free (session);
   g_clear_object (&drive_object);
   g_clear_object (&drive);
   return ret;
@@ -1523,7 +1520,7 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
       goto out;
     }
 
-  if (contents_len < 0 )
+  if (contents_len < 0)
     contents_len = strlen (contents);
   if (fwrite (contents, 1, contents_len, f) != (gsize) contents_len)
     {

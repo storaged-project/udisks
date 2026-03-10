@@ -494,11 +494,6 @@ handle_loop_setup (UDisksManager          *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef struct
-{
-  gint md_num;
-} WaitForArrayData;
-
 static UDisksObject *
 wait_for_array_object (UDisksDaemon *daemon,
                        gpointer      user_data)
@@ -1240,9 +1235,9 @@ handle_get_block_devices (UDisksManager         *object,
 		  block_paths[i++] = g_dbus_object_get_object_path (block_object);
   }
 
-  udisks_manager_complete_get_block_devices  (object,
-                                              invocation,
-                                              block_paths);
+  udisks_manager_complete_get_block_devices (object,
+                                             invocation,
+                                             block_paths);
 
   g_free (block_paths);
   g_slist_free_full (blocks, g_object_unref);

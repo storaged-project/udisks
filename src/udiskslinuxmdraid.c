@@ -130,7 +130,7 @@ udisks_linux_mdraid_new (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-on_polling_timout (gpointer user_data)
+on_polling_timeout (gpointer user_data)
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (user_data);
   UDisksLinuxMDRaidObject *object = NULL;
@@ -164,7 +164,7 @@ ensure_polling (UDisksLinuxMDRaid  *mdraid,
       if (mdraid->polling_timeout == 0)
         {
           mdraid->polling_timeout = g_timeout_add_seconds (1,
-                                                           on_polling_timout,
+                                                           on_polling_timeout,
                                                            mdraid);
         }
     }
@@ -346,7 +346,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
             sync_completed_val = ((gdouble) completed_sectors) / ((gdouble) num_sectors);
         }
 
-      /* this is KiB/s (see drivers/md/md.c:sync_speed_show() */
+      /* this is KiB/s (see drivers/md/md.c:sync_speed_show()) */
       sync_rate = udisks_linux_device_read_sysfs_attr_as_uint64 (raid_device, "md/sync_speed", NULL) * 1024;
       if (sync_rate > 0)
         {
@@ -583,7 +583,6 @@ handle_start (UDisksMDRaid           *_mdraid,
   GList *member_devices = NULL;
   gchar *raid_device_file = NULL;
   GError *error = NULL;
-  gchar *error_message = NULL;
   gboolean opt_start_degraded = FALSE;
   struct stat statbuf;
   dev_t raid_device_num;
@@ -726,7 +725,6 @@ handle_start (UDisksMDRaid           *_mdraid,
   g_clear_object (&block);
   g_clear_object (&block_object);
   g_list_free_full (member_devices, g_object_unref);
-  g_free (error_message);
   g_free (raid_device_file);
   g_clear_object (&raid_device);
   g_clear_object (&object);
@@ -1050,7 +1048,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 
   if (!bd_md_remove (device_file, member_device_file, set_faulty, NULL, &error))
     {
-      g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", device_file, member_device_file);
+      g_prefix_error (&error, "Error removing '%s' from RAID array '%s': ", member_device_file, device_file);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

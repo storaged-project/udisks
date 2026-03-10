@@ -705,7 +705,6 @@ calculate_mount_point (UDisksDaemon  *daemon,
   gboolean fs_shared = FALSE;
   const gchar *label = NULL;
   const gchar *uuid = NULL;
-  gchar *escaped_user_name = NULL;
   gchar *mount_dir = NULL;
   gchar *mount_point = NULL;
   gchar *orig_mount_point;
@@ -802,25 +801,27 @@ calculate_mount_point (UDisksDaemon  *daemon,
 
   /* ... then uniqify the mount point */
   orig_mount_point = g_strdup (mount_point);
-  n = 1;
-  while (TRUE)
+  for (n = 1; g_file_test (mount_point, G_FILE_TEST_EXISTS) && n <= 1000; n++)
     {
-      if (!g_file_test (mount_point, G_FILE_TEST_EXISTS))
-        {
-          break;
-        }
-      else
-        {
-          g_free (mount_point);
-          mount_point = g_strdup_printf ("%s%u", orig_mount_point, n++);
-        }
+      g_free (mount_point);
+      mount_point = g_strdup_printf ("%s%u", orig_mount_point, n);
     }
   g_free (orig_mount_point);
+  if (n > 1000)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Too many mount points with prefix `%s'",
+                   mount_point);
+      g_free (mount_point);
+      mount_point = NULL;
+      goto out;
+    }
 
  out:
   g_free (mount_dir);
   g_clear_object (&object);
-  g_free (escaped_user_name);
   return mount_point;
 }
 
@@ -918,6 +919,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
   const gchar *message = NULL;
   gboolean success = FALSE;
   gboolean mount_fstab_as_root = FALSE;
+  gboolean dir_created = FALSE;
   UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
@@ -975,6 +977,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                                                  device);
           return FALSE;
         }
+      dir_created = TRUE;
     }
 
   while (TRUE)
@@ -1033,11 +1036,17 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                                                                 options,
                                                                 message,
                                                                 invocation))
-                return FALSE;
+                {
+                  if (dir_created && g_rmdir (mount_point_to_use) != 0)
+                    udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
+                  return FALSE;
+                }
               mount_fstab_as_root = TRUE;
               continue;  /* retry */
             }
 
+          if (dir_created && g_rmdir (mount_point_to_use) != 0)
+            udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
@@ -2228,7 +2237,7 @@ handle_repair (UDisksFilesystem      *filesystem,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error reparing filesystem on %s: %s",
+                                             "Error repairing filesystem on %s: %s",
                                              udisks_block_get_device (block),
                                              error->message);
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
