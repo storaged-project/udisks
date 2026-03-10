@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef __UDISKS_LINUX_MDRAID_OBJECT_H__
-#define __UDISKS_LINUX_MDRAID_OBJECT_H__
+#ifndef __UDISKS_LINUX_LOGICAL_VOLUME_OBJECT_H__
+#define __UDISKS_LINUX_LOGICAL_VOLUME_OBJECT_H__
 
 #include <blockdev/lvm.h>
 
@@ -54,3 +54,4 @@ void                            udisks_linux_logical_volume_object_update_etctab
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_LOGICAL_VOLUME_OBJECT_H__ */
+
