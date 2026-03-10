@@ -24,7 +24,9 @@
 #define __UDISKS_LINUX_ENCRYPTED_HELPERS_H__
 
 #include <glib.h>
-#include <blockdev/crypto.h>
+#ifdef HAVE_CRYPTO
+#  include <blockdev/crypto.h>
+#endif
 
 #include "udisksthreadedjob.h"
 
