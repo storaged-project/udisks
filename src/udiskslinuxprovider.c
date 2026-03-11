@@ -1321,7 +1321,7 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
       g_hash_table_replace (provider->sysfs_path_to_nvme_subsys, g_strdup (sysfs_path), g_strdup (subsys_nqn));
     }
 
-  if (g_hash_table_size (subsys_table) == 0)
+  if (subsys_table == NULL || g_hash_table_size (subsys_table) == 0)
     {
       g_hash_table_remove (provider->nvme_subsystems, subsys_nqn);
       g_free (subsys_nqn);
