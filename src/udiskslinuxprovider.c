@@ -1262,7 +1262,7 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
 {
   const gchar *subsystem;
   const gchar *sysfs_path;
-  const gchar *subsys_nqn;
+  gchar *subsys_nqn;
   GUdevDevice *parent = NULL;
   GHashTable *subsys_table = NULL;
 
@@ -1283,19 +1283,22 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
   if (g_ascii_strncasecmp (subsystem, "nvme", 4) != 0)
     return;
 
-  subsys_nqn = g_udev_device_get_sysfs_attr (parent ? parent : device->udev_device, "subsysnqn");
+  subsys_nqn = g_strdup (g_udev_device_get_sysfs_attr (parent ? parent : device->udev_device, "subsysnqn"));
   g_clear_object (&parent);
 
   /* 'remove' uevents often don't carry enough context, look it up */
   if (subsys_nqn == NULL)
-    subsys_nqn = g_hash_table_lookup (provider->sysfs_path_to_nvme_subsys, sysfs_path);
+    subsys_nqn = g_strdup (g_hash_table_lookup (provider->sysfs_path_to_nvme_subsys, sysfs_path));
   if (subsys_nqn == NULL)
     return;
   /* filter invalid values out */
   if (g_strcmp0 (subsys_nqn, "(efault)") == 0 ||
       g_strcmp0 (subsys_nqn, "(einval)") == 0 ||
       g_strcmp0 (subsys_nqn, "(null)") == 0)
-    return;
+    {
+      g_free (subsys_nqn);
+      return;
+    }
 
   /* Store/remove the sysfs path */
   subsys_table = g_hash_table_lookup (provider->nvme_subsystems, subsys_nqn);
@@ -1321,9 +1324,11 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
   if (g_hash_table_size (subsys_table) == 0)
     {
       g_hash_table_remove (provider->nvme_subsystems, subsys_nqn);
+      g_free (subsys_nqn);
       return;
     }
   broadcast_subsys_uevent (provider, subsys_table, action, device);
+  g_free (subsys_nqn);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
