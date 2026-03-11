@@ -2502,8 +2502,9 @@ handle_command_info (gint        *argc,
           if (drive != NULL)
             {
               const gchar *base;
-              base = g_strrstr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), "/") + 1;
-              g_print ("%s \n", base);
+              base = strrchr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), '/');
+              if (base != NULL)
+                g_print ("%s \n", base + 1);
             }
         }
       g_list_free_full (objects, g_object_unref);
