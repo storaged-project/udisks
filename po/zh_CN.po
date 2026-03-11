@@ -15,9 +15,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks 2.9.0\n"
-"Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues\n"
-"POT-Creation-Date: 2026-02-26 12:01+0000\n"
-"PO-Revision-Date: 2026-02-27 08:46+0800\n"
+"Report-Msgid-Bugs-To: https://github.com/storaged-project/udisks/issues/\n"
+"POT-Creation-Date: 2026-03-09 16:51+0000\n"
+"PO-Revision-Date: 2026-03-11 13:30+0800\n"
 "Last-Translator: lumingzh <lumingzh@qq.com>\n"
 "Language-Team: Chinese (China) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -631,7 +631,7 @@ msgstr "创建 VDO 卷需要身份验证"
 #. Translators: This is used for possibly encrypted volumes.
 #. *              The first %s is the formatted size (e.g. "42.0 MB").
 #.
-#: src/udisksdaemonutil.c:721
+#: src/udisksdaemonutil.c:722
 #, c-format
 msgid "%s Possibly Encrypted"
 msgstr "%s 可能已加密"
@@ -639,7 +639,7 @@ msgstr "%s 可能已加密"
 #. Translators: This is used for encrypted volumes.
 #. *              The first %s is the formatted size (e.g. "42.0 MB").
 #.
-#: src/udisksdaemonutil.c:728
+#: src/udisksdaemonutil.c:729
 #, c-format
 msgid "%s Encrypted"
 msgstr "%s 已加密"
@@ -647,7 +647,7 @@ msgstr "%s 已加密"
 #. Translators: This is used for volume with no filesystem label.
 #. *              The first %s is the formatted size (e.g. "42.0 MB").
 #.
-#: src/udisksdaemonutil.c:741
+#: src/udisksdaemonutil.c:742
 #, c-format
 msgid "%s Volume"
 msgstr "%s 卷"
@@ -656,38 +656,38 @@ msgstr "%s 卷"
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
 #.
-#: src/udiskslinuxblock.c:1313
+#: src/udiskslinuxblock.c:1315
 msgid "Authentication is required to read system-level secrets"
 msgstr "读取系统级别的机密信息需要身份验证"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2032
+#: src/udiskslinuxblock.c:2034
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "向 /etc/fstab 文件中添加条目需要身份验证"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
-#: src/udiskslinuxblock.c:2051
+#: src/udiskslinuxblock.c:2053
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "向 /etc/crypttab 文件中添加条目需要身份验证"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2111
+#: src/udiskslinuxblock.c:2114
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "从 /etc/fstab 文件中移除条目需要身份验证"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2130
+#: src/udiskslinuxblock.c:2133
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "来从 /etc/crypttab 文件中移除条目需要身份验证"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: src/udiskslinuxblock.c:2203
+#: src/udiskslinuxblock.c:2207
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "修改 /etc/fstab 文件需要身份验证"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
-#: src/udiskslinuxblock.c:2222
+#: src/udiskslinuxblock.c:2226
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "修改 /etc/crypttab 文件需要身份验证"
 
@@ -704,7 +704,7 @@ msgstr "修改 /etc/crypttab 文件需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2913 src/udiskslinuxdriveata.c:2562
+#: src/udiskslinuxblock.c:2919 src/udiskslinuxdriveata.c:2565
 msgid "Authentication is required to perform a secure erase of $(device.name)"
 msgstr "执行安全擦除 $(device.name) 需要身份验证"
 
@@ -715,11 +715,11 @@ msgstr "执行安全擦除 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:2925
+#: src/udiskslinuxblock.c:2931
 msgid "Authentication is required to format $(device.name)"
 msgstr "格式化 $(device.name) 需要身份验证"
 
-#: src/udiskslinuxblock.c:2954 src/udiskslinuxmdraid.c:1534
+#: src/udiskslinuxblock.c:2960 src/udiskslinuxmdraid.c:1532
 msgid "Authentication is required to modify the system configuration"
 msgstr "修改系统配置需要身份验证"
 
@@ -729,7 +729,7 @@ msgstr "修改系统配置需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3919
+#: src/udiskslinuxblock.c:3925
 msgid "Authentication is required to open $(device.name) for reading"
 msgstr "打开$(device.name) 进行读取需要身份验证"
 
@@ -739,7 +739,7 @@ msgstr "打开$(device.name) 进行读取需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:3990
+#: src/udiskslinuxblock.c:3996
 msgid "Authentication is required to open $(device.name) for writing"
 msgstr "打开 $(device.name) 进行写入需要身份验证"
 
@@ -749,7 +749,7 @@ msgstr "打开 $(device.name) 进行写入需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4064
+#: src/udiskslinuxblock.c:4070
 msgid "Authentication is required to open $(device.name) for benchmarking"
 msgstr "打开 $(device.name) 进行基准测试需要身份验证"
 
@@ -759,7 +759,7 @@ msgstr "打开 $(device.name) 进行基准测试需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4147
+#: src/udiskslinuxblock.c:4153
 msgid "Authentication is required to open $(device.name)."
 msgstr "打开 $(device.name) 需要身份验证。"
 
@@ -769,7 +769,7 @@ msgstr "打开 $(device.name) 需要身份验证。"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4204
+#: src/udiskslinuxblock.c:4210
 msgid "Authentication is required to rescan $(device.name)"
 msgstr "重新扫描 $(device.name) 需要身份验证"
 
@@ -779,7 +779,7 @@ msgstr "重新扫描 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxblock.c:4295
+#: src/udiskslinuxblock.c:4301
 msgid ""
 "Authentication is required to restore the encrypted header on $(device.name)"
 msgstr "恢复加密设备 $(device.name) 上的加密头信息需要身份验证"
@@ -790,7 +790,7 @@ msgstr "恢复加密设备 $(device.name) 上的加密头信息需要身份验�
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1120
+#: src/udiskslinuxdrive.c:1119
 msgid "Authentication is required to eject $(device.name)"
 msgstr "弹出 $(device.name) 需要身份验证"
 
@@ -800,7 +800,7 @@ msgstr "弹出 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxdrive.c:1209
+#: src/udiskslinuxdrive.c:1208
 msgid "Authentication is required to configure settings for $(device.name)"
 msgstr "配置 $(device.name) 设置需要身份验证"
 
@@ -906,13 +906,13 @@ msgstr "将 $(device.name) 转入待机模式需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxencrypted.c:508 src/udiskslinuxencrypted.c:993
+#: src/udiskslinuxencrypted.c:508
 msgid ""
 "Authentication is required to unlock the encrypted device $(device.name)"
 msgstr "解锁加密设备 $(device.name) 需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
-#. * requests locking an encrypted device that was previously.
+#. * requests locking an encrypted device that was previously
 #. * unlocked by another user.
 #. *
 #. * Do not translate $(device.name), it's a placeholder and
@@ -923,6 +923,18 @@ msgid ""
 "Authentication is required to lock the encrypted device $(device.name) "
 "unlocked by another user"
 msgstr "锁定由其他用户解锁的加密设备 $(device.name) 需要身份验证"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing the passphrase for an encrypted device.
+#. *
+#. * Do not translate $(device.name), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#.
+#: src/udiskslinuxencrypted.c:993
+msgid ""
+"Authentication is required to change the passphrase for the encrypted device "
+"$(device.name)"
+msgstr "更改加密设备 $(device.name) 的密码需要身份验证"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests resizing a encrypted block device.
@@ -964,7 +976,7 @@ msgstr "备份加密设备 $(device.name) 上的加密头信息需要身份验�
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:939 src/udiskslinuxfilesystem.c:1131
+#: src/udiskslinuxfilesystem.c:941 src/udiskslinuxfilesystem.c:1140
 msgid "Authentication is required to mount $(device.name)"
 msgstr "挂载 $(device.name) 需要身份验证"
 
@@ -978,7 +990,7 @@ msgstr "挂载 $(device.name) 需要身份验证"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1029
+#: src/udiskslinuxfilesystem.c:1032
 msgid ""
 "Authentication is required to mount $(device.name) referenced in the /etc/"
 "fstab file"
@@ -994,7 +1006,7 @@ msgstr "挂载 /etc/fstab 文件中引用的 $(device.name) 需要身份验证"
 #. *
 #. * Do not translate /etc/fstab
 #.
-#: src/udiskslinuxfilesystem.c:1612
+#: src/udiskslinuxfilesystem.c:1621
 msgid ""
 "Authentication is required to unmount $(device.name) referenced in the /etc/"
 "fstab file"
@@ -1007,7 +1019,7 @@ msgstr "卸载 /etc/fstab 文件中引用的 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1660
+#: src/udiskslinuxfilesystem.c:1669
 msgid ""
 "Authentication is required to unmount $(device.name) mounted by another user"
 msgstr "卸载由其他用户挂载的 $(device.name) 需要身份验证"
@@ -1018,7 +1030,7 @@ msgstr "卸载由其他用户挂载的 $(device.name) 需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:1829
+#: src/udiskslinuxfilesystem.c:1838
 msgid ""
 "Authentication is required to change the filesystem label on $(device.name)"
 msgstr "更改 $(device.name) 的文件系统标签需要身份验证"
@@ -1029,7 +1041,7 @@ msgstr "更改 $(device.name) 的文件系统标签需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2012
+#: src/udiskslinuxfilesystem.c:2025
 msgid "Authentication is required to resize the filesystem on $(device.name)"
 msgstr "更改 $(device.name) 上文件系统的大小需要身份验证"
 
@@ -1039,7 +1051,7 @@ msgstr "更改 $(device.name) 上文件系统的大小需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2184
+#: src/udiskslinuxfilesystem.c:2198
 msgid "Authentication is required to repair the filesystem on $(device.name)"
 msgstr "修复 $(device.name) 上的文件系统需要身份验证"
 
@@ -1049,7 +1061,7 @@ msgstr "修复 $(device.name) 上的文件系统需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2353
+#: src/udiskslinuxfilesystem.c:2368
 msgid "Authentication is required to check the filesystem on $(device.name)"
 msgstr "检查 $(device.name) 上的文件系统需要身份验证"
 
@@ -1059,7 +1071,7 @@ msgstr "检查 $(device.name) 上的文件系统需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2514
+#: src/udiskslinuxfilesystem.c:2529
 msgid ""
 "Authentication is required to change ownership of the filesystem on $"
 "(device.name)"
@@ -1071,7 +1083,7 @@ msgstr "更改 $(device.name) 上文件系统的所有者需要身份验证"
 #. * Do not translate $(device.name), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #.
-#: src/udiskslinuxfilesystem.c:2682
+#: src/udiskslinuxfilesystem.c:2697
 msgid ""
 "Authentication is required to change the filesystem UUID on $(device.name)"
 msgstr "更改 $(device.name) 上的文件系统 UUID 需要身份验证"
@@ -1113,7 +1125,7 @@ msgstr "修改回环设备 $(drive) 需要身份验证"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmanager.c:583
+#: src/udiskslinuxmanager.c:578
 msgid "Authentication is required to create a RAID array"
 msgstr "创建 RAID 阵列需要身份验证"
 
@@ -1135,7 +1147,7 @@ msgstr "设置 NVMe 主机 ID 需要身份验证"
 #. * attempts to start a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:636
+#: src/udiskslinuxmdraid.c:635
 msgid "Authentication is required to start a RAID array"
 msgstr "启动 RAID 阵列需要身份验证"
 
@@ -1143,7 +1155,7 @@ msgstr "启动 RAID 阵列需要身份验证"
 #. * attempts to stop a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:796
+#: src/udiskslinuxmdraid.c:794
 msgid "Authentication is required to stop a RAID array"
 msgstr "停止 RAID 阵列需要身份验证"
 
@@ -1151,7 +1163,7 @@ msgstr "停止 RAID 阵列需要身份验证"
 #. * attempts to remove a device from a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1017
+#: src/udiskslinuxmdraid.c:1015
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "从 RAID 阵列中移除设备需要身份验证"
 
@@ -1159,7 +1171,7 @@ msgstr "从 RAID 阵列中移除设备需要身份验证"
 #. * attempts to add a device to a RAID Array.
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1174
+#: src/udiskslinuxmdraid.c:1172
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "向 RAID 阵列添加设备需要身份验证"
 
@@ -1167,7 +1179,7 @@ msgstr "向 RAID 阵列添加设备需要身份验证"
 #. * attempts to change whether it has a write-intent bitmap
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1300
+#: src/udiskslinuxmdraid.c:1298
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -1177,11 +1189,11 @@ msgstr "配置 RAID 阵列上的  write-intent 位图需要身份验证"
 #. * attempts to start/stop data scrubbing operations
 #.
 #. TODO: variables
-#: src/udiskslinuxmdraid.c:1425
+#: src/udiskslinuxmdraid.c:1423
 msgid "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr "启动/停止 RAID 阵列的数据清理需要身份验证"
 
-#: src/udiskslinuxmdraid.c:1515
+#: src/udiskslinuxmdraid.c:1513
 msgid "Authentication is required to delete a RAID array"
 msgstr "删除 RAID 阵列需要身份验证"
 
