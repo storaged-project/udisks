@@ -1339,10 +1339,17 @@ handle_command_unlock_lock (gint        *argc,
 
       cleartext_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
                                                                           (cleartext_object_path)));
-      g_print ("Unlocked %s as %s.\n",
-               udisks_block_get_device (block),
-               udisks_block_get_device (udisks_object_peek_block (cleartext_object)));
-      g_object_unref (cleartext_object);
+      if (cleartext_object != NULL)
+        {
+          g_print ("Unlocked %s as %s.\n",
+                   udisks_block_get_device (block),
+                   udisks_block_get_device (udisks_object_peek_block (cleartext_object)));
+          g_object_unref (cleartext_object);
+        }
+      else
+        {
+          g_print ("Unlocked %s.\n", udisks_block_get_device (block));
+        }
       g_free (cleartext_object_path);
     }
   else
