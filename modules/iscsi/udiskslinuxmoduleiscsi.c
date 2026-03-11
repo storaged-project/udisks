@@ -92,6 +92,7 @@ udisks_linux_module_iscsi_finalize (GObject *object)
 
   if (module->iscsi_ctx)
     libiscsi_cleanup (module->iscsi_ctx);
+  g_mutex_clear (&module->libiscsi_mutex);
 
   if (G_OBJECT_CLASS (udisks_linux_module_iscsi_parent_class)->finalize)
     G_OBJECT_CLASS (udisks_linux_module_iscsi_parent_class)->finalize (object);

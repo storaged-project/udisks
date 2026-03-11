@@ -817,8 +817,8 @@ _lsm_pl_data_lookup (const char *vpd83)
   /* Search again */
   lsm_pl_data = g_hash_table_lookup (_pl_id_2_lsm_pl_data_hash, lsm_conn_data->pl_id);
 
-  if (_pl_id_2_lsm_pl_data_hash == NULL)
-    /* Normally old data should not be delete yet. */
+  if (lsm_pl_data == NULL)
+    /* Normally old data should not be deleted yet. */
     return NULL;
 
   if (lsm_pl_data->last_refresh_time != current_time)

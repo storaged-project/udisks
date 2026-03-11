@@ -40,8 +40,8 @@
  * The <link
  * linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
  * and/or <link
- * linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintIconName</link>
- * propreties on associated #UDisksBlock interfaces (if any) may
+ * linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintIconName">HintIconName</link>
+ * properties on associated #UDisksBlock interfaces (if any) may
  * influence what udisks_object_info_get_icon() and
  * udisks_object_info_get_media_icon() returns.
  *

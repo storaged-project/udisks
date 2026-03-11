@@ -212,7 +212,7 @@ udisks_linux_filesystem_btrfs_new (UDisksLinuxModuleBTRFS *module,
 
 /**
  * udisks_linux_filesystem_btrfs_get_module:
- * @fs: A #UDisksLinuxFilesystemBTRFS.
+ * @l_fs_btrfs: A #UDisksLinuxFilesystemBTRFS.
  *
  * Gets the module used by @l_fs_btrfs.
  *
@@ -228,7 +228,7 @@ udisks_linux_filesystem_btrfs_get_module (UDisksLinuxFilesystemBTRFS *l_fs_btrfs
 /**
  * udisks_linux_filesystem_btrfs_update:
  * @l_fs_btrfs: A #UDisksLinuxFilesystemBTRFS.
- * @object: The enclosing #UDisksLlinuxDriveObject instance.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
  *
  * Updates the interface.
  *
@@ -405,7 +405,7 @@ btrfs_subvolume_perform_action (UDisksFilesystemBTRFS *fs_btrfs,
                                      UDISKS_OBJECT (object),
                                      BTRFS_POLICY_ACTION_ID,
                                      arg_options,
-                                     N_(polkit_message),
+                                     polkit_message,
                                      invocation);
 
   /* Do we have a valid subvolume name? */
@@ -574,7 +574,7 @@ handle_create_subvolume (UDisksFilesystemBTRFS *fs_btrfs,
                                          bd_btrfs_create_subvolume,
                                          arg_name,
                                          arg_options,
-                                         "Authentication is required to add a new subvolume for the given BTRFS volume");
+                                         N_("Authentication is required to add a new subvolume for the given BTRFS volume"));
 }
 
 static gboolean
@@ -588,7 +588,7 @@ handle_remove_subvolume (UDisksFilesystemBTRFS *fs_btrfs,
                                          bd_btrfs_delete_subvolume,
                                          arg_name,
                                          arg_options,
-                                         "Authentication is required to remove the subvolume for the given BTRFS volume");
+                                         N_("Authentication is required to remove the subvolume for the given BTRFS volume"));
 }
 
 static gboolean

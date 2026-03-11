@@ -389,18 +389,26 @@ update_progress_for_device (UDisksLinuxVolumeGroupObject *object,
           if (block)
             {
               const gchar *const *symlinks;
+              gboolean match = FALSE;
               int j;
               if (g_strcmp0 (udisks_block_get_device (block), dev) == 0)
-                goto found;
-              symlinks = udisks_block_get_symlinks (block);
-              for (j = 0; symlinks[j]; j++)
-                if (g_strcmp0 (symlinks[j], dev) == 0)
-                  goto found;
-
-              continue;
-            found:
-              udisks_job_set_progress (job, progress);
-              udisks_job_set_progress_valid (job, TRUE);
+                match = TRUE;
+              if (!match)
+                {
+                  symlinks = udisks_block_get_symlinks (block);
+                  for (j = 0; symlinks[j]; j++)
+                    if (g_strcmp0 (symlinks[j], dev) == 0)
+                      {
+                        match = TRUE;
+                        break;
+                      }
+                }
+              if (match)
+                {
+                  udisks_job_set_progress (job, progress);
+                  udisks_job_set_progress_valid (job, TRUE);
+                }
+              g_object_unref (block);
             }
         }
 

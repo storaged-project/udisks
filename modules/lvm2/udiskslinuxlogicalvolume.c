@@ -237,8 +237,11 @@ build_structure (UDisksDaemon *daemon,
 /**
  * udisks_linux_logical_volume_update:
  * @logical_volume: A #UDisksLinuxLogicalVolume.
- * @vg: LVM volume group
- * @lv: LVM logical volume
+ * @group_object: A #UDisksLinuxVolumeGroupObject.
+ * @lv_info: LVM logical volume info
+ * @meta_lv_info: LVM metadata logical volume info
+ * @all_lv_infos: All LVM logical volume infos in the volume group
+ * @needs_polling_ret: (out): Return location for whether polling is needed
  *
  * Updates the interface.
  */
@@ -1151,7 +1154,7 @@ handle_cache_attach (UDisksLogicalVolume   *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error converting volume: %s"),
+                                             "Error converting volume: %s",
                                              error->message);
       g_clear_error (&error);
       goto out;
@@ -1203,7 +1206,7 @@ handle_cache_detach_or_split (UDisksLogicalVolume    *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             N_("Error converting volume: %s"),
+                                             "Error converting volume: %s",
                                              error->message);
       g_clear_error (&error);
       goto out;

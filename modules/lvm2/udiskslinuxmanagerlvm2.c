@@ -384,11 +384,14 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
       UDisksObject *object_for_block;
-      object_for_block = udisks_daemon_util_dup_object (block, &error);
+
+      object_for_block = udisks_daemon_util_dup_object (block, NULL);
       if (object_for_block != NULL)
-        udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_for_block),
-                                                       UDISKS_DEFAULT_WAIT_TIMEOUT);
-      g_object_unref (object_for_block);
+        {
+          udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object_for_block),
+                                                         UDISKS_DEFAULT_WAIT_TIMEOUT);
+          g_object_unref (object_for_block);
+        }
     }
 
   /* ... then, sit and wait for the object to show up */

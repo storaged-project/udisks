@@ -1170,7 +1170,7 @@ add_item (gchar **items_str,
 /**
  * udisks_client_get_partition_info:
  * @client: A #UDisksClient.
- * @partition: # #UDisksPartition.
+ * @partition: A #UDisksPartition.
  *
  * Gets information about @partition that is suitable to present in an
  * user interface in a single line of text.
@@ -2052,7 +2052,7 @@ static const struct
   {"filesystem", "ext4",              "*",     NC_("fs-type", "Ext4 (version %s)"),                 NC_("fs-type", "Ext4")},
   {"filesystem", "ext4",              NULL,    NC_("fs-type", "Ext4"),                              NC_("fs-type", "Ext4")},
   {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext (version %s)"),      NC_("fs-type", "JDB")},
-  {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
+  {"filesystem", "jdb",               NULL,    NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
   {"filesystem", "xfs",               "*",     NC_("fs-type", "XFS (version %s)"),                  NC_("fs-type", "XFS")},
   {"filesystem", "xfs",               NULL,    NC_("fs-type", "XFS"),                               NC_("fs-type", "XFS")},
   /* TODO: No ID_FS_VERSION yet for btrfs... */
@@ -2645,7 +2645,7 @@ udisks_client_get_partition_type_infos (UDisksClient   *client,
  * @partition_table_type: A partitioning type e.g. 'dos' or 'gpt'.
  * @partition_type: A partition type.
  *
- * Gets a human readable localized string for @partiton_table_type and @partition_type.
+ * Gets a human readable localized string for @partition_table_type and @partition_type.
  *
  * Returns: (transfer none): A description of @partition_type or %NULL if
  * unknown.
@@ -2722,7 +2722,7 @@ udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
  * @operation: A job operation name.
  *
  * Gets a human-readable and localized text string describing a
- * a job @operation.
+ * job @operation.
  *
  * For known job operation types, see the documentation for the
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
