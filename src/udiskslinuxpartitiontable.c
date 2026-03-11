@@ -609,8 +609,11 @@ flock_block_dev (UDisksPartitionTable *iface)
   UDisksBlock *block = object? udisks_object_peek_block (object) : NULL;
   int fd = block? open (udisks_block_get_device (block), O_RDONLY) : -1;
 
-  if (fd >= 0)
-    flock (fd, LOCK_SH | LOCK_NB);
+  if (fd >= 0 && flock (fd, LOCK_SH | LOCK_NB) != 0)
+    {
+      close (fd);
+      fd = -1;
+    }
 
   g_clear_object (&object);
   return fd;
