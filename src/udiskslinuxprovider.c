@@ -1316,8 +1316,7 @@ handle_block_uevent_for_nvme_subsys (UDisksLinuxProvider *provider,
           subsys_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
           g_hash_table_replace (provider->nvme_subsystems, g_strdup (subsys_nqn), subsys_table);
         }
-      if (action == UDISKS_UEVENT_ACTION_ADD)
-        g_hash_table_add (subsys_table, g_strdup (sysfs_path));
+      g_hash_table_add (subsys_table, g_strdup (sysfs_path));
       g_hash_table_replace (provider->sysfs_path_to_nvme_subsys, g_strdup (sysfs_path), g_strdup (subsys_nqn));
     }
 
