@@ -1240,7 +1240,6 @@ broadcast_subsys_uevent (UDisksLinuxProvider *provider,
       if (object != NULL)
         udisks_linux_drive_object_nvme_subsys_uevent (object, action, device, (UDisksLinuxBlockObject **)block_objs->pdata);
     }
-  g_ptr_array_free (block_objs, TRUE);
 
   /* Now notify block objects as well */
   g_hash_table_iter_init (&iter, subsys_table);
@@ -1252,6 +1251,7 @@ broadcast_subsys_uevent (UDisksLinuxProvider *provider,
       if (object != NULL)
         udisks_linux_block_object_nvme_subsys_uevent (object, action, device);
     }
+  g_ptr_array_free (block_objs, TRUE);
 }
 
 /* called with lock held */
