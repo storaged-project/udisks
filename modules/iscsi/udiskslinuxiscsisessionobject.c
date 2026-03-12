@@ -289,17 +289,19 @@ udisks_linux_iscsi_session_object_get_session_id_from_sysfs_path (const gchar *s
 {
   GRegex *regex;
   GMatchInfo *match_info;
-  GError *error = NULL;
   gchar *rval = NULL;
 
   /* Search for session ID */
-  regex = g_regex_new ("session[0-9]+", 0, 0, &error);
-  g_regex_match (regex, sysfs_path, 0, &match_info);
-  if (g_match_info_matches (match_info))
-    rval = g_match_info_fetch (match_info, 0);
+  regex = g_regex_new ("session[0-9]+", 0, 0, NULL);
+  if (regex != NULL)
+    {
+      g_regex_match (regex, sysfs_path, 0, &match_info);
+      if (g_match_info_matches (match_info))
+        rval = g_match_info_fetch (match_info, 0);
 
-  g_match_info_free (match_info);
-  g_regex_unref (regex);
+      g_match_info_free (match_info);
+      g_regex_unref (regex);
+    }
 
   return rval;
 }
