@@ -735,6 +735,49 @@ append_fixedup_sd (const gchar *prefix,
   return g_string_free (str, FALSE);
 }
 
+static guint64
+calculate_nvme_ctrl_size (UDisksDaemon           *daemon,
+                          UDisksLinuxDevice      *device)
+{
+  gchar *subsysnqn_p;
+  gchar **namespaces, **n;
+  guint64 size = 0;
+
+  subsysnqn_p = g_strdup (g_udev_device_get_sysfs_attr (device->udev_device, "subsysnqn"));
+  if (subsysnqn_p)
+    g_strchomp (subsysnqn_p);
+
+  namespaces = bd_nvme_find_namespaces_for_ctrl (g_udev_device_get_sysfs_path (device->udev_device),
+                                                 subsysnqn_p, NULL, NULL, NULL);
+
+  for (n = namespaces; n && *n; n++)
+    {
+      UDisksObject *block_obj;
+      UDisksLinuxDevice *block_obj_device;
+
+      block_obj = udisks_daemon_find_block_by_sysfs_path (daemon, *n);
+      if (!block_obj)
+        continue;
+
+      block_obj_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (block_obj));
+      if (block_obj_device && block_obj_device->nvme_ns_info &&
+          block_obj_device->nvme_ns_info->current_lba_format.data_size > 0)
+        {
+          /* Namespace Size >= Namespace Capacity >= Namespace Utilization */
+          size += (guint64) block_obj_device->nvme_ns_info->nsize *
+                  ((guint64) block_obj_device->nvme_ns_info->current_lba_format.data_size +
+                   (guint64) block_obj_device->nvme_ns_info->current_lba_format.metadata_size);
+        }
+      g_clear_object (&block_obj_device);
+      g_object_unref (block_obj);
+    }
+
+  g_strfreev (namespaces);
+  g_free (subsysnqn_p);
+
+  return size;
+}
+
 /**
  * udisks_linux_drive_update:
  * @drive: A #UDisksLinuxDrive.
@@ -870,6 +913,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
           if (device->nvme_ctrl_info->serial_number && strlen (device->nvme_ctrl_info->serial_number) > 0)
             serial = device->nvme_ctrl_info->serial_number;
           size = device->nvme_ctrl_info->size_total;
+          if (size == 0)
+            size = calculate_nvme_ctrl_size (daemon, device);
           /* WWN is namespace specific, leaving unset */
         }
       else

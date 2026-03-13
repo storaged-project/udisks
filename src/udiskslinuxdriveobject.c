@@ -1380,4 +1380,41 @@ udisks_linux_drive_object_nvme_subsys_uevent (UDisksLinuxDriveObject  *object,
     udisks_linux_nvme_controller_update (UDISKS_LINUX_NVME_CONTROLLER (object->iface_nvme_ctrl), object);
   if (object->iface_nvme_fabrics != NULL)
     udisks_linux_nvme_fabrics_update (UDISKS_LINUX_NVME_FABRICS (object->iface_nvme_fabrics), object);
+
+  /* For controllers that don't report size_total, recalculate the drive size
+   * from the authoritative subsystem blocks list rather than relying on sysfs
+   * discovery which is subject to race conditions. */
+  if (object->iface_drive != NULL && subsystem_blocks != NULL)
+    {
+      UDisksLinuxDevice *ctrl_device;
+
+      ctrl_device = udisks_linux_drive_object_get_device (object, TRUE);
+      if (ctrl_device != NULL)
+        {
+          if (ctrl_device->nvme_ctrl_info != NULL &&
+              ctrl_device->nvme_ctrl_info->size_total == 0)
+            {
+              guint64 size = 0;
+              UDisksLinuxBlockObject **b;
+
+              for (b = subsystem_blocks; *b != NULL; b++)
+                {
+                  UDisksLinuxDevice *blk_device = udisks_linux_block_object_get_device (*b);
+                  if (blk_device != NULL)
+                    {
+                      if (blk_device->nvme_ns_info != NULL &&
+                          blk_device->nvme_ns_info->current_lba_format.data_size > 0)
+                        {
+                          size += (guint64) blk_device->nvme_ns_info->nsize *
+                                  ((guint64) blk_device->nvme_ns_info->current_lba_format.data_size +
+                                   (guint64) blk_device->nvme_ns_info->current_lba_format.metadata_size);
+                        }
+                      g_object_unref (blk_device);
+                    }
+                }
+              udisks_drive_set_size (UDISKS_DRIVE (object->iface_drive), size);
+            }
+          g_object_unref (ctrl_device);
+        }
+    }
 }

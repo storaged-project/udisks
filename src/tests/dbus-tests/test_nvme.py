@@ -373,7 +373,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         id = self.get_property_raw(drive_obj, '.Drive', 'Id')
         self.assertTrue(id.startswith('Linux-'))
         size = self.get_property_raw(drive_obj, '.Drive', 'Size')
-        self.assertEqual(size, 0)
+        self.assertEqual(size, self.NS_SIZE * self.NUM_NS)
 
         ctrl_id = self.get_property_raw(drive_obj, '.NVMe.Controller', 'ControllerID')
         self.assertGreater(ctrl_id, 0)
@@ -604,7 +604,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         state.assertEqual('live', timeout=10)
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # detach the second namespace
         nsid = self.get_property_raw(ns, '.NVMe.Namespace', 'NSID')
@@ -617,10 +617,14 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         state.assertEqual('live', timeout=10)
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE, timeout=60)
 
         # attach that namespace back
         disable_target_ns(self.SUBNQN, nsid, enable=True)
+        # trigger controller namespace rescan - the kernel AEN for namespace
+        # changes may not be reliably delivered with nvme-loop
+        ctrl_name = os.path.basename(ctrl_devs[0])
+        self.write_file('/sys/class/nvme/%s/rescan_controller' % ctrl_name, '1')
         self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         nsid_new = self.get_property(ns, '.NVMe.Namespace', 'NSID')
         nsid_new.assertEqual(nsid)
@@ -752,7 +756,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # count number of namespaces pointing to our controller
         namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
@@ -770,7 +774,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
         self.assertEqual(len(namespaces), 0)
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(0, timeout=60)
 
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
@@ -898,7 +902,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         transport = self.get_property(ctrl2, '.NVMe.Fabrics', 'Transport')
         transport.assertEqual('tcp')
@@ -907,7 +911,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl2, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl2, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         if self._ipv6_available:
             transport = self.get_property(ctrl3, '.NVMe.Fabrics', 'Transport')
@@ -917,7 +921,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             subnqn = self.get_property(ctrl3, '.NVMe.Controller', 'SubsystemNQN')
             subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
             ctrl_size = self.get_property(ctrl3, '.Drive', 'Size')
-            ctrl_size.assertEqual(0)
+            ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # count number of namespaces pointing to our controller
         ns_ctrl3 = ()
