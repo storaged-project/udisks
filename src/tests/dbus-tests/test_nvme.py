@@ -267,6 +267,18 @@ def disable_target_ns(subnqn, nsid, enable=False):
     with open("/sys/kernel/config/nvmet/subsystems/%s/namespaces/%d/enable" % (subnqn, nsid), "w") as f:
         f.write("1" if enable else "0")
 
+    # trigger controller namespace rescan - the kernel AEN for namespace
+    # changes may not be reliably delivered with nvme-loop
+    for ctrl_path in glob.glob("/sys/class/nvme/nvme*/"):
+        subsysnqn_file = os.path.join(ctrl_path, "subsysnqn")
+        try:
+            with open(subsysnqn_file, "r") as f:
+                if f.read().strip() == subnqn:
+                    with open(os.path.join(ctrl_path, "rescan_controller"), "w") as f:
+                        f.write("1")
+        except OSError:
+            pass
+
 
 class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
     SUBNQN = 'udisks_test_subnqn'
