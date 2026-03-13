@@ -621,6 +621,10 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # attach that namespace back
         disable_target_ns(self.SUBNQN, nsid, enable=True)
+        # trigger controller namespace rescan - the kernel AEN for namespace
+        # changes may not be reliably delivered with nvme-loop
+        ctrl_name = os.path.basename(ctrl_devs[0])
+        self.write_file('/sys/class/nvme/%s/rescan_controller' % ctrl_name, '1')
         self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         nsid_new = self.get_property(ns, '.NVMe.Namespace', 'NSID')
         nsid_new.assertEqual(nsid)
