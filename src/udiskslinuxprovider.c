@@ -1179,8 +1179,17 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
               if (object != NULL)
                 {
                   g_object_set_data_full (G_OBJECT (object), "x-vpd", g_strdup (vpd), g_free);
-                  g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                                G_DBUS_OBJECT_SKELETON (object));
+		  const gchar *object_path = g_dbus_object_get_object_path(G_DBUS_OBJECT (object));
+                  // check patch
+                  if (object_path != NULL && *object_path != '\0')
+                  {
+                    g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
+                                                                  G_DBUS_OBJECT_SKELETON (object));
+                  }
+                  else
+                  {
+                    g_warning ("object_path is null");
+                  }
                   g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), object);
                   g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), object);
 
