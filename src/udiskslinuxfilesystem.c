@@ -919,30 +919,60 @@ handle_mount_fstab (UDisksDaemon          *daemon,
   const gchar *message = NULL;
   gboolean success = FALSE;
   gboolean mount_fstab_as_root = FALSE;
+  gboolean x_udisks_auth = FALSE;
+  gboolean user_mount = FALSE;
   UDisksBaseJob *job = NULL;
   GError *error = NULL;
 
   block = udisks_object_peek_block (object);
   device = udisks_block_get_device (block);
 
-  if (!has_option (fstab_mount_options, "x-udisks-auth") &&
-      !has_option (fstab_mount_options, "user") &&
-      !has_option (fstab_mount_options, "users"))
+  x_udisks_auth = has_option (fstab_mount_options, "x-udisks-auth");
+  user_mount = x_udisks_auth ||
+               has_option (fstab_mount_options, "user") ||
+               has_option (fstab_mount_options, "users");
+
+  /* 'as-user' rules:
+   *  - when caller is root:
+   *    - if 'user'/'users' present, do not fall back to mounting as root, unless 'x-udisks-auth' is specified
+   *    - if 'user'/'users' not present, try as effective user first and allow fallback to mounting as root (implies 'x-udisks-auth')
+   *  - when caller is unprivileged:
+   *    - always require polkit auth to prevent identity spoofing
+   *    - do not fall back to mounting as root, unless 'x-udisks-auth' is specified
+   *    - if neither 'user'/'users'/'x-udisks-auth' present, failure is expected by nature (unless 'as-user=root')
+   *
+   * general fstab mounting rules:
+   *  - when caller is root, mount as root, allow anything
+   *  - when caller is unprivileged:
+   *    - if 'user'/'users' present, do not fall back to mounting as root, unless 'x-udisks-auth' is specified
+   *    - if only 'x-udisks-auth' present, mount as user and fall back to mounting as root if not successful
+   *    - if neither 'user'/'users'/'x-udisks-auth' present, require polkit auth and mount as root
+   *
+   * Further assumptions:
+   *  - when 'user'/'users' not present and mounting as unprivileged, this typically fails but it is still beneficial to try that e.g. for FUSE mounts
+   *  - assuming libblockdev mount error code mapping works reliably (for the BD_FS_ERROR_AUTH check)
+   */
+
+  if (caller_uid != effective_uid)
+    {
+      /* Always require authorization when mounting on behalf of another user,
+       * regardless of fstab mount options.
+       */
+      action_id = "org.freedesktop.udisks2.filesystem-mount-other-user";
+
+      /* When 'user'/'users' not present and the caller is root, allow
+       * fallback mounting as root.
+       */
+      if (caller_uid == 0 && !user_mount)
+        x_udisks_auth = TRUE;
+    }
+  else
+  if (!user_mount)
     {
       mount_fstab_as_root = TRUE;
+
       action_id = "org.freedesktop.udisks2.filesystem-mount";
-      /* Translators: Shown in authentication dialog when the user
-       * requests mounting a filesystem.
-       *
-       * Do not translate $(drive), it's a placeholder and
-       * will be replaced by the name of the drive/device in question
-       */
-      message = N_("Authentication is required to mount $(drive)");
-      if (caller_uid != effective_uid)
-        {
-          action_id = "org.freedesktop.udisks2.filesystem-mount-other-user";
-        }
-      else if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+      if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
         {
           if (udisks_block_get_hint_system (block))
             {
@@ -953,7 +983,17 @@ handle_mount_fstab (UDisksDaemon          *daemon,
               action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
             }
         }
+    }
 
+  if (action_id)
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * requests mounting a filesystem.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to mount $(drive)");
       if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                         object,
                                                         action_id,
@@ -962,7 +1002,6 @@ handle_mount_fstab (UDisksDaemon          *daemon,
                                                         invocation))
         return FALSE;
     }
-
 
   if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
     {
@@ -1013,7 +1052,7 @@ handle_mount_fstab (UDisksDaemon          *daemon,
 
       if (!success)
         {
-          if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH))
+          if (!mount_fstab_as_root && g_error_matches (error, BD_FS_ERROR, BD_FS_ERROR_AUTH) && x_udisks_auth)
             {
               g_clear_error (&error);
               action_id = "org.freedesktop.udisks2.filesystem-fstab";

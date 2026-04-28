@@ -2711,7 +2711,8 @@
         filesystem is mounted on behalf of the specified user instead
         of the calling one. This has usually an effect on the returned
         @mount_path and it also allows that user to unmount the
-        filesystem later. This option expects a user name, not a UID.
+        filesystem later. This option expects a user name, not a UID
+        and always performs an authorization check.
 
         If the device in question is referenced in the
         <filename>/etc/fstab</filename> file, the
@@ -2719,15 +2720,18 @@
         and the given options or filesystem type given in @options are
         ignored.
 
-        If <literal>x-udisks-auth</literal> is specified as an option
-        for the device in the <filename>/etc/fstab</filename> file,
-        then the <command>mount</command> command is run as the
-        calling user, without performing any authorization check
-        mentioned above. If this fails because of insufficient
-        permissions, an authorization check is performed (which
-        typically results in the user having to authenticate as an
-        administrator). If authorized, the <command>mount</command>
-        command is then run as root.
+        If <literal>x-udisks-auth</literal>, <literal>user</literal> or
+        <literal>users</literal> are specified as options for the
+        device in the <filename>/etc/fstab</filename> file, then the
+        <command>mount</command> command is run as the calling user
+        (or the effective user of the <parameter>as-user</parameter>
+        option respectively), without performing any authorization check
+        mentioned above. If this fails because of insufficient permissions
+        and <literal>x-udisks-auth</literal> is specified, an
+        authorization check is performed (which typically results in
+        the user having to authenticate as an administrator). If
+        authorized, the <command>mount</command> command is then run
+        as root.
 
         The filesystem should be unmounted using the
         org.freedesktop.UDisks2.Filesystem.Unmount() method.
