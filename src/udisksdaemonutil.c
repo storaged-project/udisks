@@ -857,6 +857,14 @@ udisks_daemon_util_check_authorization_sync_with_error (UDisksDaemon           *
   polkit_details_insert (details, "polkit.message", message);
   polkit_details_insert (details, "polkit.gettext_domain", "udisks2");
 
+  if (options != NULL &&
+      g_strcmp0 (action_id, "org.freedesktop.udisks2.filesystem-mount-other-user") == 0)
+    {
+      const gchar *as_user = NULL;
+      g_variant_lookup (options, "as-user", "&s", &as_user);
+      _safe_polkit_details_insert (details, "mount.as-user", as_user);
+    }
+
   /* Find drive associated with the block device, if any */
   if (object != NULL)
     {
