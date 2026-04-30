@@ -700,8 +700,8 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
           g_source_unref (idle_source);
         }
 
-        g_free (mountinfo_checksum);
-        g_free (swaps_checksum);
+      g_free (mountinfo_checksum);
+      g_free (swaps_checksum);
     }
   g_free (mountinfo_contents);
   g_free (swaps_contents);

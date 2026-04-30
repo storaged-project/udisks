@@ -58,7 +58,6 @@
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
-#include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
@@ -93,7 +92,7 @@ struct _UDisksLinuxBlock
 {
   UDisksBlockSkeleton parent_instance;
 
-  /* only allow single cryptsetup call at once */
+  /* per-device lock for cryptsetup info calls */
   GMutex encrypted_lock;
 };
 
@@ -108,6 +107,9 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlock, udisks_linux_block, UDISKS_TYPE_BLOCK
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK, block_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/* global lock for all libcryptsetup calls (libcryptsetup/libdevmapper is not thread safe) */
+static GMutex global_encrypted_lock;
 
 static void
 udisks_linux_block_init (UDisksLinuxBlock *block)
@@ -177,6 +179,9 @@ get_sysfs_attr (GUdevDevice *device,
       udisks_debug ("Failed to read sysfs attribute %s: %s", attr, error->message);
       g_clear_error (&error);
     }
+
+  if (value != NULL)
+    g_strchomp (value);
 
   g_free (filename);
   return value;
@@ -1236,25 +1241,6 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
   g_free (s);
   s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_UUID_ENC"),
                                  g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
-  if ((!s || strlen (s) == 0) && udisks_linux_block_is_bitlk (iface))
-    {
-      BDCryptoBITLKInfo *bitlk_info;
-
-      /* Attempt to retrieve bitlk uuid from the on-disk header */
-      bitlk_info = bd_crypto_bitlk_info (device_file, &error);
-      if (bitlk_info)
-        {
-          g_free (s);
-          s = g_strdup (bitlk_info->uuid);
-          bd_crypto_bitlk_info_free (bitlk_info);
-        }
-      else
-        {
-          g_warning ("Crypto bitlk container detected on %s but failed to parse the header: %s",
-                     device_file, error->message);
-          g_error_free (error);
-        }
-    }
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
@@ -1427,7 +1413,7 @@ track_parents (UDisksBlock *block, const gchar *options)
     {
       end = strchr (start, ',');
       if (end)
-        strcpy (start, end+1);
+        memmove (start, end + 1, strlen (end + 1) + 1);
       else
         *start = '\0';
     }
@@ -1666,28 +1652,49 @@ has_whitespace (const gchar *s)
   return FALSE;
 }
 
-static gchar *
-make_block_luksname (UDisksBlock *block, GError **error)
+/**
+ * udisks_linux_block_make_dm_name:
+ * @block: A #UDisksBlock.
+ *
+ * Calculates the device-mapper name to use for a crypto device
+ * based on block label, UUID and type. Uses label if available,
+ * otherwise falls back to a type-prefixed UUID, or type-prefixed
+ * device number as a last resort.
+ *
+ * Returns: A newly allocated string with the dm name. Free with g_free().
+ */
+gchar *
+udisks_linux_block_make_dm_name (UDisksBlock *block)
 {
-  BDCryptoLUKSInfo *info = NULL;
-  gchar *ret = NULL;
+  const gchar *label;
+  const gchar *uuid;
+  const gchar *prefix;
 
-  udisks_linux_block_encrypted_lock (block);
-  info = bd_crypto_luks_info (udisks_block_get_device (block), error);
-  udisks_linux_block_encrypted_unlock (block);
-
-  if (info)
+  label = udisks_block_get_id_label (block);
+  if (label && g_strcmp0 (label, "") != 0)
     {
-      if (info->label && g_strcmp0 (info->label, "") != 0)
-        ret = g_strdup (info->label);
-      else
-        ret = g_strdup_printf ("luks-%s", info->uuid);
-      bd_crypto_luks_info_free (info);
+      gchar *safe_name;
 
-      return ret;
+      if (strlen (label) >= 128)
+        safe_name = g_strndup (label, 127);
+      else
+        safe_name = g_strdup (label);
+
+      return g_strdelimit (safe_name, "/ ", '_');
     }
+
+  if (udisks_linux_block_is_luks (block))
+    prefix = "luks";
+  else if (udisks_linux_block_is_bitlk (block))
+    prefix = "bitlk";
   else
-    return NULL;
+    prefix = "tcrypt";
+
+  uuid = udisks_block_get_id_uuid (block);
+  if (uuid && g_strcmp0 (uuid, "") != 0)
+    return g_strdup_printf ("%s-%s", prefix, uuid);
+
+  return g_strdup_printf ("%s-%" G_GUINT64_FORMAT, prefix, udisks_block_get_device_number (block));
 }
 
 static gboolean
@@ -2070,7 +2077,8 @@ handle_add_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2149,7 +2157,8 @@ handle_remove_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (details);
+  if (details != NULL)
+    g_variant_unref (details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2241,8 +2250,10 @@ handle_update_configuration_item (UDisksBlock           *_block,
     }
 
  out:
-  g_variant_unref (new_details);
-  g_variant_unref (old_details);
+  if (new_details != NULL)
+    g_variant_unref (new_details);
+  if (old_details != NULL)
+    g_variant_unref (old_details);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -2812,15 +2823,64 @@ udisks_linux_block_is_unknown_crypto (UDisksBlock *block)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_block_encrypted_lock:
+ * @block: A #UDisksBlock.
+ *
+ * Acquires both the global cryptsetup lock and the per-device lock.
+ * Use this for active operations (unlock, lock, resize, format, etc.)
+ * that modify device state.
+ *
+ * Must be paired with udisks_linux_block_encrypted_unlock().
+ */
 void
 udisks_linux_block_encrypted_lock (UDisksBlock *block)
+{
+  UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
+  g_mutex_lock (&global_encrypted_lock);
+  g_mutex_lock (&block_iface->encrypted_lock);
+}
+
+/**
+ * udisks_linux_block_encrypted_unlock:
+ * @block: A #UDisksBlock.
+ *
+ * Releases both the per-device lock and the global cryptsetup lock.
+ * Must be paired with udisks_linux_block_encrypted_lock().
+ */
+void
+udisks_linux_block_encrypted_unlock (UDisksBlock *block)
+{
+  UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
+  g_mutex_unlock (&block_iface->encrypted_lock);
+  g_mutex_unlock (&global_encrypted_lock);
+}
+
+/**
+ * udisks_linux_block_encrypted_info_lock:
+ * @block: A #UDisksBlock.
+ *
+ * Acquires only the per-device lock. Use this for info operations
+ * that read device metadata without modifying state.
+ *
+ * Must be paired with udisks_linux_block_encrypted_info_unlock().
+ */
+void
+udisks_linux_block_encrypted_info_lock (UDisksBlock *block)
 {
   UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
   g_mutex_lock (&block_iface->encrypted_lock);
 }
 
+/**
+ * udisks_linux_block_encrypted_info_unlock:
+ * @block: A #UDisksBlock.
+ *
+ * Releases the per-device lock.
+ * Must be paired with udisks_linux_block_encrypted_info_lock().
+ */
 void
-udisks_linux_block_encrypted_unlock (UDisksBlock *block)
+udisks_linux_block_encrypted_info_unlock (UDisksBlock *block)
 {
   UDisksLinuxBlock *block_iface = UDISKS_LINUX_BLOCK (block);
   g_mutex_unlock (&block_iface->encrypted_lock);
@@ -3218,12 +3278,7 @@ format_create_luks (UDisksDaemon  *daemon,
 
   /* Open it */
   crypto_job_data.read_only = FALSE;
-  crypto_job_data.map_name = make_block_luksname (block, error);
-  if (!crypto_job_data.map_name)
-    {
-      g_prefix_error (error, "Failed to get LUKS UUID: ");
-      return FALSE;
-    }
+  crypto_job_data.map_name = udisks_linux_block_make_dm_name (block);
 
   udisks_linux_block_encrypted_lock (block);
   if (!udisks_daemon_launch_threaded_job_sync (daemon,
@@ -4244,6 +4299,7 @@ handle_restore_encrypted_header (UDisksBlock           *encrypted,
     UDisksBlock *block;
     UDisksDaemon *daemon;
     UDisksState *state = NULL;
+    const gchar *action_id;
     uid_t caller_uid;
     GError *error = NULL;
     UDisksBaseJob *job = NULL;
@@ -4267,6 +4323,33 @@ handle_restore_encrypted_header (UDisksBlock           *encrypted,
         g_dbus_method_invocation_return_gerror (invocation, error);
         goto out;
       }
+
+    action_id = "org.freedesktop.udisks2.modify-device";
+    if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+      {
+        if (udisks_block_get_hint_system (block))
+          {
+            action_id = "org.freedesktop.udisks2.modify-device-system";
+          }
+        else if (!udisks_daemon_util_on_user_seat (daemon, object, caller_uid))
+          {
+            action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+          }
+      }
+
+    if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                      object,
+                                                      action_id,
+                                                      options,
+                                                      /* Translators: Shown in authentication dialog when restoring
+                                                       * a LUKS header on a device.
+                                                       *
+                                                       * Do not translate $(device.name), it's a placeholder and will
+                                                       * be replaced by the name of the drive/device in question
+                                                       */
+                                                      N_("Authentication is required to restore the encrypted header on $(device.name)"),
+                                                      invocation))
+      goto out;
 
     job = udisks_daemon_launch_simple_job (daemon,
                                            UDISKS_OBJECT (object),

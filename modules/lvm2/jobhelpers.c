@@ -367,6 +367,10 @@ void lv_list_free (BDLVMLVdata **lv_list) {
 }
 
 void vgs_pvs_data_free (VGsPVsData *data) {
+  if (!data)
+    /* nothing to do */
+    return;
+
   vg_list_free (data->vgs);
   pv_list_free (data->pvs);
   g_free (data);

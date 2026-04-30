@@ -94,7 +94,7 @@ recursive_chown (const gchar *path,
     }
   closedir (dir);
 
-  /* recurse into parents */
+  /* recurse into children */
   for (l = list; l; l = g_slist_next (l))
     {
       gchar *newpath;

@@ -413,7 +413,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
   else
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Don't know how to create partitions this partition table of type `%s'",
+                                             "Don't know how to create partitions on this partition table of type `%s'",
                                              table_type);
       goto out;
     }
@@ -433,10 +433,10 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
     }
 
   /* Users might want to specify logical partitions start and size using size of
-   * of the extended partition. If this happens we need to shift start (offset)
+   * the extended partition. If this happens we need to shift start (offset)
    * of the logical partition.
    * XXX: We really shouldn't allow creation of overlapping partitions and
-   *      and just automatically fix this. But udisks currently doesn't have
+   *      just automatically fix this. But udisks currently doesn't have
    *      functions to get free regions on the disks so this is a somewhat valid
    *      use case. But we should definitely provide some functionality to get
    *      right "numbers" and stop doing this.
@@ -463,6 +463,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
                                                  "Requested start for the new partition %"G_GUINT64_FORMAT" "
                                                  "overlaps with existing partition %s.",
                                                   offset, overlapping_part->path);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
           goto out;
         }
     }
@@ -496,7 +497,7 @@ udisks_linux_partition_table_handle_create_partition (UDisksPartitionTable   *ta
               goto out;
             }
         }
-      else if (partition_uuid)
+      if (partition_uuid)
         {
           if (!bd_part_set_part_uuid (device_name, part_spec->path, partition_uuid, &error))
             {
@@ -608,8 +609,11 @@ flock_block_dev (UDisksPartitionTable *iface)
   UDisksBlock *block = object? udisks_object_peek_block (object) : NULL;
   int fd = block? open (udisks_block_get_device (block), O_RDONLY) : -1;
 
-  if (fd >= 0)
-    flock (fd, LOCK_SH | LOCK_NB);
+  if (fd >= 0 && flock (fd, LOCK_SH | LOCK_NB) != 0)
+    {
+      close (fd);
+      fd = -1;
+    }
 
   g_clear_object (&object);
   return fd;

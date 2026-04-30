@@ -47,10 +47,7 @@ class UdisksLSMTestCase(udiskstestcase.UdisksTestCase):
         try:
             # back the original config file up if it exists
             cls.lsm_module_conf_contents = cls.read_file(cls.lsm_module_conf_path)
-        except IOError:
-            # python2 error
-            pass
-        except FileNotFoundError:
+        except OSError:
             # no existing udisks2_lsm.conf, simply remove the file once finished
             pass
 

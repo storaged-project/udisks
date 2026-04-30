@@ -353,12 +353,12 @@ udisks_linux_mdraid_object_get_device (UDisksLinuxMDRaidObject   *object)
 typedef gboolean (*HasInterfaceFunc)     (UDisksLinuxMDRaidObject *object);
 typedef void     (*ConnectInterfaceFunc) (UDisksLinuxMDRaidObject *object);
 typedef gboolean (*UpdateInterfaceFunc)  (UDisksLinuxMDRaidObject *object,
-                                          const gchar             *uevent_action,
+                                          UDisksUeventAction       uevent_action,
                                           GDBusInterface          *interface);
 
 static gboolean
 update_iface (UDisksLinuxMDRaidObject  *object,
-              const gchar              *uevent_action,
+              UDisksUeventAction        uevent_action,
               HasInterfaceFunc          has_func,
               ConnectInterfaceFunc      connect_func,
               UpdateInterfaceFunc       update_func,
@@ -429,7 +429,7 @@ mdraid_connect (UDisksLinuxMDRaidObject *object)
 
 static gboolean
 mdraid_update (UDisksLinuxMDRaidObject  *object,
-               const gchar              *uevent_action,
+               UDisksUeventAction        uevent_action,
                GDBusInterface           *_iface)
 {
   return udisks_linux_mdraid_update (UDISKS_LINUX_MDRAID (object->iface_mdraid), object);
@@ -482,7 +482,7 @@ watch_attr (UDisksLinuxDevice *device,
       g_source_set_callback (ret, callback, user_data, NULL);
       source_id = g_source_attach (ret, g_main_context_get_thread_default ());
       g_source_unref (ret);
-      g_io_channel_unref (channel); /* the keeps a reference to this object */
+      g_io_channel_unref (channel); /* this keeps a reference to the object */
       if (source_id == 0)
         {
           /* something bad happened while attaching the source */
@@ -534,7 +534,7 @@ attr_changed (GIOChannel   *channel,
 
   /* synthesize uevent */
   if (object->raid_device != NULL)
-    udisks_linux_mdraid_object_uevent (object, "change", object->raid_device, FALSE);
+    udisks_linux_mdraid_object_uevent (object, UDISKS_UEVENT_ACTION_CHANGE, object->raid_device, FALSE);
 
  out:
   if (bail)
@@ -545,7 +545,7 @@ attr_changed (GIOChannel   *channel,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* The md(4) driver does not use the usual uevent 'change' mechanism
- * for notification - instead it excepts user-space to select(2)-ish
+ * for notification - instead it expects user-space to select(2)-ish
  * on a fd for the sysfs attribute. Annoying. See
  *
  *  https://www.kernel.org/doc/Documentation/admin-guide/md.rst
@@ -615,15 +615,15 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
 /**
  * udisks_linux_mdraid_object_uevent:
  * @object: A #UDisksLinuxMDRaidObject.
- * @action: Uevent action or %NULL
+ * @action: uevent action
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  * @is_member: %TRUE if @device is a member, %FALSE if it's the raid device.
  *
- * Updates all information on interfaces on @mdraid.
+ * Updates all information on interfaces on @object.
  */
 void
 udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
-                                   const gchar             *action,
+                                   UDisksUeventAction       action,
                                    UDisksLinuxDevice       *device,
                                    gboolean                 is_member)
 {
@@ -643,7 +643,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
           device_sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
         }
 
-      if (g_strcmp0 (action, "remove") == 0)
+      if (action == UDISKS_UEVENT_ACTION_REMOVE)
         {
           if (link != NULL)
             {
@@ -682,14 +682,14 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
       if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
         goto out;
 
-      if (g_strcmp0 (action, "remove") == 0)
+      if (action == UDISKS_UEVENT_ACTION_REMOVE)
         {
           if (object->raid_device != NULL)
             if (g_strcmp0 (g_udev_device_get_sysfs_path (object->raid_device->udev_device),
                            g_udev_device_get_sysfs_path (device->udev_device)) == 0)
               {
                 g_clear_object (&object->raid_device);
-                raid_device_removed (object, object->raid_device);
+                raid_device_removed (object, NULL);
               }
             else
               {
@@ -724,7 +724,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                 }
               else if (object->sync_action_source == NULL && object->degraded_source == NULL)
                 {
-                  /* we don't have file watchers, adding them may failed because
+                  /* we don't have file watchers, adding them may have failed because
                      we were unable to get raid level, let's try again */
                   raid_device_added (object, object->raid_device);
                 }

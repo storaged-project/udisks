@@ -1339,10 +1339,17 @@ handle_command_unlock_lock (gint        *argc,
 
       cleartext_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
                                                                           (cleartext_object_path)));
-      g_print ("Unlocked %s as %s.\n",
-               udisks_block_get_device (block),
-               udisks_block_get_device (udisks_object_get_block (cleartext_object)));
-      g_object_unref (cleartext_object);
+      if (cleartext_object != NULL)
+        {
+          g_print ("Unlocked %s as %s.\n",
+                   udisks_block_get_device (block),
+                   udisks_block_get_device (udisks_object_peek_block (cleartext_object)));
+          g_object_unref (cleartext_object);
+        }
+      else
+        {
+          g_print ("Unlocked %s.\n", udisks_block_get_device (block));
+        }
       g_free (cleartext_object_path);
     }
   else
@@ -1722,7 +1729,7 @@ handle_command_loop (gint        *argc,
                                                                           (resulting_object_path)));
       g_print ("Mapped file %s as %s.\n",
                opt_loop_file,
-               udisks_block_get_device (udisks_object_get_block (resulting_object)));
+               udisks_block_get_device (udisks_object_peek_block (resulting_object)));
       g_object_unref (resulting_object);
       g_free (resulting_object_path);
     }
@@ -2318,7 +2325,7 @@ handle_command_power_off (gint        *argc,
   proxy = udisks_object_peek_drive (object);
   if (!proxy)
     {
-      g_printerr ("Error powering off drive: dbus interface not supported");
+      g_printerr ("Error powering off drive: dbus interface not supported\n");
       g_object_unref (object);
       goto out;
     }
@@ -2792,8 +2799,9 @@ handle_command_info (gint        *argc,
           if (drive != NULL)
             {
               const gchar *base;
-              base = g_strrstr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), "/") + 1;
-              g_print ("%s \n", base);
+              base = strrchr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), '/');
+              if (base != NULL)
+                g_print ("%s \n", base + 1);
             }
         }
       g_list_free_full (objects, g_object_unref);
@@ -3116,6 +3124,7 @@ monitor_on_interface_proxy_properties_changed (GDBusObjectManagerClient *manager
       if (max_property_name_len < property_name_len)
         max_property_name_len = property_name_len;
     }
+  g_variant_iter_free (iter);
 
   value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
   if (value_column < 24)
@@ -3145,6 +3154,7 @@ monitor_on_interface_proxy_properties_changed (GDBusObjectManagerClient *manager
       g_free (value_str);
       g_variant_unref (value);
     }
+  g_variant_iter_free (iter);
  out:
   ;
 }
@@ -3536,7 +3546,6 @@ static void
 modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command)
 {
   gchar *s;
-  gchar *program_name;
 
   /* TODO:
    *  1. get a g_set_prgname() ?; or
@@ -3546,10 +3555,8 @@ modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command)
   g_assert (g_strcmp0 ((*argv)[1], command) == 0);
   remove_arg (1, argc, argv);
 
-  program_name = g_path_get_basename ((*argv)[0]);
   s = g_strdup_printf ("%s %s", (*argv)[0], command);
   (*argv)[0] = s;
-  g_free (program_name);
 }
 
 static gchar *

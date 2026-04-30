@@ -307,7 +307,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         manager = self.get_object('/Manager')
         manager.CreateVolume([dev.obj_path],
-                             'test_snapshot', 'single', 'single',
+                             'test_resize', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
 
@@ -352,7 +352,7 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
 
         manager = self.get_object('/Manager')
         manager.CreateVolume([dev.obj_path],
-                             'test_snapshot', 'single', 'single',
+                             'test_subvolume_mount', 'single', 'single',
                              self.no_options,
                              dbus_interface=self.iface_prefix + '.Manager.BTRFS')
 

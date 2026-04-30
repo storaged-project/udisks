@@ -41,6 +41,7 @@ typedef struct {
   gboolean hidden;
   gboolean system;
   gboolean read_only;
+  gboolean discard;
   const gchar *type;
   const gchar *pbkdf;
   guint32 memory;

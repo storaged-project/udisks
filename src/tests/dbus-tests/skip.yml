@@ -29,3 +29,8 @@
     - distro: ["centos", "enterprise_linux"]
       version: "7"
       reason: "SCSI debug bug causing kernel panic on CentOS/RHEL 7"
+
+- test: test_80_filesystem.NTFS3TestCase.test_mount_auto_configurable_mount_options
+  skip_on:
+    - distro: "fedora"
+      reason: "udev now rejects properties with colon which we use for the mount options configuration"

@@ -17,6 +17,10 @@ import traceback
 import yaml
 import gzip
 from datetime import datetime
+from collections import namedtuple
+
+
+SysInfo = namedtuple("SysInfo", ["distro", "version", "arch"])
 
 
 SKIP_CONFIG = 'skip.yml'
@@ -28,10 +32,13 @@ def find_daemon(projdir, system):
             daemon_bin = 'udisksd'
         else:
             print("Cannot find the daemon binary", file=sys.stderr)
-            sys.exit(1)
+            return None
     else:
         if os.path.exists('/usr/libexec/udisks2/udisksd'):
             daemon_bin = 'udisksd'
+        else:
+            print("Cannot find the system daemon binary", file=sys.stderr)
+            return None
 
     return daemon_bin
 
@@ -180,7 +187,7 @@ def _get_test_tags(test):
     return tags
 
 
-def _should_skip(distro=None, version=None, arch=None, reason=None):
+def _should_skip(sys_info, distro=None, version=None, arch=None, reason=None):
     # all these can be lists or a single value, so covert everything to list
     if distro is not None and type(distro) is not list:
         distro = [distro]
@@ -189,10 +196,9 @@ def _should_skip(distro=None, version=None, arch=None, reason=None):
     if arch is not None and type(arch) is not list:
         arch = [arch]
 
-    # DISTRO, VERSION and ARCH variables are set in main, we don't need to
-    # call hostnamectl etc. for every test run
-    if (distro is None or DISTRO in distro) and (version is None or VERSION in version) and \
-       (arch is None or ARCH in arch):
+    if (distro is None or sys_info.distro in distro) and \
+        (version is None or sys_info.version in version) and \
+       (arch is None or sys_info.arch in arch):
         return True
 
 
@@ -207,18 +213,22 @@ def _parse_skip_config(config):
         data = f.read()
     parsed = yaml.load(data, Loader=yaml.SafeLoader)
 
+    # get distro and arch here so we don't have to do this for every test
+    distro, version = udiskstestcase.get_version()
+    sys_info = SysInfo(distro=distro, version=version, arch=os.uname()[-1])
+
     for entry in parsed:
         for skip in entry["skip_on"]:
-            if _should_skip(**skip):
+            if _should_skip(sys_info, **skip):
                 skipped_tests[entry["test"]] = skip["reason"]
 
     return skipped_tests
 
 
 def _split_test_id(test_id):
-    # test.id() looks like 'crypto_test.CryptoTestResize.test_luks2_resize'
+    # test_id looks like 'crypto_test.CryptoTestResize.test_luks2_resize'
     # and we want to print 'test_luks2_resize (crypto_test.CryptoTestResize)'
-    test_desc = test.id().split(".")
+    test_desc = test_id.split(".")
     test_name = test_desc[-1]
     test_module = ".".join(test_desc[:-1])
 
@@ -309,7 +319,7 @@ def parse_args():
     return args
 
 
-if __name__ == '__main__':
+def main():
     tmpdir = None
     daemon = None
     suite = unittest.TestSuite()
@@ -334,6 +344,8 @@ if __name__ == '__main__':
     if not args.system:
         # find which binary we're about to test: this also affects the D-Bus interface and object paths
         daemon_bin = find_daemon(projdir, args.system)
+        if not daemon_bin:
+            return False
 
         tmpdir = tempfile.mkdtemp(prefix='udisks-tst-')
         atexit.register(shutil.rmtree, tmpdir)
@@ -380,10 +392,6 @@ if __name__ == '__main__':
     # get sets of include/exclude tags as tags not strings from arguments
     include_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.include_tags)
     exclude_tags = set(udiskstestcase.TestTags.get_tag_by_value(t) for t in args.exclude_tags)
-
-    # get distro and arch here so we don't have to do this for every test
-    DISTRO, VERSION = udiskstestcase.get_version()
-    ARCH = os.uname()[-1]
 
     # get list of tests to skip from the config file
     skipping = _parse_skip_config(os.path.join(testdir, SKIP_CONFIG))
@@ -453,7 +461,11 @@ if __name__ == '__main__':
             shutil.copyfileobj(f_in, f_out)
     os.unlink(udiskstestcase.FLIGHT_RECORD_FILE)
 
-    if result.wasSuccessful():
+    return result.wasSuccessful()
+
+
+if __name__ == '__main__':
+    if main():
         sys.exit(0)
     else:
         sys.exit(1)

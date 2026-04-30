@@ -389,18 +389,26 @@ update_progress_for_device (UDisksLinuxVolumeGroupObject *object,
           if (block)
             {
               const gchar *const *symlinks;
+              gboolean match = FALSE;
               int j;
               if (g_strcmp0 (udisks_block_get_device (block), dev) == 0)
-                goto found;
-              symlinks = udisks_block_get_symlinks (block);
-              for (j = 0; symlinks[j]; j++)
-                if (g_strcmp0 (symlinks[j], dev) == 0)
-                  goto found;
-
-              continue;
-            found:
-              udisks_job_set_progress (job, progress);
-              udisks_job_set_progress_valid (job, TRUE);
+                match = TRUE;
+              if (!match)
+                {
+                  symlinks = udisks_block_get_symlinks (block);
+                  for (j = 0; symlinks[j]; j++)
+                    if (g_strcmp0 (symlinks[j], dev) == 0)
+                      {
+                        match = TRUE;
+                        break;
+                      }
+                }
+              if (match)
+                {
+                  udisks_job_set_progress (job, progress);
+                  udisks_job_set_progress_valid (job, TRUE);
+                }
+              g_object_unref (block);
             }
         }
 
@@ -561,6 +569,7 @@ update_vg (GObject      *source_obj,
            GAsyncResult *result,
            gpointer      user_data)
 {
+  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
   UDisksDaemon *daemon;
   GDBusObjectManagerServer *manager;
   GHashTableIter volume_iter;
@@ -569,11 +578,9 @@ update_vg (GObject      *source_obj,
   GHashTable *new_pvs;
   GList *objects, *l;
   gboolean needs_polling = FALSE;
-  GError *error = NULL;
-
-  UDisksLinuxVolumeGroupObject *object = UDISKS_LINUX_VOLUME_GROUP_OBJECT (source_obj);
   GTask *task = G_TASK (result);
   VGUpdateData *data = user_data;
+  GError *error = NULL;
   BDLVMLVdata **lvs = g_task_propagate_pointer (task, &error);
   BDLVMVGdata *vg_info = data->vg_info;
   GSList *vg_pvs = data->vg_pvs;
@@ -581,6 +588,10 @@ update_vg (GObject      *source_obj,
   if (data->epoch != object->update_epoch)
     {
       lv_list_free (lvs);
+      g_slist_free_full (vg_pvs, (GDestroyNotify) bd_lvm_pvdata_free);
+      bd_lvm_vgdata_free (vg_info);
+      g_object_unref (object);
+      g_free (data);
       return;
     }
 
@@ -807,6 +818,9 @@ poll_vg_update (GObject      *source_obj,
       volume = g_hash_table_lookup (object->logical_volumes, lv_name);
       if (volume)
         udisks_linux_logical_volume_object_update (volume, lv_info, meta_lv_info, lvs, vdo_info, &needs_polling);
+
+      if (vdo_info)
+        bd_lvm_vdopooldata_free (vdo_info);
     }
 
   lv_list_free (lvs);

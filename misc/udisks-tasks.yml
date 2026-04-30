@@ -43,6 +43,7 @@
       - dosfstools
       - e2fsprogs
       - f2fs-tools
+      - exfatprogs
       - kernel-modules-extra
       - nilfs-utils
       - udftools

@@ -389,7 +389,7 @@ udisks_linux_drive_lsm_local_iface_init (UDisksDriveLsmLocalIface *iface)
 
 static gboolean
 udisks_linux_drive_lsm_local_module_object_process_uevent (UDisksModuleObject *module_object,
-                                                           const gchar        *action,
+                                                           UDisksUeventAction  action,
                                                            UDisksLinuxDevice  *device,
                                                            gboolean           *keep)
 {

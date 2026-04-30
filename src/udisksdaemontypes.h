@@ -214,6 +214,29 @@ typedef enum
   UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE
 } UDisksAtaCommandProtocol;
 
+/**
+ * UDisksUeventAction:
+ * @UDISKS_UEVENT_ACTION_ADD: uevent action "add"
+ * @UDISKS_UEVENT_ACTION_CHANGE: uevent action "change"
+ * @UDISKS_UEVENT_ACTION_REMOVE: uevent action "remove"
+ * @UDISKS_UEVENT_ACTION_RECONFIGURE: uevent action "reconfigure"
+ * @UDISKS_UEVENT_ACTION_BIND: uevent action "bind"
+ * @UDISKS_UEVENT_ACTION_UNBIND: uevent action "unbind"
+ * @UDISKS_UEVENT_ACTION_OTHER: other unspecified uevent action
+ *
+ * The action of the uevent e.g. "add", "remove", "change", etc.
+ */
+typedef enum
+{
+  UDISKS_UEVENT_ACTION_ADD,
+  UDISKS_UEVENT_ACTION_CHANGE,
+  UDISKS_UEVENT_ACTION_REMOVE,
+  UDISKS_UEVENT_ACTION_RECONFIGURE,
+  UDISKS_UEVENT_ACTION_BIND,
+  UDISKS_UEVENT_ACTION_UNBIND,
+  UDISKS_UEVENT_ACTION_OTHER
+} UDisksUeventAction;
+
 struct _UDisksLinuxDevice;
 typedef struct _UDisksLinuxDevice UDisksLinuxDevice;
 
@@ -254,7 +277,7 @@ typedef void     (*UDisksObjectConnectInterfaceFunc) (UDisksObject   *object);
 /**
  * UDisksObjectUpdateInterfaceFunc:
  * @object: A #UDisksObject.
- * @uevent_action: An uevent action string.
+ * @uevent_action: A #UDisksUeventAction.
  * @interface: Existing #GDBusInterface exported on the @object.
  *
  * Function prototype that is used on existing @interface on the @object to process
@@ -264,8 +287,8 @@ typedef void     (*UDisksObjectConnectInterfaceFunc) (UDisksObject   *object);
  *
  * Returns: %TRUE if configuration (properties) on the interface have changed, %FALSE otherwise.
  */
-typedef gboolean (*UDisksObjectUpdateInterfaceFunc)  (UDisksObject   *object,
-                                                      const gchar    *uevent_action,
-                                                      GDBusInterface *interface);
+typedef gboolean (*UDisksObjectUpdateInterfaceFunc)  (UDisksObject       *object,
+                                                      UDisksUeventAction  uevent_action,
+                                                      GDBusInterface     *interface);
 
 #endif /* __UDISKS_DAEMON_TYPES_H__ */

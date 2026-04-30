@@ -343,7 +343,7 @@ handle_set_autoclear (UDisksLoop             *loop,
       goto out;
     }
 
-  /* specutatively update our local value so a change signal is emitted before we return... */
+  /* speculatively update our local value so a change signal is emitted before we return... */
   udisks_loop_set_autoclear (UDISKS_LOOP (loop), arg_value);
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (loop));
 

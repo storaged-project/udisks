@@ -27,6 +27,7 @@
 #include <grp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <glib/gstdio.h>
 
@@ -842,11 +843,10 @@ is_uid_in_gid (uid_t uid,
   GError *error = NULL;
   gid_t primary_gid = -1;
   gchar *user_name = NULL;
-  static gid_t supplementary_groups[128];
-  int num_supplementary_groups = 128;
+  gid_t *supplementary_groups = NULL;
+  int num_supplementary_groups = 0;
   int n;
-
-  /* TODO: use some #define instead of hardcoding some random number like 128 */
+  gboolean ret = FALSE;
 
   if (! udisks_daemon_util_get_user_info (uid, &primary_gid, &user_name, &error))
     {
@@ -860,21 +860,31 @@ is_uid_in_gid (uid_t uid,
       return TRUE;
     }
 
-  if (getgrouplist (user_name, primary_gid, supplementary_groups, &num_supplementary_groups) < 0)
+  num_supplementary_groups = 0;
+  getgrouplist (user_name, primary_gid, NULL, &num_supplementary_groups);
+  if (num_supplementary_groups > 0)
     {
-      udisks_warning ("Error getting supplementary groups for uid %u: %m", uid);
-      g_free (user_name);
-      return FALSE;
+      supplementary_groups = g_new (gid_t, num_supplementary_groups);
+      if (getgrouplist (user_name, primary_gid, supplementary_groups, &num_supplementary_groups) < 0)
+        {
+          udisks_warning ("Error getting supplementary groups for uid %u: %m", uid);
+          goto out;
+        }
+
+      for (n = 0; n < num_supplementary_groups; n++)
+        {
+          if (supplementary_groups[n] == gid)
+            {
+              ret = TRUE;
+              goto out;
+            }
+        }
     }
+
+ out:
+  g_free (supplementary_groups);
   g_free (user_name);
-
-  for (n = 0; n < num_supplementary_groups; n++)
-    {
-      if (supplementary_groups[n] == gid)
-        return TRUE;
-    }
-
-  return FALSE;
+  return ret;
 }
 
 /* extracts option names from @allow that carry the @arg string as an argument */
@@ -893,7 +903,7 @@ extract_opts_with_arg (gchar **allow,
       gchar *eq;
 
       eq = g_strrstr (*allow, arg);
-      if (eq && eq != *allow && *(eq - 1) == '=')
+      if (eq && eq != *allow && *(eq - 1) == '=' && *(eq + strlen (arg)) == '\0')
         g_ptr_array_add (opts, g_strndup (*allow, eq - *allow - 1));
     }
   g_ptr_array_add (opts, NULL);
@@ -912,8 +922,8 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                          uid_t                 caller_uid)
 {
   gchar *endp;
-  uid_t uid;
-  gid_t gid;
+  guint64 uid64;
+  guint64 gid64;
   gchar *s;
 
   /* match the exact option=value string within allowed options */
@@ -941,11 +951,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                           option);
           return FALSE;
         }
-      uid = strtol (value, &endp, 10);
-      if (*endp != '\0')
-        /* malformed value string */
+      errno = 0;
+      uid64 = g_ascii_strtoull (value, &endp, 10);
+      if (*endp != '\0' || errno == ERANGE || uid64 != (uid_t) uid64)
         return FALSE;
-      return (uid == caller_uid);
+      return ((uid_t) uid64 == caller_uid);
     }
 
   /* .. ditto for gid
@@ -958,11 +968,11 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                           option);
           return FALSE;
         }
-      gid = strtol (value, &endp, 10);
-      if (*endp != '\0')
-        /* malformed value string */
+      errno = 0;
+      gid64 = g_ascii_strtoull (value, &endp, 10);
+      if (*endp != '\0' || errno == ERANGE || gid64 != (gid_t) gid64)
         return FALSE;
-      return is_uid_in_gid (caller_uid, gid);
+      return is_uid_in_gid (caller_uid, (gid_t) gid64);
     }
 
   /* the above UID/GID checks also assure that none of the options
@@ -1042,16 +1052,23 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                   /* set different 'mode' and 'dmode' options for file systems mounted at shared
                      location (otherwise they cannot be used by anybody else so mounting them at
                      a shared location doesn't make much sense */
-                  gchar *shared_mode = g_strdup (value);
+                  if (strlen (value) > 3)
+                    {
+                      gchar *shared_mode = g_strdup (value);
 
-                  /* give group and others the same permissions as to the owner
-                     without the 'write' permission, but at least 'read'
-                     (HINT: keep in mind that chars are ints in C and that
-                     digits are ordered naturally in the ASCII table) */
-                  shared_mode[2] = MAX(shared_mode[1] - 2, '4');
-                  shared_mode[3] = MAX(shared_mode[1] - 2, '4');
-                  g_variant_builder_add (&builder, "{ss}", option_name, shared_mode);
-                  g_free (shared_mode);
+                      /* give group and others the same permissions as to the owner
+                         without the 'write' permission, but at least 'read'
+                         (HINT: keep in mind that chars are ints in C and that
+                         digits are ordered naturally in the ASCII table) */
+                      shared_mode[2] = MAX (shared_mode[1] - 2, '4');
+                      shared_mode[3] = MAX (shared_mode[1] - 2, '4');
+                      g_variant_builder_add (&builder, "{ss}", option_name, shared_mode);
+                      g_free (shared_mode);
+                    }
+                  else
+                    {
+                      udisks_warning ("Ignoring malformed mount option '%s=%s'", option_name, value);
+                    }
                 }
               else if (shared_fs && g_str_equal (option_name, "dmode"))
                 {
@@ -1076,8 +1093,8 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
                         "&s", &option_string))
     {
       gchar **split_option_string;
-      split_option_string = g_strsplit (option_string, ",", -1);
-      for (n = 0; split_option_string[n] != NULL; n++)
+      split_option_string = parse_mount_options_string (option_string, FALSE);
+      for (n = 0; split_option_string != NULL && split_option_string[n] != NULL; n++)
         {
           gchar *option = split_option_string[n];
           const gchar *eq = strchr (option, '=');
@@ -1093,10 +1110,8 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
             }
           else
             g_variant_builder_add (&builder, "{ss}", option, VARIANT_NULL_STRING);
-
-          g_free (option);
         }
-      g_free (split_option_string);
+      g_strfreev (split_option_string);
     }
 
   return g_variant_builder_end (&builder);
@@ -1148,8 +1163,9 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
       /* GVariant doesn't handle NULL strings gracefully */
       if (g_str_equal (value, VARIANT_NULL_STRING))
         value = NULL;
-      /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
-      if (strstr (key, ",") != NULL || (value && strstr (value, ",") != NULL))
+      /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option
+       * or injecting newlines/tabs that could affect /proc/mounts parsing */
+      if (strpbrk (key, ",\n\t") != NULL || (value && strpbrk (value, ",\n\t") != NULL))
         {
           g_set_error (error,
                        UDISKS_ERROR,

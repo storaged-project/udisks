@@ -822,12 +822,18 @@ compare_blocks_by_device (gconstpointer a,
 {
   UDisksBlock *block_a = udisks_object_get_block (UDISKS_OBJECT (a));
   UDisksBlock *block_b = udisks_object_get_block (UDISKS_OBJECT (b));
+  int ret;
 
   g_assert (block_a != NULL);
   g_assert (block_b != NULL);
 
-  return g_strcmp0 (udisks_block_get_device (block_a),
-                    udisks_block_get_device (block_b));
+  ret = g_strcmp0 (udisks_block_get_device (block_a),
+                   udisks_block_get_device (block_b));
+
+  g_clear_object (&block_a);
+  g_clear_object (&block_b);
+
+  return ret;
 }
 
 static GList *
@@ -943,7 +949,10 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_drive (block));
   if (object != NULL)
-    ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
@@ -974,7 +983,10 @@ udisks_client_get_mdraid_for_block (UDisksClient  *client,
 
   object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_mdraid (block));
   if (object != NULL)
-    ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+    {
+      ret = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+      g_object_unref (object);
+    }
   return ret;
 }
 
@@ -1158,7 +1170,7 @@ add_item (gchar **items_str,
 /**
  * udisks_client_get_partition_info:
  * @client: A #UDisksClient.
- * @partition: # #UDisksPartition.
+ * @partition: A #UDisksPartition.
  *
  * Gets information about @partition that is suitable to present in an
  * user interface in a single line of text.
@@ -1712,7 +1724,7 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
 #define KIBIBYTE_FACTOR 1024.0
 #define MEBIBYTE_FACTOR (1024.0 * 1024.0)
 #define GIBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0)
-#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 10242.0)
+#define TEBIBYTE_FACTOR (1024.0 * 1024.0 * 1024.0 * 1024.0)
 
 static char *
 get_pow2_size (guint64 size)
@@ -2040,7 +2052,7 @@ static const struct
   {"filesystem", "ext4",              "*",     NC_("fs-type", "Ext4 (version %s)"),                 NC_("fs-type", "Ext4")},
   {"filesystem", "ext4",              NULL,    NC_("fs-type", "Ext4"),                              NC_("fs-type", "Ext4")},
   {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext (version %s)"),      NC_("fs-type", "JDB")},
-  {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
+  {"filesystem", "jdb",               NULL,    NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
   {"filesystem", "xfs",               "*",     NC_("fs-type", "XFS (version %s)"),                  NC_("fs-type", "XFS")},
   {"filesystem", "xfs",               NULL,    NC_("fs-type", "XFS"),                               NC_("fs-type", "XFS")},
   /* TODO: No ID_FS_VERSION yet for btrfs... */
@@ -2633,7 +2645,7 @@ udisks_client_get_partition_type_infos (UDisksClient   *client,
  * @partition_table_type: A partitioning type e.g. 'dos' or 'gpt'.
  * @partition_type: A partition type.
  *
- * Gets a human readable localized string for @partiton_table_type and @partition_type.
+ * Gets a human readable localized string for @partition_table_type and @partition_type.
  *
  * Returns: (transfer none): A description of @partition_type or %NULL if
  * unknown.
@@ -2710,7 +2722,7 @@ udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
  * @operation: A job operation name.
  *
  * Gets a human-readable and localized text string describing a
- * a job @operation.
+ * job @operation.
  *
  * For known job operation types, see the documentation for the
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>

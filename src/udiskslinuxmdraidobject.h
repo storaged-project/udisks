@@ -34,7 +34,7 @@ GType                    udisks_linux_mdraid_object_get_type      (void) G_GNUC_
 UDisksLinuxMDRaidObject *udisks_linux_mdraid_object_new           (UDisksDaemon              *daemon,
                                                                    const gchar               *uuid);
 void                     udisks_linux_mdraid_object_uevent        (UDisksLinuxMDRaidObject   *object,
-                                                                   const gchar               *action,
+                                                                   UDisksUeventAction         action,
                                                                    UDisksLinuxDevice         *device,
                                                                    gboolean                   is_member);
 const gchar             *udisks_linux_mdraid_object_get_uuid      (UDisksLinuxMDRaidObject   *object);

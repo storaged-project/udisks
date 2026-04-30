@@ -29,7 +29,7 @@ def _get_sata_disks():
                 if name.startswith("sd"):
                     # ignore devices like CD drives etc.
                     sata_disks.append(name)
-    except:
+    except Exception:
         pass
     return sata_disks
 

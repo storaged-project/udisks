@@ -122,7 +122,12 @@ udisks_linux_manager_iscsi_initiator_set_property (GObject *object, guint proper
 static void
 udisks_linux_manager_iscsi_initiator_finalize (GObject *object)
 {
-  if (G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class))
+  UDisksLinuxManagerISCSIInitiator *manager = UDISKS_LINUX_MANAGER_ISCSI_INITIATOR (object);
+
+  g_clear_object (&manager->module);
+  g_mutex_clear (&manager->initiator_config_mutex);
+
+  if (G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_manager_iscsi_initiator_parent_class)->finalize (object);
 }
 
@@ -356,7 +361,7 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
                                                      NULL,
                                                      ISCSI_MODULE_POLICY_ACTION_ID,
                                                      arg_options,
-                                                     N_("Authentication is required change iSCSI initiator name"),
+                                                     N_("Authentication is required to change iSCSI initiator name"),
                                                      invocation))
     return TRUE;
 
@@ -365,7 +370,7 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error_literal (invocation,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
-                                                     N_("Empty initiator name"));
+                                                     "Empty initiator name");
       return TRUE;
     }
 
@@ -407,11 +412,11 @@ handle_set_initiator_name (UDisksManagerISCSIInitiator *object,
       g_dbus_method_invocation_return_error_literal (invocation,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
-                                                     N_("Error parsing the iSCSI initiator name"));
+                                                     "Error parsing the iSCSI initiator name");
     }
   else if (! g_file_set_contents (INITIATOR_FILENAME, contents, -1, &error))
     {
-      g_prefix_error (&error, N_("Error writing to %s while setting iSCSI initiator name: "), INITIATOR_FILENAME);
+      g_prefix_error (&error, "Error writing to %s while setting iSCSI initiator name: ", INITIATOR_FILENAME);
       g_dbus_method_invocation_take_error (invocation, error);
     }
   else

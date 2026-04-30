@@ -494,11 +494,6 @@ handle_loop_setup (UDisksManager          *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef struct
-{
-  gint md_num;
-} WaitForArrayData;
-
 static UDisksObject *
 wait_for_array_object (UDisksDaemon *daemon,
                        gpointer      user_data)
@@ -558,7 +553,7 @@ handle_mdraid_create (UDisksManager         *_object,
   struct stat statbuf;
   dev_t raid_device_num;
   UDisksBaseJob *job = NULL;
-  const gchar **disks = NULL;
+  gchar **disks = NULL;
   guint disks_top = 0;
   gboolean success = FALSE;
   const gchar *option_bitmap = NULL;
@@ -760,7 +755,7 @@ handle_mdraid_create (UDisksManager         *_object,
     }
 
   /* names of members as gchar** for libblockdev */
-  disks = g_new0 (const gchar*, g_list_length (blocks) + 1);
+  disks = g_new0 (gchar*, g_list_length (blocks) + 1);
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);
@@ -770,7 +765,7 @@ handle_mdraid_create (UDisksManager         *_object,
 
   g_variant_lookup (arg_options, "bitmap", "^&ay", &option_bitmap);
   g_variant_lookup (arg_options, "version", "^&ay", &option_version);
-  if (!bd_md_create (array_name, arg_level, disks, 0, option_version, option_bitmap, arg_chunk, NULL, &error))
+  if (!bd_md_create (array_name, arg_level, (const gchar **) disks, 0, option_version, option_bitmap, arg_chunk, NULL, &error))
     {
       g_prefix_error (&error, "Error creating RAID array: ");
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
@@ -893,7 +888,7 @@ handle_mdraid_create (UDisksManager         *_object,
       udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), success, NULL);
     }
 
-  g_strfreev ((gchar **) disks);
+  g_strfreev (disks);
   g_free (raid_device_file);
   g_free (raid_node);
   g_free (array_name);
@@ -934,8 +929,12 @@ load_modules_in_idle_cb (gpointer user_data)
       /* Load single requested module */
       if (! udisks_module_manager_load_single_module (module_manager, data->module_name, &error))
         {
+          if (g_error_matches (error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED))
+            /* Module not available, change to UDISKS_ERROR_FAILED for backwards compatibility */
+            error->code = UDISKS_ERROR_FAILED;
+          else
+            g_warning ("Error initializing module '%s': %s", data->module_name, error->message);
           g_prefix_error (&error, "Error initializing module '%s': ", data->module_name);
-          g_warning ("%s", error->message);
           g_dbus_method_invocation_take_error (data->invocation, error);
         }
       else
@@ -1236,9 +1235,9 @@ handle_get_block_devices (UDisksManager         *object,
 		  block_paths[i++] = g_dbus_object_get_object_path (block_object);
   }
 
-  udisks_manager_complete_get_block_devices  (object,
-                                              invocation,
-                                              block_paths);
+  udisks_manager_complete_get_block_devices (object,
+                                             invocation,
+                                             block_paths);
 
   g_free (block_paths);
   g_slist_free_full (blocks, g_object_unref);

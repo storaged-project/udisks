@@ -56,7 +56,7 @@ struct _UDisksModuleObjectIface
   GTypeInterface parent_iface;
 
   gboolean (*process_uevent) (UDisksModuleObject  *object,
-                              const gchar         *action,
+                              UDisksUeventAction   action,
                               UDisksLinuxDevice   *device,
                               gboolean            *keep);
 
@@ -69,7 +69,7 @@ struct _UDisksModuleObjectIface
 GType udisks_module_object_get_type (void) G_GNUC_CONST;
 
 gboolean udisks_module_object_process_uevent (UDisksModuleObject  *object,
-                                              const gchar         *action,
+                                              UDisksUeventAction   action,
                                               UDisksLinuxDevice   *device,
                                               gboolean            *keep);
 

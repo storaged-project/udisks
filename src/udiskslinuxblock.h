@@ -65,6 +65,10 @@ gboolean     udisks_linux_block_is_unknown_crypto (UDisksBlock *block);
 
 void         udisks_linux_block_encrypted_lock (UDisksBlock *block);
 void         udisks_linux_block_encrypted_unlock (UDisksBlock *block);
+void         udisks_linux_block_encrypted_info_lock (UDisksBlock *block);
+void         udisks_linux_block_encrypted_info_unlock (UDisksBlock *block);
+
+gchar       *udisks_linux_block_make_dm_name (UDisksBlock *block);
 
 G_END_DECLS
 

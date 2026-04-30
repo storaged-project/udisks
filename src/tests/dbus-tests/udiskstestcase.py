@@ -5,7 +5,6 @@ import os
 import time
 import re
 import shutil
-import sys
 import multiprocessing
 from datetime import datetime
 from enum import Enum
@@ -226,7 +225,7 @@ class DBusProperty(object):
         ret = self._check(timeout, check_fn)
 
         if not ret:
-            raise AssertionError('unexpectedly None%s' % ' (%s)' % msg if msg else '')
+            raise AssertionError('unexpectedly None%s' % (' (%s)' % msg if msg else ''))
 
     def assertLen(self, length, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: len(x) == length
@@ -238,8 +237,8 @@ class DBusProperty(object):
             else:
                 raise AssertionError('Expected length %d, but %s has length %d%s' % (length,
                                                                                      self._value,
-                                                                                     len(self._value,
-                                                                                     ' (%s)' % msg if msg else '')))
+                                                                                     len(self._value),
+                                                                                     ' (%s)' % msg if msg else ''))
     def assertContains(self, member, timeout=TIMEOUT, msg=None):
         check_fn = lambda x: member in x
         ret = self._check(timeout, check_fn)
@@ -254,7 +253,7 @@ class UdisksTestCase(unittest.TestCase):
     iface_prefix = None
     path_prefix = None
     bus = None
-    vdevs = None
+    vdevs = []
     distro = (None, None, None)       # (project, distro_name, version)
     no_options = dbus.Dictionary(signature="sv")
 
@@ -305,7 +304,7 @@ class UdisksTestCase(unittest.TestCase):
         try:
             # self.iface_prefix is the same as the DBus name we acquire
             obj = self.bus.get_object(self.iface_prefix, path)
-        except:
+        except Exception:
             obj = None
         return obj
 
@@ -428,7 +427,7 @@ class UdisksTestCase(unittest.TestCase):
             manager.EnableModule(module, dbus.Boolean(True))
             return True
         except dbus.exceptions.DBusException as e:
-            msg = r"Error initializing module '%s': .*\.so: cannot open shared object file: No such file or directory" % module
+            msg = r"Error initializing module '%s': Module not available: " % module
             if re.search(msg, e.get_dbus_message()):
                 return False
             else:

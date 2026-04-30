@@ -223,7 +223,7 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
 {
   UDisksBlock *block = udisks_object_peek_block (UDISKS_OBJECT (object));
 
-  udisks_linux_block_encrypted_lock (block);
+  udisks_linux_block_encrypted_info_lock (block);
 
   update_child_configuration (encrypted, object);
   update_cleartext_device (encrypted, object);
@@ -238,7 +238,7 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
   if (udisks_linux_block_is_luks (block))
     update_metadata_size (encrypted, object);
 
-  udisks_linux_block_encrypted_unlock (block);
+  udisks_linux_block_encrypted_info_unlock (block);
 
   g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (encrypted));
 }
@@ -324,16 +324,6 @@ has_option (const gchar *options,
   return ret;
 }
 
-static gchar *
-label_to_safe_dm_name (const gchar *label)
-{
-  if (strlen (label) >= 128)
-    return g_strndup (label, 127);
-  return g_strdelimit (g_strdup (label), "/ ", '_');
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unlock (UDisksEncrypted        *encrypted,
@@ -363,6 +353,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gboolean read_only = FALSE;
   gboolean is_hidden = FALSE;
   gboolean is_system = FALSE;
+  gboolean discard = FALSE;
   guint32 pim = 0;
   GString *effective_passphrase = NULL;
   GVariant *keyfiles_variant = NULL;
@@ -372,8 +363,6 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gboolean is_bitlk;
   gboolean handle_as_tcrypt;
   void *open_func;
-  const gchar *uuid = NULL;
-  const gchar *label = NULL;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -532,28 +521,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
   /* calculate the name to use */
   if (is_in_crypttab && crypttab_name != NULL)
     name = g_strdup (crypttab_name);
-  else {
-    label = udisks_block_get_id_label (block);
-    if (label)
-      name = label_to_safe_dm_name (label);
-    else
-      {
-        if (is_luks)
-          name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
-        else if (is_bitlk)
-          {
-            uuid = udisks_block_get_id_uuid (block);
-            if (uuid && g_strcmp0 (uuid, "") != 0)
-              name = g_strdup_printf ("bitlk-%s", uuid);
-            else
-              name = g_strdup_printf ("bitlk-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
-          }
-        else
-          /* TCRYPT devices don't have a UUID, so we use the device number instead */
-          name = g_strdup_printf ("tcrypt-%" G_GUINT64_FORMAT, udisks_block_get_device_number (block));
-      }
-
-  }
+  else
+    name = udisks_linux_block_make_dm_name (block);
 
   /* save old encryption type to be able to restore it */
   old_hint_encryption_type = udisks_encrypted_dup_hint_encryption_type (encrypted);
@@ -570,10 +539,17 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   device = udisks_block_dup_device (block);
 
-  /* unlock as read-only if specified in @options or if the device itself is read-only */
+  /* unlock as read-only if specified in @options or crypttab or if the device itself is read-only */
+  if (is_in_crypttab && (has_option (crypttab_options, "read-only") || has_option (crypttab_options, "readonly")))
+    read_only = TRUE;
   g_variant_lookup (options, "read-only", "b", &read_only);
   if (udisks_block_get_read_only (block))
     read_only = TRUE;
+
+  /* unlock with discard if specified in @options or crypttab */
+  if (is_in_crypttab && has_option (crypttab_options, "discard"))
+    discard = TRUE;
+  g_variant_lookup (options, "discard", "b", &discard);
 
   data.device = device;
   data.map_name = name;
@@ -583,6 +559,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   data.hidden = is_hidden;
   data.system = is_system;
   data.read_only = read_only;
+  data.discard = discard;
 
   if (is_luks)
     open_func = luks_open_job_func;
@@ -786,7 +763,7 @@ udisks_linux_encrypted_lock (UDisksLinuxEncrypted   *encrypted,
                                                                    "org.freedesktop.udisks2.encrypted-lock-others",
                                                                    options,
                                                                    /* Translators: Shown in authentication dialog when the user
-                                                                    * requests locking an encrypted device that was previously.
+                                                                    * requests locking an encrypted device that was previously
                                                                     * unlocked by another user.
                                                                     *
                                                                     * Do not translate $(device.name), it's a placeholder and
@@ -924,7 +901,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   const gchar *action_id;
   GError *error = NULL;
   gchar *device = NULL;
-  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, NULL };
+  CryptoJobData data = { NULL, NULL, NULL, NULL, NULL, 0, 0, FALSE, FALSE, FALSE, FALSE, NULL };
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -963,7 +940,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
       goto out;
     }
 
-  /* Now, check that the user is actually authorized to unlock the device.
+  /* Now, check that the user is actually authorized to change the passphrase.
    */
   action_id = "org.freedesktop.udisks2.encrypted-change-passphrase";
   if (udisks_block_get_hint_system (block) &&
@@ -976,12 +953,12 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                                     action_id,
                                                     options,
                                                     /* Translators: Shown in authentication dialog when the user
-                                                     * requests unlocking an encrypted device.
+                                                     * requests changing the passphrase for an encrypted device.
                                                      *
                                                      * Do not translate $(device.name), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to unlock the encrypted device $(device.name)"),
+                                                    N_("Authentication is required to change the passphrase for the encrypted device $(device.name)"),
                                                     invocation))
     goto out;
 
@@ -1362,6 +1339,7 @@ handle_header_backup (UDisksEncrypted       *encrypted,
     UDisksBlock *block;
     UDisksDaemon *daemon;
     UDisksState *state = NULL;
+    const gchar *action_id;
     uid_t caller_uid;
     GError *error = NULL;
     UDisksBaseJob *job = NULL;
@@ -1397,6 +1375,24 @@ handle_header_backup (UDisksEncrypted       *encrypted,
         g_dbus_method_invocation_return_gerror (invocation, error);
         goto out;
       }
+
+    action_id = "org.freedesktop.udisks2.open-device";
+    if (udisks_block_get_hint_system (block))
+      action_id = "org.freedesktop.udisks2.open-device-system";
+
+    if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                      object,
+                                                      action_id,
+                                                      options,
+                                                      /* Translators: Shown in authentication dialog when backing up
+                                                       * a LUKS header of a device.
+                                                       *
+                                                       * Do not translate $(device.name), it's a placeholder and will
+                                                       * be replaced by the name of the drive/device in question
+                                                       */
+                                                      N_("Authentication is required to back up the encrypted header of $(device.name)"),
+                                                      invocation))
+      goto out;
 
     job = udisks_daemon_launch_simple_job (daemon,
                                            UDISKS_OBJECT (object),

@@ -165,7 +165,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
     {
       GPtrArray *a;
 
-      a = g_ptr_array_new ();
+      a = g_ptr_array_new_full (0, g_free);
       if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_SPARE) == BD_NVME_SMART_CRITICAL_WARNING_SPARE)
         g_ptr_array_add (a, g_strdup ("spare"));
       if ((smart_log->critical_warning & BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE) == BD_NVME_SMART_CRITICAL_WARNING_TEMPERATURE)
@@ -191,7 +191,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
   else
     {
       /* fallback, smart_log has never been retrieved successfully */
-      const gchar * const *warning = { NULL };
+      const gchar * const warning[] = { NULL };
 
       udisks_nvme_controller_set_smart_critical_warning (UDISKS_NVME_CONTROLLER (ctrl), warning);
       udisks_nvme_controller_set_smart_power_on_hours (UDISKS_NVME_CONTROLLER (ctrl), 0);
@@ -233,7 +233,7 @@ update_iface_smart (UDisksLinuxNVMeController *ctrl)
           case BD_NVME_SANITIZE_STATUS_NEVER_SANITIZED:
             status = "never_sanitized";
             break;
-          case BD_NVME_SANITIZE_STATUS_IN_PROGESS:
+          case BD_NVME_SANITIZE_STATUS_IN_PROGRESS:
             status = "inprogress";
             compl = 100 - sanitize_log->sanitize_progress;
             break;
@@ -401,7 +401,7 @@ udisks_linux_nvme_controller_refresh_smart_sync (UDisksLinuxNVMeController  *ctr
     }
 
   /* Controller capabilities check - there's no authoritative way to find out which
-   * log pages are actually supported, taking controller feature flags in account instead.
+   * log pages are actually supported, taking controller feature flags into account instead.
    * The "Supported Log Pages" log page support only came with NVMe 2.0 specification.
    */
   smart_log = bd_nvme_get_smart_log (dev_file, error);
@@ -840,7 +840,7 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
 
   /* Time estimates */
   if (action == BD_NVME_SELF_TEST_ACTION_EXTENDED)
-    time_est = device->nvme_ctrl_info->selftest_ext_time * 60 * 1000000;
+    time_est = (gint64) device->nvme_ctrl_info->selftest_ext_time * 60 * 1000000;
 
   /* Check that the Device Self-test (Log Identifier 06h) log page can be retrieved,
    * otherwise we wouldn't be able to detect the test progress and its completion.
@@ -856,9 +856,11 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
     }
   bd_nvme_self_test_log_free (self_test_log);
 
-  /* Trigger the self-test operation */
+  /* Trigger the self-test operation and launch the monitoring job atomically */
+  g_mutex_lock (&ctrl->smart_lock);
   if (!bd_nvme_device_self_test (g_udev_device_get_device_file (device->udev_device), action, &error))
     {
+      g_mutex_unlock (&ctrl->smart_lock);
       udisks_warning ("Error starting device selftest for %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -866,26 +868,22 @@ handle_smart_selftest_start (UDisksNVMeController  *_ctrl,
       goto out;
     }
 
-  g_mutex_lock (&ctrl->smart_lock);
-  if (ctrl->selftest_job == NULL)
+  ctrl->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                               UDISKS_OBJECT (object),
+                                                                               "nvme-selftest",
+                                                                               caller_uid,
+                                                                               FALSE,
+                                                                               selftest_job_func,
+                                                                               g_object_ref (ctrl),
+                                                                               (GDestroyNotify) selftest_job_func_done,
+                                                                               NULL)); /* GCancellable */
+  if (time_est > 0)
     {
-      ctrl->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
-                                                                                   UDISKS_OBJECT (object),
-                                                                                   "nvme-selftest",
-                                                                                   caller_uid,
-                                                                                   FALSE,
-                                                                                   selftest_job_func,
-                                                                                   g_object_ref (ctrl),
-                                                                                   (GDestroyNotify) selftest_job_func_done,
-                                                                                   NULL)); /* GCancellable */
-      if (time_est > 0)
-        {
-          udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->selftest_job), FALSE);
-          udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->selftest_job),
-                                            g_get_real_time () + time_est);
-        }
-      udisks_threaded_job_start (ctrl->selftest_job);
+      udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->selftest_job), FALSE);
+      udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->selftest_job),
+                                        g_get_real_time () + time_est);
     }
+  udisks_threaded_job_start (ctrl->selftest_job);
   g_mutex_unlock (&ctrl->smart_lock);
 
   udisks_nvme_controller_complete_smart_selftest_start (_ctrl, invocation);
@@ -1044,7 +1042,7 @@ sanitize_job_func (UDisksThreadedJob  *job,
         }
 
       g_mutex_lock (&ctrl->smart_lock);
-      still_in_progress = ctrl->sanitize_log && ctrl->sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGESS;
+      still_in_progress = ctrl->sanitize_log && ctrl->sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGRESS;
       progress = (ctrl->sanitize_log ? ctrl->sanitize_log->sanitize_progress : 0) / 100.0;
       g_mutex_unlock (&ctrl->smart_lock);
 
@@ -1123,7 +1121,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
   UDisksLinuxDevice *device = NULL;
   BDNVMESanitizeAction action;
   BDNVMEControllerFeature ctrl_feature;
-  gint overwrite_pass_count = 0;
+  guchar overwrite_pass_count = 0;
   guint32 overwrite_pattern = 0;
   gboolean overwrite_invert_pattern = FALSE;
   BDNVMESanitizeLog *sanitize_log;
@@ -1246,7 +1244,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  if (sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGESS)
+  if (sanitize_log->sanitize_status == BD_NVME_SANITIZE_STATUS_IN_PROGRESS)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1259,13 +1257,13 @@ handle_sanitize_start (UDisksNVMeController  *_object,
   switch (action)
     {
       case BD_NVME_SANITIZE_ACTION_BLOCK_ERASE:
-          time_est = sanitize_log->time_for_block_erase_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_block_erase_nd * 1000000;
           break;
       case BD_NVME_SANITIZE_ACTION_OVERWRITE:
-          time_est = sanitize_log->time_for_overwrite_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_overwrite_nd * 1000000;
           break;
       case BD_NVME_SANITIZE_ACTION_CRYPTO_ERASE:
-          time_est = sanitize_log->time_for_crypto_erase_nd * 1000000;
+          time_est = (gint64) sanitize_log->time_for_crypto_erase_nd * 1000000;
           break;
       default:
           udisks_warning ("Invalid sanitize action");
@@ -1276,7 +1274,8 @@ handle_sanitize_start (UDisksNVMeController  *_object,
    */
   bd_nvme_sanitize_log_free (sanitize_log);
 
-  /* Trigger the sanitize operation */
+  /* Trigger the sanitize operation and launch the monitoring job atomically */
+  g_mutex_lock (&ctrl->smart_lock);
   if (!bd_nvme_sanitize (g_udev_device_get_device_file (device->udev_device),
                          action,
                          TRUE, /* no_dealloc */
@@ -1285,6 +1284,7 @@ handle_sanitize_start (UDisksNVMeController  *_object,
                          overwrite_invert_pattern,
                          &error))
     {
+      g_mutex_unlock (&ctrl->smart_lock);
       udisks_warning ("Error starting the sanitize operation for %s: %s (%s, %d)",
                       g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -1292,23 +1292,19 @@ handle_sanitize_start (UDisksNVMeController  *_object,
       goto out;
     }
 
-  g_mutex_lock (&ctrl->smart_lock);
-  if (ctrl->sanitize_job == NULL)
-    {
-      ctrl->sanitize_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
-                                                                                   UDISKS_OBJECT (object),
-                                                                                   "nvme-sanitize",
-                                                                                   caller_uid,
-                                                                                   FALSE,
-                                                                                   sanitize_job_func,
-                                                                                   g_object_ref (ctrl),
-                                                                                   (GDestroyNotify) sanitize_job_func_done,
-                                                                                   NULL)); /* GCancellable */
-      udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
-      udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
-                                        g_get_real_time () + time_est);
-      udisks_threaded_job_start (ctrl->selftest_job);
-    }
+  ctrl->sanitize_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                               UDISKS_OBJECT (object),
+                                                                               "nvme-sanitize",
+                                                                               caller_uid,
+                                                                               FALSE,
+                                                                               sanitize_job_func,
+                                                                               g_object_ref (ctrl),
+                                                                               (GDestroyNotify) sanitize_job_func_done,
+                                                                               NULL)); /* GCancellable */
+  udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (ctrl->sanitize_job), FALSE);
+  udisks_job_set_expected_end_time (UDISKS_JOB (ctrl->sanitize_job),
+                                    g_get_real_time () + time_est);
+  udisks_threaded_job_start (ctrl->sanitize_job);
   g_mutex_unlock (&ctrl->smart_lock);
 
   udisks_nvme_controller_complete_sanitize_start (_object, invocation);

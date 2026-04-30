@@ -34,7 +34,7 @@ def _get_blkid_version():
     return Version(m.groups()[0])
 
 def _get_luks_version(disk):
-    ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+    _ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
     m = re.search(r'Version:\s*([1-2])', out)
     if not m or len(m.groups()) != 1:
         raise RuntimeError('Failed to determine LUKS version of device: %s.' % disk)
@@ -47,7 +47,12 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
     PASSPHRASE = 'shouldnotseeme'
     LUKS_NAME = 'myshinylittleluks'
 
+    luks_version = None
+
     def _create_luks(self, device, passphrase, binary=False):
+        raise NotImplementedError()
+
+    def _get_metadata_size_from_dump(self, disk):
         raise NotImplementedError()
 
     def _remove_luks(self, device, close=True):
@@ -197,6 +202,15 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         luks_ro = self.get_property(luks_obj, '.Block', 'ReadOnly')
         luks_ro.assertTrue()
 
+    def _is_ro(self, dm_name):
+        dm_path = os.path.realpath("/dev/mapper/%s" % dm_name)
+        dm_basename = os.path.basename(dm_path)
+        sysfs_path = "/sys/block/%s/ro" % dm_basename
+
+        with open(sysfs_path, "r") as f:
+            ro = f.read()
+        return ro.strip() == "1"
+
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab(self):
         # this test will change /etc/crypttab, we might want to revert the changes when it finishes
@@ -216,12 +230,13 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
         # add new entry to the crypttab
-        new_crypttab = crypttab + '%s UUID=%s none\n' % (self.LUKS_NAME, disk_uuid)
+        new_crypttab = crypttab + '%s UUID=%s none discard,read-only\n' % (self.LUKS_NAME, disk_uuid)
         self.write_file('/etc/crypttab', new_crypttab)
 
         dbus_conf = disk.GetSecretConfiguration(self.no_options, dbus_interface=self.iface_prefix + '.Block')
         self.assertIsNotNone(dbus_conf)
         self.assertEqual(self.ay_to_str(dbus_conf[0][1]['name']), self.LUKS_NAME)
+        self.assertEqual(self.ay_to_str(dbus_conf[0][1]['options']), "discard,read-only")
 
         # unlock the device
         luks = disk.Unlock(self.PASSPHRASE, self.no_options,
@@ -232,11 +247,34 @@ class UdisksEncryptedTest(udiskstestcase.UdisksTestCase):
         dm_path = '/dev/mapper/%s' % self.LUKS_NAME
         self.assertTrue(os.path.exists(dm_path))
 
+        # check that discard is enabled for the mapped device
+        _ret, out, = self.run_command("dmsetup table %s" % self.LUKS_NAME)
+        self.assertIn("allow_discards", out)
+
+        # check that the device is read-only
+        self.assertTrue(self._is_ro(self.LUKS_NAME))
+
         # preferred 'device' should be /dev/mapper/name too
         luks_obj = self.get_object(luks)
         self.assertIsNotNone(luks_obj)
         luks_path = self.get_property(luks_obj, '.Block', 'PreferredDevice')
         luks_path.assertEqual(self.str_to_ay(dm_path))
+
+        # lock the device
+        disk.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
+
+        # override crypttab options with extra options
+        options = dbus.Dictionary({'discard' : False, 'read-only': False}, signature=dbus.Signature('sv'))
+        luks = disk.Unlock(self.PASSPHRASE, options,
+                           dbus_interface=self.iface_prefix + '.Encrypted')
+        self.assertIsNotNone(luks)
+
+        # check that discard is not enabled for the mapped device
+        _ret, out, = self.run_command("dmsetup table %s" % self.LUKS_NAME)
+        self.assertNotIn("allow_discards", out)
+
+        # check that the device is not read-only
+        self.assertFalse(self._is_ro(self.LUKS_NAME))
 
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSAFE)
     def test_open_crypttab_keyfile(self):
@@ -450,7 +488,7 @@ class UdisksEncryptedTestLUKS1(UdisksEncryptedTest):
 
         m = re.search(r"Payload offset:\s*([0-9]+)", out)
         if m is None:
-            self.fail("Failed to get LUKS 2 offset information using 'cryptsetup luksDump %s'" % disk)
+            self.fail("Failed to get LUKS 1 offset information using 'cryptsetup luksDump %s'" % disk)
         # offset value is in 512B blocks; we need to multiply to get the real metadata size
         return  int(m.group(1)) * 512
 
@@ -480,7 +518,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
 
     @classmethod
     def setUpClass(cls):
-        if not BlockDev.is_initialized():
+        if not BlockDev.is_initialized():  # pylint: disable=no-value-for-parameter
             BlockDev.init(cls.requested_plugins, None)
         else:
             BlockDev.reinit(cls.requested_plugins, True, None)
@@ -595,7 +633,8 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
         device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
 
         # check that the device is not LUKS1 compatible
-        ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+        ret, out = self.run_command("cryptsetup luksDump %s" % disk)
+        self.assertEqual(ret, 0)
         m = re.search(r'PBKDF:\s*(.*)', out)
         if not m or len(m.groups()) != 1:
             raise RuntimeError('Failed to determine PBKDF of LUKS device: %s.' % disk)
@@ -636,9 +675,9 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
             # check that after reaping device and restoring header, cryptsetup will recognize header
             device.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')
             DISK_SIZE = 100 # magic number from `targetcli_config.json`
-            ret, out = udiskstestcase.UdisksTestCase.run_command("dd if=/dev/zero of=%s bs=1M count=%d" % (disk, DISK_SIZE))
+            ret, out = self.run_command("dd if=/dev/zero of=%s bs=1M count=%d" % (disk, DISK_SIZE))
             self.assertEqual(ret, 0)
-            ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+            ret, out = self.run_command("cryptsetup luksDump %s" % disk)
             self.assertEqual(1, ret)
             self.assertTrue(("Device %s is not a valid LUKS device." % disk) in out)
             # wait for changes to propagate from udev to udisks
@@ -648,7 +687,7 @@ class UdisksEncryptedTestLUKS2(UdisksEncryptedTest):
             device = self.get_device(disk)
             device.RestoreEncryptedHeader(backup_file_path, self.no_options,
                                  dbus_interface=self.iface_prefix + '.Block')
-            ret, out = udiskstestcase.UdisksTestCase.run_command("cryptsetup luksDump %s" % disk)
+            ret, out = self.run_command("cryptsetup luksDump %s" % disk)
             self.assertEqual(ret, 0)
 
         # get the Encrypted interface back
@@ -898,8 +937,9 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
         dbus_idusage.assertEqual('crypto')
         dbus_idtype = self.get_property(self.loop, '.Block', 'IdType')
         dbus_idtype.assertEqual('BitLocker')
-        dbus_uuid = self.get_property(self.loop, '.Block', 'IdUUID')
-        dbus_uuid.assertEqual('8f595209-f5b9-49a0-85d4-cb8f80258c27')
+        dbus_uuid = self.get_property_raw(self.loop, '.Block', 'IdUUID')
+        if dbus_uuid:
+            self.assertEqual(dbus_uuid, '8f595209-f5b9-49a0-85d4-cb8f80258c27')
 
         crypt_path = self.loop.Unlock(self.passphrase, self.no_options,
                                       dbus_interface=self.iface_prefix + '.Encrypted')
@@ -918,14 +958,21 @@ class UdisksEncryptedTestBITLK(udiskstestcase.UdisksTestCase):
         dbus_fs.assertEqual("ntfs")
 
         dbus_label = self.get_property_raw(self.loop, '.Block', 'IdLabel')
-        bitlk_path = self.get_property(crypt_dev, '.Block', 'PreferredDevice')
         if dbus_label:
             # has label (and we know it): label with '/' and spaces replaced by '_' should be used for DM name
             dm_path = '/dev/mapper/%s' % dbus_label.replace('/', '_').replace(' ', '_')
-        else:
-            # no label: bitlk-<UUID> should be used for DM name
+            self.assertTrue(os.path.exists(dm_path))
+        elif dbus_uuid:
+            # no label but UUID: bitlk-<UUID> should be used for DM name
             dm_path = '/dev/mapper/bitlk-8f595209-f5b9-49a0-85d4-cb8f80258c27'
             self.assertTrue(os.path.exists(dm_path))
+        else:
+            # fallback to bitlk-<device number>
+            dbus_number = self.get_property_raw(self.loop, '.Block', 'DeviceNumber')
+            dm_path = '/dev/mapper/bitlk-%s' % dbus_number
+            self.assertTrue(os.path.exists(dm_path))
+
+        bitlk_path = self.get_property(crypt_dev, '.Block', 'PreferredDevice')
         bitlk_path.assertEqual(self.str_to_ay(dm_path))
 
         self.loop.Lock(self.no_options, dbus_interface=self.iface_prefix + '.Encrypted')

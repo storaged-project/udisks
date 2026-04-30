@@ -425,27 +425,27 @@ handle_set_flags (UDisksPartition       *partition,
                                       partition_name,
                                       bootable,
                                       &error))
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_FAILED,
-                                               "Error setting partition flags on %s: %s",
-                                               udisks_block_get_device (block),
-                                               error->message);
-        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
-        goto out;
-      }
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error setting partition flags on %s: %s",
+                                                 udisks_block_get_device (block),
+                                                 error->message);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, error->message);
+          goto out;
+        }
     }
-    else
-      {
-        g_dbus_method_invocation_return_error (invocation,
-                                               UDISKS_ERROR,
-                                               UDISKS_ERROR_NOT_SUPPORTED,
-                                               "No support for setting partition flags on a partition table of type `%s'",
-                                               udisks_partition_table_get_type_ (partition_table));
-        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
-        goto out;
-      }
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "No support for setting partition flags on a partition table of type `%s'",
+                                             udisks_partition_table_get_type_ (partition_table));
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
+      goto out;
+    }
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
@@ -467,7 +467,6 @@ handle_set_flags (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -572,6 +571,7 @@ handle_set_name (UDisksPartition       *partition,
                                              UDISKS_ERROR_NOT_SUPPORTED,
                                              "No support for setting partition name on a partition table of type `%s'",
                                              udisks_partition_table_get_type_ (partition_table));
+      udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, NULL);
       goto out;
     }
 
@@ -595,7 +595,6 @@ handle_set_name (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -612,7 +611,6 @@ handle_set_uuid (UDisksPartition       *partition,
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
   UDisksState *state = NULL;
-  gchar *device_name = NULL;
   gchar *partition_name = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
@@ -708,7 +706,6 @@ handle_set_uuid (UDisksPartition       *partition,
     udisks_linux_block_object_release_cleanup_lock (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (state != NULL)
     udisks_state_check (state);
-  g_free (device_name);
   g_free (partition_name);
   g_clear_error (&error);
   g_clear_object (&object);
@@ -716,7 +713,6 @@ handle_set_uuid (UDisksPartition       *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -822,7 +818,7 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
           g_set_error (error,
                        UDISKS_ERROR,
                        UDISKS_ERROR_FAILED,
-                       "Given type `%s' is not a valid",
+                       "Given type `%s' is not valid",
                        type);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, (*error)->message);
           goto out;
@@ -876,7 +872,6 @@ udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
   g_clear_error (&loc_error);
 
   return ret;
@@ -1160,7 +1155,6 @@ handle_delete (UDisksPartition       *partition,
   g_clear_object (&block);
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table_block);
-  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

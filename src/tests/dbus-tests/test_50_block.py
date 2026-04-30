@@ -2,7 +2,6 @@ import copy
 import dbus
 import glob
 import fcntl
-import shutil
 import os
 import time
 
@@ -384,7 +383,7 @@ class UdisksBlockRemovableTest(udiskstestcase.UdisksTestCase):
         device = self.cd_dev.split('/')[-1]
         if os.path.exists('/sys/block/' + device):
             self.write_file('/sys/block/%s/device/delete' % device, '1')
-            while os.path.exists(device):
+            while os.path.exists('/sys/block/' + device):
                 time.sleep(0.1)
             self.udev_settle()
             self.run_command('modprobe -r scsi_debug')

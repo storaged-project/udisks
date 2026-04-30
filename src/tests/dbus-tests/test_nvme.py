@@ -34,10 +34,10 @@ def _wait_for_nvme_controllers_ready(subnqn, timeout=10):
                         # Found a matching live controller
                         os.system("udevadm settle")
                         return
-                except:
+                except Exception:
                     continue
 
-        except:
+        except Exception:
             pass
 
         time.sleep(1)
@@ -61,7 +61,7 @@ def find_nvme_ctrl_devs_for_subnqn(subnqn, wait_for_ready=True):
                     # nvme controller node is a character device
                     if stat.S_ISCHR(st.st_mode):
                         dev_paths += [path]
-                except:
+                except Exception:
                     pass
 
     # Wait for controllers to be ready if requested
@@ -104,7 +104,7 @@ def find_nvme_ns_devs_for_subnqn(subnqn, wait_for_ready=True):
                 st = os.lstat(path)
                 if stat.S_ISBLK(st.st_mode):
                     ns_dev_paths += [path]
-            except:
+            except Exception:
                 pass
 
     def _check_subsys(subsys, ns_dev_paths):
@@ -228,7 +228,7 @@ def setup_nvme_target(dev_paths, subnqn, tr_loop=True, tr_tcp_ipv4=False, tr_tcp
 
         ports = ",".join(ports_list)
 
-        json = """
+        tcli_config = """
 {
   "ports": [
 %s
@@ -246,7 +246,7 @@ def setup_nvme_target(dev_paths, subnqn, tr_loop=True, tr_tcp_ipv4=False, tr_tcp
   ]
 }
 """
-        tmp.write(json % (ports, namespaces, subnqn))
+        tmp.write(tcli_config % (ports, namespaces, subnqn))
 
     ret, out = udiskstestcase.run_command("nvmetcli restore %s" % tcli_json_file)
     os.unlink(tcli_json_file)
@@ -266,6 +266,18 @@ def disable_target_ns(subnqn, nsid, enable=False):
 
     with open("/sys/kernel/config/nvmet/subsystems/%s/namespaces/%d/enable" % (subnqn, nsid), "w") as f:
         f.write("1" if enable else "0")
+
+    # trigger controller namespace rescan - the kernel AEN for namespace
+    # changes may not be reliably delivered with nvme-loop
+    for ctrl_path in glob.glob("/sys/class/nvme/nvme*/"):
+        subsysnqn_file = os.path.join(ctrl_path, "subsysnqn")
+        try:
+            with open(subsysnqn_file, "r") as f:
+                if f.read().strip() == subnqn:
+                    with open(os.path.join(ctrl_path, "rescan_controller"), "w") as f:
+                        f.write("1")
+        except OSError:
+            pass
 
 
 class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
@@ -373,7 +385,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         id = self.get_property_raw(drive_obj, '.Drive', 'Id')
         self.assertTrue(id.startswith('Linux-'))
         size = self.get_property_raw(drive_obj, '.Drive', 'Size')
-        self.assertEqual(size, 0)
+        self.assertEqual(size, self.NS_SIZE * self.NUM_NS)
 
         ctrl_id = self.get_property_raw(drive_obj, '.NVMe.Controller', 'ControllerID')
         self.assertGreater(ctrl_id, 0)
@@ -469,17 +481,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         attrs = drive_obj.SmartGetAttributes(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
         self.assertGreater(len(attrs), 10)
-        self.assertEqual(attrs['avail_spare'], 0);
-        self.assertEqual(attrs['spare_thresh'], 0);
-        self.assertEqual(attrs['percent_used'], 0);
-        self.assertEqual(attrs['ctrl_busy_time'], 0);
-        self.assertEqual(attrs['power_cycles'], 0);
-        self.assertEqual(attrs['unsafe_shutdowns'], 0);
-        self.assertEqual(attrs['media_errors'], 0);
-        self.assertIn('num_err_log_entries', attrs);
-        self.assertEqual(attrs['temp_sensors'], [0, 0, 0, 0, 0, 0, 0, 0]);
-        self.assertEqual(attrs['warning_temp_time'], 0);
-        self.assertEqual(attrs['critical_temp_time'], 0);
+        self.assertEqual(attrs['avail_spare'], 0)
+        self.assertEqual(attrs['spare_thresh'], 0)
+        self.assertEqual(attrs['percent_used'], 0)
+        self.assertEqual(attrs['ctrl_busy_time'], 0)
+        self.assertEqual(attrs['power_cycles'], 0)
+        self.assertEqual(attrs['unsafe_shutdowns'], 0)
+        self.assertEqual(attrs['media_errors'], 0)
+        self.assertIn('num_err_log_entries', attrs)
+        self.assertEqual(attrs['temp_sensors'], [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(attrs['warning_temp_time'], 0)
+        self.assertEqual(attrs['critical_temp_time'], 0)
 
         # Try trigerring a self-test operation
         msg = 'The NVMe controller has no support for self-test operations'
@@ -594,17 +606,17 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # find drive object through the second namespace block object
         ns = self.get_device(ns_devs[1])
-        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         drive_obj_path = self.get_property_raw(ns, '.Block', 'Drive')
         drive_obj = self.get_object(drive_obj_path)
-        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller')
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller', timeout=60)
 
         # this will wait up to 10 seconds for the state to switch
         state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
         state.assertEqual('live', timeout=10)
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # detach the second namespace
         nsid = self.get_property_raw(ns, '.NVMe.Namespace', 'NSID')
@@ -612,13 +624,16 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
 
         # wait for the namespace block object to disappear
         self.assertObjNotOnBus(str(ns.object_path))
+        self.assertHasIface(drive_obj, 'org.freedesktop.UDisks2.NVMe.Controller', timeout=60)
+        state = self.get_property(drive_obj, '.NVMe.Controller', 'State')
+        state.assertEqual('live', timeout=10)
 
         ctrl_size = self.get_property(drive_obj, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE, timeout=60)
 
         # attach that namespace back
         disable_target_ns(self.SUBNQN, nsid, enable=True)
-        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace')
+        self.assertHasIface(ns, 'org.freedesktop.UDisks2.NVMe.Namespace', timeout=60)
         nsid_new = self.get_property(ns, '.NVMe.Namespace', 'NSID')
         nsid_new.assertEqual(nsid)
 
@@ -749,7 +764,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # count number of namespaces pointing to our controller
         namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
@@ -767,7 +782,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
         self.assertEqual(len(namespaces), 0)
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(0, timeout=60)
 
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
@@ -895,7 +910,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         transport = self.get_property(ctrl2, '.NVMe.Fabrics', 'Transport')
         transport.assertEqual('tcp')
@@ -904,7 +919,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         subnqn = self.get_property(ctrl2, '.NVMe.Controller', 'SubsystemNQN')
         subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
         ctrl_size = self.get_property(ctrl2, '.Drive', 'Size')
-        ctrl_size.assertEqual(0)
+        ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         if self._ipv6_available:
             transport = self.get_property(ctrl3, '.NVMe.Fabrics', 'Transport')
@@ -914,32 +929,36 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
             subnqn = self.get_property(ctrl3, '.NVMe.Controller', 'SubsystemNQN')
             subnqn.assertEqual(self.str_to_ay(self.SUBNQN))
             ctrl_size = self.get_property(ctrl3, '.Drive', 'Size')
-            ctrl_size.assertEqual(0)
+            ctrl_size.assertEqual(self.NS_SIZE * self.NUM_NS, timeout=60)
 
         # count number of namespaces pointing to our controller
-        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-        self.assertEqual(len(namespaces), self.NUM_NS)
-        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-        self.assertEqual(len(namespaces), 0)
+        ns_ctrl3 = ()
+        ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
         if self._ipv6_available:
-            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
-            self.assertEqual(len(namespaces), 0)
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+        # NOTE: due to org.freedesktop.UDisks2.Block.Drive property single-path
+        #       limitation, it may randomly point to any of the active controllers.
+        #       That's still perfectly valid in a multipath scenario.
+        self.assertEqual(len(ns_ctrl1) + len(ns_ctrl2) + len(ns_ctrl3), self.NUM_NS)
 
         # disconnect the first controller and watch the drive object references change
         ctrl.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
-        namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-        self.assertEqual(len(namespaces), self.NUM_NS)
-        namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-        self.assertEqual(len(namespaces), 0)
+        ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+        self.assertEqual(len(ns_ctrl1), 0)
+        ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+        if self._ipv6_available:
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+        self.assertEqual(len(ns_ctrl2) + len(ns_ctrl3), self.NUM_NS)
 
         ctrl2.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
         if self._ipv6_available:
-            namespaces = self._find_block_objects_for_ctrl(ctrl_obj_path)
-            self.assertEqual(len(namespaces), self.NUM_NS)
-            namespaces = self._find_block_objects_for_ctrl(ctrl2_obj_path)
-            self.assertEqual(len(namespaces), 0)
-            namespaces = self._find_block_objects_for_ctrl(ctrl3_obj_path)
-            self.assertEqual(len(namespaces), 0)
+            ns_ctrl1 = self._find_block_objects_for_ctrl(ctrl_obj_path)
+            self.assertEqual(len(ns_ctrl1), 0)
+            ns_ctrl2 = self._find_block_objects_for_ctrl(ctrl2_obj_path)
+            self.assertEqual(len(ns_ctrl2), 0)
+            ns_ctrl3 = self._find_block_objects_for_ctrl(ctrl3_obj_path)
+            self.assertEqual(len(ns_ctrl3), self.NUM_NS)
             ctrl3.Disconnect(self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Fabrics')
 
     def test_hostnqn(self):
@@ -955,12 +974,12 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         try:
             saved_hostnqn = self.read_file(HOSTNQN_PATH)
             self.addCleanup(self.write_file, HOSTNQN_PATH, saved_hostnqn)
-        except:
+        except Exception:
             self.addCleanup(self.remove_file, HOSTNQN_PATH, ignore_nonexistent=True)
         try:
             saved_hostid = self.read_file(HOSTID_PATH)
             self.addCleanup(self.write_file, HOSTID_PATH, saved_hostid)
-        except:
+        except Exception:
             self.addCleanup(self.remove_file, HOSTID_PATH, ignore_nonexistent=True)
         self.remove_file(HOSTNQN_PATH, ignore_nonexistent=True)
         self.remove_file(HOSTID_PATH, ignore_nonexistent=True)

@@ -568,6 +568,11 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
             part.SetType('aaaa', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
 
+        # 0x8e would be valid on DOS
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('0x8e', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
         # set part type/guid (home partition)
         home_guid = '933ac7e1-2eb4-4f13-b844-0e14e2aef915'
         part.SetType(home_guid, self.no_options,
@@ -601,6 +606,17 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             part.SetType('0x05', self.no_options,
                          dbus_interface=self.iface_prefix + '.Partition')
+
+        msg = 'Invalid partition id given'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('9999', self.no_options,
+                         dbus_interface=self.iface_prefix + '.Partition')
+
+        # GUID -- would be valid for GPT but not valid for DOS
+        msg = 'Given type .* is not valid'
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetType('933ac7e1-2eb4-4f13-b844-0e14e2aef915', self.no_options,
+                        dbus_interface=self.iface_prefix + '.Partition')
 
         # set part type/id
         part_type = '0x8e'   # 'Linux LVM' type, see https://en.wikipedia.org/wiki/Partition_type#PID_8Eh
@@ -760,3 +776,23 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         part_name = str(part.object_path).split('/')[-1]
         _ret, sys_uuid = self.run_command('lsblk -d -no PARTUUID /dev/%s' % part_name)
         self.assertEqual(sys_uuid, u)
+
+    def test_set_dos_unsupported(self):
+        disk = self.get_object('/block_devices/' + os.path.basename(self.vdevs[0]))
+        self.assertIsNotNone(disk)
+
+        # DOS -- UUID and name are not supported
+        self._create_format(disk, 'dos')
+        self.addCleanup(self._remove_format, disk)
+
+        part = self._create_partition(disk)
+        self.addCleanup(self._remove_partition, part)
+
+        u = str(uuid.uuid4())
+        msg = "Setting partition UUID is not supported on a partition table of type dos"
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetUUID(u, self.no_options, dbus_interface=self.iface_prefix + '.Partition')
+
+        msg = "No support for setting partition name on a partition table of type `dos'"
+        with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
+            part.SetName('test', self.no_options, dbus_interface=self.iface_prefix + '.Partition')

@@ -22,6 +22,7 @@ export GCC_COLORS
 
 EXTRA_DIST =                                                                   \
 	HACKING                                                                \
+	CONTRIBUTING                                                           \
 	README.md                                                              \
 	$(NULL)
 
@@ -60,12 +61,24 @@ integration-tests:
        && echo "integration-tests: SUCCESS" >> ../../RESULTS || echo "integration-tests: FAILED" >> ../../RESULTS
 	@tail -1 RESULTS | grep -q "integration-tests: SUCCESS"
 
+pylint:
+	@$(PYTHON) -m pylint --version >/dev/null 2>&1; \
+	if test $$? != 0 ; then \
+		echo "pylint not available, skipping" ; \
+		echo "pylint: SKIPPED" >> RESULTS ; \
+	else \
+		$(PYTHON) -m pylint -E src/tests/dbus-tests/*.py src/tests/integration-test |& tee pylint_output.log \
+	       && echo "pylint: SUCCESS" >> RESULTS || echo "pylint: FAILED" >> RESULTS ; \
+	fi
+	@tail -1 RESULTS | grep -q -E "pylint: (SUCCESS|SKIPPED)"
+
 ci: all
 	sudo rm -f *.log RESULTS STATUS
 	-$(MAKE) check
 	-$(MAKE) dbus-tests
 	-$(MAKE) unittests
 	-$(MAKE) integration-tests
+	-$(MAKE) pylint
 	@grep -q FAILED RESULTS && echo -n failure > STATUS || echo -n success > STATUS
 	@grep -q success STATUS
 

@@ -99,7 +99,7 @@ udisks_simple_job_new (UDisksDaemon  *daemon,
 /**
  * udisks_simple_job_complete:
  * @job: A #UDisksSimpleJob.
- * @succeess: Whether the job succeeded.
+ * @success: Whether the job succeeded.
  * @message: An error message or %NULL.
  *
  * Completes @job.

@@ -92,6 +92,7 @@ udisks_linux_module_iscsi_finalize (GObject *object)
 
   if (module->iscsi_ctx)
     libiscsi_cleanup (module->iscsi_ctx);
+  g_mutex_clear (&module->libiscsi_mutex);
 
   if (G_OBJECT_CLASS (udisks_linux_module_iscsi_parent_class)->finalize)
     G_OBJECT_CLASS (udisks_linux_module_iscsi_parent_class)->finalize (object);
@@ -223,7 +224,10 @@ udisks_linux_module_iscsi_new_object (UDisksModule      *module,
   if (session_id)
     {
        session_object = udisks_linux_iscsi_session_object_new (UDISKS_LINUX_MODULE_ISCSI (module), session_id);
-       udisks_linux_iscsi_session_object_process_uevent (UDISKS_MODULE_OBJECT (session_object), "add", device, &keep);
+       udisks_linux_iscsi_session_object_process_uevent (UDISKS_MODULE_OBJECT (session_object),
+                                                         UDISKS_UEVENT_ACTION_ADD,
+                                                         device,
+                                                         &keep);
        g_warn_if_fail (keep == TRUE);
        g_free (session_id);
     }

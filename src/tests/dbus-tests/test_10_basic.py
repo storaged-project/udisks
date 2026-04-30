@@ -74,7 +74,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
                 manager.EnableModule(module, dbus.Boolean(False))
             manager.EnableModule(module, dbus.Boolean(True))
         with self.assertRaisesRegex(dbus.exceptions.DBusException,
-                                    r'cannot open shared object file: No such file or directory'):
+                                    r'Module not available: '):
             manager.EnableModule("non-exist_ent", dbus.Boolean(True))
         with self.assertRaisesRegex(dbus.exceptions.DBusException,
                                     r'Module unloading is not currently supported.'):
@@ -305,7 +305,7 @@ class UdisksBaseTest(udiskstestcase.UdisksTestCase):
 
         # format another disk to ext4 with the same label, ResolveDevice should
         # now return both devices
-        ret, _out = self.run_command('mkfs.ext4 -F -L %s %s' % (label, self.vdevs[1]))
+        ret, out = self.run_command('mkfs.ext4 -F -L %s %s' % (label, self.vdevs[1]))
         if ret != 0:
             self.fail('Failed to create ext4 filesystem on %s: %s' % (self.vdevs[1], out))
         self.addCleanup(self._wipe, self.vdevs[1])

@@ -1,8 +1,6 @@
 import time
 import dbus
 import os
-import shutil
-import tempfile
 
 import gi
 gi.require_version('GLib', '2.0')
@@ -29,7 +27,6 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
 
     def tearDown(self):
         # tear down loop device
-        self.run_command('umount %s' % self.dev_name)
         self.run_command('losetup --detach %s' % self.dev_name)
         os.remove(self.LOOP_DEVICE_FILENAME)
 
@@ -46,20 +43,19 @@ class UdisksLoopDeviceTest(udiskstestcase.UdisksTestCase):
         ret_code, result = self.run_command('losetup --list')
         self.assertEqual(ret_code, 0)
         if self.dev_name in result:
-            self.fail('Test loop device was not deleted' % self.dev_name)
+            self.fail('Test loop device %s was not deleted' % self.dev_name)
         # TODO: Device is still present on Dbus even when detached. This is
         # probably a udisks and udisks2 issue. Not addressed for now to keep
         # the same udisks/udisks2 functionality (japokorn, Nov 2016)
 
     def test_20_setautoclear(self):
-        # autoclear detaches loop device as soon as it is umounted
-        # to be able to check that property value is set we need to mount the
-        # device first
+        # open the loop device so that it doesn't disappear once we set
+        # autoclear to True (it's otherwise not being used so it may get cleared
+        # automatically)
         flag_file_name = '/sys/class/block/%s/loop/autoclear' % os.path.basename(self.dev_name)
-        tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp)
-        self.run_command('mkfs -t ext4 %s' % self.dev_name)
-        self.run_command('mount %s %s' % (self.dev_name, tmp))
+        fd = os.open(self.dev_name, os.O_RDONLY)
+        self.addCleanup(os.close, fd)
+
         self.iface.SetAutoclear(True, self.no_options)
         self.udev_settle()
         autoclear_flag = self.get_property(self.device, '.Loop', 'Autoclear')
@@ -111,7 +107,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, self.no_options)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
@@ -145,7 +141,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
@@ -171,7 +167,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
@@ -197,7 +193,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
@@ -219,9 +215,9 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
     @udiskstestcase.tag_test(udiskstestcase.TestTags.UNSTABLE)
     def test_50_create_no_part_scan(self):
         # create a partition on the file (future loop device)
-        ret, out = self.run_command("echo 'label:dos' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
+        ret, _out = self.run_command("echo 'label:dos' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret, 0)
-        ret, out = self.run_command("echo 'size=9M, type=L' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
+        ret, _out = self.run_command("echo 'size=9M, type=L' | sfdisk %s" % self.LOOP_DEVICE_FILENAME)
         self.assertEqual(ret, 0)
 
         opts = dbus.Dictionary({"no-part-scan": dbus.Boolean(True)}, signature=dbus.Signature('sv'))
@@ -230,7 +226,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)
@@ -241,7 +237,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
         backing_file = self.str_to_ay(os.path.join(os.getcwd(), self.LOOP_DEVICE_FILENAME))
         raw.assertEqual(backing_file)
 
-        # should use the whole file except for the first 4096 bytes (offset)
+        # should use the whole file
         size = self.get_property(loop_dev_obj, ".Block", "Size")
         size.assertEqual(10 * 1024**2)
 
@@ -274,7 +270,7 @@ class UdisksManagerLoopDeviceTest(udiskstestcase.UdisksTestCase):
             loop_dev_obj_path = self.manager.LoopSetup(fd, opts)
         self.assertTrue(loop_dev_obj_path)
         self.assertTrue(loop_dev_obj_path.startswith(self.path_prefix))
-        path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
+        _path, loop_dev = loop_dev_obj_path.rsplit("/", 1)
         self.addCleanup(self.run_command, "losetup -d /dev/%s" % loop_dev)
 
         loop_dev_obj = self.get_object(loop_dev_obj_path)

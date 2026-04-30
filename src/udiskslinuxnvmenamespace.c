@@ -34,7 +34,6 @@
 #include "udisksprivate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
-#include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udisksthreadedjob.h"
@@ -314,6 +313,15 @@ format_ns_job_func (UDisksThreadedJob  *job,
                        "Error creating pollfd for cancellable");
           goto out;
         }
+    }
+
+  if (g_cancellable_is_cancelled (cancellable))
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_CANCELLED,
+                   "Format namespace job was cancelled");
+      goto out;
     }
 
   ret = TRUE;
