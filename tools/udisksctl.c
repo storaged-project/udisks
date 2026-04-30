@@ -2429,7 +2429,7 @@ handle_command_set_standby (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksDrive *drv;
+  UDisksDriveAta *ata;
   guint n;
   GVariant *options;
   GVariant *configuration;
@@ -2498,8 +2498,8 @@ handle_command_set_standby (gint        *argc,
           for (l = objects; l != NULL; l = l->next)
             {
               object = UDISKS_OBJECT (l->data);
-              drv = udisks_object_peek_drive (object);
-              if (drv != NULL)
+              ata = udisks_object_peek_drive_ata (object);
+              if (ata != NULL)
                 {
                   object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
                   g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
@@ -2515,12 +2515,12 @@ handle_command_set_standby (gint        *argc,
           for (l = objects; l != NULL; l = l->next)
             {
               object = UDISKS_OBJECT (l->data);
-              drv = udisks_object_peek_drive (object);
-              if (drv != NULL)
+              ata = udisks_object_peek_drive_ata (object);
+              if (ata != NULL)
                 {
                   UDisksBlock *block;
 
-                  block = udisks_client_get_block_for_drive (client, drv, TRUE);
+                  block = udisks_client_get_block_for_drive (client, udisks_object_peek_drive (object), TRUE);
                   if (block != NULL)
                     {
                       const gchar * const *symlinks;
@@ -2607,6 +2607,17 @@ handle_command_set_standby (gint        *argc,
       s = g_option_context_get_help (o, FALSE, NULL);
       g_printerr ("%s", s);
       g_free (s);
+      goto out;
+    }
+
+  if (udisks_object_peek_drive_ata (object) == NULL)
+    {
+      UDisksBlock *block;
+
+      block = udisks_object_peek_block (object);
+      g_printerr ("Device %s is not an ATA device\n",
+                  block ? udisks_block_get_device (block) : "(not a block device)");
+      g_object_unref (object);
       goto out;
     }
 
