@@ -1443,11 +1443,23 @@ handle_mount (UDisksFilesystem      *filesystem,
                                system_managed,
                                system_managed ? FALSE : mpoint_persistent);
 
-  udisks_notice ("Mounted %s%s at %s on behalf of uid %u",
-                 device,
-                 system_managed ? " (system)" : "",
-                 mount_point_to_use,
-                 effective_uid);
+  if (effective_uid != caller_uid)
+    {
+      udisks_notice ("Mounted %s%s at %s on behalf of uid %u (requested by uid %u)",
+                     device,
+                     system_managed ? " (system)" : "",
+                     mount_point_to_use,
+                     effective_uid,
+                     caller_uid);
+    }
+  else
+    {
+      udisks_notice ("Mounted %s%s at %s on behalf of uid %u",
+                     device,
+                     system_managed ? " (system)" : "",
+                     mount_point_to_use,
+                     effective_uid);
+    }
 
   udisks_linux_block_object_trigger_uevent_sync (UDISKS_LINUX_BLOCK_OBJECT (object),
                                                  UDISKS_DEFAULT_WAIT_TIMEOUT);
