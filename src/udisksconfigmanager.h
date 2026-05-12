@@ -34,8 +34,8 @@ G_BEGIN_DECLS
 
 /**
  * UDisksModuleLoadPreference:
- * @UDISKS_MODULE_LOAD_ONDEMAND
- * @UDISKS_MODULE_LOAD_ONSTARTUP
+ * @UDISKS_MODULE_LOAD_ONDEMAND: Load modules on demand.
+ * @UDISKS_MODULE_LOAD_ONSTARTUP: Load modules on startup.
  *
  * Enumeration used to specify when to load additional modules.
  */

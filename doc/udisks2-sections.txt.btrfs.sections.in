@@ -1,4 +1,43 @@
 <SECTION>
+<FILE>udiskslinuxmodulebtrfs</FILE>
+UDisksLinuxModuleBTRFS
+udisks_module_btrfs_new
+<SUBSECTION Standard>
+UDISKS_LINUX_MODULE_BTRFS
+UDISKS_IS_LINUX_MODULE_BTRFS
+UDISKS_TYPE_LINUX_MODULE_BTRFS
+<SUBSECTION Private>
+udisks_linux_module_btrfs_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxmanagerbtrfs</FILE>
+UDisksLinuxManagerBTRFS
+udisks_linux_manager_btrfs_new
+udisks_linux_manager_btrfs_get_module
+<SUBSECTION Standard>
+UDISKS_LINUX_MANAGER_BTRFS
+UDISKS_IS_LINUX_MANAGER_BTRFS
+UDISKS_TYPE_LINUX_MANAGER_BTRFS
+<SUBSECTION Private>
+udisks_linux_manager_btrfs_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxfilesystembtrfs</FILE>
+UDisksLinuxFilesystemBTRFS
+udisks_linux_filesystem_btrfs_new
+udisks_linux_filesystem_btrfs_update
+udisks_linux_filesystem_btrfs_get_module
+<SUBSECTION Standard>
+UDISKS_LINUX_FILESYSTEM_BTRFS
+UDISKS_IS_LINUX_FILESYSTEM_BTRFS
+UDISKS_TYPE_LINUX_FILESYSTEM_BTRFS
+<SUBSECTION Private>
+udisks_linux_filesystem_btrfs_get_type
+</SECTION>
+
+<SECTION>
 <FILE>UDisksManagerBTRFS</FILE>
 UDisksManagerBTRFS
 UDisksManagerBTRFSProxy
@@ -78,4 +117,12 @@ udisks_filesystem_btrfs_complete_remove_subvolume
 udisks_filesystem_btrfs_complete_repair
 udisks_filesystem_btrfs_complete_resize
 udisks_filesystem_btrfs_complete_set_label
+udisks_filesystem_btrfs_call_get_default_subvolume_id
+udisks_filesystem_btrfs_call_get_default_subvolume_id_finish
+udisks_filesystem_btrfs_call_get_default_subvolume_id_sync
+udisks_filesystem_btrfs_call_set_default_subvolume_id
+udisks_filesystem_btrfs_call_set_default_subvolume_id_finish
+udisks_filesystem_btrfs_call_set_default_subvolume_id_sync
+udisks_filesystem_btrfs_complete_get_default_subvolume_id
+udisks_filesystem_btrfs_complete_set_default_subvolume_id
 </SECTION>

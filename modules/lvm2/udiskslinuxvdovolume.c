@@ -43,7 +43,7 @@
 #include "jobhelpers.h"
 
 /**
- * SECTION:udisklinuxvdovolume
+ * SECTION:udiskslinuxvdovolume
  * @title: UDisksLinuxVDOVolume
  * @short_description: Linux implementation of #UDisksVDOVolume
  *

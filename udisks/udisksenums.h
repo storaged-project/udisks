@@ -46,6 +46,18 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_TIMED_OUT: The operation timed out.
  * @UDISKS_ERROR_WOULD_WAKEUP: The operation would wake up a disk that is in a deep-sleep state.
  * @UDISKS_ERROR_DEVICE_BUSY: Attempting to unmount a device that is busy.
+ * @UDISKS_ERROR_ISCSI_DAEMON_TRANSPORT_FAILED: iSCSI daemon transport communication failed.
+ * @UDISKS_ERROR_ISCSI_HOST_NOT_FOUND: iSCSI host not found.
+ * @UDISKS_ERROR_ISCSI_IDMB: iSCSI initiator database error.
+ * @UDISKS_ERROR_ISCSI_LOGIN_FAILED: iSCSI login failed.
+ * @UDISKS_ERROR_ISCSI_LOGIN_AUTH_FAILED: iSCSI login authentication failed.
+ * @UDISKS_ERROR_ISCSI_LOGIN_FATAL: iSCSI login fatal error.
+ * @UDISKS_ERROR_ISCSI_LOGOUT_FAILED: iSCSI logout failed.
+ * @UDISKS_ERROR_ISCSI_NO_FIRMWARE: iSCSI firmware not found.
+ * @UDISKS_ERROR_ISCSI_NO_OBJECTS_FOUND: No iSCSI objects found.
+ * @UDISKS_ERROR_ISCSI_NOT_CONNECTED: iSCSI not connected.
+ * @UDISKS_ERROR_ISCSI_TRANSPORT_FAILED: iSCSI transport failed.
+ * @UDISKS_ERROR_ISCSI_UNKNOWN_DISCOVERY_TYPE: Unknown iSCSI discovery type.
  *
  * Error codes for the #UDISKS_ERROR error domain and the
  * corresponding D-Bus error names.

@@ -65,7 +65,7 @@ udisks_module_object_default_init (UDisksModuleObjectIface *iface)
  * Returns: %TRUE in case the uevent was processed, %FALSE when the @device is
  *          not applicable for the object or interface.
  *
- * Since: 2.0
+ * Since: 2.0.0
  */
 gboolean
 udisks_module_object_process_uevent (UDisksModuleObject  *object,
@@ -95,7 +95,7 @@ udisks_module_object_process_uevent (UDisksModuleObject  *object,
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  *
- * Since: 2.0
+ * Since: 2.0.0
  */
 gboolean
 udisks_module_object_housekeeping (UDisksModuleObject  *object,

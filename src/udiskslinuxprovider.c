@@ -1364,10 +1364,10 @@ trigger_nvme_subsystem_uevent_source_func (TriggerNVMeSubsystemData *data)
 
 /**
  * udisks_linux_provider_trigger_nvme_subsystem_uevent:
- * @daemon: A #UDisksDaemon.
+ * @provider: A #UDisksLinuxProvider.
+ * @subsys_nqn: A NVMe subsystem NQN.
  * @action: uevent action
  * @device: A #UDisksLinuxDevice that triggered the action or %NULL if not available.
- * @subsys_nqn: A NVMe subsystem NQN.
  *
  * Triggers uevent on a NVMe subsystem, updating all block and drive
  * objects currently present. This is a thread-safe synchronous operation.

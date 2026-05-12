@@ -1,4 +1,63 @@
 <SECTION>
+<FILE>udiskslinuxmoduleiscsi</FILE>
+UDisksLinuxModuleISCSI
+udisks_module_iscsi_new
+udisks_linux_module_iscsi_get_libiscsi_context
+udisks_linux_module_iscsi_lock_libiscsi_context
+udisks_linux_module_iscsi_unlock_libiscsi_context
+<SUBSECTION Standard>
+UDISKS_LINUX_MODULE_ISCSI
+UDISKS_IS_LINUX_MODULE_ISCSI
+UDISKS_TYPE_LINUX_MODULE_ISCSI
+<SUBSECTION Private>
+udisks_linux_module_iscsi_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxmanageriscsiinitiator</FILE>
+UDisksLinuxManagerISCSIInitiator
+udisks_linux_manager_iscsi_initiator_new
+udisks_linux_manager_iscsi_initiator_get_module
+<SUBSECTION Standard>
+UDISKS_LINUX_MANAGER_ISCSI_INITIATOR
+UDISKS_IS_LINUX_MANAGER_ISCSI_INITIATOR
+UDISKS_TYPE_LINUX_MANAGER_ISCSI_INITIATOR
+<SUBSECTION Private>
+udisks_linux_manager_iscsi_initiator_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxiscsisession</FILE>
+UDisksLinuxISCSISession
+udisks_linux_iscsi_session_new
+udisks_linux_iscsi_session_update
+<SUBSECTION Standard>
+UDISKS_LINUX_ISCSI_SESSION
+UDISKS_IS_LINUX_ISCSI_SESSION
+UDISKS_TYPE_LINUX_ISCSI_SESSION
+<SUBSECTION Private>
+udisks_linux_iscsi_session_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxiscsisessionobject</FILE>
+UDisksLinuxISCSISessionObject
+udisks_linux_iscsi_session_object_new
+udisks_linux_iscsi_session_object_get_module
+udisks_linux_iscsi_session_object_get_session_id
+udisks_linux_iscsi_session_object_get_object_path
+udisks_linux_iscsi_session_object_make_object_path
+udisks_linux_iscsi_session_object_get_session_id_from_sysfs_path
+<SUBSECTION Standard>
+UDISKS_LINUX_ISCSI_SESSION_OBJECT
+UDISKS_IS_LINUX_ISCSI_SESSION_OBJECT
+UDISKS_TYPE_LINUX_ISCSI_SESSION_OBJECT
+<SUBSECTION Private>
+udisks_linux_iscsi_session_object_get_type
+udisks_linux_iscsi_session_object_process_uevent
+</SECTION>
+
+<SECTION>
 <FILE>UDisksManagerISCSIInitiator</FILE>
 UDisksManagerISCSIInitiator
 UDisksManagerISCSIInitiatorProxy

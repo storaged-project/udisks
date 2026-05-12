@@ -62,7 +62,7 @@ struct _UDisksModule
  *
  * Returns: (transfer full): The module ID string. Free with g_free().
  *
- * Since: 2.0
+ * Since: 2.0.0
  */
 typedef gchar *(*UDisksModuleIDFunc) (void);
 
@@ -79,7 +79,7 @@ typedef gchar *(*UDisksModuleIDFunc) (void);
  * Returns: (transfer full): A #UDisksModule object or %NULL if @error is set.
  *                           Free with g_object_unref().
  *
- * Since: 2.9
+ * Since: 2.9.0
  */
 typedef UDisksModule* (*UDisksModuleNewFunc) (UDisksDaemon  *daemon,
                                               GCancellable  *cancellable,
