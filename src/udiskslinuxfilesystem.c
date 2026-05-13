@@ -677,7 +677,7 @@ sanitize_mount_point (const gchar *mount_dir,
 }
 
 /*
- * calculate_mount_point: <internal>
+ * create_mount_point: <internal>
  * @daemon: A #UDisksDaemon.
  * @block: A #UDisksBlock.
  * @uid: user id of the calling user
@@ -687,19 +687,26 @@ sanitize_mount_point (const gchar *mount_dir,
  * @persistent: if the mount point is persistent (survives reboot) or not
  * @error: Return location for error or %NULL.
  *
- * Calculates the mount point to use.
+ * Computes a unique mount point under MOUNT_BASE and creates the directory.
+ * mkdir(2) is used inside the uniquification loop so name reservation and
+ * collision detection happen in a single syscall.
  *
- * Returns: A UTF-8 string with the mount point to use or %NULL if @error is set. Free with g_free().
+ * On success the directory exists at the returned path; the caller owns it
+ * and MUST g_rmdir() it if a later step in the mount pipeline fails before
+ * the mount completes.
+ *
+ * Returns: A UTF-8 string with the mount point, or %NULL if @error is set.
+ * Free with g_free().
  */
 static gchar *
-calculate_mount_point (UDisksDaemon  *daemon,
-                       UDisksBlock   *block,
-                       uid_t          uid,
-                       gid_t          gid,
-                       const gchar   *user_name,
-                       const gchar   *fs_type,
-                       gboolean      *persistent,
-                       GError       **error)
+create_mount_point (UDisksDaemon  *daemon,
+                    UDisksBlock   *block,
+                    uid_t          uid,
+                    gid_t          gid,
+                    const gchar   *user_name,
+                    const gchar   *fs_type,
+                    gboolean      *persistent,
+                    GError       **error)
 {
   UDisksLinuxBlockObject *object = NULL;
   gboolean fs_shared = FALSE;
@@ -801,23 +808,33 @@ calculate_mount_point (UDisksDaemon  *daemon,
 
   /* ... then uniqify the mount point */
   orig_mount_point = g_strdup (mount_point);
-  for (n = 1; g_file_test (mount_point, G_FILE_TEST_EXISTS) && n <= 1000; n++)
+  for (n = 1; n <= 1000; n++)
     {
+      if (g_mkdir (mount_point, 0700) == 0)
+        break;
+      if (errno != EEXIST)
+        {
+          g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                       "Error creating mount point `%s': %m", mount_point);
+          g_free (mount_point);
+          mount_point = NULL;
+          break;
+        }
+      /* EEXIST: name taken, try next suffix */
       g_free (mount_point);
       mount_point = g_strdup_printf ("%s%u", orig_mount_point, n);
     }
-  g_free (orig_mount_point);
-  if (n > 1000)
+  if (mount_point != NULL && n > 1000)
     {
       g_set_error (error,
                    UDISKS_ERROR,
                    UDISKS_ERROR_FAILED,
                    "Too many mount points with prefix `%s'",
-                   mount_point);
+                   orig_mount_point);
       g_free (mount_point);
       mount_point = NULL;
-      goto out;
     }
+  g_free (orig_mount_point);
 
  out:
   g_free (mount_dir);
@@ -1170,14 +1187,14 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
     }
 
   /* Calculate mount point (guaranteed to be valid UTF-8) */
-  *mount_point_to_use = calculate_mount_point (daemon,
-                                               block,
-                                               caller_uid,
-                                               caller_gid,
-                                               caller_user_name,
-                                               fs_type_to_use,
-                                               mpoint_persistent,
-                                               &error);
+  *mount_point_to_use = create_mount_point (daemon,
+                                            block,
+                                            caller_uid,
+                                            caller_gid,
+                                            caller_user_name,
+                                            fs_type_to_use,
+                                            mpoint_persistent,
+                                            &error);
   if (*mount_point_to_use == NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -1198,19 +1215,9 @@ handle_mount_dynamic (UDisksDaemon          *daemon,
   g_free (fs_type_to_use);
   if (mount_options == NULL)
     {
+      if (g_rmdir (*mount_point_to_use) != 0)
+        udisks_warning ("Error removing directory %s: %m", *mount_point_to_use);
       g_dbus_method_invocation_take_error (invocation, error);
-      return FALSE;
-    }
-
-  /* Create the mount point */
-  if (g_mkdir (*mount_point_to_use, 0700) != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating mount point `%s': %m",
-                                             *mount_point_to_use);
-      free_mount_options (mount_options);
       return FALSE;
     }
 
