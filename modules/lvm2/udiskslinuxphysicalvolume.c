@@ -122,6 +122,8 @@ udisks_linux_physical_volume_new (void)
  * udisks_linux_physical_volume_update:
  * @physical_volume: A #UDisksLinuxPhysicalVolume.
  * @object: The enclosing #UDisksLinuxBlockObject instance.
+ * @group_object: The #UDisksLinuxVolumeGroupObject for the volume group.
+ * @pv_info: LVM physical volume data.
  *
  * Updates the interface.
  */

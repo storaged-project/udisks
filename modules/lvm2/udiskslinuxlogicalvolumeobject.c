@@ -246,6 +246,9 @@ udisks_linux_logical_volume_object_class_init (UDisksLinuxLogicalVolumeObjectCla
 
 /**
  * udisks_linux_logical_volume_object_new:
+ * @module: A #UDisksLinuxModuleLVM2.
+ * @vg_object: The #UDisksLinuxVolumeGroupObject for the volume group.
+ * @name: The logical volume name.
  *
  * Create a new LogicalVolume object.
  *

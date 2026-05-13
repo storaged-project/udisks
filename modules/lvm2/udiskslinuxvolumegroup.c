@@ -53,7 +53,7 @@
 #include "jobhelpers.h"
 
 /**
- * SECTION:udiskslinuxvolume_group
+ * SECTION:udiskslinuxvolumegroup
  * @title: UDisksLinuxVolumeGroup
  * @short_description: Linux implementation of #UDisksVolumeGroup
  *

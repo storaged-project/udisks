@@ -19,6 +19,7 @@ udisks_daemon_get_uninstalled
 udisks_daemon_get_utab_monitor
 udisks_daemon_get_parent_for_tracking
 UDisksDaemonWaitFuncGeneric
+UDisksDaemonWaitFuncObject
 udisks_daemon_wait_for_object_sync
 UDISKS_DEFAULT_WAIT_TIMEOUT
 udisks_daemon_get_objects
@@ -42,6 +43,31 @@ UDISKS_IS_DAEMON
 udisks_daemon_get_type
 udisks_daemon_marshal_BOOLEAN__BOOLEAN_BOXED
 udisks_daemon_marshal_BOOLEAN__BOXED_INT_BOXED_BOXED
+</SECTION>
+
+<SECTION>
+<FILE>udisksconfigmanager</FILE>
+<TITLE>UDisksConfigManager</TITLE>
+UDisksConfigManager
+UDisksModuleLoadPreference
+udisks_config_manager_new
+udisks_config_manager_new_uninstalled
+udisks_config_manager_get_uninstalled
+udisks_config_manager_get_modules
+udisks_config_manager_get_modules_all
+udisks_config_manager_get_load_preference
+udisks_config_manager_get_encryption
+udisks_config_manager_get_supported_encryption_types
+udisks_config_manager_get_config_dir
+<SUBSECTION Standard>
+UDISKS_TYPE_CONFIG_MANAGER
+UDISKS_CONFIG_MANAGER
+UDISKS_IS_CONFIG_MANAGER
+UDISKS_CONFIG_MANAGER_CLASS
+UDISKS_IS_CONFIG_MANAGER_CLASS
+UDISKS_CONFIG_MANAGER_GET_CLASS
+<SUBSECTION Private>
+udisks_config_manager_get_type
 </SECTION>
 
 <SECTION>
@@ -157,7 +183,6 @@ UDisksLinuxDriveAta
 udisks_linux_drive_ata_new
 udisks_linux_drive_ata_update
 udisks_linux_drive_ata_refresh_smart_sync
-udisks_linux_drive_ata_smart_selftest_sync
 udisks_linux_drive_ata_apply_configuration
 udisks_linux_drive_ata_secure_erase_sync
 udisks_linux_drive_ata_get_pm_state
@@ -585,6 +610,8 @@ udisks_module_new_block_object_interface
 udisks_module_new_drive_object_interface
 udisks_module_track_parent
 udisks_module_get_daemon
+udisks_module_handle_uevent
+UDisksUeventAction
 udisks_module_object_process_uevent
 udisks_module_object_housekeeping
 <SUBSECTION Standard>

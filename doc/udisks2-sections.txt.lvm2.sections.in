@@ -1,4 +1,144 @@
 <SECTION>
+<FILE>udiskslinuxmodulelvm2</FILE>
+UDisksLinuxModuleLVM2
+udisks_module_lvm2_new
+udisks_linux_module_lvm2_find_volume_group_object
+udisks_linux_module_lvm2_get_name_to_volume_group
+<SUBSECTION Standard>
+UDISKS_LINUX_MODULE_LVM2
+UDISKS_IS_LINUX_MODULE_LVM2
+UDISKS_TYPE_LINUX_MODULE_LVM2
+<SUBSECTION Private>
+udisks_linux_module_lvm2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxmanagerlvm2</FILE>
+UDisksLinuxManagerLVM2
+udisks_linux_manager_lvm2_new
+udisks_linux_manager_lvm2_get_module
+<SUBSECTION Standard>
+UDISKS_LINUX_MANAGER_LVM2
+UDISKS_IS_LINUX_MANAGER_LVM2
+UDISKS_TYPE_LINUX_MANAGER_LVM2
+<SUBSECTION Private>
+udisks_linux_manager_lvm2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxblocklvm2</FILE>
+UDisksLinuxBlockLVM2
+udisks_linux_block_lvm2_new
+udisks_linux_block_lvm2_update
+<SUBSECTION Standard>
+UDISKS_LINUX_BLOCK_LVM2
+UDISKS_IS_LINUX_BLOCK_LVM2
+UDISKS_TYPE_LINUX_BLOCK_LVM2
+<SUBSECTION Private>
+udisks_linux_block_lvm2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxphysicalvolume</FILE>
+UDisksLinuxPhysicalVolume
+udisks_linux_physical_volume_new
+udisks_linux_physical_volume_update
+udisks_linux_block_object_update_lvm_pv
+<SUBSECTION Standard>
+UDISKS_LINUX_PHYSICAL_VOLUME
+UDISKS_IS_LINUX_PHYSICAL_VOLUME
+UDISKS_TYPE_LINUX_PHYSICAL_VOLUME
+<SUBSECTION Private>
+udisks_linux_physical_volume_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxvolumegroup</FILE>
+UDisksLinuxVolumeGroup
+udisks_linux_volume_group_new
+udisks_linux_volume_group_update
+udisks_linux_volume_group_get_logical_volumes
+<SUBSECTION Standard>
+UDISKS_LINUX_VOLUME_GROUP
+UDISKS_IS_LINUX_VOLUME_GROUP
+UDISKS_TYPE_LINUX_VOLUME_GROUP
+<SUBSECTION Private>
+udisks_linux_volume_group_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxvolumegroupobject</FILE>
+UDisksLinuxVolumeGroupObject
+udisks_linux_volume_group_object_new
+udisks_linux_volume_group_object_get_name
+udisks_linux_volume_group_object_get_module
+udisks_linux_volume_group_object_update
+udisks_linux_volume_group_object_poll
+udisks_linux_volume_group_object_destroy
+udisks_linux_volume_group_object_find_logical_volume_object
+<SUBSECTION Standard>
+UDISKS_LINUX_VOLUME_GROUP_OBJECT
+UDISKS_IS_LINUX_VOLUME_GROUP_OBJECT
+UDISKS_TYPE_LINUX_VOLUME_GROUP_OBJECT
+<SUBSECTION Private>
+udisks_linux_volume_group_object_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxlogicalvolume</FILE>
+UDisksLinuxLogicalVolume
+udisks_linux_logical_volume_new
+udisks_linux_logical_volume_update
+udisks_linux_logical_volume_update_etctabs
+udisks_linux_logical_volume_teardown_block
+<SUBSECTION Standard>
+UDISKS_LINUX_LOGICAL_VOLUME
+UDISKS_IS_LINUX_LOGICAL_VOLUME
+UDISKS_TYPE_LINUX_LOGICAL_VOLUME
+<SUBSECTION Private>
+udisks_linux_logical_volume_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxlogicalvolumeobject</FILE>
+UDisksLinuxLogicalVolumeObject
+udisks_linux_logical_volume_object_new
+udisks_linux_logical_volume_object_get_module
+udisks_linux_logical_volume_object_get_volume_group
+udisks_linux_logical_volume_object_get_name
+udisks_linux_logical_volume_object_update
+udisks_linux_logical_volume_object_update_etctabs
+<SUBSECTION Standard>
+UDISKS_LINUX_LOGICAL_VOLUME_OBJECT
+UDISKS_IS_LINUX_LOGICAL_VOLUME_OBJECT
+UDISKS_TYPE_LINUX_LOGICAL_VOLUME_OBJECT
+<SUBSECTION Private>
+udisks_linux_logical_volume_object_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxvdovolume</FILE>
+UDisksLinuxVDOVolume
+udisks_linux_vdo_volume_new
+udisks_linux_vdo_volume_update
+<SUBSECTION Standard>
+UDISKS_LINUX_VDO_VOLUME
+UDISKS_IS_LINUX_VDO_VOLUME
+UDISKS_TYPE_LINUX_VDO_VOLUME
+<SUBSECTION Private>
+udisks_linux_vdo_volume_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslvm2daemonutil</FILE>
+udisks_daemon_util_lvm2_block_is_unused
+udisks_daemon_util_lvm2_wipe_block
+udisks_daemon_util_lvm2_name_is_reserved
+udisks_daemon_util_lvm2_trigger_udev
+udisks_daemon_util_lvm2_gather_pvs
+</SECTION>
+
+<SECTION>
 <FILE>UDisksManagerLVM2</FILE>
 UDisksManagerLVM2
 UDisksManagerLVM2Proxy

@@ -34,7 +34,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_debug:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_DEBUG.
  * Warning: ONLY WORKS WHEN COMPILED WITH --enable-debug
@@ -49,7 +49,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_info:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_INFO.
  * Warning: ONLY WORKS WHEN COMPILED WITH --enable-debug
@@ -64,7 +64,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_notice:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
  *
@@ -74,7 +74,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_message:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_MESSAGE.
  *
@@ -84,7 +84,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_warning:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_WARNING.
  *
@@ -94,7 +94,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_critical:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_CRITICAL.
  *
@@ -104,7 +104,7 @@ void udisks_log (UDisksLogLevel   level,
 
 /**
  * udisks_error:
- * @args...: printf()-style format string and arguments
+ * @...: printf()-style format string and arguments
  *
  * Logging macro for %UDISKS_LOG_LEVEL_ERROR.
  * Warning: THIS ALSO TERMINATES THE PROCESS with the abort() call!

@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>udiskslinuxmodulelsm</FILE>
+UDisksLinuxModuleLSM
+udisks_module_lsm_new
+udisks_linux_module_lsm_drive_check
+udisks_linux_module_lsm_drive_local_check
+<SUBSECTION Standard>
+UDISKS_LINUX_MODULE_LSM
+UDISKS_IS_LINUX_MODULE_LSM
+UDISKS_TYPE_LINUX_MODULE_LSM
+<SUBSECTION Private>
+udisks_linux_module_lsm_get_type
+</SECTION>
+
+<SECTION>
 <FILE>UDisksDriveLSM</FILE>
 UDisksDriveLSM
 UDisksDriveLSMProxy
