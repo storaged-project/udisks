@@ -629,7 +629,7 @@ handle_command_mount_unmount (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   if (is_mount)
     g_option_context_set_summary (o, "Mount a filesystem.");
   else
@@ -1137,7 +1137,7 @@ handle_command_unlock_lock (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   if (is_unlock)
     g_option_context_set_summary (o, "Unlock an encrypted device.");
   else
@@ -1543,7 +1543,7 @@ handle_command_loop (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   if (is_setup)
     g_option_context_set_summary (o, "Set up a loop device.");
   else
@@ -1885,7 +1885,7 @@ handle_command_smart_simulate (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Set SMART data for drive.");
   g_option_context_add_main_entries (o,
                                      command_smart_simulate_entries,
@@ -2172,7 +2172,7 @@ handle_command_power_off (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Safely power off a drive.");
   g_option_context_add_main_entries (o,
                                      command_power_off_entries,
@@ -2408,7 +2408,7 @@ handle_command_info (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Show information about an object.");
   g_option_context_add_main_entries (o, command_info_entries, NULL /* GETTEXT_PACKAGE*/);
 
@@ -2615,7 +2615,7 @@ handle_command_dump (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Show information about all objects.");
   g_option_context_add_main_entries (o, command_dump_entries, NULL /* GETTEXT_PACKAGE*/);
 
@@ -2921,7 +2921,7 @@ handle_command_monitor (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Monitor changes to objects.");
   g_option_context_add_main_entries (o, command_monitor_entries, NULL /* GETTEXT_PACKAGE*/);
 
@@ -3065,7 +3065,7 @@ handle_command_status (gint        *argc,
   o = g_option_context_new (NULL);
   if (request_completion)
     g_option_context_set_ignore_unknown_options (o, TRUE);
-  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_help_enabled (o, !request_completion);
   g_option_context_set_summary (o, "Shows high-level status.");
   g_option_context_add_main_entries (o, command_status_entries, NULL /* GETTEXT_PACKAGE*/);
 
@@ -3354,7 +3354,7 @@ main (int argc,
 
  again:
   command = argv[1];
-  if (g_strcmp0 (command, "help") == 0)
+  if (g_strcmp0 (command, "help") == 0 || g_strcmp0 (command, "--help") == 0 || g_strcmp0 (command, "-h") == 0)
     {
       if (request_completion)
         {
