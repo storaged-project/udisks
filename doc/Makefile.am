@@ -12,7 +12,7 @@ DOC_MODULE=udisks2
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
 
 # Extra options to supply to gtkdoc-scan
-SCAN_OPTIONS=
+SCAN_OPTIONS=--ignore-decorators="G_GNUC_DEPRECATED"
 
 # Types
 UDISKS_TYPES=$(DOC_MODULE).types
