@@ -1096,6 +1096,35 @@ pack_binary_blob (const gchar *data,
   return g_variant_builder_end (&builder);
 }
 
+static gboolean
+has_crypttab_passphrase (UDisksBlock *block)
+{
+  GVariantIter iter;
+  const gchar *type;
+  GVariant *details;
+
+  g_variant_iter_init (&iter, udisks_block_get_configuration (block));
+  while (g_variant_iter_next (&iter, "(&s@a{sv})", &type, &details))
+    {
+      if (g_strcmp0 (type, "crypttab") == 0)
+        {
+          const gchar *passphrase_path;
+          if (g_variant_lookup (details, "passphrase-path", "^&ay", &passphrase_path) &&
+              strlen (passphrase_path) > 0 &&
+              !g_str_has_prefix (passphrase_path, "/dev"))
+            {
+              g_variant_unref (details);
+              return TRUE;
+            }
+          g_variant_unref (details);
+          return FALSE;
+        }
+      g_variant_unref (details);
+    }
+
+  return FALSE;
+}
+
 static gint
 handle_command_unlock_lock (gint        *argc,
                             gchar      **argv[],
@@ -1305,7 +1334,7 @@ handle_command_unlock_lock (gint        *argc,
   options = g_variant_builder_end (&builder);
   g_variant_ref_sink (options);
 
-  if (is_unlock && !opt_unlock_keyfile)
+  if (is_unlock && !opt_unlock_keyfile && !has_crypttab_passphrase (block))
     passphrase = read_passphrase ();
 
  try_again:
