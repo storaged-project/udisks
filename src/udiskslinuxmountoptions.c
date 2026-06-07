@@ -1156,7 +1156,25 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
                                                   shared_fs);
 
   /* validate mount options */
-  str = g_string_new ("uhelper=udisks2,nodev,nosuid");
+  {
+    const gchar *strict_filesystems[] = { "erofs", "zonefs", NULL };
+    gboolean is_strict = FALSE;
+    gint i;
+
+    for (i = 0; strict_filesystems[i] != NULL; i++)
+      {
+        if (g_strcmp0 (fs_type, strict_filesystems[i]) == 0)
+          {
+            is_strict = TRUE;
+            break;
+          }
+      }
+
+    if (is_strict)
+      str = g_string_new ("nodev,nosuid");
+    else
+      str = g_string_new ("uhelper=udisks2,nodev,nosuid");
+  }
   g_variant_iter_init (&iter, options_to_use);
   while (g_variant_iter_next (&iter, "{&s&s}", &key, &value))
     {
