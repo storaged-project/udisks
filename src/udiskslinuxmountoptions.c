@@ -1156,7 +1156,10 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
                                                   shared_fs);
 
   /* validate mount options */
-  str = g_string_new ("uhelper=udisks2,nodev,nosuid");
+  if (g_strcmp0 (fs_type, "erofs") == 0)
+    str = g_string_new ("nodev,nosuid");
+  else
+    str = g_string_new ("uhelper=udisks2,nodev,nosuid");
   g_variant_iter_init (&iter, options_to_use);
   while (g_variant_iter_next (&iter, "{&s&s}", &key, &value))
     {
