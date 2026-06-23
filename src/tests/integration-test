@@ -99,6 +99,20 @@ def get_distro_version():
 DISTRO_VER = get_distro_version()
 
 
+def get_exfatprogs_version():
+    try:
+        proc = subprocess.run(['mkfs.exfat', '--version'],
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        match = re.search(r'(\d+\.\d+\.\d+)', proc.stdout.decode())
+        if match:
+            return tuple(int(x) for x in match.group(1).split('.'))
+    except FileNotFoundError:
+        pass
+    return (0, 0, 0)
+
+EXFATPROGS_VER = get_exfatprogs_version()
+
+
 # ----------------------------------------------------------------------------
 
 class UDisksTestCase(unittest.TestCase):
@@ -339,6 +353,8 @@ class UDisksTestCase(unittest.TestCase):
                      'ntfs': ['-F'],
                      'btrfs': ['-f'],
                      'reiserfs': ['-ff']}
+        if EXFATPROGS_VER >= (1, 4, 0):
+            extra_opt['exfat'] = ['-P', 'none']
 
         cmd = [mkcmd.get(fs_type, 'mkfs.' + fs_type)]
         cmd += extra_opt.get(fs_type, [])
