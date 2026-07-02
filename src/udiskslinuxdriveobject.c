@@ -258,8 +258,11 @@ udisks_linux_drive_object_constructed (GObject *_object)
   strip_and_replace_with_uscore (model);
   strip_and_replace_with_uscore (serial);
   str = g_string_new ("/org/freedesktop/UDisks2/drives/");
-  if (vendor == NULL && model == NULL && serial == NULL)
+  if ((vendor == NULL || strlen(vendor) == 0) &&
+      (model == NULL || strlen(model) == 0) &&
+      (serial == NULL || strlen(serial) == 0))
     {
+      g_warning("Drive has no vendor/model/serial.");
       g_string_append (str, "drive");
     }
   else
