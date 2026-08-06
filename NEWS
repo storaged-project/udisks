@@ -1,4 +1,48 @@
 ---------------------------
+udisks 2.11.2
+---------------------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+This is a bugfix release with a security fix, several crash and memory
+leak fixes, and mount options update.
+
+Security fix:
+ - CVE-2026-7867: An unprivileged D-Bus caller could use the 'as-user'
+   Filesystem.Mount() option combined with fstab entries containing 'user'
+   or 'users' mount options to mount on behalf of another user without
+   polkit authorization.
+
+Changes since 2.11.1:
+
+Tomas Bzatek (21):
+      udiskslinuxnvmenamespace: Report cancellation as error in format job
+      udiskslinuxprovider: Fix memory leak on spurious uevents
+      udiskslinuxprovider: Initialize GError pointer in sleep signal handler
+      udisksdaemonutil: Fix missing NULL terminator in resolve_links()
+      udiskslinuxdriveata: Add missing D-Bus method completion for SecurityEraseUnit
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_resize
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_repair
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_check
+      udiskslinuxfilesystem: Fix mounted check in filesystem update
+      udiskslinuxmountoptions: Fix integer overflow in UID/GID option parsing
+      udiskslinuxmountoptions: Fix static buffer and hardcoded limit in is_uid_in_gid
+      doap: Update storaged.org https link
+      udisksmodulemanager: Fix broken module error check
+      lvm2: Fix NULL dereference in VG create uevent trigger loop
+      mount options: Sync exfat allowed options with the latest kernel
+      udiskslinuxfilesystem: Separate real caller identity from as-user target
+      udiskslinuxfilesystem: Rework fstab mount authorization for as-user
+      udiskslinuxfilesystem: Log real caller uid for as-user mounts
+      udisksdaemonutil: Pass as-user target to polkit details
+      tests: Add security tests for as-user mount authorization
+      tests: Trigger controller rescan after namespace re-attach in test_ns_detach
+
+Vojtech Trefny (1):
+      tests: Temporarily skip NTFS3 configurable mount options test
+
+---------------------------
 udisks 2.11.1
 ---------------------------
 
