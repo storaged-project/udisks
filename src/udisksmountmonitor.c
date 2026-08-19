@@ -406,39 +406,6 @@ udisks_mount_monitor_new (void)
   return UDISKS_MOUNT_MONITOR (g_object_new (UDISKS_TYPE_MOUNT_MONITOR, NULL));
 }
 
-static gboolean
-have_mount (UDisksMountMonitor *monitor,
-            dev_t               dev,
-            const gchar        *mount_point)
-{
-  GList *l;
-  gboolean ret;
-
-  ret = FALSE;
-
-  for (l = monitor->mounts; l != NULL; l = l->next)
-    {
-      UDisksMount *mount = UDISKS_MOUNT (l->data);
-
-      if (udisks_mount_get_dev (mount) != dev)
-        continue;
-
-      if (mount_point != NULL)
-        {
-          if (udisks_mount_get_mount_type (mount) != UDISKS_MOUNT_TYPE_FILESYSTEM)
-            continue;
-
-          if (g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) != 0)
-            continue;
-        }
-
-      ret = TRUE;
-      break;
-    }
-
-  return ret;
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
@@ -460,10 +427,11 @@ udisks_mount_monitor_read_mountinfo (gchar  **contents,
 
 static void
 udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
-                                      const gchar         *contents)
+                                      const gchar         *contents,
+                                      GHashTable          *seen_mounts)
 {
-  gchar **lines;
-  guint n;
+  const gchar *p;
+  GString *line_buf;
 
   /* See Documentation/filesystems/proc.txt for the format of /proc/self/mountinfo
    *
@@ -472,103 +440,118 @@ udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
   if (contents == NULL)
     return;
 
-  lines = g_strsplit (contents, "\n", 0);
-  for (n = 0; lines[n] != NULL; n++)
+  line_buf = g_string_sized_new (512);
+  for (p = contents; *p != '\0'; )
     {
-      guint mount_id;
-      guint parent_id;
-      guint major, minor;
-      gchar encoded_root[PATH_MAX + 1];
-      gchar encoded_mount_point[PATH_MAX + 1];
-      gchar *mount_point;
-      dev_t dev;
+      const gchar *next = strchr (p, '\n');
+      gsize len = next ? (gsize)(next - p) : strlen (p);
 
-      if (strlen (lines[n]) == 0)
-        continue;
-
-      if (sscanf (lines[n],
-                  "%u %u %u:%u " PATH_MAX_FMT " " PATH_MAX_FMT,
-                  &mount_id,
-                  &parent_id,
-                  &major,
-                  &minor,
-                  encoded_root,
-                  encoded_mount_point) != 6)
+      if (len > 0)
         {
-          udisks_warning ("Error parsing line '%s'", lines[n]);
-          continue;
-        }
-      encoded_root[sizeof encoded_root - 1] = '\0';
-      encoded_mount_point[sizeof encoded_mount_point - 1] = '\0';
+          guint mount_id;
+          guint parent_id;
+          guint major, minor;
+          gchar encoded_root[PATH_MAX + 1];
+          gchar encoded_mount_point[PATH_MAX + 1];
+          gchar *mount_point;
+          gchar *key;
+          dev_t dev;
 
-      /* Temporary work-around for btrfs, see
-       *
-       *  https://bugzilla.redhat.com/show_bug.cgi?id=495152#c31
-       *  http://article.gmane.org/gmane.comp.file-systems.btrfs/2851
-       *
-       * for details.
-       */
-      if (major == 0)
-        {
-          const gchar *sep;
-          sep = strstr (lines[n], " - ");
-          if (sep != NULL)
+          g_string_truncate (line_buf, 0);
+          g_string_append_len (line_buf, p, len);
+
+          if (sscanf (line_buf->str,
+                      "%u %u %u:%u " PATH_MAX_FMT " " PATH_MAX_FMT,
+                      &mount_id,
+                      &parent_id,
+                      &major,
+                      &minor,
+                      encoded_root,
+                      encoded_mount_point) != 6)
             {
-              gchar fstype[PATH_MAX + 1];
-              gchar mount_source[PATH_MAX + 1];
-              struct stat statbuf;
+              udisks_warning ("Error parsing line '%s'", line_buf->str);
+              goto next_line;
+            }
+          encoded_root[sizeof encoded_root - 1] = '\0';
+          encoded_mount_point[sizeof encoded_mount_point - 1] = '\0';
 
-              if (sscanf (sep + 3, PATH_MAX_FMT " " PATH_MAX_FMT, fstype, mount_source) != 2)
+          /* Temporary work-around for btrfs, see
+           *
+           *  https://bugzilla.redhat.com/show_bug.cgi?id=495152#c31
+           *  http://article.gmane.org/gmane.comp.file-systems.btrfs/2851
+           *
+           * for details.
+           */
+          if (major == 0)
+            {
+              const gchar *sep;
+              sep = strstr (line_buf->str, " - ");
+              if (sep != NULL)
                 {
-                  udisks_warning ("Error parsing things past - for '%s'", lines[n]);
-                  continue;
+                  gchar fstype[PATH_MAX + 1];
+                  gchar mount_source[PATH_MAX + 1];
+                  struct stat statbuf;
+
+                  if (sscanf (sep + 3, PATH_MAX_FMT " " PATH_MAX_FMT, fstype, mount_source) != 2)
+                    {
+                      udisks_warning ("Error parsing things past - for '%s'", line_buf->str);
+                      goto next_line;
+                    }
+                  fstype[sizeof fstype - 1] = '\0';
+                  mount_source[sizeof mount_source - 1] = '\0';
+
+                  if (g_strcmp0 (fstype, "btrfs") != 0)
+                    goto next_line;
+
+                  if (!g_str_has_prefix (mount_source, "/dev/"))
+                    goto next_line;
+
+                  if (stat (mount_source, &statbuf) != 0)
+                    {
+                      udisks_warning ("Error statting %s: %m", mount_source);
+                      goto next_line;
+                    }
+
+                  if (!S_ISBLK (statbuf.st_mode))
+                    {
+                      udisks_warning ("%s is not a block device", mount_source);
+                      goto next_line;
+                    }
+
+                  dev = statbuf.st_rdev;
                 }
-              fstype[sizeof fstype - 1] = '\0';
-              mount_source[sizeof mount_source - 1] = '\0';
-
-              if (g_strcmp0 (fstype, "btrfs") != 0)
-                continue;
-
-              if (!g_str_has_prefix (mount_source, "/dev/"))
-                continue;
-
-              if (stat (mount_source, &statbuf) != 0)
+              else
                 {
-                  udisks_warning ("Error statting %s: %m", mount_source);
-                  continue;
+                  goto next_line;
                 }
-
-              if (!S_ISBLK (statbuf.st_mode))
-                {
-                  udisks_warning ("%s is not a block device", mount_source);
-                  continue;
-                }
-
-              dev = statbuf.st_rdev;
             }
           else
             {
-              continue;
+              dev = makedev (major, minor);
             }
-        }
-      else
-        {
-          dev = makedev (major, minor);
+
+          mount_point = g_strcompress (encoded_mount_point);
+
+          key = g_strdup_printf ("%" G_GUINT64_FORMAT ":%s", (guint64) dev, mount_point);
+          if (!g_hash_table_contains (seen_mounts, key))
+            {
+              UDisksMount *mount;
+              g_hash_table_add (seen_mounts, key);
+              mount = _udisks_mount_new (dev, mount_point, UDISKS_MOUNT_TYPE_FILESYSTEM);
+              monitor->mounts = g_list_prepend (monitor->mounts, mount);
+            }
+          else
+            {
+              g_free (key);
+            }
+
+          g_free (mount_point);
         }
 
-      mount_point = g_strcompress (encoded_mount_point);
-
-      /* TODO: we can probably use a hash table or something if this turns out to be slow */
-      if (!have_mount (monitor, dev, mount_point))
-        {
-          UDisksMount *mount;
-          mount = _udisks_mount_new (dev, mount_point, UDISKS_MOUNT_TYPE_FILESYSTEM);
-          monitor->mounts = g_list_prepend (monitor->mounts, mount);
-        }
-
-      g_free (mount_point);
+    next_line:
+      p = next ? next + 1 : p + len;
     }
-  g_strfreev (lines);
+  g_string_free (line_buf, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -600,51 +583,69 @@ udisks_mount_monitor_read_swaps (gchar  **contents,
 
 static void
 udisks_mount_monitor_parse_swaps (UDisksMountMonitor  *monitor,
-                                  const gchar         *contents)
+                                  const gchar         *contents,
+                                  GHashTable          *seen_mounts)
 {
-  gchar **lines;
-  guint n;
+  const gchar *p;
+  GString *line_buf;
+  guint n = 0;
 
   if (contents == NULL)
     return;
 
-  lines = g_strsplit (contents, "\n", 0);
-  for (n = 0; lines[n] != NULL; n++)
+  line_buf = g_string_sized_new (512);
+  for (p = contents; *p != '\0'; n++)
     {
-      gchar filename[PATH_MAX + 1];
-      struct stat statbuf;
-      dev_t dev;
+      const gchar *next = strchr (p, '\n');
+      gsize len = next ? (gsize)(next - p) : strlen (p);
 
-      /* skip first line of explanatory text */
-      if (n == 0)
-        continue;
-
-      if (strlen (lines[n]) == 0)
-        continue;
-
-      if (sscanf (lines[n], PATH_MAX_FMT, filename) != 1)
+      if (len > 0)
         {
-          udisks_warning ("Error parsing line '%s'", lines[n]);
-          continue;
-        }
-      filename[sizeof filename - 1] = '\0';
+          gchar filename[PATH_MAX + 1];
+          struct stat statbuf;
+          gchar *key;
+          dev_t dev;
 
-      if (stat (filename, &statbuf) != 0)
-        {
-          udisks_warning ("Error statting %s: %m", filename);
-          continue;
+          /* skip first line of explanatory text */
+          if (n == 0)
+            goto next_line;
+
+          g_string_truncate (line_buf, 0);
+          g_string_append_len (line_buf, p, len);
+
+          if (sscanf (line_buf->str, PATH_MAX_FMT, filename) != 1)
+            {
+              udisks_warning ("Error parsing line '%s'", line_buf->str);
+              goto next_line;
+            }
+          filename[sizeof filename - 1] = '\0';
+
+          if (stat (filename, &statbuf) != 0)
+            {
+              udisks_warning ("Error statting %s: %m", filename);
+              goto next_line;
+            }
+
+          dev = statbuf.st_rdev;
+
+          key = g_strdup_printf ("%" G_GUINT64_FORMAT ":<swap>", (guint64) dev);
+          if (!g_hash_table_contains (seen_mounts, key))
+            {
+              UDisksMount *mount;
+              g_hash_table_add (seen_mounts, key);
+              mount = _udisks_mount_new (dev, NULL, UDISKS_MOUNT_TYPE_SWAP);
+              monitor->mounts = g_list_prepend (monitor->mounts, mount);
+            }
+          else
+            {
+              g_free (key);
+            }
         }
 
-      dev = statbuf.st_rdev;
-
-      if (!have_mount (monitor, dev, NULL))
-        {
-          UDisksMount *mount;
-          mount = _udisks_mount_new (dev, NULL, UDISKS_MOUNT_TYPE_SWAP);
-          monitor->mounts = g_list_prepend (monitor->mounts, mount);
-        }
+    next_line:
+      p = next ? next + 1 : p + len;
     }
-  g_strfreev (lines);
+  g_string_free (line_buf, TRUE);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -680,11 +681,17 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
       if (g_strcmp0 (mountinfo_checksum, monitor->mountinfo_checksum) != 0 ||
           g_strcmp0 (swaps_checksum, monitor->swaps_checksum) != 0)
         {
+          GHashTable *seen_mounts;
+
+          seen_mounts = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
           g_list_free_full (monitor->mounts, g_object_unref);
           monitor->mounts = NULL;
 
-          udisks_mount_monitor_parse_mountinfo (monitor, mountinfo_contents);
-          udisks_mount_monitor_parse_swaps (monitor, swaps_contents);
+          udisks_mount_monitor_parse_mountinfo (monitor, mountinfo_contents, seen_mounts);
+          udisks_mount_monitor_parse_swaps (monitor, swaps_contents, seen_mounts);
+
+          g_hash_table_destroy (seen_mounts);
 
           /* save current checksums */
           g_free (monitor->mountinfo_checksum);
