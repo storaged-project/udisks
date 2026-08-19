@@ -2126,8 +2126,9 @@ udisks_client_get_id_for_display (UDisksClient *client,
                 ret = g_strdup (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].short_name));
               goto out;
             }
-          else if ((g_strcmp0 (id_type[n].version, version) == 0 && strlen (version) > 0) ||
-                   (g_strcmp0 (id_type[n].version, "*") == 0 && strlen (version) > 0))
+          else if (strlen (version) > 0 &&
+                   (g_strcmp0 (id_type[n].version, version) == 0 ||
+                    g_strcmp0 (id_type[n].version, "*") == 0))
             {
               /* we know better than the compiler here */
 #if defined(__GNUC__) || defined(__clang__)
