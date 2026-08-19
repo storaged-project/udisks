@@ -24,6 +24,7 @@
 #include <gio/gunixfdlist.h>
 
 #include <stdio.h>
+#include <string.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -132,7 +133,8 @@ void udisks_string_wipe_and_free (GString *string)
 {
   if (string != NULL)
     {
-      memset (string->str, '\0', string->len);
+      if (string->str != NULL && string->allocated_len > 0)
+        explicit_bzero (string->str, string->allocated_len);
       g_string_free (string, TRUE);
     }
 }
