@@ -158,7 +158,6 @@ set_supported_filesystems (UDisksLinuxManager *manager)
   ptr_array = g_ptr_array_new ();
   for (fss_i = fss; *fss_i; fss_i++)
     g_ptr_array_add (ptr_array, (gpointer) *fss_i);
-  g_free (fss);
 
   if (! g_ptr_array_find_with_equal_func (ptr_array, "swap", g_str_equal, NULL))
     g_ptr_array_add (ptr_array, (gpointer) "swap");
@@ -166,6 +165,7 @@ set_supported_filesystems (UDisksLinuxManager *manager)
 
   udisks_manager_set_supported_filesystems (UDISKS_MANAGER (manager), (const gchar * const *) ptr_array->pdata);
   g_ptr_array_free (ptr_array, TRUE);
+  g_strfreev ((gchar **) fss);
 }
 
 static void
