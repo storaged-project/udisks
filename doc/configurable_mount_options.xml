@@ -72,9 +72,10 @@
     </para>
 
     <para>
-    The <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call will then attempt to mount the filesystem using computed options defined for the particular filesystem driver separately.
-    Multiple mount attempts are made where in case the filesystem driver is unknown to the kernel, the next one in the list is tried until the operation succeeds. This might potentially lead to extra error messages in the system log from the unsuccessful tries.
-    Distributors are suggested to tweak the priorities according to the supported filesystem drivers.
+    The <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount()</link> method call will then attempt to mount the filesystem using computed options defined for each of the filesystem driver separately.
+    Multiple mount attempts are made where in case the filesystem driver is unknown to the kernel and there are multiple drivers defined, the next one in the drivers list is tried until the operation succeeds. This might potentially lead to extra error messages in the system log from the unsuccessful tries.
+    Actual mount errors are reported as usual and are not subject to drivers fallback, apart from a "unknown filesystem type" of course.
+    Distributors are suggested to tweak the priorities according to their supported filesystem drivers.
     To take advantage of this functionality the <literal>_drivers</literal> record needs to be present, otherwise the extra filesystem driver definitions are ignored and only the base filesystem signature definition matching the filesystem driver name is taken in account.
     </para>
 
