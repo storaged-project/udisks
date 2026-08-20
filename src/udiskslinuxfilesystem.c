@@ -40,6 +40,10 @@
 #include <libmount/libmount.h>
 
 #include <glib/gstdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
@@ -419,45 +423,68 @@ static gboolean
 is_in_filesystem_file (const gchar *filesystems_file,
                        const gchar *fstype)
 {
-  gchar *filesystems = NULL;
-  GError *error = NULL;
   gboolean ret = FALSE;
+  int fd = -1;
+  struct stat sb;
+  void *addr = NULL;
+  gchar *contents = NULL;
   gchar **lines = NULL;
   guint n;
 
-  if (!g_file_get_contents (filesystems_file,
-                            &filesystems,
-                            NULL, /* gsize *out_length */
-                            &error))
+  fd = open (filesystems_file, O_RDONLY);
+  if (fd == -1)
     {
-      udisks_warning ("Error reading %s: %s (%s %d)",
-                      filesystems_file,
-                      error->message,
-                      g_quark_to_string (error->domain),
-                      error->code);
-      g_clear_error (&error);
+      if (errno != ENOENT)
+        udisks_warning ("Error opening %s: %m", filesystems_file);
       goto out;
     }
 
-  lines = g_strsplit (filesystems, "\n", -1);
-  for (n = 0; lines != NULL && lines[n] != NULL && !ret; n++)
+  if (fstat (fd, &sb) == -1)
     {
-      gchar **tokens;
-      gint num_tokens;
-      g_strdelimit (lines[n], " \t", ' ');
-      g_strstrip (lines[n]);
-      tokens = g_strsplit (lines[n], " ", -1);
-      num_tokens = g_strv_length (tokens);
-      if (num_tokens == 1 && g_strcmp0 (tokens[0], fstype) == 0)
-        {
-          ret = TRUE;
-        }
-      g_strfreev (tokens);
+      udisks_warning ("Error stating %s: %m", filesystems_file);
+      goto out;
     }
 
- out:
+  if (sb.st_size > 0)
+    {
+      addr = mmap (NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+      if (addr == MAP_FAILED)
+        {
+          udisks_warning ("Error mmaping %s: %m", filesystems_file);
+          addr = NULL;
+          goto out;
+        }
+      contents = g_strndup (addr, sb.st_size);
+    }
+  else
+    {
+      contents = g_strdup ("");
+    }
+
+  if (contents != NULL)
+    {
+      lines = g_strsplit (contents, "\n", -1);
+      for (n = 0; lines != NULL && lines[n] != NULL && !ret; n++)
+        {
+          gchar **tokens;
+          g_strdelimit (lines[n], " \t", ' ');
+          g_strstrip (lines[n]);
+          tokens = g_strsplit (lines[n], " ", -1);
+          if (g_strv_length (tokens) == 1 && g_strcmp0 (tokens[0], fstype) == 0)
+            {
+              ret = TRUE;
+            }
+          g_strfreev (tokens);
+        }
+    }
+
+out:
   g_strfreev (lines);
-  g_free (filesystems);
+  g_free (contents);
+  if (addr != NULL)
+    munmap (addr, sb.st_size);
+  if (fd != -1)
+    close (fd);
   return ret;
 }
 
