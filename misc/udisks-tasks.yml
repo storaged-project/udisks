@@ -11,19 +11,19 @@
       - libtool
       - autoconf
       - automake
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Enable our copr repository with latest builds of libblockdev
   command: "dnf -y copr enable @storage/udisks-daily"
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install dnf-plugins-core for dnf builddep (Fedora)
   package: name=dnf-plugins-core state=present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install build dependencies (Fedora)
   command: "dnf -y builddep udisks2 --nogpgcheck"
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install test dependencies (Fedora)
   package:
@@ -53,7 +53,7 @@
       - cryptsetup
       - vdo
       - util-linux
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 ####### CentOS
 - name: Install basic build tools (CentOS)
@@ -65,31 +65,31 @@
       - libtool
       - autoconf
       - automake
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Enable our copr repository with latest builds of libblockdev
   command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-x86_64"
-  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '10'
+  when: ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '10'
 
 - name: Enable our copr repository with latest builds of libblockdev
   command: "dnf -y copr enable @storage/udisks-daily centos-stream-9-x86_64"
-  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '9'
+  when: ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '9'
 
 - name: Install dnf-plugins-core for dnf builddep (CentOS)
   package: name=dnf-plugins-core state=present
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Install build dependencies (CentOS)
   command: "dnf -y builddep udisks2 --nogpgcheck"
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Install libblockdev NVMe plugin (CentOS)
   package: name=libblockdev-nvme-devel state=present
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Install libblockdev SMART plugin (CentOS)
   package: name=libblockdev-smart-devel state=present
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Install test dependencies (CentOS)
   package:
@@ -111,4 +111,4 @@
       - cryptsetup
       - vdo
       - util-linux
-  when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
