@@ -6,7 +6,7 @@ Documentation=man:udisks(8)
 Type=dbus
 BusName=org.freedesktop.UDisks2
 ExecStart=@udisksdprivdir@/udisksd
-KillSignal=SIGINT
+KillSignal=SIGTERM
 
 [Install]
 WantedBy=graphical.target
