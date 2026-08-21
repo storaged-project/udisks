@@ -1119,6 +1119,9 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* Filesystem types whose kernel driver refuses the 'uhelper' mount option */
+const gchar *fs_no_uhelper[] = { "erofs", "zonefs", NULL };
+
 static UDisksMountOptionsEntry *
 calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
                                      UDisksBlock   *block,
@@ -1156,7 +1159,9 @@ calculate_mount_options_for_fs_type (UDisksDaemon  *daemon,
                                                   shared_fs);
 
   /* validate mount options */
-  str = g_string_new ("uhelper=udisks2,nodev,nosuid");
+  str = g_string_new ("nodev,nosuid");
+  if (! g_strv_contains (fs_no_uhelper, fs_type))
+    g_string_append (str, ",uhelper=udisks2");
   g_variant_iter_init (&iter, options_to_use);
   while (g_variant_iter_next (&iter, "{&s&s}", &key, &value))
     {
