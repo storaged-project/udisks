@@ -48,7 +48,6 @@
       - nilfs-utils
       - udftools
       - python3-systemd
-      - python3-monotonic
       - python3-packaging
       - cryptsetup
       - vdo
