@@ -28,8 +28,81 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 
 #include <udisks/udisks.h>
+
+#define xstr(s) str(s)
+#define str(s) #s
+#define PATH_MAX_FMT "%" xstr(PATH_MAX) "s"
+#define PATH_MAX_SKIP_FMT "%*" xstr(PATH_MAX) "s"
+
+static gboolean
+lookup_block_device_for_mount_point (const gchar  *mount_point,
+                                     dev_t        *block_device)
+{
+  gchar *contents = NULL;
+  gchar **lines = NULL;
+  guint n;
+  gboolean ret = FALSE;
+
+  if (!g_file_get_contents ("/proc/self/mountinfo", &contents, NULL, NULL))
+    return FALSE;
+
+  lines = g_strsplit (contents, "\n", 0);
+  for (n = 0; lines[n] != NULL; n++)
+    {
+      gchar encoded_mount_point[PATH_MAX + 1];
+      gchar *decoded_mount_point;
+
+      if (strlen (lines[n]) == 0)
+        continue;
+
+      if (sscanf (lines[n],
+                  "%*u %*u %*u:%*u " PATH_MAX_SKIP_FMT " " PATH_MAX_FMT,
+                  encoded_mount_point) != 1)
+        continue;
+
+      encoded_mount_point[sizeof encoded_mount_point - 1] = '\0';
+      decoded_mount_point = g_strcompress (encoded_mount_point);
+
+      if (g_strcmp0 (decoded_mount_point, mount_point) == 0)
+        {
+          const gchar *sep;
+          sep = strstr (lines[n], " - ");
+          if (sep != NULL)
+            {
+              gchar fstype[PATH_MAX + 1];
+              gchar mount_source[PATH_MAX + 1];
+              struct stat statbuf;
+
+              if (sscanf (sep + 3, PATH_MAX_FMT " " PATH_MAX_FMT, fstype, mount_source) == 2)
+                {
+                  fstype[sizeof fstype - 1] = '\0';
+                  mount_source[sizeof mount_source - 1] = '\0';
+
+                  if (g_strcmp0 (fstype, "btrfs") == 0 &&
+                      g_str_has_prefix (mount_source, "/dev/") &&
+                      stat (mount_source, &statbuf) == 0 &&
+                      S_ISBLK (statbuf.st_mode))
+                    {
+                      *block_device = statbuf.st_rdev;
+                      ret = TRUE;
+                    }
+                }
+            }
+        }
+
+      g_free (decoded_mount_point);
+
+      if (ret)
+        break;
+    }
+
+  g_strfreev (lines);
+  g_free (contents);
+  return ret;
+}
 
 static UDisksObject *
 lookup_object_for_block (UDisksClient  *client,
@@ -94,7 +167,7 @@ main (int argc, char *argv[])
 
   if (S_ISBLK (statbuf.st_mode))
     block_device = statbuf.st_rdev;
-  else
+  else if (!lookup_block_device_for_mount_point (argv[1], &block_device))
     block_device = statbuf.st_dev;
 
   error = NULL;
