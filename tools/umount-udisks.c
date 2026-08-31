@@ -32,6 +32,8 @@
 
 #include <udisks/udisks.h>
 
+#include "src/udisksmountutil.h"
+
 #define xstr(s) str(s)
 #define str(s) #s
 #define PATH_MAX_FMT "%" xstr(PATH_MAX) "s"
@@ -67,31 +69,7 @@ lookup_block_device_for_mount_point (const gchar  *mount_point,
       decoded_mount_point = g_strcompress (encoded_mount_point);
 
       if (g_strcmp0 (decoded_mount_point, mount_point) == 0)
-        {
-          const gchar *sep;
-          sep = strstr (lines[n], " - ");
-          if (sep != NULL)
-            {
-              gchar fstype[PATH_MAX + 1];
-              gchar mount_source[PATH_MAX + 1];
-              struct stat statbuf;
-
-              if (sscanf (sep + 3, PATH_MAX_FMT " " PATH_MAX_FMT, fstype, mount_source) == 2)
-                {
-                  fstype[sizeof fstype - 1] = '\0';
-                  mount_source[sizeof mount_source - 1] = '\0';
-
-                  if (g_strcmp0 (fstype, "btrfs") == 0 &&
-                      g_str_has_prefix (mount_source, "/dev/") &&
-                      stat (mount_source, &statbuf) == 0 &&
-                      S_ISBLK (statbuf.st_mode))
-                    {
-                      *block_device = statbuf.st_rdev;
-                      ret = TRUE;
-                    }
-                }
-            }
-        }
+        ret = udisks_mount_util_get_btrfs_device_from_mountinfo (lines[n], block_device);
 
       g_free (decoded_mount_point);
 
