@@ -28,6 +28,7 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 
 #include <udisks/udisks.h>
 
@@ -60,6 +61,43 @@ lookup_object_for_block (UDisksClient  *client,
 
  out:
   g_list_free_full (objects, g_object_unref);
+
+  return ret;
+}
+
+/* Looks up the object whose filesystem is mounted at @mount_point. This doesn't depend on the device
+ * number of the mount point, which is not the one of the block device on filesystems with their own
+ * anonymous device numbers (e.g. btrfs, where st_dev has major 0). */
+static UDisksObject *
+lookup_object_for_mount_point (UDisksClient *client,
+                               const gchar  *mount_point)
+{
+  UDisksObject *ret = NULL;
+  GList *objects;
+  GList *l;
+  gchar *canonical;
+
+  canonical = realpath (mount_point, NULL);
+  if (canonical == NULL)
+    return NULL;
+
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+  for (l = objects; l != NULL && ret == NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksFilesystem *filesystem = udisks_object_peek_filesystem (object);
+      const gchar * const *mount_points;
+
+      if (filesystem == NULL)
+        continue;
+
+      mount_points = udisks_filesystem_get_mount_points (filesystem);
+      if (mount_points != NULL && g_strv_contains (mount_points, canonical))
+        ret = g_object_ref (object);
+    }
+
+  g_list_free_full (objects, g_object_unref);
+  free (canonical);
 
   return ret;
 }
@@ -107,7 +145,13 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  object = lookup_object_for_block (client, block_device);
+  /* mounted filesystems are identified by their mount point first, the device number is only
+   * reliable for block devices and for filesystems without anonymous device numbers */
+  object = NULL;
+  if (!S_ISBLK (statbuf.st_mode))
+    object = lookup_object_for_mount_point (client, argv[1]);
+  if (object == NULL)
+    object = lookup_object_for_block (client, block_device);
   if (object == NULL)
     {
       g_printerr ("Error finding object for block device %u:%u\n", major (block_device), minor (block_device));
