@@ -3627,7 +3627,7 @@ pick_word_at (const gchar  *s,
       return g_strdup ("");
     }
 
-  while (!g_ascii_isspace (s[cursor - 1]) && cursor > 0)
+  while (cursor > 0 && !g_ascii_isspace (s[cursor - 1]))
     cursor--;
   begin = cursor;
 
