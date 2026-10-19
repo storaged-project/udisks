@@ -1751,7 +1751,7 @@ class NonPOSIXTestCase(UdisksFSTestCase):
         self.assertIsNotNone(mnt_path)
         self.assertTrue(os.path.ismount(mnt_path))
 
-        # unmount as the user, shoul still work thanks to the "users" option
+        # unmount as the user, should still work thanks to the "users" option
         res = self._run_as_user_with_pipes(self._unmount_as_user_fstab, uid, gid, self.vdevs[0])
         if not res[0]:
             self.fail(res[1])
