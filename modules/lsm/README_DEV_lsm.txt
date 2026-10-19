@@ -263,7 +263,7 @@ _vpd83_2_lsm_vri_data_hash = {
     _lsm_vri_data_lookup () to generate struct StdLsmVolData *.
 
 * std_lsm_data_teardown ():
-    * Free memorys and close connections.
+    * Free memory and close connections.
 
 ## TODO
 * Add extra sections to the documentation, currently we only have dbus

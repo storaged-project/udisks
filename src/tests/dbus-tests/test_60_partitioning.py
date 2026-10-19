@@ -147,7 +147,7 @@ class UdisksPartitionTableTest(udiskstestcase.UdisksTestCase):
 
         self.addCleanup(self._remove_partition, ext_part)
 
-        # check dbus type (0x05, 0x0f, 0x85 are all exteded types, see https://en.wikipedia.org/wiki/Partition_type#PID_05h)
+        # check dbus type (0x05, 0x0f, 0x85 are all extended types, see https://en.wikipedia.org/wiki/Partition_type#PID_05h)
         dbus_pttype = self.get_property(ext_part, '.Partition', 'Type')
         dbus_pttype.assertIn(['0x05', '0x0f', '0x85'])
 

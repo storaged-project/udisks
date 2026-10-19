@@ -210,7 +210,7 @@ class UdisksLVMTest(UDisksLVMTestBase):
                       dbus.Dictionary({'pvs': devs}, signature='sv'),
                       dbus_interface=self.iface_prefix + '.LogicalVolume')
 
-        # Now resize the LV to the whole VG without contraints
+        # Now resize the LV to the whole VG without constraints
         lv.Resize(dbus.UInt64(new_vgsize.value), self.no_options, dbus_interface=self.iface_prefix + '.LogicalVolume')
         new_lvsize = self.get_property(lv, '.LogicalVolume', 'Size')
         new_lvsize.assertEqual(new_vgsize.value)

@@ -1162,7 +1162,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
        * /dev/disk/by-label)
        *
        * TODO: add features to ata_id / cdrom_id in systemd to extract
-       *       medium identiers (at optical discs have these) and add
+       *       medium identifiers (at optical discs have these) and add
        *       udev rules to create symlinks in something like
        *       /dev/disk/by-medium. Then use said symlinks to for the
        *       id_device_file
@@ -1292,7 +1292,7 @@ handle_get_secret_configuration (UDisksBlock           *_block,
                                                     NULL,
                                                     "org.freedesktop.udisks2.read-system-configuration-secrets",
                                                     options,
-                                                    /* Translators: This is shown in an authentcation dialog when
+                                                    /* Translators: This is shown in an authentication dialog when
                                                      * the user is editing settings that involve system-level
                                                      * passwords and secrets
                                                      */
@@ -2054,7 +2054,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
-                                                        /* Translators: shown in authentication dialog - do not tranlsate /etc/crypttab */
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/crypttab */
                                                         N_("Authentication is required to add an entry to the /etc/crypttab file"),
                                                         invocation))
         goto out;

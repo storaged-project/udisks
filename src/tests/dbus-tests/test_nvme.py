@@ -493,7 +493,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         self.assertEqual(attrs['warning_temp_time'], 0)
         self.assertEqual(attrs['critical_temp_time'], 0)
 
-        # Try trigerring a self-test operation
+        # Try triggering a self-test operation
         msg = 'The NVMe controller has no support for self-test operations'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SmartSelftestStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
@@ -527,7 +527,7 @@ class UdisksNVMeTest(udiskstestcase.UdisksTestCase):
         sanitize_percent_remaining = self.get_property_raw(drive_obj, '.NVMe.Controller', 'SanitizePercentRemaining')
         self.assertEqual(sanitize_percent_remaining, -1)
 
-        # Try trigerring a sanitize operation
+        # Try triggering a sanitize operation
         msg = 'Unknown sanitize action xxx'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
             drive_obj.SanitizeStart('xxx', self.no_options, dbus_interface=self.iface_prefix + '.NVMe.Controller')
