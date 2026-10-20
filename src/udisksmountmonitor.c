@@ -37,6 +37,7 @@
 #include "udiskslogging.h"
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
+#include "udisksmountutil.h"
 #include "udisksprivate.h"
 #include "udisksdaemonutil.h"
 
@@ -510,46 +511,8 @@ udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
        */
       if (major == 0)
         {
-          const gchar *sep;
-          sep = strstr (lines[n], " - ");
-          if (sep != NULL)
-            {
-              gchar fstype[PATH_MAX + 1];
-              gchar mount_source[PATH_MAX + 1];
-              struct stat statbuf;
-
-              if (sscanf (sep + 3, PATH_MAX_FMT " " PATH_MAX_FMT, fstype, mount_source) != 2)
-                {
-                  udisks_warning ("Error parsing things past - for '%s'", lines[n]);
-                  continue;
-                }
-              fstype[sizeof fstype - 1] = '\0';
-              mount_source[sizeof mount_source - 1] = '\0';
-
-              if (g_strcmp0 (fstype, "btrfs") != 0)
-                continue;
-
-              if (!g_str_has_prefix (mount_source, "/dev/"))
-                continue;
-
-              if (stat (mount_source, &statbuf) != 0)
-                {
-                  udisks_warning ("Error statting %s: %m", mount_source);
-                  continue;
-                }
-
-              if (!S_ISBLK (statbuf.st_mode))
-                {
-                  udisks_warning ("%s is not a block device", mount_source);
-                  continue;
-                }
-
-              dev = statbuf.st_rdev;
-            }
-          else
-            {
-              continue;
-            }
+          if (!udisks_mount_util_get_btrfs_device_from_mountinfo (lines[n], &dev))
+            continue;
         }
       else
         {

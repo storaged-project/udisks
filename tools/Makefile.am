@@ -43,6 +43,7 @@ sbin_PROGRAMS = umount.udisks2
 
 umount_udisks2_SOURCES =                                                       \
 	umount-udisks.c                                                        \
+	$(top_srcdir)/src/udisksmountutil.h                                    \
 	$(NULL)
 
 umount_udisks2_CFLAGS =                                                        \
