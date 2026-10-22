@@ -601,6 +601,13 @@ class UdisksPartitionTest(udiskstestcase.UdisksTestCase):
         self._create_format(part, 'ext4')
         self.addCleanup(self._remove_format, part)
 
+        # Keep the partition open across the SetType calls so a udev
+        # BLKRRPART cannot remove and recreate it between calls, including
+        # after libblockdev rejects an invalid partition ID.
+        part_dev = self.ay_to_str(self.get_property_raw(part, '.Block', 'Device'))
+        fd = os.open(part_dev, os.O_RDONLY)
+        self.addCleanup(os.close, fd)
+
         # try to set part type to an extended partition type -- should fail
         msg = 'Refusing to change partition type to that of an extended partition'
         with self.assertRaisesRegex(dbus.exceptions.DBusException, msg):
