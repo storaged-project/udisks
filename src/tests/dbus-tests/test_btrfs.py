@@ -381,6 +381,41 @@ class UdisksBtrfsTest(udiskstestcase.UdisksTestCase):
         dbus_mnt = self.ay_to_str(dbus_mounts.value[0])  # mountpoints are arrays of bytes
         self.assertEqual(dbus_mnt, mnt_path)
 
+    def test_umount_helper(self):
+        """Test that umount.udisks2 finds btrfs filesystems by their mount point"""
+
+        helper = os.environ.get('UDISKS_UMOUNT_HELPER') or shutil.which('umount.udisks2') or '/usr/sbin/umount.udisks2'
+        if not os.access(helper, os.X_OK):
+            self.skipTest('umount.udisks2 not found, set UDISKS_UMOUNT_HELPER')
+
+        dev = self._get_devices(1)[0]
+        self.addCleanup(self._clean_format, dev.obj)
+
+        manager = self.get_object('/Manager')
+        manager.CreateVolume([dev.obj_path],
+                             'test_umount_helper', 'single', 'single',
+                             self.no_options,
+                             dbus_interface=self.iface_prefix + '.Manager.BTRFS')
+
+        with self._temp_mount(dev.path):
+            dev.obj.CreateSubvolume('test_sub1', self.no_options,
+                                    dbus_interface=self.iface_prefix + '.Filesystem.BTRFS')
+
+        self.addCleanup(self.try_unmount, dev.path)
+
+        # the top-level subvolume and a non-top-level one: st_dev of the mount point has major 0 in both cases
+        for mount_options in ('', 'subvol=/test_sub1'):
+            opts = dbus.Dictionary({'options': mount_options} if mount_options else {}, signature=dbus.Signature('sv'))
+            mnt_path = dev.obj.Mount(opts, dbus_interface=self.iface_prefix + '.Filesystem')
+            self.assertTrue(os.path.ismount(mnt_path))
+
+            ret, out = self.run_command('%s %s' % (helper, mnt_path))
+            self.assertEqual(ret, 0, msg='umount.udisks2 failed for options "%s": %s' % (mount_options, out))
+            self.assertFalse(os.path.ismount(mnt_path))
+
+            dbus_mounts = self.get_property(dev.obj, '.Filesystem', 'MountPoints')
+            dbus_mounts.assertLen(0)
+
     def test_default_subvolume_id(self):
         dev = self._get_devices(1)[0]
         self.addCleanup(self._clean_format, dev.obj)
