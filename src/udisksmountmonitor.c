@@ -529,22 +529,30 @@ udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
               if (g_strcmp0 (fstype, "btrfs") != 0)
                 continue;
 
-              if (!g_str_has_prefix (mount_source, "/dev/"))
-                continue;
-
-              if (stat (mount_source, &statbuf) != 0)
+              /* A removed Btrfs device leaves a live mount behind, but
+               * its source may be a stale /dev path or a missing-device
+               * marker. Keep the mount discoverable by path using the
+               * anonymous dev_t from mountinfo when the source cannot be
+               * resolved to a block device.
+               */
+              dev = makedev (major, minor);
+              if (g_str_has_prefix (mount_source, "/dev/"))
                 {
-                  udisks_warning ("Error statting %s: %m", mount_source);
-                  continue;
+                  if (stat (mount_source, &statbuf) != 0)
+                    {
+                      udisks_debug ("Unable to resolve Btrfs mount source %s: %m; tracking by mount path",
+                                    mount_source);
+                    }
+                  else if (!S_ISBLK (statbuf.st_mode))
+                    {
+                      udisks_warning ("%s is not a block device; tracking Btrfs mount by path",
+                                      mount_source);
+                    }
+                  else
+                    {
+                      dev = statbuf.st_rdev;
+                    }
                 }
-
-              if (!S_ISBLK (statbuf.st_mode))
-                {
-                  udisks_warning ("%s is not a block device", mount_source);
-                  continue;
-                }
-
-              dev = statbuf.st_rdev;
             }
           else
             {
