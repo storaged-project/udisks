@@ -53,7 +53,7 @@ struct _UDisksBaseJobPrivate
   gboolean auto_estimate;
   gulong notify_progress_signal_handler_id;
 
-  Sample *samples;
+  Sample samples[MAX_SAMPLES];
   guint num_samples;
 };
 
@@ -76,8 +76,6 @@ udisks_base_job_finalize (GObject *object)
 {
   UDisksBaseJob *job = UDISKS_BASE_JOB (object);
 
-
-  g_free (job->priv->samples);
 
   if (job->priv->cancellable != NULL)
     {
@@ -541,8 +539,6 @@ udisks_base_job_set_auto_estimate (UDisksBaseJob  *job,
 
   if (value)
     {
-      if (job->priv->samples == NULL)
-        job->priv->samples = g_new0 (Sample, MAX_SAMPLES);
       g_assert_cmpint (job->priv->notify_progress_signal_handler_id, ==, 0);
       job->priv->notify_progress_signal_handler_id = g_signal_connect (job,
                                                                        "notify::progress",
