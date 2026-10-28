@@ -46,7 +46,7 @@
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static GHashTable * mount_options_parse_config_file (const gchar *filename, GError **error);
+static GHashTable * mount_options_parse_config_file (UDisksConfigManager *config_manager, GError **error);
 static GHashTable * mount_options_get_from_udev (UDisksLinuxDevice *device, GError **error);
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -162,7 +162,9 @@ udisks_mount_options_entry_free (UDisksMountOptionsEntry *entry)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-#define MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME "mount_options.conf"
+#define MOUNT_OPTIONS_GLOBAL_CONFIG_NAME      "mount_options"
+#define MOUNT_OPTIONS_GLOBAL_CONFIG_SUFFIX    "conf"
+#define MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME MOUNT_OPTIONS_GLOBAL_CONFIG_NAME "." MOUNT_OPTIONS_GLOBAL_CONFIG_SUFFIX
 
 #define MOUNT_OPTIONS_CONFIG_GROUP_DEFAULTS  "defaults"
 #define MOUNT_OPTIONS_KEY_DEFAULTS           "defaults"
@@ -714,13 +716,37 @@ mount_options_parse_key_file (GKeyFile *key_file, GError **error)
 
 /* returns two-level hashtable with block specifics at the first level */
 static GHashTable *
-mount_options_parse_config_file (const gchar *filename, GError **error)
+mount_options_parse_config_file (UDisksConfigManager *config_manager, GError **error)
 {
   GKeyFile *key_file;
   GHashTable *mount_options;
+  gboolean success;
 
   key_file = g_key_file_new ();
-  if (! g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, error))
+
+#if defined (USE_VENDORDIR)
+  udisks_debug ("Loading mount options configuration files %s from %s/%s and %s/%s",
+                MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME,
+                PACKAGE_SYSCONF_DIR, PROJECT_SYSCONF_DIR, _PATH_VENDORDIR, PROJECT_SYSCONF_DIR);
+  success = g_key_file_load_unix_configurations (key_file,
+                                                 PROJECT_SYSCONF_DIR,
+                                                 PACKAGE_SYSCONF_DIR,
+                                                 NULL,
+                                                 _PATH_VENDORDIR,
+                                                 MOUNT_OPTIONS_GLOBAL_CONFIG_NAME,
+                                                 MOUNT_OPTIONS_GLOBAL_CONFIG_SUFFIX,
+                                                 G_KEY_FILE_NONE, error);
+#else
+  gchar *filename;
+
+  filename = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
+                               MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
+  udisks_debug ("Loading mount options configuration file: %s", filename);
+  success = g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, error);
+  g_free (filename);
+#endif
+
+  if (! success)
     {
       g_key_file_free (key_file);
       return NULL;
@@ -1261,7 +1287,6 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
   UDisksLinuxDevice *device = NULL;
   gboolean shared_fs = FALSE;
   GHashTable *overrides;
-  gchar *config_file_path;
   GError *l_error = NULL;
   GPtrArray *ptr_array;
   gchar **drivers;
@@ -1275,20 +1300,17 @@ udisks_linux_calculate_mount_options (UDisksDaemon  *daemon,
     shared_fs = TRUE;
 
   /* Global config file overrides */
-  config_file_path = g_build_filename (udisks_config_manager_get_config_dir (config_manager),
-                                       MOUNT_OPTIONS_GLOBAL_CONFIG_FILE_NAME, NULL);
-  overrides = mount_options_parse_config_file (config_file_path, &l_error);
+  overrides = mount_options_parse_config_file (config_manager, &l_error);
   if (!overrides)
     {
       if (! g_error_matches (l_error, G_FILE_ERROR, G_FILE_ERROR_NOENT) /* not found */ &&
           ! g_error_matches (l_error, UDISKS_ERROR, UDISKS_ERROR_NOT_SUPPORTED) /* empty file */ )
         {
-          udisks_warning ("Error reading global mount options config file %s: %s",
-                          config_file_path, l_error->message);
+          udisks_warning ("Error reading global mount options configuration: %s",
+                          l_error->message);
         }
       g_clear_error (&l_error);
     }
-  g_free (config_file_path);
 
   /* Compute filesystem drivers for given @fs_signature and @fs_type */
   drivers = compute_drivers (daemon, block, object, overrides, fs_signature, fs_type);

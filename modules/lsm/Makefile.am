@@ -20,8 +20,13 @@ AM_CPPFLAGS =                                                                  \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
 	$(BLOCKDEV_CFLAGS)                                                     \
-	$(WARN_CFLAGS)                                                         \
-	$(NULL)
+	$(WARN_CFLAGS)
+if USE_VENDORDIR
+AM_CPPFLAGS += \
+      -D_PATH_VENDORDIR=\"${vendordir}\"
+endif
+
+AM_CPPFLAGS += $(NULL)
 
 if ENABLE_DAEMON
 

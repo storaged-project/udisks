@@ -37,6 +37,22 @@
       the configuration file placed at
       <emphasis>@sysconfdir@/udisks2/udisks2.conf</emphasis>.
     </para>
+
+    <para condition="with_vendordir">
+      If this file does not exist, the definitions are taken from the first
+      of <emphasis>@sysconfdir@/udisks2/udisks2.conf</emphasis>,
+      <emphasis>/run/udisks2/udisks2.conf</emphasis> and
+      <emphasis>@vendordir@/udisks2/udisks2.conf</emphasis> that is found.
+      In addition, drop-in files matching
+      <emphasis>@sysconfdir@/udisks2/udisks2.conf.d/*</emphasis>,
+      <emphasis>/run/udisks2/udisks2.conf.d/*</emphasis> and
+      <emphasis>@vendordir@/udisks2/udisks2.conf.d/*</emphasis> are merged
+      together. If a drop-in of the same name exists in more than one of
+      these directories, only the one from the highest priority directory
+      (<emphasis>@sysconfdir@</emphasis> over <emphasis>/run</emphasis> over
+      <emphasis>@vendordir@</emphasis>) is used.
+    </para>
+
   </refsect1>
 
   <refsect1>
