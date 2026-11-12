@@ -1,17 +1,332 @@
 ---------------------------
-udisks 2.12.0 (unreleased)
+udisks 2.12.0
 ---------------------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
+This release brings several notable changes (since 2.11.2):
+
+- Setting up loop devices now always requires polkit authorization
+  (org.freedesktop.udisks2.loop-setup)
+- NVMe drive capacity is now recalculated from attached namespaces when
+  the controller does not report Total NVM Capacity (TNVMCAP)
+- New `udisksctl drive-set-standby` command to configure a persistent ATA
+  standby timeout
+
+Public API changes since 2.11.0:
+
+- Encrypted.Unlock(): added the boolean 'discard' option. The 'read-only'
+  and 'discard' settings are now also read from /etc/crypttab, with explicit
+  D-Bus options taking precedence.
+- Filesystem.Mount(): the 'as-user' option always performs an authorization
+  check using the real caller's identity. For fstab entries with 'user' or
+  'users', mounting is attempted as the effective target user; escalation
+  to a privileged mount requires 'x-udisks-auth'.
+
 Changes since 2.11.0:
-(TODO: make shortlog)
+
+Anders Jonsson (3):
+      Update POTFILES.in
+      Update Swedish translation
+      Update Swedish translation
+
+Anthropy (1):
+      udisksctl: Add drive-set-standby command
+
+Artur S0 (2):
+      Update Russian translation
+      Update Russian translation
+
+Baurzhan Muftakhidinov (2):
+      Update Kazakh translation
+      Update Kazakh translation
+
+Danyil Semenko (1):
+      udiskslinuxfilesystem: Fix TOCTOU race in mount point directory creation
+
+Ekaterine Papava (1):
+      Update Georgian translation
+
+Emin Tufan Çetin (1):
+      Update Turkish translation
+
+Herman Semenoff (3):
+      udisksobjinfo: code simplify remove spagetti code
+      udisksclient: condition simplify with strlen()
+      daemon: fix leak LUKS keys and passes in -O2/-O3 opt flag
+
+Kjartan Maraas (1):
+      Update Norwegian Bokmål translation
+
+Louis D (1):
+      fix: add proper detection of CRYPT-PLAIN devices as crypto devices, thus properly setting the CryptoBackingDevice property
+
+Martin (4):
+      Update Slovenian translation
+      Update Slovenian translation
+      Update Slovenian translation
+      Update Slovenian translation
+
+Mikhail Dmitrichenko (1):
+      udisksctl: Fix out-of-bounds read in pick_word_at()
+
+Méven Car (1):
+      udev: Ignore Apple Silicon boot and recovery partitions
+
+Nikola Forró (1):
+      Make spec file Release condition more robust
+
+Rafael Fontenelle (1):
+      Update Brazilian Portuguese translation
+
+Roy-Magne Mo (1):
+      Update Norwegian Nynorsk translation
+
+Sabri Ünal (1):
+      Update Turkish translation
+
+Tian ShiLin (1):
+      Fix typos in comments, tests and docs
+
+Tomas Bzatek (158):
+      udiskslinuxdriveata: Avoid static locks
+      Post-release version bump to 2.12.0
+      udiskslinuxmdraid: Add uevent triggers
+      integration-test: Sleep for a while after mdraid creation
+      lvm2: Prevent a segfault on discarded probe output
+      udiskslinuxdevice: Fix ATA USB detection
+      daemon: Refactor uevent action string to an enum
+      btrfs: Adapt to the new UDisksUeventAction
+      iscsi: Adapt to the new UDisksUeventAction
+      lsm: Adapt to the new UDisksUeventAction
+      udiskslinuxprovider: Track NVMe subsystems
+      udiskslinuxprovider: Filter invalid NVMe Subsystem NQN values out
+      udiskslinuxdriveobject: Update object interfaces on NVMe subsystem uevent
+      udiskslinuxmanagernvme: Trigger subsystem uevent upon successful connect
+      udiskslinuxnvmefabrics: Trigger subsystem uevent on disconnect
+      Add CONTRIBUTING guidelines
+      udiskslinuxnvmecontroller: Fix sanitize job start
+      udiskslinuxpartition: Fix missing job completion in handle_set_name
+      udiskslinuxpartitiontable: Fix missing job completion on overlapping partition error
+      udiskslinuxnvmecontroller: Fix type mismatch in g_variant_lookup call
+      udiskslinuxnvmenamespace: Remove duplicate include
+      udiskslinuxmanagernvme: Fix UINT64 variant handling in fabrics extra options
+      udiskslinuxmanagernvme: Fix reference leak in wait_for_fabrics_object()
+      udiskslinuxdevice: Fix memory leak on NVMe reprobe
+      udiskslinuxdevice: Replace atoi() with g_ascii_strtoll()
+      udisksdaemonutil: Fix missing NULL terminator in resolve_links()
+      udisksdaemonutil: Fix file descriptor leak on fdopen() failure
+      udisksmodulemanager: Silence console warnings when requested module is not available
+      udisksmodulemanager: Fix racy lock-free module list check
+      udisksmodulemanager: Fix potential deadlock in unload_modules signal emission
+      tests: Update expected error messages for unavailable modules
+      udiskslinuxblock: Add missing polkit check for RestoreEncryptedHeader()
+      udiskslinuxencrypted: Add missing polkit check for HeaderBackup()
+      udiskslinuxnvmecontroller: Fix incorrect pointer type for empty string array
+      udiskslinuxnvmecontroller: Fix potential integer overflow in time estimates
+      udiskslinuxnvmecontroller: Fix TOCTOU race in selftest and sanitize start
+      udiskslinuxnvmenamespace: Report cancellation as error in format job
+      udiskslinuxprovider: Fix memory leak on spurious uevents
+      udiskslinuxprovider: Fix NULL dereference on NVMe subsystem remove
+      udiskslinuxprovider: Fix type confusion in module instance table cleanup
+      udiskslinuxprovider: Initialize GError pointer in sleep signal handler
+      udisksclient: Fix TEBIBYTE_FACTOR typo
+      udisksobjectinfo: Fix swapped Zip/Jaz floppy icons
+      udisksclient: Fix memory leak in compare_blocks_by_device
+      udisksclient: Fix object leaks in get_drive/mdraid_for_block
+      udisksctl: Fix object leaks in unlock and loop-setup output
+      udisksctl: Fix GVariantIter leaks in monitor properties-changed handler
+      udiskslinuxblockobject: Fix off-by-one in partition table reread retry loops
+      udiskslinuxblockobject: Fix reference leak in block object device get_property
+      udiskslinuxdriveobject: Fix wrong g_return_val_if_fail fallback type in check_for_vpd
+      udiskslinuxdrive: Fix potential integer underflow in append_fixedup_sd
+      udiskslinuxdrive: Remove redundant NULL check before g_clear_object
+      udiskslinuxblock: Remove duplicate udisksdaemonutil.h include
+      udiskslinuxblock: Strip trailing whitespace from sysfs attribute values
+      udiskslinuxblock: Fix potential NULL dereference in configuration item handlers
+      udiskslinuxdriveata: Add missing D-Bus method completion for SecurityEraseUnit
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_resize
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_repair
+      udiskslinuxfilesystem: Fix missing goto after mount state check in handle_check
+      udiskslinuxfilesystem: Fix mounted check in filesystem update
+      udiskslinuxprovider: Replace deprecated g_slice allocator with g_new0/g_free
+      udiskslinuxmdraid: Fix wrong D-Bus completion function in handle_set_bitmap_location
+      udiskslinuxmdraid: Fix potential NULL dereference in handle_delete teardown
+      udiskslinuxnvmecontroller: Fix string leak in SMART critical warning array
+      udiskslinuxmanager: Fix const-correctness of disks array in handle_mdraid_create
+      udiskslinuxpartition: Remove duplicate g_clear_object calls in cleanup paths
+      udiskslinuxpartition: Fix truncated error message in set_type_sync
+      udiskslinuxmountoptions: Use libmount parser for user-provided mount options
+      udiskslinuxmountoptions: Reject newlines and tabs in mount option values
+      udiskslinuxmountoptions: Fix out-of-bounds access on short mode value
+      udiskslinuxmountoptions: Fix substring match in extract_opts_with_arg
+      udiskslinuxmountoptions: Fix integer overflow in UID/GID option parsing
+      udiskslinuxmountoptions: Fix static buffer and hardcoded limit in is_uid_in_gid
+      doap: Update storaged.org https link
+      udiskslinuxfilesystem: Limit mount point uniquification iterations
+      udiskslinuxfilesystem: Fix typo in repair error message
+      udiskslinuxfilesystem: Remove unused escaped_user_name variable
+      udiskslinuxfilesystem: Clean up mount point directory on fstab mount failure
+      udiskslinuxfilesystemhelpers: Fix comment in recursive_chown
+      udisksdaemonutil: Validate hex digits in udev string decoding
+      udisksdaemonutil: Remove unused session and seat variables
+      udisksdaemonutil: Fix uid format specifier in error messages
+      udiskslinuxblock: Use memmove instead of strcpy for overlapping buffers
+      udiskslinuxblock: Use g_clear_error to avoid dangling error pointer
+      udiskslinuxdriveata: Fix typo "specically" → "specifically"
+      udiskslinuxdriveata: Guard against division by zero in erase progress
+      udiskslinuxdriveata: Fix comment typo "O_RDRW" → "O_RDWR"
+      udisksstate: Fix GVariant leak in mdraid list visitor
+      udisksstate: Fix udisks_state_has_loop returning FALSE when out_uid is NULL
+      udisksdaemon: Fix misleading indentation and missing space
+      udiskslinuxdrive: Fix GVariant leak in handle_set_configuration
+      udiskslinuxdrive: Fix double space typo in error message
+      udisksdaemonutil: Fix comment typo "his" → "this"
+      udisksdaemonutil: Fix extra space before closing parenthesis
+      udiskslinuxmdraid: Fix function name typo "timout" → "timeout"
+      udiskslinuxmdraid: Fix missing closing parenthesis in comment
+      udiskslinuxmdraid: Fix swapped arguments in remove device error message
+      udiskslinuxmdraid: Remove unused error_message variable
+      udiskslinuxencrypted: Sanitize truncated label in dm name generation
+      udiskslinuxencrypted: Fix misleading comment and message in change passphrase
+      udiskslinuxencrypted: Fix stray period in translator comment
+      udiskslinuxmanager: Remove unused WaitForArrayData struct
+      udiskslinuxmanager: Fix double space and indentation in function call
+      udiskslinuxdriveobject: Fix doc comment typo "not is use" → "not in use"
+      udiskslinuxnvmecontroller: Fix comment typo "in account" → "into account"
+      udiskslinuxpartition: Remove unused device_name variable in handle_set_uuid
+      udiskslinuxpartition: Fix misleading indentation in handle_set_flags
+      udisksspawnedjob: Fix doc comment typo "regards of" → "regardless of"
+      udiskslinuxmdraidobject: Fix use-after-clear in raid device removal
+      udiskslinuxmdraidobject: Fix comment typos
+      udisksmountmonitor: Fix misleading indentation in ensure function
+      udiskslinuxpartitiontable: Fix error message and comment typos
+      udiskslinuxpartitiontable: Allow setting both name and UUID on new partition
+      udisksmodulemanager: Fix broken module error check
+      udisksmodulemanager: Fix doc comment and comment typos
+      udiskslinuxswapspace: Fix error message typos
+      udiskscrypttabmonitor: Fix macro name typo
+      udiskslinuxloop: Fix comment typo
+      udiskssimplejob: Fix doc comment typo
+      udisksclient: Fix doc comment typos
+      udisksclient: Fix jdb id_type entry version match
+      udisksobjectinfo: Fix doc comment typos
+      udiskssimplejob: Fix parameter name typo in header
+      udisksctl: Add missing newline in error message
+      udisksctl: Remove unused variable in modify_argv0_for_command
+      lvm2: Remove incorrect N_() from D-Bus error messages
+      lvm2: Fix doc comment for udisks_linux_logical_volume_update
+      lvm2: Fix error message grammar and doc comment in volume group
+      lsm: Fix wrong NULL check causing potential NULL dereference
+      btrfs: Fix doc comment parameter name and type reference
+      btrfs: Fix N_() usage for polkit messages in subvolume actions
+      lvm2: Fix memory leak of block interface in update_progress_for_device
+      iscsi: Fix polkit message grammar and remove incorrect N_() from errors
+      iscsi: Fix resource leaks in initiator manager finalize
+      iscsi: Fix iscsi_node_set_parameters silently ignoring errors
+      lvm2: Fix NULL dereference in VG create uevent trigger loop
+      iscsi: Clear mutex in module finalize
+      lvm2: Fix wrong include guard in logical volume object header
+      udisksctl: Fix NULL dereference on cleartext object after unlock
+      iscsi: Fix potential NULL dereference on regex in session ID parsing
+      udiskslinuxpartitiontable: Close fd on flock failure in flock_block_dev
+      udisksctl: Guard against NULL return from strrchr in drive completion
+      udiskslinuxprovider: Fix subsys_nqn string memory ownership
+      udiskslinuxprovider: Handle NULL subsys_table
+      udiskslinuxprovider: Track NVMe subsystem sysfs paths on CHANGE events
+      udiskslinuxprovider: Free block_objs array after all subsystem notifications
+      udiskslinuxdriveobject: Recalculate NVMe drive size from subsystem blocks
+      tests: Trigger controller rescan after namespace re-attach in test_ns_detach
+      mount options: Sync exfat allowed options with the latest kernel
+      udiskslinuxfilesystem: Separate real caller identity from as-user target
+      udiskslinuxfilesystem: Rework fstab mount authorization for as-user
+      udiskslinuxfilesystem: Log real caller uid for as-user mounts
+      udisksdaemonutil: Pass as-user target to polkit details
+      tests: Add security tests for as-user mount authorization
+      mount options: Clarify conditions for drivers fallback
+      udiskslinuxmountoptions: Exclude default 'uhelper=udisks2' for erofs
+      tests: Keep partition open across DOS type changes
+      loop: Require polkit auth for active seats
+
+Vojtech Trefny (47):
+      docs: Update links to documentation on storaged.org
+      udiskslinuxnvmecontroller: Use the typo-free "progress" libblockdev constant
+      udiskslinuxmdraid: Fix getting bitmap location on latest kernels
+      udisksobjectinfo: Fix compiler warning with C23
+      udiskslinuxencrypted: Add support for reading options from crypttab
+      udiskslinuxencrypted: Add discard extra option to Unlock
+      tests: Do not mount the loop device for SetAutoclear test
+      misc: Add exfatprogs to test dependencies
+      tests: Add some "unsupported" cases to partition tests
+      Use global lock for all libcryptsetup calls
+      udiskslinuxblock: Get LUKS and BITLK UUID/label from udev
+      Add per-device lock for cryptsetup info operations
+      lvm2: Fix VDO pool data memory leak in poll_vg_update
+      lvm2: Use correct D-Bus completion function for CacheDetach
+      tests: Fix test_offline_grow to actually test offline grow
+      tests: Fix broken assertLen() error message formatting
+      tests: Fix operator precedence in assertIsNotNone() error message
+      tests: Fix _split_test_id() to use its parameter instead of outer variable
+      tests: Fix missing format specifier in loop device failure message
+      tests: Replace e.message with str(e) for Python 3 compatibility
+      tests: Fix device existence check using relative instead of absolute path
+      tests: Fix RuntimeError string formatting in _rescan_lio_devices
+      tests: Fix misleading comment for VDO compression enable
+      tests: Fix LUKS version in error message for LUKS1 metadata dump
+      tests: Fix wrong variable in mkfs error message
+      tests: Replace bare except clauses with except Exception
+      tests: Remove unreachable assertions inside assertRaisesRegex blocks
+      tests: Fix typos in iSCSI test method names
+      tests: Remove unnecessary tearDownClass() calls before skipTest()
+      tests: Rename local variable that shadows imported json module
+      tests: Fix copy-paste volume labels in btrfs tests
+      tests: Fix misleading comment about offset in loop device test
+      tests: Remove duplicate and unused imports in integration-test
+      tests: Use context managers for file handles in integration-test
+      tests: Remove unnecessary Python 2 future import in integration-test
+      ci: Run a simple pylint check on tests
+      tests: Temporarily skip NTFS3 configurable mount options test
+      Fix gtk-doc warnings and documentation issues
+      Fix gtk-doc missing deprecated symbols and leaked annotations
+      udisksctl: Fix udisksctl returning exit code 1 for --help
+      udisksctl: Do not ask for passphrase when crypttab has a keyfile
+      Fix integration test test_exfat with exfatprogs >= 1.4.0
+      misc: Remove python3-monotonic from test requirements
+      misc: Use ansible_facts instead of deprecated top-level fact variables
+      tests: Cleanup PV signature in UdisksLVMTest.test_60_pvs
+      ci: Better test coverage with packit and testing farm
+      ci: Allow vendor change when installing test dependencies
+
+dependabot[bot] (4):
+      infra: bump actions/checkout from 5 to 6
+      infra: bump actions/upload-artifact from 5 to 6
+      infra: bump actions/upload-artifact from 6 to 7
+      infra: bump actions/checkout from 6 to 7
+
+guazhang (1):
+      tests: Make sure to load sr_mod for cdrom tests
+
+lizhipeng (1):
+      linux-drive: handle empty vendor/model/serial when building object path, Some NVMe devices expose empty Vendor/Model/Serial strings instead of NULL.
+
+luming zh (4):
+      Update Chinese (China) translation
+      Update Chinese (China) translation
+      Update Chinese (China) translation
+      Update Chinese (China) translation
+
+xust (1):
+      text: Provide clearer user prompts when requesting authorization.
+
+Марко Костић (2):
+      Update Serbian translation
+      Update Serbian (Latin) translation
 
 Thanks to all our contributors.
 
 Tomas Bzatek
-(TODO: date --rfc-3339='date')
+2026-11-12
 
 ---------------------------
 udisks 2.11.0

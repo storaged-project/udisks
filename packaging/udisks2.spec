@@ -4,7 +4,7 @@
 %global systemd_version                 208
 %global dbus_version                    1.4.0
 %global with_gtk_doc                    1
-%global libblockdev_version             3.4
+%global libblockdev_version             3.6
 
 %define with_btrfs                      1
 %define with_lsm                        1
@@ -329,6 +329,9 @@ fi
 %endif
 
 %changelog
+* Thu Nov 12 2026 Tomas Bzatek <tbzatek@redhat.com> - 2.12.0-1
+- Version 2.12.0
+
 * Thu Nov 06 2025 Tomas Bzatek <tbzatek@redhat.com> - 2.11.0-1
 - Version 2.11.0
 

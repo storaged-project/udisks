@@ -2953,7 +2953,7 @@
     <!--
         Unlock:
         @passphrase: The passphrase to use.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>keyfile_contents</parameter> (of type 'ay') which is preferred over @passphrase if specified, <parameter>read-only</parameter> (of type 'b') and <parameter>discard</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>keyfile_contents</parameter> (of type 'ay') which is preferred over @passphrase if specified, <parameter>read-only</parameter> (of type 'b') and <parameter>discard</parameter> (of type 'b', since 2.12.0).
         @cleartext_device: An object path to the unlocked object implementing the #org.freedesktop.UDisks2.Block interface.
 
         Tries to unlock the encrypted device using @passphrase.
