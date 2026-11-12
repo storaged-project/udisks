@@ -22,7 +22,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.12.0
+Version: 2.13.0
 %if 0%{?is_git} == 0
 Release: 1%{?dist}
 %else
