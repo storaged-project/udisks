@@ -67,7 +67,7 @@
   when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Enable our copr repository with latest builds of libblockdev
-  command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-x86_64"
+  command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-{{ ansible_facts['architecture'] }}"
   when: ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '10'
 
 - name: Enable our copr repository with latest builds of libblockdev
