@@ -1,15 +1,22 @@
-summary: Run tests
+summary: Run the UDisks test suites
 
 adjust+:
-  when: revdeps == yes
-  enabled: false
+  - when: revdeps == yes
+    enabled: false
 
 prepare:
   - name: copr
     how: shell
     script:
-      - sudo dnf install -y python3-libdnf5 'dnf-command(copr)'
-      - sudo dnf copr enable -y @storage/udisks-daily
+      - |
+        . /etc/os-release
+        if [ "$ID" = centos ]; then
+            sudo dnf install -y python3-libdnf 'dnf-command(copr)'
+            sudo dnf copr enable -y @storage/udisks-daily centos-stream-10-$(uname -m)
+        else
+            sudo dnf install -y python3-libdnf5 'dnf-command(copr)'
+            sudo dnf copr enable -y @storage/udisks-daily
+        fi
       # TF prioritizes Fedora tag repo over all others, in particular our daily COPR
       - for f in $(grep -l -r 'testing-farm-tag-repository' /etc/yum.repos.d); do sed -i '/priority/d' "$f" ;done
       - sudo dnf -y update
@@ -21,6 +28,28 @@ prepare:
     how: ansible
     playbook: misc/install-test-dependencies.yml
 
-execute:
+# Build during execute: tmt's pre-execute sync deletes guest-only build files
+# created during prepare.
+/dbus:
+  summary: Run stable D-Bus tests
+  execute:
     how: tmt
-    script: ./autogen.sh --enable-modules && make -j && sudo make dbus-tests
+    script: ./autogen.sh --enable-available-modules --localstatedir=/var && make -j && sudo make dbus-tests
+
+/integration:
+  summary: Run integration tests
+  execute:
+    how: tmt
+    script: ./autogen.sh --enable-available-modules --localstatedir=/var && make -j && sudo make integration-tests
+
+/unit:
+  summary: Run unit tests
+  execute:
+    how: tmt
+    script: ./autogen.sh --enable-available-modules --localstatedir=/var && make -j && make unittests
+
+/unstable:
+  summary: Run only unstable D-Bus tests
+  execute:
+    how: tmt
+    script: ./autogen.sh --enable-available-modules --localstatedir=/var && make -j && sudo make dbus-tests DBUS_TESTS_ARGS='--include-tags unstable'

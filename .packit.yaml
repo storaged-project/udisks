@@ -23,18 +23,65 @@ jobs:
     - fedora-latest-stable-aarch64
     - fedora-latest-stable-ppc64le
     - fedora-latest-stable-x86_64
+    - centos-stream-10-aarch64
+    - centos-stream-10-ppc64le
+    - centos-stream-10-x86_64
   additional_repos:
   - "copr://@storage/udisks-daily"
 
-- job: tests
+- &fedora-tests
+  job: tests
+  identifier: dbus
   trigger: pull_request
+  tmt_plan: ^/plans/tests/dbus$
   targets:
-    - fedora-latest-stable
+    - fedora-rawhide-x86_64
+    - fedora-rawhide-aarch64
+    - fedora-latest-x86_64
+    - fedora-latest-aarch64
+    - fedora-latest-stable-x86_64
+    - fedora-latest-stable-aarch64
   tf_extra_params:
     environments:
       - artifacts:
         - type: repository-file
           id: https://copr.fedorainfracloud.org/coprs/g/storage/udisks-daily/repo/fedora-$releasever/group_storage-udisks-daily-fedora-$releasever.repo
+
+- &centos-tests
+  <<: *fedora-tests
+  identifier: dbus-centos
+  targets:
+    - centos-stream-10-x86_64
+    - centos-stream-10-aarch64
+  tf_extra_params:
+    environments:
+      - artifacts:
+        - type: repository-file
+          id: https://copr.fedorainfracloud.org/coprs/g/storage/udisks-daily/repo/centos-stream-10/group_storage-udisks-daily-centos-stream-10.repo
+
+- <<: *fedora-tests
+  identifier: integration
+  tmt_plan: ^/plans/tests/integration$
+
+- <<: *centos-tests
+  identifier: integration-centos
+  tmt_plan: ^/plans/tests/integration$
+
+- <<: *fedora-tests
+  identifier: unit
+  tmt_plan: ^/plans/tests/unit$
+
+- <<: *centos-tests
+  identifier: unit-centos
+  tmt_plan: ^/plans/tests/unit$
+
+- <<: *fedora-tests
+  identifier: unstable
+  tmt_plan: ^/plans/tests/unstable$
+
+- <<: *centos-tests
+  identifier: unstable-centos
+  tmt_plan: ^/plans/tests/unstable$
 
 # run tests for udisks consumers, see plans/ with `revdeps == yes`
 - job: tests

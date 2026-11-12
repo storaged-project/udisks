@@ -4,6 +4,7 @@ SHELL = @BASH@
 .SHELLFLAGS = -o pipefail -c
 
 PYTHON ?= python3
+DBUS_TESTS_ARGS ?=
 
 NULL =
 
@@ -45,7 +46,7 @@ clean-local:
 
 dbus-tests:
 	$(MAKE) all &>/dev/null
-	sudo $(PYTHON) src/tests/dbus-tests/run_tests.py -l dbus_tests.log |& tee dbus_tests_output.log \
+	sudo $(PYTHON) src/tests/dbus-tests/run_tests.py -l dbus_tests.log $(DBUS_TESTS_ARGS) |& tee dbus_tests_output.log \
        && echo "dbus-tests: SUCCESS" >> RESULTS || echo "dbus-tests: FAILED" >> RESULTS
 	@tail -1 RESULTS | grep -q "dbus-tests: SUCCESS"
 

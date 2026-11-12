@@ -17,6 +17,10 @@
   command: "dnf -y copr enable @storage/udisks-daily"
   when: ansible_facts['distribution'] == 'Fedora'
 
+- name: Allow package vendor changes (Fedora)
+  command: "dnf config-manager setopt allow_vendor_change=True"
+  when: ansible_facts['distribution'] == 'Fedora'
+
 - name: Install dnf-plugins-core for dnf builddep (Fedora)
   package: name=dnf-plugins-core state=present
   when: ansible_facts['distribution'] == 'Fedora'
@@ -67,7 +71,7 @@
   when: ansible_facts['distribution'] == 'CentOS'
 
 - name: Enable our copr repository with latest builds of libblockdev
-  command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-x86_64"
+  command: "dnf -y copr enable @storage/udisks-daily centos-stream-10-{{ ansible_facts['architecture'] }}"
   when: ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '10'
 
 - name: Enable our copr repository with latest builds of libblockdev
