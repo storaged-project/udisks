@@ -17,6 +17,10 @@
   command: "dnf -y copr enable @storage/udisks-daily"
   when: ansible_facts['distribution'] == 'Fedora'
 
+- name: Allow package vendor changes (Fedora)
+  command: "dnf config-manager setopt allow_vendor_change=True"
+  when: ansible_facts['distribution'] == 'Fedora'
+
 - name: Install dnf-plugins-core for dnf builddep (Fedora)
   package: name=dnf-plugins-core state=present
   when: ansible_facts['distribution'] == 'Fedora'
