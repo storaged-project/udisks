@@ -681,6 +681,24 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
     }
   g_list_free_full (mounts, g_object_unref);
 
+  if (!is_mounted)
+    {
+      UDisksMount *path_mount;
+
+      path_mount = udisks_mount_monitor_get_mount_for_path (monitor, mount_point);
+      if (path_mount != NULL)
+        {
+          /* Unresolved Btrfs mounts are tracked with mountinfo's anonymous
+           * dev_t. Only use the path fallback for such mounts, so a stale
+           * state entry cannot detach an unrelated block-device mount that
+           * later reused the same path.
+           */
+          if (major (udisks_mount_get_dev (path_mount)) == 0)
+            is_mounted = TRUE;
+          g_object_unref (path_mount);
+        }
+    }
+
   /* Figure out if block device still exists */
   udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (state->daemon));
   udev_device = g_udev_client_query_by_device_number (udev_client,
