@@ -532,19 +532,30 @@ udisks_mount_monitor_parse_mountinfo (UDisksMountMonitor  *monitor,
               if (!g_str_has_prefix (mount_source, "/dev/"))
                 continue;
 
-              if (stat (mount_source, &statbuf) != 0)
+              if (stat (mount_source, &statbuf) == 0)
+                {
+                  if (!S_ISBLK (statbuf.st_mode))
+                    {
+                      udisks_warning ("%s is not a block device", mount_source);
+                      continue;
+                    }
+
+                  dev = statbuf.st_rdev;
+                }
+              else if (errno == ENOENT)
+                {
+                  /* The device node is gone because the device was pulled
+                   * while mounted. Record the mount under the anonymous
+                   * device number of mountinfo, so that the state cleanup
+                   * can still find it by its path and unmount it.
+                   */
+                  dev = makedev (major, minor);
+                }
+              else
                 {
                   udisks_warning ("Error statting %s: %m", mount_source);
                   continue;
                 }
-
-              if (!S_ISBLK (statbuf.st_mode))
-                {
-                  udisks_warning ("%s is not a block device", mount_source);
-                  continue;
-                }
-
-              dev = statbuf.st_rdev;
             }
           else
             {
