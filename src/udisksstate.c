@@ -737,6 +737,23 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
       g_object_unref (udev_device);
     }
 
+  /* A btrfs mount whose device is gone is recorded under an anonymous device
+   * number, so the lookup by device above could not find it. Look it up by
+   * path, so that it still gets unmounted before its directory is removed.
+   */
+  if (!device_exists && !is_mounted)
+    {
+      UDisksMount *mount;
+
+      mount = udisks_mount_monitor_get_mount_for_path (monitor, mount_point);
+      if (mount != NULL)
+        {
+          if (major (udisks_mount_get_dev (mount)) == 0)
+            is_mounted = TRUE;
+          g_object_unref (mount);
+        }
+    }
+
   /* Figure out if the device is about to be cleaned up */
   if (devs_to_clean != NULL)
     for (n = 0; n < devs_to_clean->len; n++)
