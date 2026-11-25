@@ -247,6 +247,19 @@ if test "x$with_tmpfilesdir" != "xno"; then
   AC_SUBST([tmpfilesdir], [$with_tmpfilesdir])
 fi
 
+AC_ARG_WITH([vendordir],
+  AS_HELP_STRING([--with-vendordir=DIR], [Directory for distribution provided configuration files]),
+  [], []
+)
+AC_SUBST([vendordir], [$with_vendordir])
+AM_CONDITIONAL([USE_VENDORDIR], [test "x$with_vendordir" != x])
+AS_IF([test "x$with_vendordir" != x], [
+  AC_DEFINE([USE_VENDORDIR], [1], [Define to 1 to use vendordir])
+  PKG_CHECK_MODULES(GLIB_VENDORDIR, [glib-2.0 >= 2.90],
+                    [],
+                    [AC_MSG_ERROR([glib-2.0 >= 2.89 is required when --with-vendordir is used (needed for g_key_file_load_unix_configurations)])])
+])
+
 # kernel modules
 AC_ARG_WITH([modloaddir],
   [AS_HELP_STRING([--with-modloaddir=DIR], [Directory for configuring kernel modules to load at boot])],
@@ -676,6 +689,7 @@ echo "
         sbindir:                    ${sbindir}
         datadir:                    ${datadir}
         sysconfdir:                 ${sysconfdir}
+	vendordir:                  ${with_vendordir}
         localstatedir:              ${localstatedir}
         docdir:                     ${docdir}
         introspection:              ${found_introspection}

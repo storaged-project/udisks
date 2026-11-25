@@ -22,6 +22,8 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
+#include <glib.h>
 
 #include "udiskslogging.h"
 #include "udisksdaemontypes.h"
@@ -91,6 +93,43 @@ udisks_config_manager_get_property (GObject    *object,
     }
 }
 
+static void
+set_module_list (GList **out_modules, gchar **modules, const gchar *conf_filename)
+{
+  gchar **modules_tmp = modules;
+
+  for (gchar * module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
+    {
+      g_strstrip (module_i);
+      if (! udisks_module_validate_name (module_i) && !g_str_equal (module_i, MODULES_ALL_ARG))
+        {
+          g_warning ("Invalid module name '%s' specified in the %s config file.",
+                     module_i, conf_filename);
+          continue;
+        }
+      *out_modules = g_list_append (*out_modules, g_strdup (module_i));
+    }
+}
+
+static void
+set_load_preference (UDisksModuleLoadPreference *out_load_preference, const gchar *load_preference)
+{
+  /* Check the key value */
+  if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
+    {
+      *out_load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
+    }
+  else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
+    {
+      *out_load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
+    }
+  else
+    {
+      udisks_warning ("Unknown value used for 'modules_load_preference': %s; defaulting to 'ondemand'",
+                      load_preference);
+    }
+}
+
 static const gchar *
 get_encryption_config (const gchar *encryption)
 {
@@ -145,26 +184,59 @@ parse_config_file (UDisksConfigManager         *manager,
                    GList                      **out_modules)
 {
   GKeyFile *config_file;
-  gchar *conf_filename;
+  gchar *conf_filename = NULL;
   gchar *load_preference;
   gchar *encryption;
-  gchar *module_i;
   gchar **modules;
-  gchar **modules_tmp;
   GError *l_error = NULL;
+  gboolean success = FALSE;
+#if defined (USE_VENDORDIR)
+  gchar *conf_dir = NULL;
+#endif
 
-  /* Get modules and means of loading */
-  conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
-                                    manager->config_dir,
-                                    PACKAGE_NAME_UDISKS2 ".conf",
-                                    NULL);
-
-  udisks_debug ("Loading configuration file: %s", conf_filename);
-
-  /* Load config */
   config_file = g_key_file_new ();
   g_key_file_set_list_separator (config_file, ',');
-  if (g_key_file_load_from_file (config_file, conf_filename, G_KEY_FILE_NONE, &l_error))
+
+#if defined (USE_VENDORDIR)
+  conf_dir = g_build_path (G_DIR_SEPARATOR_S,
+                           PACKAGE_SYSCONF_DIR,
+                           PROJECT_SYSCONF_DIR,
+                           NULL);
+  if (manager->uninstalled || !g_str_equal(conf_dir,manager->config_dir))
+    {
+#endif
+      /* Taking this file only and not parsing e.g. vendor files */
+      conf_filename = g_build_filename (G_DIR_SEPARATOR_S,
+                                        manager->config_dir,
+                                        PACKAGE_NAME_UDISKS2 ".conf",
+                                        NULL);
+
+      udisks_debug ("Loading configuration file: %s", conf_filename);
+      /* Load config */
+      success = g_key_file_load_from_file (config_file, conf_filename, G_KEY_FILE_NONE, &l_error);
+      
+#if defined (USE_VENDORDIR)
+    }
+  else
+    {
+      /* Parsing vendor, runtime and sysconf dir */
+      conf_filename = g_strdup_printf ("%s/%s, /run/%s or %s/%s",
+                                       PACKAGE_SYSCONF_DIR, PROJECT_SYSCONF_DIR,
+                                       PROJECT_SYSCONF_DIR,
+                                       _PATH_VENDORDIR, PROJECT_SYSCONF_DIR);
+      udisks_debug ("Loading configuration files from %s", conf_filename);
+      success = g_key_file_load_unix_configurations (config_file,
+                                                     PROJECT_SYSCONF_DIR,
+                                                     PACKAGE_SYSCONF_DIR,
+                                                     NULL,
+                                                     _PATH_VENDORDIR,
+                                                     PACKAGE_NAME_UDISKS2,
+                                                     "conf",
+                                                     G_KEY_FILE_NONE, &l_error);
+    }
+  g_free (conf_dir);
+#endif
+  if (success)
     {
       if (out_modules != NULL)
         {
@@ -172,18 +244,7 @@ parse_config_file (UDisksConfigManager         *manager,
           /* Read the list of modules to load. */
           if (modules)
             {
-              modules_tmp = modules;
-              for (module_i = *modules_tmp; module_i; module_i = *++modules_tmp)
-                {
-                  g_strstrip (module_i);
-                  if (! udisks_module_validate_name (module_i) && !g_str_equal (module_i, MODULES_ALL_ARG))
-                    {
-                      g_warning ("Invalid module name '%s' specified in the %s config file.",
-                                 module_i, conf_filename);
-                      continue;
-                    }
-                  *out_modules = g_list_append (*out_modules, g_strdup (module_i));
-                }
+              set_module_list (out_modules, modules, conf_filename);
               g_strfreev (modules);
             }
         }
@@ -194,28 +255,14 @@ parse_config_file (UDisksConfigManager         *manager,
           load_preference = g_key_file_get_string (config_file, MODULES_GROUP_NAME, MODULES_LOAD_PREFERENCE_KEY, NULL);
           if (load_preference)
             {
-              /* Check the key value */
-              if (g_ascii_strcasecmp (load_preference, "ondemand") == 0)
-                {
-                  *out_load_preference = UDISKS_MODULE_LOAD_ONDEMAND;
-                }
-              else if (g_ascii_strcasecmp (load_preference, "onstartup") == 0)
-                {
-                  *out_load_preference = UDISKS_MODULE_LOAD_ONSTARTUP;
-                }
-              else
-                {
-                  udisks_warning ("Unknown value used for 'modules_load_preference': %s; defaulting to 'ondemand'",
-                                  load_preference);
-                }
-
+              set_load_preference (out_load_preference, load_preference);
               g_free (load_preference);
             }
         }
 
       if (out_encryption != NULL)
         {
-          /* Read the load preference configuration option. */
+          /* Read the encryption option. */
           encryption = g_key_file_get_string (config_file, DEFAULTS_GROUP_NAME, DEFAULTS_ENCRYPTION_KEY, NULL);
           if (encryption)
             {
@@ -235,7 +282,6 @@ parse_config_file (UDisksConfigManager         *manager,
         {
           udisks_warning ("Can't load configuration file %s", conf_filename);
         }
-
     }
 
   g_key_file_free (config_file);
