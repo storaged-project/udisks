@@ -172,6 +172,9 @@
 #define UDISKS_STATE_FILE_MDRAID                 "mdraid"
 #define UDISKS_STATE_FILE_MODULES                "modules"
 
+/* How long to wait before retrying a failed cleanup of an unlocked crypto device */
+#define UDISKS_STATE_CRYPTO_CLEANUP_RETRY_INTERVAL (10 * G_TIME_SPAN_SECOND)
+
 /**
  * UDisksState:
  *
@@ -192,6 +195,9 @@ struct _UDisksState
 
   /* key-path -> GVariant */
   GHashTable *cache;
+
+  /* dev_t (as guint64) -> gint64, monotonic time of the last failed cleanup attempt */
+  GHashTable *crypto_cleanup_retry_times;
 };
 
 typedef struct _UDisksStateClass UDisksStateClass;
@@ -237,6 +243,7 @@ udisks_state_init (UDisksState *state)
 {
   g_mutex_init (&state->lock);
   state->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_variant_unref);
+  state->crypto_cleanup_retry_times = g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free, g_free);
 }
 
 static void
@@ -245,6 +252,7 @@ udisks_state_finalize (GObject *object)
   UDisksState *state = UDISKS_STATE (object);
 
   g_hash_table_unref (state->cache);
+  g_hash_table_unref (state->crypto_cleanup_retry_times);
   g_mutex_clear (&state->lock);
 
   G_OBJECT_CLASS (udisks_state_parent_class)->finalize (object);
@@ -1141,6 +1149,9 @@ udisks_state_check_unlocked_crypto_dev_entry (UDisksState  *state,
   GUdevClient *udev_client;
   GUdevDevice *udev_cleartext_device;
   GUdevDevice *udev_crypto_device;
+  guint64 cleartext_device_key;
+  guint64 *retry_key;
+  gint64 *retry_time;
 
   keep = FALSE;
   is_unlocked = FALSE;
@@ -1239,6 +1250,21 @@ udisks_state_check_unlocked_crypto_dev_entry (UDisksState  *state,
           CryptoJobData data;
           GError *error = NULL;
 
+          /* Cleanup checks are triggered by every block uevent. If the close
+           * failed on the last attempt because the device is still in use
+           * (e.g. it is still mounted), don't retry on every check and flood
+           * the journal. The entry is kept and the close is attempted again
+           * after the retry interval. */
+          cleartext_device_key = cleartext_device;
+          retry_time = g_hash_table_lookup (state->crypto_cleanup_retry_times,
+                                            &cleartext_device_key);
+          if (retry_time != NULL &&
+              g_get_monotonic_time () - *retry_time < UDISKS_STATE_CRYPTO_CLEANUP_RETRY_INTERVAL)
+            {
+              keep = TRUE;
+              goto out2;
+            }
+
           udisks_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exists)",
                          device_file_cleartext,
                          major (crypto_device), minor (crypto_device));
@@ -1255,13 +1281,27 @@ udisks_state_check_unlocked_crypto_dev_entry (UDisksState  *state,
                                                        NULL, /* cancellable */
                                                        &error))
             {
-              udisks_critical ("Error cleaning up LUKS device %s: %s",
-                               device_file_cleartext, error->message);
+              /* Log the first failure, but not every retry. */
+              if (retry_time == NULL)
+                udisks_critical ("Error cleaning up LUKS device %s: %s",
+                                 device_file_cleartext, error->message);
+              else
+                udisks_debug ("Error cleaning up LUKS device %s: %s",
+                              device_file_cleartext, error->message);
               g_clear_error (&error);
+
+              retry_key = g_new (guint64, 1);
+              *retry_key = cleartext_device_key;
+              retry_time = g_new (gint64, 1);
+              *retry_time = g_get_monotonic_time ();
+              g_hash_table_replace (state->crypto_cleanup_retry_times,
+                                    retry_key, retry_time);
               /* keep the entry so we can clean it up later */
               keep = TRUE;
               goto out2;
             }
+
+          g_hash_table_remove (state->crypto_cleanup_retry_times, &cleartext_device_key);
         }
       else
         {
